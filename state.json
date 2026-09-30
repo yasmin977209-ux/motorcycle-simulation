@@ -1,0 +1,23 @@
+{
+  "stage": 7,
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "reference_in_repo": false,
+  "reports_in_repo": false,
+  "excel_in_repo": false,
+  "main_simulation_started": false,
+  "source_package_sha256": "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd",
+  "source_package_chunks": 18,
+  "local_acceptance": {
+    "collected": 163,
+    "passed": 119,
+    "failed": 44
+  },
+  "github_gates": {
+    "repository_cleanliness": "pending",
+    "acceptance_163": "pending",
+    "parallel_3_trials_workers_2_and_4": "pending",
+    "pause_resume_exact": "pending"
+  },
+  "main_simulation_started_on_github": false,
+  "notes": "No reference, reports, or Excel are stored in this repository. The source package is stored as ordered Base64 chunks and verified by SHA-256 in CI before test execution."
+}
