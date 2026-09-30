@@ -13,11 +13,25 @@
     "failed": 44
   },
   "github_gates": {
-    "repository_cleanliness": "pending",
-    "acceptance_163": "pending",
-    "parallel_3_trials_workers_2_and_4": "pending",
-    "pause_resume_exact": "pending"
+    "repository_cleanliness": "success",
+    "acceptance_163": "failure_114_pass_49_fail",
+    "parallel_3_trials_workers_2_and_4": "success",
+    "pause_resume_exact": "success"
   },
   "main_simulation_started_on_github": false,
-  "notes": "No reference, reports, or Excel are stored in this repository. The source package is stored as ordered Base64 chunks and verified by SHA-256 in CI before test execution."
+  "notes": "No reference, reports, or Excel are stored in this repository. The source package is stored as ordered Base64 chunks and verified by SHA-256 in CI before test execution.",
+  "github_run": {
+    "run_id": 36793142370,
+    "commit_sha": "6f98518ce0817529b7d816c8a07244d8725245e6",
+    "repository_cleanliness": "success",
+    "acceptance_163": {
+      "status": "failure",
+      "passed": 114,
+      "failed": 49
+    },
+    "parallel_3_trials_workers_2_and_4": "success",
+    "pause_resume_exact": "success",
+    "main_simulation_started": false
+  },
+  "stage7_status": "FAIL_acceptance_gate"
 }
