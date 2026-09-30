@@ -52,7 +52,8 @@ jobs:
         run: |
           set -euo pipefail
           cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.b64" | sha256sum -c -
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
           mkdir -p /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
@@ -78,7 +79,8 @@ jobs:
         run: |
           set -euo pipefail
           cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.b64" | sha256sum -c -
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
           mkdir -p /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
@@ -119,7 +121,8 @@ jobs:
         run: |
           set -euo pipefail
           cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.b64" | sha256sum -c -
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
           mkdir -p /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
