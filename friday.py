@@ -1,4 +1,4 @@
-"""Chapter 5 — Friday fee and oil-service rules, isolated from the daily engine."""
+"""Chapter 5 Friday fee and oil-service rules."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from constants import (
     PARTNER1_FINAL_SHARE_PCT,
     PARTNER2_FINAL_SHARE_PCT,
 )
-from dateutils import is_eligible_friday, eligible_friday_number
+from dateutils import is_eligible_friday
 
 
 @dataclass(frozen=True)
@@ -33,12 +33,7 @@ def apply_friday_fee_and_oil(
     friday_counter: int,
     in_tenant_possession: bool,
 ) -> FridayResult:
-    """Apply the deterministic Friday fee/oil rules for one bike snapshot.
-
-    No operating rent is created on Friday. The fee/oil decision depends only
-    on eligibility, possession, and the contract's existing Friday counter.
-    """
-
+    """Apply one eligible-Friday snapshot without touching daily-engine state."""
     if friday_counter < 0:
         raise ValueError("friday_counter must not be negative")
 
@@ -46,7 +41,6 @@ def apply_friday_fee_and_oil(
         in_tenant_possession
         and is_eligible_friday(delivery_date, current_date)
     )
-
     if not eligible:
         return FridayResult(
             eligible=False,
@@ -58,25 +52,18 @@ def apply_friday_fee_and_oil(
             friday_counter_after=friday_counter,
         )
 
-    next_counter = friday_counter + 1
-    revenue = FRIDAY_FEE
-    oil = OIL_SERVICE_COST if next_counter % 2 == 0 else 0
-    cash_delta = revenue - oil
-
+    counter_after = friday_counter + 1
+    fee = FRIDAY_FEE
+    oil = OIL_SERVICE_COST if counter_after % 2 == 0 else 0
     return FridayResult(
         eligible=True,
-        revenue_friday_fee=revenue,
+        revenue_friday_fee=fee,
         oil_service_expense=oil,
-        cash_delta=cash_delta,
-        partner1_allocation=(revenue * PARTNER1_FINAL_SHARE_PCT) // 100,
-        partner2_allocation=(revenue * PARTNER2_FINAL_SHARE_PCT) // 100,
-        friday_counter_after=next_counter,
+        cash_delta=fee - oil,
+        partner1_allocation=(fee * PARTNER1_FINAL_SHARE_PCT) // 100,
+        partner2_allocation=(fee * PARTNER2_FINAL_SHARE_PCT) // 100,
+        friday_counter_after=counter_after,
     )
 
 
-__all__ = [
-    "FridayResult",
-    "apply_friday_fee_and_oil",
-    "eligible_friday_number",
-    "is_eligible_friday",
-]
+__all__ = ["FridayResult", "apply_friday_fee_and_oil"]
