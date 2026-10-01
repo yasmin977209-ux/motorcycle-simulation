@@ -216,7 +216,7 @@ jobs:
           raise SystemExit(0 if b.get("status") in ("checkpoint_time_slice", "initialized", "intentionally_stopped") and not sc.get("complete", False) else 1)
           PY
           then
-            gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=production
+            gh workflow run stage9-simulation.yml --ref main --field scenario="$SCENARIO" --field mode=production
           fi
 
       - name: Smoke self-dispatch proof
@@ -236,7 +236,7 @@ jobs:
                 -f message="stage9: smoke global-stop marker" \
                 -f content="$b64" \
                 -f branch=main >/dev/null
-              gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=smoke
+              gh workflow run stage9-simulation.yml --ref main --field scenario="$SCENARIO" --field mode=smoke
               exit 0
             fi
           fi
@@ -244,7 +244,7 @@ jobs:
           import json
           from pathlib import Path
           s=json.loads(Path("state.json").read_text())
-          raise SystemExit(0 if s.get("status")=="intentionally_stopped" else 1)
+          raise SystemExit(0 if s.get("batch_state",{}).get("status")=="intentionally_stopped" else 1)
           PY
           gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=smoke
 
