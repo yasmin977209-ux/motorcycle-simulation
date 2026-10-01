@@ -52,28 +52,31 @@ jobs:
           run_group "STAGE2_REGRESSION" tests/test_stage2.py
 
           overall=0
-          printf '\n| Test group | Status | Actual pytest summary |\n|---|---|---|\n'
-          while IFS='|' read -r label rc summary; do
-            if [ "$rc" -eq 0 ]; then
-              status="PASS"
-            else
-              status="FAIL"
-              overall=1
-            fi
-            case "$label" in
-              CH5) display="Chapter 5 unit tests" ;;
-              CH6) display="Chapter 6 unit tests" ;;
-              CH7) display="Chapter 7 unit tests" ;;
-              CH8) display="Chapter 8 unit tests" ;;
-              CH9) display="Chapter 9 unit tests" ;;
-              STAGE1_REGRESSION) display="Stage 1 regression" ;;
-              STAGE2_REGRESSION) display="Stage 2 regression" ;;
-              *) display="$label" ;;
-            esac
-            printf '| %s | %s | %s |\n' "$display" "$status" "$summary"
-          done < /tmp/stage3a_status
-
-          printf '| Tests 127, 159, 160, 161 | DEFERRED | later-stage inputs |\n'
-          printf '| Test 158 | ADJUDICATION | rule 8 conflict retained |\n'
+          {
+            printf '\n| Test group | Status | Actual pytest summary |\n'
+            printf '|---|---|---|\n'
+            while IFS='|' read -r label rc summary; do
+              if [ "$rc" -eq 0 ]; then
+                status="PASS"
+              else
+                status="FAIL"
+                overall=1
+              fi
+              case "$label" in
+                CH5) display="Chapter 5 unit tests" ;;
+                CH6) display="Chapter 6 unit tests" ;;
+                CH7) display="Chapter 7 unit tests" ;;
+                CH8) display="Chapter 8 unit tests" ;;
+                CH9) display="Chapter 9 unit tests" ;;
+                STAGE1_REGRESSION) display="Stage 1 regression" ;;
+                STAGE2_REGRESSION) display="Stage 2 regression" ;;
+                *) display="$label" ;;
+              esac
+              printf '| %s | %s | %s |\n' "$display" "$status" "$summary"
+            done < /tmp/stage3a_status
+            printf '| Tests 127, 159, 160, 161 | DEFERRED | later-stage inputs |\n'
+            printf '| Test 158 | ADJUDICATION | rule 8 conflict retained |\n'
+          } | tee /tmp/stage3a_summary
+          cat /tmp/stage3a_summary >> "$GITHUB_STEP_SUMMARY"
 
           exit "$overall"
