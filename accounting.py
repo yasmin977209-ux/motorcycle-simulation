@@ -4,6 +4,29 @@ from entities import Project
 
 LIABILITIES = 0
 
+def initialize_accounting(project: Project | None = None) -> Project:
+    """Initialize the Chapter 10 accounting state on a Project entity.
+
+    The opening position is established before 2027-01-01:
+    Cash=0, AR=0, Guarantee Claims=0, Gross Bike Assets=3,600,000,
+    Accumulated Depreciation=0, Capital=3,700,000, and Retained Earnings=-100,000.
+    Marketing expense is recorded once as an opening memorandum value.
+    """
+    if project is None:
+        project = Project()
+    from constants import OPENING_BIKE_ASSETS, OPENING_CASH, OPENING_MARKETING_EXPENSE, OPENING_RETAINED_LOSS, TOTAL_CAPITAL
+
+    project.project_cash = OPENING_CASH
+    project.accounts_receivable = 0
+    project.guarantee_claim_receivable = 0
+    project.gross_bike_assets = OPENING_BIKE_ASSETS
+    project.accumulated_depreciation = 0
+    project.capital = TOTAL_CAPITAL
+    project.retained_earnings = OPENING_RETAINED_LOSS
+    project.opening_loss = OPENING_RETAINED_LOSS
+    project.expense_marketing = OPENING_MARKETING_EXPENSE
+    return project
+
 def operating_revenue(project: Project) -> int:
     return project.revenue_primary + project.revenue_secondary + project.revenue_settlement + project.revenue_friday_fee
 
