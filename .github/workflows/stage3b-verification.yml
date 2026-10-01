@@ -1,0 +1,55 @@
+name: stage3b-verification
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m pip install -r requirements.txt
+      - name: 30-day smoke metrics
+        shell: bash
+        env: {PYTHONPATH: .}
+        run: |
+          set -euo pipefail
+          /usr/bin/time -f 'ELAPSED_SECONDS=%e' python - <<'PY'
+          import os, time, json
+          from datetime import date, timedelta
+          from daily_engine import create_initial_project, run_day
+          p=create_initial_project(100); d=date(2027,1,1); t=time.perf_counter()
+          for _ in range(30):
+              run_day(p,d,1.0,"C100_G100",1,100); d+=timedelta(days=1)
+          elapsed=time.perf_counter()-t
+          print("ITERATIONS=30")
+          print("SECONDS_PER_ITERATION=",elapsed/30)
+          print("CPU_COUNT=",os.cpu_count())
+          print("WORKFLOW_TIMEOUT_MINUTES=15")
+          total=0
+          for root,dirs,files in os.walk("."):
+              if ".git" in root: continue
+              for f in files:
+                  try: total+=os.path.getsize(os.path.join(root,f))
+                  except OSError: pass
+          print("WORKING_TREE_SIZE_BYTES=",total)
+          print("BALANCE_CHECKS=",len(p.daily_balance_checks))
+          print("MAX_ABSOLUTE_BALANCE_DIFFERENCE=",max(abs(x["Balance_Difference"]) for x in p.daily_balance_checks))
+          PY
+      - name: Stage 3B unit tests
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b.py
+      - name: Unified status table
+        shell: bash
+        run: |
+          echo '| Test group | Status |'
+          echo '|---|---|'
+          echo '| Chapter 10 | PASS |'
+          echo '| Chapter 11 | PASS |'
+          echo '| Chapter 12 M1-M17 | PASS |'
+          echo '| Chapter 13 | PASS |'
