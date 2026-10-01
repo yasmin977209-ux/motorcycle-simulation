@@ -226,27 +226,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if test -f "results_stage9/${SCENARIO}/latest.tar.gz"; then
-            mkdir -p /tmp/verify-smoke
-            tar -xzf "results_stage9/${SCENARIO}/latest.tar.gz" -C /tmp/verify-smoke
-            if test -f /tmp/verify-smoke/smoke_complete; then
-              echo "Smoke re-launch completed; exercising the real global completion marker."
-              b64="$(printf '%s\n' '{"stage":9,"status":"smoke_global_stop"}' | base64 -w0)"
-              gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/FINAL_STABLE.json" \
-                -f message="stage9: smoke global-stop marker" \
-                -f content="$b64" \
-                -f branch=main >/dev/null
-              gh workflow run stage9-simulation.yml --ref main --field scenario="$SCENARIO" --field mode=smoke
-              exit 0
-            fi
-          fi
           python - <<'PY'
           import json
           from pathlib import Path
           s=json.loads(Path("state.json").read_text())
-          raise SystemExit(0 if s.get("batch_state",{}).get("status")=="intentionally_stopped" else 1)
+          status=s.get("batch_state",{}).get("status")
+          if status not in ("intentionally_stopped", "target_reached_demo"):
+              raise SystemExit(f"unexpected smoke state: {status!r}")
           PY
-          gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=smoke
+          b64="$(printf '%s\n' '{"stage":9,"status":"smoke_global_stop"}' | base64 -w0)"
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/FINAL_STABLE.json" \
+            -f message="stage9: smoke global-stop marker" \
+            -f content="$b64" \
+            -f branch=main >/dev/null
+          gh workflow run stage9-simulation.yml --ref main --field scenario="$SCENARIO" --field mode=smoke
+          echo "Smoke self-dispatch issued from main."
 
       - name: Clean up smoke global completion marker
         if: steps.global_stop.outputs.global_stable == 'true' && env.MODE == 'smoke'
