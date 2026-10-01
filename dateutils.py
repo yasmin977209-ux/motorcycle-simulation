@@ -2,6 +2,13 @@
 
 Model calendar rule: every day except Friday is a business day. Therefore
 Saturday and Sunday are business days in this simulation.
+
+Important reference reconciliation:
+Chapter 5.2's written rule is authoritative for the Friday pattern.
+The dated Friday examples printed in that section are off by one calendar day
+for the actual 2027 calendar. This module follows the written rule and the
+actual calendar; the discrepancy is documented in README.md and must not be
+hidden by changing the rule.
 """
 
 from __future__ import annotations
@@ -12,12 +19,11 @@ from typing import Final
 from dateutil.relativedelta import relativedelta
 
 from constants import (
+    BIKE_PREP_SCHEDULE_DAYS,
     CLAIM_WAITING_PERIODS_DAYS,
     EXPANSION_CUTOFF_DATE,
-    INITIAL_FLEET_DELIVERY_DATE,
-    INITIAL_FLEET_PURCHASE_DATE,
     INITIAL_FLEET_READY_DATE,
-    BIKE_PREP_SCHEDULE_DAYS,
+    INITIAL_FLEET_PURCHASE_DATE,
     PRIMARY_CONTRACT_MONTHS,
     PROJECT_START_DATE,
 )
@@ -78,7 +84,7 @@ def first_following_friday(delivery_date: date) -> date:
 
 
 def first_eligible_friday(delivery_date: date) -> date:
-    """First eligible Friday under the exact delivery-day rule."""
+    """First eligible Friday under the exact Chapter 5.2 written rule."""
     first_friday = first_following_friday(delivery_date)
     # Tuesday, Wednesday, Thursday deliveries exempt the first Friday.
     if delivery_date.weekday() in (1, 2, 3):
@@ -118,31 +124,33 @@ def add_calendar_days(day: date, days: int) -> date:
     return day + timedelta(days=days)
 
 
-# Reference examples from Chapter 5.2.
+# Corrected by actual 2027 calendar while preserving the written rule:
+# Saturday/Sunday/Monday -> first following Friday;
+# Tuesday/Wednesday/Thursday -> first following Friday exempt, next Friday eligible.
 REFERENCE_FRIDAY_EXAMPLES: Final[dict[date, date]] = {
-    date(2027, 1, 2): date(2027, 1, 9),   # Saturday -> Friday #1
-    date(2027, 1, 3): date(2027, 1, 9),   # Sunday -> Friday #1
-    date(2027, 1, 4): date(2027, 1, 9),   # Monday -> Friday #1
-    date(2027, 1, 5): date(2027, 1, 16),  # Tuesday -> first Friday exempted
-    date(2027, 1, 6): date(2027, 1, 16),  # Wednesday -> first Friday exempted
-    date(2027, 1, 7): date(2027, 1, 16),  # Thursday -> first Friday exempted
+    date(2027, 1, 2): date(2027, 1, 8),
+    date(2027, 1, 3): date(2027, 1, 8),
+    date(2027, 1, 4): date(2027, 1, 8),
+    date(2027, 1, 5): date(2027, 1, 15),
+    date(2027, 1, 6): date(2027, 1, 15),
+    date(2027, 1, 7): date(2027, 1, 15),
 }
 
 
-# Calendar checks derived from the named reference dates.
+# Deterministic reference/date checks.
 assert is_friday(PROJECT_START_DATE)
 assert is_business_day(date(2027, 1, 2))
 assert is_business_day(date(2027, 1, 3))
 assert not is_business_day(date(2027, 1, 1))
 assert scheduled_ready_date(INITIAL_FLEET_PURCHASE_DATE) == INITIAL_FLEET_READY_DATE
-assert next_business_day_on_or_after(INITIAL_FLEET_READY_DATE) == INITIAL_FLEET_DELIVERY_DATE
+assert next_business_day_on_or_after(INITIAL_FLEET_READY_DATE) == date(2027, 1, 2)
 assert INITIAL_FLEET_READY_DATE == PROJECT_START_DATE
 assert EXPANSION_CUTOFF_DATE == date(2030, 12, 31)
 
 for delivery, expected in REFERENCE_FRIDAY_EXAMPLES.items():
     assert first_eligible_friday(delivery) == expected
+    assert is_friday(expected)
 
-# Chapter 2.4 claim-timing examples.
 assert settlement_due_date(date(2027, 1, 15), 20) == date(2027, 2, 5)
 assert settlement_due_date(date(2027, 1, 15), 30) == date(2027, 2, 15)
 assert settlement_due_date(date(2027, 1, 15), 60) == date(2027, 3, 17)
