@@ -13,6 +13,8 @@ from constants import (
     WAITING_PRIMARY_UPPER,
     NOTICE_PRIMARY_UPPER,
     GRACE_PRIMARY_UPPER,
+    PRIMARY_DAILY_RENT,
+    SECONDARY_DAILY_RENT,
 )
 from entities import ContractType
 
@@ -216,6 +218,31 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
 )
 
 
+def is_declared_transition(from_state: str, to_state: str) -> bool:
+    """Return whether Table 4.3 explicitly declares this state edge."""
+    for rule in TRANSITION_TABLE:
+        if rule.to_state == to_state and from_state in rule.from_states:
+            return True
+    return False
+
+
+def run_reference_path(path: Sequence[str]) -> tuple[str, ...]:
+    """Execute a reference lifecycle path through the declared transition table.
+
+    This is a structural state-machine runner for Chapter 4 only. It does not
+    invent event timing or implement M1-M17; it verifies each requested edge
+    against the authoritative transition table.
+    """
+    if len(path) < 2:
+        raise ValueError("A lifecycle path must contain at least two states")
+    declared = {state.value for state in BikeState}
+    if any(state not in declared for state in path):
+        raise ValueError("Path contains an undeclared state")
+    for current, target in zip(path, path[1:]):
+        if not is_declared_transition(current, target):
+            raise ValueError(f"Undeclared transition: {current} -> {target}")
+    return tuple(path)
+
 def _state_band(outstanding_amount: int, daily_rate: int, contract_type: str) -> str:
     state = derive_state_from_balance(outstanding_amount, daily_rate, contract_type)
     if state is not None:
@@ -254,11 +281,11 @@ def legal_next_state(
 
 # Reference-linked numeric integrity checks: thresholds remain derived from
 # constants and daily rates rather than being magic business values.
-assert WAITING_PRIMARY_UPPER == 21 * 1500
-assert NOTICE_PRIMARY_UPPER == 28 * 1500
+assert WAITING_PRIMARY_UPPER == 21 * PRIMARY_DAILY_RENT
+assert NOTICE_PRIMARY_UPPER == 28 * PRIMARY_DAILY_RENT
 assert GRACE_PRIMARY_UPPER == PRIMARY_DEFAULT_AMOUNT
-assert PRIMARY_DEFAULT_AMOUNT == 30 * 1500
-assert SECONDARY_DEFAULT_AMOUNT == 10 * 1000
+assert PRIMARY_DEFAULT_AMOUNT == 30 * PRIMARY_DAILY_RENT
+assert SECONDARY_DEFAULT_AMOUNT == 10 * SECONDARY_DAILY_RENT
 assert EXPANSION_PURCHASE_CASH_THRESHOLD == 350_000
 assert len(BikeState) == STATE_COUNT
 assert not (set(BikeState.__members__) & FORBIDDEN_STATE_NAMES)
