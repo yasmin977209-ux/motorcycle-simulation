@@ -84,7 +84,7 @@ def derive_state_from_balance(
 @dataclass(frozen=True)
 class TransitionRule:
     from_states: tuple[str, ...]
-    to_state: str
+    to_states: tuple[str, ...]
     condition: str
     phase: str
 
