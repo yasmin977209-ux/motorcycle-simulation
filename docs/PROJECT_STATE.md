@@ -211,21 +211,34 @@
 **القرار 158:** ADJUDICATION_REQUIRED  
 
 
-## 10. فجوة محتملة في entities.py (تُحسم في R4 للمرحلة 3ب مع إعادة اختبارات المرحلتين 1 و2)
+## 10. حسم K_SPEC في entities.py بقرار R4 للمرحلة 3ب
 
-أظهر التحقق الفعلي من تنفيذ GitHub للنسخة القديمة أن `daily_engine.py` يستخدم الحقل `pending_writeoff_today` في M12/M13/M16، بينما هذا الحقل غير موجود في تعريف `Bike` الحالي في `entities.py`. كما يستخدم مرجع M13 الاسم `active_settlement_receivable`، ولا يوجد هذا الحقل في `Bike` الحالي؛ المرجع يعرّف بدلاً منه `receivables_ledger` وحقول الدين القديمة الصريحة. لم يُعدّل `entities.py` في هذه الخطوة.
+تم إغلاق بنود K_SPEC الثلاثة التالية بقرارات المستخدم المعتمدة، مع تثبيتها في تنفيذ `entities.py`:
 
-النص المرجعي يثبت:
-- السطر 1363: `bike.pending_writeoff_today = True` عند التمليك من M12.
-- السطر 1404: `bike.pending_writeoff_today = True` عند اكتمال التسوية في M13.
-- السطر 1393: `bike.active_settlement_receivable.created_date = current_date`.
-- السطر 1415: `bike.active_settlement_receivable.status = "TRANSFERRED_TO_GUARANTEE"`.
-- الأسطر 1540–1548: M16 يقرأ `pending_writeoff_today` ثم يصفره بعد الشطب.
+1. **`pending_writeoff_today`**
+   - الحقل موجود في `Bike`.
+   - النوع: `bool`.
+   - القيمة الافتراضية: `False`.
+   - commit التنفيذ: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
 
-كما أن تعريف كيان الدراجة في الأسطر 362–367 يثبت وجود: `current_contract_id`، `current_tenant_id`، `settlement_start_date`، `settlement_legacy_debt_original`، `settlement_legacy_debt_remaining`، و`settlement_business_days_elapsed`. لذلك لا تُعد هذه الحقول مفقودة.
+2. **`active_settlement_receivable`**
+   - لا يوجد كائن جديد بهذا الاسم.
+   - الحقل المعتمد في `Bike`: `active_settlement_receivable_id`.
+   - النوع: معرف عقدة/مرجع اختياري إلى `ReceivableEntry`.
+   - commit التنفيذ: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
 
-الحالة: **OPEN / لا تعديل الآن**. تُحسم مطابقة الحقول المرجعية الفعلية في R4 الخاصة بالمرحلة 3ب، مع إعادة اختبارات المرحلتين 1 و2 بعد أي تغيير في `entities.py`.
+3. **`current_contract`**
+   - لا يُضاف حقل كائني مستقل في `Bike`.
+   - الاشتقاق يكون عبر `current_contract_id` والـ`Project` contract index بمفتاح `contract_id` للوصول O(1).
+   - `Project.contracts` ممثل فعلياً بـ`ContractIndex` وهو `dict[str, Contract]`-backed.
+   - commit تثبيت الفهرس: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
 
+**حالة K_SPEC الثلاثة:** **CLOSED / RESOLVED**.
+
+التحقق الإضافي:
+- أُضيف `tests/test_stage2_entities_additions.py` دون تعديل أي اختبار قائم.
+- تشغيل Stage 2 الذي يتضمنه: Run **81**، والنتيجة الفعلية: **18 passed in 0.21s**.
+- commit الاختبار/تشغيله: `e55e6cb9104f1b35108617953fa49c1559a4f6dd`.
 
 ## 11. اعتماديات 3A المتعطلة بالتبعية حتى 3B
 
@@ -242,19 +255,21 @@
 
 **تصحيح للتقرير السابق:** لا يجوز وصف هذه الحالة بأنها مجموعة imports مكسورة. ما ثبت فعلياً هو أن `daily_engine.py` ينفذ استدعاءات أبواب 5–9، وأن مساره التشغيلي القديم ينكسر عند الوصول إلى حقل `pending_writeoff_today` غير الموجود في `Bike`. أما `accounting.py` و`partner_equity.py` فلا تحتويان أصلاً على imports لهذه الدوال، و`closure.py` importه للكفالة صالح نصياً.
 
-## 12. غموض K_SPEC إضافي في حقول M12/M13/M16
+## 12. حسم K_SPEC إضافي في حقول M12/M13/M16
 
-بالمقارنة الحرفية مع المرجع، أسماء حقول الدراجة المستخدمة في M12/M13/M16 ولا تظهر كحقول في `entities.py` الحالي هي:
+تم حسم الأسماء الثلاثة التي كان تعريفها غير ممثل في `Bike` كما يلي:
 
-1. `current_contract`: المرجع يستخدمه في الأسطر 1358 و1403 و1410، بينما `entities.py` الحالي يعرّف `current_contract_id` فقط. البند 3.2 من المرجع ينص في الوقت نفسه على أن الدراجة تشير إلى العقد ولا تخزّن نسخة مستقلة من مجاميعه.
-2. `active_settlement_receivable`: المرجع يستخدمه في الأسطر 1338 و1393 و1415، ولا يوجد حقل بهذا الاسم في `Bike` الحالي؛ يوجد بدلاً منه `receivables_ledger`.
-3. `pending_writeoff_today`: المرجع يستخدمه في الأسطر 1363 و1404 و1540 و1548، ولا يوجد حقل بهذا الاسم في `Bike` الحالي.
+- `current_contract`: لا حقل جديد؛ اشتقاق عبر `current_contract_id` ثم البحث بالمفتاح في فهرس `Project.contracts` O(1).
+- `active_settlement_receivable`: لا حقل كائن؛ المرجع المعتمد هو `active_settlement_receivable_id`.
+- `pending_writeoff_today`: حقل `bool` في `Bike` بقيمة افتراضية `False`.
 
-البحث الكامل في المرجع عن الأسماء الثلاثة لم يجد أي تعريف مستقل لها؛ وجد استعمالاتها التنفيذية فقط. لذلك تُسجل هذه النقطة **K_SPEC — غموض في المرجع**، ولا يُتخذ قرار تنفيذي الآن.
+هذه القرارات مغلقة في R4، ولا تُعامل كـK_SPEC مفتوحة بعد الآن.
 
-خيارات R4 المقترحة للمرحلة 3ب، دون حسم:
-- `current_contract`: (أ) تمثيله كعلاقة مشتقة من `current_contract_id`، أو (ب) إدخال علاقة كائنية فعلية إذا أثبت R4 أن ذلك هو المقصود رغم قاعدة مصدر الحقيقة.
-- `active_settlement_receivable`: (أ) علاقة مشتقة من دفتر `receivables_ledger`، أو (ب) حقل علاقة مستقل إلى `ReceivableEntry` إذا أثبت R4 أن المرجع يقصده صراحة.
-- `pending_writeoff_today`: (أ) علامة مؤقتة على `Bike` كما يكتبها المرجع مباشرة، أو (ب) آلية حالة/حدث بديلة لا تضيف حقلاً إذا أثبت R4 أن المقصود مجرد marker تنفيذي مؤقت.
+### 12.1 قرارات إضافية مؤجلة إلى منطق 3ب
 
-**الحالة: K_SPEC OPEN.** لا تعديل لـ`entities.py` الآن. أي حسم لاحق يستوجب R4 للمرحلة 3ب ثم إعادة اختبارات المرحلتين 1 و2.
+- **Final equity:** سيُطبّق في 3ب وفق صيغة M15 في المرجع: `Cash + مجموع NBV للدراجات HELD_AS_ASSET`. وسيضيف M17 تأكيد المساواة مع `Total_Equity`. أي اختلاف بين القيمتين يُعامل كخلل ويُبلّغ، ولا يُسجل كانحراف معتمد.
+- **master_seed:** يُمرر في سلسلة اشتقاق الرميات باستخدام SHA-256.
+- **execution_trace:** اختياري ويُفعّل في الاختبار فقط.
+
+حالة هذه البنود: **DEFERRED TO STAGE 3B**.
+
