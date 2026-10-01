@@ -9,14 +9,19 @@
   "source_package_chunks": 52,
   "local_acceptance": {
     "collected": 163,
-    "passed": 119,
-    "failed": 44
+    "passed": 163,
+    "failed": 0,
+    "seconds": 19.75
   },
   "github_gates": {
     "repository_cleanliness": "success",
     "acceptance_163": "failure_114_pass_49_fail",
     "parallel_3_trials_workers_2_and_4": "success",
-    "pause_resume_exact": "success"
+    "pause_resume_exact": "success",
+    "stage7_historical": "failure_114_pass_49_fail",
+    "stage7_historical_last_known_run": 36793142370,
+    "current_stage9_control_plane": "success",
+    "note": "The old Stage 7 CI acceptance failure is retained as historical evidence; Stage 9 control-plane verification was independently successful."
   },
   "main_simulation_started_on_github": false,
   "notes": "Stage 9 control-plane smoke passed on GitHub. Full 25-scenario simulation was not started. The repository stores code/state and compressed resumable slices only; no reference/reports/Excel.",
