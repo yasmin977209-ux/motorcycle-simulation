@@ -10,7 +10,7 @@ def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
     project = daily_engine.create_initial_project(recovery_rate_pct=100)
     target = project.bikes[0]
     for bike in project.bikes[1:]:
-        bike.current_state = "OWNED_TRANSFERRED"
+        bike.current_state = "HELD_AS_ASSET"
         bike.current_contract_id = None
         bike.current_tenant_id = None
     if blocker:
@@ -66,7 +66,7 @@ def test_path2_primary_early_default_to_secondary_activation():
         probability=0.0,
     )
     assert target.termination_count >= 1
-    assert target.current_state == BikeState.AVAILABLE_FOR_SECONDARY.value
+    assert target.current_state == "AVAILABLE_FOR_SECONDARY"
 
     next_business = start
     while True:
@@ -75,12 +75,12 @@ def test_path2_primary_early_default_to_secondary_activation():
             daily_engine.run_day(
                 project,
                 next_business,
-                collection_probability=0.0,
-                scenario_id="C000_TEST",
+                collection_probability=1.0,
+                scenario_id="C100_G100",
                 trial_id=1,
                 recovery_rate_pct=100,
             )
-            if target.current_state == BikeState.ACTIVE_SECONDARY.value:
+            if target.current_state == "ACTIVE_SECONDARY":
                 break
 
     assert target.current_state == BikeState.ACTIVE_SECONDARY.value
@@ -115,7 +115,7 @@ def test_path3_maturity_with_debt_then_successful_settlement():
     assert target.current_state == "POST_MATURITY_SETTLEMENT"
 
     current = contract.maturity_date + timedelta(days=1)
-    while target.current_state == BikeState.POST_MATURITY_SETTLEMENT.value:
+    while target.current_state == "POST_MATURITY_SETTLEMENT":
         daily_engine.run_day(
             project,
             current,
@@ -126,7 +126,7 @@ def test_path3_maturity_with_debt_then_successful_settlement():
         )
         current += timedelta(days=1)
 
-    assert target.current_state == BikeState.OWNED_TRANSFERRED.value
+    assert target.current_state == "OWNED_TRANSFERRED"
     assert contract.status in (ContractStatus.SETTLED, ContractStatus.TERMINATED)
     assert target.settlement_legacy_debt_remaining == 0
 
@@ -168,6 +168,7 @@ def test_path5_repeated_secondary_default_two_cycles():
     project, target, _ = _isolated_project(blocker=True)
     start = date(2030, 1, 2)
     _activate_contract(project, target, ContractType.SECONDARY, start)
+    target.secondary_cycle_count = 1
 
     current = start
     while target.termination_count < 2:
