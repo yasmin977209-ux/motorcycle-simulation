@@ -158,16 +158,6 @@ class Contract:
     friday_counter: int = 0
 
 
-class ContractIndex(dict[str, Contract]):
-    """O(1) contract_id index with value iteration for existing callers."""
-
-    def append(self, contract: Contract) -> None:
-        self[contract.contract_id] = contract
-
-    def __iter__(self):
-        return iter(self.values())
-
-
 @dataclass
 class Tenant:
     tenant_id: str
@@ -271,8 +261,7 @@ class Project:
     partner2_final_entitlement: int | None = None
     simulation_stopped: bool = False
     bikes: list[Bike] = field(default_factory=list)
-    # O(1) contract lookup by the authoritative contract_id key.
-    contracts: ContractIndex = field(default_factory=ContractIndex)
+    contracts: dict[str, Contract] = field(default_factory=dict)
     tenants: list[Tenant] = field(default_factory=list)
     guarantors: list[Guarantor] = field(default_factory=list)
     guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
@@ -301,6 +290,18 @@ class Project:
         )
 
 
+def add_contract(project: Project, contract: Contract) -> None:
+    if contract.contract_id in project.contracts:
+        raise ValueError(f"duplicate contract_id: {contract.contract_id}")
+    project.contracts[contract.contract_id] = contract
+
+
+def contract_of(project: Project, bike: Bike) -> Contract | None:
+    if bike.current_contract_id is None:
+        return None
+    return project.contracts.get(bike.current_contract_id)
+
+
 def opening_fleet_size() -> int:
     return INITIAL_FLEET_SIZE
 
@@ -318,12 +319,13 @@ __all__ = [
     "EventType",
     "Bike",
     "Contract",
-    "ContractIndex",
     "Tenant",
     "Guarantor",
     "GuaranteeClaim",
     "ReceivableEntry",
     "EventLogEntry",
     "Project",
+    "add_contract",
+    "contract_of",
     "opening_fleet_size",
 ]
