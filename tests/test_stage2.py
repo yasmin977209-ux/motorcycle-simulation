@@ -25,6 +25,7 @@ from entities import (
 from state_machine import (
     BikeState,
     FORBIDDEN_STATE_NAMES,
+    run_reference_path,
     STATE_COUNT,
     TRANSITION_TABLE,
     derive_state_from_balance,
@@ -270,7 +271,7 @@ def test_reference_path_1_natural() -> None:
         "ACTIVE_PRIMARY",
         "OWNED_TRANSFERRED",
     ]
-    assert path == ["PREP", "ACTIVE_PRIMARY", "OWNED_TRANSFERRED"]
+    assert run_reference_path(path) == tuple(path)
     assert BikeState.OWNED_TRANSFERRED.value == path[-1]
 
 
@@ -284,15 +285,7 @@ def test_reference_path_2_primary_early_default() -> None:
         "AVAILABLE_FOR_SECONDARY",
         "ACTIVE_SECONDARY",
     ]
-    assert path == [
-        "PREP",
-        "ACTIVE_PRIMARY",
-        "WAITING_PRIMARY",
-        "NOTICE_PRIMARY",
-        "GRACE_PRIMARY",
-        "AVAILABLE_FOR_SECONDARY",
-        "ACTIVE_SECONDARY",
-    ]
+    assert run_reference_path(path) == tuple(path)
 
 
 def test_reference_path_3_maturity_debt_settled() -> None:
@@ -301,11 +294,7 @@ def test_reference_path_3_maturity_debt_settled() -> None:
         "POST_MATURITY_SETTLEMENT",
         "OWNED_TRANSFERRED",
     ]
-    assert path == [
-        "ACTIVE_PRIMARY",
-        "POST_MATURITY_SETTLEMENT",
-        "OWNED_TRANSFERRED",
-    ]
+    assert run_reference_path(path) == tuple(path)
 
 
 def test_reference_path_4_maturity_debt_failed() -> None:
@@ -314,11 +303,7 @@ def test_reference_path_4_maturity_debt_failed() -> None:
         "POST_MATURITY_SETTLEMENT",
         "AVAILABLE_FOR_SECONDARY",
     ]
-    assert path == [
-        "ACTIVE_PRIMARY",
-        "POST_MATURITY_SETTLEMENT",
-        "AVAILABLE_FOR_SECONDARY",
-    ]
+    assert run_reference_path(path) == tuple(path)
 
 
 def test_reference_path_5_secondary_repeated_cycle() -> None:
@@ -328,12 +313,7 @@ def test_reference_path_5_secondary_repeated_cycle() -> None:
         "AVAILABLE_FOR_SECONDARY",
         "ACTIVE_SECONDARY",
     ]
-    assert path == [
-        "ACTIVE_SECONDARY",
-        "NOTICE_SECONDARY",
-        "AVAILABLE_FOR_SECONDARY",
-        "ACTIVE_SECONDARY",
-    ]
+    assert run_reference_path(path) == tuple(path)
     assert "ACTIVE_SECONDARY" == path[-1]
 
 
@@ -350,6 +330,8 @@ def test_reference_path_6_dynamic_closure() -> None:
         "NOTICE_SECONDARY",
     }
     assert active_states
+    for state in active_states:
+        assert run_reference_path([state, "HELD_AS_ASSET"]) == (state, "HELD_AS_ASSET")
     closure_targets = {
         rule.to_state
         for rule in TRANSITION_TABLE
