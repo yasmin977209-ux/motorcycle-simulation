@@ -41,22 +41,32 @@ def _nth_business_day(start: date, n: int) -> date:
 
 # Chapter 5
 
-def test_ch5_2_six_delivery_weekdays_use_dateutils_for_all_fridays() -> None:
-    deliveries = tuple(date(2027, 1, day) for day in range(2, 8))
-    for delivery in deliveries:
-        first_following = dateutils.first_following_friday(delivery)
-        eligible = dateutils.first_eligible_friday(delivery)
+@pytest.mark.parametrize(
+    ("delivery",),
+    [(date(2027, 1, day),) for day in range(2, 8)],
+    ids=(
+        "Saturday_delivery",
+        "Sunday_delivery",
+        "Monday_delivery",
+        "Tuesday_delivery",
+        "Wednesday_delivery",
+        "Thursday_delivery",
+    ),
+)
+def test_ch5_2_six_delivery_weekdays_and_dateutils_fridays(delivery: date) -> None:
+    first_following = dateutils.first_following_friday(delivery)
+    eligible = dateutils.first_eligible_friday(delivery)
 
-        first_result = apply_friday_fee_and_oil(delivery, eligible, 0, True)
-        assert first_result.eligible
-        assert first_result.friday_counter_after == 1
+    first_result = apply_friday_fee_and_oil(delivery, eligible, 0, True)
+    assert first_result.eligible
+    assert first_result.friday_counter_after == 1
 
-        if delivery.weekday() in (1, 2, 3):
-            assert eligible != first_following
-            assert not dateutils.is_eligible_friday(delivery, first_following)
-        else:
-            assert eligible == first_following
-            assert dateutils.is_eligible_friday(delivery, first_following)
+    if delivery.weekday() in (1, 2, 3):
+        assert eligible != first_following
+        assert not dateutils.is_eligible_friday(delivery, first_following)
+    else:
+        assert eligible == first_following
+        assert dateutils.is_eligible_friday(delivery, first_following)
 
 
 def test_ch5_3_counter_continues_on_same_contract_and_new_contract_resets() -> None:
@@ -66,12 +76,7 @@ def test_ch5_3_counter_continues_on_same_contract_and_new_contract_resets() -> N
 
     one = apply_friday_fee_and_oil(delivery, fridays[0], 0, True)
     two = apply_friday_fee_and_oil(delivery, fridays[1], one.friday_counter_after, True)
-    new_contract = apply_friday_fee_and_oil(
-        delivery,
-        fridays[2],
-        0,
-        True,
-    )
+    new_contract = apply_friday_fee_and_oil(delivery, fridays[2], 0, True)
 
     assert one.friday_counter_after == 1
     assert two.friday_counter_after == 2
@@ -95,10 +100,7 @@ def test_ch5_4_fee_is_deterministic_and_allocated_seventy_thirty() -> None:
 def test_ch5_5_even_counter_runs_oil_service_with_full_gross_entries() -> None:
     delivery = date(2027, 1, 2)
     first = dateutils.first_eligible_friday(delivery)
-    second = dateutils.eligible_friday_dates(
-        delivery,
-        first + timedelta(days=7),
-    )[1]
+    second = dateutils.eligible_friday_dates(delivery, first + timedelta(days=7))[1]
     result = apply_friday_fee_and_oil(delivery, second, 1, True)
 
     assert result.friday_counter_after == 2
@@ -110,6 +112,7 @@ def test_ch5_non_possession_has_no_friday_effect() -> None:
     delivery = date(2027, 1, 2)
     eligible = dateutils.first_eligible_friday(delivery)
     result = apply_friday_fee_and_oil(delivery, eligible, 0, False)
+
     assert not result.eligible
     assert result.friday_counter_after == 0
     assert result.cash_delta == 0
@@ -117,29 +120,46 @@ def test_ch5_non_possession_has_no_friday_effect() -> None:
 
 # Chapter 6
 
-def test_ch6_2_five_reference_rows_exact() -> None:
-    current = _next_business_day()
-    rows = (
+@pytest.mark.parametrize(
+    ("total_due", "total_paid", "daily_rate", "expected_arrears", "expected_payment", "expected_collected", "expected_remaining"),
+    (
         (1500, 0, 1500, 0, 0, 1500, 0),
         (3000, 0, 1500, 1500, 1500, 3000, 0),
         (2300, 0, 1500, 800, 800, 2300, 0),
         (16500, 0, 1500, 15000, 1500, 3000, 13500),
         (11000, 0, 1000, 10000, 1000, 2000, 9000),
+    ),
+    ids=(
+        "no_arrears",
+        "one_day_primary",
+        "800_arrears_primary",
+        "ten_day_primary",
+        "ten_day_secondary",
+    ),
+)
+def test_ch6_2_reference_row(
+    total_due: int,
+    total_paid: int,
+    daily_rate: int,
+    expected_arrears: int,
+    expected_payment: int,
+    expected_collected: int,
+    expected_remaining: int,
+) -> None:
+    result = apply_ordinary_collection(
+        total_due,
+        total_paid,
+        daily_rate,
+        True,
+        _next_business_day(),
     )
-    for total_due, total_paid, rate, arrears, payment, collected, remaining in rows:
-        result = apply_ordinary_collection(
-            total_due,
-            total_paid,
-            rate,
-            True,
-            current,
-        )
-        assert result.prior_arrears == arrears
-        assert result.arrears_payment == payment
-        assert result.collected == collected
-        assert result.outstanding_after == remaining
-        assert result.total_paid_after == total_paid + collected
-        assert result.total_paid_after <= total_due
+
+    assert result.prior_arrears == expected_arrears
+    assert result.arrears_payment == expected_payment
+    assert result.collected == expected_collected
+    assert result.outstanding_after == expected_remaining
+    assert result.total_paid_after == total_paid + expected_collected
+    assert result.total_paid_after <= total_due
 
 
 def test_ch6_3_friday_has_zero_collection_effect_and_failed_attempt_has_none() -> None:
@@ -215,17 +235,10 @@ def test_ch7_5_expiry_happens_after_the_thirtieth_working_day() -> None:
 def test_ch7_6_friday_counter_and_depreciation_continue_during_settlement() -> None:
     delivery = date(2027, 1, 2)
     first = dateutils.first_eligible_friday(delivery)
-    second = dateutils.eligible_friday_dates(
-        delivery,
-        first + timedelta(days=7),
-    )[1]
+    second = dateutils.eligible_friday_dates(delivery, first + timedelta(days=7))[1]
 
     friday = apply_friday_fee_and_oil(delivery, second, 1, True)
-    depreciation = apply_daily_depreciation(
-        constants.BIKE_GROSS_ASSET_COST,
-        0,
-        True,
-    )
+    depreciation = apply_daily_depreciation(constants.BIKE_GROSS_ASSET_COST, 0, True)
 
     assert friday.friday_counter_after == 2
     assert depreciation.depreciation_recorded == constants.DEPRECIATION_RATE_PER_DAY
@@ -235,11 +248,7 @@ def test_ch7_6_friday_counter_and_depreciation_continue_during_settlement() -> N
 
 def test_ch8_1_full_gross_cost_is_basis_and_cap_is_hard() -> None:
     one_day = apply_daily_depreciation(constants.BIKE_GROSS_ASSET_COST, 0, True)
-    at_cap = apply_daily_depreciation(
-        constants.BIKE_GROSS_ASSET_COST,
-        constants.BIKE_GROSS_ASSET_COST,
-        True,
-    )
+    at_cap = apply_daily_depreciation(constants.BIKE_GROSS_ASSET_COST, constants.BIKE_GROSS_ASSET_COST, True)
 
     assert one_day.depreciation_recorded == constants.DEPRECIATION_RATE_PER_DAY
     assert one_day.accumulated_depreciation_after == constants.DEPRECIATION_RATE_PER_DAY
@@ -248,17 +257,13 @@ def test_ch8_1_full_gross_cost_is_basis_and_cap_is_hard() -> None:
 
 
 def test_ch8_2_four_non_depreciable_states_are_mapped_to_no_possession() -> None:
-    for _state in (
+    for state in (
         "PREP",
         "AVAILABLE_FOR_SECONDARY",
         "OWNED_TRANSFERRED",
         "HELD_AS_ASSET",
     ):
-        result = apply_daily_depreciation(
-            constants.BIKE_GROSS_ASSET_COST,
-            0,
-            False,
-        )
+        result = apply_daily_depreciation(constants.BIKE_GROSS_ASSET_COST, 0, False)
         assert result.depreciation_recorded == 0
         assert result.usage_days_after == 0
 
@@ -288,7 +293,7 @@ def test_ch8_4_writeoff_captures_old_accumulated_before_releasing_it() -> None:
 
 # Chapter 9
 
-def test_ch9_2_claim_amount_is_outstanding_rent_only_and_waiting_sources_are_exact() -> None:
+def test_ch9_waiting_sources_and_claim_amount() -> None:
     created = _next_business_day()
     sources = (
         "PRIMARY_EARLY_TERMINATION",
@@ -317,33 +322,38 @@ def test_ch9_2_claim_amount_is_outstanding_rent_only_and_waiting_sources_are_exa
         assert claim.status is ClaimStatus.PENDING
 
 
-def test_ch9_1_all_five_recovery_percentages_are_deterministic() -> None:
+@pytest.mark.parametrize(
+    "rate",
+    constants.GUARANTEE_RECOVERY_RATES,
+    ids=("recovery_100", "recovery_70", "recovery_50", "recovery_30", "recovery_0"),
+)
+def test_ch9_1_recovery_percentage(rate: int) -> None:
     created = _next_business_day()
     claim_amount = 45000
 
-    for rate in constants.GUARANTEE_RECOVERY_RATES:
-        claim = create_guarantee_claim(
-            f"CL{rate:03d}",
-            "BKTEST",
-            "CTTEST",
-            "TNTEST",
-            "GRTEST",
-            "PRIMARY_EARLY_TERMINATION",
-            claim_amount,
-            created,
-            rate,
-        )
-        assert not can_settle_claim(
-            claim,
-            claim.settlement_due_date - timedelta(days=1),
-        )
-        result = settle_guarantee_claim(claim, claim.settlement_due_date)
-        expected_recovered = (claim_amount * rate) // 100
+    claim = create_guarantee_claim(
+        f"CL{rate:03d}",
+        "BKTEST",
+        "CTTEST",
+        "TNTEST",
+        "GRTEST",
+        "PRIMARY_EARLY_TERMINATION",
+        claim_amount,
+        created,
+        rate,
+    )
+    assert not can_settle_claim(
+        claim,
+        claim.settlement_due_date - timedelta(days=1),
+    )
 
-        assert result.settled_now
-        assert result.recovered_amount == expected_recovered
-        assert result.bad_debt_amount == claim_amount - expected_recovered
-        assert claim.status is ClaimStatus.SETTLED
+    result = settle_guarantee_claim(claim, claim.settlement_due_date)
+    expected_recovered = (claim_amount * rate) // 100
+
+    assert result.settled_now
+    assert result.recovered_amount == expected_recovered
+    assert result.bad_debt_amount == claim_amount - expected_recovered
+    assert claim.status is ClaimStatus.SETTLED
 
 
 def test_ch9_repeated_settlement_raises_value_error() -> None:
