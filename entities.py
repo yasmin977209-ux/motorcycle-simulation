@@ -1,15 +1,26 @@
-"""Entities defined by Chapters 3 and 4 of the authoritative reference.
+"""Chapter 3 — authoritative data entities and enums.
 
-This module contains data structures only. No daily engine, accounting engine,
-Monte Carlo loop, or random behavior is implemented here.
+This module defines data structures only. Business transitions are implemented
+in later build stages, following the reference order.
 """
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
-from typing import Optional
+from typing import Any
+
+from constants import (
+    BIKE_GROSS_ASSET_COST,
+    INITIAL_FLEET_SIZE,
+    OPENING_BIKE_ASSETS,
+    OPENING_CASH,
+    OPENING_MARKETING_EXPENSE,
+    OPENING_PARTNER1_REINVESTMENT_BALANCE,
+    OPENING_PARTNER2_REINVESTMENT_BALANCE,
+    OPENING_RETAINED_LOSS,
+    TOTAL_CAPITAL,
+)
 
 
 class BikeSource(str, Enum):
@@ -57,6 +68,20 @@ class ReceivableStatus(str, Enum):
     TRANSFERRED_TO_GUARANTEE = "TRANSFERRED_TO_GUARANTEE"
 
 
+class BikeState(str, Enum):
+    PREP = "PREP"
+    ACTIVE_PRIMARY = "ACTIVE_PRIMARY"
+    WAITING_PRIMARY = "WAITING_PRIMARY"
+    NOTICE_PRIMARY = "NOTICE_PRIMARY"
+    GRACE_PRIMARY = "GRACE_PRIMARY"
+    POST_MATURITY_SETTLEMENT = "POST_MATURITY_SETTLEMENT"
+    AVAILABLE_FOR_SECONDARY = "AVAILABLE_FOR_SECONDARY"
+    ACTIVE_SECONDARY = "ACTIVE_SECONDARY"
+    NOTICE_SECONDARY = "NOTICE_SECONDARY"
+    OWNED_TRANSFERRED = "OWNED_TRANSFERRED"
+    HELD_AS_ASSET = "HELD_AS_ASSET"
+
+
 class EventType(str, Enum):
     BIKE_PURCHASED = "BIKE_PURCHASED"
     PREP_STARTED = "PREP_STARTED"
@@ -85,69 +110,25 @@ class EventType(str, Enum):
 
 
 @dataclass
-class Project:
-    """Unified project entity.
-
-    The two partner reinvestment balances are memo-only allocation figures,
-    not separate cash accounts or balance-sheet assets.
-    """
-
-    project_cash: int = 0
-    partner1_reinvestment_balance: int = 0
-    partner2_reinvestment_balance: int = 0
-    accounts_receivable: int = 0
-    guarantee_claim_receivable: int = 0
-    gross_bike_assets: int = 0
-    accumulated_depreciation: int = 0
-    capital: int = 0
-    retained_earnings: int = 0
-    opening_loss: int = 0
-    revenue_primary: int = 0
-    revenue_secondary: int = 0
-    revenue_settlement: int = 0
-    revenue_friday_fee: int = 0
-    expense_depreciation: int = 0
-    expense_oil_service: int = 0
-    expense_prep: int = 0
-    expense_marketing: int = 0
-    bad_debt_expense: int = 0
-    asset_writeoff_expense: int = 0
-    bikes: list[Bike] = field(default_factory=list)
-    contracts: list[Contract] = field(default_factory=list)
-    tenants: list[Tenant] = field(default_factory=list)
-    guarantors: list[Guarantor] = field(default_factory=list)
-    guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
-    receivables: list[ReceivableEntry] = field(default_factory=list)
-    event_log: list[EventLogEntry] = field(default_factory=list)
-    daily_balance_checks: list[dict] = field(default_factory=list)
-    execution_trace: list[list[str]] = field(default_factory=list)
-    simulation_stopped: bool = False
-    final_close_date: Optional[date] = None
-    final_net_project_equity: Optional[int] = None
-    partner1_final_entitlement: Optional[int] = None
-    partner2_final_entitlement: Optional[int] = None
-
-
-@dataclass
 class Bike:
     bike_id: str
     source: BikeSource
     purchase_date: date
     scheduled_ready_date: date
-    funding_completion_date: Optional[date] = None
-    actual_ready_date: Optional[date] = None
+    funding_completion_date: date | None = None
+    actual_ready_date: date | None = None
     prep_paid: bool = False
     customs_paid: bool = False
-    delivery_date: Optional[date] = None
+    delivery_date: date | None = None
     gross_cost: int = 0
     accumulated_depreciation: int = 0
     net_book_value: int = 0
-    current_state: str = "PREP"
-    current_contract_id: Optional[str] = None
-    current_tenant_id: Optional[str] = None
-    settlement_start_date: Optional[date] = None
-    settlement_legacy_debt_original: Optional[int] = None
-    settlement_legacy_debt_remaining: Optional[int] = None
+    current_state: BikeState = BikeState.PREP
+    current_contract_id: str | None = None
+    current_tenant_id: str | None = None
+    settlement_start_date: date | None = None
+    settlement_legacy_debt_original: int | None = None
+    settlement_legacy_debt_remaining: int | None = None
     settlement_business_days_elapsed: int = 0
     settlement_rent_due_total: int = 0
     settlement_rent_collected_total: int = 0
@@ -155,8 +136,6 @@ class Bike:
     secondary_cycle_count: int = 0
     usage_days: int = 0
     lifecycle_cycle_number: int = 1
-    active_settlement_receivable_id: Optional[str] = None
-    pending_writeoff_today: bool = False
     lifecycle_history: list[EventLogEntry] = field(default_factory=list)
     receivables_ledger: list[ReceivableEntry] = field(default_factory=list)
 
@@ -170,7 +149,7 @@ class Contract:
     contract_type: ContractType
     daily_rate: int
     start_date: date
-    maturity_date: Optional[date] = None
+    maturity_date: date | None = None
     status: ContractStatus = ContractStatus.ACTIVE
     total_due: int = 0
     total_paid: int = 0
@@ -184,7 +163,7 @@ class Tenant:
     contract_id: str
     guarantor_id: str
     start_date: date
-    end_date: Optional[date] = None
+    end_date: date | None = None
 
 
 @dataclass
@@ -207,9 +186,9 @@ class GuaranteeClaim:
     waiting_period_days: int
     settlement_due_date: date
     recovery_rate_pct: int
-    settlement_date: Optional[date] = None
-    recovered_amount: Optional[int] = None
-    bad_debt_amount: Optional[int] = None
+    settlement_date: date | None = None
+    recovered_amount: int | None = None
+    bad_debt_amount: int | None = None
     status: ClaimStatus = ClaimStatus.PENDING
 
 
@@ -219,13 +198,13 @@ class ReceivableEntry:
     bike_id: str
     contract_id: str
     tenant_id: str
-    source: ReceivableSource
-    original_amount: int
-    collected_amount: int
-    remaining_amount: int
-    status: ReceivableStatus
-    created_date: Optional[date]
-    settlement_date: Optional[date] = None
+    source: ReceivableSource = ReceivableSource.SETTLEMENT_LEGACY_DEBT
+    original_amount: int = 0
+    collected_amount: int = 0
+    remaining_amount: int = 0
+    status: ReceivableStatus = ReceivableStatus.OUTSTANDING
+    created_date: date | None = None
+    settlement_date: date | None = None
 
 
 @dataclass
@@ -234,20 +213,125 @@ class EventLogEntry:
     date: date
     bike_id: str
     event_type: EventType
-    previous_state: Optional[str] = None
-    new_state: Optional[str] = None
-    contract_id: Optional[str] = None
-    tenant_id: Optional[str] = None
-    guarantor_id: Optional[str] = None
-    receivable_id: Optional[str] = None
-    claim_id: Optional[str] = None
-    amount_if_applicable: Optional[int] = None
-    balance_before: Optional[int] = None
-    balance_after: Optional[int] = None
+    previous_state: BikeState | None = None
+    new_state: BikeState | None = None
+    contract_id: str | None = None
+    tenant_id: str | None = None
+    guarantor_id: str | None = None
+    receivable_id: str | None = None
+    claim_id: str | None = None
+    amount_if_applicable: int | None = None
+    balance_before: int | None = None
+    balance_after: int | None = None
     trigger_reason: str = ""
     notes: str = ""
 
 
-# Forward-reference containers are resolved after class creation.
-Bike.__annotations__["lifecycle_history"] = list[EventLogEntry]
-Bike.__annotations__["receivables_ledger"] = list[ReceivableEntry]
+@dataclass
+class Project:
+    # Opening/accounting state explicitly supported by the reference.
+    project_cash: int = OPENING_CASH
+    partner1_reinvestment_balance: int = OPENING_PARTNER1_REINVESTMENT_BALANCE
+    partner2_reinvestment_balance: int = OPENING_PARTNER2_REINVESTMENT_BALANCE
+    accounts_receivable: int = 0
+    guarantee_claim_receivable: int = 0
+    gross_bike_assets: int = OPENING_BIKE_ASSETS
+    accumulated_depreciation: int = 0
+    capital: int = TOTAL_CAPITAL
+    retained_earnings: int = OPENING_RETAINED_LOSS
+    opening_loss: int = OPENING_RETAINED_LOSS
+    expense_marketing: int = OPENING_MARKETING_EXPENSE
+
+    # Collections of the eight reference entities.
+    bikes: list[Bike] = field(default_factory=list)
+    contracts: list[Contract] = field(default_factory=list)
+    tenants: list[Tenant] = field(default_factory=list)
+    guarantors: list[Guarantor] = field(default_factory=list)
+    guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
+    receivables: list[ReceivableEntry] = field(default_factory=list)
+    event_log: list[EventLogEntry] = field(default_factory=list)
+
+    # Accounting/closure state needed by later reference stages.
+    operating_revenue: int = 0
+    operating_expenses: int = 0
+    operating_net_profit: int = 0
+    cumulative_project_profit: int = 0
+    final_close_date: date | None = None
+    final_net_project_equity: int | None = None
+    partner1_final_entitlement: int | None = None
+    partner2_final_entitlement: int | None = None
+    simulation_stopped: bool = False
+
+    # Daily audit trails mandated by later chapters.
+    cash_rollforward: list[dict[str, Any]] = field(default_factory=list)
+    ar_rollforward: list[dict[str, Any]] = field(default_factory=list)
+    gross_asset_rollforward: list[dict[str, Any]] = field(default_factory=list)
+    depreciation_rollforward: list[dict[str, Any]] = field(default_factory=list)
+    daily_snapshots: list[dict[str, Any]] = field(default_factory=list)
+    daily_balance_checks: list[dict[str, Any]] = field(default_factory=list)
+    execution_trace: list[list[str]] = field(default_factory=list)
+    error_log: list[dict[str, Any]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        # Data-structure invariants; no daily business logic is performed here.
+        if self.project_cash < 0:
+            raise ValueError("project_cash must not be negative")
+        if self.partner1_reinvestment_balance < 0:
+            raise ValueError("partner1_reinvestment_balance must not be negative")
+        if self.partner2_reinvestment_balance < 0:
+            raise ValueError("partner2_reinvestment_balance must not be negative")
+        if self.accounts_receivable < 0:
+            raise ValueError("accounts_receivable must not be negative")
+        if self.guarantee_claim_receivable < 0:
+            raise ValueError("guarantee_claim_receivable must not be negative")
+        if self.gross_bike_assets != OPENING_BIKE_ASSETS and not self.bikes:
+            raise ValueError(
+                "non-opening gross_bike_assets requires bike records"
+            )
+
+    @classmethod
+    def opening(cls) -> "Project":
+        """Construct the exact opening project shell for 2027-01-01.
+
+        The ten-bike opening fleet is instantiated in a later build stage;
+        this method therefore establishes only the project-level opening
+        accounting values.
+        """
+        return cls(
+            project_cash=OPENING_CASH,
+            partner1_reinvestment_balance=OPENING_PARTNER1_REINVESTMENT_BALANCE,
+            partner2_reinvestment_balance=OPENING_PARTNER2_REINVESTMENT_BALANCE,
+            gross_bike_assets=OPENING_BIKE_ASSETS,
+            capital=TOTAL_CAPITAL,
+            retained_earnings=OPENING_RETAINED_LOSS,
+            opening_loss=OPENING_RETAINED_LOSS,
+            expense_marketing=OPENING_MARKETING_EXPENSE,
+        )
+
+
+def opening_fleet_size() -> int:
+    """Reference constant exposed without creating simulation logic."""
+    return INITIAL_FLEET_SIZE
+
+
+__all__ = [
+    "BikeSource",
+    "ContractType",
+    "ContractStatus",
+    "TenantType",
+    "ClaimSource",
+    "ClaimStatus",
+    "ReceivableSource",
+    "ReceivableStatus",
+    "BikeState",
+    "EventType",
+    "Bike",
+    "Contract",
+    "Tenant",
+    "Guarantor",
+    "GuaranteeClaim",
+    "ReceivableEntry",
+    "EventLogEntry",
+    "Project",
+    "opening_fleet_size",
+]
