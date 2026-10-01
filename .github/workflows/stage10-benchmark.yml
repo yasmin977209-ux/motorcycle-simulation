@@ -23,9 +23,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat stage7_source/source.b64.* > /tmp/source.b64
+          cat $(find stage7_source -maxdepth 1 -type f -name "source.b64.*" | sort -V) > /tmp/source.b64
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          echo "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd  /tmp/source.tar.gz" | sha256sum -c -
+          sha256sum /tmp/source.tar.gz | tee /tmp/source.sha256
           rm -rf /tmp/source && mkdir /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
           cp -a /tmp/source/. .
