@@ -117,6 +117,7 @@ def run_day(p:Project,current_date:date,collection_probability:float=1.0,scenari
         if current_date<=EXPANSION_CUTOFF_DATE and not any(x.current_state=="PREP" and (not x.prep_paid or not x.customs_paid) for x in p.bikes):
             while p.project_cash>=BIKE_BASE_PURCHASE_COST and p.partner1_reinvestment_balance>=BIKE_BASE_PURCHASE_COST:
                 consume_partner1_for_expansion(p,BIKE_BASE_PURCHASE_COST)
+                p.gross_bike_assets += BIKE_BASE_PURCHASE_COST
                 n=len(p.bikes)+1
                 b=Bike(f"BK{n:04d}",BikeSource.EXPANSION,current_date,scheduled_ready_date(current_date),gross_cost=BIKE_BASE_PURCHASE_COST,net_book_value=BIKE_BASE_PURCHASE_COST)
                 p.bikes.append(b); _event(p,current_date,b,EventType.EXPANSION_PURCHASE,amount=BIKE_BASE_PURCHASE_COST)
