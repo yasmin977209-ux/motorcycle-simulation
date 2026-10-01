@@ -41,3 +41,5 @@ def test_opening_project_shell():
     assert not p.event_log
 
 # GitHub execution verification marker
+
+# PR verification marker 2
