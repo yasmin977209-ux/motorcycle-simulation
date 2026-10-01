@@ -1,4 +1,4 @@
-"""Chapter 8 — daily depreciation and ownership writeoff, isolated."""
+"""Chapter 8 depreciation and ownership write-off rules."""
 
 from __future__ import annotations
 
@@ -33,17 +33,17 @@ def apply_daily_depreciation(
     accumulated_depreciation: int,
     in_tenant_possession: bool,
 ) -> DepreciationResult:
-    """Record one day of use-based depreciation, including Friday."""
-
+    """Apply one day of use-based depreciation, including Friday."""
     if gross_cost < 0:
         raise ValueError("gross_cost must not be negative")
     if accumulated_depreciation < 0 or accumulated_depreciation > gross_cost:
         raise ValueError("accumulated_depreciation is outside gross_cost bounds")
 
-    current_accumulated = min(accumulated_depreciation, MAX_DEPRECIATION)
+    depreciation_cap = min(gross_cost, MAX_DEPRECIATION)
+    current_accumulated = min(accumulated_depreciation, depreciation_cap)
     current_net = max(0, gross_cost - current_accumulated)
 
-    if not in_tenant_possession or current_net <= 0:
+    if not in_tenant_possession or current_net == 0:
         return DepreciationResult(
             depreciation_recorded=0,
             accumulated_depreciation_after=current_accumulated,
@@ -53,16 +53,16 @@ def apply_daily_depreciation(
             depreciation_expense=0,
         )
 
-    remaining = min(gross_cost, MAX_DEPRECIATION) - current_accumulated
-    depreciation = min(DEPRECIATION_RATE_PER_DAY, remaining)
+    depreciation = min(
+        DEPRECIATION_RATE_PER_DAY,
+        depreciation_cap - current_accumulated,
+    )
     accumulated_after = current_accumulated + depreciation
-    net_after = max(0, gross_cost - accumulated_after)
-
     return DepreciationResult(
         depreciation_recorded=depreciation,
         accumulated_depreciation_after=accumulated_after,
-        usage_days_after=1,
-        net_book_value_after=net_after,
+        usage_days_after=1 if depreciation > 0 else 0,
+        net_book_value_after=max(0, gross_cost - accumulated_after),
         project_accumulated_depreciation_delta=depreciation,
         depreciation_expense=depreciation,
     )
@@ -72,22 +72,20 @@ def apply_ownership_writeoff(
     gross_cost: int,
     accumulated_depreciation: int,
 ) -> OwnershipWriteoffResult:
-    """Write off the remaining net book value at ownership transfer."""
-
+    """Write off the gross asset and release the old accumulated depreciation."""
     if gross_cost < 0:
         raise ValueError("gross_cost must not be negative")
     if accumulated_depreciation < 0 or accumulated_depreciation > gross_cost:
         raise ValueError("accumulated_depreciation is outside gross_cost bounds")
 
     old_accumulated = accumulated_depreciation
-    writeoff = gross_cost - old_accumulated
-
+    writeoff_amount = gross_cost - old_accumulated
     return OwnershipWriteoffResult(
         old_accumulated_depreciation=old_accumulated,
-        writeoff_amount=writeoff,
+        writeoff_amount=writeoff_amount,
         project_accumulated_depreciation_delta=-old_accumulated,
         project_gross_asset_delta=-gross_cost,
-        expense_asset_writeoff=writeoff,
+        expense_asset_writeoff=writeoff_amount,
         bike_accumulated_depreciation_after=gross_cost,
         bike_net_book_value_after=0,
     )
