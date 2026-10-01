@@ -2,10 +2,6 @@ name: stage10-benchmark
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - .stage10-benchmark-trigger
 
 permissions:
   contents: read
