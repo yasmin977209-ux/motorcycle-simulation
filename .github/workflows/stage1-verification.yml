@@ -83,10 +83,10 @@ jobs:
           assert rng.rng_draw(s1) == rng.rng_draw(s1b)
 
           variants = [
-              rng.derive_seed(**base, scenario_id="C085_G071", event_type="PRIMARY_COLLECTION"),
-              rng.derive_seed(**base, trial_id=2, event_type="PRIMARY_COLLECTION"),
-              rng.derive_seed(**base, bike_id="BK0002", event_type="PRIMARY_COLLECTION"),
-              rng.derive_seed(**base, day=date(2027, 1, 3), event_type="PRIMARY_COLLECTION"),
+              rng.derive_seed(**dict(base, scenario_id="C085_G071"), event_type="PRIMARY_COLLECTION"),
+              rng.derive_seed(**dict(base, trial_id=2), event_type="PRIMARY_COLLECTION"),
+              rng.derive_seed(**dict(base, bike_id="BK0002"), event_type="PRIMARY_COLLECTION"),
+              rng.derive_seed(**dict(base, day=date(2027, 1, 3)), event_type="PRIMARY_COLLECTION"),
               rng.derive_seed(**base, event_type="SECONDARY_COLLECTION"),
               rng.derive_seed(**base, event_type="LEGACY_DEBT_COLLECTION"),
           ]
