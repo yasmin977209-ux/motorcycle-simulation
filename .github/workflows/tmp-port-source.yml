@@ -1,0 +1,68 @@
+name: tmp-port-source
+
+on:
+  push:
+    branches: ["tmp/port-source"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/port-source
+
+      - name: Rebuild source package and split
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work/orig orig
+          cat stage7_source/source.b64.* > work/source.b64
+          base64 -d work/source.b64 > work/source.gz
+          file work/source.gz
+          tar -xzf work/source.gz -C work/orig
+          find work/orig -type f -print0 | sort -z | xargs -0 sha256sum > work/extracted_sha256.txt
+          test -s work/extracted_sha256.txt
+          target=$(awk '/test_acceptance_16_full\.py$/ {print $2; exit}' work/extracted_sha256.txt)
+          if [[ -z "$target" ]]; then
+            echo "ERROR: test_acceptance_16_full.py was not found in reconstructed archive"
+            exit 2
+          fi
+          cp "$target" work/test_acceptance_16_full.py
+          total_sha=$(sha256sum work/test_acceptance_16_full.py | awk '{print $1}')
+          total_lines=$(wc -l < work/test_acceptance_16_full.py)
+          split -d -a 4 -l 150 work/test_acceptance_16_full.py orig/test_acceptance_16_full.part.
+          {
+            echo "FILE=test_acceptance_16_full.py"
+            echo "LINES=$total_lines"
+            echo "SHA256=$total_sha"
+            echo "PART_MAX_LINES=150"
+          } > orig/MANIFEST.txt
+          sha256sum orig/test_acceptance_16_full.part.* >> orig/MANIFEST.txt
+          for p in orig/test_acceptance_16_full.part.*; do
+            printf '%s ' "$p" | sed 's#orig/##'
+            wc -l < "$p"
+          done > orig/PART_LINES.txt
+
+      - name: Print verified metadata
+        shell: bash
+        run: |
+          cat orig/MANIFEST.txt
+          cat orig/PART_LINES.txt
+          echo "RECONSTRUCTED_SOURCE_SHA256:"
+          awk '/test_acceptance_16_full\.py$/ {print}' work/extracted_sha256.txt
+
+      - name: Upload source parts
+        uses: actions/upload-artifact@v4
+        with:
+          name: port-source-original
+          path: |
+            orig/
+            work/test_acceptance_16_full.py
+          if-no-files-found: error
+          retention-days: 1
