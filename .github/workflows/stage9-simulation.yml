@@ -58,7 +58,7 @@ jobs:
               if requested not in scenarios:
                   raise SystemExit(f"Unknown scenario: {requested}")
               selected = [requested]
-          matrix = {"include": [{"scenario": s} for s in selected]}
+          matrix = [s for s in selected]
           print("matrix=" + json.dumps(matrix, separators=(",", ":")))
           print("mode=" + mode)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
@@ -69,7 +69,8 @@ jobs:
     needs: plan
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+      matrix:
+        scenario: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
     concurrency:
