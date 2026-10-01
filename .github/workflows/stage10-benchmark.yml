@@ -9,25 +9,44 @@ on:
 permissions:
   contents: read
 
-env:
-  SOURCE_SHA256: "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd"
-  SCENARIOS_JSON: '["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
-
 jobs:
   benchmark:
     name: benchmark-${{ matrix.scenario }}
     strategy:
       fail-fast: false
       matrix:
-        scenario: ${{ fromJSON(env.SCENARIOS_JSON) }}
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       SCENARIO: ${{ matrix.scenario }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -37,8 +56,8 @@ jobs:
           set -euo pipefail
           cat stage7_source/source.b64.00 stage7_source/source.b64.01 stage7_source/source.b64.02.part.00 stage7_source/source.b64.02.part.01 stage7_source/source.b64.02.part.02 stage7_source/source.b64.02.part.03 stage7_source/source.b64.02.part.04 stage7_source/source.b64.02.part.05 stage7_source/source.b64.03 stage7_source/source.b64.04 stage7_source/source.b64.05 stage7_source/source.b64.06 stage7_source/source.b64.07 stage7_source/source.b64.08 stage7_source/source.b64.09 stage7_source/source.b64.10 stage7_source/source.b64.11 stage7_source/source.b64.12 stage7_source/source.b64.13 stage7_source/source.b64.14 stage7_source/source.b64.15 stage7_source/source.b64.16 stage7_source/source.b64.17 > /tmp/source.b64
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          echo "${SOURCE_SHA256}  /tmp/source.tar.gz" | sha256sum -c -
-          rm -rf /tmp/source && mkdir /tmp/source
+          echo "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd  /tmp/source.tar.gz" | sha256sum -c -
+          mkdir /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
           cp -a /tmp/source/. .
       - name: Install dependencies
@@ -46,36 +65,29 @@ jobs:
       - name: Measure one complete trial
         shell: python
         run: |
-          import gzip, json, os, time
+          import gzip, json, os, time, multiprocessing
           from dataclasses import asdict
           from pathlib import Path
-          import multiprocessing
-
           from monte_carlo import run_trial
 
-          s = os.environ["SCENARIO"]
-          c = int(s[1:4]) / 100.0
-          g = int(s[6:9])
-          Path("/tmp/benchmark").mkdir(exist_ok=True)
-          start = time.perf_counter()
-          result = run_trial(c, g, 1, scenario=s, keep_daily=True, include_raw_logs=False)
-          elapsed = time.perf_counter() - start
-
-          payload = asdict(result)
-          out = Path("/tmp/benchmark") / f"{s}_trial_000001.json.gz"
-          raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
-          with gzip.open(out, "wb", compresslevel=6) as fh:
-              fh.write(raw)
-
+          s=os.environ["SCENARIO"]
+          c=int(s[1:4])/100.0
+          g=int(s[6:9])
+          outdir=Path("/tmp/benchmark"); outdir.mkdir()
+          t0=time.perf_counter()
+          result=run_trial(c,g,1,scenario=s,keep_daily=True,include_raw_logs=False)
+          elapsed=time.perf_counter()-t0
+          raw=json.dumps(asdict(result),ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()
+          out=outdir/f"{s}_trial_000001.json.gz"
+          with gzip.open(out,"wb",compresslevel=6) as fh: fh.write(raw)
           print(json.dumps({
-              "scenario": s,
-              "trial_id": 1,
-              "elapsed_seconds": elapsed,
-              "cpu_count_multiprocessing": multiprocessing.cpu_count(),
-              "nproc": os.cpu_count(),
-              "saved_file_bytes": out.stat().st_size,
-              "uncompressed_json_bytes": len(raw),
-              "days": len(result.daily_snapshots),
-              "final_close_date": result.final_close_date,
-              "final_net_project_equity": result.final_net_project_equity,
-          }, sort_keys=True))
+            "scenario":s,
+            "trial_id":1,
+            "elapsed_seconds":elapsed,
+            "cpu_count":multiprocessing.cpu_count(),
+            "nproc":os.cpu_count(),
+            "saved_file_bytes":out.stat().st_size,
+            "uncompressed_json_bytes":len(raw),
+            "days":len(result.daily_snapshots),
+            "final_close_date":result.final_close_date
+          },sort_keys=True))
