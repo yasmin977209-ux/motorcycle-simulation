@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  EXPECTED_ARCHIVE_SHA256: 8a368b983afa757666f11b872d350c0280dea889feefa0ecdbe306914cdefede
+  EXPECTED_ARCHIVE_SHA256: c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79
 
 jobs:
   repository-cleanliness:
@@ -31,7 +31,8 @@ jobs:
           test -f state.json
           test -f stage7_evidence_slice.zip
           test -f .github/workflows/stage7-gates.yml
-          test -f stage7_source/source.tar.gz
+          test -f stage7_source/source.b64.00
+          test "$(find stage7_source -maxdepth 1 -type f -name 'source.b64.[0-9][0-9]' | wc -l)" -eq 52
           echo "Repository cleanliness gate: PASS"
 
   acceptance-163:
@@ -47,8 +48,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
-          tar -xzf stage7_source/source.tar.gz -C .
+          cat stage7_source/source.b64.* > /tmp/source.b64
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "${EXPECTED_ARCHIVE_SHA256}  /tmp/source.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/source.tar.gz -C .
       - name: Install test requirements
         run: python -m pip install -r requirements.txt
       - name: Run all 163 acceptance tests
@@ -69,8 +72,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
-          tar -xzf stage7_source/source.tar.gz -C .
+          cat stage7_source/source.b64.* > /tmp/source.b64
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "${EXPECTED_ARCHIVE_SHA256}  /tmp/source.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/source.tar.gz -C .
       - name: Install requirements
         run: python -m pip install -r requirements.txt
       - name: Run 3 trials with 2 workers
@@ -107,8 +112,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
-          tar -xzf stage7_source/source.tar.gz -C .
+          cat stage7_source/source.b64.* > /tmp/source.b64
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "${EXPECTED_ARCHIVE_SHA256}  /tmp/source.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/source.tar.gz -C .
       - name: Install test requirements
         run: python -m pip install -r requirements.txt
       - name: Prove pause and resume
