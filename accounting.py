@@ -27,6 +27,21 @@ def initialize_accounting(project: Project | None = None) -> Project:
     project.expense_marketing = OPENING_MARKETING_EXPENSE
     return project
 
+def accrue_rent(project: Project, contract, amount: int | None = None) -> int:
+    """Accrue one ordinary rental amount under Chapter 10 accrual accounting."""
+    rent = contract.daily_rate if amount is None else amount
+    if rent < 0:
+        raise ValueError("rent amount must be non-negative")
+    contract.total_due += rent
+    project.accounts_receivable += rent
+    contract_type = getattr(contract.contract_type, "value", contract.contract_type)
+    if contract_type == "PRIMARY":
+        project.revenue_primary += rent
+    elif contract_type == "SECONDARY":
+        project.revenue_secondary += rent
+    else:
+        raise ValueError(f"unsupported contract type for ordinary rent accrual: {contract_type}")
+    return rent
 def operating_revenue(project: Project) -> int:
     return project.revenue_primary + project.revenue_secondary + project.revenue_settlement + project.revenue_friday_fee
 
