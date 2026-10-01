@@ -1,0 +1,86 @@
+name: tmp-timing
+
+on:
+  push:
+    branches:
+      - "tmp/timing"
+
+permissions:
+  contents: read
+
+jobs:
+  timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Run actual run_day timing trials
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import time
+          from datetime import date, timedelta
+          from daily_engine import create_initial_project, run_day
+
+          cases = [
+              ("C070_G100", 0.70, 100, [1, 2, 3]),
+              ("C030_G000", 0.30, 0, [1]),
+              ("C100_G100", 1.00, 100, [1, 2]),
+          ]
+
+          def run_trial(scenario_id, collection_probability, recovery_rate_pct, trial_id):
+              project = create_initial_project(recovery_rate_pct=recovery_rate_pct)
+              current = date(2027, 1, 1)
+              started = time.perf_counter()
+              iterations = 0
+              while not project.simulation_stopped:
+                  run_day(
+                      project,
+                      current,
+                      collection_probability=collection_probability,
+                      scenario_id=scenario_id,
+                      trial_id=trial_id,
+                      recovery_rate_pct=recovery_rate_pct,
+                  )
+                  iterations += 1
+                  current += timedelta(days=1)
+              elapsed = time.perf_counter() - started
+              return {
+                  "scenario_id": scenario_id,
+                  "trial_id": trial_id,
+                  "collection_probability": collection_probability,
+                  "recovery_rate_pct": recovery_rate_pct,
+                  "elapsed_seconds": elapsed,
+                  "seconds_per_day": elapsed / iterations,
+                  "days_executed": iterations,
+                  "final_close_date": project.final_close_date.isoformat() if project.final_close_date else None,
+                  "bike_count": len(project.bikes),
+                  "Final_Net_Project_Equity": project.final_net_project_equity,
+                  "P1": project.partner1_final_entitlement,
+                  "P2": project.partner2_final_entitlement,
+                  "max_absolute_balance_difference": max(
+                      abs(row["Balance_Difference"]) for row in project.daily_balance_checks
+                  ),
+              }
+
+          results = []
+          for scenario_id, probability, recovery, trial_ids in cases:
+              for trial_id in trial_ids:
+                  result = run_trial(scenario_id, probability, recovery, trial_id)
+                  results.append(result)
+                  print("TRIAL_RESULT=" + json.dumps(result, sort_keys=True))
+
+          print("CPU_COUNT=" + str(os.cpu_count()))
+          print("WORKFLOW_TIMEOUT_MINUTES=15")
+          print("TRIAL_COUNT=" + str(len(results)))
+          print("RESULTS=" + json.dumps(results, sort_keys=True))
+          PY
