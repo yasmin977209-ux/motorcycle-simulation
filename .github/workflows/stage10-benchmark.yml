@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  SOURCE_SHA256: 2f278f9f60ec6d0cbf69d27d6182de051e421f5150f60bf7de2996ce4f045aed
+  SOURCE_SHA256: c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79
   JOB_TIMEOUT_MINUTES: "350"
 
 jobs:
@@ -59,14 +59,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Verify source archive
+      - name: Reconstruct and verify current source archive
         shell: bash
         run: |
           set -euo pipefail
-          echo "${SOURCE_SHA256}  stage10_source/source.tar.gz" | sha256sum -c -
           rm -rf /tmp/motorcycle_source
           mkdir -p /tmp/motorcycle_source
-          tar -xzf stage10_source/source.tar.gz -C /tmp/motorcycle_source
+          cat stage7_source/source.b64.* | base64 -d > /tmp/current_source.tar.gz
+          actual_sha256="$(sha256sum /tmp/current_source.tar.gz | awk '{print $1}')"
+          test "$actual_sha256" = "$SOURCE_SHA256"
+          tar -xzf /tmp/current_source.tar.gz -C /tmp/motorcycle_source
           cp -a /tmp/motorcycle_source/. .
           python -m py_compile *.py
 
