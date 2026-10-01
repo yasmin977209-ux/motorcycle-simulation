@@ -110,7 +110,7 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
     TransitionRule(
         ("NOTICE_PRIMARY",),
         ("GRACE_PRIMARY",),
-        f"{NOTICE_PRIMARY_UPPER} <= outstanding < {PRIMARY_DEFAULT_AMOUNT}",
+        f"{NOTICE_PRIMARY_UPPER} <= outstanding < {GRACE_PRIMARY_UPPER}",
         "M10",
     ),
     TransitionRule(
@@ -122,7 +122,7 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
     TransitionRule(
         ("GRACE_PRIMARY",),
         ("AVAILABLE_FOR_SECONDARY",),
-        f"outstanding >= {PRIMARY_DEFAULT_AMOUNT}",
+        f"outstanding >= {GRACE_PRIMARY_UPPER}",
         "M11",
     ),
     TransitionRule(
@@ -249,9 +249,8 @@ def legal_next_state(
 # than duplicated numeric business values.
 assert WAITING_PRIMARY_UPPER == 21 * PRIMARY_DAILY_RENT
 assert NOTICE_PRIMARY_UPPER == 28 * PRIMARY_DAILY_RENT
-assert GRACE_PRIMARY_UPPER == 28 * PRIMARY_DAILY_RENT
-assert PRIMARY_DEFAULT_AMOUNT == 30 * PRIMARY_DAILY_RENT
-assert GRACE_PRIMARY_UPPER < PRIMARY_DEFAULT_AMOUNT
+assert GRACE_PRIMARY_UPPER == 30 * PRIMARY_DAILY_RENT
+assert PRIMARY_DEFAULT_AMOUNT == GRACE_PRIMARY_UPPER
 assert SECONDARY_DEFAULT_AMOUNT == 10 * SECONDARY_DAILY_RENT
 assert STATE_COUNT == 11
 assert len(TRANSITION_TABLE) == 18
