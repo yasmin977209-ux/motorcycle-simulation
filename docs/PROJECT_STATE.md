@@ -225,3 +225,36 @@
 كما أن تعريف كيان الدراجة في الأسطر 362–367 يثبت وجود: `current_contract_id`، `current_tenant_id`، `settlement_start_date`، `settlement_legacy_debt_original`، `settlement_legacy_debt_remaining`، و`settlement_business_days_elapsed`. لذلك لا تُعد هذه الحقول مفقودة.
 
 الحالة: **OPEN / لا تعديل الآن**. تُحسم مطابقة الحقول المرجعية الفعلية في R4 الخاصة بالمرحلة 3ب، مع إعادة اختبارات المرحلتين 1 و2 بعد أي تغيير في `entities.py`.
+
+
+## 11. اعتماديات 3A المتعطلة بالتبعية حتى 3B
+
+الملفات القديمة `daily_engine.py` و`accounting.py` و`closure.py` و`partner_equity.py` تبقى مصنفة **معطّلة بالتبعية حتى 3ب**، ولا تُعد جزءاً من تنفيذ 3أ المعزول.
+
+التحقق النصي الفعلي من imports على `main` يثبت:
+
+| الملف | imports المرتبطة بأبواب 5–9 | الحالة بعد إعادة كتابة 3A |
+|---|---|---|
+| `daily_engine.py` | `apply_ordinary_collection`، `apply_daily_depreciation`، `apply_ownership_writeoff`، `apply_friday_fee_and_oil`، `create_guarantee_claim`، `settle_guarantee_claim`، `apply_legacy_debt_collection`، `apply_settlement_rent` | الاستيرادات نفسها ليست مكسورة نصياً؛ التعطل التشغيلي بالتبعية من فجوة `entities.py` في 3B، وخاصة `pending_writeoff_today` |
+| `accounting.py` | لا يستورد دوال أبواب 5–9 | لا يوجد import مكسور نصياً؛ يبقى معطلاً بالتبعية حتى 3B |
+| `closure.py` | `create_guarantee_claim` | import صالح نصياً؛ يبقى معطلاً بالتبعية حتى 3B |
+| `partner_equity.py` | لا يستورد دوال أبواب 5–9 | لا يوجد import مكسور نصياً؛ يبقى معطلاً بالتبعية حتى 3B |
+
+**تصحيح للتقرير السابق:** لا يجوز وصف هذه الحالة بأنها مجموعة imports مكسورة. ما ثبت فعلياً هو أن `daily_engine.py` ينفذ استدعاءات أبواب 5–9، وأن مساره التشغيلي القديم ينكسر عند الوصول إلى حقل `pending_writeoff_today` غير الموجود في `Bike`. أما `accounting.py` و`partner_equity.py` فلا تحتويان أصلاً على imports لهذه الدوال، و`closure.py` importه للكفالة صالح نصياً.
+
+## 12. غموض K_SPEC إضافي في حقول M12/M13/M16
+
+بالمقارنة الحرفية مع المرجع، أسماء حقول الدراجة المستخدمة في M12/M13/M16 ولا تظهر كحقول في `entities.py` الحالي هي:
+
+1. `current_contract`: المرجع يستخدمه في الأسطر 1358 و1403 و1410، بينما `entities.py` الحالي يعرّف `current_contract_id` فقط. البند 3.2 من المرجع ينص في الوقت نفسه على أن الدراجة تشير إلى العقد ولا تخزّن نسخة مستقلة من مجاميعه.
+2. `active_settlement_receivable`: المرجع يستخدمه في الأسطر 1338 و1393 و1415، ولا يوجد حقل بهذا الاسم في `Bike` الحالي؛ يوجد بدلاً منه `receivables_ledger`.
+3. `pending_writeoff_today`: المرجع يستخدمه في الأسطر 1363 و1404 و1540 و1548، ولا يوجد حقل بهذا الاسم في `Bike` الحالي.
+
+البحث الكامل في المرجع عن الأسماء الثلاثة لم يجد أي تعريف مستقل لها؛ وجد استعمالاتها التنفيذية فقط. لذلك تُسجل هذه النقطة **K_SPEC — غموض في المرجع**، ولا يُتخذ قرار تنفيذي الآن.
+
+خيارات R4 المقترحة للمرحلة 3ب، دون حسم:
+- `current_contract`: (أ) تمثيله كعلاقة مشتقة من `current_contract_id`، أو (ب) إدخال علاقة كائنية فعلية إذا أثبت R4 أن ذلك هو المقصود رغم قاعدة مصدر الحقيقة.
+- `active_settlement_receivable`: (أ) علاقة مشتقة من دفتر `receivables_ledger`، أو (ب) حقل علاقة مستقل إلى `ReceivableEntry` إذا أثبت R4 أن المرجع يقصده صراحة.
+- `pending_writeoff_today`: (أ) علامة مؤقتة على `Bike` كما يكتبها المرجع مباشرة، أو (ب) آلية حالة/حدث بديلة لا تضيف حقلاً إذا أثبت R4 أن المقصود مجرد marker تنفيذي مؤقت.
+
+**الحالة: K_SPEC OPEN.** لا تعديل لـ`entities.py` الآن. أي حسم لاحق يستوجب R4 للمرحلة 3ب ثم إعادة اختبارات المرحلتين 1 و2.
