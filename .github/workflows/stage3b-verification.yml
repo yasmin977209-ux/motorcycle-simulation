@@ -70,21 +70,61 @@ jobs:
           )
           PY
 
-      - name: Stage 3B unit and path tests before long run
+      - name: Stage 3B test groups
+        shell: bash
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest -q             tests/test_stage3b_accounting.py             tests/test_stage3b_partner_equity.py             tests/test_stage3b_closure.py             tests/test_stage3b_m_order.py             tests/test_stage3b_paths.py             tests/test_stage3b_no_time_cap.py
+          set +e
+          : > /tmp/stage3b_status
+          overall=0
 
-      - name: Stage 3B status
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo '| Test group | Status |'
-          echo '|---|---|'
-          echo '| Chapter 10 | unit tests executed above |'
-          echo '| Chapter 11 | unit tests executed above |'
-          echo '| Chapter 12 | unit/path tests executed above |'
-          echo '| Chapter 13 | closure/path tests executed above |'
-          echo '| 127/159/160/161 | DEFERRED |'
-          echo '| 158 | ADJUDICATION |'
+          run_group() {
+            local label="$1"
+            shift
+            local output rc summary
+            output="$(python -m pytest -q "$@" 2>&1)"
+            rc=$?
+            printf '%s\n' "$output"
+            summary="$(printf '%s\n' "$output" | tail -1)"
+            printf '%s|%s|%s\n' "$label" "$rc" "$summary" >> /tmp/stage3b_status
+            if [ "$rc" -ne 0 ]; then
+              overall=1
+            fi
+          }
+
+          run_group "CH10" tests/test_stage3b_accounting.py
+          run_group "CH11" tests/test_stage3b_partner_equity.py
+          run_group "CH12" tests/test_stage3b_m_order.py
+          run_group "CH13" tests/test_stage3b_closure.py
+          run_group "PATHS_4_4" tests/test_stage3b_paths.py
+          run_group "NO_TIME_CAP" tests/test_stage3b_no_time_cap.py
+          run_group "ROLLFORWARD_AND_C100" tests/test_stage3b_determinism.py
+
+          {
+            printf '| Test group | Status | Actual pytest summary |\n'
+            printf '|---|---|---|\n'
+            while IFS='|' read -r label rc summary; do
+              if [ "$rc" -eq 0 ]; then
+                status="PASS"
+              else
+                status="FAIL"
+              fi
+              case "$label" in
+                CH10) display="Chapter 10" ;;
+                CH11) display="Chapter 11" ;;
+                CH12) display="Chapter 12 M1-M17" ;;
+                CH13) display="Chapter 13" ;;
+                PATHS_4_4) display="Chapter 4.4 paths 2-6" ;;
+                NO_TIME_CAP) display="No time cap behavioral test" ;;
+                ROLLFORWARD_AND_C100) display="Roll-forward + C100 deterministic repetitions" ;;
+                *) display="$label" ;;
+              esac
+              printf '| %s | %s | %s |\n' "$display" "$status" "$summary"
+            done < /tmp/stage3b_status
+            printf '| Tests 127, 159, 160, 161 | DEFERRED | later-stage inputs |\n'
+            printf '| Test 158 | ADJUDICATION | rule 8 conflict retained |\n'
+          } | tee /tmp/stage3b_summary
+
+          cat /tmp/stage3b_summary >> "$GITHUB_STEP_SUMMARY"
+          exit "$overall"
