@@ -1,0 +1,283 @@
+name: stage9-simulation
+
+on:
+  push:
+    branches: [main]
+    paths: [.stage9-smoke-trigger]
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: "One scenario code or ALL 25"
+        required: true
+        default: "ALL"
+        type: string
+      mode:
+        description: "production or smoke"
+        required: true
+        default: "production"
+        type: choice
+        options: [production, smoke]
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  PYTHON_VERSION: "3.11"
+  CHECKPOINT_MINUTES: "20"
+  JOB_TIMEOUT_MINUTES: "350"
+  SOURCE_SHA256: "8a368b983afa757666f11b872d350c0280dea889feefa0ecdbe306914cdefede"
+  SCENARIOS_JSON: '["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+      mode: ${{ steps.set.outputs.mode }}
+    steps:
+      - id: set
+        shell: python
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SCENARIO: ${{ inputs.scenario || '' }}
+          INPUT_MODE: ${{ inputs.mode || '' }}
+          SCENARIOS_JSON: ${{ env.SCENARIOS_JSON }}
+        run: |
+          import json, os
+          scenarios = json.loads(os.environ["SCENARIOS_JSON"])
+          event = os.environ["EVENT_NAME"]
+          requested = os.environ.get("INPUT_SCENARIO", "")
+          mode = os.environ.get("INPUT_MODE", "")
+          if event == "push":
+              selected = ["C100_G100"]
+              mode = "smoke"
+          elif requested in ("", "ALL"):
+              selected = scenarios
+          else:
+              if requested not in scenarios:
+                  raise SystemExit(f"Unknown scenario: {requested}")
+              selected = [requested]
+          matrix = {"include": [{"scenario": s} for s in selected]}
+          print("matrix=" + json.dumps(matrix, separators=(",", ":")))
+          print("mode=" + mode)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write("matrix=" + json.dumps(matrix, separators=(",", ":")) + "\n")
+              fh.write("mode=" + mode + "\n")
+
+  simulate:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    concurrency:
+      group: stage9-${{ matrix.scenario }}
+      cancel-in-progress: false
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+      MODE: ${{ needs.plan.outputs.mode }}
+      BRANCH: sim/${{ matrix.scenario }}
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Prepare scenario branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin --prune
+          if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}"; then
+            git switch --create "${BRANCH}" --track "origin/${BRANCH}"
+          else
+            git switch --create "${BRANCH}"
+            git push --set-upstream origin "${BRANCH}"
+          fi
+
+      - name: Stop immediately after global completion
+        id: global_stop
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/${GITHUB_REPOSITORY}/contents/FINAL_STABLE.json?ref=main" >/dev/null 2>&1; then
+            echo "global_stable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "global_stable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Reconstruct verified Python source
+        if: steps.global_stop.outputs.global_stable != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat stage7_source/source.tar.gz > /tmp/source.tar.gz
+          echo "${SOURCE_SHA256}  /tmp/source.tar.gz" | sha256sum -c -
+          rm -rf /tmp/source
+          mkdir -p /tmp/source
+          tar -xzf /tmp/source.tar.gz -C /tmp/source
+          cp -a /tmp/source/. .
+          python -m py_compile *.py
+
+      - name: Restore latest compressed checkpoint
+        if: steps.global_stop.outputs.global_stable != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="results_stage9/${SCENARIO}/work"
+          ARCHIVE="results_stage9/${SCENARIO}/latest.tar.gz"
+          rm -rf "$WORK"
+          mkdir -p "$WORK"
+          if test -f "$ARCHIVE"; then
+            tar -xzf "$ARCHIVE" -C "$WORK"
+          fi
+
+      - name: Execute bounded operational slice
+        if: steps.global_stop.outputs.global_stable != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="results_stage9/${SCENARIO}/work"
+          export PYTHONPATH=.
+          if [ "$MODE" = "smoke" ]; then
+            if test -f "$WORK/smoke_complete"; then
+              echo "Smoke already complete."
+            elif python - "$WORK/state.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          if not p.exists(): raise SystemExit(1)
+          s=json.loads(p.read_text())
+          raise SystemExit(0 if s.get("status")=="intentionally_stopped" else 1)
+          PY
+            then
+              python run_batch.py --scenario "$SCENARIO" --output "$WORK" --demo-total 4
+              touch "$WORK/smoke_complete"
+            else
+              python run_batch.py --scenario "$SCENARIO" --output "$WORK" --demo-total 4 --stop-after-new-trials 1
+            fi
+          else
+            python run_batch.py --scenario "$SCENARIO" --output "$WORK" --time-slice-minutes "$CHECKPOINT_MINUTES"
+          fi
+
+      - name: Package checkpoint and persist state
+        if: steps.global_stop.outputs.global_stable != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="results_stage9/${SCENARIO}/work"
+          ARCHIVE="results_stage9/${SCENARIO}/latest.tar.gz"
+          test -f "$WORK/state.json"
+          test -f "$WORK/manifest.json"
+          python - "$WORK/state.json" "$SCENARIO" "$MODE" > state.json.tmp <<'PY'
+          import json, sys
+          from pathlib import Path
+          batch_state=json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          root={"stage":9,"scenario":sys.argv[2],"mode":sys.argv[3],"batch_state":batch_state}
+          print(json.dumps(root, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+          PY
+          mv state.json.tmp state.json
+          mkdir -p "results_stage9/${SCENARIO}"
+          tar -C "$WORK" -czf "$ARCHIVE.tmp" .
+          mv "$ARCHIVE.tmp" "$ARCHIVE"
+          rm -rf "$WORK"
+          git add state.json "$ARCHIVE"
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "stage9: checkpoint ${SCENARIO}"
+          git push origin "HEAD:${BRANCH}"
+
+      - name: Dispatch next slice with GITHUB_TOKEN
+        if: steps.global_stop.outputs.global_stable != 'true' && env.MODE == 'production'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if python - "$SCENARIO" <<'PY'
+          import json, sys
+          from pathlib import Path
+          scenario=sys.argv[1]
+          s=json.loads(Path("state.json").read_text())
+          b=s["batch_state"]
+          sc=b.get("scenarios", {}).get(scenario, {})
+          raise SystemExit(0 if b.get("status") in ("checkpoint_time_slice", "initialized", "intentionally_stopped") and not sc.get("complete", False) else 1)
+          PY
+          then
+            gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=production
+          fi
+
+      - name: Smoke self-dispatch proof
+        if: steps.global_stop.outputs.global_stable != 'true' && env.MODE == 'smoke'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if test -f "results_stage9/${SCENARIO}/latest.tar.gz"; then
+            mkdir -p /tmp/verify-smoke
+            tar -xzf "results_stage9/${SCENARIO}/latest.tar.gz" -C /tmp/verify-smoke
+            if test -f /tmp/verify-smoke/smoke_complete; then
+              echo "Smoke self-relaunch completed."
+              exit 0
+            fi
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("state.json").read_text())
+          raise SystemExit(0 if s.get("status")=="intentionally_stopped" else 1)
+          PY
+          gh workflow run stage9-simulation.yml --ref "$BRANCH" --field scenario="$SCENARIO" --field mode=smoke
+
+      - name: Mark this scenario stable when both gates are complete
+        if: steps.global_stop.outputs.global_stable != 'true' && env.MODE == 'production'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python - "$SCENARIO" <<'PY'
+          import json, sys
+          from pathlib import Path
+          scenario=sys.argv[1]
+          s=json.loads(Path("state.json").read_text())
+          b=s["batch_state"]
+          sc=b.get("scenarios", {}).get(scenario, {})
+          raise SystemExit(0 if b.get("status")=="stable" and sc.get("complete") else 1)
+          PY
+          git fetch origin --prune
+          all_stable=true
+          while IFS= read -r scenario; do
+            branch="sim/${scenario}"
+            if ! git show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
+              all_stable=false
+              break
+            fi
+            state_json="$(git show "origin/${branch}:state.json" 2>/dev/null || true)"
+            if [ -z "$state_json" ]; then
+              all_stable=false
+              break
+            fi
+            if ! printf '%s' "$state_json" | python -c 'import json,sys; s=json.load(sys.stdin); b=s.get("batch_state",{}); a=b.get("scenarios",{}); ok=all(v.get("complete") and v.get("reference_stable") and v.get("project_ci_stable") for v in a.values()) and bool(a); raise SystemExit(0 if b.get("status")=="stable" and ok else 1)'; then
+              all_stable=false
+              break
+            fi
+          done < <(python -c 'import json,os; print("\n".join(json.loads(os.environ["SCENARIOS_JSON"])))')
+          if [ "$all_stable" = true ]; then
+            tmp="/tmp/final_stable.json"
+            printf '{"stage":9,"status":"all_25_stable","recorded_by":"%s"}\n' "${SCENARIO}" > "$tmp"
+            b64="$(base64 -w0 "$tmp")"
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/FINAL_STABLE.json" \
+              -f message="stage9: all 25 scenarios stable" \
+              -f content="$b64" \
+              -f branch=main >/dev/null
+            echo "All 25 scenarios stable. Global completion marker written to main."
+          fi
