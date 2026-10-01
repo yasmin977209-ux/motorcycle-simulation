@@ -9,9 +9,10 @@ from entities import (
     Bike,
     BikeSource,
     Contract,
-    ContractIndex,
     ContractType,
     Project,
+    add_contract,
+    contract_of,
 )
 
 
@@ -42,44 +43,58 @@ def test_bike_approved_defaults_and_source_of_truth_fields() -> None:
     assert not hasattr(bike, "friday_counter")
 
 
-def test_contract_index_is_dict_backed_and_supports_large_key_lookup() -> None:
-    index = ContractIndex()
+def test_project_contracts_is_plain_dict_and_supports_large_key_lookup() -> None:
+    project = Project()
 
     for number in range(100_000):
-        contract_id = f"CT{number:08d}"
-        index[contract_id] = _contract(contract_id)
+        contract = _contract(f"CT{number:08d}")
+        project.contracts[contract.contract_id] = contract
 
     target_id = "CT00099999"
-    target = index[target_id]
+    target = project.contracts[target_id]
 
-    assert isinstance(index, dict)
+    assert type(project.contracts) is dict
     assert target.contract_id == target_id
-    assert index[target_id] is target
-
-    # The key lookup must not depend on value iteration / a linear scan.
-    original_iter = ContractIndex.__iter__
-
-    def fail_if_iterated(self):
-        raise AssertionError("key lookup must not iterate over the contract index")
-
-    ContractIndex.__iter__ = fail_if_iterated
-    try:
-        assert index[target_id] is target
-    finally:
-        ContractIndex.__iter__ = original_iter
+    assert project.contracts[target_id] is target
 
 
-def test_contract_index_repeated_contract_id_replaces_existing_value() -> None:
-    index = ContractIndex()
+def test_add_contract_raises_value_error_on_duplicate_contract_id() -> None:
+    project = Project()
     first = _contract("CT00000001")
     second = _contract("CT00000001")
 
-    index.append(first)
-    index.append(second)
+    add_contract(project, first)
 
-    assert len(index) == 1
-    assert index["CT00000001"] is second
-    assert list(index) == [second]
+    try:
+        add_contract(project, second)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("duplicate contract_id must raise ValueError")
+
+    assert project.contracts["CT00000001"] is first
+    assert len(project.contracts) == 1
+
+
+def test_contract_of_returns_current_contract_by_key_or_none() -> None:
+    project = Project()
+    bike = Bike(
+        bike_id="BK0001",
+        source=BikeSource.INITIAL,
+        purchase_date=date(2026, 12, 26),
+        scheduled_ready_date=date(2027, 1, 1),
+    )
+
+    assert contract_of(project, bike) is None
+
+    contract = _contract("CT00000001")
+    add_contract(project, contract)
+    bike.current_contract_id = contract.contract_id
+
+    assert contract_of(project, bike) is contract
+
+    bike.current_contract_id = "CT_NOT_PRESENT"
+    assert contract_of(project, bike) is None
 
 
 def test_project_rollforward_names_and_reference_record_shapes() -> None:
