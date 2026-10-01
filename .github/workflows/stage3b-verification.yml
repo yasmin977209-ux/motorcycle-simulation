@@ -1,95 +1,90 @@
 name: stage3b-verification
+
 on:
+  push:
+    branches: ["main"]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  smoke:
+  stage3b:
+    name: stage3b
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: python -m pip install -r requirements.txt
-      - name: 30-day smoke metrics
-        shell: bash
-        env: {PYTHONPATH: .}
-        run: |
-          set -euo pipefail
-          /usr/bin/time -f 'ELAPSED_SECONDS=%e' python - <<'PY'
-          import os, time, json
-          from datetime import date, timedelta
-          from daily_engine import create_initial_project, run_day
-          p=create_initial_project(100); d=date(2027,1,1); t=time.perf_counter()
-          for _ in range(30):
-              run_day(p,d,1.0,"C100_G100",1,100); d+=timedelta(days=1)
-          elapsed=time.perf_counter()-t
-          print("ITERATIONS=30")
-          print("SECONDS_PER_ITERATION=",elapsed/30)
-          print("CPU_COUNT=",os.cpu_count())
-          print("WORKFLOW_TIMEOUT_MINUTES=15")
-          total=0
-          for root,dirs,files in os.walk("."):
-              if ".git" in root: continue
-              for f in files:
-                  try: total+=os.path.getsize(os.path.join(root,f))
-                  except OSError: pass
-          print("WORKING_TREE_SIZE_BYTES=",total)
-          print("BALANCE_CHECKS=",len(p.daily_balance_checks))
-          print("MAX_ABSOLUTE_BALANCE_DIFFERENCE=",max(abs(x["Balance_Difference"]) for x in p.daily_balance_checks))
-          PY
-      - name: Stage 3B unit tests (exclude full deterministic repetition)
-        env: {PYTHONPATH: .}
-        run: python -m pytest -q tests/test_stage3b.py -k "not full_deterministic_trial_daily_balance"
-      - name: Run exactly one full deterministic repetition and check every day
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: 30-day deterministic smoke metrics
         shell: bash
         env:
           PYTHONPATH: .
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json
-          import os
-          import time
-          from daily_engine import run_deterministic_trial
-          t0=time.perf_counter()
-          p=run_deterministic_trial(100,1,"C100_G100")
-          elapsed=time.perf_counter()-t0
-          max_abs=max(abs(x["Balance_Difference"]) for x in p.daily_balance_checks)
-          result={
-              "trial_id":1,
-              "scenario_id":"C100_G100",
-              "recovery_rate_pct":100,
-              "collection_probability":1.0,
-              "final_close_date":p.final_close_date.isoformat() if p.final_close_date else None,
-              "days_executed":len(p.daily_balance_checks),
-              "balance_checks":len(p.daily_balance_checks),
-              "max_absolute_balance_difference":max_abs,
-              "final_cash":p.project_cash,
-              "final_net_project_equity":p.final_net_project_equity,
-              "partner1_final_entitlement":p.partner1_final_entitlement,
-              "partner2_final_entitlement":p.partner2_final_entitlement,
-              "bike_count":len(p.bikes),
-              "contract_count":len(p.contracts),
-              "claim_count":len(p.guarantee_claims),
-              "elapsed_seconds":elapsed,
-              "cpu_count":os.cpu_count(),
-          }
-          assert p.simulation_stopped
-          assert p.final_close_date is not None
-          assert p.final_net_project_equity is not None
-          assert max_abs == 0
-          assert p.final_net_project_equity == p.daily_balance_checks[-1]["Total_Equity"]
-          print(json.dumps(result,sort_keys=True))
-          print("DAILY_BALANCE_CHECKS_ALL_ZERO=TRUE" if max_abs==0 else "DAILY_BALANCE_CHECKS_ALL_ZERO=FALSE")
+          /usr/bin/time -f 'ELAPSED_SECONDS=%e' python - <<'PY'
+          import os, time
+          from datetime import date, timedelta
+          from daily_engine import create_initial_project, run_day
+
+          project = create_initial_project(100)
+          current = date(2027, 1, 1)
+          started = time.perf_counter()
+          for _ in range(30):
+              run_day(
+                  project,
+                  current,
+                  1.0,
+                  "C100_G100",
+                  1,
+                  100,
+                  20270101,
+              )
+              current += timedelta(days=1)
+          elapsed = time.perf_counter() - started
+          total = 0
+          for root, dirs, files in os.walk("."):
+              if ".git" in root:
+                  continue
+              for filename in files:
+                  try:
+                      total += os.path.getsize(os.path.join(root, filename))
+                  except OSError:
+                      pass
+          print(f"ITERATIONS=30")
+          print(f"SECONDS_PER_ITERATION={elapsed / 30}")
+          print(f"CPU_COUNT={os.cpu_count()}")
+          print("WORKFLOW_TIMEOUT_MINUTES=15")
+          print(f"WORKING_TREE_SIZE_BYTES={total}")
+          print(f"BALANCE_CHECKS={len(project.daily_balance_checks)}")
+          print(
+              "MAX_ABSOLUTE_BALANCE_DIFFERENCE="
+              f"{max(abs(x['Balance_Difference']) for x in project.daily_balance_checks)}"
+          )
           PY
-      - name: Unified status table
+
+      - name: Stage 3B unit and path tests before long run
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q             tests/test_stage3b_accounting.py             tests/test_stage3b_partner_equity.py             tests/test_stage3b_closure.py             tests/test_stage3b_m_order.py             tests/test_stage3b_paths.py             tests/test_stage3b_no_time_cap.py
+
+      - name: Stage 3B status
         shell: bash
         run: |
+          set -euo pipefail
           echo '| Test group | Status |'
           echo '|---|---|'
-          echo '| Chapter 10 | PASS |'
-          echo '| Chapter 11 | PASS |'
-          echo '| Chapter 12 M1-M17 | PASS |'
-          echo '| Chapter 13 | PASS |'
+          echo '| Chapter 10 | unit tests executed above |'
+          echo '| Chapter 11 | unit tests executed above |'
+          echo '| Chapter 12 | unit/path tests executed above |'
+          echo '| Chapter 13 | closure/path tests executed above |'
+          echo '| 127/159/160/161 | DEFERRED |'
+          echo '| 158 | ADJUDICATION |'

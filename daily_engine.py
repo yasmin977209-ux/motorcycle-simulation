@@ -1,287 +1,1057 @@
-"""Chapter 12 — daily engine, M1 through M17 in the mandatory order."""
+"""Chapter 12 daily engine rebuilt from the authoritative reference."""
+
 from __future__ import annotations
+
 from datetime import date, timedelta
 
-from constants import (
-    BIKE_BASE_PURCHASE_COST, BIKE_GROSS_ASSET_COST, BIKE_TOTAL_CASH_FLOW_COST,
-    CUSTOMS_AND_REGISTRATION_COST, EXPANSION_CUTOFF_DATE, FRIDAY_FEE,
-    INITIAL_FLEET_PURCHASE_DATE, INITIAL_FLEET_READY_DATE, INITIAL_FLEET_SIZE,
-    OPENING_BIKE_ASSETS, OPENING_CASH, OPENING_MARKETING_EXPENSE,
-    OPENING_RETAINED_LOSS, PRIMARY_DAILY_RENT, SECONDARY_DAILY_RENT,
-    SETTLEMENT_DAILY_RENT, TOTAL_CAPITAL,
+import constants
+import dateutils
+import rng
+from accounting import (
+    accrue_rent,
+    assert_balance_sheet_balanced,
+    record_daily_rollforwards,
 )
-from accounting import assert_balance_sheet_balanced
 from closure import execute_dynamic_closure
-from collection import apply_ordinary_collection
-from depreciation import apply_daily_depreciation, apply_ownership_writeoff
-from dateutils import is_business_day, is_eligible_friday, primary_maturity_date, scheduled_ready_date
 from entities import (
-    Bike, BikeSource, ClaimStatus, Contract, ContractStatus, ContractType,
-    EventLogEntry, EventType, GuaranteeClaim, Guarantor, Project,
-    ReceivableEntry, ReceivableSource, ReceivableStatus, Tenant, TenantType,
+    Bike,
+    BikeSource,
+    BikeState,
+    Contract,
+    ContractStatus,
+    ContractType,
+    EventLogEntry,
+    EventType,
+    Guarantor,
+    Project,
+    ReceivableEntry,
+    ReceivableSource,
+    ReceivableStatus,
+    Tenant,
+    TenantType,
+    add_contract,
+    contract_of,
+)
+from guarantee import create_guarantee_claim
+from partner_equity import (
+    assert_memo_nonnegative,
+    consume_partner1_for_expansion,
+    record_eligible_inflow,
 )
 from friday import apply_friday_fee_and_oil
-from guarantee import create_guarantee_claim, settle_guarantee_claim
-from partner_equity import assert_memo_nonnegative, consume_partner1_for_expansion, record_eligible_inflow
-from rng import derive_seed, rng_draw
-from settlement import apply_legacy_debt_collection, apply_settlement_rent
 from state_machine import derive_state_from_balance
 
-POSSESSION_STATES=frozenset({
-    "ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY",
-    "POST_MATURITY_SETTLEMENT","ACTIVE_SECONDARY","NOTICE_SECONDARY",
-})
+
+POSSESSION_STATES = frozenset(
+    {
+        BikeState.ACTIVE_PRIMARY,
+        BikeState.WAITING_PRIMARY,
+        BikeState.NOTICE_PRIMARY,
+        BikeState.GRACE_PRIMARY,
+        BikeState.POST_MATURITY_SETTLEMENT,
+        BikeState.ACTIVE_SECONDARY,
+        BikeState.NOTICE_SECONDARY,
+    }
+)
 
 
-def create_initial_project(recovery_rate_pct: int=100)->Project:
-    del recovery_rate_pct
-    p=Project(
-        project_cash=OPENING_CASH,
-        partner1_reinvestment_balance=0,
-        partner2_reinvestment_balance=0,
-        accounts_receivable=0,
-        guarantee_claim_receivable=0,
-        gross_bike_assets=OPENING_BIKE_ASSETS,
-        accumulated_depreciation=0,
-        capital=TOTAL_CAPITAL,
-        retained_earnings=OPENING_RETAINED_LOSS,
-        opening_loss=OPENING_RETAINED_LOSS,
-        expense_marketing=OPENING_MARKETING_EXPENSE,
+def create_initial_project(recovery_rate_pct: int = 100) -> Project:
+    project = Project.opening()
+    for index in range(1, constants.INITIAL_FLEET_SIZE + 1):
+        project.bikes.append(
+            Bike(
+                bike_id=f"BK{index:04d}",
+                source=BikeSource.INITIAL,
+                purchase_date=constants.INITIAL_FLEET_PURCHASE_DATE,
+                scheduled_ready_date=constants.INITIAL_FLEET_READY_DATE,
+                funding_completion_date=constants.INITIAL_FLEET_PURCHASE_DATE,
+                actual_ready_date=constants.INITIAL_FLEET_READY_DATE,
+                prep_paid=True,
+                customs_paid=True,
+                delivery_date=None,
+                gross_cost=constants.BIKE_GROSS_ASSET_COST,
+                accumulated_depreciation=0,
+                net_book_value=constants.BIKE_GROSS_ASSET_COST,
+                current_state=BikeState.PREP,
+            )
+        )
+    return project
+
+
+def _new_contract(
+    project: Project,
+    bike: Bike,
+    contract_type: ContractType,
+    current_date: date,
+) -> Contract:
+    contract_id = f"CT{len(project.contracts) + 1:08d}"
+    tenant_id = f"TN{len(project.tenants) + 1:08d}"
+    guarantor_id = f"GR{len(project.guarantors) + 1:08d}"
+    contract = Contract(
+        contract_id=contract_id,
+        bike_id=bike.bike_id,
+        tenant_id=tenant_id,
+        guarantor_id=guarantor_id,
+        contract_type=contract_type,
+        daily_rate=(
+            constants.PRIMARY_DAILY_RENT
+            if contract_type is ContractType.PRIMARY
+            else constants.SECONDARY_DAILY_RENT
+        ),
+        start_date=current_date,
+        maturity_date=(
+            dateutils.primary_maturity_date(current_date)
+            if contract_type is ContractType.PRIMARY
+            else None
+        ),
     )
-    for i in range(1, INITIAL_FLEET_SIZE+1):
-        p.bikes.append(Bike(
-            bike_id=f"BK{i:04d}", source=BikeSource.INITIAL,
-            purchase_date=INITIAL_FLEET_PURCHASE_DATE,
-            scheduled_ready_date=INITIAL_FLEET_READY_DATE,
-            funding_completion_date=INITIAL_FLEET_PURCHASE_DATE,
-            actual_ready_date=INITIAL_FLEET_READY_DATE,
-            prep_paid=True, customs_paid=True, gross_cost=BIKE_GROSS_ASSET_COST,
-            net_book_value=BIKE_GROSS_ASSET_COST,
-        ))
-    return p
+    tenant = Tenant(
+        tenant_id=tenant_id,
+        tenant_type=(
+            TenantType.ORIGINAL
+            if contract_type is ContractType.PRIMARY
+            else TenantType.SECONDARY
+        ),
+        contract_id=contract_id,
+        guarantor_id=guarantor_id,
+        start_date=current_date,
+    )
+    guarantor = Guarantor(
+        guarantor_id=guarantor_id,
+        related_contract_id=contract_id,
+        related_tenant_id=tenant_id,
+    )
+    add_contract(project, contract)
+    project.tenants.append(tenant)
+    project.guarantors.append(guarantor)
+    return contract
 
 
-def _create_contract(p:Project,b:Bike,typ:ContractType,d:date)->Contract:
-    cid=f"CT{len(p.contracts)+1:08d}"; tid=f"TN{len(p.tenants)+1:08d}"; gid=f"GR{len(p.guarantors)+1:08d}"
-    rate=PRIMARY_DAILY_RENT if typ is ContractType.PRIMARY else SECONDARY_DAILY_RENT
-    c=Contract(cid,b.bike_id,tid,gid,typ,rate,d,primary_maturity_date(d) if typ is ContractType.PRIMARY else None)
-    p.contracts.append(c)
-    p.tenants.append(Tenant(tid,TenantType.ORIGINAL if typ is ContractType.PRIMARY else TenantType.SECONDARY,cid,gid,d))
-    p.guarantors.append(Guarantor(gid,cid,tid))
-    return c
-
-
-def _find_contract(p:Project,b:Bike)->Contract:
-    if b.current_contract_id is None: raise ValueError(f"Bike {b.bike_id} has no current contract")
-    return next(c for c in p.contracts if c.contract_id==b.current_contract_id)
-
-
-def _find_receivable(p:Project,b:Bike)->ReceivableEntry:
-    if b.active_settlement_receivable_id is None: raise ValueError(f"Bike {b.bike_id} has no settlement receivable")
-    return next(r for r in p.receivables if r.receivable_id==b.active_settlement_receivable_id)
-
-
-def _event(p:Project,d:date,b:Bike,kind:EventType,c:Contract|None=None,claim:GuaranteeClaim|None=None,amount:int|None=None)->None:
-    e=EventLogEntry(
-        event_id=f"EV{len(p.event_log)+1:08d}",date=d,bike_id=b.bike_id,event_type=kind,
-        previous_state=b.current_state,new_state=b.current_state,
-        contract_id=c.contract_id if c else None,tenant_id=c.tenant_id if c else None,
-        guarantor_id=c.guarantor_id if c else None,claim_id=claim.claim_id if claim else None,
+def _event(
+    project: Project,
+    current_date: date,
+    bike: Bike,
+    event_type: EventType,
+    previous_state: BikeState | None = None,
+    new_state: BikeState | None = None,
+    contract_id: str | None = None,
+    amount: int | None = None,
+) -> None:
+    event = EventLogEntry(
+        event_id=f"EV{len(project.event_log) + 1:08d}",
+        date=current_date,
+        bike_id=bike.bike_id,
+        event_type=event_type,
+        previous_state=previous_state,
+        new_state=new_state,
+        contract_id=contract_id,
         amount_if_applicable=amount,
     )
-    p.event_log.append(e); b.lifecycle_history.append(e)
+    project.event_log.append(event)
+    bike.lifecycle_history.append(event)
 
 
-def _success(probability:float,scenario_id:str,trial_id:int,bike_id:str,d:date,event_type:str)->bool:
-    if probability>=1.0: return True
-    if probability<=0.0: return False
-    return rng_draw(derive_seed(20270101,scenario_id,trial_id,bike_id,d,event_type))<probability
+def _new_receivable(
+    project: Project,
+    bike: Bike,
+    contract: Contract,
+    amount: int,
+) -> ReceivableEntry:
+    receivable_id = f"RC{len(project.receivables) + 1:08d}"
+    receivable = ReceivableEntry(
+        receivable_id=receivable_id,
+        bike_id=bike.bike_id,
+        contract_id=contract.contract_id,
+        tenant_id=contract.tenant_id,
+        source=ReceivableSource.SETTLEMENT_LEGACY_DEBT,
+        original_amount=amount,
+        collected_amount=0,
+        remaining_amount=amount,
+        status=ReceivableStatus.OUTSTANDING,
+        created_date=None,
+    )
+    project.receivables.append(receivable)
+    bike.active_settlement_receivable_id = receivable_id
+    return receivable
 
 
-def run_day(p:Project,current_date:date,collection_probability:float=1.0,scenario_id:str="C100_G100",trial_id:int=1,recovery_rate_pct:int=100)->None:
-    if p.simulation_stopped: raise RuntimeError("simulation already stopped")
-    trace=[]; p.execution_trace.append(trace)
-    business=is_business_day(current_date)
-
-    trace.append("M1")
-    trace.append("M2")
-    if business:
-        for b in sorted((x for x in p.bikes if x.current_state=="PREP"),key=lambda x:(x.purchase_date,x.bike_id)):
-            if not b.prep_paid and p.project_cash>=4000 and p.partner1_reinvestment_balance>=4000:
-                p.project_cash-=4000; p.partner1_reinvestment_balance-=4000; p.expense_prep+=4000; b.prep_paid=True
-            if not b.customs_paid and p.project_cash>=CUSTOMS_AND_REGISTRATION_COST and p.partner1_reinvestment_balance>=CUSTOMS_AND_REGISTRATION_COST:
-                p.project_cash-=CUSTOMS_AND_REGISTRATION_COST; p.partner1_reinvestment_balance-=CUSTOMS_AND_REGISTRATION_COST
-                p.gross_bike_assets+=CUSTOMS_AND_REGISTRATION_COST; b.gross_cost+=CUSTOMS_AND_REGISTRATION_COST; b.customs_paid=True
-            if b.prep_paid and b.customs_paid and b.actual_ready_date is None:
-                b.funding_completion_date=current_date; b.actual_ready_date=max(b.scheduled_ready_date,current_date)
-        if current_date<=EXPANSION_CUTOFF_DATE and not any(x.current_state=="PREP" and (not x.prep_paid or not x.customs_paid) for x in p.bikes):
-            while p.project_cash>=BIKE_BASE_PURCHASE_COST and p.partner1_reinvestment_balance>=BIKE_BASE_PURCHASE_COST:
-                consume_partner1_for_expansion(p,BIKE_BASE_PURCHASE_COST)
-                p.gross_bike_assets += BIKE_BASE_PURCHASE_COST
-                n=len(p.bikes)+1
-                b=Bike(f"BK{n:04d}",BikeSource.EXPANSION,current_date,scheduled_ready_date(current_date),gross_cost=BIKE_BASE_PURCHASE_COST,net_book_value=BIKE_BASE_PURCHASE_COST)
-                p.bikes.append(b); _event(p,current_date,b,EventType.EXPANSION_PURCHASE,amount=BIKE_BASE_PURCHASE_COST)
-
-    trace.append("M3")
-    if business:
-        for b in sorted((x for x in p.bikes if x.current_state=="PREP"),key=lambda x:(x.purchase_date,x.bike_id)):
-            if b.actual_ready_date is not None and current_date>=b.actual_ready_date:
-                b.delivery_date=current_date; c=_create_contract(p,b,ContractType.PRIMARY,current_date)
-                b.current_contract_id=c.contract_id; b.current_tenant_id=c.tenant_id; b.current_state="ACTIVE_PRIMARY"; b.lifecycle_cycle_number=1
-                _event(p,current_date,b,EventType.PRIMARY_CONTRACT_STARTED,c)
-        for b in sorted((x for x in p.bikes if x.current_state=="AVAILABLE_FOR_SECONDARY"),key=lambda x:x.bike_id):
-            b.delivery_date=current_date; c=_create_contract(p,b,ContractType.SECONDARY,current_date)
-            b.current_contract_id=c.contract_id; b.current_tenant_id=c.tenant_id; b.secondary_cycle_count+=1; b.lifecycle_cycle_number+=1; b.current_state="ACTIVE_SECONDARY"
-            _event(p,current_date,b,EventType.SECONDARY_CONTRACT_STARTED,c)
-
-    trace.append("M4")
-    possession={b.bike_id:b.current_state in POSSESSION_STATES for b in p.bikes}
-
-    trace.append("M5")
-    if business:
-        for b in p.bikes:
-            if b.current_state in {"ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY"}:
-                c=_find_contract(p,b); c.total_due+=PRIMARY_DAILY_RENT; p.revenue_primary+=PRIMARY_DAILY_RENT; p.accounts_receivable+=PRIMARY_DAILY_RENT
-            elif b.current_state in {"ACTIVE_SECONDARY","NOTICE_SECONDARY"}:
-                c=_find_contract(p,b); c.total_due+=SECONDARY_DAILY_RENT; p.revenue_secondary+=SECONDARY_DAILY_RENT; p.accounts_receivable+=SECONDARY_DAILY_RENT
-            elif b.current_state=="POST_MATURITY_SETTLEMENT":
-                r=apply_settlement_rent(current_date)
-                if r.collected:
-                    b.settlement_rent_due_total+=r.due; b.settlement_rent_collected_total+=r.collected; p.revenue_settlement+=r.collected; p.project_cash+=r.cash_delta; record_eligible_inflow(p,r.collected)
-
-    trace.append("M6")
-    if not business:
-        for b in p.bikes:
-            if not possession.get(b.bike_id): continue
-            c=_find_contract(p,b)
-            r=apply_friday_fee_and_oil(c.start_date,current_date,c.friday_counter,True)
-            if r.eligible:
-                p.revenue_friday_fee+=r.revenue_friday_fee; p.project_cash+=r.revenue_friday_fee; c.friday_counter=r.friday_counter_after
-                p.expense_oil_service+=r.oil_service_expense; p.project_cash-=r.oil_service_expense; record_eligible_inflow(p,r.revenue_friday_fee)
-
-    trace.append("M7")
-    for b in p.bikes:
-        if not possession.get(b.bike_id): continue
-        r=apply_daily_depreciation(b.gross_cost,b.accumulated_depreciation,True)
-        b.accumulated_depreciation=r.accumulated_depreciation_after; b.net_book_value=r.net_book_value_after; b.usage_days+=r.usage_days_after
-        p.accumulated_depreciation+=r.project_accumulated_depreciation_delta; p.expense_depreciation+=r.depreciation_expense
-
-    trace.append("M8")
-    if business:
-        for b in p.bikes:
-            if b.current_state in {"ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY"}:
-                c=_find_contract(p,b); ok=_success(collection_probability,scenario_id,trial_id,b.bike_id,current_date,"PRIMARY_COLLECTION")
-                r=apply_ordinary_collection(c.total_due,c.total_paid,PRIMARY_DAILY_RENT,ok,current_date); c.total_paid=r.total_paid_after
-                p.project_cash+=r.cash_delta; p.accounts_receivable+=r.accounts_receivable_delta; record_eligible_inflow(p,r.collected)
-            elif b.current_state in {"ACTIVE_SECONDARY","NOTICE_SECONDARY"}:
-                c=_find_contract(p,b); ok=_success(collection_probability,scenario_id,trial_id,b.bike_id,current_date,"SECONDARY_COLLECTION")
-                r=apply_ordinary_collection(c.total_due,c.total_paid,SECONDARY_DAILY_RENT,ok,current_date); c.total_paid=r.total_paid_after
-                p.project_cash+=r.cash_delta; p.accounts_receivable+=r.accounts_receivable_delta; record_eligible_inflow(p,r.collected)
-            elif b.current_state=="POST_MATURITY_SETTLEMENT":
-                remaining=b.settlement_legacy_debt_remaining or 0
-                if remaining>0:
-                    ok=_success(collection_probability,scenario_id,trial_id,b.bike_id,current_date,"LEGACY_DEBT_COLLECTION")
-                    r=apply_legacy_debt_collection(remaining,ok); b.settlement_legacy_debt_remaining=r.remaining_after
-                    p.project_cash+=r.cash_delta; p.accounts_receivable+=r.accounts_receivable_delta
-                    recv=_find_receivable(p,b); recv.collected_amount+=r.payment; recv.remaining_amount=r.remaining_after
-                    if r.completed: recv.status=ReceivableStatus.SETTLED
-                    record_eligible_inflow(p,r.payment)
-
-    trace.append("M9")
-    for b in p.bikes:
-        if b.current_state in {"ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY"}:
-            c=_find_contract(p,b); s=derive_state_from_balance(c.total_due-c.total_paid,PRIMARY_DAILY_RENT,"PRIMARY")
-            if s is not None: b.current_state=s
-        elif b.current_state in {"ACTIVE_SECONDARY","NOTICE_SECONDARY"}:
-            c=_find_contract(p,b); s=derive_state_from_balance(c.total_due-c.total_paid,SECONDARY_DAILY_RENT,"SECONDARY")
-            if s is not None: b.current_state=s
-
-    trace.append("M10")
-
-    trace.append("M11")
-    for b in list(p.bikes):
-        if b.current_state=="GRACE_PRIMARY":
-            c=_find_contract(p,b); outstanding=c.total_due-c.total_paid
-            if outstanding>=45000:
-                claim=create_guarantee_claim(f"CL{len(p.guarantee_claims)+1:08d}",b.bike_id,c.contract_id,c.tenant_id,c.guarantor_id,"PRIMARY_EARLY_TERMINATION",outstanding,current_date,recovery_rate_pct)
-                p.guarantee_claims.append(claim); p.accounts_receivable-=outstanding; p.guarantee_claim_receivable+=outstanding; c.status=ContractStatus.TERMINATED
-                b.current_contract_id=None; b.current_tenant_id=None; b.termination_count+=1; b.current_state="AVAILABLE_FOR_SECONDARY"; _event(p,current_date,b,EventType.PRIMARY_TERMINATED,c,claim,outstanding)
-        elif b.current_state=="NOTICE_SECONDARY":
-            c=_find_contract(p,b); outstanding=c.total_due-c.total_paid
-            if outstanding>=10000:
-                claim=create_guarantee_claim(f"CL{len(p.guarantee_claims)+1:08d}",b.bike_id,c.contract_id,c.tenant_id,c.guarantor_id,"SECONDARY_EARLY_TERMINATION",outstanding,current_date,recovery_rate_pct)
-                p.guarantee_claims.append(claim); p.accounts_receivable-=outstanding; p.guarantee_claim_receivable+=outstanding; c.status=ContractStatus.TERMINATED
-                b.current_contract_id=None; b.current_tenant_id=None; b.termination_count+=1; b.current_state="AVAILABLE_FOR_SECONDARY"; _event(p,current_date,b,EventType.SECONDARY_TERMINATED,c,claim,outstanding)
-
-    trace.append("M12")
-    for b in list(p.bikes):
-        if b.current_state not in {"ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY"}: continue
-        c=_find_contract(p,b)
-        if c.status is ContractStatus.ACTIVE and current_date==c.maturity_date:
-            outstanding=c.total_due-c.total_paid; _event(p,current_date,b,EventType.PRIMARY_CONTRACT_MATURED,c)
-            if outstanding==0:
-                c.status=ContractStatus.SETTLED; b.current_state="OWNED_TRANSFERRED"; b.current_contract_id=None; b.current_tenant_id=None; b.pending_writeoff_today=True; _event(p,current_date,b,EventType.OWNERSHIP_TRANSFERRED,c)
-            else:
-                c.status=ContractStatus.MATURED; b.current_state="POST_MATURITY_SETTLEMENT"; b.settlement_legacy_debt_original=outstanding; b.settlement_legacy_debt_remaining=outstanding
-                b.settlement_business_days_elapsed=0; b.settlement_start_date=None
-                recv=ReceivableEntry(f"RC{len(p.receivables)+1:08d}",b.bike_id,c.contract_id,c.tenant_id,ReceivableSource.SETTLEMENT_LEGACY_DEBT,outstanding,0,outstanding,ReceivableStatus.OUTSTANDING,None)
-                p.receivables.append(recv); b.active_settlement_receivable_id=recv.receivable_id; _event(p,current_date,b,EventType.SETTLEMENT_STARTED,c,amount=outstanding)
-
-    trace.append("M13")
-    for b in p.bikes:
-        if b.current_state!="POST_MATURITY_SETTLEMENT": continue
-        recv=_find_receivable(p,b)
-        if b.settlement_start_date is None:
-            b.settlement_start_date=current_date; recv.created_date=current_date; continue
-        if not business: continue
-        b.settlement_business_days_elapsed+=1
-        c=next(x for x in p.contracts if x.contract_id==recv.contract_id)
-        if b.settlement_legacy_debt_remaining==0:
-            c.status=ContractStatus.SETTLED; b.current_state="OWNED_TRANSFERRED"; b.current_contract_id=None; b.current_tenant_id=None; b.pending_writeoff_today=True; _event(p,current_date,b,EventType.SETTLEMENT_COMPLETED,c); _event(p,current_date,b,EventType.OWNERSHIP_TRANSFERRED,c)
-        elif b.settlement_business_days_elapsed>30:
-            remaining=b.settlement_legacy_debt_remaining
-            claim=create_guarantee_claim(f"CL{len(p.guarantee_claims)+1:08d}",b.bike_id,c.contract_id,c.tenant_id,c.guarantor_id,"POST_MATURITY_SETTLEMENT_FAILURE",remaining,current_date,recovery_rate_pct)
-            p.guarantee_claims.append(claim); p.accounts_receivable-=remaining; p.guarantee_claim_receivable+=remaining; recv.status=ReceivableStatus.TRANSFERRED_TO_GUARANTEE; recv.remaining_amount=0
-            b.settlement_legacy_debt_remaining=0; c.status=ContractStatus.TERMINATED; b.current_contract_id=None; b.current_tenant_id=None; b.current_state="AVAILABLE_FOR_SECONDARY"; b.termination_count+=1
-            _event(p,current_date,b,EventType.SETTLEMENT_FAILED,c,claim,remaining)
-
-    trace.append("M14")
-    for claim in list(p.guarantee_claims):
-        if claim.status is ClaimStatus.PENDING and current_date>=claim.settlement_due_date:
-            r=settle_guarantee_claim(claim,current_date)
-            if r.settled_now:
-                p.project_cash+=r.recovered_amount; p.guarantee_claim_receivable-=r.claim_amount; p.bad_debt_expense+=r.bad_debt_amount; record_eligible_inflow(p,r.recovered_amount)
-
-    trace.append("M15")
-    execute_dynamic_closure(p,current_date,recovery_rate_pct)
-
-    trace.append("M16")
-    for b in p.bikes:
-        if not b.pending_writeoff_today: continue
-        r=apply_ownership_writeoff(b.gross_cost,b.accumulated_depreciation)
-        p.accumulated_depreciation+=r.project_accumulated_depreciation_delta
-        p.asset_writeoff_expense+=r.expense_asset_writeoff
-        p.gross_bike_assets+=r.project_gross_asset_delta
-        b.net_book_value=0; b.accumulated_depreciation=r.bike_accumulated_depreciation_after; b.pending_writeoff_today=False
-
-    trace.append("M17")
-    assert_memo_nonnegative(p)
-    snap=assert_balance_sheet_balanced(p,current_date)
-    p.daily_balance_checks.append({"date":current_date.isoformat(),**snap})
-    if p.simulation_stopped and p.final_net_project_equity!=snap["Total_Equity"]:
-        raise AssertionError("final equity differs from M17 equity")
+def _receivable_of(project: Project, bike: Bike) -> ReceivableEntry | None:
+    rid = bike.active_settlement_receivable_id
+    if rid is None:
+        return None
+    return next(
+        (item for item in project.receivables if item.receivable_id == rid),
+        None,
+    )
 
 
-def run_days(p:Project,start_date:date,end_date:date,**kwargs)->Project:
-    d=start_date
-    while d<=end_date and not p.simulation_stopped:
-        run_day(p,d,**kwargs); d+=timedelta(days=1)
+def _begin_day(project: Project) -> dict[str, int]:
+    opening = {
+        "Opening_Cash": project.project_cash,
+        "Opening_AR": project.accounts_receivable,
+        "Opening_Gross_Bike_Assets": project.gross_bike_assets,
+        "Opening_Accumulated_Depreciation": project.accumulated_depreciation,
+        "Opening_Equity": project.capital + project.retained_earnings,
+    }
+    project._day_metrics = {
+        "cash_inflows": 0,
+        "cash_outflows": 0,
+        "ar_accruals": 0,
+        "ar_collections": 0,
+        "ar_transfers_to_guarantee": 0,
+        "capitalized_purchases_and_customs": 0,
+        "gross_writeoffs_on_ownership": 0,
+        "depreciation_expense": 0,
+        "ad_removed_on_writeoff": 0,
+    }
+    return opening
+
+
+def _cash_in(project: Project, amount: int) -> None:
+    project.project_cash += amount
+    project._day_metrics["cash_inflows"] += amount
+
+
+def _cash_out(project: Project, amount: int) -> None:
+    project.project_cash -= amount
+    project._day_metrics["cash_outflows"] += amount
+
+
+def _ar_collect(project: Project, amount: int) -> None:
+    project.accounts_receivable -= amount
+    project._day_metrics["ar_collections"] += amount
+
+
+def _ar_transfer(project: Project, amount: int) -> None:
+    project.accounts_receivable -= amount
+    project._day_metrics["ar_transfers_to_guarantee"] += amount
+
+
+def _capitalize(project: Project, amount: int) -> None:
+    project.gross_bike_assets += amount
+    project._day_metrics["capitalized_purchases_and_customs"] += amount
+
+
+def _gross_writeoff(project: Project, amount: int) -> None:
+    project.gross_bike_assets -= amount
+    project._day_metrics["gross_writeoffs_on_ownership"] += amount
+
+
+def _dep(project: Project, amount: int) -> None:
+    project.accumulated_depreciation += amount
+    project._day_metrics["depreciation_expense"] += amount
+
+
+def _ad_remove(project: Project, amount: int) -> None:
+    project.accumulated_depreciation -= amount
+    project._day_metrics["ad_removed_on_writeoff"] += amount
+
+
+def _has_prep_underfunded(project: Project) -> bool:
+    return any(
+        bike.current_state is BikeState.PREP
+        and (not bike.prep_paid or not bike.customs_paid)
+        for bike in project.bikes
+    )
+
+
+def _m2(project: Project, current_date: date) -> None:
+    if not dateutils.is_business_day(current_date):
+        return
+
+    for bike in sorted(
+        (b for b in project.bikes if b.current_state is BikeState.PREP),
+        key=lambda b: (b.purchase_date, b.bike_id),
+    ):
+        if (
+            not bike.prep_paid
+            and project.project_cash >= constants.PREP_OPERATING_EXPENSE_PER_BIKE
+            and project.partner1_reinvestment_balance
+            >= constants.PREP_OPERATING_EXPENSE_PER_BIKE
+        ):
+            _cash_out(
+                project,
+                constants.PREP_OPERATING_EXPENSE_PER_BIKE,
+            )
+            consume_partner1_for_expansion(
+                project,
+                constants.PREP_OPERATING_EXPENSE_PER_BIKE,
+            )
+            project.expense_prep += constants.PREP_OPERATING_EXPENSE_PER_BIKE
+            bike.prep_paid = True
+        if (
+            not bike.customs_paid
+            and project.project_cash >= constants.CUSTOMS_AND_REGISTRATION_COST
+            and project.partner1_reinvestment_balance
+            >= constants.CUSTOMS_AND_REGISTRATION_COST
+        ):
+            _cash_out(project, constants.CUSTOMS_AND_REGISTRATION_COST)
+            consume_partner1_for_expansion(
+                project,
+                constants.CUSTOMS_AND_REGISTRATION_COST,
+            )
+            _capitalize(
+                project,
+                constants.CUSTOMS_AND_REGISTRATION_COST,
+            )
+            bike.gross_cost += constants.CUSTOMS_AND_REGISTRATION_COST
+            bike.customs_paid = True
+        if bike.prep_paid and bike.customs_paid and bike.actual_ready_date is None:
+            bike.funding_completion_date = current_date
+            bike.actual_ready_date = max(
+                bike.scheduled_ready_date,
+                bike.funding_completion_date,
+            )
+
+    if (
+        current_date <= constants.EXPANSION_CUTOFF_DATE
+        and not _has_prep_underfunded(project)
+    ):
+        while (
+            project.project_cash >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
+            and project.partner1_reinvestment_balance
+            >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
+        ):
+            _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
+            consume_partner1_for_expansion(
+                project,
+                constants.BIKE_BASE_PURCHASE_COST,
+            )
+            _capitalize(
+                project,
+                constants.BIKE_BASE_PURCHASE_COST,
+            )
+            next_number = len(project.bikes) + 1
+            project.bikes.append(
+                Bike(
+                    bike_id=f"BK{next_number:04d}",
+                    source=BikeSource.EXPANSION,
+                    purchase_date=current_date,
+                    scheduled_ready_date=dateutils.scheduled_ready_date(
+                        current_date
+                    ),
+                    gross_cost=constants.BIKE_BASE_PURCHASE_COST,
+                    net_book_value=constants.BIKE_BASE_PURCHASE_COST,
+                )
+            )
+
+
+def _m3(project: Project, current_date: date) -> None:
+    if not dateutils.is_business_day(current_date):
+        return
+    for bike in project.bikes:
+        if (
+            bike.current_state is BikeState.PREP
+            and bike.actual_ready_date is not None
+            and current_date >= bike.actual_ready_date
+        ):
+            contract = _new_contract(
+                project,
+                bike,
+                ContractType.PRIMARY,
+                current_date,
+            )
+            bike.delivery_date = current_date
+            bike.current_contract_id = contract.contract_id
+            bike.current_tenant_id = contract.tenant_id
+            bike.lifecycle_cycle_number = 1
+            previous = bike.current_state
+            bike.current_state = BikeState.ACTIVE_PRIMARY
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.PRIMARY_CONTRACT_STARTED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+            )
+        elif bike.current_state is BikeState.AVAILABLE_FOR_SECONDARY:
+            contract = _new_contract(
+                project,
+                bike,
+                ContractType.SECONDARY,
+                current_date,
+            )
+            bike.delivery_date = current_date
+            bike.current_contract_id = contract.contract_id
+            bike.current_tenant_id = contract.tenant_id
+            bike.secondary_cycle_count += 1
+            bike.lifecycle_cycle_number += 1
+            previous = bike.current_state
+            bike.current_state = BikeState.ACTIVE_SECONDARY
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.SECONDARY_CONTRACT_STARTED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+            )
+
+
+def _m4(project: Project) -> dict[str, bool]:
+    return {
+        bike.bike_id: bike.current_state in POSSESSION_STATES
+        for bike in project.bikes
+    }
+
+
+def _m5(project: Project, current_date: date) -> None:
+    if not dateutils.is_business_day(current_date):
+        return
+    for bike in list(project.bikes):
+        contract = contract_of(project, bike)
+        if contract is None:
+            continue
+        if bike.current_state in {
+            BikeState.ACTIVE_PRIMARY,
+            BikeState.WAITING_PRIMARY,
+            BikeState.NOTICE_PRIMARY,
+            BikeState.GRACE_PRIMARY,
+        }:
+            accrue_rent(project, contract)
+            project._day_metrics["ar_accruals"] += contract.daily_rate
+        elif bike.current_state in {
+            BikeState.ACTIVE_SECONDARY,
+            BikeState.NOTICE_SECONDARY,
+        }:
+            accrue_rent(project, contract)
+            project._day_metrics["ar_accruals"] += contract.daily_rate
+        elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            bike.settlement_rent_due_total += constants.SETTLEMENT_DAILY_RENT
+            bike.settlement_rent_collected_total += constants.SETTLEMENT_DAILY_RENT
+            project.revenue_settlement += constants.SETTLEMENT_DAILY_RENT
+            _cash_in(project, constants.SETTLEMENT_DAILY_RENT)
+            record_eligible_inflow(
+                project,
+                constants.SETTLEMENT_DAILY_RENT,
+            )
+
+
+def _m6(
+    project: Project,
+    current_date: date,
+    possession: dict[str, bool],
+) -> None:
+    if not dateutils.is_friday(current_date):
+        return
+    for bike in project.bikes:
+        if not possession.get(bike.bike_id, False):
+            continue
+        if bike.delivery_date is None:
+            continue
+        contract = contract_of(project, bike)
+        if contract is None:
+            continue
+        result = apply_friday_fee_and_oil(
+            bike.delivery_date,
+            current_date,
+            contract.friday_counter,
+            True,
+        )
+        if not result.eligible:
+            continue
+        project.revenue_friday_fee += result.revenue_friday_fee
+        contract.friday_counter = result.friday_counter_after
+        if result.revenue_friday_fee:
+            _cash_in(project, result.revenue_friday_fee)
+            record_eligible_inflow(
+                project,
+                result.revenue_friday_fee,
+            )
+        if result.oil_service_expense:
+            project.expense_oil_service += result.oil_service_expense
+            _cash_out(project, result.oil_service_expense)
+
+
+def _m7(
+    project: Project,
+    possession: dict[str, bool],
+    current_date: date,
+) -> None:
+    for bike in project.bikes:
+        if not possession.get(bike.bike_id, False):
+            continue
+        if bike.net_book_value <= 0:
+            continue
+        depreciation = min(
+            constants.DEPRECIATION_RATE_PER_DAY,
+            constants.MAX_DEPRECIATION - bike.accumulated_depreciation,
+        )
+        if depreciation <= 0:
+            continue
+        bike.accumulated_depreciation += depreciation
+        bike.usage_days += 1
+        bike.net_book_value = max(
+            0,
+            bike.gross_cost - bike.accumulated_depreciation,
+        )
+        _dep(project, depreciation)
+        project.expense_depreciation += depreciation
+        _event(
+            project,
+            current_date,
+            bike,
+            EventType.DEPRECIATION_RECORDED,
+            bike.current_state,
+            bike.current_state,
+        )
+
+
+def _collect_ordinary(
+    project: Project,
+    bike: Bike,
+    contract: Contract,
+    collection_probability: float,
+    scenario_id: str,
+    trial_id: int,
+    master_seed: int,
+    event_type: str,
+) -> None:
+    seed = rng.derive_seed(
+        master_seed,
+        scenario_id,
+        trial_id,
+        bike.bike_id,
+        project._current_date,
+        event_type,
+    )
+    if not rng.deterministic_success(collection_probability, seed):
+        return
+    outstanding = contract.total_due - contract.total_paid
+    prior_arrears = max(0, outstanding - contract.daily_rate)
+    collected = min(
+        contract.daily_rate + prior_arrears,
+        outstanding,
+    )
+    contract.total_paid += collected
+    _cash_in(project, collected)
+    _ar_collect(project, collected)
+    record_eligible_inflow(project, collected)
+
+
+def _m8(
+    project: Project,
+    current_date: date,
+    collection_probability: float,
+    scenario_id: str,
+    trial_id: int,
+    master_seed: int,
+) -> None:
+    if not dateutils.is_business_day(current_date):
+        return
+    project._current_date = current_date
+
+    for bike in list(project.bikes):
+        contract = contract_of(project, bike)
+        if contract is None:
+            continue
+        if bike.current_state in {
+            BikeState.ACTIVE_PRIMARY,
+            BikeState.WAITING_PRIMARY,
+            BikeState.NOTICE_PRIMARY,
+            BikeState.GRACE_PRIMARY,
+        }:
+            _collect_ordinary(
+                project,
+                bike,
+                contract,
+                collection_probability,
+                scenario_id,
+                trial_id,
+                master_seed,
+                "PRIMARY_COLLECTION",
+            )
+        elif bike.current_state in {
+            BikeState.ACTIVE_SECONDARY,
+            BikeState.NOTICE_SECONDARY,
+        }:
+            _collect_ordinary(
+                project,
+                bike,
+                contract,
+                collection_probability,
+                scenario_id,
+                trial_id,
+                master_seed,
+                "SECONDARY_COLLECTION",
+            )
+        elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            remaining = bike.settlement_legacy_debt_remaining
+            if remaining is None or remaining <= 0:
+                continue
+            seed = rng.derive_seed(
+                master_seed,
+                scenario_id,
+                trial_id,
+                bike.bike_id,
+                current_date,
+                "LEGACY_DEBT_COLLECTION",
+            )
+            if not rng.deterministic_success(collection_probability, seed):
+                continue
+            payment = min(constants.SETTLEMENT_DAILY_RENT, remaining)
+            bike.settlement_legacy_debt_remaining -= payment
+            _cash_in(project, payment)
+            _ar_collect(project, payment)
+            receivable = _receivable_of(project, bike)
+            if receivable is not None:
+                receivable.collected_amount += payment
+                receivable.remaining_amount = bike.settlement_legacy_debt_remaining
+                if receivable.remaining_amount == 0:
+                    receivable.status = ReceivableStatus.SETTLED
+            record_eligible_inflow(project, payment)
+
+
+def _m9(project: Project) -> None:
+    for bike in project.bikes:
+        contract = contract_of(project, bike)
+        if contract is None:
+            continue
+        if bike.current_state in {
+            BikeState.ACTIVE_PRIMARY,
+            BikeState.WAITING_PRIMARY,
+            BikeState.NOTICE_PRIMARY,
+            BikeState.GRACE_PRIMARY,
+        }:
+            derived = derive_state_from_balance(
+                contract.total_due - contract.total_paid,
+                constants.PRIMARY_DAILY_RENT,
+                ContractType.PRIMARY,
+            )
+            if derived is not None:
+                bike.current_state = BikeState(derived)
+        elif bike.current_state in {
+            BikeState.ACTIVE_SECONDARY,
+            BikeState.NOTICE_SECONDARY,
+        }:
+            derived = derive_state_from_balance(
+                contract.total_due - contract.total_paid,
+                constants.SECONDARY_DAILY_RENT,
+                ContractType.SECONDARY,
+            )
+            if derived is not None:
+                bike.current_state = BikeState(derived)
+
+
+def _m11(
+    project: Project,
+    current_date: date,
+    recovery_rate_pct: int,
+) -> None:
+    for bike in list(project.bikes):
+        contract = contract_of(project, bike)
+        if contract is None:
+            continue
+        outstanding = contract.total_due - contract.total_paid
+
+        if (
+            bike.current_state
+            in {
+                BikeState.ACTIVE_PRIMARY,
+                BikeState.WAITING_PRIMARY,
+                BikeState.NOTICE_PRIMARY,
+                BikeState.GRACE_PRIMARY,
+            }
+            and outstanding >= constants.PRIMARY_DEFAULT_AMOUNT
+        ):
+            claim_source = constants.CLAIM_SOURCE_PRIMARY_EARLY_TERMINATION
+            event_type = EventType.PRIMARY_TERMINATED
+            previous = bike.current_state
+        elif (
+            bike.current_state
+            in {BikeState.ACTIVE_SECONDARY, BikeState.NOTICE_SECONDARY}
+            and outstanding >= constants.SECONDARY_DEFAULT_AMOUNT
+        ):
+            claim_source = constants.CLAIM_SOURCE_SECONDARY_EARLY_TERMINATION
+            event_type = EventType.SECONDARY_TERMINATED
+            previous = bike.current_state
+        else:
+            continue
+
+        claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
+        claim = create_guarantee_claim(
+            claim_id,
+            bike.bike_id,
+            contract.contract_id,
+            contract.tenant_id,
+            contract.guarantor_id,
+            claim_source,
+            outstanding,
+            current_date,
+            recovery_rate_pct,
+        )
+        project.guarantee_claims.append(claim)
+        _ar_transfer(project, outstanding)
+        project.guarantee_claim_receivable += outstanding
+        contract.status = ContractStatus.TERMINATED
+        bike.current_contract_id = None
+        bike.current_tenant_id = None
+        bike.termination_count += 1
+        bike.current_state = BikeState.AVAILABLE_FOR_SECONDARY
+        _event(
+            project,
+            current_date,
+            bike,
+            event_type,
+            previous,
+            bike.current_state,
+            contract.contract_id,
+            outstanding,
+        )
+
+
+def _m12(project: Project, current_date: date) -> None:
+    for bike in list(project.bikes):
+        contract = contract_of(project, bike)
+        if contract is None or contract.status is not ContractStatus.ACTIVE:
+            continue
+        if contract.contract_type is not ContractType.PRIMARY:
+            continue
+        if current_date != contract.maturity_date:
+            continue
+        if bike.current_state not in {
+            BikeState.ACTIVE_PRIMARY,
+            BikeState.WAITING_PRIMARY,
+            BikeState.NOTICE_PRIMARY,
+            BikeState.GRACE_PRIMARY,
+        }:
+            continue
+
+        outstanding = contract.total_due - contract.total_paid
+        previous = bike.current_state
+        if outstanding == 0:
+            bike.current_state = BikeState.OWNED_TRANSFERRED
+            contract.status = ContractStatus.SETTLED
+            bike.pending_writeoff_today = True
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.PRIMARY_CONTRACT_MATURED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+            )
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.OWNERSHIP_TRANSFERRED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+            )
+        else:
+            bike.current_state = BikeState.POST_MATURITY_SETTLEMENT
+            contract.status = ContractStatus.MATURED
+            bike.settlement_legacy_debt_original = outstanding
+            bike.settlement_legacy_debt_remaining = outstanding
+            bike.settlement_start_date = None
+            _new_receivable(project, bike, contract, outstanding)
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.PRIMARY_CONTRACT_MATURED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+                outstanding,
+            )
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.SETTLEMENT_STARTED,
+                previous,
+                bike.current_state,
+                contract.contract_id,
+                outstanding,
+            )
+
+
+def _m13(project: Project, current_date: date) -> None:
+    for bike in list(project.bikes):
+        if bike.current_state is not BikeState.POST_MATURITY_SETTLEMENT:
+            continue
+        if bike.settlement_start_date is None:
+            bike.settlement_start_date = current_date
+            receivable = _receivable_of(project, bike)
+            if receivable is not None:
+                receivable.created_date = current_date
+            continue
+
+        if not dateutils.is_business_day(current_date):
+            continue
+
+        bike.settlement_business_days_elapsed += 1
+        if bike.settlement_legacy_debt_remaining == 0:
+            contract = (
+                project.contracts.get(bike.current_contract_id)
+                if bike.current_contract_id
+                else None
+            )
+            if contract is not None:
+                contract.status = ContractStatus.SETTLED
+            previous = bike.current_state
+            bike.current_state = BikeState.OWNED_TRANSFERRED
+            bike.pending_writeoff_today = True
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.SETTLEMENT_COMPLETED,
+                previous,
+                bike.current_state,
+                bike.current_contract_id,
+            )
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.OWNERSHIP_TRANSFERRED,
+                previous,
+                bike.current_state,
+                bike.current_contract_id,
+            )
+        elif (
+            bike.settlement_business_days_elapsed
+            > constants.SETTLEMENT_PERIOD_DAYS
+        ):
+            remaining = bike.settlement_legacy_debt_remaining
+            contract = (
+                project.contracts.get(bike.current_contract_id)
+                if bike.current_contract_id
+                else None
+            )
+            if contract is None:
+                raise AssertionError(
+                    "settlement bike lost its contract before failure"
+                )
+            claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
+            claim = create_guarantee_claim(
+                claim_id,
+                bike.bike_id,
+                contract.contract_id,
+                contract.tenant_id,
+                contract.guarantor_id,
+                constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,
+                remaining,
+                current_date,
+                project._recovery_rate_pct,
+            )
+            project.guarantee_claims.append(claim)
+            _ar_transfer(project, remaining)
+            project.guarantee_claim_receivable += remaining
+            bike.settlement_legacy_debt_remaining = 0
+            receivable = _receivable_of(project, bike)
+            if receivable is not None:
+                receivable.status = ReceivableStatus.TRANSFERRED_TO_GUARANTEE
+                receivable.remaining_amount = 0
+            contract.status = ContractStatus.TERMINATED
+            bike.current_contract_id = None
+            bike.current_tenant_id = None
+            bike.current_state = BikeState.AVAILABLE_FOR_SECONDARY
+            bike.active_settlement_receivable_id = None
+            _event(
+                project,
+                current_date,
+                bike,
+                EventType.SETTLEMENT_FAILED,
+                BikeState.POST_MATURITY_SETTLEMENT,
+                bike.current_state,
+                contract.contract_id,
+                remaining,
+            )
+
+
+def _m14(
+    project: Project,
+    current_date: date,
+) -> None:
+    for claim in list(project.guarantee_claims):
+        if claim.status is not ClaimStatus.PENDING:
+            continue
+        if current_date < claim.settlement_due_date:
+            continue
+        recovered = (claim.claim_amount * claim.recovery_rate_pct) // 100
+        bad_debt = claim.claim_amount - recovered
+        _cash_in(project, recovered)
+        project.guarantee_claim_receivable -= claim.claim_amount
+        project.bad_debt_expense += bad_debt
+        record_eligible_inflow(project, recovered)
+        claim.recovered_amount = recovered
+        claim.bad_debt_amount = bad_debt
+        claim.settlement_date = current_date
+        claim.status = ClaimStatus.SETTLED
+        bike = next(
+            item for item in project.bikes if item.bike_id == claim.bike_id
+        )
+        _event(
+            project,
+            current_date,
+            bike,
+            EventType.GUARANTEE_RECOVERED
+            if recovered > 0
+            else EventType.GUARANTEE_WRITTEN_OFF,
+            amount=claim.claim_amount,
+        )
+
+
+def _m15(
+    project: Project,
+    current_date: date,
+    recovery_rate_pct: int,
+) -> None:
+    execute_dynamic_closure(project, current_date, recovery_rate_pct)
+
+
+def _m16(project: Project, current_date: date) -> None:
+    for bike in project.bikes:
+        if not bike.pending_writeoff_today:
+            continue
+        old_accumulated = bike.accumulated_depreciation
+        writeoff_amount = bike.gross_cost - old_accumulated
+        _ad_remove(project, old_accumulated)
+        project.asset_writeoff_expense += writeoff_amount
+        _gross_writeoff(project, bike.gross_cost)
+        bike.net_book_value = 0
+        bike.accumulated_depreciation = bike.gross_cost
+        bike.pending_writeoff_today = False
+        _event(
+            project,
+            current_date,
+            bike,
+            EventType.OWNERSHIP_TRANSFERRED,
+            bike.current_state,
+            bike.current_state,
+            amount=writeoff_amount,
+        )
+
+
+def _m17(
+    project: Project,
+    current_date: date,
+    opening: dict[str, int],
+) -> None:
+    from accounting import refresh_profit
+
+    refresh_profit(project)
+    snapshot = assert_balance_sheet_balanced(project, current_date)
+    project.daily_balance_checks.append(snapshot)
+    record_daily_rollforwards(
+        project,
+        current_date,
+        opening,
+        project._day_metrics,
+    )
+    if project.simulation_stopped:
+        if project.final_net_project_equity != snapshot["Total_Equity"]:
+            raise AssertionError(
+                "Final_Net_Project_Equity must equal Total_Equity after M17"
+            )
+
+
+def run_day(
+    p: Project,
+    current_date: date,
+    collection_probability: float = 1.0,
+    scenario_id: str = "C100_G100",
+    trial_id: int = 1,
+    recovery_rate_pct: int = 100,
+    master_seed: int = constants.MASTER_SEED,
+) -> None:
+    if p.simulation_stopped:
+        return
+
+    p._recovery_rate_pct = recovery_rate_pct
+    p._current_date = current_date
+    opening = _begin_day(p)
+    trace_enabled = getattr(p, "_execution_trace_enabled", False)
+    trace = []
+
+    stages = (
+        ("M1", lambda: None),
+        ("M2", lambda: _m2(p, current_date)),
+        ("M3", lambda: _m3(p, current_date)),
+        ("M4", lambda: None),
+        ("M5", lambda: _m5(p, current_date)),
+        ("M6", lambda: _m6(p, current_date, p._possession)),
+        ("M7", lambda: _m7(p, p._possession, current_date)),
+        (
+            "M8",
+            lambda: _m8(
+                p,
+                current_date,
+                collection_probability,
+                scenario_id,
+                trial_id,
+                master_seed,
+            ),
+        ),
+        ("M9", lambda: _m9(p)),
+        ("M10", lambda: None),
+        ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
+        ("M12", lambda: _m12(p, current_date)),
+        ("M13", lambda: _m13(p, current_date)),
+        ("M14", lambda: _m14(p, current_date)),
+        ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
+        ("M16", lambda: _m16(p, current_date)),
+        ("M17", lambda: _m17(p, current_date, opening)),
+    )
+
+    p._possession = _m4(p)
+    for name, fn in stages:
+        fn()
+        if trace_enabled:
+            trace.append(name)
+
+    if trace_enabled:
+        p.execution_trace.append(trace)
+
+
+def run_days(
+    p: Project,
+    start_date: date,
+    end_date: date,
+    **kwargs,
+) -> Project:
+    current = start_date
+    while current <= end_date and not p.simulation_stopped:
+        run_day(p, current, **kwargs)
+        current += timedelta(days=1)
     return p
 
 
-def run_deterministic_trial(recovery_rate_pct:int=100,trial_id:int=1,scenario_id:str="C100_G100")->Project:
-    p=create_initial_project(recovery_rate_pct)
-    d=date(2027,1,1)
-    while not p.simulation_stopped:
-        run_day(p,d,1.0,scenario_id,trial_id,recovery_rate_pct); d+=timedelta(days=1)
-    return p
+def run_deterministic_trial(
+    recovery_rate_pct: int = 100,
+    trial_id: int = 1,
+    scenario_id: str = "C100_G100",
+    master_seed: int = constants.MASTER_SEED,
+) -> Project:
+    project = create_initial_project(recovery_rate_pct=recovery_rate_pct)
+    current = constants.PROJECT_START_DATE
+    while not project.simulation_stopped:
+        run_day(
+            project,
+            current,
+            collection_probability=1.0,
+            scenario_id=scenario_id,
+            trial_id=trial_id,
+            recovery_rate_pct=recovery_rate_pct,
+            master_seed=master_seed,
+        )
+        current += timedelta(days=1)
+    return project
+
+
+__all__ = [
+    "POSSESSION_STATES",
+    "create_initial_project",
+    "run_day",
+    "run_days",
+    "run_deterministic_trial",
+]

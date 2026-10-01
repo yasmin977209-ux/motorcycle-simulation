@@ -1,68 +1,210 @@
-"""Chapter 13 — dynamic closure."""
+"""Chapter 13 dynamic closure rebuilt from the authoritative reference."""
+
 from __future__ import annotations
+
 from datetime import date
-from constants import EXPANSION_CUTOFF_DATE
-from entities import ClaimStatus, ClaimSource, ContractStatus, Project, ReceivableStatus
-from guarantee import create_guarantee_claim
+
+from accounting import settle_guarantee_accounting
+from constants import (
+    CLAIM_SOURCE_ADMINISTRATIVE_CLOSURE,
+    CLAIM_SOURCE_FINAL_CLOSURE,
+    EXPANSION_CUTOFF_DATE,
+)
+from entities import (
+    BikeState,
+    ClaimStatus,
+    EventLogEntry,
+    EventType,
+    Project,
+    ReceivableStatus,
+)
+from guarantee import create_guarantee_claim, settle_guarantee_claim
+from partner_equity import record_eligible_inflow
+
 
 def closure_preconditions_met(project: Project, current_date: date) -> bool:
+    no_prep = not any(b.current_state is BikeState.PREP for b in project.bikes)
+    no_primary_active = not any(
+        b.current_state
+        in {
+            BikeState.ACTIVE_PRIMARY,
+            BikeState.WAITING_PRIMARY,
+            BikeState.NOTICE_PRIMARY,
+            BikeState.GRACE_PRIMARY,
+        }
+        for b in project.bikes
+    )
+    no_settlement_active = not any(
+        b.current_state is BikeState.POST_MATURITY_SETTLEMENT
+        for b in project.bikes
+    )
+    expansion_window_closed = current_date > EXPANSION_CUTOFF_DATE
     return (
-        not any(b.current_state=="PREP" for b in project.bikes)
-        and not any(b.current_state in {"ACTIVE_PRIMARY","WAITING_PRIMARY","NOTICE_PRIMARY","GRACE_PRIMARY"} for b in project.bikes)
-        and not any(b.current_state=="POST_MATURITY_SETTLEMENT" for b in project.bikes)
-        and current_date > EXPANSION_CUTOFF_DATE
+        no_prep
+        and no_primary_active
+        and no_settlement_active
+        and expansion_window_closed
     )
 
-def _force_settle(project: Project, claim, current_date: date) -> None:
-    if claim.status is not ClaimStatus.PENDING: return
-    recovered=(claim.claim_amount*claim.recovery_rate_pct)//100
-    bad_debt=claim.claim_amount-recovered
-    project.project_cash += recovered
-    project.guarantee_claim_receivable -= claim.claim_amount
-    project.bad_debt_expense += bad_debt
-    claim.recovered_amount=recovered
-    claim.bad_debt_amount=bad_debt
-    claim.status=ClaimStatus.SETTLED
-    claim.settlement_date=current_date
 
-def execute_dynamic_closure(project: Project,current_date: date,recovery_rate_pct:int)->bool:
-    if not closure_preconditions_met(project,current_date): return False
-    for bike in list(project.bikes):
-        if bike.current_state not in {"ACTIVE_SECONDARY","NOTICE_SECONDARY"}: continue
-        contract=next(c for c in project.contracts if c.contract_id==bike.current_contract_id)
-        outstanding=contract.total_due-contract.total_paid
-        if outstanding>0:
-            claim=create_guarantee_claim(f"CL{len(project.guarantee_claims)+1:08d}",bike.bike_id,contract.contract_id,contract.tenant_id,contract.guarantor_id,ClaimSource.ADMINISTRATIVE_CLOSURE,outstanding,current_date,recovery_rate_pct)
-            project.guarantee_claims.append(claim)
-            project.accounts_receivable-=outstanding
-            project.guarantee_claim_receivable+=outstanding
-        contract.status=ContractStatus.TERMINATED
-        bike.current_contract_id=None
-        bike.current_tenant_id=None
-        bike.current_state="HELD_AS_ASSET"
-    for claim in project.guarantee_claims:
-        _force_settle(project,claim,current_date)
-    for recv in project.receivables:
-        if recv.status is not ReceivableStatus.OUTSTANDING: continue
-        remaining=recv.remaining_amount
-        if remaining<=0:
-            recv.status=ReceivableStatus.SETTLED
-            continue
-        claim=create_guarantee_claim(f"CL{len(project.guarantee_claims)+1:08d}",recv.bike_id,recv.contract_id,recv.tenant_id,"",ClaimSource.FINAL_CLOSURE,remaining,current_date,recovery_rate_pct)
-        project.guarantee_claims.append(claim)
-        project.accounts_receivable-=remaining
-        project.guarantee_claim_receivable+=remaining
-        _force_settle(project,claim,current_date)
-        recv.remaining_amount=0
-        recv.status=ReceivableStatus.SETTLED
-        recv.settlement_date=current_date
+def _metric(project: Project, key: str, amount: int) -> None:
+    if hasattr(project, "_day_metrics"):
+        project._day_metrics[key] += amount
+
+
+def _event(project: Project, current_date: date, bike_id: str, event_type: EventType, contract_id: str | None = None, amount: int | None = None) -> None:
+    event = EventLogEntry(
+        event_id=f"EV{len(project.event_log) + 1:08d}",
+        date=current_date,
+        bike_id=bike_id,
+        event_type=event_type,
+        contract_id=contract_id,
+        amount_if_applicable=amount,
+    )
+    project.event_log.append(event)
+    bike = next((b for b in project.bikes if b.bike_id == bike_id), None)
+    if bike is not None:
+        bike.lifecycle_history.append(event)
+
+
+def _force_settle(project: Project, claim, current_date: date) -> None:
+    if claim.status is ClaimStatus.SETTLED:
+        return
+    result = settle_guarantee_claim(claim, current_date)
+    if not result.settled_now:
+        recovered = (claim.claim_amount * claim.recovery_rate_pct) // 100
+        bad_debt = claim.claim_amount - recovered
+        claim.recovered_amount = recovered
+        claim.bad_debt_amount = bad_debt
+        claim.settlement_date = current_date
+        claim.status = ClaimStatus.SETTLED
+    else:
+        recovered = result.recovered_amount
+        bad_debt = result.bad_debt_amount
+    settle_guarantee_accounting(
+        project,
+        claim.claim_amount,
+        recovered,
+        bad_debt,
+    )
+    _metric(project, "cash_inflows", recovered)
+    record_eligible_inflow(project, recovered)
+
+
+def execute_dynamic_closure(
+    project: Project,
+    current_date: date,
+    recovery_rate_pct: int,
+) -> bool:
+    if not closure_preconditions_met(project, current_date):
+        return False
+
     for bike in project.bikes:
-        if bike.current_state not in {"OWNED_TRANSFERRED","HELD_AS_ASSET"}:
-            bike.current_state="HELD_AS_ASSET"
-            bike.net_book_value=max(0,bike.gross_cost-bike.accumulated_depreciation)
-    project.final_close_date=current_date
-    project.final_net_project_equity=project.project_cash+sum(b.net_book_value for b in project.bikes if b.current_state=="HELD_AS_ASSET")
-    project.partner1_final_entitlement=(project.final_net_project_equity*70)//100
-    project.partner2_final_entitlement=project.final_net_project_equity-project.partner1_final_entitlement
-    project.simulation_stopped=True
+        if bike.current_state not in {
+            BikeState.ACTIVE_SECONDARY,
+            BikeState.NOTICE_SECONDARY,
+        }:
+            continue
+        if bike.current_contract_id is None:
+            continue
+        contract = project.contracts.get(bike.current_contract_id)
+        if contract is None:
+            raise AssertionError("secondary bike lost its current contract")
+        outstanding = contract.total_due - contract.total_paid
+        if outstanding > 0:
+            claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
+            claim = create_guarantee_claim(
+                claim_id,
+                bike.bike_id,
+                contract.contract_id,
+                contract.tenant_id,
+                contract.guarantor_id,
+                CLAIM_SOURCE_ADMINISTRATIVE_CLOSURE,
+                outstanding,
+                current_date,
+                recovery_rate_pct,
+            )
+            project.guarantee_claims.append(claim)
+            project.accounts_receivable -= outstanding
+            project.guarantee_claim_receivable += outstanding
+            _metric(project, "ar_transfers_to_guarantee", outstanding)
+        contract.status = contract.status.TERMINATED
+        previous = bike.current_state
+        bike.current_state = BikeState.HELD_AS_ASSET
+        bike.current_contract_id = None
+        bike.current_tenant_id = None
+        _event(
+            project,
+            current_date,
+            bike.bike_id,
+            EventType.ADMINISTRATIVE_CLOSURE,
+            contract.contract_id,
+            outstanding,
+        )
+
+    for claim in project.guarantee_claims:
+        if claim.status is ClaimStatus.PENDING:
+            _force_settle(project, claim, current_date)
+
+    for receivable in project.receivables:
+        if receivable.status is not ReceivableStatus.OUTSTANDING:
+            continue
+        remaining = receivable.remaining_amount
+        if remaining <= 0:
+            receivable.status = ReceivableStatus.SETTLED
+            continue
+        contract = project.contracts.get(receivable.contract_id)
+        guarantor_id = contract.guarantor_id if contract is not None else ""
+        claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
+        claim = create_guarantee_claim(
+            claim_id,
+            receivable.bike_id,
+            receivable.contract_id,
+            receivable.tenant_id,
+            guarantor_id,
+            CLAIM_SOURCE_FINAL_CLOSURE,
+            remaining,
+            current_date,
+            recovery_rate_pct,
+        )
+        project.guarantee_claims.append(claim)
+        project.accounts_receivable -= remaining
+        project.guarantee_claim_receivable += remaining
+        _metric(project, "ar_transfers_to_guarantee", remaining)
+        receivable.status = ReceivableStatus.SETTLED
+        receivable.remaining_amount = 0
+        _force_settle(project, claim, current_date)
+
+    for bike in project.bikes:
+        if bike.current_state in {
+            BikeState.OWNED_TRANSFERRED,
+            BikeState.HELD_AS_ASSET,
+        }:
+            continue
+        previous = bike.current_state
+        bike.current_state = BikeState.HELD_AS_ASSET
+        _event(
+            project,
+            current_date,
+            bike.bike_id,
+            EventType.FINAL_ASSET_HELD,
+        )
+
+    project.final_close_date = current_date
+    project.final_net_project_equity = project.project_cash + sum(
+        bike.net_book_value
+        for bike in project.bikes
+        if bike.current_state is BikeState.HELD_AS_ASSET
+    )
+    project.partner1_final_entitlement = (
+        project.final_net_project_equity * 70
+    ) // 100
+    project.partner2_final_entitlement = (
+        project.final_net_project_equity
+        - project.partner1_final_entitlement
+    )
+    project.simulation_stopped = True
     return True
+
+
+__all__ = ["closure_preconditions_met", "execute_dynamic_closure"]

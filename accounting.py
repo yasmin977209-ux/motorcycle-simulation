@@ -1,88 +1,132 @@
-"""Chapter 10 — accrual accounting and daily balance-sheet controls."""
-from __future__ import annotations
-from entities import Project
+"""Chapter 10 accounting layer rebuilt from the authoritative reference."""
 
-LIABILITIES = 0
+from __future__ import annotations
+
+from datetime import date
+
+from entities import Contract, Project
+
+
+ROLLFORWARD_FIELDS = {
+    "cash": (
+        "Opening_Cash",
+        "Inflows",
+        "Outflows",
+        "Closing_Cash",
+    ),
+    "ar": (
+        "Opening_AR",
+        "Accruals",
+        "Collections",
+        "TransfersToGuarantee",
+        "Closing_AR",
+    ),
+    "asset": (
+        "Opening_Gross_Bike_Assets",
+        "Capitalized_Purchases_And_Customs",
+        "Gross_Writeoffs_On_Ownership",
+        "Closing_Gross_Bike_Assets",
+        "Opening_Accumulated_Depreciation",
+        "Depreciation_Expense",
+        "AD_Removed_On_Writeoff",
+        "Closing_Accumulated_Depreciation",
+    ),
+    "equity": (
+        "Opening_Equity",
+        "Operating_Net_Profit",
+        "Closing_Equity",
+    ),
+}
+
 
 def initialize_accounting(project: Project | None = None) -> Project:
-    """Initialize the Chapter 10 accounting state on a Project entity.
+    return Project.opening() if project is None else project
 
-    The opening position is established before 2027-01-01:
-    Cash=0, AR=0, Guarantee Claims=0, Gross Bike Assets=3,600,000,
-    Accumulated Depreciation=0, Capital=3,700,000, and Retained Earnings=-100,000.
-    Marketing expense is recorded once as an opening memorandum value.
-    """
-    if project is None:
-        project = Project()
-    from constants import OPENING_BIKE_ASSETS, OPENING_CASH, OPENING_MARKETING_EXPENSE, OPENING_RETAINED_LOSS, TOTAL_CAPITAL
 
-    project.project_cash = OPENING_CASH
-    project.accounts_receivable = 0
-    project.guarantee_claim_receivable = 0
-    project.gross_bike_assets = OPENING_BIKE_ASSETS
-    project.accumulated_depreciation = 0
-    project.capital = TOTAL_CAPITAL
-    project.retained_earnings = OPENING_RETAINED_LOSS
-    project.opening_loss = OPENING_RETAINED_LOSS
-    project.expense_marketing = OPENING_MARKETING_EXPENSE
-    return project
-
-def accrue_rent(project: Project, contract, amount: int | None = None) -> int:
-    """Accrue one ordinary rental amount under Chapter 10 accrual accounting."""
+def accrue_rent(project: Project, contract: Contract, amount: int | None = None) -> int:
     rent = contract.daily_rate if amount is None else amount
     if rent < 0:
-        raise ValueError("rent amount must be non-negative")
+        raise ValueError("rent amount must not be negative")
     contract.total_due += rent
-    project.accounts_receivable += rent
-    contract_type = getattr(contract.contract_type, "value", contract.contract_type)
-    if contract_type == "PRIMARY":
+    if contract.contract_type.value == "PRIMARY":
         project.revenue_primary += rent
-    elif contract_type == "SECONDARY":
-        project.revenue_secondary += rent
     else:
-        raise ValueError(f"unsupported contract type for ordinary rent accrual: {contract_type}")
+        project.revenue_secondary += rent
+    project.accounts_receivable += rent
     return rent
 
-def collect_from_ar(project: Project, amount: int) -> int:
-    """Collect an existing receivable without recognizing revenue a second time."""
-    if amount < 0:
-        raise ValueError("collection amount must be non-negative")
-    collected = min(amount, project.accounts_receivable)
-    project.accounts_receivable -= collected
-    project.project_cash += collected
-    return collected
 
-def settle_guarantee_accounting(project: Project, claim_amount: int, recovered_amount: int, bad_debt_amount: int) -> None:
-    """Account for settlement of a guarantee claim: recovery is cash only; unrecovered balance is bad debt."""
+def collect_from_ar(project: Project, amount: int) -> int:
+    if amount < 0 or amount > project.accounts_receivable:
+        raise ValueError("collection amount is outside Accounts_Receivable")
+    project.project_cash += amount
+    project.accounts_receivable -= amount
+    return amount
+
+
+def settle_guarantee_accounting(
+    project: Project,
+    claim_amount: int,
+    recovered_amount: int,
+    bad_debt_amount: int,
+) -> None:
     if min(claim_amount, recovered_amount, bad_debt_amount) < 0:
-        raise ValueError("guarantee amounts must be non-negative")
+        raise ValueError("guarantee accounting amounts must not be negative")
     if recovered_amount + bad_debt_amount != claim_amount:
-        raise ValueError("recovered_amount + bad_debt_amount must equal claim_amount")
-    if claim_amount > project.guarantee_claim_receivable:
-        raise ValueError("claim amount exceeds guarantee claim receivable")
-    project.guarantee_claim_receivable -= claim_amount
+        raise ValueError("recovered + bad debt must equal claim amount")
+    if project.guarantee_claim_receivable < claim_amount:
+        raise ValueError("claim exceeds Guarantee_Claim_Receivable")
     project.project_cash += recovered_amount
+    project.guarantee_claim_receivable -= claim_amount
     project.bad_debt_expense += bad_debt_amount
+
+
 def operating_revenue(project: Project) -> int:
-    return project.revenue_primary + project.revenue_secondary + project.revenue_settlement + project.revenue_friday_fee
+    return (
+        project.revenue_primary
+        + project.revenue_secondary
+        + project.revenue_settlement
+        + project.revenue_friday_fee
+    )
+
 
 def operating_expenses(project: Project) -> int:
-    return project.expense_depreciation + project.expense_oil_service + project.expense_prep + project.bad_debt_expense + project.asset_writeoff_expense
+    return (
+        project.expense_depreciation
+        + project.expense_oil_service
+        + project.expense_prep
+        + project.bad_debt_expense
+        + project.asset_writeoff_expense
+    )
+
 
 def operating_net_profit(project: Project) -> int:
     return operating_revenue(project) - operating_expenses(project)
 
+
 def refresh_profit(project: Project) -> int:
-    project.retained_earnings = project.opening_loss + operating_net_profit(project)
-    return project.retained_earnings
+    project.operating_revenue = operating_revenue(project)
+    project.operating_expenses = operating_expenses(project)
+    project.operating_net_profit = operating_net_profit(project)
+    project.cumulative_project_profit = (
+        project.opening_loss + project.operating_net_profit
+    )
+    project.retained_earnings = project.cumulative_project_profit
+    return project.operating_net_profit
+
 
 def net_bike_assets(project: Project) -> int:
     return project.gross_bike_assets - project.accumulated_depreciation
 
+
 def balance_sheet_snapshot(project: Project) -> dict[str, int]:
-    refresh_profit(project)
     net_assets = net_bike_assets(project)
-    total_assets = project.project_cash + project.accounts_receivable + project.guarantee_claim_receivable + net_assets
+    total_assets = (
+        project.project_cash
+        + project.accounts_receivable
+        + project.guarantee_claim_receivable
+        + net_assets
+    )
     total_equity = project.capital + project.retained_earnings
     return {
         "Cash": project.project_cash,
@@ -91,17 +135,118 @@ def balance_sheet_snapshot(project: Project) -> dict[str, int]:
         "Gross_Bike_Assets": project.gross_bike_assets,
         "Accumulated_Depreciation": project.accumulated_depreciation,
         "Net_Bike_Assets": net_assets,
-        "Capital": project.capital,
-        "Retained_Earnings": project.retained_earnings,
         "Total_Assets": total_assets,
         "Total_Equity": total_equity,
+        "Liabilities": 0,
         "Balance_Difference": total_assets - total_equity,
-        "Liabilities": LIABILITIES,
     }
 
-def assert_balance_sheet_balanced(project: Project, current_date=None) -> dict[str, int]:
+
+def assert_balance_sheet_balanced(
+    project: Project,
+    current_date: date | None = None,
+) -> dict[str, int]:
     snapshot = balance_sheet_snapshot(project)
     if snapshot["Balance_Difference"] != 0:
-        suffix = f" on {current_date}" if current_date is not None else ""
-        raise AssertionError(f"Balance sheet out of balance{suffix}: {snapshot['Balance_Difference']}")
+        raise AssertionError(
+            f"balance sheet mismatch on {current_date}: "
+            f"{snapshot['Balance_Difference']}"
+        )
     return snapshot
+
+
+def _fixed_record(kind: str, values: dict[str, int]) -> dict[str, int]:
+    fields = ROLLFORWARD_FIELDS[kind]
+    if set(values) != set(fields):
+        raise ValueError(f"invalid {kind} roll-forward fields")
+    return {field: values[field] for field in fields}
+
+
+def record_daily_rollforwards(
+    project: Project,
+    current_date: date,
+    opening: dict[str, int],
+    metrics: dict[str, int],
+) -> None:
+    closing_equity = project.capital + project.retained_earnings
+    daily_operating_profit = closing_equity - opening["Opening_Equity"]
+
+    project.cash_rollforward.append(
+        _fixed_record(
+            "cash",
+            {
+                "Opening_Cash": opening["Opening_Cash"],
+                "Inflows": metrics["cash_inflows"],
+                "Outflows": metrics["cash_outflows"],
+                "Closing_Cash": project.project_cash,
+            },
+        )
+    )
+    project.ar_rollforward.append(
+        _fixed_record(
+            "ar",
+            {
+                "Opening_AR": opening["Opening_AR"],
+                "Accruals": metrics["ar_accruals"],
+                "Collections": metrics["ar_collections"],
+                "TransfersToGuarantee": metrics["ar_transfers_to_guarantee"],
+                "Closing_AR": project.accounts_receivable,
+            },
+        )
+    )
+    project.asset_rollforward.append(
+        _fixed_record(
+            "asset",
+            {
+                "Opening_Gross_Bike_Assets": opening["Opening_Gross_Bike_Assets"],
+                "Capitalized_Purchases_And_Customs": metrics[
+                    "capitalized_purchases_and_customs"
+                ],
+                "Gross_Writeoffs_On_Ownership": metrics[
+                    "gross_writeoffs_on_ownership"
+                ],
+                "Closing_Gross_Bike_Assets": project.gross_bike_assets,
+                "Opening_Accumulated_Depreciation": opening[
+                    "Opening_Accumulated_Depreciation"
+                ],
+                "Depreciation_Expense": metrics["depreciation_expense"],
+                "AD_Removed_On_Writeoff": metrics["ad_removed_on_writeoff"],
+                "Closing_Accumulated_Depreciation": (
+                    project.accumulated_depreciation
+                ),
+            },
+        )
+    )
+    project.equity_rollforward.append(
+        _fixed_record(
+            "equity",
+            {
+                "Opening_Equity": opening["Opening_Equity"],
+                "Operating_Net_Profit": daily_operating_profit,
+                "Closing_Equity": closing_equity,
+            },
+        )
+    )
+    project.daily_snapshots.append(
+        {
+            "date": current_date,
+            **balance_sheet_snapshot(project),
+        }
+    )
+
+
+__all__ = [
+    "ROLLFORWARD_FIELDS",
+    "initialize_accounting",
+    "accrue_rent",
+    "collect_from_ar",
+    "settle_guarantee_accounting",
+    "operating_revenue",
+    "operating_expenses",
+    "operating_net_profit",
+    "refresh_profit",
+    "net_bike_assets",
+    "balance_sheet_snapshot",
+    "assert_balance_sheet_balanced",
+    "record_daily_rollforwards",
+]
