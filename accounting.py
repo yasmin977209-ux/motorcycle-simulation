@@ -42,6 +42,27 @@ def accrue_rent(project: Project, contract, amount: int | None = None) -> int:
     else:
         raise ValueError(f"unsupported contract type for ordinary rent accrual: {contract_type}")
     return rent
+
+def collect_from_ar(project: Project, amount: int) -> int:
+    """Collect an existing receivable without recognizing revenue a second time."""
+    if amount < 0:
+        raise ValueError("collection amount must be non-negative")
+    collected = min(amount, project.accounts_receivable)
+    project.accounts_receivable -= collected
+    project.project_cash += collected
+    return collected
+
+def settle_guarantee_accounting(project: Project, claim_amount: int, recovered_amount: int, bad_debt_amount: int) -> None:
+    """Account for settlement of a guarantee claim: recovery is cash only; unrecovered balance is bad debt."""
+    if min(claim_amount, recovered_amount, bad_debt_amount) < 0:
+        raise ValueError("guarantee amounts must be non-negative")
+    if recovered_amount + bad_debt_amount != claim_amount:
+        raise ValueError("recovered_amount + bad_debt_amount must equal claim_amount")
+    if claim_amount > project.guarantee_claim_receivable:
+        raise ValueError("claim amount exceeds guarantee claim receivable")
+    project.guarantee_claim_receivable -= claim_amount
+    project.project_cash += recovered_amount
+    project.bad_debt_expense += bad_debt_amount
 def operating_revenue(project: Project) -> int:
     return project.revenue_primary + project.revenue_secondary + project.revenue_settlement + project.revenue_friday_fee
 
