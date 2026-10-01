@@ -83,7 +83,7 @@ def test_path2_primary_early_default_to_secondary_activation():
             if target.current_state == "ACTIVE_SECONDARY":
                 break
 
-    assert target.current_state == BikeState.ACTIVE_SECONDARY.value
+    assert target.current_state == "ACTIVE_SECONDARY"
     assert target.secondary_cycle_count >= 1
     assert any(
         event.event_type.value == "SECONDARY_CONTRACT_STARTED"
@@ -143,10 +143,10 @@ def test_path4_maturity_with_debt_then_failed_settlement_to_secondary():
         trial_id=1,
         recovery_rate_pct=100,
     )
-    assert target.current_state == BikeState.POST_MATURITY_SETTLEMENT.value
+    assert target.current_state == "POST_MATURITY_SETTLEMENT"
 
     current = contract.maturity_date + timedelta(days=1)
-    while target.current_state == BikeState.POST_MATURITY_SETTLEMENT.value:
+    while target.current_state == "POST_MATURITY_SETTLEMENT":
         daily_engine.run_day(
             project,
             current,
@@ -157,7 +157,7 @@ def test_path4_maturity_with_debt_then_failed_settlement_to_secondary():
         )
         current += timedelta(days=1)
 
-    assert target.current_state == BikeState.AVAILABLE_FOR_SECONDARY.value
+    assert target.current_state == "AVAILABLE_FOR_SECONDARY"
     assert any(
         claim.claim_source.value == "POST_MATURITY_SETTLEMENT_FAILURE"
         for claim in project.guarantee_claims
@@ -187,8 +187,8 @@ def test_path5_repeated_secondary_default_two_cycles():
     assert target.secondary_cycle_count >= 2
     assert target.termination_count >= 2
     assert target.current_state in {
-        BikeState.AVAILABLE_FOR_SECONDARY.value,
-        BikeState.ACTIVE_SECONDARY.value,
+        "AVAILABLE_FOR_SECONDARY",
+        "ACTIVE_SECONDARY",
     }
     secondary_starts = sum(
         1 for event in target.lifecycle_history
