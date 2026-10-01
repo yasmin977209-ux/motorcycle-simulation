@@ -158,6 +158,16 @@ class Contract:
     friday_counter: int = 0
 
 
+class ContractIndex(dict[str, Contract]):
+    """O(1) contract_id index with value iteration for existing callers."""
+
+    def append(self, contract: Contract) -> None:
+        self[contract.contract_id] = contract
+
+    def __iter__(self):
+        return iter(self.values())
+
+
 @dataclass
 class Tenant:
     tenant_id: str
@@ -262,7 +272,7 @@ class Project:
     simulation_stopped: bool = False
     bikes: list[Bike] = field(default_factory=list)
     # O(1) contract lookup by the authoritative contract_id key.
-    contracts: dict[str, Contract] = field(default_factory=dict)
+    contracts: ContractIndex = field(default_factory=ContractIndex)
     tenants: list[Tenant] = field(default_factory=list)
     guarantors: list[Guarantor] = field(default_factory=list)
     guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
@@ -308,6 +318,7 @@ __all__ = [
     "EventType",
     "Bike",
     "Contract",
+    "ContractIndex",
     "Tenant",
     "Guarantor",
     "GuaranteeClaim",
