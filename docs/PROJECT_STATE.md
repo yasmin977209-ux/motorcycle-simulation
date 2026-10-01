@@ -201,7 +201,7 @@
 
 ## 9. الوضع عند آخر تحديث
 
-**آخر SHA:** `63c65f7f4fe6121a4d8a797658a1d06ea6176342`  
+**آخر SHA:** `58e321e1f6153df3307fe95c184525939d0612a0`  
 **Stage 1:** ACCEPTED  
 **Stage 2:** ACCEPTED  
 **Stage 3A:** NOT STARTED / NOT APPROVED  
@@ -211,34 +211,48 @@
 **القرار 158:** ADJUDICATION_REQUIRED  
 
 
-## 10. حسم K_SPEC في entities.py بقرار R4 للمرحلة 3ب
+## 10. حسم K_SPEC في entities.py بقرارات R4 المحدثة
 
-تم إغلاق بنود K_SPEC الثلاثة التالية بقرارات المستخدم المعتمدة، مع تثبيتها في تنفيذ `entities.py`:
+تم إغلاق بنود K_SPEC الثلاثة وفق قرارات المستخدم:
 
 1. **`pending_writeoff_today`**
-   - الحقل موجود في `Bike`.
-   - النوع: `bool`.
+   - حقل `bool` في `Bike`.
    - القيمة الافتراضية: `False`.
-   - commit التنفيذ: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
+   - قرار التثبيت الأصلي: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
 
 2. **`active_settlement_receivable`**
-   - لا يوجد كائن جديد بهذا الاسم.
-   - الحقل المعتمد في `Bike`: `active_settlement_receivable_id`.
-   - النوع: معرف عقدة/مرجع اختياري إلى `ReceivableEntry`.
-   - commit التنفيذ: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
+   - لا يوجد كائن مستقل جديد.
+   - الحقل المعتمد: `active_settlement_receivable_id` في `Bike`.
+   - قرار التثبيت الأصلي: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
 
 3. **`current_contract`**
-   - لا يُضاف حقل كائني مستقل في `Bike`.
-   - الاشتقاق يكون عبر `current_contract_id` والـ`Project` contract index بمفتاح `contract_id` للوصول O(1).
-   - `Project.contracts` ممثل فعلياً بـ`ContractIndex` وهو `dict[str, Contract]`-backed.
-   - commit تثبيت الفهرس: `a13bb24b80678548bbc04a1ae8f6ddcd17a488fc`.
+   - لا يوجد حقل كائني جديد في `Bike`.
+   - الاشتقاق عبر `current_contract_id` ثم `Project.contracts[contract_id]`.
+   - `Project.contracts` أصبح الآن **`dict[str, Contract]` عاديًا**.
+   - أُزيل `ContractIndex` نهائيًا؛ لا يوجد `__iter__` مخصص ولا `append`.
+   - أضيفت في `entities.py`:
+     - `add_contract(project, contract)` — ترفع `ValueError` عند تكرار `contract_id`.
+     - `contract_of(project, bike)` — تعيد العقد بواسطة المفتاح أو `None` عند عدم وجوده.
+   - تنفيذ القرار المحدث: `58e321e1f6153df3307fe95c184525939d0612a0`.
 
-**حالة K_SPEC الثلاثة:** **CLOSED / RESOLVED**.
+**حالة K_SPEC الثلاثة: CLOSED / RESOLVED.**
 
-التحقق الإضافي:
-- أُضيف `tests/test_stage2_entities_additions.py` دون تعديل أي اختبار قائم.
-- تشغيل Stage 2 الذي يتضمنه: Run **81**، والنتيجة الفعلية: **18 passed in 0.21s**.
-- commit الاختبار/تشغيله: `e55e6cb9104f1b35108617953fa49c1559a4f6dd`.
+### اختبار الكيان والفهرس
+أُنشئ الملف الجديد `tests/test_stage2_entities_additions.py` دون تعديل أي اختبار قائم.
+
+بعد التحديث:
+- الاختبار الجديد يتأكد من القيم الافتراضية، source-of-truth، وفهرس dict كبير، وسلوك التكرار عبر `add_contract`، و`contract_of`، وبنية سجلات Roll-forward.
+- تشغيل Stage 2: Run **84** — **success** — `19 passed in 0.26s`.
+
+لا يوجد كسر في اختبارات Stage 1 أو Stage 2 القائمة أو انحدار Stage 3A بعد إزالة `ContractIndex`.
+
+## 10.1 Roll-forward
+- `cash_rollforward`
+- `ar_rollforward`
+- `asset_rollforward`
+- `equity_rollforward`
+
+سجل الأصول يفصل Gross وAccumulated، بينما Net مشتق وليس حقلاً مخزناً مستقلاً، وفق 10.6.
 
 ## 11. اعتماديات 3A المتعطلة بالتبعية حتى 3B
 
@@ -255,21 +269,12 @@
 
 **تصحيح للتقرير السابق:** لا يجوز وصف هذه الحالة بأنها مجموعة imports مكسورة. ما ثبت فعلياً هو أن `daily_engine.py` ينفذ استدعاءات أبواب 5–9، وأن مساره التشغيلي القديم ينكسر عند الوصول إلى حقل `pending_writeoff_today` غير الموجود في `Bike`. أما `accounting.py` و`partner_equity.py` فلا تحتويان أصلاً على imports لهذه الدوال، و`closure.py` importه للكفالة صالح نصياً.
 
-## 12. حسم K_SPEC إضافي في حقول M12/M13/M16
+## 12. بنود مؤجلة إلى منطق 3ب
 
-تم حسم الأسماء الثلاثة التي كان تعريفها غير ممثل في `Bike` كما يلي:
+تم حسم K_SPEC الخاصة بالكيانات أعلاه. تبقى البنود التالية مؤجلة إلى منطق 3ب:
 
-- `current_contract`: لا حقل جديد؛ اشتقاق عبر `current_contract_id` ثم البحث بالمفتاح في فهرس `Project.contracts` O(1).
-- `active_settlement_receivable`: لا حقل كائن؛ المرجع المعتمد هو `active_settlement_receivable_id`.
-- `pending_writeoff_today`: حقل `bool` في `Bike` بقيمة افتراضية `False`.
-
-هذه القرارات مغلقة في R4، ولا تُعامل كـK_SPEC مفتوحة بعد الآن.
-
-### 12.1 قرارات إضافية مؤجلة إلى منطق 3ب
-
-- **Final equity:** سيُطبّق في 3ب وفق صيغة M15 في المرجع: `Cash + مجموع NBV للدراجات HELD_AS_ASSET`. وسيضيف M17 تأكيد المساواة مع `Total_Equity`. أي اختلاف بين القيمتين يُعامل كخلل ويُبلّغ، ولا يُسجل كانحراف معتمد.
+- **Final equity:** يُطبق في 3ب وفق صيغة M15 المرجعية: `Cash + مجموع NBV للدراجات HELD_AS_ASSET`، ثم يؤكد M17 مساواتها مع `Total_Equity`. أي اختلاف يُعامل كخلل ويُبلّغ.
 - **master_seed:** يُمرر في سلسلة اشتقاق الرميات باستخدام SHA-256.
 - **execution_trace:** اختياري ويُفعّل في الاختبار فقط.
 
-حالة هذه البنود: **DEFERRED TO STAGE 3B**.
-
+الحالة: **DEFERRED TO STAGE 3B**.
