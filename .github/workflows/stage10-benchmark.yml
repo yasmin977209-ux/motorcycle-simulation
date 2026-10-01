@@ -1,0 +1,74 @@
+name: stage10-benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .stage10-benchmark-trigger
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Reconstruct and verify source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat stage7_source/source.b64.* > /tmp/source.b64
+          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
+          echo "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd  /tmp/source.tar.gz" | sha256sum -c -
+          rm -rf /tmp/source && mkdir /tmp/source
+          tar -xzf /tmp/source.tar.gz -C /tmp/source
+          cp -a /tmp/source/. .
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Benchmark 25 complete trials
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH=.
+          python - <<'PY' | tee /tmp/stage10-results.jsonl
+          import gzip, json, multiprocessing, os, time
+          from dataclasses import asdict
+          from pathlib import Path
+          from monte_carlo import run_trial
+
+          scenarios=[f"C{c:03d}_G{g:03d}" for c in (100,85,70,50,30) for g in (100,70,50,30,0)]
+          out=Path("/tmp/stage10-files"); out.mkdir(exist_ok=True)
+
+          for s in scenarios:
+              c=int(s[1:4])/100.0
+              g=int(s[6:9])
+              t0=time.perf_counter()
+              result=run_trial(c,g,1,scenario=s,keep_daily=True,include_raw_logs=False)
+              elapsed=time.perf_counter()-t0
+              raw=json.dumps(asdict(result),ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()
+              f=out/f"{s}_trial_000001.json.gz"
+              with gzip.open(f,"wb",compresslevel=6) as fh: fh.write(raw)
+              print(json.dumps({
+                  "scenario":s,"collection_probability":c,"recovery_rate_pct":g,
+                  "trial_id":1,"elapsed_seconds":elapsed,
+                  "cpu_count":multiprocessing.cpu_count(),"os_cpu_count":os.cpu_count(),
+                  "saved_file_bytes":f.stat().st_size,
+                  "uncompressed_json_bytes":len(raw),
+                  "days":len(result.daily_snapshots),
+                  "final_close_date":result.final_close_date
+              },sort_keys=True,flush=True))
+          PY
+      - name: Upload temporary benchmark artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage10-benchmark-results
+          path: |
+            /tmp/stage10-results.jsonl
+            /tmp/stage10-files/*.json.gz
+          if-no-files-found: error
