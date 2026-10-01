@@ -74,8 +74,8 @@ jobs:
             overall=1
           else
             summary="$(printf '%s\n' "$acceptance_output" | grep -E '[0-9]+ passed|[0-9]+ failed' | tail -1 || true)"
-            passed="$(printf '%s' "$summary" | sed -n 's/.*\([0-9][0-9]*\) passed.*/\1/p')"
-            failed="$(printf '%s' "$summary" | sed -n 's/.*\([0-9][0-9]*\) failed.*/\1/p')"
+            passed="$(printf '%s\n' "$summary" | grep -oE '[0-9]+ passed' | awk '{print $1}' | head -1 || true)"
+            failed="$(printf '%s\n' "$summary" | grep -oE '[0-9]+ failed' | awk '{print $1}' | head -1 || true)"
             printf 'ACCEPTANCE_RUNNABLE_SUMMARY=%s\n' "$summary" >> /tmp/stage3a_status
             printf 'ACCEPTANCE_PASS=%s\n' "${passed:-0}" >> /tmp/stage3a_status
             printf 'ACCEPTANCE_FAIL=%s\n' "${failed:-0}" >> /tmp/stage3a_status
