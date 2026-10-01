@@ -23,24 +23,26 @@ jobs:
         run: |
           import ast
           import json
-          from datetime import date, timedelta
+          import os
+          import sys
+          from datetime import date
 
+          sys.path.insert(0, os.environ["GITHUB_WORKSPACE"])
           import constants
           import dateutils
           import rng
 
-          # Constants: assert the user-approved overrides and Chapter 2 values.
           assert constants.C100_STATISTICAL_START_TRIALS == 1
           assert constants.NON_C100_STATISTICAL_START_TRIALS == 300
           assert constants.ITERATION_ESCALATION_STEP == 50
           assert constants.STATISTICAL_CHECK_START_N == 300
           assert constants.STATISTICAL_CHECK_STEP_N == 50
           assert constants.MINIMUM_STOP_N_FOR_NON_C100 == 400
+          assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 3
+          assert constants.INITIAL_SMOKE_TRIALS_PER_SCENARIO == 1
+          assert constants.C100_CI_GATE_ENABLED is False
           assert constants.CI_ABSOLUTE_EPSILON == 1
-          assert constants.S1 if False else True
-          assert constants.Scenario if False else True
 
-          # Exact reference Friday examples, validated by the runtime calendar.
           deliveries = {
               "2027-01-02": "2027-01-09",
               "2027-01-03": "2027-01-09",
@@ -61,7 +63,6 @@ jobs:
                   "eligible_friday": got.isoformat(),
               })
 
-          # Reference named dates and calendar transitions.
           assert dateutils.is_friday(date(2027, 1, 1))
           assert dateutils.next_business_day_on_or_after(date(2027, 1, 1)) == date(2027, 1, 2)
           assert dateutils.scheduled_ready_date(date(2026, 12, 26)) == date(2027, 1, 1)
@@ -69,12 +70,13 @@ jobs:
           assert dateutils.settlement_due_date(date(2027, 1, 15), 20) == date(2027, 2, 5)
           assert dateutils.settlement_due_date(date(2027, 1, 15), 0) == date(2027, 1, 15)
 
-          # RNG reproducibility and logical-event independence.
-          base = dict(master_seed=constants.MASTER_SEED,
-                      scenario_id="C085_G070",
-                      trial_id=1,
-                      bike_id="BK0001",
-                      day=date(2027, 1, 2))
+          base = dict(
+              master_seed=constants.MASTER_SEED,
+              scenario_id="C085_G070",
+              trial_id=1,
+              bike_id="BK0001",
+              day=date(2027, 1, 2),
+          )
           s1 = rng.derive_seed(**base, event_type="PRIMARY_COLLECTION")
           s1b = rng.derive_seed(**base, event_type="PRIMARY_COLLECTION")
           assert s1 == s1b
@@ -90,20 +92,19 @@ jobs:
           ]
           assert all(v != s1 for v in variants)
           assert len({s1, *variants}) == 7
-
-          # p=0 / p=1 are deterministic shortcuts permitted by Chapter 14.3.
           assert rng.deterministic_success(1.0, s1) is True
           assert rng.deterministic_success(0.0, s1) is False
 
-          # Confirm the source contains no actual call to Python built-in hash().
           for filename in ("constants.py", "dateutils.py", "rng.py"):
-              tree = ast.parse(open(filename, encoding="utf-8").read(), filename)
-              for node in ast.walk(tree):
-                  assert not (
+              tree = ast.parse(open(os.path.join(os.environ["GITHUB_WORKSPACE"], filename), encoding="utf-8").read(), filename)
+              assert all(
+                  not (
                       isinstance(node, ast.Call)
                       and isinstance(node.func, ast.Name)
                       and node.func.id == "hash"
-                  ), filename
+                  )
+                  for node in ast.walk(tree)
+              ), filename
 
           result = {
               "constants": {
@@ -112,6 +113,7 @@ jobs:
                   "ITERATION_ESCALATION_STEP": constants.ITERATION_ESCALATION_STEP,
                   "STATISTICAL_CHECK_START_N": constants.STATISTICAL_CHECK_START_N,
                   "STATISTICAL_CHECK_STEP_N": constants.STATISTICAL_CHECK_STEP_N,
+                  "MINIMUM_STOP_N_FOR_NON_C100": constants.MINIMUM_STOP_N_FOR_NON_C100,
                   "CI_ABSOLUTE_EPSILON": constants.CI_ABSOLUTE_EPSILON,
                   "scenario_count": len(constants.SCENARIO_IDS),
               },
