@@ -1,0 +1,43 @@
+name: stage3-c100-determinism
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  determinism:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Small preflight batch
+        run: |
+          python - <<'PY'
+          from datetime import date, timedelta
+          import time
+          from daily_engine import create_initial_project, run_day
+          from rng import derive_seed
+
+          ids = (101, 202, 303)
+          starts = time.perf_counter()
+          for trial_id in ids:
+              p = create_initial_project()
+              d = date(2027, 1, 1)
+              for _ in range(30):
+                  if p.simulation_stopped:
+                      break
+                  run_day(p, d, 1.0, "C100_G100", trial_id, 100)
+                  d += timedelta(days=1)
+          elapsed = time.perf_counter() - starts
+          seeds = [derive_seed(20270101, "C100_G100", t, "BK0001", date(2027,1,2), "PRIMARY_COLLECTION") for t in ids]
+          print({"preflight_trials": len(ids), "preflight_days_per_trial": 30, "elapsed_seconds": elapsed, "seed_values": seeds})
+          assert len(set(seeds)) == 3
+          PY
+      - name: Three full C100 repetitions
+        run: python -m pytest -q -s tests/test_c100_determinism.py
