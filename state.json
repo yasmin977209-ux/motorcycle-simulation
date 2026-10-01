@@ -1,12 +1,12 @@
 {
-  "stage": 7,
+  "stage": 9,
   "repository": "yasmin977209-ux/motorcycle-simulation",
   "reference_in_repo": false,
   "reports_in_repo": false,
   "excel_in_repo": false,
   "main_simulation_started": false,
-  "source_package_sha256": "37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd",
-  "source_package_chunks": 18,
+  "source_package_sha256": "c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79",
+  "source_package_chunks": 52,
   "local_acceptance": {
     "collected": 163,
     "passed": 119,
@@ -19,7 +19,7 @@
     "pause_resume_exact": "success"
   },
   "main_simulation_started_on_github": false,
-  "notes": "No reference, reports, or Excel are stored in this repository. The source package is stored as ordered Base64 chunks and verified by SHA-256 in CI before test execution.",
+  "notes": "Stage 9 control-plane smoke passed on GitHub. Full 25-scenario simulation was not started. The repository stores code/state and compressed resumable slices only; no reference/reports/Excel.",
   "github_run": {
     "run_id": 36793142370,
     "commit_sha": "6f98518ce0817529b7d816c8a07244d8725245e6",
@@ -33,5 +33,48 @@
     "pause_resume_exact": "success",
     "main_simulation_started": false
   },
-  "stage7_status": "FAIL_acceptance_gate"
+  "stage7_status": "FAIL_acceptance_gate",
+  "stage9": {
+    "status": "PASS_control_plane_smoke",
+    "full_matrix_size": 25,
+    "checkpoint_interval_minutes": 20,
+    "job_timeout_minutes": 350,
+    "scenario_branch": "sim/C100_G100",
+    "smoke_runs": [
+      {
+        "run_id": 36804564757,
+        "status": "success",
+        "event": "push",
+        "head_branch": "main"
+      },
+      {
+        "run_id": 36804614998,
+        "status": "success",
+        "event": "workflow_dispatch",
+        "head_branch": "main"
+      }
+    ],
+    "global_stop": "FINAL_STABLE.json created_and_then_deleted_successfully",
+    "full_simulation_started": false,
+    "local_tests": {
+      "acceptance": {
+        "count": 163,
+        "passed": 163,
+        "failed": 0,
+        "seconds": 19.75
+      },
+      "stage9_and_run_batch": {
+        "count": 8,
+        "passed": 8,
+        "failed": 0,
+        "seconds": 0.72
+      },
+      "core_reference_paths": {
+        "count": 50,
+        "passed": 50,
+        "failed": 0,
+        "seconds": 10.2
+      }
+    }
+  }
 }
