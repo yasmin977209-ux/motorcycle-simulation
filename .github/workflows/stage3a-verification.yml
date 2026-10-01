@@ -1,8 +1,6 @@
 name: stage3a-verification
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
