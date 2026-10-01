@@ -1,14 +1,11 @@
-"""Chapter 6 — ordinary daily collection formula, isolated from the daily engine."""
+"""Chapter 6 ordinary collection formula."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
 
-from constants import (
-    PARTNER1_FINAL_SHARE_PCT,
-    PARTNER2_FINAL_SHARE_PCT,
-)
+from constants import PARTNER1_FINAL_SHARE_PCT, PARTNER2_FINAL_SHARE_PCT
 from dateutils import is_friday
 
 
@@ -31,10 +28,9 @@ def apply_ordinary_collection(
     total_paid: int,
     daily_rate: int,
     success: bool,
-    current_date: date | None = None,
+    current_date: date,
 ) -> CollectionResult:
-    """Apply the reference ordinary-collection formula without global state."""
-
+    """Apply the reference collection rule; Friday is a strict no-collection day."""
     if total_due < 0 or total_paid < 0:
         raise ValueError("total_due and total_paid must not be negative")
     if total_paid > total_due:
@@ -42,16 +38,16 @@ def apply_ordinary_collection(
     if daily_rate <= 0:
         raise ValueError("daily_rate must be positive")
 
-    outstanding_before = total_due - total_paid
+    outstanding = total_due - total_paid
+    prior_arrears = max(0, outstanding - daily_rate)
 
-    # Friday has no operating-rent due/collection.
-    if current_date is not None and is_friday(current_date):
+    if is_friday(current_date) or not success or outstanding == 0:
         return CollectionResult(
             collected=0,
             total_paid_after=total_paid,
-            outstanding_before=outstanding_before,
-            outstanding_after=outstanding_before,
-            prior_arrears=max(0, outstanding_before - daily_rate),
+            outstanding_before=outstanding,
+            outstanding_after=outstanding,
+            prior_arrears=prior_arrears,
             arrears_payment=0,
             cash_delta=0,
             accounts_receivable_delta=0,
@@ -59,34 +55,15 @@ def apply_ordinary_collection(
             partner2_allocation=0,
         )
 
-    if not success or outstanding_before == 0:
-        return CollectionResult(
-            collected=0,
-            total_paid_after=total_paid,
-            outstanding_before=outstanding_before,
-            outstanding_after=outstanding_before,
-            prior_arrears=max(0, outstanding_before - daily_rate),
-            arrears_payment=0,
-            cash_delta=0,
-            accounts_receivable_delta=0,
-            partner1_allocation=0,
-            partner2_allocation=0,
-        )
-
-    prior_arrears = max(0, outstanding_before - daily_rate)
     arrears_payment = min(daily_rate, prior_arrears)
-    collected = min(
-        daily_rate + arrears_payment,
-        outstanding_before,
-    )
-
+    collected = min(daily_rate + arrears_payment, outstanding)
     total_paid_after = total_paid + collected
     outstanding_after = total_due - total_paid_after
 
     return CollectionResult(
         collected=collected,
         total_paid_after=total_paid_after,
-        outstanding_before=outstanding_before,
+        outstanding_before=outstanding,
         outstanding_after=outstanding_after,
         prior_arrears=prior_arrears,
         arrears_payment=arrears_payment,
