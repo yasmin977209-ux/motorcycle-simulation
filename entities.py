@@ -126,6 +126,8 @@ class Bike:
     current_state: BikeState = BikeState.PREP
     current_contract_id: str | None = None
     current_tenant_id: str | None = None
+    active_settlement_receivable_id: str | None = None
+    pending_writeoff_today: bool = False
     settlement_start_date: date | None = None
     settlement_legacy_debt_original: int | None = None
     settlement_legacy_debt_remaining: int | None = None
@@ -259,7 +261,8 @@ class Project:
     partner2_final_entitlement: int | None = None
     simulation_stopped: bool = False
     bikes: list[Bike] = field(default_factory=list)
-    contracts: list[Contract] = field(default_factory=list)
+    # O(1) contract lookup by the authoritative contract_id key.
+    contracts: dict[str, Contract] = field(default_factory=dict)
     tenants: list[Tenant] = field(default_factory=list)
     guarantors: list[Guarantor] = field(default_factory=list)
     guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
@@ -267,8 +270,8 @@ class Project:
     event_log: list[EventLogEntry] = field(default_factory=list)
     cash_rollforward: list[dict] = field(default_factory=list)
     ar_rollforward: list[dict] = field(default_factory=list)
-    gross_asset_rollforward: list[dict] = field(default_factory=list)
-    depreciation_rollforward: list[dict] = field(default_factory=list)
+    asset_rollforward: list[dict] = field(default_factory=list)
+    equity_rollforward: list[dict] = field(default_factory=list)
     daily_snapshots: list[dict] = field(default_factory=list)
     daily_balance_checks: list[dict] = field(default_factory=list)
     execution_trace: list[list[str]] = field(default_factory=list)
