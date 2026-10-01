@@ -1,9 +1,6 @@
 name: stage9-simulation
 
 on:
-  push:
-    branches: [main]
-    paths: [.stage9-smoke-trigger]
   workflow_dispatch:
     inputs:
       scenario:
