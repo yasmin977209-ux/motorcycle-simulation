@@ -39,3 +39,5 @@ def test_opening_project_shell():
     assert not p.guarantee_claims
     assert not p.receivables
     assert not p.event_log
+
+# GitHub execution verification marker
