@@ -90,15 +90,12 @@ jobs:
           print("RESULTS=" + json.dumps(results, sort_keys=True))
           PY
       - name: Compare C100 old and current commits daily
-        env:
-          PYTHONPATH: .
         run: |
           set -euo pipefail
           OLD_SHA="2e3aa381d833fe430d2aec42e98dd0d29918c3bf"
-          NEW_SHA="$(git rev-parse HEAD)"
           git fetch --no-tags origin "$OLD_SHA"
           git worktree add --detach /tmp/old "$OLD_SHA"
-          python - <<'PY'
+          cat >/tmp/measure_trial.py <<'PY'
           import hashlib
           import json
           import os
@@ -106,71 +103,72 @@ jobs:
           import time
           from datetime import date, timedelta
 
-          def execute(repo_path):
-              sys.path.insert(0, repo_path)
-              from daily_engine import create_initial_project, run_day
-              project = create_initial_project(recovery_rate_pct=100)
-              current = date(2027, 1, 1)
-              started = time.perf_counter()
-              days = 0
-              while not project.simulation_stopped:
-                  run_day(
-                      project,
-                      current,
-                      collection_probability=1.0,
-                      scenario_id="C100_G100",
-                      trial_id=1,
-                      recovery_rate_pct=100,
-                  )
-                  days += 1
-                  current += timedelta(days=1)
-              elapsed = time.perf_counter() - started
-              rows = []
-              for row in project.daily_balance_checks:
-                  rows.append(
-                      f'{row["Cash"]}|{row["Total_Assets"]}|{row["Total_Equity"]}\n'
-                  )
-              payload = "".join(rows).encode("utf-8")
-              digest = hashlib.sha256(payload).hexdigest()
-              return {
-                  "days": days,
-                  "daily_rows": len(rows),
-                  "event_log_count": len(project.event_log),
-                  "contract_count": len(project.contracts),
-                  "receivable_count": len(project.receivables),
-                  "final_close_date": project.final_close_date.isoformat() if project.final_close_date else None,
-                  "final_equity": project.final_net_project_equity,
-                  "daily_cash_assets_equity_sha256": digest,
-                  "elapsed_seconds": elapsed,
-                  "rows": [(r["Cash"], r["Total_Assets"], r["Total_Equity"]) for r in project.daily_balance_checks],
-              }
+          project = None
+          from daily_engine import create_initial_project, run_day
 
-          old = execute("/tmp/old")
-          sys.path.pop(0)
-          new = execute(os.getcwd())
-
-          comparable = {
-              key: old[key] == new[key]
-              for key in (
-                  "days",
-                  "daily_rows",
-                  "event_log_count",
-                  "contract_count",
-                  "receivable_count",
-                  "final_close_date",
-                  "final_equity",
-                  "daily_cash_assets_equity_sha256",
+          project = create_initial_project(recovery_rate_pct=100)
+          current = date(2027, 1, 1)
+          started = time.perf_counter()
+          days = 0
+          while not project.simulation_stopped:
+              run_day(
+                  project,
+                  current,
+                  collection_probability=1.0,
+                  scenario_id="C100_G100",
+                  trial_id=1,
+                  recovery_rate_pct=100,
               )
+              days += 1
+              current += timedelta(days=1)
+
+          rows = [
+              f'{row["Cash"]}|{row["Total_Assets"]}|{row["Total_Equity"]}\n'
+              for row in project.daily_balance_checks
+          ]
+          payload = "".join(rows).encode("utf-8")
+          result = {
+              "days": days,
+              "daily_rows": len(rows),
+              "event_log_count": len(project.event_log),
+              "contract_count": len(project.contracts),
+              "receivable_count": len(project.receivables),
+              "final_close_date": project.final_close_date.isoformat() if project.final_close_date else None,
+              "final_equity": project.final_net_project_equity,
+              "daily_cash_assets_equity_sha256": hashlib.sha256(payload).hexdigest(),
+              "elapsed_seconds": time.perf_counter() - started,
+              "daily_values": [(row["Cash"], row["Total_Assets"], row["Total_Equity"]) for row in project.daily_balance_checks],
           }
-          first_diff = None
-          for index, (a, b) in enumerate(zip(old["rows"], new["rows"]), start=1):
+          print(json.dumps(result, sort_keys=True))
+          PY
+
+          PYTHONPATH=/tmp/old python /tmp/measure_trial.py > /tmp/old.json
+          PYTHONPATH="$PWD" python /tmp/measure_trial.py > /tmp/new.json
+
+          python - <<'PY'
+          import json
+          old=json.load(open("/tmp/old.json"))
+          new=json.load(open("/tmp/new.json"))
+          keys=[
+              "days",
+              "daily_rows",
+              "event_log_count",
+              "contract_count",
+              "receivable_count",
+              "final_close_date",
+              "final_equity",
+              "daily_cash_assets_equity_sha256",
+          ]
+          comparable={k: old[k] == new[k] for k in keys}
+          first_diff=None
+          for i,(a,b) in enumerate(zip(old["daily_values"],new["daily_values"]),1):
               if a != b:
-                  first_diff = {"row": index, "old": a, "new": b}
+                  first_diff={"row":i,"old":a,"new":b}
                   break
-          print("OLD=" + json.dumps({k:v for k,v in old.items() if k != "rows"}, sort_keys=True))
-          print("NEW=" + json.dumps({k:v for k,v in new.items() if k != "rows"}, sort_keys=True))
-          print("COMPARABLE=" + json.dumps(comparable, sort_keys=True))
-          print("FIRST_DAILY_DIFFERENCE=" + json.dumps(first_diff, sort_keys=True))
+          print("OLD=" + json.dumps({k:v for k,v in old.items() if k!="daily_values"},sort_keys=True))
+          print("NEW=" + json.dumps({k:v for k,v in new.items() if k!="daily_values"},sort_keys=True))
+          print("COMPARABLE=" + json.dumps(comparable,sort_keys=True))
+          print("FIRST_DAILY_DIFFERENCE=" + json.dumps(first_diff,sort_keys=True))
           assert old["days"] == new["days"] == 2198
           assert old["daily_rows"] == new["daily_rows"] == 2198
           assert old["event_log_count"] == new["event_log_count"]
@@ -178,6 +176,6 @@ jobs:
           assert old["receivable_count"] == new["receivable_count"]
           assert old["final_close_date"] == new["final_close_date"]
           assert old["final_equity"] == new["final_equity"]
-          assert old["rows"] == new["rows"]
+          assert old["daily_values"] == new["daily_values"]
           assert old["daily_cash_assets_equity_sha256"] == new["daily_cash_assets_equity_sha256"]
           PY
