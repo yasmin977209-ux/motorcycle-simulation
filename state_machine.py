@@ -110,7 +110,7 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
     TransitionRule(
         ("NOTICE_PRIMARY",),
         ("GRACE_PRIMARY",),
-        f"{NOTICE_PRIMARY_UPPER} <= outstanding < {GRACE_PRIMARY_UPPER}",
+        f"{NOTICE_PRIMARY_UPPER} <= outstanding < {PRIMARY_DEFAULT_AMOUNT}",
         "M10",
     ),
     TransitionRule(
@@ -246,11 +246,12 @@ def legal_next_state(
 
 
 # R4/R6 structural integrity checks. Threshold constants are referenced rather
-# than duplicated numeric literals.
+# than duplicated numeric business values.
 assert WAITING_PRIMARY_UPPER == 21 * PRIMARY_DAILY_RENT
 assert NOTICE_PRIMARY_UPPER == 28 * PRIMARY_DAILY_RENT
-assert GRACE_PRIMARY_UPPER == 30 * PRIMARY_DAILY_RENT
-assert PRIMARY_DEFAULT_AMOUNT == GRACE_PRIMARY_UPPER
+assert GRACE_PRIMARY_UPPER == 28 * PRIMARY_DAILY_RENT
+assert PRIMARY_DEFAULT_AMOUNT == 30 * PRIMARY_DAILY_RENT
+assert GRACE_PRIMARY_UPPER < PRIMARY_DEFAULT_AMOUNT
 assert SECONDARY_DEFAULT_AMOUNT == 10 * SECONDARY_DAILY_RENT
 assert STATE_COUNT == 11
 assert len(TRANSITION_TABLE) == 18
