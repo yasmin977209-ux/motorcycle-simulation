@@ -1004,7 +1004,36 @@ def run_day(
         ("M17", lambda: _m17(p, current_date, opening)),
     )
 
-    p._possession = _m4(p)
+    p._possession = {}
+    stages = (
+        ("M1", lambda: None),
+        ("M2", lambda: _m2(p, current_date)),
+        ("M3", lambda: _m3(p, current_date)),
+        ("M4", lambda: p._possession.update(_m4(p))),
+        ("M5", lambda: _m5(p, current_date)),
+        ("M6", lambda: _m6(p, current_date, p._possession)),
+        ("M7", lambda: _m7(p, p._possession, current_date)),
+        (
+            "M8",
+            lambda: _m8(
+                p,
+                current_date,
+                collection_probability,
+                scenario_id,
+                trial_id,
+                master_seed,
+            ),
+        ),
+        ("M9", lambda: _m9(p)),
+        ("M10", lambda: None),
+        ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
+        ("M12", lambda: _m12(p, current_date)),
+        ("M13", lambda: _m13(p, current_date)),
+        ("M14", lambda: _m14(p, current_date)),
+        ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
+        ("M16", lambda: _m16(p, current_date)),
+        ("M17", lambda: _m17(p, current_date, opening)),
+    )
     for name, fn in stages:
         fn()
         if trace_enabled:

@@ -42,6 +42,8 @@ def _activate(
         if contract_type is ContractType.PRIMARY
         else BikeState.ACTIVE_SECONDARY
     )
+    if contract_type is ContractType.SECONDARY:
+        target.secondary_cycle_count = max(target.secondary_cycle_count, 1)
     return contract
 
 
