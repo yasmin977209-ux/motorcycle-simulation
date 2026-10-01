@@ -99,103 +99,103 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
     ),
     TransitionRule(
         ("ACTIVE_PRIMARY",),
-        "WAITING_PRIMARY",
+        ("WAITING_PRIMARY",),
         "0 < outstanding < 21 * daily_rate",
         "M10",
     ),
     TransitionRule(
         ("WAITING_PRIMARY",),
-        "ACTIVE_PRIMARY",
+        ("ACTIVE_PRIMARY",),
         "outstanding == 0",
         "M10",
     ),
     TransitionRule(
         ("WAITING_PRIMARY",),
-        "NOTICE_PRIMARY",
+        ("NOTICE_PRIMARY",),
         "21 * daily_rate <= outstanding < 28 * daily_rate",
         "M10",
     ),
     TransitionRule(
         ("NOTICE_PRIMARY",),
-        "WAITING_PRIMARY",
-        "new outstanding after payment is in WAITING_PRIMARY band",
+        ("WAITING_PRIMARY", "ACTIVE_PRIMARY"),
+        "new outstanding after payment is in WAITING_PRIMARY or ACTIVE_PRIMARY band",
         "M10",
     ),
     TransitionRule(
         ("NOTICE_PRIMARY",),
-        "ACTIVE_PRIMARY",
+        ("ACTIVE_PRIMARY",),
         "new outstanding after payment == 0",
         "M10",
     ),
     TransitionRule(
         ("NOTICE_PRIMARY",),
-        "GRACE_PRIMARY",
+        ("GRACE_PRIMARY",),
         "28 * daily_rate <= outstanding < 30 * daily_rate",
         "M10",
     ),
     TransitionRule(
         ("GRACE_PRIMARY",),
-        "any lower state",
+        ("ACTIVE_PRIMARY", "WAITING_PRIMARY", "NOTICE_PRIMARY", "GRACE_PRIMARY"),
         "new outstanding after payment is below 30 * daily_rate",
         "M10",
     ),
     TransitionRule(
         ("GRACE_PRIMARY",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",),
         "outstanding >= 30 * daily_rate",
         "M11",
     ),
     TransitionRule(
         ("ACTIVE_PRIMARY", "WAITING_PRIMARY", "NOTICE_PRIMARY", "GRACE_PRIMARY"),
-        "OWNED_TRANSFERRED",
+        ("OWNED_TRANSFERRED",),
         "current_date == maturity_date and total_due == total_paid after maturity-day collection",
         "M12",
     ),
     TransitionRule(
         ("ACTIVE_PRIMARY", "WAITING_PRIMARY", "NOTICE_PRIMARY", "GRACE_PRIMARY"),
-        "POST_MATURITY_SETTLEMENT",
+        ("POST_MATURITY_SETTLEMENT",),
         "current_date == maturity_date and total_due > total_paid after maturity-day collection",
         "M12",
     ),
     TransitionRule(
         ("POST_MATURITY_SETTLEMENT",),
-        "OWNED_TRANSFERRED",
+        ("OWNED_TRANSFERRED",),
         "settlement_legacy_debt_remaining == 0",
         "M13",
     ),
     TransitionRule(
         ("POST_MATURITY_SETTLEMENT",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",),
         "30 working days have elapsed from settlement_start_date without full payment",
         "M13",
     ),
     TransitionRule(
         ("AVAILABLE_FOR_SECONDARY",),
-        "ACTIVE_SECONDARY",
+        ("ACTIVE_SECONDARY",),
         "first eligible working day",
         "M3",
     ),
     TransitionRule(
         ("ACTIVE_SECONDARY",),
-        "NOTICE_SECONDARY",
+        ("NOTICE_SECONDARY",),
         "0 < outstanding < 10 * daily_rate",
         "M10",
     ),
     TransitionRule(
         ("NOTICE_SECONDARY",),
-        "ACTIVE_SECONDARY",
+        ("ACTIVE_SECONDARY",),
         "outstanding == 0",
         "M10",
     ),
     TransitionRule(
         ("NOTICE_SECONDARY",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",),
         "outstanding >= 10 * daily_rate",
         "M11",
     ),
     TransitionRule(
         ("ACTIVE_SECONDARY", "NOTICE_SECONDARY"),
-        "HELD_AS_ASSET",
+        ("HELD_AS_ASSET",),
         "dynamic closure conditions satisfied",
         "M15",
     ),
@@ -211,7 +211,7 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
             "ACTIVE_SECONDARY",
             "NOTICE_SECONDARY",
         ),
-        "HELD_AS_ASSET",
+        ("HELD_AS_ASSET",),
         "dynamic closure conditions satisfied",
         "M15",
     ),
@@ -221,7 +221,7 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
 def is_declared_transition(from_state: str, to_state: str) -> bool:
     """Return whether Table 4.3 explicitly declares this state edge."""
     for rule in TRANSITION_TABLE:
-        if rule.to_state == to_state and from_state in rule.from_states:
+        if to_state in rule.to_states and from_state in rule.from_states:
             return True
     return False
 
@@ -288,4 +288,5 @@ assert PRIMARY_DEFAULT_AMOUNT == 30 * PRIMARY_DAILY_RENT
 assert SECONDARY_DEFAULT_AMOUNT == 10 * SECONDARY_DAILY_RENT
 assert EXPANSION_PURCHASE_CASH_THRESHOLD == 350_000
 assert len(BikeState) == STATE_COUNT
+assert len(TRANSITION_TABLE) == 18
 assert not (set(BikeState.__members__) & FORBIDDEN_STATE_NAMES)
