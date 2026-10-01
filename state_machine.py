@@ -212,6 +212,26 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
 )
 
 
+def validate_transition_table(table: Sequence[TransitionRule] = TRANSITION_TABLE) -> bool:
+    """Validate the declared Chapter 4 transition table structurally."""
+    declared = {state.value for state in BikeState}
+    if len(declared) != STATE_COUNT:
+        return False
+    seen: set[tuple[str, str]] = set()
+    for rule in table:
+        if not rule.from_states or not rule.to_states or not rule.condition or not rule.phase:
+            return False
+        for from_state in rule.from_states:
+            if from_state not in declared or from_state in FORBIDDEN_STATE_NAMES:
+                return False
+            for to_state in rule.to_states:
+                if to_state not in declared or to_state in FORBIDDEN_STATE_NAMES:
+                    return False
+                edge = (from_state, to_state)
+                if edge in seen:
+                    return False
+                seen.add(edge)
+    return True
 def is_declared_transition(from_state: str, to_state: str) -> bool:
     """Return whether Table 4.3 explicitly declares this state edge."""
     for rule in TRANSITION_TABLE:
