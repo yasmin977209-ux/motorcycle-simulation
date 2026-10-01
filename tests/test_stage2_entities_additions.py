@@ -49,7 +49,7 @@ def test_contract_index_is_dict_backed_and_supports_large_key_lookup() -> None:
         contract_id = f"CT{number:08d}"
         index[contract_id] = _contract(contract_id)
 
-    target_id = "CT099999"
+    target_id = "CT00099999"
     target = index[target_id]
 
     assert isinstance(index, dict)
