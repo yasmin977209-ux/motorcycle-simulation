@@ -1,4 +1,4 @@
-"""Chapter 7 — post-maturity settlement rules, isolated from the daily engine."""
+"""Chapter 7 post-maturity settlement rules."""
 
 from __future__ import annotations
 
@@ -36,7 +36,6 @@ class LegacyDebtCollectionResult:
 
 def first_settlement_business_day_after(maturity_date: date) -> date:
     """Return the first business day strictly after maturity."""
-
     current = maturity_date + timedelta(days=1)
     while not is_business_day(current):
         current += timedelta(days=1)
@@ -44,8 +43,7 @@ def first_settlement_business_day_after(maturity_date: date) -> date:
 
 
 def settlement_legacy_debt(total_due: int, total_paid: int) -> int:
-    """Freeze the old debt at settlement entry."""
-
+    """Freeze the legacy debt at settlement entry."""
     if total_due < 0 or total_paid < 0 or total_paid > total_due:
         raise ValueError("Invalid contract due/paid amounts")
     return total_due - total_paid
@@ -55,28 +53,14 @@ def settlement_business_days_elapsed(
     settlement_start_date: date,
     current_date: date,
 ) -> int:
-    """Count completed settlement business days before current_date.
-
-    The settlement start day is day 1 of the period but has zero elapsed
-    days at its beginning. Thus the 30th working day has elapsed=29; the
-    next working day has elapsed=30 and is the first day eligible for the
-    expiry transition.
-    """
-
-    if current_date <= settlement_start_date:
+    """Return elapsed settlement business days using the reference day-1 convention."""
+    if current_date < settlement_start_date:
+        raise ValueError("current_date must not precede settlement_start_date")
+    if current_date == settlement_start_date:
         return 0
 
-    if is_friday(current_date):
-        current = settlement_start_date
-        business_days = 0
-        while current < current_date:
-            if is_business_day(current):
-                business_days += 1
-            current += timedelta(days=1)
-        return max(0, business_days - 1)
-
-    current = settlement_start_date
     business_days = 0
+    current = settlement_start_date
     while current <= current_date:
         if is_business_day(current):
             business_days += 1
@@ -85,11 +69,9 @@ def settlement_business_days_elapsed(
 
 
 def apply_settlement_rent(current_date: date) -> SettlementRentResult:
-    """Apply the deterministic 1,500 settlement rent on business days only."""
-
+    """Collect deterministic settlement rent on business days only."""
     if is_friday(current_date):
         return SettlementRentResult(0, 0, 0, 0)
-
     return SettlementRentResult(
         due=SETTLEMENT_DAILY_RENT,
         collected=SETTLEMENT_DAILY_RENT,
@@ -102,11 +84,9 @@ def apply_legacy_debt_collection(
     remaining_debt: int,
     success: bool,
 ) -> LegacyDebtCollectionResult:
-    """Apply one independent 1,500 legacy-debt payment attempt."""
-
+    """Apply one successful independent legacy-debt payment, capped at the daily rate."""
     if remaining_debt < 0:
         raise ValueError("remaining_debt must not be negative")
-
     if not success or remaining_debt == 0:
         return LegacyDebtCollectionResult(
             payment=0,
@@ -118,7 +98,6 @@ def apply_legacy_debt_collection(
 
     payment = min(SETTLEMENT_DAILY_RENT, remaining_debt)
     remaining_after = remaining_debt - payment
-
     return LegacyDebtCollectionResult(
         payment=payment,
         remaining_after=remaining_after,
@@ -128,45 +107,35 @@ def apply_legacy_debt_collection(
     )
 
 
-def settlement_status(
+def _settlement_status(
     settlement_start_date: date | None,
     current_date: date,
     remaining_debt: int,
 ) -> SettlementStatus:
-    """Classify settlement status without mutating bike/contract state."""
-
+    """Internal lifecycle helper; not a public Stage 3A contract."""
     if remaining_debt < 0:
         raise ValueError("remaining_debt must not be negative")
-    if settlement_start_date is None:
-        return SettlementStatus.NOT_STARTED
-    if current_date < settlement_start_date:
+    if settlement_start_date is None or current_date < settlement_start_date:
         return SettlementStatus.NOT_STARTED
     if remaining_debt == 0:
         return SettlementStatus.COMPLETED
-
-    elapsed = settlement_business_days_elapsed(
+    if is_friday(current_date):
+        return SettlementStatus.ACTIVE
+    if settlement_business_days_elapsed(
         settlement_start_date,
         current_date,
-    )
-
-    # M13 only runs on working days. A Friday between working days leaves
-    # the lifecycle state unchanged until the next working day.
-    if not is_business_day(current_date):
-        return SettlementStatus.ACTIVE
-
-    if elapsed >= SETTLEMENT_PERIOD_DAYS:
+    ) >= SETTLEMENT_PERIOD_DAYS:
         return SettlementStatus.EXPIRED
     return SettlementStatus.ACTIVE
 
 
 __all__ = [
-    "LegacyDebtCollectionResult",
-    "SettlementRentResult",
     "SettlementStatus",
-    "apply_legacy_debt_collection",
-    "apply_settlement_rent",
+    "SettlementRentResult",
+    "LegacyDebtCollectionResult",
     "first_settlement_business_day_after",
-    "settlement_business_days_elapsed",
     "settlement_legacy_debt",
-    "settlement_status",
+    "settlement_business_days_elapsed",
+    "apply_settlement_rent",
+    "apply_legacy_debt_collection",
 ]
