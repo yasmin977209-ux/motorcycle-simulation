@@ -38,7 +38,7 @@ def test_c100_three_full_repetitions_are_identical():
 
     print(json.dumps(results, ensure_ascii=False, sort_keys=True))
 
-    assert len({r["derived_seed"] for r in results}) == 3
+    assert len({r["derived_seed_hex"] for r in results}) == 3
 
     fields = (
         "Cash",
