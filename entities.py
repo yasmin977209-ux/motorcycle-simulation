@@ -95,6 +95,37 @@ class Project:
     project_cash: int = 0
     partner1_reinvestment_balance: int = 0
     partner2_reinvestment_balance: int = 0
+    accounts_receivable: int = 0
+    guarantee_claim_receivable: int = 0
+    gross_bike_assets: int = 0
+    accumulated_depreciation: int = 0
+    capital: int = 0
+    retained_earnings: int = 0
+    opening_loss: int = 0
+    revenue_primary: int = 0
+    revenue_secondary: int = 0
+    revenue_settlement: int = 0
+    revenue_friday_fee: int = 0
+    expense_depreciation: int = 0
+    expense_oil_service: int = 0
+    expense_prep: int = 0
+    expense_marketing: int = 0
+    bad_debt_expense: int = 0
+    asset_writeoff_expense: int = 0
+    bikes: list[Bike] = field(default_factory=list)
+    contracts: list[Contract] = field(default_factory=list)
+    tenants: list[Tenant] = field(default_factory=list)
+    guarantors: list[Guarantor] = field(default_factory=list)
+    guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
+    receivables: list[ReceivableEntry] = field(default_factory=list)
+    event_log: list[EventLogEntry] = field(default_factory=list)
+    daily_balance_checks: list[dict] = field(default_factory=list)
+    execution_trace: list[list[str]] = field(default_factory=list)
+    simulation_stopped: bool = False
+    final_close_date: Optional[date] = None
+    final_net_project_equity: Optional[int] = None
+    partner1_final_entitlement: Optional[int] = None
+    partner2_final_entitlement: Optional[int] = None
 
 
 @dataclass
@@ -124,6 +155,8 @@ class Bike:
     secondary_cycle_count: int = 0
     usage_days: int = 0
     lifecycle_cycle_number: int = 1
+    active_settlement_receivable_id: Optional[str] = None
+    pending_writeoff_today: bool = False
     lifecycle_history: list[EventLogEntry] = field(default_factory=list)
     receivables_ledger: list[ReceivableEntry] = field(default_factory=list)
 
@@ -191,7 +224,7 @@ class ReceivableEntry:
     collected_amount: int
     remaining_amount: int
     status: ReceivableStatus
-    created_date: date
+    created_date: Optional[date]
     settlement_date: Optional[date] = None
 
 
