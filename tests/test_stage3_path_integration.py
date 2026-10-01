@@ -3,19 +3,19 @@
 from datetime import date, timedelta
 
 import daily_engine
-from entities import BikeState, ContractStatus, ContractType, Project, ReceivableEntry, ReceivableSource, ReceivableStatus
+from entities import ContractStatus, ContractType, Project
 
 
 def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
     project = daily_engine.create_initial_project(recovery_rate_pct=100)
     target = project.bikes[0]
     for bike in project.bikes[1:]:
-        bike.current_state = BikeState.OWNED_TRANSFERRED.value
+        bike.current_state = "OWNED_TRANSFERRED"
         bike.current_contract_id = None
         bike.current_tenant_id = None
     if blocker:
         spare = project.bikes[1]
-        spare.current_state = BikeState.PREP.value
+        spare.current_state = "PREP"
         spare.prep_paid = True
         spare.customs_paid = True
         spare.actual_ready_date = date(2099, 1, 1)
@@ -26,9 +26,9 @@ def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
 def _activate_contract(project: Project, bike, contract_type: ContractType, start_date: date):
     contract = daily_engine._create_contract(project, bike, contract_type, start_date)
     bike.current_state = (
-        BikeState.ACTIVE_PRIMARY.value
+        "ACTIVE_PRIMARY"
         if contract_type is ContractType.PRIMARY
-        else BikeState.ACTIVE_SECONDARY.value
+        else "ACTIVE_SECONDARY"
     )
     bike.current_contract_id = contract.contract_id
     bike.current_tenant_id = contract.tenant_id
@@ -62,7 +62,7 @@ def test_path2_primary_early_default_to_secondary_activation():
     _run_until(
         project,
         start,
-        lambda: target.current_state == BikeState.AVAILABLE_FOR_SECONDARY.value,
+        lambda: target.current_state == "AVAILABLE_FOR_SECONDARY",
         probability=0.0,
     )
     assert target.termination_count >= 1
@@ -112,7 +112,7 @@ def test_path3_maturity_with_debt_then_successful_settlement():
         trial_id=1,
         recovery_rate_pct=100,
     )
-    assert target.current_state == BikeState.POST_MATURITY_SETTLEMENT.value
+    assert target.current_state == "POST_MATURITY_SETTLEMENT"
 
     current = contract.maturity_date + timedelta(days=1)
     while target.current_state == BikeState.POST_MATURITY_SETTLEMENT.value:
@@ -217,6 +217,6 @@ def test_path6_dynamic_closure_with_active_secondary_holds_asset():
 
     assert project.simulation_stopped is True
     assert project.final_close_date == start
-    assert target.current_state == BikeState.HELD_AS_ASSET.value
+    assert target.current_state == "HELD_AS_ASSET"
     assert contract.status is ContractStatus.TERMINATED
     assert project.final_net_project_equity is not None
