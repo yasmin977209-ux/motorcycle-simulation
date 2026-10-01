@@ -1,23 +1,23 @@
-"""Chapter 3 — authoritative data entities and enums.
+"""Chapter 3 entities — rebuilt from the authoritative reference.
 
-This module defines data structures only. Business transitions are implemented
-in later build stages, following the reference order.
+This module contains the domain data model only. It does not import dateutils
+or rng and it does not execute daily business logic.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
-from typing import Any
 
 from constants import (
-    BIKE_GROSS_ASSET_COST,
     INITIAL_FLEET_SIZE,
     OPENING_BIKE_ASSETS,
     OPENING_CASH,
     OPENING_MARKETING_EXPENSE,
     OPENING_PARTNER1_REINVESTMENT_BALANCE,
     OPENING_PARTNER2_REINVESTMENT_BALANCE,
+    OPENING_PREP_EXPENSE,
     OPENING_RETAINED_LOSS,
     TOTAL_CAPITAL,
 )
@@ -198,12 +198,12 @@ class ReceivableEntry:
     bike_id: str
     contract_id: str
     tenant_id: str
-    source: ReceivableSource = ReceivableSource.SETTLEMENT_LEGACY_DEBT
-    original_amount: int = 0
-    collected_amount: int = 0
-    remaining_amount: int = 0
-    status: ReceivableStatus = ReceivableStatus.OUTSTANDING
-    created_date: date | None = None
+    source: ReceivableSource
+    original_amount: int
+    collected_amount: int
+    remaining_amount: int
+    status: ReceivableStatus
+    created_date: date
     settlement_date: date | None = None
 
 
@@ -229,7 +229,6 @@ class EventLogEntry:
 
 @dataclass
 class Project:
-    # Opening/accounting state explicitly supported by the reference.
     project_cash: int = OPENING_CASH
     partner1_reinvestment_balance: int = OPENING_PARTNER1_REINVESTMENT_BALANCE
     partner2_reinvestment_balance: int = OPENING_PARTNER2_REINVESTMENT_BALANCE
@@ -240,18 +239,16 @@ class Project:
     capital: int = TOTAL_CAPITAL
     retained_earnings: int = OPENING_RETAINED_LOSS
     opening_loss: int = OPENING_RETAINED_LOSS
+    revenue_primary: int = 0
+    revenue_secondary: int = 0
+    revenue_settlement: int = 0
+    revenue_friday_fee: int = 0
+    expense_depreciation: int = 0
+    expense_oil_service: int = 0
+    expense_prep: int = 0
     expense_marketing: int = OPENING_MARKETING_EXPENSE
-
-    # Collections of the eight reference entities.
-    bikes: list[Bike] = field(default_factory=list)
-    contracts: list[Contract] = field(default_factory=list)
-    tenants: list[Tenant] = field(default_factory=list)
-    guarantors: list[Guarantor] = field(default_factory=list)
-    guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
-    receivables: list[ReceivableEntry] = field(default_factory=list)
-    event_log: list[EventLogEntry] = field(default_factory=list)
-
-    # Accounting/closure state needed by later reference stages.
+    bad_debt_expense: int = 0
+    asset_writeoff_expense: int = 0
     operating_revenue: int = 0
     operating_expenses: int = 0
     operating_net_profit: int = 0
@@ -261,42 +258,24 @@ class Project:
     partner1_final_entitlement: int | None = None
     partner2_final_entitlement: int | None = None
     simulation_stopped: bool = False
-
-    # Daily audit trails mandated by later chapters.
-    cash_rollforward: list[dict[str, Any]] = field(default_factory=list)
-    ar_rollforward: list[dict[str, Any]] = field(default_factory=list)
-    gross_asset_rollforward: list[dict[str, Any]] = field(default_factory=list)
-    depreciation_rollforward: list[dict[str, Any]] = field(default_factory=list)
-    daily_snapshots: list[dict[str, Any]] = field(default_factory=list)
-    daily_balance_checks: list[dict[str, Any]] = field(default_factory=list)
+    bikes: list[Bike] = field(default_factory=list)
+    contracts: list[Contract] = field(default_factory=list)
+    tenants: list[Tenant] = field(default_factory=list)
+    guarantors: list[Guarantor] = field(default_factory=list)
+    guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
+    receivables: list[ReceivableEntry] = field(default_factory=list)
+    event_log: list[EventLogEntry] = field(default_factory=list)
+    cash_rollforward: list[dict] = field(default_factory=list)
+    ar_rollforward: list[dict] = field(default_factory=list)
+    gross_asset_rollforward: list[dict] = field(default_factory=list)
+    depreciation_rollforward: list[dict] = field(default_factory=list)
+    daily_snapshots: list[dict] = field(default_factory=list)
+    daily_balance_checks: list[dict] = field(default_factory=list)
     execution_trace: list[list[str]] = field(default_factory=list)
-    error_log: list[dict[str, Any]] = field(default_factory=list)
-
-    def __post_init__(self) -> None:
-        # Data-structure invariants; no daily business logic is performed here.
-        if self.project_cash < 0:
-            raise ValueError("project_cash must not be negative")
-        if self.partner1_reinvestment_balance < 0:
-            raise ValueError("partner1_reinvestment_balance must not be negative")
-        if self.partner2_reinvestment_balance < 0:
-            raise ValueError("partner2_reinvestment_balance must not be negative")
-        if self.accounts_receivable < 0:
-            raise ValueError("accounts_receivable must not be negative")
-        if self.guarantee_claim_receivable < 0:
-            raise ValueError("guarantee_claim_receivable must not be negative")
-        if self.gross_bike_assets != OPENING_BIKE_ASSETS and not self.bikes:
-            raise ValueError(
-                "non-opening gross_bike_assets requires bike records"
-            )
+    error_log: list[dict] = field(default_factory=list)
 
     @classmethod
     def opening(cls) -> "Project":
-        """Construct the exact opening project shell for 2027-01-01.
-
-        The ten-bike opening fleet is instantiated in a later build stage;
-        this method therefore establishes only the project-level opening
-        accounting values.
-        """
         return cls(
             project_cash=OPENING_CASH,
             partner1_reinvestment_balance=OPENING_PARTNER1_REINVESTMENT_BALANCE,
@@ -310,7 +289,6 @@ class Project:
 
 
 def opening_fleet_size() -> int:
-    """Reference constant exposed without creating simulation logic."""
     return INITIAL_FLEET_SIZE
 
 
