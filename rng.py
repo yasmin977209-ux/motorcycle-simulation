@@ -19,6 +19,13 @@ RNG_WORD_BYTES: Final[int] = 8
 RNG_DENOMINATOR: Final[int] = 1 << 64
 
 
+def scenario_id(collection_probability: float, recovery_rate_pct: int) -> str:
+    """Return the canonical scenario identifier used by the simulation."""
+    if not 0.0 <= collection_probability <= 1.0:
+        raise ValueError("collection_probability must be in [0, 1]")
+    if not isinstance(recovery_rate_pct, int) or isinstance(recovery_rate_pct, bool):
+        raise TypeError("recovery_rate_pct must be an int")
+    return f"C{int(collection_probability * 100):03d}_G{recovery_rate_pct:03d}"
 def derive_seed(
     master_seed: int,
     scenario_id: str,
