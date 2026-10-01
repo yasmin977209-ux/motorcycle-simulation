@@ -61,18 +61,32 @@ jobs:
           echo "c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79  /tmp/source.tar.gz" | sha256sum -c -
           tar -xzf /tmp/source.tar.gz -C /tmp/acceptance_runtime
           cp /tmp/acceptance_runtime/tests/test_acceptance_16_full.py tests/test_acceptance_16_full.py
-          acceptance_output="$(python -m pytest -q tests/test_acceptance_16_full.py 2>&1)"
+
+          # Stage-specific filtering is applied in CI; the acceptance source is unchanged.
+          # 127/159/160/161 require later-stage data; 158 is adjudication-only.
+          acceptance_output="$(python -m pytest -q tests/test_acceptance_16_full.py -k 'not test_127 and not test_158 and not test_159 and not test_160 and not test_161' 2>&1)"
           acceptance_rc=$?
           printf '%s\n' "$acceptance_output"
           rm -f tests/test_acceptance_16_full.py
 
-          if printf '%s' "$acceptance_output" | grep -q "ModuleNotFoundError: No module named 'accounting'"; then
-            printf 'ACCEPTANCE_163=DEFERRED\n' >> /tmp/stage3a_status
-          elif [ "$acceptance_rc" -eq 0 ]; then
-            printf 'ACCEPTANCE_163=PASS\n' >> /tmp/stage3a_status
-          else
-            printf 'ACCEPTANCE_163=FAIL\n' >> /tmp/stage3a_status
+          if printf '%s' "$acceptance_output" | grep -Eq 'ModuleNotFoundError|ImportError|cannot import name'; then
+            printf 'ACCEPTANCE_163=WORKFLOW_DEFECT\n' >> /tmp/stage3a_status
             overall=1
+          else
+            summary="$(printf '%s\n' "$acceptance_output" | grep -E '[0-9]+ passed|[0-9]+ failed' | tail -1 || true)"
+            passed="$(printf '%s' "$summary" | sed -n 's/.*\([0-9][0-9]*\) passed.*/\1/p')"
+            failed="$(printf '%s' "$summary" | sed -n 's/.*\([0-9][0-9]*\) failed.*/\1/p')"
+            printf 'ACCEPTANCE_RUNNABLE_SUMMARY=%s\n' "$summary" >> /tmp/stage3a_status
+            printf 'ACCEPTANCE_PASS=%s\n' "${passed:-0}" >> /tmp/stage3a_status
+            printf 'ACCEPTANCE_FAIL=%s\n' "${failed:-0}" >> /tmp/stage3a_status
+            printf 'ACCEPTANCE_DEFERRED=4\n' >> /tmp/stage3a_status
+            printf 'ACCEPTANCE_ADJUDICATION=1\n' >> /tmp/stage3a_status
+            if [ "$acceptance_rc" -eq 0 ]; then
+              printf 'ACCEPTANCE_163=PASS\n' >> /tmp/stage3a_status
+            else
+              printf 'ACCEPTANCE_163=FAIL\n' >> /tmp/stage3a_status
+              overall=1
+            fi
           fi
 
           printf '\n| Test group | Status |\n|---|---|\n'
@@ -84,9 +98,13 @@ jobs:
               CH8) printf '| Chapter 8 unit tests | %s |\n' "$status" ;;
               CH9) printf '| Chapter 9 unit tests | %s |\n' "$status" ;;
               PATHS_44) printf '| Chapter 4.4 regression paths | %s |\n' "$status" ;;
-              ACCEPTANCE_163) printf '| Acceptance 163 regression | %s |\n' "$status" ;;
+              ACCEPTANCE_163) printf '| Acceptance gate after stage filtering | %s |\n' "$status" ;;
+              ACCEPTANCE_PASS) printf '| Acceptance PASS (actual pytest output) | %s |\n' "$status" ;;
+              ACCEPTANCE_FAIL) printf '| Acceptance FAIL (actual pytest output) | %s |\n' "$status" ;;
+              ACCEPTANCE_DEFERRED) printf '| Acceptance DEFERRED (later-stage data) | %s |\n' "$status" ;;
+              ACCEPTANCE_ADJUDICATION) printf '| Acceptance ADJUDICATION | %s |\n' "$status" ;;
+              ACCEPTANCE_RUNNABLE_SUMMARY) printf '| Acceptance pytest summary | %s |\n' "$status" ;;
             esac
           done < /tmp/stage3a_status
-
           printf '| test_158 | ADJUDICATION_REQUIRED |\n'
           exit "$overall"
