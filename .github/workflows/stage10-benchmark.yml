@@ -1,74 +1,151 @@
 name: stage10-benchmark
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - .stage10-benchmark-trigger
-  workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  SOURCE_SHA256: 2f278f9f60ec6d0cbf69d27d6182de051e421f5150f60bf7de2996ce4f045aed
+  JOB_TIMEOUT_MINUTES: "350"
+
 jobs:
   benchmark:
+    name: benchmark-${{ matrix.scenario }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Reconstruct and verify source package
+
+      - name: Verify source archive
         shell: bash
         run: |
           set -euo pipefail
-          cat $(find stage7_source -maxdepth 1 -type f -name "source.b64.*" | sort -V) > /tmp/source.b64
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          sha256sum /tmp/source.tar.gz | tee /tmp/source.sha256
-          rm -rf /tmp/source && mkdir /tmp/source
-          tar -xzf /tmp/source.tar.gz -C /tmp/source
-          cp -a /tmp/source/. .
-      - name: Install dependencies
+          echo "${SOURCE_SHA256}  stage10_source/source.tar.gz" | sha256sum -c -
+          rm -rf /tmp/motorcycle_source
+          mkdir -p /tmp/motorcycle_source
+          tar -xzf stage10_source/source.tar.gz -C /tmp/motorcycle_source
+          cp -a /tmp/motorcycle_source/. .
+          python -m py_compile *.py
+
+      - name: Install requirements
         run: python -m pip install -r requirements.txt
-      - name: Benchmark 25 complete trials
+
+      - name: Run one real trial and measure
         shell: bash
+        env:
+          SCENARIO: ${{ matrix.scenario }}
         run: |
           set -euo pipefail
           export PYTHONPATH=.
-          python - <<'PY' | tee /tmp/stage10-results.jsonl
-          import gzip, json, multiprocessing, os, time
-          from dataclasses import asdict
-          from pathlib import Path
-          from monte_carlo import run_trial
-
-          scenarios=[f"C{c:03d}_G{g:03d}" for c in (100,85,70,50,30) for g in (100,70,50,30,0)]
-          out=Path("/tmp/stage10-files"); out.mkdir(exist_ok=True)
-
-          for s in scenarios:
-              c=int(s[1:4])/100.0
-              g=int(s[6:9])
-              t0=time.perf_counter()
-              result=run_trial(c,g,1,scenario=s,keep_daily=True,include_raw_logs=False)
-              elapsed=time.perf_counter()-t0
-              raw=json.dumps(asdict(result),ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()
-              f=out/f"{s}_trial_000001.json.gz"
-              with gzip.open(f,"wb",compresslevel=6) as fh: fh.write(raw)
-              print(json.dumps({
-                  "scenario":s,"collection_probability":c,"recovery_rate_pct":g,
-                  "trial_id":1,"elapsed_seconds":elapsed,
-                  "cpu_count":multiprocessing.cpu_count(),"os_cpu_count":os.cpu_count(),
-                  "saved_file_bytes":f.stat().st_size,
-                  "uncompressed_json_bytes":len(raw),
-                  "days":len(result.daily_snapshots),
-                  "final_close_date":result.final_close_date
-              },sort_keys=True),flush=True)
+          rm -rf benchmark_results
+          mkdir -p benchmark_results
+          start_epoch="$(python - <<'PY'
+          import time
+          print(time.perf_counter())
           PY
-      - name: Upload temporary benchmark artifact
+          )"
+          start_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          python run_batch.py --scenario "$SCENARIO" --output benchmark_results --demo-total 1
+          end_epoch="$(python - <<'PY'
+          import time
+          print(time.perf_counter())
+          PY
+          )"
+          end_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          elapsed="$(python - "$start_epoch" "$end_epoch" <<'PY'
+          import sys
+          print(f"{float(sys.argv[2])-float(sys.argv[1]):.6f}")
+          PY
+          )"
+          nproc_value="$(nproc)"
+          cpu_model="$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')"
+          files_json="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("benchmark_results")
+          rows=[]
+          total=0
+          for p in sorted(root.rglob("*")):
+              if p.is_file():
+                  size=p.stat().st_size
+                  total += size
+                  rows.append({"path":str(p),"bytes":size})
+          print(json.dumps({"total_bytes":total,"files":rows},sort_keys=True))
+          PY
+          )"
+          python - "$SCENARIO" "$start_utc" "$end_utc" "$elapsed" "$nproc_value" "$cpu_model" "$files_json" <<'PY'
+          import json,sys
+          from pathlib import Path
+          scenario,start_utc,end_utc,elapsed,nproc,cpu_model,files_json=sys.argv[1:]
+          payload=json.loads(files_json)
+          out={
+            "stage":10,
+            "scenario":scenario,
+            "trials_completed":1,
+            "trial_mode":"demo_total_1",
+            "start_utc":start_utc,
+            "end_utc":end_utc,
+            "elapsed_seconds":float(elapsed),
+            "cores_reported":int(nproc),
+            "cpu_model":cpu_model,
+            "job_timeout_minutes":350,
+            "saved_output_bytes":payload["total_bytes"],
+            "saved_files":payload["files"],
+          }
+          Path("benchmark_results/benchmark.json").write_text(
+            json.dumps(out,ensure_ascii=False,sort_keys=True,indent=2),
+            encoding="utf-8"
+          )
+          print(json.dumps(out,ensure_ascii=False,sort_keys=True))
+          PY
+
+      - name: Upload benchmark artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stage10-benchmark-results
-          path: |
-            /tmp/stage10-results.jsonl
-            /tmp/stage10-files/*.json.gz
+          name: stage10-benchmark-${{ matrix.scenario }}
+          path: benchmark_results/
           if-no-files-found: error
+          retention-days: 7
