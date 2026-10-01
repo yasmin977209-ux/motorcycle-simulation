@@ -209,3 +209,19 @@
 **آخر stage2-verification:** Run 55 — success  
 **الاختبارات 163 في main:** غير موجودة  
 **القرار 158:** ADJUDICATION_REQUIRED  
+
+
+## 10. فجوة محتملة في entities.py (تُحسم في R4 للمرحلة 3ب مع إعادة اختبارات المرحلتين 1 و2)
+
+أظهر التحقق الفعلي من تنفيذ GitHub للنسخة القديمة أن `daily_engine.py` يستخدم الحقل `pending_writeoff_today` في M12/M13/M16، بينما هذا الحقل غير موجود في تعريف `Bike` الحالي في `entities.py`. كما يستخدم مرجع M13 الاسم `active_settlement_receivable`، ولا يوجد هذا الحقل في `Bike` الحالي؛ المرجع يعرّف بدلاً منه `receivables_ledger` وحقول الدين القديمة الصريحة. لم يُعدّل `entities.py` في هذه الخطوة.
+
+النص المرجعي يثبت:
+- السطر 1363: `bike.pending_writeoff_today = True` عند التمليك من M12.
+- السطر 1404: `bike.pending_writeoff_today = True` عند اكتمال التسوية في M13.
+- السطر 1393: `bike.active_settlement_receivable.created_date = current_date`.
+- السطر 1415: `bike.active_settlement_receivable.status = "TRANSFERRED_TO_GUARANTEE"`.
+- الأسطر 1540–1548: M16 يقرأ `pending_writeoff_today` ثم يصفره بعد الشطب.
+
+كما أن تعريف كيان الدراجة في الأسطر 362–367 يثبت وجود: `current_contract_id`، `current_tenant_id`، `settlement_start_date`، `settlement_legacy_debt_original`، `settlement_legacy_debt_remaining`، و`settlement_business_days_elapsed`. لذلك لا تُعد هذه الحقول مفقودة.
+
+الحالة: **OPEN / لا تعديل الآن**. تُحسم مطابقة الحقول المرجعية الفعلية في R4 الخاصة بالمرحلة 3ب، مع إعادة اختبارات المرحلتين 1 و2 بعد أي تغيير في `entities.py`.
