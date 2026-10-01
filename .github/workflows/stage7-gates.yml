@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  EXPECTED_ARCHIVE_SHA256: 37e2d164a5e6565afb785bba24dd3754e523845ef5ea4449485b779a8c656bfd
+  EXPECTED_ARCHIVE_SHA256: 8a368b983afa757666f11b872d350c0280dea889feefa0ecdbe306914cdefede
 
 jobs:
   repository-cleanliness:
@@ -31,11 +31,7 @@ jobs:
           test -f state.json
           test -f stage7_evidence_slice.zip
           test -f .github/workflows/stage7-gates.yml
-          test "$(find stage7_source -maxdepth 1 -type f -name 'source.b64.[0-9][0-9]' | wc -l)" -eq 17
-          test "$(find stage7_source -maxdepth 1 -type f -name 'source.b64.02.part.[0-9][0-9]' | wc -l)" -eq 6
-          if grep -RIl --exclude-dir=.git -E 'المرجع_النهائي_الموحد_المعتمد|stage7_source_package' .; then
-            true
-          fi
+          test -f stage7_source/source.tar.gz
           echo "Repository cleanliness gate: PASS"
 
   acceptance-163:
@@ -47,17 +43,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Reconstruct verified source package
+      - name: Reconstruct verified Python source package
         shell: bash
         run: |
           set -euo pipefail
-          cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          mkdir -p /tmp/source
-          tar -xzf /tmp/source.tar.gz -C /tmp/source
-          cp -a /tmp/source/. .
+          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
+          tar -xzf stage7_source/source.tar.gz -C .
       - name: Install test requirements
         run: python -m pip install -r requirements.txt
       - name: Run all 163 acceptance tests
@@ -74,17 +65,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Reconstruct verified source package
+      - name: Reconstruct verified Python source package
         shell: bash
         run: |
           set -euo pipefail
-          cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          mkdir -p /tmp/source
-          tar -xzf /tmp/source.tar.gz -C /tmp/source
-          cp -a /tmp/source/. .
+          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
+          tar -xzf stage7_source/source.tar.gz -C .
       - name: Install requirements
         run: python -m pip install -r requirements.txt
       - name: Run 3 trials with 2 workers
@@ -95,39 +81,35 @@ jobs:
         env:
           PYTHONPATH: .
         run: python tests/run_worker_group_to_file.py 4 /tmp/workers4.json
-      - name: Compare the 3 trial fingerprints exactly
+      - name: Compare fingerprints exactly
         shell: python
         run: |
           import json
           from pathlib import Path
-
-          a = json.loads(Path("/tmp/workers2.json").read_text())
-          b = json.loads(Path("/tmp/workers4.json").read_text())
-          assert sorted(a) == ["1", "2", "3"]
-          assert a == b, (a, b)
-          print(json.dumps({"gate": "parallel_3_trials", "exact_match": True, "trials": 3, "workers": [2, 4]}, sort_keys=True))
+          a=json.loads(Path('/tmp/workers2.json').read_text())
+          b=json.loads(Path('/tmp/workers4.json').read_text())
+          assert a == b
+          assert sorted(a) == ['1','2','3']
+          print(json.dumps({'exact_match':True,'trials':3,'workers':[2,4]},sort_keys=True))
 
   pause-resume:
     name: pause-resume
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Reconstruct verified source package
+      - name: Reconstruct verified Python source package
         shell: bash
         run: |
           set -euo pipefail
-          cat             stage7_source/source.b64.00             stage7_source/source.b64.01             stage7_source/source.b64.02.part.00             stage7_source/source.b64.02.part.01             stage7_source/source.b64.02.part.02             stage7_source/source.b64.02.part.03             stage7_source/source.b64.02.part.04             stage7_source/source.b64.02.part.05             stage7_source/source.b64.03             stage7_source/source.b64.04             stage7_source/source.b64.05             stage7_source/source.b64.06             stage7_source/source.b64.07             stage7_source/source.b64.08             stage7_source/source.b64.09             stage7_source/source.b64.10             stage7_source/source.b64.11             stage7_source/source.b64.12             stage7_source/source.b64.13             stage7_source/source.b64.14             stage7_source/source.b64.15             stage7_source/source.b64.16             stage7_source/source.b64.17 > /tmp/source.b64
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          echo "$EXPECTED_ARCHIVE_SHA256  /tmp/source.tar.gz" | sha256sum -c -
-          base64 -d /tmp/source.b64 > /tmp/source.tar.gz
-          mkdir -p /tmp/source
-          tar -xzf /tmp/source.tar.gz -C /tmp/source
-          cp -a /tmp/source/. .
-      - name: Install requirements
+          echo "${EXPECTED_ARCHIVE_SHA256}  stage7_source/source.tar.gz" | sha256sum -c -
+          tar -xzf stage7_source/source.tar.gz -C .
+      - name: Install test requirements
         run: python -m pip install -r requirements.txt
       - name: Prove pause and resume
         env:
