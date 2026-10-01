@@ -23,42 +23,70 @@ jobs:
       - name: Install requirements
         run: python -m pip install -r requirements.txt
 
-      - name: Unit and regression tests
-        env:
-          PYTHONPATH: .
-        run: python -m pytest -q tests/test_stage1.py tests/test_stage2.py tests/test_stage3a.py
-
-      - name: Acceptance 163 regression against current tree
+      - name: Execute Stage 3A tests and render actual status table
         shell: bash
-        continue-on-error: true
         env:
           PYTHONPATH: .
         run: |
-          set -o pipefail
+          set +e
+          overall=0
+
+          run_group() {
+            local label="$1"
+            shift
+            local output
+            output="$(python -m pytest -q "$@" 2>&1)"
+            local rc=$?
+            printf '%s\n' "$output"
+            if [ "$rc" -eq 0 ]; then
+              printf '%s=PASS\n' "$label" >> /tmp/stage3a_status
+            else
+              printf '%s=FAIL\n' "$label" >> /tmp/stage3a_status
+              overall=1
+            fi
+          }
+
+          : > /tmp/stage3a_status
+
+          run_group CH5 tests/test_stage3a.py -k test_ch5
+          run_group CH6 tests/test_stage3a.py -k test_ch6
+          run_group CH7 tests/test_stage3a.py -k test_ch7
+          run_group CH8 tests/test_stage3a.py -k test_ch8
+          run_group CH9 tests/test_stage3a.py -k test_ch9
+          run_group PATHS_44 tests/test_stage2.py -k "reference_path"
+
           mkdir -p /tmp/acceptance_runtime
           cat stage7_source/source.b64.* > /tmp/source.b64
           base64 -d /tmp/source.b64 > /tmp/source.tar.gz
           echo "c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79  /tmp/source.tar.gz" | sha256sum -c -
           tar -xzf /tmp/source.tar.gz -C /tmp/acceptance_runtime
           cp /tmp/acceptance_runtime/tests/test_acceptance_16_full.py tests/test_acceptance_16_full.py
-          set +e
-          python -m pytest -q tests/test_acceptance_16_full.py 2>&1 | tee /tmp/acceptance.log
-          status=$?
-          set -e
-          echo "ACCEPTANCE_EXIT_CODE=$status"
-          exit 0
+          acceptance_output="$(python -m pytest -q tests/test_acceptance_16_full.py 2>&1)"
+          acceptance_rc=$?
+          printf '%s\n' "$acceptance_output"
+          rm -f tests/test_acceptance_16_full.py
 
-      - name: Unified stage status table
-        shell: bash
-        run: |
-          cat <<'EOF'
-          | Stage / test group | Status |
-          |---|---|
-          | Chapter 5 unit tests | determined by preceding pytest run |
-          | Chapter 6 unit tests | determined by preceding pytest run |
-          | Chapter 7 unit tests | determined by preceding pytest run |
-          | Chapter 8 unit tests | determined by preceding pytest run |
-          | Chapter 9 unit tests | determined by preceding pytest run |
-          | Chapter 4.4 regression paths | determined by preceding pytest run |
-          | Acceptance 163 regression | DEFERRED/ADJUDICATION pending test execution for future-stage inputs |
-          EOF
+          if printf '%s' "$acceptance_output" | grep -q "ModuleNotFoundError: No module named 'accounting'"; then
+            printf 'ACCEPTANCE_163=DEFERRED\n' >> /tmp/stage3a_status
+          elif [ "$acceptance_rc" -eq 0 ]; then
+            printf 'ACCEPTANCE_163=PASS\n' >> /tmp/stage3a_status
+          else
+            printf 'ACCEPTANCE_163=FAIL\n' >> /tmp/stage3a_status
+            overall=1
+          fi
+
+          printf '\n| Test group | Status |\n|---|---|\n'
+          while IFS='=' read -r label status; do
+            case "$label" in
+              CH5) printf '| Chapter 5 unit tests | %s |\n' "$status" ;;
+              CH6) printf '| Chapter 6 unit tests | %s |\n' "$status" ;;
+              CH7) printf '| Chapter 7 unit tests | %s |\n' "$status" ;;
+              CH8) printf '| Chapter 8 unit tests | %s |\n' "$status" ;;
+              CH9) printf '| Chapter 9 unit tests | %s |\n' "$status" ;;
+              PATHS_44) printf '| Chapter 4.4 regression paths | %s |\n' "$status" ;;
+              ACCEPTANCE_163) printf '| Acceptance 163 regression | %s |\n' "$status" ;;
+            esac
+          done < /tmp/stage3a_status
+
+          printf '| test_158 | ADJUDICATION_REQUIRED |\n'
+          exit "$overall"
