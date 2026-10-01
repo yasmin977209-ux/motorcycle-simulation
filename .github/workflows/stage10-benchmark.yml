@@ -62,7 +62,7 @@ jobs:
                   "uncompressed_json_bytes":len(raw),
                   "days":len(result.daily_snapshots),
                   "final_close_date":result.final_close_date
-              },sort_keys=True,flush=True))
+              },sort_keys=True),flush=True)
           PY
       - name: Upload temporary benchmark artifact
         uses: actions/upload-artifact@v4
