@@ -127,6 +127,7 @@ jobs:
           mkdir -p /tmp/source
           tar -xzf /tmp/source.tar.gz -C /tmp/source
           cp -a /tmp/source/. .
+          python -m pip install -r requirements.txt
           python -m py_compile *.py
 
       - name: Restore latest compressed checkpoint
