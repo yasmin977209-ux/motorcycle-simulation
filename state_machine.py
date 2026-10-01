@@ -93,7 +93,7 @@ class TransitionRule:
 TRANSITION_TABLE: tuple[TransitionRule, ...] = (
     TransitionRule(
         ("PREP",),
-        "ACTIVE_PRIMARY",
+        ("ACTIVE_PRIMARY",),
         "prep_paid and customs_paid and first working day on/after actual_ready_date",
         "M3",
     ),
@@ -119,12 +119,6 @@ TRANSITION_TABLE: tuple[TransitionRule, ...] = (
         ("NOTICE_PRIMARY",),
         ("WAITING_PRIMARY", "ACTIVE_PRIMARY"),
         "new outstanding after payment is in WAITING_PRIMARY or ACTIVE_PRIMARY band",
-        "M10",
-    ),
-    TransitionRule(
-        ("NOTICE_PRIMARY",),
-        ("ACTIVE_PRIMARY",),
-        "new outstanding after payment == 0",
         "M10",
     ),
     TransitionRule(
