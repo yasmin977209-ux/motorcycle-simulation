@@ -41,9 +41,51 @@ jobs:
           print("BALANCE_CHECKS=",len(p.daily_balance_checks))
           print("MAX_ABSOLUTE_BALANCE_DIFFERENCE=",max(abs(x["Balance_Difference"]) for x in p.daily_balance_checks))
           PY
-      - name: Stage 3B unit tests
+      - name: Stage 3B unit tests (exclude full deterministic repetition)
         env: {PYTHONPATH: .}
-        run: python -m pytest -q tests/test_stage3b.py
+        run: python -m pytest -q tests/test_stage3b.py -k "not full_deterministic_trial_daily_balance"
+      - name: Run exactly one full deterministic repetition and check every day
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import time
+          from daily_engine import run_deterministic_trial
+          t0=time.perf_counter()
+          p=run_deterministic_trial(100,1,"C100_G100")
+          elapsed=time.perf_counter()-t0
+          max_abs=max(abs(x["Balance_Difference"]) for x in p.daily_balance_checks)
+          result={
+              "trial_id":1,
+              "scenario_id":"C100_G100",
+              "recovery_rate_pct":100,
+              "collection_probability":1.0,
+              "final_close_date":p.final_close_date.isoformat() if p.final_close_date else None,
+              "days_executed":len(p.daily_balance_checks),
+              "balance_checks":len(p.daily_balance_checks),
+              "max_absolute_balance_difference":max_abs,
+              "final_cash":p.project_cash,
+              "final_net_project_equity":p.final_net_project_equity,
+              "partner1_final_entitlement":p.partner1_final_entitlement,
+              "partner2_final_entitlement":p.partner2_final_entitlement,
+              "bike_count":len(p.bikes),
+              "contract_count":len(p.contracts),
+              "claim_count":len(p.guarantee_claims),
+              "elapsed_seconds":elapsed,
+              "cpu_count":os.cpu_count(),
+          }
+          assert p.simulation_stopped
+          assert p.final_close_date is not None
+          assert p.final_net_project_equity is not None
+          assert max_abs == 0
+          assert p.final_net_project_equity == p.daily_balance_checks[-1]["Total_Equity"]
+          print(json.dumps(result,sort_keys=True))
+          print("DAILY_BALANCE_CHECKS_ALL_ZERO=TRUE" if max_abs==0 else "DAILY_BALANCE_CHECKS_ALL_ZERO=FALSE")
+          PY
       - name: Unified status table
         shell: bash
         run: |
