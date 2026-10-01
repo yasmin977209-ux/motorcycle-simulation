@@ -17,6 +17,7 @@ from entities import (
     Bike,
     BikeSource,
     BikeState,
+    ClaimStatus,
     Contract,
     ContractStatus,
     ContractType,

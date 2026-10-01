@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from daily_engine import create_initial_project, run_day
-from entities import BikeState, Contract, ContractType
+from entities import BikeState, Contract, ContractStatus, ContractType
 
 
 def _isolated_project():
