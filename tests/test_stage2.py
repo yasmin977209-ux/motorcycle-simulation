@@ -216,36 +216,36 @@ def test_threshold_breach_does_not_self_terminate_in_m10() -> None:
 
 def test_transition_table_contains_reference_rules() -> None:
     assert len(TRANSITION_TABLE) == 19
-    pairs = {(rule.from_states, rule.to_state, rule.phase) for rule in TRANSITION_TABLE}
-    assert (("PREP",), "ACTIVE_PRIMARY", "M3") in pairs
+    pairs = {(rule.from_states, rule.to_states, rule.phase) for rule in TRANSITION_TABLE}
+    assert (("PREP",), ("ACTIVE_PRIMARY",), "M3") in pairs
     assert (
         ("GRACE_PRIMARY",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",),
         "M11",
     ) in pairs
     assert (
         ("POST_MATURITY_SETTLEMENT",),
-        "OWNED_TRANSFERRED",
+        ("OWNED_TRANSFERRED",),
         "M13",
     ) in pairs
     assert (
         ("POST_MATURITY_SETTLEMENT",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",)
         "M13",
     ) in pairs
     assert (
         ("AVAILABLE_FOR_SECONDARY",),
-        "ACTIVE_SECONDARY",
+        ("ACTIVE_SECONDARY",)
         "M3",
     ) in pairs
     assert (
         ("NOTICE_SECONDARY",),
-        "AVAILABLE_FOR_SECONDARY",
+        ("AVAILABLE_FOR_SECONDARY",)
         "M11",
     ) in pairs
     assert (
         ("ACTIVE_SECONDARY", "NOTICE_SECONDARY"),
-        "HELD_AS_ASSET",
+        ("HELD_AS_ASSET",)
         "M15",
     ) in pairs
     assert (
@@ -260,7 +260,7 @@ def test_transition_table_contains_reference_rules() -> None:
             "ACTIVE_SECONDARY",
             "NOTICE_SECONDARY",
         ),
-        "HELD_AS_ASSET",
+        ("HELD_AS_ASSET",),
         "M15",
     ) in pairs
 
