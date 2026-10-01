@@ -27,7 +27,7 @@ def test_c100_three_full_repetitions_are_identical():
         )
         row = {
             "trial_id": trial_id,
-            "derived_seed": event_seed,
+            "derived_seed_hex": event_seed.hex(),
             "Cash": project.project_cash,
             "Final_Net_Project_Equity": project.final_net_project_equity,
             "Partner1_Final_Entitlement": project.partner1_final_entitlement,
