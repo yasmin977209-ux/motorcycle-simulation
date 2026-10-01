@@ -54,6 +54,31 @@ jobs:
         run: |
           cat orig/MANIFEST.txt
           cat orig/PART_LINES.txt
+          echo "ARCHIVE_FILE_COUNT:"
+          find work/orig -type f | wc -l
+          echo "ARCHIVE_PY_FILE_COUNT:"
+          find work/orig -type f -name "*.py" | wc -l
+          echo "ARCHIVE_TEST_FILES:"
+          find work/orig -type f -path "*/tests/*" -name "*.py" | sort
+          echo "ARCHIVE_KEY_FILES:"
+          for f in daily_engine.py accounting.py closure.py entities.py state_machine.py; do
+            p=$(find work/orig -type f -name "$f" | head -n1 || true)
+            if [[ -n "$p" ]]; then
+              echo "ARCHIVE $f $p"
+              sha256sum "$p"
+            else
+              echo "ARCHIVE $f NOT_FOUND"
+            fi
+            if [[ -f "$f" ]]; then
+              echo "CURRENT $f"
+              sha256sum "$f"
+            else
+              echo "CURRENT $f NOT_FOUND"
+            fi
+          done
+          echo "ARCHIVE_ALL_PATHS:"
+          find work/orig -type f -printf '%P
+' | sort
           echo "RECONSTRUCTED_SOURCE_SHA256:"
           awk '/test_acceptance_16_full\.py$/ {print}' work/extracted_sha256.txt
 
