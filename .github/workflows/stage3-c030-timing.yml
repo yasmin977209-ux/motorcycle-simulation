@@ -1,8 +1,6 @@
 name: stage3-c030-timing
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
