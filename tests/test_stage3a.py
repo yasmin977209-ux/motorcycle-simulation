@@ -49,7 +49,7 @@ def test_ch5_friday_fee_oil_and_no_operating_rent() -> None:
     assert first.operating_rent_revenue == 0
 
     second = apply_friday_fee_and_oil(
-        date(2027, 1, 2), date(2027, 1, 16), 1, True
+        date(2027, 1, 2), date(2027, 1, 15), 1, True
     )
     assert second.revenue_friday_fee == 1000
     assert second.oil_service_expense == constants.OIL_SERVICE_COST
