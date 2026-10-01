@@ -1034,13 +1034,13 @@ def run_day(
         ("M16", lambda: _m16(p, current_date)),
         ("M17", lambda: _m17(p, current_date, opening)),
     )
+    if trace_enabled:
+        p.execution_trace.append(trace)
+
     for name, fn in stages:
         fn()
         if trace_enabled:
             trace.append(name)
-
-    if trace_enabled:
-        p.execution_trace.append(trace)
 
 
 def run_days(
