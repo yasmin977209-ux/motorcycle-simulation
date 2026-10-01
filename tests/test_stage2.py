@@ -338,9 +338,11 @@ def test_reference_path_6_dynamic_closure() -> None:
     for state in active_states:
         assert run_reference_path([state, "HELD_AS_ASSET"]) == (state, "HELD_AS_ASSET")
     closure_targets = {
-        rule.to_state
+        target
         for rule in TRANSITION_TABLE
-        if rule.phase == "M15" and rule.to_state == "HELD_AS_ASSET"
+        if rule.phase == "M15" and "HELD_AS_ASSET" in rule.to_states
+        for target in rule.to_states
+        if target == "HELD_AS_ASSET"
     }
     assert closure_targets == {"HELD_AS_ASSET"}
 
