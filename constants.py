@@ -81,17 +81,13 @@ PREP_LUBE_COST: Final[int] = 2_000
 PREP_OPERATING_EXPENSE_PER_BIKE: Final[int] = PREP_OIL_COST + PREP_LUBE_COST
 
 # [R6-2][Ref 2.2] Full cash flow cost = purchase + customs/registration + preparation.
-BIKE_TOTAL_CASH_FLOW_COST: Final[int] = (
-    BIKE_BASE_PURCHASE_COST + CUSTOMS_AND_REGISTRATION_COST + PREP_OPERATING_EXPENSE_PER_BIKE
-)
+BIKE_TOTAL_CASH_FLOW_COST: Final[int] = BIKE_BASE_PURCHASE_COST + CUSTOMS_AND_REGISTRATION_COST + PREP_OPERATING_EXPENSE_PER_BIKE
 
 # [R6-1][Ref 2.2] Expansion-purchase eligibility threshold is base purchase price only.
 EXPANSION_PURCHASE_CASH_THRESHOLD: Final[int] = 350_000
 
 # [R6-2][Ref 2.2] Additional cash required after purchase = prep + customs/registration.
-FULL_PREP_CASH_REQUIREMENT: Final[int] = (
-    PREP_OPERATING_EXPENSE_PER_BIKE + CUSTOMS_AND_REGISTRATION_COST
-)
+FULL_PREP_CASH_REQUIREMENT: Final[int] = PREP_OPERATING_EXPENSE_PER_BIKE + CUSTOMS_AND_REGISTRATION_COST
 
 # [R6-1][Ref 2.2] Primary daily rent on eligible business days.
 PRIMARY_DAILY_RENT: Final[int] = 1_500
@@ -133,9 +129,7 @@ OPENING_MARKETING_EXPENSE: Final[int] = 60_000
 OPENING_PREP_EXPENSE: Final[int] = INITIAL_FLEET_SIZE * PREP_OPERATING_EXPENSE_PER_BIKE
 
 # [R6-2][Ref 2.2] Opening retained loss is the negative of the two opening expenses.
-OPENING_RETAINED_LOSS: Final[int] = -(
-    OPENING_MARKETING_EXPENSE + OPENING_PREP_EXPENSE
-)
+OPENING_RETAINED_LOSS: Final[int] = -(OPENING_MARKETING_EXPENSE + OPENING_PREP_EXPENSE)
 
 # [R6-2][Ref 2.2] Ten founding motorcycles x gross asset cost.
 OPENING_BIKE_ASSETS: Final[int] = INITIAL_FLEET_SIZE * BIKE_GROSS_ASSET_COST
