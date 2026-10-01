@@ -70,6 +70,57 @@ jobs:
           )
           PY
 
+      - name: One representative C100_G100 repetition metrics
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import time
+
+          from daily_engine import run_deterministic_trial
+
+          started = time.perf_counter()
+          project = run_deterministic_trial(
+              recovery_rate_pct=100,
+              trial_id=1,
+              scenario_id="C100_G100",
+              master_seed=20270101,
+          )
+          elapsed = time.perf_counter() - started
+
+          result = {
+              "days_executed": len(project.daily_balance_checks),
+              "final_close_date": project.final_close_date.isoformat(),
+              "bike_count": len(project.bikes),
+              "Final_Net_Project_Equity": project.final_net_project_equity,
+              "P1": project.partner1_final_entitlement,
+              "P2": project.partner2_final_entitlement,
+              "max_absolute_balance_difference": max(
+                  abs(item["Balance_Difference"])
+                  for item in project.daily_balance_checks
+              ),
+              "elapsed_seconds": elapsed,
+              "cpu_count": os.cpu_count(),
+          }
+          assert project.final_net_project_equity == (
+              project.daily_balance_checks[-1]["Total_Equity"]
+          )
+          assert result["Final_Net_Project_Equity"] == (
+              project.project_cash
+              + sum(
+                  bike.net_book_value
+                  for bike in project.bikes
+                  if bike.current_state.value == "HELD_AS_ASSET"
+              )
+          )
+          assert result["max_absolute_balance_difference"] == 0
+          print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+          PY
+
       - name: Stage 3B test groups
         shell: bash
         env:
