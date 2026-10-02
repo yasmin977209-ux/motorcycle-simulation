@@ -405,6 +405,67 @@ def build_daily_distribution(
     return distribution
 
 
+
+class RepresentativeSelection(dict[str, int]):
+    @property
+    def p50_trial_id(self) -> int:
+        return self["p50_trial_id"]
+
+    @property
+    def p10_trial_id(self) -> int:
+        return self["p10_trial_id"]
+
+    @property
+    def p90_trial_id(self) -> int:
+        return self["p90_trial_id"]
+
+    @property
+    def loss_case_trial_id(self) -> int:
+        return self["loss_case_trial_id"]
+
+
+def select_representative_trials(
+    results: list[TrialResult],
+    quantiles: tuple[float, ...] = (0.10, 0.50, 0.90),
+) -> RepresentativeSelection:
+    if not results:
+        raise ValueError("results must not be empty")
+    if tuple(quantiles) != (0.10, 0.50, 0.90):
+        raise ValueError("quantiles must be exactly (0.10, 0.50, 0.90)")
+
+    equities = np.asarray(
+        [result.final_net_project_equity for result in results],
+        dtype=np.float64,
+    )
+
+    def nearest_trial(target_quantile: float) -> int:
+        target = np.quantile(
+            equities,
+            target_quantile,
+            method="linear",
+        )
+        return min(
+            results,
+            key=lambda result: (
+                abs(result.final_net_project_equity - target),
+                result.trial_id,
+            ),
+        ).trial_id
+
+    return RepresentativeSelection(
+        p50_trial_id=nearest_trial(0.50),
+        p10_trial_id=nearest_trial(0.10),
+        p90_trial_id=nearest_trial(0.90),
+        loss_case_trial_id=min(
+            results,
+            key=lambda result: (
+                result.final_net_project_equity,
+                result.trial_id,
+            ),
+        ).trial_id,
+    )
+
+
 __all__ = [
     "TrialResult",
     "parse_scenario_id",
@@ -415,4 +476,6 @@ __all__ = [
     "fingerprint_daily_distribution",
     "fingerprint_per_trial_slices",
     "build_daily_distribution",
+    "RepresentativeSelection",
+    "select_representative_trials",
 ]
