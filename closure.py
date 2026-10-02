@@ -195,18 +195,6 @@ def execute_dynamic_closure(
         )
 
     project.final_close_date = current_date
-    project.final_net_project_equity = project.project_cash + sum(
-        bike.net_book_value
-        for bike in project.bikes
-        if bike.current_state is BikeState.HELD_AS_ASSET
-    )
-    project.partner1_final_entitlement = (
-        project.final_net_project_equity * 70
-    ) // 100
-    project.partner2_final_entitlement = (
-        project.final_net_project_equity
-        - project.partner1_final_entitlement
-    )
     project.simulation_stopped = True
     return True
 
