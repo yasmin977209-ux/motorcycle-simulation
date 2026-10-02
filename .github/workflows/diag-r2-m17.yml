@@ -1,0 +1,29 @@
+name: diag-r2-m17
+
+on:
+  push:
+    branches:
+      - "tmp/diag-r2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Diagnose #45 #90 #94 at M17 failure
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python diag_r2_m17.py | tee /tmp/diag_r2_m17.log
+          cat /tmp/diag_r2_m17.log >> "$GITHUB_STEP_SUMMARY"
