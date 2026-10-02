@@ -141,20 +141,21 @@ jobs:
                       daily.derive_seed = old_rng_module.derive_seed
               project = daily.create_initial_project(recovery_rate_pct=recovery_rate)
               day = date(2027, 1, 1)
+              rows = []
+              accounting = sys.modules["accounting"]
               while not project.simulation_stopped:
                   call_run_day(daily, project, day, probability, scenario, trial_id, recovery_rate)
-                  day += timedelta(days=1)
-              rows = []
-              for snap in project.daily_balance_checks:
+                  snap = accounting.balance_sheet_snapshot(project)
                   rows.append({
-                      "date": snap["date"],
+                      "date": day.isoformat(),
                       "Cash": snap["Cash"],
                       "Total_Assets": snap["Total_Assets"],
                       "Total_Equity": snap["Total_Equity"],
-                      "AR": project_snapshot_ar(project, snap["date"]),
+                      "AR": project.accounts_receivable,
                       "contracts": len(project.contracts),
                       "claims": len(project.guarantee_claims),
                   })
+                  day += timedelta(days=1)
               return daily, project, rows
 
           def project_snapshot_ar(project, iso_date: str):
@@ -268,23 +269,14 @@ jobs:
                   day += timedelta(days=1)
               print_event(args.tree, "C030_G000", project)
           else:
-              daily = import_project(OLD if args.tree == "old" else CURRENT, args.tree)
-              project = daily.create_initial_project(recovery_rate_pct=0)
-              day = date(2027, 1, 1)
-              while not project.simulation_stopped:
-                  call_run_day(daily, project, day, args.probability, args.scenario, 1, 0)
-                  day += timedelta(days=1)
-              rows = []
-              for snap in project.daily_balance_checks:
-                  rows.append({
-                      "date": snap["date"],
-                      "Cash": snap["Cash"],
-                      "Total_Assets": snap["Total_Assets"],
-                      "Total_Equity": snap["Total_Equity"],
-                      "AR": project_snapshot_ar(project, snap["date"]),
-                      "contracts": len(project.contracts),
-                      "claims": len(project.guarantee_claims),
-                  })
+              daily, project, rows = run_trial(
+                  OLD if args.tree == "old" else CURRENT,
+                  args.tree,
+                  args.probability,
+                  args.scenario,
+                  1,
+                  0,
+              )
               emit_trial(args.tree, args.probability, project, rows)
           PY
 
