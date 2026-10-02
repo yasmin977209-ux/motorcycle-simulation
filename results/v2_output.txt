@@ -4,7 +4,7 @@ rootdir: /home/runner/work/motorcycle-simulation/motorcycle-simulation
 collected 163 items
 
 tests/test_acceptance_16_v2.py ......................................... [ 25%]
-...F....FF..FF..................................FFFFF.F................. [ 69%]
+...F....FF..FF..................................FFFFF................... [ 69%]
 .............s.................F............ssss..                       [100%]
 
 =================================== FAILURES ===================================
@@ -394,15 +394,6 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
 daily_engine.py:987: AssertionError
-_________________________ test_096_AR_صفر_بعد_الاغلاق __________________________
-
-    def test_096_AR_صفر_بعد_الاغلاق():
->       p=_new_project(); _mark_all_initial_owned(p); p.accounts_receivable=100; execute_dynamic_closure(p,date(2031,1,1),100); assert p.accounts_receivable==0
-                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       assert 100 == 0
-E        +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
-
-tests/test_acceptance_16_v2.py:497: AssertionError
 ______________________ test_145_فشل_التسوية_وسقوط_التمليك ______________________
 
     def test_145_فشل_التسوية_وسقوط_التمليك():
@@ -440,7 +431,5 @@ FAILED tests/test_acceptance_16_v2.py::test_091_رسم_الجمعة_في_يوم_
 FAILED tests/test_acceptance_16_v2.py::test_092_الاستهلاك_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
-FAILED tests/test_acceptance_16_v2.py::test_096_AR_صفر_بعد_الاغلاق - assert 100 == 0
- +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
 FAILED tests/test_acceptance_16_v2.py::test_145_فشل_التسوية_وسقوط_التمليك - AttributeError: 'Project' object has no attribute '_day_metrics'
-================== 12 failed, 146 passed, 5 skipped in 7.93s ===================
+================== 11 failed, 147 passed, 5 skipped in 7.84s ===================

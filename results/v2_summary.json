@@ -1,8 +1,8 @@
 {
-  "sha": "ee03fab9be3efca08b511f1344fab8b29fbd20b5",
-  "run_started_at": "2026-10-02T18:22:29Z",
-  "pass_count": 146,
-  "fail_count": 12,
+  "sha": "c6e4dd14e793ac7b33135891f37a25528d679164",
+  "run_started_at": "2026-10-02T18:24:41Z",
+  "pass_count": 147,
+  "fail_count": 11,
   "deferred_count": 4,
   "adjudication_count": 1,
   "failed_tests": [
@@ -55,11 +55,6 @@
       "id": "94",
       "name": "test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات",
       "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:987: AssertionError"
-    },
-    {
-      "id": "96",
-      "name": "test_096_AR_صفر_بعد_الاغلاق",
-      "error": "                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       assert 100 == 0\nE        +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable\n\ntests/test_acceptance_16_v2.py:497: AssertionError"
     },
     {
       "id": "145",
