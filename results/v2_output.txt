@@ -16,16 +16,16 @@ ____________________ test_045_يوم_النضج_يستحق_ايجارا_عادي
 
 tests/test_acceptance_16_v2.py:269: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1500, partner1_reinvestment_balance=1050, partner2_reinvestment_balance=450, accounts_receivable=...sets': 3241500, 'Total_Equity': 3241500, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1500, partner1_reinvestment_balance=1050, partner2_reinvestment_balance=450, accounts_receivable=...sets': -358500, 'Total_Equity': -358500, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 2)
-opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -35,6 +35,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -50,7 +65,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 ______________________ test_051_اكتمال_السداد_في_اليوم_3 _______________________
 
     def test_051_اكتمال_السداد_في_اليوم_3():
@@ -62,16 +77,16 @@ ______________________ test_051_اكتمال_السداد_في_اليوم_3 ____
 
 tests/test_acceptance_16_v2.py:307: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=9000, partner1_reinvestment_balance=6300, partner2_reinvestment_balance=2700, accounts_receivable...sets': 3249000, 'Total_Equity': 3249000, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=9000, partner1_reinvestment_balance=6300, partner2_reinvestment_balance=2700, accounts_receivable...sets': -351000, 'Total_Equity': -351000, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 6)
-opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 150, ...}
+opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 150, ...}
 
     def _m17(
         project: Project,
@@ -81,6 +96,21 @@ opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets'
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -96,7 +126,7 @@ opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets'
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 ____________________
 
     def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
@@ -108,16 +138,16 @@ ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_
 
 tests/test_acceptance_16_v2.py:337: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1138000, partner1_reinvestment_balance=102200, partner2_reinvestment_balance=43800, accounts_rece...sets': 4734300, 'Total_Equity': 4734300, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1138000, partner1_reinvestment_balance=102200, partner2_reinvestment_balance=43800, accounts_rece...sets': 1134300, 'Total_Equity': 1134300, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 2, 8)
-opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 3600, ...}
+opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 3600, ...}
 
     def _m17(
         project: Project,
@@ -127,6 +157,21 @@ opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Ass
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -142,7 +187,7 @@ opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Ass
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم ________________
 
     def test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم():
@@ -151,16 +196,16 @@ _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_ن
 
 tests/test_acceptance_16_v2.py:473: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...sets': 3600950, 'Total_Equity': 3600950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...Total_Assets': 950, 'Total_Equity': 950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 1)
-opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -170,6 +215,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -185,7 +245,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق ______________________
 
     def test_091_رسم_الجمعة_في_يوم_الاغلاق():
@@ -194,16 +254,16 @@ ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق _
 
 tests/test_acceptance_16_v2.py:477: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...sets': 3600950, 'Total_Equity': 3600950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...Total_Assets': 950, 'Total_Equity': 950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 3)
-opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -213,6 +273,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -228,7 +303,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 ______________________ test_092_الاستهلاك_في_يوم_الاغلاق _______________________
 
     def test_092_الاستهلاك_في_يوم_الاغلاق():
@@ -237,16 +312,16 @@ ______________________ test_092_الاستهلاك_في_يوم_الاغلاق __
 
 tests/test_acceptance_16_v2.py:481: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...sets': 3600950, 'Total_Equity': 3600950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...Total_Assets': 950, 'Total_Equity': 950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 1)
-opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -256,6 +331,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -271,7 +361,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 _______________ test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق ________________
 
     def test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق():
@@ -280,16 +370,16 @@ _______________ test_093_انهاء_العقود_الثانوية_في_نهاي�
 
 tests/test_acceptance_16_v2.py:485: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...sets': 3600950, 'Total_Equity': 3600950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=1000, partner1_reinvestment_balance=700, partner2_reinvestment_balance=300, accounts_receivable=0...Total_Assets': 950, 'Total_Equity': 950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 1)
-opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -299,6 +389,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -314,7 +419,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات ____________
 
     def test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات():
@@ -323,16 +428,16 @@ ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأ�
 
 tests/test_acceptance_16_v2.py:489: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1074: in run_day
+daily_engine.py:1089: in run_day
     fn()
-daily_engine.py:1068: in <lambda>
+daily_engine.py:1083: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=6000, partner1_reinvestment_balance=4200, partner2_reinvestment_balance=1800, accounts_receivable...sets': 3605950, 'Total_Equity': 3605950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
+project = Project(project_cash=6000, partner1_reinvestment_balance=4200, partner2_reinvestment_balance=1800, accounts_receivable...tal_Assets': 5950, 'Total_Equity': 5950, 'Liabilities': 0, 'Balance_Difference': 0}], execution_trace=[], error_log=[])
 current_date = datetime.date(2031, 1, 1)
-opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3600000, 'Opening_Accumulated_Depreciation': 0, ...}
+opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 0, 'Opening_Accumulated_Depreciation': 0, ...}
 
     def _m17(
         project: Project,
@@ -342,6 +447,21 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3
         from accounting import refresh_profit
     
         refresh_profit(project)
+    
+        if project.simulation_stopped:
+            project.final_net_project_equity = project.project_cash + sum(
+                bike.net_book_value
+                for bike in project.bikes
+                if bike.current_state is BikeState.HELD_AS_ASSET
+            )
+            project.partner1_final_entitlement = (
+                project.final_net_project_equity * 70
+            ) // 100
+            project.partner2_final_entitlement = (
+                project.final_net_project_equity
+                - project.partner1_final_entitlement
+            )
+    
         snapshot = assert_balance_sheet_balanced(project, current_date)
         project.daily_balance_checks.append(snapshot)
         record_daily_rollforwards(
@@ -357,7 +477,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:987: AssertionError
+daily_engine.py:1002: AssertionError
 -------------------- generated xml file: /tmp/v2_junit.xml ---------------------
 =========================== short test summary info ============================
 FAILED tests/test_acceptance_16_v2.py::test_045_يوم_النضج_يستحق_ايجارا_عاديا - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
@@ -368,4 +488,4 @@ FAILED tests/test_acceptance_16_v2.py::test_091_رسم_الجمعة_في_يوم_
 FAILED tests/test_acceptance_16_v2.py::test_092_الاستهلاك_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
-=================== 8 failed, 150 passed, 5 skipped in 8.10s ===================
+=================== 8 failed, 150 passed, 5 skipped in 4.72s ===================
