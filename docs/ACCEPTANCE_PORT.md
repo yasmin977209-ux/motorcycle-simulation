@@ -56,3 +56,64 @@
 | 44 | `fields` | `fields` | لا |
 | 45 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
 | 46 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+
+| 47 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 48 | `Contract; apply_settlement_rent` | `Contract; apply_settlement_rent(current_date)` | لا |
+| 49 | `derive_seed` | `derive_seed` | لا |
+| 50 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 51 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 52 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day; d.weekday` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day; d.weekday` | لا |
+| 53 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day; d.weekday` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day; d.weekday` | لا |
+| 54 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 55 | `_new_project; _add_active_contract; daily_engine._m13` | `_new_project; _add_active_contract; daily_engine._m13(project, current_date)` | لا |
+| 56 | `Contract; apply_friday_fee_and_oil` | `Contract; apply_friday_fee_and_oil(delivery_date, current_date, friday_counter, in_tenant_possession)` | لا |
+| 57 | `Bike; apply_daily_depreciation` | `Bike; apply_daily_depreciation(gross_cost, accumulated_depreciation, in_tenant_possession)` | لا |
+| 58 | `waiting_days_for_source` | `_waiting_days_for_source(claim_source)` | لا |
+| 59 | `waiting_days_for_source` | `_waiting_days_for_source(claim_source)` | لا |
+| 60 | `waiting_days_for_source` | `_waiting_days_for_source(claim_source)` | لا |
+| 61 | `_new_project; create_guarantee_claim` | `_new_project; create_guarantee_claim` | لا |
+| 62 | `create_guarantee_claim` | `create_guarantee_claim` | لا |
+| 63 | `create_guarantee_claim` | `create_guarantee_claim` | لا |
+| 64 | `create_guarantee_claim; can_settle_claim` | `create_guarantee_claim; can_settle_claim` | لا |
+| 65 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 66 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 67 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 68 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 69 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 70 | `_new_project; _add_active_contract` | `_new_project; _add_active_contract` | لا |
+| 71 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 72 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 73 | `_new_project; _add_active_contract; daily_engine._m3` | `_new_project; _add_active_contract; daily_engine._m3(project, current_date)` | لا |
+| 74 | `_new_project; _add_active_contract; daily_engine._m3` | `_new_project; _add_active_contract; daily_engine._m3(project, current_date)` | لا |
+| 75 | `_new_project; _add_active_contract; daily_engine._m3` | `_new_project; _add_active_contract; daily_engine._m3(project, current_date)` | لا |
+| 76 | `_source_text` | `_source_text` | لا |
+| 77 | `_new_project; _add_active_contract; daily_engine._m3` | `_new_project; _add_active_contract; daily_engine._m3(project, current_date); p.contracts.values` | لا |
+| 78 | `_new_project; _add_active_contract; daily_engine.__dict__.get` | `state_machine.TRANSITION_TABLE` | لا |
+| 79 | `_new_project; daily_engine._m2` | `_new_project; daily_engine._m2(project, current_date)` | لا |
+| 80 | `_new_project; daily_engine._m2` | `_new_project; daily_engine._m2(project, current_date)` | لا |
+| 81 | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | لا |
+| 82 | `_new_project; daily_engine._m2` | `_new_project; daily_engine._m2(project, current_date)` | لا |
+| 83 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 84 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 85 | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | لا |
+| 86 | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | لا |
+| 87 | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | لا |
+| 88 | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | لا |
+| 89 | `_new_project; _mark_all_initial_owned; execute_dynamic_closure` | `invoke_closure_and_get_state(project, current_date, recovery_rate_pct)` | لا |
+| 90 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 91 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 92 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 93 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 94 | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; _add_active_contract; daily_engine.run_day` | لا |
+| 95 | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; invoke_closure_and_get_state` | لا |
+| 96 | `_new_project; _mark_all_initial_owned; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; execute_dynamic_closure(project, current_date, recovery_rate_pct)` | لا |
+| 97 | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; execute_dynamic_closure(project, current_date, recovery_rate_pct)` | لا |
+| 98 | `_new_project; _mark_all_initial_owned; _add_active_contract; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; _add_active_contract; execute_dynamic_closure(project, current_date, recovery_rate_pct)` | لا |
+| 99 | `_new_project; _mark_all_initial_owned; execute_dynamic_closure; daily_engine.run_day` | `_new_project; _mark_all_initial_owned; execute_dynamic_closure(project, current_date, recovery_rate_pct); daily_engine.run_day` | لا |
+| 100 | `_new_project; daily_engine.run_deterministic_trial` | `_new_project; daily_engine.run_deterministic_trial` | لا |
+| 101 | `_deterministic_trial_cached; balance_sheet_snapshot` | `_deterministic_trial_cached; balance_sheet_snapshot` | لا |
+| 102 | `Project; initialize_accounting; balance_sheet_snapshot` | `Project; initialize_accounting; balance_sheet_snapshot` | لا |
+| 103 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 104 | `_deterministic_trial_cached; append; byyear.setdefault; byyear.values` | `_deterministic_trial_cached; append; byyear.setdefault; byyear.values` | لا |
+| 105 | `_deterministic_trial_cached; balance_sheet_snapshot` | `_deterministic_trial_cached; balance_sheet_snapshot` | لا |
+| 106 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
