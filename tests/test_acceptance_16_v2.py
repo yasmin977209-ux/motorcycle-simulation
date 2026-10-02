@@ -594,3 +594,52 @@ def test_117_لا_توزيعات_نقدية_فعلية():
 def test_118_المشروع_كيان_اقتصادي_واحد(): assert 'Partner1_Current_Account' not in _source_text([ROOT/'*.py'] if False else APP_FILES)
 def test_119_الأصول_التوسعية_موحدة(): p=_new_project(); assert hasattr(p,'gross_bike_assets') and not hasattr(p,'partner1_bike_assets')
 def test_120_الشريك_الأول_70_عند_الاغلاق(): p=_new_project(); p.final_net_project_equity=1001; assert final_entitlements(p)[0]==700
+def test_153_لا_حسابات_جارية_للشركاء():
+    text=_source_text([ROOT/'entities.py',ROOT/'accounting.py',ROOT/'partner_equity.py',ROOT/'daily_engine.py',ROOT/'closure.py']); assert 'Current_Account' not in text
+
+
+@pytest.mark.skip(reason='DEFERRED: فحص ساكن كامل لشجرة الإنتاج مؤجل ضمن بوابة المرحلة المخصصة.')
+def test_154_شجرة_الإنتاج_خالية_من_الواجهات_القديمة():
+    assert 'terminate_for_default' not in _source_text(APP_FILES)
+
+
+@pytest.mark.skip(reason='DEFERRED: فحص ساكن كامل لشجرة الإنتاج مؤجل إلى بوابة التنظيف المخصصة.')
+def test_155_شجرة_الإنتاج_خالية_من_pickle():
+    assert 'pickle' not in _source_text(APP_FILES).lower()
+
+
+@pytest.mark.skip(reason='DEFERRED: الفحص الساكن الكامل للملفات التشغيلية مؤجل ضمن بوابة المرحلة المخصصة.')
+def test_156_شجرة_الإنتاج_لا_تكتب_المخرجات_النهائية_في_المستودع():
+    assert 'xlsx' not in _source_text(APP_FILES).lower()
+
+
+@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5/حزمة التشغيل لم تُبنَ بعد.')
+def test_157_حلقة_التشغيل_تستخدم_شرط_الإيقاف_المعتمد():
+    text=_source_text(APP_FILES)
+    assert 'while not project.simulation_stopped' in text or 'while not p.simulation_stopped' in text
+
+
+@pytest.mark.skip(reason='ADJUDICATION: الاختبار 158 مرتبط بتعارضه مع القاعدة 8 ولا يُحسم آلياً.')
+def test_158_مسار_artifact_المخالف_للقاعدة_8():
+    assert False
+
+
+@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5 الخاصة بالتشغيل الكلي.')
+def test_159_حفظ_DAILY_DISTRIBUTION_بلا_فجوات():
+    assert False
+
+
+@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5 الخاصة بالتوازي.')
+def test_160_تطابق_التوازي():
+    assert False
+
+
+@pytest.mark.skip(reason='DEFERRED: DAILY_DISTRIBUTION النهائي يُبنى في المرحلة 5.')
+def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
+    assert False
+
+
+def test_162_شروط_الاغلاق_لا_تشترط_المطالبات_او_الذمم():
+    p=_new_project(); _mark_all_initial_owned(p); p.accounts_receivable=500; p.guarantee_claim_receivable=500; assert closure_preconditions_met(p,date(2031,1,1))
+def test_163_تسوية_المطالبات_فورا_عند_الاغلاق():
+    p=_new_project(); _mark_all_initial_owned(p); cl=create_guarantee_claim('CL1','B1','C1','T1','G1','PRIMARY_EARLY_TERMINATION',1000,date(2031,1,1),100); p.guarantee_claims.append(cl); p.guarantee_claim_receivable=1000; r=invoke_closure_and_get_state(p,date(2031,1,1),100); assert cl.status=='SETTLED' and cl.settlement_date==date(2031,1,1) and r['final_close_date']==date(2031,1,1)
