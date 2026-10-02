@@ -118,3 +118,5 @@ def invoke_closure_and_get_state(
         "partner1_final_entitlement": project.partner1_final_entitlement,
         "partner2_final_entitlement": project.partner2_final_entitlement,
     }
+
+# Stage 4 trigger: workflow materializes the acceptance payload.
