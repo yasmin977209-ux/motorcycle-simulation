@@ -12,14 +12,14 @@
 
 - ملف الثوابت أُعيد بناؤه من المرجع، مع تطبيق R7 للثوابت المشتقة.
 - commit إعادة بناء الثوابت الأخير: `8b5054ddb6a7d6aa91634af6bad7eb9c74929041`.
-- أحدث تحقق GitHub ظاهر في هذا السجل: `stage1-verification` Run **65**، GitHub run id **36911530602**، النتيجة **success**، وعلى SHA `63c65f7f4fe6121a4d8a797658a1d06ea6176342`.
+- أحدث تحقق GitHub: `stage1-verification` Run **146**، GitHub run id **37060161854**، النتيجة **success**، وعلى SHA التشغيلي `de72533819ba4b8e09e96b3af54999dd3f3e4225`.
 - Run سابق موثق في سجل README: Run **4** على commit `433a944974a1646e83f9be3122bbb45e5aeffa89` بنجاح.
 
 ### المرحلة 2 — entities.py وstate_machine.py
 الحالة: **ACCEPTED**
 
 - commit المرحلة 2 الحاكم: `d19ca51b8337a475ddd28cce6d661277930f3e48`.
-- أحدث تحقق GitHub ظاهر في هذا السجل: `stage2-verification` Run **55**، GitHub run id **36911530116**، النتيجة **success**، وعلى SHA `63c65f7f4fe6121a4d8a797658a1d06ea6176342`.
+- أحدث تحقق GitHub: `stage2-verification` Run **136**، GitHub run id **37060161892**، النتيجة **success**، وعلى SHA التشغيلي `de72533819ba4b8e09e96b3af54999dd3f3e4225`.
 - تدقيق واجهات R4/R6 موجود في `docs/stage2_interface_audit.md`.
 
 ### توضيح مهم حول commit ملف التدقيق
@@ -29,6 +29,17 @@
 
 أما `67e9168c5786f5207408252ef1f5c45f8a467466` فهو **SHA للـblob/محتوى الملف** كما أعاده GitHub عند قراءة الملف، وليس commit. لذلك المرجع الصحيح لإضافة الملف هو `63c65f7f…`.
 
+### المرحلة 3ب — مسار 4.4 (PATH_1)
+الحالة: **PASS** للاختبار المضاف، مع بقاء المرحلة الفرعية نفسها ضمن نطاق التحقق الحالي.
+
+- اختبار جديد: `tests/test_stage3b_path1.py`.
+- commit الاختبار: `eb97d02b14f950d38bafe9cceedc16e868a17b83`.
+- تعديل Workflow المعتمد لإدخال PATH_1: `de72533819ba4b8e09e96b3af54999dd3f3e4225`.
+- `stage3b-verification` Run **94**، GitHub run id **37060161894**.
+- نتيجة pytest الحرفية لمسار 1: `1 passed in 0.20s`.
+- جدول Workflow أظهر: `Chapter 4.4 path 1 | PASS | 1 passed in 0.20s`.
+- المجموعات الأخرى في Run 94 بقيت PASS: Chapter 10 = `2 passed in 0.02s`، Chapter 11 = `3 passed in 0.01s`، Chapter 12 M1-M17 = `3 passed in 0.02s`، Chapter 13 = `6 passed in 0.02s`، paths 2-6 = `5 passed in 0.03s`، no-time-cap = `1 passed in 1.49s`، roll-forward + C100 = `1 passed in 35.03s`.
+- الشرط الحسابي المتعلق بالـroll-forward لم يفشل مستقلاً؛ الاختبار والتدفق الخاصان بالمسار 1 نجحا.
 ### المرحلة 3أ
 الحالة: **NOT STARTED / NOT APPROVED**
 
@@ -201,16 +212,28 @@
 
 ## 9. الوضع عند آخر تحديث
 
-**آخر SHA:** `58e321e1f6153df3307fe95c184525939d0612a0`  
-**Stage 1:** ACCEPTED  
-**Stage 2:** ACCEPTED  
-**Stage 3A:** NOT STARTED / NOT APPROVED  
-**آخر stage1-verification:** Run 65 — success  
-**آخر stage2-verification:** Run 55 — success  
-**الاختبارات 163 في main:** غير موجودة  
-**القرار 158:** ADJUDICATION_REQUIRED  
+**SHA التشغيلي الذي اختُبرت عليه التغييرات:** `de72533819ba4b8e09e96b3af54999dd3f3e4225`  
+**آخر SHA على main قبل تحديث ملف الحالة:** `6a9648c7bd8a51472dbc889824f9fd3e4bbe3387`  
+**stage1-verification:** Run **146** — success — GitHub run id `37060161854`  
+**stage2-verification:** Run **136** — success — GitHub run id `37060161892`  
+**stage3a-verification:** Run **115** — success — GitHub run id `37060162170`  
+**stage3b-verification:** Run **94** — success — GitHub run id `37060161894`  
+**Stage 4 Acceptance Port:** Run **43** — success — GitHub run id `37060161884`  
+**v2:** `158 passed / 0 failed / 4 deferred / 1 adjudication`، وملف `results/v2_output.txt` سجل `158 passed, 5 skipped in 8.77s`.  
+**اختبارات 127/159/160/161:** DEFERRED.  
+**اختبار 158:** ADJUDICATION_REQUIRED.  
+**Stage 3A:** NOT STARTED / NOT APPROVED.  
+**Stage 5:** لم يبدأ.
 
+### تصحيح M8 وحالته
+- الإصلاح المعتمد لصيغة التحصيل في M8: commit `e174ac69e5b5f28733671ebebead2ee05378b17b`.
+- أصلح الصيغة المخالفة للمرجع في البند 6.2 باستخدام مسار التحصيل/AR الصحيح، دون تغيير اختبارات القبول لتناسب الكود.
+- الدليل المحفوظ على فرع `tmp/verify-m8` هو commit `2e389337dd3848e93b6a83a0d88edb98e0e0ca2c`.
 
+### قرار event_log
+- بسبب حجم `event_log` الخام الكبير (نحو 95 MB لكل repetition في القياسات المعتمدة)، يُحفظ الخام كاملاً **فقط لأربع repetitions تمثيلية** لأغراض التدقيق.
+- بقية repetitions لا تُحفظ لها نسخ event_log خام؛ يُحفظ لها فقط شرائح `DAILY_DISTRIBUTION` اللازمة للاستئناف والتحليل.
+- هذا القرار تشغيلي موثق ولا يغيّر منطق المحاكاة أو حقول `TrialResult`.
 ## 10. حسم K_SPEC في entities.py بقرارات R4 المحدثة
 
 تم إغلاق بنود K_SPEC الثلاثة وفق قرارات المستخدم:
