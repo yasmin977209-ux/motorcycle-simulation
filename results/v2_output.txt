@@ -16,9 +16,9 @@ ____________________ test_045_يوم_النضج_يستحق_ايجارا_عادي
 
 tests/test_acceptance_16_v2.py:269: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -50,7 +50,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 _________________ test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري _________________
 
     def test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري():
@@ -75,9 +75,9 @@ ______________________ test_051_اكتمال_السداد_في_اليوم_3 ____
 
 tests/test_acceptance_16_v2.py:307: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -109,7 +109,7 @@ opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets'
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 ____________________
 
     def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
@@ -121,9 +121,9 @@ ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_
 
 tests/test_acceptance_16_v2.py:337: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -155,7 +155,7 @@ opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Ass
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 __________________ test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل ___________________
 
     def test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل():
@@ -165,95 +165,20 @@ __________________ test_055_سقوط_حق_التمليك_نهائيا_بعد_ا�
 
 tests/test_acceptance_16_v2.py:347: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+daily_engine.py:881: in _m13
+    _ar_transfer(project, remaining)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100000, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-current_date = datetime.date(2031, 2, 15)
+project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
+amount = 100000
 
-    def _m13(project: Project, current_date: date) -> None:
-        for bike in list(project.bikes):
-            if bike.current_state is not BikeState.POST_MATURITY_SETTLEMENT:
-                continue
-            contract = (
-                project.contracts.get(bike.current_contract_id)
-                if bike.current_contract_id
-                else None
-            )
-    
-            if (
-                bike.settlement_start_date is None
-                and contract is not None
-                and contract.maturity_date is not None
-                and current_date > contract.maturity_date
-            ):
-                bike.settlement_start_date = current_date
-                receivable = _receivable_of(project, bike)
-                if receivable is not None:
-                    receivable.created_date = current_date
-                continue
-    
-            if not dateutils.is_business_day(current_date):
-                continue
-    
-            bike.settlement_business_days_elapsed += 1
-            if bike.settlement_legacy_debt_remaining == 0:
-                contract = (
-                    project.contracts.get(bike.current_contract_id)
-                    if bike.current_contract_id
-                    else None
-                )
-                if contract is not None:
-                    contract.status = ContractStatus.SETTLED
-                previous = bike.current_state
-                bike.current_state = BikeState.OWNED_TRANSFERRED
-                bike.pending_writeoff_today = True
-                _event(
-                    project,
-                    current_date,
-                    bike,
-                    EventType.SETTLEMENT_COMPLETED,
-                    previous,
-                    bike.current_state,
-                    bike.current_contract_id,
-                )
-                _event(
-                    project,
-                    current_date,
-                    bike,
-                    EventType.OWNERSHIP_TRANSFERRED,
-                    previous,
-                    bike.current_state,
-                    bike.current_contract_id,
-                )
-            elif (
-                bike.settlement_business_days_elapsed
-                > constants.SETTLEMENT_PERIOD_DAYS
-            ):
-                remaining = bike.settlement_legacy_debt_remaining
-                contract = (
-                    project.contracts.get(bike.current_contract_id)
-                    if bike.current_contract_id
-                    else None
-                )
-                if contract is None:
-                    raise AssertionError(
-                        "settlement bike lost its contract before failure"
-                    )
-                claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
-                claim = create_guarantee_claim(
-                    claim_id,
-                    bike.bike_id,
-                    contract.contract_id,
-                    contract.tenant_id,
-                    contract.guarantor_id,
-                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,
-                    remaining,
-                    current_date,
->                   project._recovery_rate_pct,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-                )
-E               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
+    def _ar_transfer(project: Project, amount: int) -> None:
+        project.accounts_receivable -= amount
+>       project._day_metrics["ar_transfers_to_guarantee"] += amount
+        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Project' object has no attribute '_day_metrics'
 
-daily_engine.py:874: AttributeError
+daily_engine.py:244: AttributeError
 _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم ________________
 
     def test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم():
@@ -262,9 +187,9 @@ _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_ن
 
 tests/test_acceptance_16_v2.py:473: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -296,7 +221,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق ______________________
 
     def test_091_رسم_الجمعة_في_يوم_الاغلاق():
@@ -305,9 +230,9 @@ ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق _
 
 tests/test_acceptance_16_v2.py:477: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -339,7 +264,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 ______________________ test_092_الاستهلاك_في_يوم_الاغلاق _______________________
 
     def test_092_الاستهلاك_في_يوم_الاغلاق():
@@ -348,9 +273,9 @@ ______________________ test_092_الاستهلاك_في_يوم_الاغلاق __
 
 tests/test_acceptance_16_v2.py:481: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -382,7 +307,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 _______________ test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق ________________
 
     def test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق():
@@ -391,9 +316,9 @@ _______________ test_093_انهاء_العقود_الثانوية_في_نهاي�
 
 tests/test_acceptance_16_v2.py:485: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -425,7 +350,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات ____________
 
     def test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات():
@@ -434,9 +359,9 @@ ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأ�
 
 tests/test_acceptance_16_v2.py:489: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1070: in run_day
+daily_engine.py:1074: in run_day
     fn()
-daily_engine.py:1064: in <lambda>
+daily_engine.py:1068: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -468,7 +393,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:983: AssertionError
+daily_engine.py:987: AssertionError
 _________________________ test_096_AR_صفر_بعد_الاغلاق __________________________
 
     def test_096_AR_صفر_بعد_الاغلاق():
@@ -486,95 +411,20 @@ ______________________ test_145_فشل_التسوية_وسقوط_التمليك 
 
 tests/test_acceptance_16_v2.py:675: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+daily_engine.py:881: in _m13
+    _ar_transfer(project, remaining)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=10000, g...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-current_date = datetime.date(2031, 1, 4)
+project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
+amount = 10000
 
-    def _m13(project: Project, current_date: date) -> None:
-        for bike in list(project.bikes):
-            if bike.current_state is not BikeState.POST_MATURITY_SETTLEMENT:
-                continue
-            contract = (
-                project.contracts.get(bike.current_contract_id)
-                if bike.current_contract_id
-                else None
-            )
-    
-            if (
-                bike.settlement_start_date is None
-                and contract is not None
-                and contract.maturity_date is not None
-                and current_date > contract.maturity_date
-            ):
-                bike.settlement_start_date = current_date
-                receivable = _receivable_of(project, bike)
-                if receivable is not None:
-                    receivable.created_date = current_date
-                continue
-    
-            if not dateutils.is_business_day(current_date):
-                continue
-    
-            bike.settlement_business_days_elapsed += 1
-            if bike.settlement_legacy_debt_remaining == 0:
-                contract = (
-                    project.contracts.get(bike.current_contract_id)
-                    if bike.current_contract_id
-                    else None
-                )
-                if contract is not None:
-                    contract.status = ContractStatus.SETTLED
-                previous = bike.current_state
-                bike.current_state = BikeState.OWNED_TRANSFERRED
-                bike.pending_writeoff_today = True
-                _event(
-                    project,
-                    current_date,
-                    bike,
-                    EventType.SETTLEMENT_COMPLETED,
-                    previous,
-                    bike.current_state,
-                    bike.current_contract_id,
-                )
-                _event(
-                    project,
-                    current_date,
-                    bike,
-                    EventType.OWNERSHIP_TRANSFERRED,
-                    previous,
-                    bike.current_state,
-                    bike.current_contract_id,
-                )
-            elif (
-                bike.settlement_business_days_elapsed
-                > constants.SETTLEMENT_PERIOD_DAYS
-            ):
-                remaining = bike.settlement_legacy_debt_remaining
-                contract = (
-                    project.contracts.get(bike.current_contract_id)
-                    if bike.current_contract_id
-                    else None
-                )
-                if contract is None:
-                    raise AssertionError(
-                        "settlement bike lost its contract before failure"
-                    )
-                claim_id = f"CL{len(project.guarantee_claims) + 1:08d}"
-                claim = create_guarantee_claim(
-                    claim_id,
-                    bike.bike_id,
-                    contract.contract_id,
-                    contract.tenant_id,
-                    contract.guarantor_id,
-                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,
-                    remaining,
-                    current_date,
->                   project._recovery_rate_pct,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-                )
-E               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
+    def _ar_transfer(project: Project, amount: int) -> None:
+        project.accounts_receivable -= amount
+>       project._day_metrics["ar_transfers_to_guarantee"] += amount
+        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Project' object has no attribute '_day_metrics'
 
-daily_engine.py:874: AttributeError
+daily_engine.py:244: AttributeError
 -------------------- generated xml file: /tmp/v2_junit.xml ---------------------
 =========================== short test summary info ============================
 FAILED tests/test_acceptance_16_v2.py::test_045_يوم_النضج_يستحق_ايجارا_عاديا - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
@@ -584,7 +434,7 @@ FAILED tests/test_acceptance_16_v2.py::test_050_اكتمال_السداد_في_�
   + POST_MATURITY_SETTLEMENT
 FAILED tests/test_acceptance_16_v2.py::test_051_اكتمال_السداد_في_اليوم_3 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
-FAILED tests/test_acceptance_16_v2.py::test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
+FAILED tests/test_acceptance_16_v2.py::test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_091_رسم_الجمعة_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_092_الاستهلاك_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
@@ -592,5 +442,5 @@ FAILED tests/test_acceptance_16_v2.py::test_093_انهاء_العقود_الثا
 FAILED tests/test_acceptance_16_v2.py::test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_096_AR_صفر_بعد_الاغلاق - assert 100 == 0
  +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
-FAILED tests/test_acceptance_16_v2.py::test_145_فشل_التسوية_وسقوط_التمليك - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
-================== 12 failed, 146 passed, 5 skipped in 5.50s ===================
+FAILED tests/test_acceptance_16_v2.py::test_145_فشل_التسوية_وسقوط_التمليك - AttributeError: 'Project' object has no attribute '_day_metrics'
+================== 12 failed, 146 passed, 5 skipped in 7.93s ===================
