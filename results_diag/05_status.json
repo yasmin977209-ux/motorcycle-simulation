@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "exit_code": 1,
+      "name": "pytest_m8"
+    },
+    {
+      "exit_code": 0,
+      "name": "c100"
+    },
+    {
+      "exit_code": 0,
+      "name": "single_contract"
+    },
+    {
+      "exit_code": 0,
+      "name": "c030"
+    }
+  ],
+  "overall_exit_code": 1
+}

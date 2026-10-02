@@ -1,0 +1,13 @@
+{
+  "Final_Net_Project_Equity": 27099450,
+  "claims": 1697,
+  "contracts": 1704,
+  "cpu_count": 4,
+  "daily_balance_check_count": 1612,
+  "days": 1612,
+  "elapsed_seconds": 0.3505850170000002,
+  "final_close_date": "2031-05-31",
+  "max_absolute_balance_difference": 0,
+  "scenario_id": "C030_G000",
+  "trial_id": 1
+}

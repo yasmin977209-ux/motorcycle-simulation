@@ -1,0 +1,112 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/work/motorcycle-simulation/motorcycle-simulation
+plugins: platformdirs-4.12.0
+collecting ... collected 5 items
+
+tests/test_m8_settlement_api.py::test_m8_primary_three_days_arrears_pays_today_plus_one_day FAILED [ 20%]
+tests/test_m8_settlement_api.py::test_m8_secondary_three_days_arrears_pays_today_plus_one_day FAILED [ 40%]
+tests/test_m8_settlement_api.py::test_m8_p1_without_arrears_collects_exactly_one_day PASSED [ 60%]
+tests/test_m8_settlement_api.py::test_collection_api_cash_and_ar_signals_are_exact PASSED [ 80%]
+tests/test_m8_settlement_api.py::test_run_day_balance_sheet_zero_difference_for_400_days_at_p030 PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ test_m8_primary_three_days_arrears_pays_today_plus_one_day __________
+
+    def test_m8_primary_three_days_arrears_pays_today_plus_one_day():
+        project, _, contract = _activate_single_contract(
+            ContractType.PRIMARY,
+            date(2027, 1, 2),
+        )
+        contract.total_due = 3 * contract.daily_rate
+        project.accounts_receivable = contract.total_due
+    
+>       run_day(
+            project,
+            date(2027, 1, 4),
+            collection_probability=1.0,
+            scenario_id="C100_G100",
+            trial_id=1,
+            recovery_rate_pct=100,
+        )
+
+tests/test_m8_settlement_api.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+daily_engine.py:1105: in run_day
+    fn()
+daily_engine.py:1099: in <lambda>
+    ("M17", lambda: _m17(p, current_date, opening)),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+daily_engine.py:1008: in _m17
+    snapshot = assert_balance_sheet_balanced(project, current_date)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = Project(project_cash=3000, partner1_reinvestment_balance=2100, partner2_reinvestment_balance=900, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
+current_date = datetime.date(2027, 1, 4)
+
+    def assert_balance_sheet_balanced(
+        project: Project,
+        current_date: date | None = None,
+    ) -> dict[str, int]:
+        snapshot = balance_sheet_snapshot(project)
+        if snapshot["Balance_Difference"] != 0:
+>           raise AssertionError(
+                f"balance sheet mismatch on {current_date}: "
+                f"{snapshot['Balance_Difference']}"
+            )
+E           AssertionError: balance sheet mismatch on 2027-01-04: 4500
+
+accounting.py:151: AssertionError
+_________ test_m8_secondary_three_days_arrears_pays_today_plus_one_day _________
+
+    def test_m8_secondary_three_days_arrears_pays_today_plus_one_day():
+        project, _, contract = _activate_single_contract(
+            ContractType.SECONDARY,
+            date(2027, 1, 2),
+        )
+        contract.total_due = 3 * contract.daily_rate
+        project.accounts_receivable = contract.total_due
+    
+>       run_day(
+            project,
+            date(2027, 1, 4),
+            collection_probability=1.0,
+            scenario_id="C100_G100",
+            trial_id=1,
+            recovery_rate_pct=100,
+        )
+
+tests/test_m8_settlement_api.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+daily_engine.py:1105: in run_day
+    fn()
+daily_engine.py:1099: in <lambda>
+    ("M17", lambda: _m17(p, current_date, opening)),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+daily_engine.py:1008: in _m17
+    snapshot = assert_balance_sheet_balanced(project, current_date)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = Project(project_cash=2000, partner1_reinvestment_balance=1400, partner2_reinvestment_balance=600, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
+current_date = datetime.date(2027, 1, 4)
+
+    def assert_balance_sheet_balanced(
+        project: Project,
+        current_date: date | None = None,
+    ) -> dict[str, int]:
+        snapshot = balance_sheet_snapshot(project)
+        if snapshot["Balance_Difference"] != 0:
+>           raise AssertionError(
+                f"balance sheet mismatch on {current_date}: "
+                f"{snapshot['Balance_Difference']}"
+            )
+E           AssertionError: balance sheet mismatch on 2027-01-04: 3000
+
+accounting.py:151: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_m8_settlement_api.py::test_m8_primary_three_days_arrears_pays_today_plus_one_day - AssertionError: balance sheet mismatch on 2027-01-04: 4500
+FAILED tests/test_m8_settlement_api.py::test_m8_secondary_three_days_arrears_pays_today_plus_one_day - AssertionError: balance sheet mismatch on 2027-01-04: 3000
+========================= 2 failed, 3 passed in 0.11s ==========================
