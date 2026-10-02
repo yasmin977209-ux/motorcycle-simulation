@@ -41,7 +41,7 @@ jobs:
           import monte_carlo
 
           TIMEOUT_MIN = 90
-          TRIALS = 10
+          TRIALS = 300
           scenarios = ("C070_G100", "C030_G000")
           measurement = {
               "timeout_min": TIMEOUT_MIN,
@@ -108,6 +108,15 @@ jobs:
                   )
               ]
               active_ok = dates == expected_dates
+              active_ok = active_ok and all(
+                  row["active_trial_count"]
+                  == sum(
+                      result.final_close_date is None
+                      or result.final_close_date >= row["date"]
+                      for result in results
+                  )
+                  for row in distribution
+              )
 
               measurement["scenarios"].append({
                   "scenario": scenario,
@@ -132,7 +141,7 @@ jobs:
           measurement["projected_25_after_escalation_100"] = 8005
 
           Path(
-              "results_stage5/round3_smoke.json"
+              "results_stage5/round3_measurement.json"
           ).write_text(
               json.dumps(
                   measurement,
@@ -153,6 +162,6 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage5-round3-smoke
+          name: stage5-round3-measurement
           path: results_stage5/
           if-no-files-found: error
