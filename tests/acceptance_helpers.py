@@ -73,6 +73,13 @@ def _mark_all_initial_owned(project: Project) -> None:
         bike.current_state = BikeState.OWNED_TRANSFERRED
         bike.current_contract_id = None
         bike.current_tenant_id = None
+        old_accumulated = bike.accumulated_depreciation
+        project.accumulated_depreciation -= old_accumulated
+        writeoff_amount = bike.gross_cost - old_accumulated
+        project.asset_writeoff_expense += writeoff_amount
+        project.gross_bike_assets -= bike.gross_cost
+        bike.net_book_value = 0
+        bike.accumulated_depreciation = bike.gross_cost
 
 
 def _run_days(
