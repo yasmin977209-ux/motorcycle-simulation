@@ -974,6 +974,21 @@ def _m17(
     from accounting import refresh_profit
 
     refresh_profit(project)
+
+    if project.simulation_stopped:
+        project.final_net_project_equity = project.project_cash + sum(
+            bike.net_book_value
+            for bike in project.bikes
+            if bike.current_state is BikeState.HELD_AS_ASSET
+        )
+        project.partner1_final_entitlement = (
+            project.final_net_project_equity * 70
+        ) // 100
+        project.partner2_final_entitlement = (
+            project.final_net_project_equity
+            - project.partner1_final_entitlement
+        )
+
     snapshot = assert_balance_sheet_balanced(project, current_date)
     project.daily_balance_checks.append(snapshot)
     record_daily_rollforwards(
