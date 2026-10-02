@@ -28,14 +28,24 @@ jobs:
           if not files:
               raise SystemExit("NO_WORKFLOW_FILES")
 
-          for path in files:
-              text = path.read_text(encoding="utf-8")
-              list(yaml.parse(text))
-              data = yaml.safe_load(text)
-              if not isinstance(data, dict):
-                  raise SystemExit(f"TOP_LEVEL_NOT_MAPPING: {path}")
-
+          failures = []
           print(f"WORKFLOW_FILE_COUNT={len(files)}")
           for path in files:
-              print(f"YAML_OK={path.as_posix()}")
+              try:
+                  text = path.read_text(encoding="utf-8")
+                  list(yaml.parse(text))
+                  data = yaml.safe_load(text)
+                  if not isinstance(data, dict):
+                      raise ValueError("TOP_LEVEL_NOT_MAPPING")
+              except Exception as exc:
+                  message = str(exc).replace("\n", " | ")
+                  failures.append((path.as_posix(), message))
+                  print(f"YAML_FAIL={path.as_posix()}::{message}")
+              else:
+                  print(f"YAML_OK={path.as_posix()}")
+
+          print(f"YAML_OK_COUNT={len(files)-len(failures)}")
+          print(f"YAML_FAIL_COUNT={len(failures)}")
+          if failures:
+              raise SystemExit(1)
           PY
