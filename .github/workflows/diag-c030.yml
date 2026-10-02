@@ -1,0 +1,424 @@
+name: diag-c030
+
+on:
+  push:
+    branches: ["tmp/diag-c030"]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Build isolated old/current trees
+        shell: bash
+        env:
+          OLD_SHA: 2e3aa381d833fe430d2aec42e98dd0d29918c3bf
+          CURRENT_SHA: 00582746c9b6391e8f84fe0f0ed776fd025c9e47
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$OLD_SHA"
+          mkdir -p /tmp/diag_c030/old /tmp/diag_c030/current
+          git archive "$OLD_SHA" | tar -x -C /tmp/diag_c030/old
+          git archive "$CURRENT_SHA" | tar -x -C /tmp/diag_c030/current
+          test -f /tmp/diag_c030/old/daily_engine.py
+          test -f /tmp/diag_c030/current/daily_engine.py
+          printf 'OLD_TREE=%s\nCURRENT_TREE=%s\n' "$OLD_SHA" "$CURRENT_SHA"
+
+      - name: Write diagnostic runner outside repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/diag_c030_runner.py <<'PY'
+          from __future__ import annotations
+
+          import argparse
+          import dataclasses
+          import gzip
+          import hashlib
+          import importlib.util
+          import inspect
+          import json
+          import os
+          import sys
+          from collections import Counter
+          from datetime import date, timedelta
+          from pathlib import Path
+          from types import ModuleType
+          from enum import Enum
+
+          ROOT = Path("/tmp/diag_c030")
+          OLD = ROOT / "old"
+          CURRENT = ROOT / "current"
+
+          def load_module_from_path(name: str, path: Path) -> ModuleType:
+              spec = importlib.util.spec_from_file_location(name, path)
+              if spec is None or spec.loader is None:
+                  raise RuntimeError(f"cannot load {name} from {path}")
+              mod = importlib.util.module_from_spec(spec)
+              sys.modules[name] = mod
+              spec.loader.exec_module(mod)
+              return mod
+
+          def jsonable(value):
+              if isinstance(value, Enum):
+                  return value.value
+              if isinstance(value, (date,)):
+                  return value.isoformat()
+              if dataclasses.is_dataclass(value):
+                  return {k: jsonable(v) for k, v in dataclasses.asdict(value).items()}
+              if isinstance(value, dict):
+                  return {str(k): jsonable(v) for k, v in value.items()}
+              if isinstance(value, (list, tuple)):
+                  return [jsonable(v) for v in value]
+              return value
+
+          def import_project(root: Path, label: str):
+              sys.path.insert(0, str(root))
+              try:
+                  for name in list(sys.modules):
+                      if name in {
+                          "daily_engine", "constants", "accounting", "closure",
+                          "collection", "dateutils", "depreciation", "entities",
+                          "friday", "guarantee", "partner_equity", "rng",
+                          "settlement", "state_machine",
+                      }:
+                          sys.modules.pop(name, None)
+                  daily = load_module_from_path(f"{label}_daily_engine", root / "daily_engine.py")
+                  return daily
+              finally:
+                  try:
+                      sys.path.remove(str(root))
+                  except ValueError:
+                      pass
+
+          def call_run_day(daily, project, day, probability, scenario, trial_id, recovery_rate):
+              sig = inspect.signature(daily.run_day)
+              kwargs = {
+                  "project": project,
+                  "current_date": day,
+                  "collection_probability": probability,
+                  "scenario_id": scenario,
+                  "trial_id": trial_id,
+              }
+              if "recovery_rate_pct" in sig.parameters:
+                  kwargs["recovery_rate_pct"] = recovery_rate
+              if "master_seed" in sig.parameters:
+                  kwargs["master_seed"] = 20270101
+              accepted = {k: v for k, v in kwargs.items() if k in sig.parameters}
+              try:
+                  return daily.run_day(**accepted)
+              except TypeError:
+                  positional = [project, day, probability, scenario, trial_id]
+                  if "recovery_rate_pct" in sig.parameters:
+                      positional.append(recovery_rate)
+                  if "master_seed" in sig.parameters:
+                      positional.append(20270101)
+                  return daily.run_day(*positional)
+
+          def run_trial(root: Path, label: str, probability: float, scenario: str, trial_id: int,
+                        recovery_rate: int, pin_current_to_old: bool = False,
+                        old_rng_module=None):
+              daily = import_project(root, label)
+              if pin_current_to_old and old_rng_module is not None:
+                  current_rng = sys.modules.get("rng")
+                  if current_rng is None:
+                      raise RuntimeError("current rng module is not loaded")
+                  current_rng.derive_seed = old_rng_module.derive_seed
+                  if hasattr(daily, "derive_seed"):
+                      daily.derive_seed = old_rng_module.derive_seed
+              project = daily.create_initial_project(recovery_rate_pct=recovery_rate)
+              day = date(2027, 1, 1)
+              while not project.simulation_stopped:
+                  call_run_day(daily, project, day, probability, scenario, trial_id, recovery_rate)
+                  day += timedelta(days=1)
+              rows = []
+              for snap in project.daily_balance_checks:
+                  rows.append({
+                      "date": snap["date"],
+                      "Cash": snap["Cash"],
+                      "Total_Assets": snap["Total_Assets"],
+                      "Total_Equity": snap["Total_Equity"],
+                      "AR": project_snapshot_ar(project, snap["date"]),
+                      "contracts": len(project.contracts),
+                      "claims": len(project.guarantee_claims),
+                  })
+              return daily, project, rows
+
+          def project_snapshot_ar(project, iso_date: str):
+              # Daily balance checks do not necessarily carry AR, so use the final
+              # project value only for the final row comparison. For first-difference
+              # diagnosis, a per-day accounting path is reconstructed from daily
+              # snapshots when available.
+              for attr in ("daily_snapshots", "daily_balance_checks"):
+                  seq = getattr(project, attr, None)
+                  if seq:
+                      for row in reversed(seq):
+                          if row.get("date") == iso_date and "Accounts_Receivable" in row:
+                              return row["Accounts_Receivable"]
+              return None
+
+          def daily_sha(rows):
+              payload = b"".join(
+                  (json.dumps(
+                      {k: row[k] for k in ("date", "Cash", "Total_Assets", "Total_Equity")},
+                      ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                  ) + "\n").encode("utf-8")
+                  for row in rows
+              )
+              return hashlib.sha256(payload).hexdigest()
+
+          def first_diff(a, b):
+              n = min(len(a), len(b))
+              for i in range(n):
+                  aa, bb = a[i], b[i]
+                  if {k: aa.get(k) for k in ("Cash", "AR", "contracts")} != {k: bb.get(k) for k in ("Cash", "AR", "contracts")}:
+                      return {
+                          "index": i,
+                          "date_old": aa.get("date"),
+                          "date_current": bb.get("date"),
+                          "old": {k: aa.get(k) for k in ("Cash", "AR", "contracts")},
+                          "current": {k: bb.get(k) for k in ("Cash", "AR", "contracts")},
+                      }
+              if len(a) != len(b):
+                  return {"index": n, "length_old": len(a), "length_current": len(b)}
+              return None
+
+          def emit_trial(label, probability, project, rows):
+              print(json.dumps({
+                  "kind": "trial",
+                  "tree": label,
+                  "scenario_id": "C030_G000",
+                  "collection_probability": probability,
+                  "trial_id": 1,
+                  "days": len(rows),
+                  "final_close_date": project.final_close_date.isoformat() if project.final_close_date else None,
+                  "Final_Net_Project_Equity": project.final_net_project_equity,
+                  "contracts": len(project.contracts),
+                  "claims": len(project.guarantee_claims),
+                  "sha256_daily_Cash_Total_Assets_Total_Equity": daily_sha(rows),
+              }, ensure_ascii=False, sort_keys=True))
+
+          def event_sizes(label, daily):
+              project = daily.run_deterministic_trial(
+                  recovery_rate_pct=0, trial_id=1, scenario_id="C030_G000"
+              ) if hasattr(daily, "run_deterministic_trial") else None
+              if project is None:
+                  project = daily.create_initial_project(recovery_rate_pct=0)
+                  day = date(2027, 1, 1)
+                  while not project.simulation_stopped:
+                      call_run_day(daily, project, day, 0.30, "C030_G000", 1, 0)
+                      day += timedelta(days=1)
+              return project
+
+          def serialized_event_log(project):
+              lines = []
+              for event in project.event_log:
+                  obj = jsonable(event)
+                  lines.append(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n")
+              raw = "".join(lines).encode("utf-8")
+              gz = gzip.compress(raw, mtime=0)
+              counts = Counter(
+                  event.event_type.value if hasattr(event.event_type, "value") else str(event.event_type)
+                  for event in project.event_log
+              )
+              return len(project.event_log), len(raw), len(gz), counts.most_common(5)
+
+          def print_event(label, scenario, project):
+              n, raw, gz, top5 = serialized_event_log(project)
+              print(json.dumps({
+                  "kind": "event_log",
+                  "tree": label,
+                  "scenario_id": scenario,
+                  "event_log_records": n,
+                  "jsonl_bytes": raw,
+                  "gzip_bytes": gz,
+                  "estimated_300_jsonl_bytes": raw * 300,
+                  "estimated_300_gzip_bytes": gz * 300,
+                  "estimated_300_jsonl_exceeds_1GB": (raw * 300) > 1_000_000_000,
+                  "estimated_300_gzip_exceeds_1GB": (gz * 300) > 1_000_000_000,
+                  "top5_event_types": top5,
+              }, ensure_ascii=False, sort_keys=True))
+
+          parser = argparse.ArgumentParser()
+          parser.add_argument("--tree", choices=["old", "current"])
+          parser.add_argument("--probability", type=float)
+          parser.add_argument("--mode", choices=["deterministic", "random", "event"])
+          parser.add_argument("--scenario", default="C030_G000")
+          args = parser.parse_args()
+
+          if args.mode == "event":
+              daily = import_project(OLD if args.tree == "old" else CURRENT, args.tree)
+              project = daily.create_initial_project(recovery_rate_pct=0)
+              day = date(2027, 1, 1)
+              while not project.simulation_stopped:
+                  call_run_day(daily, project, day, 0.30, "C030_G000", 1, 0)
+                  day += timedelta(days=1)
+              print_event(args.tree, "C030_G000", project)
+          else:
+              daily = import_project(OLD if args.tree == "old" else CURRENT, args.tree)
+              project = daily.create_initial_project(recovery_rate_pct=0)
+              day = date(2027, 1, 1)
+              while not project.simulation_stopped:
+                  call_run_day(daily, project, day, args.probability, args.scenario, 1, 0)
+                  day += timedelta(days=1)
+              rows = []
+              for snap in project.daily_balance_checks:
+                  rows.append({
+                      "date": snap["date"],
+                      "Cash": snap["Cash"],
+                      "Total_Assets": snap["Total_Assets"],
+                      "Total_Equity": snap["Total_Equity"],
+                      "AR": project_snapshot_ar(project, snap["date"]),
+                      "contracts": len(project.contracts),
+                      "claims": len(project.guarantee_claims),
+                  })
+              emit_trial(args.tree, args.probability, project, rows)
+          PY
+
+      - name: C030 deterministic p=1 and p=0 — old version
+        run: |
+          set -euo pipefail
+          python /tmp/diag_c030_runner.py --tree old --mode deterministic --probability 1.0 | tee /tmp/old_p1.json
+          python /tmp/diag_c030_runner.py --tree old --mode deterministic --probability 0.0 | tee /tmp/old_p0.json
+
+      - name: C030 deterministic p=1 and p=0 — current version
+        run: |
+          set -euo pipefail
+          python /tmp/diag_c030_runner.py --tree current --mode deterministic --probability 1.0 | tee /tmp/current_p1.json
+          python /tmp/diag_c030_runner.py --tree current --mode deterministic --probability 0.0 | tee /tmp/current_p0.json
+
+      - name: C030 random p=0.30 — compare old/current with current derive_seed pinned
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/diag_c030_random_compare.py <<'PY'
+          import importlib.util, json, sys
+          from pathlib import Path
+
+          runner_path = Path("/tmp/diag_c030_runner.py")
+          spec = importlib.util.spec_from_file_location("diag_runner", runner_path)
+          mod = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+
+          old_rng = mod.load_module_from_path("legacy_rng_for_pin", mod.OLD / "rng.py")
+
+          old_daily, old_project, old_rows = mod.run_trial(
+              mod.OLD, "old", 0.30, "C030_G000", 1, 0, False, old_rng
+          )
+          current_daily, current_project, current_rows = mod.run_trial(
+              mod.CURRENT, "current", 0.30, "C030_G000", 1, 0, True, old_rng
+          )
+
+          print(json.dumps({
+              "old": {
+                  "days": len(old_rows),
+                  "final_close_date": old_project.final_close_date.isoformat() if old_project.final_close_date else None,
+                  "Final_Net_Project_Equity": old_project.final_net_project_equity,
+                  "contracts": len(old_project.contracts),
+                  "claims": len(old_project.guarantee_claims),
+                  "sha": mod.daily_sha(old_rows),
+              },
+              "current_pinned_to_old_derive_seed": {
+                  "days": len(current_rows),
+                  "final_close_date": current_project.final_close_date.isoformat() if current_project.final_close_date else None,
+                  "Final_Net_Project_Equity": current_project.final_net_project_equity,
+                  "contracts": len(current_project.contracts),
+                  "claims": len(current_project.guarantee_claims),
+                  "sha": mod.daily_sha(current_rows),
+              },
+              "sha_match": mod.daily_sha(old_rows) == mod.daily_sha(current_rows),
+              "first_difference_cash_ar_contracts": mod.first_diff(old_rows, current_rows),
+              "derive_seed_source_equal": (
+                  (mod.OLD / "rng.py").read_text(encoding="utf-8").split("def rng_draw", 1)[0]
+                  .replace(""""", "")
+                  .strip()
+                  == (mod.CURRENT / "rng.py").read_text(encoding="utf-8").split("def rng_draw", 1)[0]
+                  .replace(""""", "")
+                  .strip()
+              ),
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+          python /tmp/diag_c030_random_compare.py | tee /tmp/random_compare.json
+
+      - name: Event log size — C100 and C030 one repetition each
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/diag_event_sizes.py <<'PY'
+          from __future__ import annotations
+          import dataclasses
+          import gzip
+          import json
+          from collections import Counter
+          from datetime import date, timedelta
+          from pathlib import Path
+          import sys
+          import importlib.util
+
+          ROOT = Path("/tmp/diag_c030/current")
+          sys.path.insert(0, str(ROOT))
+          import daily_engine
+
+          def run(prob, scenario, recovery):
+              p = daily_engine.create_initial_project(recovery_rate_pct=recovery)
+              d = date(2027,1,1)
+              while not p.simulation_stopped:
+                  daily_engine.run_day(
+                      p, d, prob, scenario, 1, recovery,
+                      **({"master_seed": 20270101} if "master_seed" in __import__("inspect").signature(daily_engine.run_day).parameters else {})
+                  )
+                  d += timedelta(days=1)
+              return p
+
+          def enc(v):
+              from enum import Enum
+              if isinstance(v, Enum): return v.value
+              if isinstance(v, date): return v.isoformat()
+              if dataclasses.is_dataclass(v): return {k:enc(x) for k,x in dataclasses.asdict(v).items()}
+              if isinstance(v, dict): return {str(k):enc(x) for k,x in v.items()}
+              if isinstance(v, (list,tuple)): return [enc(x) for x in v]
+              return v
+
+          for scenario, prob, recovery in [("C100_G100",1.0,100),("C030_G000",0.30,0)]:
+              p=run(prob,scenario,recovery)
+              raw=b"".join(
+                  (json.dumps(enc(e),ensure_ascii=False,sort_keys=True,separators=(",",":"))+"\n").encode()
+                  for e in p.event_log
+              )
+              gz=gzip.compress(raw,mtime=0)
+              top=Counter(e.event_type.value if hasattr(e.event_type,"value") else str(e.event_type) for e in p.event_log).most_common(5)
+              print(json.dumps({
+                  "scenario_id":scenario,
+                  "event_log_records":len(p.event_log),
+                  "jsonl_bytes":len(raw),
+                  "gzip_bytes":len(gz),
+                  "estimated_300_jsonl_bytes":len(raw)*300,
+                  "estimated_300_gzip_bytes":len(gz)*300,
+                  "estimated_300_jsonl_exceeds_1GB":len(raw)*300 > 1_000_000_000,
+                  "estimated_300_gzip_exceeds_1GB":len(gz)*300 > 1_000_000_000,
+                  "top5_event_types":top,
+              },ensure_ascii=False,sort_keys=True))
+          PY
+          python /tmp/diag_event_sizes.py | tee /tmp/event_sizes.json
+
+      - name: Final evidence table
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '\n===== DETERMINISTIC =====\n'
+          cat /tmp/old_p1.json /tmp/old_p0.json /tmp/current_p1.json /tmp/current_p0.json
+          printf '\n===== RANDOM =====\n'
+          cat /tmp/random_compare.json
+          printf '\n===== EVENT LOG SIZES =====\n'
+          cat /tmp/event_sizes.json
