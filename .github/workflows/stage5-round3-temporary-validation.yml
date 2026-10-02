@@ -8,9 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  round3-smoke:
+  round3-unit:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,7 +21,18 @@ jobs:
         env:
           PYTHONPATH: .
         run: python -m pytest -q tests/test_monte_carlo_round3.py
-      - name: Round 3 smoke measurement
+
+  measure-c070:
+    needs: round3-unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Measure 300 C070_G100
         env:
           PYTHONPATH: .
         run: |
@@ -32,7 +43,6 @@ jobs:
           import json
           import os
           import time
-          from dataclasses import asdict
           from pathlib import Path
 
           import pyarrow as pa
@@ -40,115 +50,258 @@ jobs:
 
           import monte_carlo
 
-          TIMEOUT_MIN = 90
-          TRIALS = 300
-          scenarios = ("C070_G100", "C030_G000")
-          measurement = {
-              "timeout_min": TIMEOUT_MIN,
+          scenario = "C070_G100"
+          trials_count = 300
+          timeout_min = 20
+          started = time.perf_counter()
+          results, slices = monte_carlo.run_trials_sequentially(
+              scenario,
+              tuple(range(1, trials_count + 1)),
+          )
+          elapsed = time.perf_counter() - started
+          distribution = monte_carlo.build_daily_distribution(results, slices)
+
+          flat_rows = []
+          for trial_id in sorted(slices):
+              for row in slices[trial_id]:
+                  flat_rows.append({"scenario_id": scenario, **row})
+
+          parquet_path = Path("results_stage5/C070_G100_daily_slices.parquet")
+          pq.write_table(
+              pa.Table.from_pylist(flat_rows),
+              parquet_path,
+              compression="zstd",
+          )
+
+          jsonl_path = Path("results_stage5/C070_G100_daily_slices.jsonl.gz")
+          with gzip.open(jsonl_path, "wt", encoding="utf-8") as stream:
+              for row in flat_rows:
+                  stream.write(
+                      json.dumps(
+                          row,
+                          ensure_ascii=False,
+                          sort_keys=True,
+                          separators=(",", ":"),
+                      ) + "\n"
+                  )
+
+          dates = sorted({row["date"] for row in flat_rows})
+          expected_dates = [
+              (
+                  monte_carlo.date.fromisoformat(dates[0])
+                  + monte_carlo.timedelta(days=i)
+              ).isoformat()
+              for i in range(
+                  (
+                      monte_carlo.date.fromisoformat(dates[-1])
+                      - monte_carlo.date.fromisoformat(dates[0])
+                  ).days
+                  + 1
+              )
+          ]
+          date_series_ok = dates == expected_dates
+          active_series_ok = date_series_ok and all(
+              row["active_trial_count"]
+              == sum(
+                  result.final_close_date is None
+                  or result.final_close_date >= row["date"]
+                  for result in results
+              )
+              for row in distribution
+          )
+
+          payload = {
+              "scenario": scenario,
+              "trials_count": trials_count,
+              "elapsed_total_s": elapsed,
+              "elapsed_per_trial_s": elapsed / trials_count,
               "cpu_count": os.cpu_count(),
-              "scenarios": [],
+              "timeout_min": timeout_min,
+              "parquet_bytes": parquet_path.stat().st_size,
+              "jsonl_gz_bytes": jsonl_path.stat().st_size,
+              "active_trial_count_series_ok": active_series_ok,
+              "daily_distribution_days_max": max(
+                  len(rows) for rows in slices.values()
+              ),
+              "distribution_rows": len(distribution),
           }
+          Path("results_stage5/C070_G100_measurement.json").write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage5-round3-c070
+          path: results_stage5/
+          if-no-files-found: error
 
-          for scenario in scenarios:
-              started = time.perf_counter()
-              trial_ids = tuple(range(1, TRIALS + 1))
-              results, slices = monte_carlo.run_trials_sequentially(
-                  scenario,
-                  trial_ids,
-              )
-              elapsed = time.perf_counter() - started
-              distribution = monte_carlo.build_daily_distribution(
-                  results,
-                  slices,
-              )
+  measure-c030:
+    needs: round3-unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Measure 300 C030_G000
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          mkdir -p results_stage5
+          python - <<'PY'
+          import gzip
+          import json
+          import os
+          import time
+          from pathlib import Path
 
-              flat_rows = []
-              for trial_id in sorted(slices):
-                  for row in slices[trial_id]:
-                      flat_rows.append({
-                          "scenario_id": scenario,
-                          **row,
-                      })
+          import pyarrow as pa
+          import pyarrow.parquet as pq
 
-              parquet_path = (
-                  Path("results_stage5")
-                  / f"{scenario}_10_daily_slices.parquet"
-              )
-              pq.write_table(
-                  pa.Table.from_pylist(flat_rows),
-                  parquet_path,
-                  compression="zstd",
-              )
+          import monte_carlo
 
-              jsonl_path = (
-                  Path("results_stage5")
-                  / f"{scenario}_10_daily_slices.jsonl.gz"
-              )
-              with gzip.open(jsonl_path, "wt", encoding="utf-8") as stream:
-                  for row in flat_rows:
-                      stream.write(
-                          json.dumps(
-                              row,
-                              ensure_ascii=False,
-                              sort_keys=True,
-                              separators=(",", ":"),
-                          )
-                          + "\n"
-                      )
+          scenario = "C030_G000"
+          trials_count = 300
+          timeout_min = 20
+          started = time.perf_counter()
+          results, slices = monte_carlo.run_trials_sequentially(
+              scenario,
+              tuple(range(1, trials_count + 1)),
+          )
+          elapsed = time.perf_counter() - started
+          distribution = monte_carlo.build_daily_distribution(results, slices)
 
-              dates = sorted({row["date"] for row in flat_rows})
-              expected_dates = [
-                  (monte_carlo.date.fromisoformat(dates[0]) + monte_carlo.timedelta(days=i)).isoformat()
-                  for i in range(
-                      (
-                          monte_carlo.date.fromisoformat(dates[-1])
-                          - monte_carlo.date.fromisoformat(dates[0])
-                      ).days
-                      + 1
+          flat_rows = []
+          for trial_id in sorted(slices):
+              for row in slices[trial_id]:
+                  flat_rows.append({"scenario_id": scenario, **row})
+
+          parquet_path = Path("results_stage5/C030_G000_daily_slices.parquet")
+          pq.write_table(
+              pa.Table.from_pylist(flat_rows),
+              parquet_path,
+              compression="zstd",
+          )
+
+          jsonl_path = Path("results_stage5/C030_G000_daily_slices.jsonl.gz")
+          with gzip.open(jsonl_path, "wt", encoding="utf-8") as stream:
+              for row in flat_rows:
+                  stream.write(
+                      json.dumps(
+                          row,
+                          ensure_ascii=False,
+                          sort_keys=True,
+                          separators=(",", ":"),
+                      ) + "\n"
                   )
-              ]
-              active_ok = dates == expected_dates
-              active_ok = active_ok and all(
-                  row["active_trial_count"]
-                  == sum(
-                      result.final_close_date is None
-                      or result.final_close_date >= row["date"]
-                      for result in results
-                  )
-                  for row in distribution
+
+          dates = sorted({row["date"] for row in flat_rows})
+          expected_dates = [
+              (
+                  monte_carlo.date.fromisoformat(dates[0])
+                  + monte_carlo.timedelta(days=i)
+              ).isoformat()
+              for i in range(
+                  (
+                      monte_carlo.date.fromisoformat(dates[-1])
+                      - monte_carlo.date.fromisoformat(dates[0])
+                  ).days
+                  + 1
               )
-
-              measurement["scenarios"].append({
-                  "scenario": scenario,
-                  "trials_count": TRIALS,
-                  "elapsed_total_s": elapsed,
-                  "elapsed_per_trial_s": elapsed / TRIALS,
-                  "cpu_count": os.cpu_count(),
-                  "timeout_min": TIMEOUT_MIN,
-                  "parquet_bytes": parquet_path.stat().st_size,
-                  "jsonl_gz_bytes": jsonl_path.stat().st_size,
-                  "daily_distribution_days_max": max(
-                      len(rows) for rows in slices.values()
-                  ),
-                  "active_trial_count_series_ok": active_ok,
-                  "distribution_rows": len(distribution),
-              })
-
-          measurement["per_g_level_totals"] = 1201
-          measurement["all_25_total"] = 6005
-          measurement["projected_25_all_at_start"] = 6005
-          measurement["projected_25_after_escalation_50"] = 7005
-          measurement["projected_25_after_escalation_100"] = 8005
-
-          Path(
-              "results_stage5/round3_measurement.json"
-          ).write_text(
-              json.dumps(
-                  measurement,
-                  ensure_ascii=False,
-                  indent=2,
-                  sort_keys=True,
+          ]
+          date_series_ok = dates == expected_dates
+          active_series_ok = date_series_ok and all(
+              row["active_trial_count"]
+              == sum(
+                  result.final_close_date is None
+                  or result.final_close_date >= row["date"]
+                  for result in results
               )
+              for row in distribution
+          )
+
+          payload = {
+              "scenario": scenario,
+              "trials_count": trials_count,
+              "elapsed_total_s": elapsed,
+              "elapsed_per_trial_s": elapsed / trials_count,
+              "cpu_count": os.cpu_count(),
+              "timeout_min": timeout_min,
+              "parquet_bytes": parquet_path.stat().st_size,
+              "jsonl_gz_bytes": jsonl_path.stat().st_size,
+              "active_trial_count_series_ok": active_series_ok,
+              "daily_distribution_days_max": max(
+                  len(rows) for rows in slices.values()
+              ),
+              "distribution_rows": len(distribution),
+          }
+          Path("results_stage5/C030_G000_measurement.json").write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage5-round3-c030
+          path: results_stage5/
+          if-no-files-found: error
+
+  aggregate:
+    needs: [measure-c070, measure-c030]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage5-round3-c*
+          path: results_stage5/incoming
+          merge-multiple: true
+      - name: Build round3_measurement.json
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("results_stage5/incoming")
+          c070 = json.loads(
+              (root / "C070_G100_measurement.json").read_text(encoding="utf-8")
+          )
+          c030 = json.loads(
+              (root / "C030_G000_measurement.json").read_text(encoding="utf-8")
+          )
+          per_g_level_totals = 1 + 4 * 300
+          all_25_total = 5 * per_g_level_totals
+          projected_25_after_escalation_50 = 5 * (1 + 4 * (300 + 50))
+          projected_25_after_escalation_100 = 5 * (1 + 4 * (300 + 100))
+
+          measurement = {
+              "scenarios": [c070, c030],
+              "per_g_level_totals": per_g_level_totals,
+              "all_25_total": all_25_total,
+              "projected_25_all_at_start": all_25_total,
+              "projected_25_after_escalation_50": projected_25_after_escalation_50,
+              "projected_25_after_escalation_100": projected_25_after_escalation_100,
+              "active_trial_count_series_ok": all(
+                  item["active_trial_count_series_ok"]
+                  for item in (c070, c030)
+              ),
+              "daily_distribution_days_max": max(
+                  item["daily_distribution_days_max"]
+                  for item in (c070, c030)
+              ),
+          }
+          output = Path("results_stage5/round3_measurement.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(
+              json.dumps(measurement, ensure_ascii=False, indent=2, sort_keys=True)
               + "\n",
               encoding="utf-8",
           )
@@ -163,5 +316,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: stage5-round3-measurement
-          path: results_stage5/
+          path: results_stage5/round3_measurement.json
           if-no-files-found: error
