@@ -198,3 +198,103 @@ def test_028_لا_متأخرات_دفعة_يوم_واحد():
 
 def test_029_متأخر_يوم_دفعة_يومين():
     c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1),total_due=3000,total_paid=0)
+    r=apply_ordinary_collection(c.total_due,c.total_paid,c.daily_rate,True,date(2031,1,4))
+    assert r.collected == 3000
+
+
+def test_030_متأخر_800():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1),total_due=2300,total_paid=0)
+    r=apply_ordinary_collection(c.total_due,c.total_paid,c.daily_rate,True,date(2031,1,4))
+    assert r.collected == 2300
+
+
+def test_031_منع_تجاوز_total_paid_total_due():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1),total_due=1200,total_paid=0)
+    r=apply_ordinary_collection(c.total_due,c.total_paid,c.daily_rate,True,date(2031,1,4))
+    assert r.collected <= 1200
+
+
+def test_032_FIFO_ضمني_في_تسوية_المتأخرات():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1),total_due=16500,total_paid=0)
+    r=apply_ordinary_collection(c.total_due,c.total_paid,c.daily_rate,True,date(2031,1,4))
+    assert r.arrears_payment == 1500 and r.collected == 3000
+
+
+def test_033_لا_تحصيل_ولا_استحقاق_إيجار_الجمعة():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1),total_due=0,total_paid=0)
+    r=apply_ordinary_collection(c.total_due,c.total_paid,c.daily_rate,True,date(2031,1,8))
+    assert r.collected == 0 and r.accounts_receivable_delta == 0
+
+# 16.5 delinquency
+
+def test_034_اليوم_20_انتظار(): assert derive_state_from_balance(30000,1500,'PRIMARY') == 'WAITING_PRIMARY'
+def test_035_اليوم_21_انذار(): assert derive_state_from_balance(31500,1500,'PRIMARY') == 'NOTICE_PRIMARY'
+def test_036_اليوم_27_انذار(): assert derive_state_from_balance(40500,1500,'PRIMARY') == 'NOTICE_PRIMARY'
+def test_037_اليوم_28_مهلة(): assert derive_state_from_balance(42000,1500,'PRIMARY') == 'GRACE_PRIMARY'
+def test_038_اليوم_30_قبل_الفسخ_مهلة(): assert derive_state_from_balance(43500,1500,'PRIMARY') == 'GRACE_PRIMARY'
+
+def test_039_نجاح_تحصيل_اليوم_الحرج_يلغي_الفسخ():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2031,1,4),state='ACTIVE_PRIMARY',due=43500,paid=0)
+    daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert b.current_state != 'AVAILABLE_FOR_SECONDARY'
+
+
+def test_040_فشل_التحصيل_في_اليوم_الحرج_ينتج_فسخا():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2031,1,4),state='ACTIVE_PRIMARY',due=43500,paid=0)
+    daily_engine.run_day(p,date(2031,1,4),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    assert b.current_state == 'AVAILABLE_FOR_SECONDARY' and b.termination_count == 1
+
+
+def test_041_انخفاض_الدين_يعيد_تصنيف_الحالة():
+    assert derive_state_from_balance(42000,1500,'PRIMARY') == 'GRACE_PRIMARY'
+    assert derive_state_from_balance(10000,1500,'PRIMARY') == 'WAITING_PRIMARY'
+    assert derive_state_from_balance(0,1500,'PRIMARY') == 'ACTIVE_PRIMARY'
+
+
+def test_042_لا_تواريخ_انذار_محفوظة():
+    fields={f.name for f in __import__('dataclasses').fields(Bike)}; assert 'notice_start_date' not in fields and 'grace_start_date' not in fields
+
+
+def test_043_الثانوي_يفسخ_عند_10000():
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='NOTICE_SECONDARY',due=10000,paid=0); daily_engine._m11(p,date(2031,1,4),100); assert b.current_state=='AVAILABLE_FOR_SECONDARY'
+
+def test_044_لا_عداد_ايام_منفصل():
+    fields={f.name for f in __import__('dataclasses').fields(Contract)}; assert 'unpaid_days' not in fields
+
+# 16.6 settlement
+
+def test_045_يوم_النضج_يستحق_ايجارا_عاديا():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=0,paid=0)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert c.total_due >= 1500
+
+
+def test_046_يوم_النضج_ليس_اول_يوم_تسوية():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert b.current_state == 'POST_MATURITY_SETTLEMENT' and b.settlement_start_date is None
+
+
+def test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert b.settlement_start_date == date(2031,1,4)
+
+
+def test_048_ايجار_التسوية_حتمي():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2030,1,2)); from settlement import SettlementRentResult
+    r=apply_settlement_rent(date(2031,1,4)); assert r.collected == r.due == 1500
+
+
+def test_049_سداد_الدين_القديم_ذو_رمية_مستقلة():
+    s1=derive_seed(MASTER_SEED,'C100_G100',1,'B1',date(2031,1,4),'PRIMARY_COLLECTION')
+    s2=derive_seed(MASTER_SEED,'C100_G100',1,'B1',date(2031,1,4),'LEGACY_DEBT_COLLECTION')
+    assert s1 != s2
+
+
+def test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=0,paid=0)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert b.current_state == 'OWNED_TRANSFERRED'
