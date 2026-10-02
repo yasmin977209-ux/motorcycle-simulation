@@ -3,196 +3,11 @@ platform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/runner/work/motorcycle-simulation/motorcycle-simulation
 collected 163 items
 
-tests/test_acceptance_16_v2.py .......FF..FF.FFF........................ [ 25%]
-.F.F....FF..FF........................F.F.......FFFFF.F................. [ 69%]
-F............s.................F.F..........ssss..                       [100%]
+tests/test_acceptance_16_v2.py ......................................... [ 25%]
+...F....FF..FF..................................FFFFF.F................. [ 69%]
+.............s.................F............ssss..                       [100%]
 
 =================================== FAILURES ===================================
-__________ test_008_شراء_توسع_بـ350000_يخصم_من_cash_و_partner1_rb_معا __________
-
-    def test_008_شراء_توسع_بـ350000_يخصم_من_cash_و_partner1_rb_معا():
-        p = _new_project(); p.project_cash = p.partner1_reinvestment_balance = 350_000
->       daily_engine._m2(p, date(2030, 12, 31))
-
-tests/test_acceptance_16_v2.py:70: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:316: in _m2
-    _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 350000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-____________________ test_009_الدراجة_تدخل_PREP_عند_الشراء _____________________
-
-    def test_009_الدراجة_تدخل_PREP_عند_الشراء():
-        p = _new_project(); p.project_cash = p.partner1_reinvestment_balance = 350_000
->       daily_engine._m2(p, date(2030, 12, 31))
-
-tests/test_acceptance_16_v2.py:77: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:316: in _m2
-    _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 350000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-______________________ test_012_دفع_4000_ينشئ_مصروفا_فقط _______________________
-
-    def test_012_دفع_4000_ينشئ_مصروفا_فقط():
-        p = _new_project(); b = Bike('BKX','EXPANSION',date(2030,12,31),date(2031,1,6),gross_cost=350_000); p.bikes.append(b)
-        p.project_cash = p.partner1_reinvestment_balance = 4_000
->       before = p.gross_bike_assets; daily_engine._m2(p, date(2031,1,2))
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:93: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-______________________ test_013_دفع_10000_يزيد_gross_cost ______________________
-
-    def test_013_دفع_10000_يزيد_gross_cost():
-        p = _new_project(); b = Bike('BKX','EXPANSION',date(2030,12,31),date(2031,1,6),gross_cost=350_000); p.bikes.append(b)
-        p.project_cash = p.partner1_reinvestment_balance = 14_000
->       before = b.gross_cost; daily_engine._m2(p, date(2031,1,2))
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:100: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=10000, partner1_reinvestment_balance=14000, partner2_reinvestment_balance=0, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-_____________________ test_015_FIFO_في_تجهيز_دراجات_متعددة _____________________
-
-    def test_015_FIFO_في_تجهيز_دراجات_متعددة():
-        p = _new_project()
-        b1 = Bike('BK001','EXPANSION',date(2030,12,1),date(2030,12,7),gross_cost=350_000)
-        b2 = Bike('BK002','EXPANSION',date(2030,12,2),date(2030,12,8),gross_cost=350_000)
-        p.bikes.extend([b1,b2]); p.project_cash=p.partner1_reinvestment_balance=4_000
->       daily_engine._m2(p,date(2030,12,8))
-
-tests/test_acceptance_16_v2.py:117: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-__________ test_016_لا_شراء_توسع_جديد_قبل_تمويل_PREP_القائمة_بالكامل ___________
-
-    def test_016_لا_شراء_توسع_جديد_قبل_تمويل_PREP_القائمة_بالكامل():
-        p = _new_project(); b = Bike('BK001','EXPANSION',date(2030,12,1),date(2030,12,7),gross_cost=350_000); p.bikes.append(b)
-        p.project_cash=p.partner1_reinvestment_balance=350_000
->       daily_engine._m2(p,date(2030,12,8))
-
-tests/test_acceptance_16_v2.py:124: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=346000, partner1_reinvestment_balance=350000, partner2_reinvestment_balance=0, accounts_receivabl...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-__________________ test_017_استمرار_تمويل_PREP_بعد_2030_12_31 __________________
-
-    def test_017_استمرار_تمويل_PREP_بعد_2030_12_31():
-        p=_new_project(); b=Bike('BK001','EXPANSION',date(2030,12,31),date(2031,1,6),gross_cost=350_000); p.bikes.append(b)
-        p.project_cash=p.partner1_reinvestment_balance=14_000
->       daily_engine._m2(p,date(2031,1,2))
-
-tests/test_acceptance_16_v2.py:131: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=10000, partner1_reinvestment_balance=14000, partner2_reinvestment_balance=0, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-_______________________ test_043_الثانوي_يفسخ_عند_10000 ________________________
-
-    def test_043_الثانوي_يفسخ_عند_10000():
->       p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='NOTICE_SECONDARY',due=10000,paid=0); daily_engine._m11(p,date(2031,1,4),100); assert b.current_state=='AVAILABLE_FOR_SECONDARY'
-                                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:260: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:688: in _m11
-    _ar_transfer(project, outstanding)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 10000
-
-    def _ar_transfer(project: Project, amount: int) -> None:
-        project.accounts_receivable -= amount
->       project._day_metrics["ar_transfers_to_guarantee"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:228: AttributeError
 ____________________ test_045_يوم_النضج_يستحق_ايجارا_عاديا _____________________
 
     def test_045_يوم_النضج_يستحق_ايجارا_عاديا():
@@ -201,9 +16,9 @@ ____________________ test_045_يوم_النضج_يستحق_ايجارا_عادي
 
 tests/test_acceptance_16_v2.py:269: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -235,7 +50,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 _________________ test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري _________________
 
     def test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري():
@@ -260,9 +75,9 @@ ______________________ test_051_اكتمال_السداد_في_اليوم_3 ____
 
 tests/test_acceptance_16_v2.py:307: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -294,7 +109,7 @@ opening = {'Opening_Cash': 6000, 'Opening_AR': 1500, 'Opening_Gross_Bike_Assets'
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 ____________________
 
     def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
@@ -306,9 +121,9 @@ ___________________ test_054_فشل_التسوية_بعد_تجاوز_اليوم_
 
 tests/test_acceptance_16_v2.py:337: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -340,7 +155,7 @@ opening = {'Opening_Cash': 1046000, 'Opening_AR': 44500, 'Opening_Gross_Bike_Ass
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 __________________ test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل ___________________
 
     def test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل():
@@ -438,51 +253,7 @@ current_date = datetime.date(2031, 2, 15)
                 )
 E               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
 
-daily_engine.py:856: AttributeError
-____________________ test_080_السماح_بالشراء_في_2030_12_31 _____________________
-
-    def test_080_السماح_بالشراء_في_2030_12_31():
->       p=_new_project(); p.project_cash=p.partner1_reinvestment_balance=350000; daily_engine._m2(p,date(2030,12,31)); assert any(b.source=='EXPANSION' for b in p.bikes)
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:436: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:316: in _m2
-    _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 350000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
-_______________ test_082_استمرار_الدراجة_المشتراة_في_2030_12_31 ________________
-
-    def test_082_استمرار_الدراجة_المشتراة_في_2030_12_31():
->       p=_new_project(); p.project_cash=p.partner1_reinvestment_balance=364000; daily_engine._m2(p,date(2030,12,31)); b=[b for b in p.bikes if b.source=='EXPANSION'][0]; assert b.current_state=='PREP'; p.project_cash=p.partner1_reinvestment_balance=14000; daily_engine._m2(p,date(2031,1,2)); assert b.actual_ready_date is not None
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:444: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:316: in _m2
-    _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=14000, partner1_reinvestment_balance=364000, partner2_reinvestment_balance=0, accounts_receivable...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 350000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
+daily_engine.py:874: AttributeError
 _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم ________________
 
     def test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم():
@@ -491,9 +262,9 @@ _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_ن
 
 tests/test_acceptance_16_v2.py:473: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -525,7 +296,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق ______________________
 
     def test_091_رسم_الجمعة_في_يوم_الاغلاق():
@@ -534,9 +305,9 @@ ______________________ test_091_رسم_الجمعة_في_يوم_الاغلاق _
 
 tests/test_acceptance_16_v2.py:477: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -568,7 +339,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 ______________________ test_092_الاستهلاك_في_يوم_الاغلاق _______________________
 
     def test_092_الاستهلاك_في_يوم_الاغلاق():
@@ -577,9 +348,9 @@ ______________________ test_092_الاستهلاك_في_يوم_الاغلاق __
 
 tests/test_acceptance_16_v2.py:481: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -611,7 +382,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 _______________ test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق ________________
 
     def test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق():
@@ -620,9 +391,9 @@ _______________ test_093_انهاء_العقود_الثانوية_في_نهاي�
 
 tests/test_acceptance_16_v2.py:485: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -654,7 +425,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 0, 'Opening_Gross_Bike_Assets': 3600
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات ____________
 
     def test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات():
@@ -663,9 +434,9 @@ ____________ test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأ�
 
 tests/test_acceptance_16_v2.py:489: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:1052: in run_day
+daily_engine.py:1070: in run_day
     fn()
-daily_engine.py:1046: in <lambda>
+daily_engine.py:1064: in <lambda>
     ("M17", lambda: _m17(p, current_date, opening)),
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
@@ -697,7 +468,7 @@ opening = {'Opening_Cash': 0, 'Opening_AR': 5000, 'Opening_Gross_Bike_Assets': 3
                 )
 E               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 
-daily_engine.py:965: AssertionError
+daily_engine.py:983: AssertionError
 _________________________ test_096_AR_صفر_بعد_الاغلاق __________________________
 
     def test_096_AR_صفر_بعد_الاغلاق():
@@ -707,28 +478,6 @@ E       assert 100 == 0
 E        +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
 
 tests/test_acceptance_16_v2.py:497: AssertionError
-______________________ test_114_منع_ازدواج_مصروف_التجهيز _______________________
-
-    def test_114_منع_ازدواج_مصروف_التجهيز():
->       p=_new_project(); b=Bike('BX','EXPANSION',date(2030,1,1),date(2030,1,7),gross_cost=350000); p.bikes.append(b); p.project_cash=p.partner1_reinvestment_balance=4000; daily_engine._m2(p,date(2030,1,7)); before=p.expense_prep; daily_engine._m2(p,date(2030,1,8)); assert p.expense_prep==before
-                                                                                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:576: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:273: in _m2
-    _cash_out(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 4000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
 ______________________ test_145_فشل_التسوية_وسقوط_التمليك ______________________
 
     def test_145_فشل_التسوية_وسقوط_التمليك():
@@ -825,38 +574,9 @@ current_date = datetime.date(2031, 1, 4)
                 )
 E               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
 
-daily_engine.py:856: AttributeError
-________________________ test_147_شراء_في_آخر_يوم_مسموح ________________________
-
->   def test_147_شراء_في_آخر_يوم_مسموح(): p=_new_project(); p.project_cash=p.partner1_reinvestment_balance=350000; daily_engine._m2(p,date(2030,12,31)); assert any(b.purchase_date==date(2030,12,31) for b in p.bikes if b.source=='EXPANSION')
-                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:680: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-daily_engine.py:316: in _m2
-    _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-amount = 350000
-
-    def _cash_out(project: Project, amount: int) -> None:
-        project.project_cash -= amount
->       project._day_metrics["cash_outflows"] += amount
-        ^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'Project' object has no attribute '_day_metrics'
-
-daily_engine.py:218: AttributeError
+daily_engine.py:874: AttributeError
 -------------------- generated xml file: /tmp/v2_junit.xml ---------------------
 =========================== short test summary info ============================
-FAILED tests/test_acceptance_16_v2.py::test_008_شراء_توسع_بـ350000_يخصم_من_cash_و_partner1_rb_معا - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_009_الدراجة_تدخل_PREP_عند_الشراء - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_012_دفع_4000_ينشئ_مصروفا_فقط - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_013_دفع_10000_يزيد_gross_cost - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_015_FIFO_في_تجهيز_دراجات_متعددة - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_016_لا_شراء_توسع_جديد_قبل_تمويل_PREP_القائمة_بالكامل - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_017_استمرار_تمويل_PREP_بعد_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_043_الثانوي_يفسخ_عند_10000 - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_045_يوم_النضج_يستحق_ايجارا_عاديا - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري - AssertionError: assert <BikeState.PO...Y_SETTLEMENT'> == 'OWNED_TRANSFERRED'
   
@@ -865,8 +585,6 @@ FAILED tests/test_acceptance_16_v2.py::test_050_اكتمال_السداد_في_�
 FAILED tests/test_acceptance_16_v2.py::test_051_اكتمال_السداد_في_اليوم_3 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
-FAILED tests/test_acceptance_16_v2.py::test_080_السماح_بالشراء_في_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_082_استمرار_الدراجة_المشتراة_في_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_091_رسم_الجمعة_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_092_الاستهلاك_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
@@ -874,7 +592,5 @@ FAILED tests/test_acceptance_16_v2.py::test_093_انهاء_العقود_الثا
 FAILED tests/test_acceptance_16_v2.py::test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_096_AR_صفر_بعد_الاغلاق - assert 100 == 0
  +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
-FAILED tests/test_acceptance_16_v2.py::test_114_منع_ازدواج_مصروف_التجهيز - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_145_فشل_التسوية_وسقوط_التمليك - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
-FAILED tests/test_acceptance_16_v2.py::test_147_شراء_في_آخر_يوم_مسموح - AttributeError: 'Project' object has no attribute '_day_metrics'
-================== 24 failed, 134 passed, 5 skipped in 8.38s ===================
+================== 12 failed, 146 passed, 5 skipped in 5.50s ===================

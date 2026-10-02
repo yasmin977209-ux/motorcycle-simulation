@@ -1,55 +1,15 @@
 {
-  "sha": "a75d9a7fb6253000aca11e1ffcd87beb520fa8ad",
-  "run_started_at": "2026-10-02T18:15:58Z",
-  "pass_count": 134,
-  "fail_count": 24,
+  "sha": "8ef0cc5de050308a24b96d73211fbfa59b17885d",
+  "run_started_at": "2026-10-02T18:19:52Z",
+  "pass_count": 146,
+  "fail_count": 12,
   "deferred_count": 4,
   "adjudication_count": 1,
   "failed_tests": [
     {
-      "id": "8",
-      "name": "test_008_شراء_توسع_بـ350000_يخصم_من_cash_و_partner1_rb_معا",
-      "error": "ance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 350000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "9",
-      "name": "test_009_الدراجة_تدخل_PREP_عند_الشراء",
-      "error": "ance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 350000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "12",
-      "name": "test_012_دفع_4000_ينشئ_مصروفا_فقط",
-      "error": "alance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "13",
-      "name": "test_013_دفع_10000_يزيد_gross_cost",
-      "error": "nt_balance=14000, partner2_reinvestment_balance=0, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "15",
-      "name": "test_015_FIFO_في_تجهيز_دراجات_متعددة",
-      "error": "alance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "16",
-      "name": "test_016_لا_شراء_توسع_جديد_قبل_تمويل_PREP_القائمة_بالكامل",
-      "error": "ent_balance=350000, partner2_reinvestment_balance=0, accounts_receivabl...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "17",
-      "name": "test_017_استمرار_تمويل_PREP_بعد_2030_12_31",
-      "error": "nt_balance=14000, partner2_reinvestment_balance=0, accounts_receivable=...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "43",
-      "name": "test_043_الثانوي_يفسخ_عند_10000",
-      "error": "vestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 10000\n\n    def _ar_transfer(project: Project, amount: int) -> None:\n        project.accounts_receivable -= amount\n>       project._day_metrics[\"ar_transfers_to_guarantee\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:228: AttributeError"
-    },
-    {
       "id": "45",
       "name": "test_045_يوم_النضج_يستحق_ايجارا_عاديا",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "50",
@@ -59,52 +19,42 @@
     {
       "id": "51",
       "name": "test_051_اكتمال_السداد_في_اليوم_3",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "54",
       "name": "test_054_فشل_التسوية_بعد_تجاوز_اليوم_30",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "55",
       "name": "test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل",
-      "error": "                 contract.contract_id,\n                    contract.tenant_id,\n                    contract.guarantor_id,\n                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,\n                    remaining,\n                    current_date,\n>                   project._recovery_rate_pct,\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n                )\nE               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'\n\ndaily_engine.py:856: AttributeError"
-    },
-    {
-      "id": "80",
-      "name": "test_080_السماح_بالشراء_في_2030_12_31",
-      "error": "ance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 350000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
-      "id": "82",
-      "name": "test_082_استمرار_الدراجة_المشتراة_في_2030_12_31",
-      "error": "_balance=364000, partner2_reinvestment_balance=0, accounts_receivable...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 350000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
+      "error": "                 contract.contract_id,\n                    contract.tenant_id,\n                    contract.guarantor_id,\n                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,\n                    remaining,\n                    current_date,\n>                   project._recovery_rate_pct,\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n                )\nE               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'\n\ndaily_engine.py:874: AttributeError"
     },
     {
       "id": "90",
       "name": "test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "91",
       "name": "test_091_رسم_الجمعة_في_يوم_الاغلاق",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "92",
       "name": "test_092_الاستهلاك_في_يوم_الاغلاق",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "93",
       "name": "test_093_انهاء_العقود_الثانوية_في_نهاية_الاغلاق",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "94",
       "name": "test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات",
-      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:965: AssertionError"
+      "error": "rwards(\n            project,\n            current_date,\n            opening,\n            project._day_metrics,\n        )\n        if project.simulation_stopped:\n            if project.final_net_project_equity != snapshot[\"Total_Equity\"]:\n>               raise AssertionError(\n                    \"Final_Net_Project_Equity must equal Total_Equity after M17\"\n                )\nE               AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17\n\ndaily_engine.py:983: AssertionError"
     },
     {
       "id": "96",
@@ -112,19 +62,9 @@
       "error": "                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       assert 100 == 0\nE        +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable\n\ntests/test_acceptance_16_v2.py:497: AssertionError"
     },
     {
-      "id": "114",
-      "name": "test_114_منع_ازدواج_مصروف_التجهيز",
-      "error": "alance=4000, partner2_reinvestment_balance=0, accounts_receivable=0, gu...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 4000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
-    },
-    {
       "id": "145",
       "name": "test_145_فشل_التسوية_وسقوط_التمليك",
-      "error": "                 contract.contract_id,\n                    contract.tenant_id,\n                    contract.guarantor_id,\n                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,\n                    remaining,\n                    current_date,\n>                   project._recovery_rate_pct,\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n                )\nE               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'\n\ndaily_engine.py:856: AttributeError"
-    },
-    {
-      "id": "147",
-      "name": "test_147_شراء_في_آخر_يوم_مسموح",
-      "error": "ance=350000, partner2_reinvestment_balance=0, accounts_receivable=0, ...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])\namount = 350000\n\n    def _cash_out(project: Project, amount: int) -> None:\n        project.project_cash -= amount\n>       project._day_metrics[\"cash_outflows\"] += amount\n        ^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'Project' object has no attribute '_day_metrics'\n\ndaily_engine.py:218: AttributeError"
+      "error": "                 contract.contract_id,\n                    contract.tenant_id,\n                    contract.guarantor_id,\n                    constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,\n                    remaining,\n                    current_date,\n>                   project._recovery_rate_pct,\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n                )\nE               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'\n\ndaily_engine.py:874: AttributeError"
     }
   ]
 }
