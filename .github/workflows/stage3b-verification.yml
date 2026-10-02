@@ -148,6 +148,7 @@ jobs:
           run_group "CH11" tests/test_stage3b_partner_equity.py
           run_group "CH12" tests/test_stage3b_m_order.py
           run_group "CH13" tests/test_stage3b_closure.py
+          run_group "PATH_1" tests/test_stage3b_path1.py
           run_group "PATHS_4_4" tests/test_stage3b_paths.py
           run_group "NO_TIME_CAP" tests/test_stage3b_no_time_cap.py
           run_group "ROLLFORWARD_AND_C100" tests/test_stage3b_determinism.py
@@ -166,6 +167,7 @@ jobs:
                 CH11) display="Chapter 11" ;;
                 CH12) display="Chapter 12 M1-M17" ;;
                 CH13) display="Chapter 13" ;;
+                PATH_1) display="Chapter 4.4 path 1" ;;
                 PATHS_4_4) display="Chapter 4.4 paths 2-6" ;;
                 NO_TIME_CAP) display="No time cap behavioral test" ;;
                 ROLLFORWARD_AND_C100) display="Roll-forward + C100 deterministic repetitions" ;;
