@@ -117,3 +117,60 @@
 | 104 | `_deterministic_trial_cached; append; byyear.setdefault; byyear.values` | `_deterministic_trial_cached; append; byyear.setdefault; byyear.values` | لا |
 | 105 | `_deterministic_trial_cached; balance_sheet_snapshot` | `_deterministic_trial_cached; balance_sheet_snapshot` | لا |
 | 106 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 107 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 108 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 109 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 110 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 111 | `Project; initialize_accounting; accrue_rent; collect_from_ar` | `Project; initialize_accounting; Contract; accrue_rent(project, contract, amount); collect_from_ar(project, amount)` | لا |
+| 112 | `Project; initialize_accounting; settle_guarantee_accounting; refresh_profit` | `Project; initialize_accounting; settle_guarantee_accounting; refresh_profit` | لا |
+| 113 | `Project; initialize_accounting; refresh_profit` | `Project; initialize_accounting; refresh_profit` | لا |
+| 114 | `_new_project; Bike; p.bikes.append; daily_engine._m2` | `_new_project; Bike; p.bikes.append; daily_engine._m2(project, current_date)` | لا |
+| 115 | `read_text` | `read_text` | لا |
+| 116 | `Project; initialize_accounting; Bike; p.bikes.append; apply_ownership_writeoff; record_asset_writeoff` | `apply_ownership_writeoff(gross_cost, accumulated_depreciation) + apply project_accumulated_depreciation_delta once` | لا |
+| 117 | `_source_text; text.lower` | `_source_text; text.lower` | لا |
+| 118 | `_source_text` | `_source_text` | لا |
+| 119 | `_new_project` | `_new_project` | لا |
+| 120 | `_new_project; final_entitlements` | `_new_project; final_entitlements(project)` | لا |
+| 121 | `_new_project; final_entitlements` | `_new_project; final_entitlements(project)` | لا |
+| 122 | `_source_text` | `_source_text` | لا |
+| 123 | `balance_sheet_snapshot; _new_project` | `balance_sheet_snapshot; _new_project` | لا |
+| 124 | `_new_project; final_entitlements` | `_new_project; final_entitlements(project)` | لا |
+| 125 | `_deterministic_trial_cached` | `_deterministic_trial_cached` | لا |
+| 126 | `derive_seed; rng_draw` | `derive_seed; rng_draw` | لا |
+| 127 | `json.loads; read_text` | `pytest.mark.skip; json.loads; read_text` | لا |
+| 128 | `derive_seed` | `derive_seed` | لا |
+| 129 | `rng_draw; derive_seed` | `rng_draw; derive_seed` | لا |
+| 130 | `Contract; AssertionError; apply_friday_fee_and_oil` | `Contract; AssertionError; apply_friday_fee_and_oil(delivery_date, current_date, friday_counter, in_tenant_possession)` | لا |
+| 131 | `_claim; AssertionError; settle_guarantee_claim` | `_claim; AssertionError; settle_guarantee_claim` | لا |
+| 132 | `derive_seed` | `derive_seed` | لا |
+| 133 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 134 | `_new_project` | `_new_project` | لا |
+| 135 | `daily_engine._m1` | `dateutils.is_business_day` | لا |
+| 136 | `derive_state_from_balance` | `derive_state_from_balance` | لا |
+| 137 | `Contract; apply_ordinary_collection` | `Contract; apply_ordinary_collection(total_due, total_paid, daily_rate, success, current_date)` | لا |
+| 138 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 139 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 140 | `_claim; settle_guarantee_claim` | `_claim; settle_guarantee_claim` | لا |
+| 141 | `_new_project; _add_active_contract; daily_rate_for_contract; globals` | `_new_project; _add_active_contract; daily_rate_for_contract; globals` | لا |
+| 142 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 143 | `_new_project; _add_active_contract; daily_engine.run_day` | `_new_project; _add_active_contract; daily_engine.run_day` | لا |
+| 144 | `_new_project; _add_active_contract; daily_engine._receivable; apply_legacy_debt_collection` | `_new_receivable(project, bike, contract, 800) + apply_legacy_debt_collection(800, True)` | لا |
+| 145 | `_new_project; _add_active_contract; daily_engine._m13` | `_new_project; _add_active_contract; daily_engine._m13(project, current_date)` | لا |
+| 146 | `_source_text` | `_source_text` | لا |
+| 147 | `_new_project; daily_engine._m2` | `_new_project; daily_engine._m2(project, current_date)` | لا |
+| 148 | `Contract; apply_friday_fee_and_oil` | `Contract; apply_friday_fee_and_oil(delivery_date, current_date, friday_counter, in_tenant_possession)` | لا |
+| 149 | `—` | `—` | لا |
+| 150 | `_claim; settle_guarantee_claim; pytest.raises` | `_claim; settle_guarantee_claim; pytest.raises` | لا |
+| 151 | `derive_seed` | `derive_seed` | لا |
+| 152 | `_claim` | `_claim` | لا |
+| 153 | `_source_text` | `_source_text` | لا |
+| 154 | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; _add_active_contract; closure_preconditions_met` | لا |
+| 155 | `read_text` | `read_text` | لا |
+| 156 | `_source_text` | `_source_text` | لا |
+| 157 | `_source_text` | `_source_text` | لا |
+| 158 | `read_text` | `pytest.mark.skip; read_text` | لا |
+| 159 | `json.loads; select_representative_trials; read_text; TrialResult` | `pytest.mark.skip; json.loads; select_representative_trials; read_text; TrialResult` | لا |
+| 160 | `json.loads; read_text; exists` | `pytest.mark.skip; json.loads; read_text; exists` | لا |
+| 161 | `json.loads; read_text; date.fromisoformat; isoformat` | `pytest.mark.skip; json.loads; read_text; date.fromisoformat; isoformat` | لا |
+| 162 | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | لا |
+| 163 | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; invoke_closure_and_get_state` | لا |
