@@ -494,3 +494,103 @@ def test_095_تسوية_فورية_قسرية_لكل_المطالبات_عند_�
 
 def test_096_AR_صفر_بعد_الاغلاق():
     p=_new_project(); _mark_all_initial_owned(p); p.accounts_receivable=100; execute_dynamic_closure(p,date(2031,1,1),100); assert p.accounts_receivable==0
+def test_097_لا_مطالبات_pending_بعد_الاغلاق():
+    p=_new_project(); _mark_all_initial_owned(p); cl=create_guarantee_claim('CL1','B1','C1','T1','G1','PRIMARY_EARLY_TERMINATION',1000,date(2031,1,1),100); p.guarantee_claims.append(cl); p.guarantee_claim_receivable=1000; execute_dynamic_closure(p,date(2031,1,1),100); assert all(c.status=='SETTLED' for c in p.guarantee_claims)
+
+
+def test_098_لا_عقود_مفتوحة_بعد_الاغلاق():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2030,1,4),state='ACTIVE_SECONDARY'); execute_dynamic_closure(p,date(2031,1,1),100); assert all(c.status in {'TERMINATED','SETTLED'} for c in p.contracts.values())
+
+
+def test_099_لا_شراء_بعد_الاغلاق():
+    p=_new_project(); _mark_all_initial_owned(p); execute_dynamic_closure(p,date(2031,1,1),100); n=len(p.bikes); daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1); assert len(p.bikes)==n
+
+
+def test_100_الجرد_النهائي_دقيق():
+    p=_new_project(); r=daily_engine.run_deterministic_trial(recovery_rate_pct=100,trial_id=7,scenario_id='C100_G100'); assert all(b.current_state in {'OWNED_TRANSFERRED','HELD_AS_ASSET'} for b in r.bikes)
+
+
+def test_101_التسوية_الختامية_تطابق_حقوق_الملكية():
+    p=_deterministic_trial_cached(); s=balance_sheet_snapshot(p); assert p.final_net_project_equity==s["Total_Equity"]
+
+# 16.10 accounting
+
+def test_102_توازن_الميزانية_الافتتاحية_محاسبيا():
+    p=Project(); initialize_accounting(p); assert balance_sheet_snapshot(p)["Balance_Difference"]==0
+
+
+def test_103_توازن_يومي_فعلي_في_كل_يوم():
+    p=_deterministic_trial_cached(); assert p.daily_balance_checks and all(x['Balance_Difference']==0 for x in p.daily_balance_checks)
+
+
+def test_104_توازن_سنوي():
+    p=_deterministic_trial_cached(); byyear={}
+    for row in p.daily_snapshots: byyear.setdefault(row['date'].year,[]).append(row)
+    assert all(rows[-1]['Balance_Difference']==0 for rows in byyear.values())
+
+
+def test_105_توازن_نهائي_بعد_الاغلاق():
+    p=_deterministic_trial_cached(); assert balance_sheet_snapshot(p)["Balance_Difference"]==0
+
+
+def test_106_rollforward_النقدية():
+    p=_deterministic_trial_cached();
+    assert hasattr(p,'cash_rollforward') and p.cash_rollforward, 'لا يوجد سجل Roll-forward نقدية قابل للاختبار'
+
+
+def test_107_rollforward_الذمم_المدينة():
+    p=_deterministic_trial_cached();
+    assert hasattr(p,'ar_rollforward') and p.ar_rollforward, 'لا يوجد سجل Roll-forward للذمم المدينة قابل للاختبار'
+
+
+def test_108_rollforward_الأصول_الإجمالية():
+    p=_deterministic_trial_cached();
+    assert hasattr(p,'asset_rollforward') and p.asset_rollforward and {'Opening_Gross_Bike_Assets','Closing_Gross_Bike_Assets','Gross_Writeoffs_On_Ownership'} <= set(p.asset_rollforward[-1])
+
+
+def test_109_rollforward_مجمع_الاستهلاك():
+    p=_deterministic_trial_cached();
+    assert hasattr(p,'asset_rollforward') and p.asset_rollforward and {'Opening_Accumulated_Depreciation','Closing_Accumulated_Depreciation','AD_Removed_On_Writeoff'} <= set(p.asset_rollforward[-1])
+
+
+def test_110_rollforward_حقوق_الملكية():
+    p=_deterministic_trial_cached(); assert p.equity_rollforward and all(row['Closing_Equity'] == row['Opening_Equity'] + row['Operating_Net_Profit'] for row in p.equity_rollforward)
+
+
+def test_111_منع_ازدواج_ايراد_التحصيل():
+    p=Project(); initialize_accounting(p); accrue_before=p.revenue_primary; from accounting import accrue_rent, collect_from_ar; c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1)); accrue_rent(p,c,amount=1500); collect_from_ar(p,1500); assert p.revenue_primary==accrue_before+1500
+
+
+def test_112_عدم_دخول_استرداد_الكفالة_في_الربح():
+    p=Project(); initialize_accounting(p); settle_guarantee_accounting=None
+    from accounting import settle_guarantee_accounting
+    p.guarantee_claim_receivable=1000; settle_guarantee_accounting(p,1000,700,300); refresh_profit(p); assert p.revenue_primary+p.revenue_secondary+p.revenue_settlement+p.revenue_friday_fee==0
+
+
+def test_113_marketing_ليس_تشغيليا_بعد_البداية():
+    p=Project(); initialize_accounting(p); p.expense_marketing=60000; refresh_profit(p); assert p.operating_expenses==0
+
+
+def test_114_منع_ازدواج_مصروف_التجهيز():
+    p=_new_project(); b=Bike('BX','EXPANSION',date(2030,1,1),date(2030,1,7),gross_cost=350000); p.bikes.append(b); p.project_cash=p.partner1_reinvestment_balance=4000; daily_engine._m2(p,date(2030,1,7)); before=p.expense_prep; daily_engine._m2(p,date(2030,1,8)); assert p.expense_prep==before
+
+
+def test_115_استخدام_bike_gross_cost_حصرا():
+    text=(ROOT/'depreciation.py').read_text(encoding='utf-8')+'\n'+(ROOT/'daily_engine.py').read_text(encoding='utf-8'); assert 'bike.gross_cost' in text
+
+
+def test_116_تحديث_accumulated_المحلي_لا_يغير_حساب_المشروع_مرة_ثانية():
+    p=Project(); initialize_accounting(p); b=Bike('BX','INITIAL',date(2026,12,26),date(2027,1,1),gross_cost=360000,accumulated_depreciation=100,current_state='OWNED_TRANSFERRED'); p.bikes.append(b); p.gross_bike_assets=360000; p.accumulated_depreciation=100
+    result=apply_ownership_writeoff(b.gross_cost,b.accumulated_depreciation)
+    p.accumulated_depreciation += result.project_accumulated_depreciation_delta
+    b.accumulated_depreciation = result.bike_accumulated_depreciation_after
+    assert p.accumulated_depreciation==0 and b.accumulated_depreciation==b.gross_cost
+
+# 16.11 partners
+
+def test_117_لا_توزيعات_نقدية_فعلية():
+    text=_source_text([ROOT/'accounting.py',ROOT/'partner_equity.py',ROOT/'daily_engine.py',ROOT/'closure.py']); assert 'Partner1_Current_Account' not in text and 'distribution' not in text.lower()
+
+def test_118_المشروع_كيان_اقتصادي_واحد(): assert 'Partner1_Current_Account' not in _source_text([ROOT/'*.py'] if False else APP_FILES)
+def test_119_الأصول_التوسعية_موحدة(): p=_new_project(); assert hasattr(p,'gross_bike_assets') and not hasattr(p,'partner1_bike_assets')
+def test_120_الشريك_الأول_70_عند_الاغلاق(): p=_new_project(); p.final_net_project_equity=1001; assert final_entitlements(p)[0]==700
