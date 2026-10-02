@@ -59,24 +59,7 @@ jobs:
 
           junit_path = Path("/tmp/v2_junit.xml")
           if not junit_path.exists():
-              summary = {
-                  "sha": os.environ["TEST_SHA"],
-                  "run_started_at": os.environ["RUN_STARTED_AT"],
-                  "pass_count": 0,
-                  "fail_count": 1,
-                  "deferred_count": 0,
-                  "adjudication_count": 0,
-                  "failed_tests": [{
-                      "id": "0",
-                      "name": "pytest_startup",
-                      "error": "JUnit XML was not created; pytest did not reach test execution."
-                  }],
-              }
-              Path("results/v2_summary.json").write_text(
-                  json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-                  encoding="utf-8",
-              )
-              raise SystemExit(0)
+              raise SystemExit("JUnit XML was not created; pytest did not reach test execution.")
 
           root = ET.parse(junit_path).getroot()
           testcases = list(root.iter("testcase"))
