@@ -175,6 +175,10 @@ def execute_dynamic_closure(
         receivable.remaining_amount = 0
         _force_settle(project, claim, current_date)
 
+    if project.accounts_receivable > 0:
+        project.bad_debt_expense += project.accounts_receivable
+        project.accounts_receivable = 0
+
     for bike in project.bikes:
         if bike.current_state in {
             BikeState.OWNED_TRANSFERRED,
