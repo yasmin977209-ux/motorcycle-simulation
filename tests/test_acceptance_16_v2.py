@@ -273,7 +273,7 @@ def test_045_يوم_النضج_يستحق_ايجارا_عاديا():
 def test_046_يوم_النضج_ليس_اول_يوم_تسوية():
     p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
     daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
-    assert b.current_state == 'POST_MATURITY_SETTLEMENT' and b.settlement_start_date is None
+    assert b.current_state == BikeState.POST_MATURITY_SETTLEMENT and b.settlement_start_date is None
 
 
 def test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول():
@@ -715,7 +715,7 @@ def test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاسته
     result=apply_ownership_writeoff(bike.gross_cost,bike.accumulated_depreciation)
     assert result.writeoff_amount == bike.gross_cost - old_accumulated
     assert result.project_accumulated_depreciation_delta == -old_accumulated
-    daily_engine._begin_day(p,date(2031,1,1))
+    daily_engine._begin_day(p)
     daily_engine._m16(p,date(2031,1,1))
     assert bike.net_book_value == 0
     assert p.accumulated_depreciation == project_accumulated_before - old_accumulated

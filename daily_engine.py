@@ -778,7 +778,18 @@ def _m13(project: Project, current_date: date) -> None:
     for bike in list(project.bikes):
         if bike.current_state is not BikeState.POST_MATURITY_SETTLEMENT:
             continue
-        if bike.settlement_start_date is None:
+        contract = (
+            project.contracts.get(bike.current_contract_id)
+            if bike.current_contract_id
+            else None
+        )
+
+        if (
+            bike.settlement_start_date is None
+            and contract is not None
+            and contract.maturity_date is not None
+            and current_date > contract.maturity_date
+        ):
             bike.settlement_start_date = current_date
             receivable = _receivable_of(project, bike)
             if receivable is not None:
