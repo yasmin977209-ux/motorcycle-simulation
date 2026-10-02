@@ -9,7 +9,7 @@ import dataclasses
 import pytest
 
 from constants import *
-from entities import Bike, Contract, GuaranteeClaim, Project, ContractType
+from entities import Bike, Contract, GuaranteeClaim, Project, ContractType, BikeState
 from accounting import initialize_accounting, balance_sheet_snapshot, refresh_profit, accrue_rent, collect_from_ar, settle_guarantee_accounting
 from partner_equity import record_eligible_inflow, final_entitlements
 from state_machine import derive_state_from_balance, TRANSITION_TABLE
@@ -272,13 +272,13 @@ def test_045_يوم_النضج_يستحق_ايجارا_عاديا():
 
 def test_046_يوم_النضج_ليس_اول_يوم_تسوية():
     p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
-    daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
     assert b.current_state == 'POST_MATURITY_SETTLEMENT' and b.settlement_start_date is None
 
 
 def test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول():
     p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
-    daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
     daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
     assert b.settlement_start_date == date(2031,1,4)
 
@@ -401,15 +401,15 @@ def test_072_مطالبة_فسخ_ثانوي_20_يوما():
 
 
 def test_073_عقد_ثانوي_ثان_مستاجر_جديد():
-    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.current_state='AVAILABLE_FOR_SECONDARY'; old=c.tenant_id; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==1 and b.current_tenant_id!=old
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.current_state=BikeState.AVAILABLE_FOR_SECONDARY; old=c.tenant_id; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==1 and b.current_tenant_id!=old
 
 
 def test_074_عقد_ثانوي_ثالث():
-    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=2; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==3
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=2; b.current_state=BikeState.AVAILABLE_FOR_SECONDARY; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==3
 
 
 def test_075_عقد_ثانوي_رابع():
-    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=3; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==4
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=3; b.current_state=BikeState.AVAILABLE_FOR_SECONDARY; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==4
 
 
 def test_076_تكرار_الدورات_بلا_حد_اقصى_مبرمج():
@@ -417,7 +417,7 @@ def test_076_تكرار_الدورات_بلا_حد_اقصى_مبرمج():
 
 
 def test_077_عداد_الجمعة_يبدأ_من_صفر_مع_كل_عقد_ثانوي():
-    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); c.friday_counter=7; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); newc=next(x for x in p.contracts.values() if x.contract_id==b.current_contract_id); assert newc.friday_counter==0
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); c.friday_counter=7; b.current_state=BikeState.AVAILABLE_FOR_SECONDARY; daily_engine._m3(p,date(2031,1,5)); newc=next(x for x in p.contracts.values() if x.contract_id==b.current_contract_id); assert newc.friday_counter==0
 
 
 def test_078_لا_حق_تمليك_للعقد_الثانوي():
@@ -453,7 +453,7 @@ def test_084_استمرار_فترة_التسوية_بعد_القطع():
 
 
 def test_085_لا_اغلاق_مع_PREP_غير_مكتملة():
-    p=_new_project(); _mark_all_initial_owned(p); b=p.bikes[0]; b.current_state='PREP'; b.prep_paid=False; assert not closure_preconditions_met(p,date(2031,1,1))
+    p=_new_project(); _mark_all_initial_owned(p); b=p.bikes[0]; b.current_state=BikeState.PREP; b.prep_paid=False; assert not closure_preconditions_met(p,date(2031,1,1))
 
 def test_086_لا_اغلاق_مع_عقد_اساسي_نشط():
     p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2030,1,1),state='ACTIVE_PRIMARY',maturity=date(2032,1,1)); assert not closure_preconditions_met(p,date(2031,1,1))
@@ -559,7 +559,7 @@ def test_110_rollforward_حقوق_الملكية():
 
 
 def test_111_منع_ازدواج_ايراد_التحصيل():
-    p=Project(); initialize_accounting(p); accrue_before=p.revenue_primary; from accounting import accrue_rent, collect_from_ar; c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1)); accrue_rent(p,c,amount=1500); collect_from_ar(p,1500); assert p.revenue_primary==accrue_before+1500
+    p=Project(); initialize_accounting(p); accrue_before=p.revenue_primary; from accounting import accrue_rent, collect_from_ar; c=Contract('CT1','B1','T1','G1',ContractType.PRIMARY,1500,date(2031,1,1)); accrue_rent(p,c,amount=1500); collect_from_ar(p,1500); assert p.revenue_primary==accrue_before+1500
 
 
 def test_112_عدم_دخول_استرداد_الكفالة_في_الربح():
@@ -705,7 +705,20 @@ def test_154_الثانوي_لا_يمنع_الاغلاق():
 
 
 def test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك():
-    assert 'bike.gross_cost' in (ROOT/'depreciation.py').read_text(encoding='utf-8') and 'BIKE_GROSS_ASSET_COST' not in (ROOT/'depreciation.py').read_text(encoding='utf-8')
+    p=Project(); initialize_accounting(p)
+    bike=Bike('BX','INITIAL',date(2026,12,26),date(2027,1,1),gross_cost=360000,accumulated_depreciation=100,net_book_value=359900,current_state=BikeState.OWNED_TRANSFERRED,pending_writeoff_today=True)
+    p.bikes.append(bike)
+    p.gross_bike_assets=360000
+    p.accumulated_depreciation=100
+    old_accumulated=bike.accumulated_depreciation
+    project_accumulated_before=p.accumulated_depreciation
+    result=apply_ownership_writeoff(bike.gross_cost,bike.accumulated_depreciation)
+    assert result.writeoff_amount == bike.gross_cost - old_accumulated
+    assert result.project_accumulated_depreciation_delta == -old_accumulated
+    daily_engine._begin_day(p,date(2031,1,1))
+    daily_engine._m16(p,date(2031,1,1))
+    assert bike.net_book_value == 0
+    assert p.accumulated_depreciation == project_accumulated_before - old_accumulated
 
 
 def test_156_لا_PROJECT_END_DATE_يوقف_الحلقة():
