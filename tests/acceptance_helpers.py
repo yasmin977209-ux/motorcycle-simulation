@@ -47,6 +47,8 @@ def _add_active_contract(
         current_state=BikeState.PREP,
     )
     project.bikes.append(bike)
+    project.gross_bike_assets += bike.gross_cost
+    project.capital += bike.gross_cost
     contract = daily_engine._new_contract(
         project, bike, ContractType(contract_type), start
     )
