@@ -1,0 +1,141 @@
+name: stage5-round4-temporary-validation
+
+on:
+  push:
+    branches: ["tmp/stage5-round4-20261003"]
+
+permissions:
+  contents: read
+
+jobs:
+  round4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Round 4 tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_monte_carlo_round4.py
+      - name: Build Round 4 selection and representative event logs
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          mkdir -p results_stage5/representative_event_logs
+          python - <<'PY'
+          import gzip
+          import json
+          import os
+          from dataclasses import asdict
+          from pathlib import Path
+
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+
+          import constants
+          import daily_engine
+          import monte_carlo
+
+          master_seed = constants.MASTER_SEED
+          scenario = "C070_G100"
+
+          c100_results = [
+              monte_carlo.run_single_trial(
+                  "C100_G100",
+                  trial_id,
+                  master_seed=master_seed,
+              )[0]
+              for trial_id in (1, 100, 9999)
+          ]
+          if not (c100_results[0] == c100_results[1] == c100_results[2]):
+              raise AssertionError("C100 zero-variance proof failed")
+
+          results, _ = monte_carlo.run_trials_sequentially(
+              scenario,
+              tuple(range(1, 21)),
+              master_seed=master_seed,
+          )
+          selection = monte_carlo.select_representative_trials(results)
+
+          selection_row = {
+              "scenario_id": scenario,
+              "p10_trial_id": selection.p10_trial_id,
+              "p50_trial_id": selection.p50_trial_id,
+              "p90_trial_id": selection.p90_trial_id,
+              "loss_case_trial_id": selection.loss_case_trial_id,
+              "c100_trial_ids": [1, 100, 9999],
+          }
+          pq.write_table(
+              pa.Table.from_pylist([selection_row]),
+              "results_stage5/selection.parquet",
+              compression="zstd",
+          )
+
+          collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(
+              scenario
+          )
+          selected_ids = {
+              selection.p10_trial_id,
+              selection.p50_trial_id,
+              selection.p90_trial_id,
+              selection.loss_case_trial_id,
+          }
+          for trial_id in sorted(selected_ids):
+              project = daily_engine.run_deterministic_trial(
+                  recovery_rate_pct=recovery_rate_pct,
+                  trial_id=trial_id,
+                  scenario_id=scenario,
+                  master_seed=master_seed,
+                  collection_probability=collection_probability,
+              )
+              path = Path(
+                  "results_stage5/representative_event_logs"
+              ) / f"{trial_id}.jsonl.gz"
+              with gzip.open(path, "wt", encoding="utf-8") as stream:
+                  for event in project.event_log:
+                      stream.write(
+                          json.dumps(
+                              asdict(event),
+                              ensure_ascii=False,
+                              sort_keys=True,
+                              default=str,
+                              separators=(",", ":"),
+                          ) + "\n"
+                      )
+
+          manifest = {
+              "scenario_id": scenario,
+              "master_seed": master_seed,
+              "c100_zero_variance": True,
+              "c100_trial_ids": [1, 100, 9999],
+              "selection": selection_row,
+              "representative_event_logs": sorted(selected_ids),
+              "event_log_files": {
+                  str(trial_id): (
+                      Path("results_stage5/representative_event_logs")
+                      / f"{trial_id}.jsonl.gz"
+                  ).stat().st_size
+                  for trial_id in selected_ids
+              },
+              "cpu_count": os.cpu_count(),
+              "selection_rows": 1,
+          }
+          Path(
+              "results_stage5/round4_manifest.json"
+          ).write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True)
+              + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage5-round4-selection-and-event-logs
+          path: results_stage5/
+          if-no-files-found: error
