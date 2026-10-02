@@ -2,7 +2,7 @@ name: stage5-round4-temporary-validation
 
 on:
   push:
-    branches: ["tmp/stage5-round4-20261003"]
+    branches: ["tmp/stage5-round4-fix-20261003"]
 
 permissions:
   contents: read
@@ -52,7 +52,10 @@ jobs:
               )[0]
               for trial_id in (1, 100, 9999)
           ]
-          if not (c100_results[0] == c100_results[1] == c100_results[2]):
+          c100_dicts = [asdict(result) for result in c100_results]
+          for row in c100_dicts:
+              row.pop("trial_id")
+          if not (c100_dicts[0] == c100_dicts[1] == c100_dicts[2]):
               raise AssertionError("C100 zero-variance proof failed")
 
           results, _ = monte_carlo.run_trials_sequentially(
