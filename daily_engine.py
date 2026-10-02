@@ -806,17 +806,18 @@ def _m13(
             else None
         )
 
-        if (
-            bike.settlement_start_date is None
-            and contract is not None
-            and contract.maturity_date is not None
-            and current_date > contract.maturity_date
-        ):
+        if bike.settlement_start_date is None:
+            if (
+                contract is None
+                or contract.maturity_date is None
+                or current_date <= contract.maturity_date
+                or not dateutils.is_business_day(current_date)
+            ):
+                continue
             bike.settlement_start_date = current_date
             receivable = _receivable_of(project, bike)
             if receivable is not None:
                 receivable.created_date = current_date
-            continue
 
         if not dateutils.is_business_day(current_date):
             continue
