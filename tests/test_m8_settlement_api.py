@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+from accounting import accrue_rent
 from collection import apply_ordinary_collection
 from daily_engine import create_initial_project, run_day
 from entities import BikeState, ContractType
@@ -37,8 +38,10 @@ def test_m8_primary_three_days_arrears_pays_today_plus_one_day():
         ContractType.PRIMARY,
         date(2027, 1, 2),
     )
-    contract.total_due = 3 * contract.daily_rate
-    project.accounts_receivable = contract.total_due
+    daily_rate = contract.daily_rate
+    accrue_rent(project, contract, amount=daily_rate)
+    accrue_rent(project, contract, amount=daily_rate)
+    accrue_rent(project, contract, amount=daily_rate)
 
     run_day(
         project,
@@ -57,8 +60,10 @@ def test_m8_secondary_three_days_arrears_pays_today_plus_one_day():
         ContractType.SECONDARY,
         date(2027, 1, 2),
     )
-    contract.total_due = 3 * contract.daily_rate
-    project.accounts_receivable = contract.total_due
+    daily_rate = contract.daily_rate
+    accrue_rent(project, contract, amount=daily_rate)
+    accrue_rent(project, contract, amount=daily_rate)
+    accrue_rent(project, contract, amount=daily_rate)
 
     run_day(
         project,
