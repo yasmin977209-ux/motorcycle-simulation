@@ -15,7 +15,7 @@ def assert_same_except_trial_id(a, b):
     assert a_dict == b_dict
 
 
-def test_c100_zero_variance_across_trial_ids()
+def test_c100_zero_variance_across_trial_ids() -> None:
     results = [
         monte_carlo.run_single_trial(
             "C100_G100",
