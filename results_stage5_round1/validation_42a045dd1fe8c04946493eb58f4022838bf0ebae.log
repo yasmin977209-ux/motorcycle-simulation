@@ -1,0 +1,62 @@
+COMMIT_SHA=42a045dd1fe8c04946493eb58f4022838bf0ebae
+RUN_ID=37062044323
+RUN_STARTED_AT=2026-10-02T20:40:17Z
+== V2 ==
+........................................................................ [ 44%]
+......................................................s................. [ 88%]
+.............ssss..                                                      [100%]
+158 passed, 5 skipped in 7.09s
+== STAGE 1 ==
+......                                                                   [100%]
+6 passed in 0.11s
+== STAGE 2 ==
+...................                                                      [100%]
+19 passed in 0.24s
+== STAGE 3A CH5 ==
+..........                                                               [100%]
+10 passed, 23 deselected in 0.07s
+== STAGE 3A CH6 ==
+......                                                                   [100%]
+6 passed, 27 deselected in 0.03s
+== STAGE 3A CH7 ==
+......                                                                   [100%]
+6 passed, 27 deselected in 0.02s
+== STAGE 3A CH8 ==
+....                                                                     [100%]
+4 passed, 29 deselected in 0.02s
+== STAGE 3A CH9 ==
+.......                                                                  [100%]
+7 passed, 26 deselected in 0.03s
+== STAGE 3A STAGE1 REGRESSION ==
+......                                                                   [100%]
+6 passed in 0.05s
+== STAGE 3A STAGE2 REGRESSION ==
+..............                                                           [100%]
+14 passed in 0.02s
+== STAGE 3B CH10 ==
+..                                                                       [100%]
+2 passed in 0.02s
+== STAGE 3B CH11 ==
+...                                                                      [100%]
+3 passed in 0.02s
+== STAGE 3B CH12 ==
+...                                                                      [100%]
+3 passed in 0.02s
+== STAGE 3B CH13 ==
+......                                                                   [100%]
+6 passed in 0.03s
+== STAGE 3B PATH 1 ==
+.                                                                        [100%]
+1 passed in 0.26s
+== STAGE 3B PATHS 2-6 ==
+.....                                                                    [100%]
+5 passed in 0.03s
+== STAGE 3B NO TIME CAP ==
+.                                                                        [100%]
+1 passed in 1.99s
+== STAGE 3B DETERMINISM ==
+.                                                                        [100%]
+1 passed in 44.44s
+== ROUND 1 UNIT TESTS == NOT_PRESENT
+VALIDATION_STATUS=PASS
+RUN_FINISHED_AT=2026-10-02T20:41:15Z
