@@ -739,7 +739,7 @@ def test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Proje
     import json
     from monte_carlo import TrialResult, select_representative_trials
     rows = json.loads((ROOT / 'results_stage5' / 'trials_summary.json').read_text(encoding='utf-8'))
-    trials = [TrialResult(scenario_id='C100_G100', collection_probability=1.0, recovery_rate_pct=100, trial_id=r['trial_id'], final_close_date=r['final_close_date'], final_net_project_equity=r['final_net_project_equity'], final_cash=r['final_net_project_equity'], cumulative_project_profit=r['final_net_project_equity']-TOTAL_CAPITAL, operating_net_profit=r['final_net_project_equity']-TOTAL_CAPITAL+100000, termination_count=0, secondary_cycle_count=0, owned_bikes=357, held_assets=0, total_operating_revenue=0, bad_debt=0, guarantee_recovered=0) for r in rows]
+    trials = [TrialResult(scenario_id='C100_G100', collection_probability=1.0, recovery_rate_pct=100, trial_id=r['trial_id'], final_close_date=r['final_close_date'], final_net_project_equity=r['final_net_project_equity'], final_cash=r['final_net_project_equity'], cumulative_project_profit=r['final_net_project_equity']-TOTAL_CAPITAL, operating_net_profit=r['final_net_project_equity']-TOTAL_CAPITAL+100000, termination_count=0, secondary_cycle_count=0, owned_bikes=357, held_assets=0, total_operating_revenue=0, bad_debt=0, guarantee_recovered=0, partner1_final_entitlement=(r['final_net_project_equity'] * 70) // 100, partner2_final_entitlement=r['final_net_project_equity'] - ((r['final_net_project_equity'] * 70) // 100)) for r in rows]
     sel = select_representative_trials(trials)
     assert sel.p50_trial_id == 1 and sel.p10_trial_id == 1 and sel.p90_trial_id == 1 and sel.loss_case_trial_id == 1
 
