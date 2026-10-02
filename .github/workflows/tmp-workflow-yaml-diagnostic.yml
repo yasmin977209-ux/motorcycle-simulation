@@ -1,0 +1,41 @@
+name: workflow-yaml-diagnostic
+on:
+  push:
+    branches:
+      - "tmp/diagnose-workflow-yaml-20261002"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate every workflow YAML
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          files = sorted(list(Path(".github/workflows").glob("*.yml")) + list(Path(".github/workflows").glob("*.yaml")))
+          if not files:
+              raise SystemExit("NO_WORKFLOW_FILES")
+
+          for path in files:
+              text = path.read_text(encoding="utf-8")
+              list(yaml.parse(text))
+              data = yaml.safe_load(text)
+              if not isinstance(data, dict):
+                  raise SystemExit(f"TOP_LEVEL_NOT_MAPPING: {path}")
+
+          print(f"WORKFLOW_FILE_COUNT={len(files)}")
+          for path in files:
+              print(f"YAML_OK={path.as_posix()}")
+          PY
