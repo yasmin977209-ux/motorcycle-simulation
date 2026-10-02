@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from dataclasses import asdict, dataclass
+from dataclasses
+import numpy as np import asdict, dataclass
 import hashlib
 import json
 import multiprocessing
