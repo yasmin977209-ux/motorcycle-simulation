@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from dataclasses import asdict, dataclass
 import hashlib
 import json
@@ -325,4 +326,5 @@ __all__ = [
     "fingerprint_trial_results",
     "fingerprint_daily_distribution",
     "fingerprint_per_trial_slices",
+    "build_daily_distribution",
 ]
