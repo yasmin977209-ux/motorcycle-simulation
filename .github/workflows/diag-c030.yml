@@ -238,31 +238,33 @@ jobs:
                   "top5_event_types": top5,
               }, ensure_ascii=False, sort_keys=True))
 
-          parser = argparse.ArgumentParser()
-          parser.add_argument("--tree", choices=["old", "current"])
-          parser.add_argument("--probability", type=float)
-          parser.add_argument("--mode", choices=["deterministic", "random", "event"])
-          parser.add_argument("--scenario", default="C030_G000")
-          args = parser.parse_args()
+          if __name__ == "__main__":
+                  parser = argparse.ArgumentParser()
+                  parser.add_argument("--tree", choices=["old", "current"])
+                  parser.add_argument("--probability", type=float)
+                  parser.add_argument("--mode", choices=["deterministic", "random", "event"])
+                  parser.add_argument("--scenario", default="C030_G000")
+                  args = parser.parse_args()
 
-          if args.mode == "event":
-              daily = import_project(OLD if args.tree == "old" else CURRENT, args.tree)
-              project = daily.create_initial_project(recovery_rate_pct=0)
-              day = date(2027, 1, 1)
-              while not project.simulation_stopped:
-                  call_run_day(daily, project, day, 0.30, "C030_G000", 1, 0)
-                  day += timedelta(days=1)
-              print_event(args.tree, "C030_G000", project)
-          else:
-              daily, project, rows = run_trial(
-                  OLD if args.tree == "old" else CURRENT,
-                  args.tree,
-                  args.probability,
-                  args.scenario,
-                  1,
-                  0,
-              )
-              emit_trial(args.tree, args.probability, project, rows)
+                  if args.mode == "event":
+                  daily = import_project(OLD if args.tree == "old" else CURRENT, args.tree)
+                  project = daily.create_initial_project(recovery_rate_pct=0)
+                  day = date(2027, 1, 1)
+                  while not project.simulation_stopped:
+                      call_run_day(daily, project, day, 0.30, "C030_G000", 1, 0)
+                      day += timedelta(days=1)
+                  print_event(args.tree, "C030_G000", project)
+              else:
+                  daily, project, rows = run_trial(
+                      OLD if args.tree == "old" else CURRENT,
+                      args.tree,
+                      args.probability,
+                      args.scenario,
+                      1,
+                      0,
+                  )
+                  emit_trial(args.tree, args.probability, project, rows)
+
           PY
 
       - name: C030 deterministic p=1 and p=0 — old version
