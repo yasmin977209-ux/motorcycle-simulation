@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from dataclasses import asdict, dataclass
+import numpy as np
 import hashlib
 import json
 import multiprocessing
@@ -316,6 +318,93 @@ def fingerprint_per_trial_slices(
     return _fingerprint_json_lines(ordered)
 
 
+
+def build_daily_distribution(
+    results_list: list[TrialResult],
+    slices_by_trial: dict[int, list[dict[str, object]]],
+) -> list[dict[str, object]]:
+    quantile_names = ("P10", "P25", "P50", "P75", "P90")
+    quantiles = (0.10, 0.25, 0.50, 0.75, 0.90)
+    metric_names = (
+        "Cash",
+        "Net_Equity",
+        "Active_Bikes",
+        "Owned_Transferred_Bikes",
+        "Pending_Claims",
+    )
+    trial_by_id = {result.trial_id: result for result in results_list}
+    if set(trial_by_id) != set(slices_by_trial):
+        raise ValueError("results_list and slices_by_trial trial_ids differ")
+
+    rows_by_trial_date = {
+        trial_id: {row["date"]: row for row in rows}
+        for trial_id, rows in slices_by_trial.items()
+    }
+    all_dates = sorted(
+        {
+            row["date"]
+            for rows in slices_by_trial.values()
+            for row in rows
+        }
+    )
+    if not all_dates:
+        return []
+
+    start = date.fromisoformat(all_dates[0])
+    end = date.fromisoformat(all_dates[-1])
+    expected_dates = [
+        (start + timedelta(days=index)).isoformat()
+        for index in range((end - start).days + 1)
+    ]
+    if all_dates != expected_dates:
+        raise AssertionError("DAILY_DISTRIBUTION contains date gaps")
+
+    distribution: list[dict[str, object]] = []
+    for current_date in expected_dates:
+        active_trial_ids = [
+            trial_id
+            for trial_id, result in trial_by_id.items()
+            if result.final_close_date is None
+            or result.final_close_date >= current_date
+        ]
+        day_rows = []
+        for trial_id in active_trial_ids:
+            row = rows_by_trial_date[trial_id].get(current_date)
+            if row is None:
+                raise AssertionError(
+                    f"missing active daily slice: trial_id={trial_id} date={current_date}"
+                )
+            day_rows.append(row)
+
+        if not day_rows:
+            raise AssertionError(f"no active trials on {current_date}")
+
+        payloads = {
+            metric: np.asarray([row[metric] for row in day_rows])
+            for metric in metric_names
+        }
+        active_trial_count = len(day_rows)
+        for quantile_name, quantile in zip(quantile_names, quantiles):
+            record = {
+                "date": current_date,
+                "quantile_name": quantile_name,
+                "active_trial_count": active_trial_count,
+            }
+            record.update(
+                {
+                    metric: np.quantile(
+                        values,
+                        quantile,
+                        method="linear",
+                    ).item()
+                    for metric, values in payloads.items()
+                }
+            )
+            distribution.append(record)
+
+    return distribution
+
+
 __all__ = [
     "TrialResult",
     "parse_scenario_id",
@@ -325,4 +414,5 @@ __all__ = [
     "fingerprint_trial_results",
     "fingerprint_daily_distribution",
     "fingerprint_per_trial_slices",
+    "build_daily_distribution",
 ]
