@@ -1,0 +1,15 @@
+{
+  "sha": "0aaae943d263d491cb5afda2fd55a8e1ef6d2adb",
+  "run_started_at": "2026-10-02T16:56:34Z",
+  "pass_count": 0,
+  "fail_count": 1,
+  "deferred_count": 0,
+  "adjudication_count": 0,
+  "failed_tests": [
+    {
+      "id": null,
+      "name": "tests.test_acceptance_16_v2",
+      "error": "/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_acceptance_16_v2.py:15: in <module>\n    from state_machine import derive_state_from_balance, validate_transition_table, TRANSITION_TABLE\nE   ImportError: cannot import name 'validate_transition_table' from 'state_machine' (/home/runner/work/motorcycle-simulation/motorcycle-simulation/state_machine.py)"
+    }
+  ]
+}
