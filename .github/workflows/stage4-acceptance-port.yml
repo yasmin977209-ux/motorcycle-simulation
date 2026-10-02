@@ -116,6 +116,7 @@ jobs:
             echo "No result changes to commit."
           else
             git commit -m "Record Stage 4 v2 acceptance results"
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
 
