@@ -33,6 +33,7 @@ from entities import (
     add_contract,
     contract_of,
 )
+from collection import apply_ordinary_collection
 from guarantee import create_guarantee_claim
 from partner_equity import (
     assert_memo_nonnegative,
@@ -40,6 +41,10 @@ from partner_equity import (
     record_eligible_inflow,
 )
 from friday import apply_friday_fee_and_oil
+from settlement import (
+    apply_legacy_debt_collection,
+    apply_settlement_rent,
+)
 from state_machine import derive_state_from_balance
 
 
@@ -437,14 +442,16 @@ def _m5(project: Project, current_date: date) -> None:
             accrue_rent(project, contract)
             project._day_metrics["ar_accruals"] += contract.daily_rate
         elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
-            bike.settlement_rent_due_total += constants.SETTLEMENT_DAILY_RENT
-            bike.settlement_rent_collected_total += constants.SETTLEMENT_DAILY_RENT
-            project.revenue_settlement += constants.SETTLEMENT_DAILY_RENT
-            _cash_in(project, constants.SETTLEMENT_DAILY_RENT)
-            record_eligible_inflow(
-                project,
-                constants.SETTLEMENT_DAILY_RENT,
+            result = apply_settlement_rent(
+                current_date=current_date,
             )
+            bike.settlement_rent_due_total += result.due
+            bike.settlement_rent_collected_total += result.collected
+            project.revenue_settlement += result.collected
+            if result.cash_delta > 0:
+                _cash_in(project, result.cash_delta)
+            if result.collected > 0:
+                record_eligible_inflow(project, result.collected)
 
 
 def _m6(
@@ -537,16 +544,19 @@ def _collect_ordinary(
     )
     if not rng.deterministic_success(collection_probability, seed):
         return
-    outstanding = contract.total_due - contract.total_paid
-    prior_arrears = max(0, outstanding - contract.daily_rate)
-    collected = min(
-        contract.daily_rate + prior_arrears,
-        outstanding,
+    result = apply_ordinary_collection(
+        total_due=contract.total_due,
+        total_paid=contract.total_paid,
+        daily_rate=contract.daily_rate,
+        success=True,
+        current_date=project._current_date,
     )
-    contract.total_paid += collected
-    _cash_in(project, collected)
-    _ar_collect(project, collected)
-    record_eligible_inflow(project, collected)
+    contract.total_paid = result.total_paid_after
+    if result.cash_delta > 0:
+        _cash_in(project, result.cash_delta)
+    if result.collected > 0:
+        _ar_collect(project, result.collected)
+        record_eligible_inflow(project, result.collected)
 
 
 def _m8(
@@ -609,17 +619,23 @@ def _m8(
             )
             if not rng.deterministic_success(collection_probability, seed):
                 continue
-            payment = min(constants.SETTLEMENT_DAILY_RENT, remaining)
-            bike.settlement_legacy_debt_remaining -= payment
-            _cash_in(project, payment)
-            _ar_collect(project, payment)
+            result = apply_legacy_debt_collection(
+                remaining_debt=remaining,
+                success=True,
+            )
+            bike.settlement_legacy_debt_remaining = result.remaining_after
+            if result.cash_delta > 0:
+                _cash_in(project, result.cash_delta)
+            if result.payment > 0:
+                _ar_collect(project, result.payment)
             receivable = _receivable_of(project, bike)
             if receivable is not None:
-                receivable.collected_amount += payment
+                receivable.collected_amount += result.payment
                 receivable.remaining_amount = bike.settlement_legacy_debt_remaining
                 if receivable.remaining_amount == 0:
                     receivable.status = ReceivableStatus.SETTLED
-            record_eligible_inflow(project, payment)
+            if result.payment > 0:
+                record_eligible_inflow(project, result.payment)
 
 
 def _m9(project: Project) -> None:
