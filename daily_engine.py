@@ -792,7 +792,11 @@ def _m12(project: Project, current_date: date) -> None:
             )
 
 
-def _m13(project: Project, current_date: date) -> None:
+def _m13(
+    project: Project,
+    current_date: date,
+    recovery_rate_pct: int = 100,
+) -> None:
     for bike in list(project.bikes):
         if bike.current_state is not BikeState.POST_MATURITY_SETTLEMENT:
             continue
@@ -871,7 +875,7 @@ def _m13(project: Project, current_date: date) -> None:
                 constants.CLAIM_SOURCE_POST_MATURITY_SETTLEMENT_FAILURE,
                 remaining,
                 current_date,
-                project._recovery_rate_pct,
+                recovery_rate_pct,
             )
             project.guarantee_claims.append(claim)
             _ar_transfer(project, remaining)
@@ -1026,7 +1030,7 @@ def run_day(
         ("M10", lambda: None),
         ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
         ("M12", lambda: _m12(p, current_date)),
-        ("M13", lambda: _m13(p, current_date)),
+        ("M13", lambda: _m13(p, current_date, recovery_rate_pct)),
         ("M14", lambda: _m14(p, current_date)),
         ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
         ("M16", lambda: _m16(p, current_date)),
