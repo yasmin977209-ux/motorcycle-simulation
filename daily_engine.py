@@ -208,6 +208,22 @@ def _begin_day(project: Project) -> dict[str, int]:
     return opening
 
 
+def _ensure_day_metrics(project: Project) -> None:
+    if hasattr(project, "_day_metrics"):
+        return
+    project._day_metrics = {
+        "cash_inflows": 0,
+        "cash_outflows": 0,
+        "ar_accruals": 0,
+        "ar_collections": 0,
+        "ar_transfers_to_guarantee": 0,
+        "capitalized_purchases_and_customs": 0,
+        "gross_writeoffs_on_ownership": 0,
+        "depreciation_expense": 0,
+        "ad_removed_on_writeoff": 0,
+    }
+
+
 def _cash_in(project: Project, amount: int) -> None:
     project.project_cash += amount
     project._day_metrics["cash_inflows"] += amount
@@ -257,6 +273,7 @@ def _has_prep_underfunded(project: Project) -> bool:
 
 
 def _m2(project: Project, current_date: date) -> None:
+    _ensure_day_metrics(project)
     if not dateutils.is_business_day(current_date):
         return
 
@@ -642,6 +659,7 @@ def _m11(
     current_date: date,
     recovery_rate_pct: int,
 ) -> None:
+    _ensure_day_metrics(project)
     for bike in list(project.bikes):
         contract = contract_of(project, bike)
         if contract is None:
