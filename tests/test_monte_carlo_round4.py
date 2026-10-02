@@ -7,7 +7,15 @@ import numpy as np
 import monte_carlo
 
 
-def test_c100_zero_variance_across_trial_ids() -> None:
+def assert_same_except_trial_id(a, b):
+    a_dict = dataclasses.asdict(a)
+    b_dict = dataclasses.asdict(b)
+    a_dict.pop("trial_id")
+    b_dict.pop("trial_id")
+    assert a_dict == b_dict
+
+
+def test_c100_zero_variance_across_trial_ids()
     results = [
         monte_carlo.run_single_trial(
             "C100_G100",
@@ -16,7 +24,8 @@ def test_c100_zero_variance_across_trial_ids() -> None:
         )[0]
         for trial_id in (1, 100, 9999)
     ]
-    assert results[0] == results[1] == results[2]
+    assert_same_except_trial_id(results[0], results[1])
+    assert_same_except_trial_id(results[0], results[2])
 
 
 def test_c100_representative_selection_has_four_equal_keys() -> None:
