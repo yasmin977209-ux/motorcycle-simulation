@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import hashlib
+import json
+import multiprocessing
 
 import constants
 import daily_engine
@@ -219,9 +222,107 @@ def run_trials_sequentially(
     return results, daily_rows_by_trial
 
 
+
+def _run_single_trial_worker(
+    scenario_id: str,
+    trial_id: int,
+    master_seed: int,
+) -> tuple[TrialResult, list[dict[str, object]]]:
+    return run_single_trial(
+        scenario_id,
+        trial_id,
+        master_seed=master_seed,
+    )
+
+
+def run_trials_parallel(
+    scenario_id: str,
+    trial_ids: tuple[int, ...] | list[int],
+    n_workers: int,
+    *,
+    master_seed: int = constants.MASTER_SEED,
+) -> tuple[list[TrialResult], dict[int, list[dict[str, object]]]]:
+    if n_workers < 1:
+        raise ValueError("n_workers must be >= 1")
+    jobs = [(scenario_id, int(trial_id), master_seed) for trial_id in trial_ids]
+    ctx = multiprocessing.get_context("spawn")
+    with ctx.Pool(processes=n_workers) as pool:
+        outputs = pool.starmap(_run_single_trial_worker, jobs)
+    outputs.sort(key=lambda item: item[0].trial_id)
+    results = [item[0] for item in outputs]
+    daily_rows_by_trial = {
+        result.trial_id: daily_rows
+        for result, daily_rows in outputs
+    }
+    return results, daily_rows_by_trial
+
+
+def _canonical_jsonable(value: object) -> object:
+    if isinstance(value, float):
+        return value.hex()
+    if isinstance(value, dict):
+        return {
+            str(key): _canonical_jsonable(value[key])
+            for key in sorted(value, key=str)
+        }
+    if isinstance(value, (list, tuple)):
+        return [_canonical_jsonable(item) for item in value]
+    return value
+
+
+def _fingerprint_json_lines(records: list[object]) -> str:
+    payload = "\n".join(
+        json.dumps(
+            _canonical_jsonable(record),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        for record in records
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def fingerprint_trial_results(results: list[TrialResult]) -> str:
+    records = [
+        asdict(result)
+        for result in sorted(results, key=lambda item: item.trial_id)
+    ]
+    return _fingerprint_json_lines(records)
+
+
+def fingerprint_daily_distribution(
+    distribution: list[dict[str, object]],
+) -> str:
+    ordered = sorted(
+        distribution,
+        key=lambda row: (str(row["date"]), str(row["quantile_name"])),
+    )
+    return _fingerprint_json_lines(ordered)
+
+
+def fingerprint_per_trial_slices(
+    slices: dict[int, list[dict[str, object]]],
+) -> str:
+    ordered: list[dict[str, object]] = []
+    for trial_id in sorted(slices):
+        for row in sorted(
+            slices[trial_id],
+            key=lambda item: str(item["date"]),
+        ):
+            ordered.append(
+                {"trial_id": trial_id, **row}
+            )
+    return _fingerprint_json_lines(ordered)
+
+
 __all__ = [
     "TrialResult",
     "parse_scenario_id",
     "run_single_trial",
     "run_trials_sequentially",
+    "run_trials_parallel",
+    "fingerprint_trial_results",
+    "fingerprint_daily_distribution",
+    "fingerprint_per_trial_slices",
 ]
