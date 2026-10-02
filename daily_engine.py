@@ -194,22 +194,12 @@ def _begin_day(project: Project) -> dict[str, int]:
         "Opening_Accumulated_Depreciation": project.accumulated_depreciation,
         "Opening_Equity": project.capital + project.retained_earnings,
     }
-    project._day_metrics = {
-        "cash_inflows": 0,
-        "cash_outflows": 0,
-        "ar_accruals": 0,
-        "ar_collections": 0,
-        "ar_transfers_to_guarantee": 0,
-        "capitalized_purchases_and_customs": 0,
-        "gross_writeoffs_on_ownership": 0,
-        "depreciation_expense": 0,
-        "ad_removed_on_writeoff": 0,
-    }
+    _ensure_day_metrics(project, reset=True)
     return opening
 
 
-def _ensure_day_metrics(project: Project) -> None:
-    if hasattr(project, "_day_metrics"):
+def _ensure_day_metrics(project: Project, *, reset: bool = False) -> None:
+    if hasattr(project, "_day_metrics") and not reset:
         return
     project._day_metrics = {
         "cash_inflows": 0,
@@ -225,41 +215,49 @@ def _ensure_day_metrics(project: Project) -> None:
 
 
 def _cash_in(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.project_cash += amount
     project._day_metrics["cash_inflows"] += amount
 
 
 def _cash_out(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.project_cash -= amount
     project._day_metrics["cash_outflows"] += amount
 
 
 def _ar_collect(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.accounts_receivable -= amount
     project._day_metrics["ar_collections"] += amount
 
 
 def _ar_transfer(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.accounts_receivable -= amount
     project._day_metrics["ar_transfers_to_guarantee"] += amount
 
 
 def _capitalize(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.gross_bike_assets += amount
     project._day_metrics["capitalized_purchases_and_customs"] += amount
 
 
 def _gross_writeoff(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.gross_bike_assets -= amount
     project._day_metrics["gross_writeoffs_on_ownership"] += amount
 
 
 def _dep(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.accumulated_depreciation += amount
     project._day_metrics["depreciation_expense"] += amount
 
 
 def _ad_remove(project: Project, amount: int) -> None:
+    _ensure_day_metrics(project)
     project.accumulated_depreciation -= amount
     project._day_metrics["ad_removed_on_writeoff"] += amount
 
@@ -417,6 +415,7 @@ def _m4(project: Project) -> dict[str, bool]:
 
 
 def _m5(project: Project, current_date: date) -> None:
+    _ensure_day_metrics(project)
     if not dateutils.is_business_day(current_date):
         return
     for bike in list(project.bikes):
