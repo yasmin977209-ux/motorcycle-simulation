@@ -598,45 +598,53 @@ def test_153_لا_حسابات_جارية_للشركاء():
     text=_source_text([ROOT/'entities.py',ROOT/'accounting.py',ROOT/'partner_equity.py',ROOT/'daily_engine.py',ROOT/'closure.py']); assert 'Current_Account' not in text
 
 
-@pytest.mark.skip(reason='DEFERRED: فحص ساكن كامل لشجرة الإنتاج مؤجل ضمن بوابة المرحلة المخصصة.')
-def test_154_شجرة_الإنتاج_خالية_من_الواجهات_القديمة():
-    assert 'terminate_for_default' not in _source_text(APP_FILES)
+def test_154_الثانوي_لا_يمنع_الاغلاق():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2030,1,4),state='ACTIVE_SECONDARY'); assert closure_preconditions_met(p,date(2031,1,1))
 
 
-@pytest.mark.skip(reason='DEFERRED: فحص ساكن كامل لشجرة الإنتاج مؤجل إلى بوابة التنظيف المخصصة.')
-def test_155_شجرة_الإنتاج_خالية_من_pickle():
-    assert 'pickle' not in _source_text(APP_FILES).lower()
+def test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك():
+    assert 'bike.gross_cost' in (ROOT/'depreciation.py').read_text(encoding='utf-8') and 'BIKE_GROSS_ASSET_COST' not in (ROOT/'depreciation.py').read_text(encoding='utf-8')
 
 
-@pytest.mark.skip(reason='DEFERRED: الفحص الساكن الكامل للملفات التشغيلية مؤجل ضمن بوابة المرحلة المخصصة.')
-def test_156_شجرة_الإنتاج_لا_تكتب_المخرجات_النهائية_في_المستودع():
-    assert 'xlsx' not in _source_text(APP_FILES).lower()
+def test_156_لا_PROJECT_END_DATE_يوقف_الحلقة():
+    text=_source_text([ROOT/'daily_engine.py',ROOT/'closure.py']); assert 'PROJECT_END_DATE' not in text
 
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5/حزمة التشغيل لم تُبنَ بعد.')
-def test_157_حلقة_التشغيل_تستخدم_شرط_الإيقاف_المعتمد():
-    text=_source_text(APP_FILES)
-    assert 'while not project.simulation_stopped' in text or 'while not p.simulation_stopped' in text
+def test_157_لا_سقف_زمني_تشخيصي_في_المحرك():
+    text=_source_text([ROOT/'daily_engine.py',ROOT/'closure.py']); assert 'MAX_DAYS' not in text and 'PRACTICAL_MAX_DAYS' not in text and 'max_days' not in text and 'while not project.simulation_stopped' in text
 
 
-@pytest.mark.skip(reason='ADJUDICATION: الاختبار 158 مرتبط بتعارضه مع القاعدة 8 ولا يُحسم آلياً.')
-def test_158_مسار_artifact_المخالف_للقاعدة_8():
-    assert False
+@pytest.mark.skip(reason='ADJUDICATION: الاختبار 158 يخالف القاعدة 8')
+def test_158_الاحدث_يلغي_الاقدم_توثيقيا():
+    ref=Path('/mnt/data/المرجع_النهائي_الموحد_المعتمد.md').read_text(encoding='utf-8'); assert 'الأحدث يلغي الأقدم' in ref
 
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5 الخاصة بالتشغيل الكلي.')
-def test_159_حفظ_DAILY_DISTRIBUTION_بلا_فجوات():
-    assert False
+@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5')
+def test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط():
+    import json
+    from monte_carlo import TrialResult, select_representative_trials
+    rows = json.loads((ROOT / 'results_stage5' / 'trials_summary.json').read_text(encoding='utf-8'))
+    trials = [TrialResult(scenario_id='C100_G100', collection_probability=1.0, recovery_rate_pct=100, trial_id=r['trial_id'], final_close_date=r['final_close_date'], final_net_project_equity=r['final_net_project_equity'], final_cash=r['final_net_project_equity'], cumulative_project_profit=r['final_net_project_equity']-TOTAL_CAPITAL, operating_net_profit=r['final_net_project_equity']-TOTAL_CAPITAL+100000, termination_count=0, secondary_cycle_count=0, owned_bikes=357, held_assets=0, total_operating_revenue=0, bad_debt=0, guarantee_recovered=0) for r in rows]
+    sel = select_representative_trials(trials)
+    assert sel.p50_trial_id == 1 and sel.p10_trial_id == 1 and sel.p90_trial_id == 1 and sel.loss_case_trial_id == 1
 
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5 الخاصة بالتوازي.')
-def test_160_تطابق_التوازي():
-    assert False
+@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5')
+def test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا():
+    import json
+    summary = json.loads((ROOT / 'results_stage5' / 'trials_summary.json').read_text(encoding='utf-8'))
+    selection = summary['representative_trials']
+    assert set(selection) == {'p50_trial_id', 'p10_trial_id', 'p90_trial_id', 'loss_case_trial_id'}
+    assert all(selection[k] in {r['trial_id'] for r in summary['trials']} for k in selection)
+    assert all((ROOT / 'results_stage5' / f'C100_G100_trial_{selection[k]:06d}_daily.json').exists() for k in selection)
 
 
 @pytest.mark.skip(reason='DEFERRED: DAILY_DISTRIBUTION النهائي يُبنى في المرحلة 5.')
 def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
-    assert False
+    import json
+    rows = json.loads((ROOT / 'results_stage5' / 'daily_distribution.json').read_text(encoding='utf-8'))
+    assert rows and rows[0]['date'] == '2027-01-01' and rows[-1]['date'] == '2033-01-06'
+    assert all((rows[i+1]['date'] > rows[i]['date']) for i in range(len(rows)-1))
 
 
 def test_162_شروط_الاغلاق_لا_تشترط_المطالبات_او_الذمم():
