@@ -298,3 +298,101 @@ def test_050_اكتمال_السداد_في_اليوم_1_تمليك_فوري():
     daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
     daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
     assert b.current_state == 'OWNED_TRANSFERRED'
+def test_051_اكتمال_السداد_في_اليوم_3():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=3000,paid=0)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    # Let first two settlement workdays pass with no collection, then collect on third.
+    for d,pv in [(date(2031,1,4),1.0),(date(2031,1,5),1.0),(date(2031,1,6),1.0)]:
+        daily_engine.run_day(p,d,collection_probability=pv,scenario_id='C000_TEST',trial_id=1)
+    assert b.current_state == 'OWNED_TRANSFERRED'
+
+
+def test_052_اكتمال_السداد_في_اليوم_29():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=42000,paid=0); _add_active_contract(p,start=date(2031,1,2),state='ACTIVE_PRIMARY',due=1_000_000,paid=1_000_000)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    d=date(2031,1,4); work=0
+    while work<28:
+        daily_engine.run_day(p,d,collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+        work += d.weekday()!=4; d += timedelta(days=1)
+    daily_engine.run_day(p,d,collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+    assert b.current_state == 'OWNED_TRANSFERRED'
+
+
+def test_053_اكتمال_السداد_في_اليوم_30():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=42000,paid=0); _add_active_contract(p,start=date(2031,1,2),state='ACTIVE_PRIMARY',due=1_000_000,paid=1_000_000)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    d=date(2031,1,4); work=0
+    while work<29:
+        daily_engine.run_day(p,d,collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+        work += d.weekday()!=4; d += timedelta(days=1)
+    assert b.current_state == 'OWNED_TRANSFERRED'
+
+
+def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
+    p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=42000,paid=0); _add_active_contract(p,start=date(2031,1,2),state='ACTIVE_PRIMARY',due=1_000_000,paid=1_000_000)
+    daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+    d=date(2031,1,4)
+    for _ in range(45):
+        daily_engine.run_day(p,d,collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
+        if b.current_state == 'AVAILABLE_FOR_SECONDARY':
+            break
+        d += timedelta(days=1)
+    assert b.current_state == 'HELD_AS_ASSET' and any(cl.claim_source=='POST_MATURITY_SETTLEMENT_FAILURE' for cl in p.guarantee_claims) and any(e.event_type=='SETTLEMENT_FAILED' for e in p.event_log)
+
+
+def test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل():
+    p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='POST_MATURITY_SETTLEMENT',due=100000,paid=0)
+    b.settlement_start_date=date(2031,1,3); b.settlement_business_days_elapsed=30; b.settlement_legacy_debt_remaining=100000
+    daily_engine._m13(p,date(2031,2,15))
+    assert b.current_state == 'AVAILABLE_FOR_SECONDARY' and b.current_contract_id is None
+
+
+def test_056_استمرار_عداد_الجمعة_اثناء_التسوية():
+    c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2027,1,2)); c.friday_counter=4
+    r=apply_friday_fee_and_oil(date(2027,1,2),date(2027,2,5),c.friday_counter,True); assert r.friday_counter_after==5
+
+
+def test_057_استمرار_الاستهلاك_اثناء_التسوية_والجمعة():
+    b=Bike('B1','INITIAL',date(2026,12,26),date(2027,1,1),gross_cost=360000,current_state='POST_MATURITY_SETTLEMENT')
+    r=apply_daily_depreciation(b.gross_cost,b.accumulated_depreciation,True); assert r.depreciation_recorded==50 and r.accumulated_depreciation_after==50
+
+# 16.7 guarantee
+
+def test_058_فسخ_اساسي_30_يوما(): assert _waiting_days_for_source('PRIMARY_EARLY_TERMINATION')==30
+def test_059_فسخ_ثانوي_20_يوما(): assert _waiting_days_for_source('SECONDARY_EARLY_TERMINATION')==20
+def test_060_فشل_تسوية_60_يوما(): assert _waiting_days_for_source('POST_MATURITY_SETTLEMENT_FAILURE')==60
+
+def test_061_المطالبة_تاريخ_انشائها_هو_تاريخ_الحدث():
+    p=_new_project(); cl=create_guarantee_claim('CL1','B1','C1','T1','G1','PRIMARY_EARLY_TERMINATION',15000,date(2031,1,15),100); assert cl.created_date==date(2031,1,15)
+
+
+def test_062_موعد_التسوية_يحفظ_عند_الانشاء():
+    cl=create_guarantee_claim('CL1','B1','C1','T1','G1','PRIMARY_EARLY_TERMINATION',15000,date(2031,1,15),100); assert cl.settlement_due_date==date(2031,2,15)
+
+
+def test_063_انتظار_صفر_فوري():
+    cl=create_guarantee_claim('CL1','B1','C1','T1','G1','ADMINISTRATIVE_CLOSURE',15000,date(2031,1,15),100); assert cl.settlement_due_date==cl.created_date
+
+
+def test_064_عد_الانتظار_تقويمي_لا_عملي():
+    d=date(2027,1,15); cl=create_guarantee_claim('CL1','B1','C1','T1','G1','SECONDARY_EARLY_TERMINATION',100,date(2027,1,15),100); assert can_settle_claim(cl,date(2027,2,5))
+
+
+def _claim(rate): return create_guarantee_claim('CL1','B1','C1','T1','G1','PRIMARY_EARLY_TERMINATION',15000,date(2031,1,15),rate)
+def test_065_استرداد_100(): cl=_claim(100); r=settle_guarantee_claim(cl,date(2031,2,15)); assert r.recovered_amount==15000
+def test_066_استرداد_70(): cl=_claim(70); r=settle_guarantee_claim(cl,date(2031,2,15)); assert r.recovered_amount==(15000*70)//100
+def test_067_استرداد_50(): cl=_claim(50); r=settle_guarantee_claim(cl,date(2031,2,15)); assert r.recovered_amount==(15000*50)//100
+def test_068_استرداد_30(): cl=_claim(30); r=settle_guarantee_claim(cl,date(2031,2,15)); assert r.recovered_amount==(15000*30)//100
+def test_069_استرداد_0(): cl=_claim(0); r=settle_guarantee_claim(cl,date(2031,2,15)); assert r.recovered_amount==0 and r.bad_debt_amount==15000
+
+# 16.8 secondary
+
+def test_070_اول_عقد_ثانوي():
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); assert c.contract_type=='SECONDARY'; b.secondary_cycle_count=1; assert b.secondary_cycle_count==1
+
+
+def test_071_فسخ_ثانوي():
+    p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY',due=10000,paid=0); daily_engine.run_day(p,date(2031,1,4),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1); assert b.current_state=='AVAILABLE_FOR_SECONDARY'
+
+
+def test_072_مطالبة_فسخ_ثانوي_20_يوما():
