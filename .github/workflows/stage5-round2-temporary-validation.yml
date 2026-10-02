@@ -1,0 +1,177 @@
+name: stage5-round2-temporary-validation
+
+on:
+  push:
+    branches: ["tmp/stage5-round2-20261002"]
+
+permissions:
+  contents: read
+
+jobs:
+  round2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Round 2 tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_monte_carlo_round2.py
+
+      - name: Build worker equivalence manifest
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results_stage5
+          cat > /tmp/build_round2_manifest.py <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          import monte_carlo
+
+          SCENARIO_ID = "C070_G100"
+          TRIAL_IDS = (1, 2, 3)
+          WORKER_COUNTS = (2, 4)
+          PYTHON_HASH_SEEDS = (1, 42, 987654)
+
+          def probe(
+              slices: dict[int, list[dict[str, object]]],
+          ) -> list[dict[str, object]]:
+              rows: list[dict[str, object]] = []
+              for trial_id in sorted(slices):
+                  for row in slices[trial_id]:
+                      rows.append({**row, "quantile_name": f"TRIAL_{trial_id}"})
+              return rows
+
+          def fingerprints(
+              results: list[monte_carlo.TrialResult],
+              slices: dict[int, list[dict[str, object]]],
+          ) -> dict[str, str]:
+              return {
+                  "trial_results": monte_carlo.fingerprint_trial_results(results),
+                  "daily_distribution": monte_carlo.fingerprint_daily_distribution(
+                      probe(slices)
+                  ),
+                  "per_trial_slices": monte_carlo.fingerprint_per_trial_slices(
+                      slices
+                  ),
+              }
+
+          def write_hashseed_script(path: Path) -> None:
+              path.write_text(
+                  """from __future__ import annotations
+
+          import json
+
+          import monte_carlo
+
+
+          def main() -> None:
+              results, slices = monte_carlo.run_trials_parallel(
+                  "C070_G100",
+                  (1, 2, 3),
+                  4,
+              )
+              rows = []
+              for trial_id in sorted(slices):
+                  for row in slices[trial_id]:
+                      rows.append({**row, "quantile_name": f"TRIAL_{trial_id}"})
+              print(
+                  json.dumps(
+                      {
+                          "trial_results": monte_carlo.fingerprint_trial_results(results),
+                          "daily_distribution": monte_carlo.fingerprint_daily_distribution(rows),
+                          "per_trial_slices": monte_carlo.fingerprint_per_trial_slices(slices),
+                      },
+                      sort_keys=True,
+                  )
+              )
+
+
+          if __name__ == "__main__":
+              main()
+          """,
+                  encoding="utf-8",
+              )
+
+          def main() -> None:
+              sequential_results, sequential_slices = monte_carlo.run_trials_sequentially(
+                  SCENARIO_ID, TRIAL_IDS
+              )
+              sequential_fp = fingerprints(sequential_results, sequential_slices)
+
+              workers_2_results, workers_2_slices = monte_carlo.run_trials_parallel(
+                  SCENARIO_ID, TRIAL_IDS, 2
+              )
+              workers_2_fp = fingerprints(workers_2_results, workers_2_slices)
+
+              workers_4_results, workers_4_slices = monte_carlo.run_trials_parallel(
+                  SCENARIO_ID, TRIAL_IDS, 4
+              )
+              workers_4_fp = fingerprints(workers_4_results, workers_4_slices)
+
+              script_path = Path("/tmp/round2_hashseed_probe.py")
+              write_hashseed_script(script_path)
+              pythonhashseeds = {}
+              for seed in PYTHON_HASH_SEEDS:
+                  env = os.environ.copy()
+                  env["PYTHONHASHSEED"] = str(seed)
+                  completed = subprocess.run(
+                      [sys.executable, str(script_path)],
+                      env=env,
+                      text=True,
+                      capture_output=True,
+                      check=True,
+                  )
+                  pythonhashseeds[str(seed)] = json.loads(completed.stdout)
+
+              all_match = (
+                  workers_2_fp == sequential_fp
+                  and workers_4_fp == sequential_fp
+                  and all(value == sequential_fp for value in pythonhashseeds.values())
+              )
+
+              manifest = {
+                  "scenario_id": SCENARIO_ID,
+                  "trial_ids": list(TRIAL_IDS),
+                  "sequential": sequential_fp,
+                  "workers_2": workers_2_fp,
+                  "workers_4": workers_4_fp,
+                  "pythonhashseeds": pythonhashseeds,
+                  "all_match": all_match,
+              }
+              Path("results_stage5/worker_equivalence_manifest.json").write_text(
+                  json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                  encoding="utf-8",
+              )
+              print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
+              assert all_match is True
+
+          if __name__ == "__main__":
+              main()
+          PY
+          python /tmp/build_round2_manifest.py
+
+      - name: Upload Round 2 manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-round2-worker-equivalence
+          path: results_stage5/worker_equivalence_manifest.json
+          if-no-files-found: error
