@@ -1,0 +1,605 @@
+name: diag-c030b
+
+on:
+  push:
+    branches: ["tmp/diag-c030b"]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Build isolated old/current trees
+        shell: bash
+        env:
+          OLD_SHA: 2e3aa381d833fe430d2aec42e98dd0d29918c3bf
+          CURRENT_SHA: 00582746c9b6391e8f84fe0f0ed776fd025c9e47
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$OLD_SHA"
+          git fetch --no-tags --depth=1 origin "$CURRENT_SHA"
+          mkdir -p /tmp/diag_c030b/old /tmp/diag_c030b/current
+          git archive "$OLD_SHA" | tar -x -C /tmp/diag_c030b/old
+          git archive "$CURRENT_SHA" | tar -x -C /tmp/diag_c030b/current
+          test -f /tmp/diag_c030b/old/daily_engine.py
+          test -f /tmp/diag_c030b/current/daily_engine.py
+          printf 'OLD_SHA=%s\nCURRENT_SHA=%s\n' "$OLD_SHA" "$CURRENT_SHA"
+
+      - name: Write diagnostic runner outside repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/diag_c030b.py <<'PY'
+          from __future__ import annotations
+
+          import dataclasses
+          import hashlib
+          import importlib.util
+          import inspect
+          import json
+          import math
+          import random
+          import sys
+          from collections import Counter
+          from datetime import date, timedelta
+          from pathlib import Path
+          from typing import Any
+
+          ROOT = Path("/tmp/diag_c030b")
+          OLD = ROOT / "old"
+          CURRENT = ROOT / "current"
+          START = date(2027, 1, 1)
+          CONTRACT_START = date(2027, 1, 2)
+          P = 0.30
+          TRIAL_ID = 1
+
+          MODULE_NAMES = {
+              "daily_engine", "constants", "accounting", "closure", "collection",
+              "dateutils", "depreciation", "entities", "friday", "guarantee",
+              "partner_equity", "rng", "settlement", "state_machine",
+          }
+
+          def purge_modules() -> None:
+              for name in list(sys.modules):
+                  if name in MODULE_NAMES:
+                      sys.modules.pop(name, None)
+
+          def load_tree(root: Path, label: str):
+              purge_modules()
+              sys.path.insert(0, str(root))
+              try:
+                  spec = importlib.util.spec_from_file_location(
+                      "daily_engine", root / "daily_engine.py"
+                  )
+                  if spec is None or spec.loader is None:
+                      raise RuntimeError(f"cannot load daily_engine from {root}")
+                  daily = importlib.util.module_from_spec(spec)
+                  sys.modules["daily_engine"] = daily
+                  spec.loader.exec_module(daily)
+                  modules = {
+                      name: sys.modules[name]
+                      for name in MODULE_NAMES
+                      if name in sys.modules
+                  }
+                  return daily, modules
+              finally:
+                  try:
+                      sys.path.remove(str(root))
+                  except ValueError:
+                      pass
+
+          def sval(value: Any) -> str:
+              return value.value if hasattr(value, "value") else str(value)
+
+          def project_contracts(project):
+              return list(project.contracts.values()) if isinstance(project.contracts, dict) else list(project.contracts)
+
+          def first_contract(project):
+              contracts = project_contracts(project)
+              return contracts[0] if contracts else None
+
+          def one_contract_project(daily):
+              project = daily.create_initial_project(recovery_rate_pct=0)
+              bike = project.bikes[0]
+              project.bikes = [bike]
+              project.gross_bike_assets = bike.gross_cost
+              project.capital = project.gross_bike_assets - project.retained_earnings
+              prep = daily.BikeState.PREP if hasattr(daily, "BikeState") else "PREP"
+              bike.current_state = prep
+              bike.actual_ready_date = CONTRACT_START
+              bike.scheduled_ready_date = CONTRACT_START
+              bike.delivery_date = None
+              bike.current_contract_id = None
+              bike.current_tenant_id = None
+              return project, bike
+
+          def is_business(day: date) -> bool:
+              return day.weekday() != 4
+
+          def business_index(start: date, current: date) -> int:
+              d = start
+              n = 0
+              while d <= current:
+                  if is_business(d):
+                      n += 1
+                  d += timedelta(days=1)
+              return n
+
+          def state_label(bike) -> str:
+              return sval(bike.current_state)
+
+          def terminal_status(project):
+              contract = first_contract(project)
+              return sval(contract.status) if contract is not None else None
+
+          def daily_snapshot(accounting, project, day):
+              snap = accounting.balance_sheet_snapshot(project)
+              contract = first_contract(project)
+              return {
+                  "date": day.isoformat(),
+                  "due": contract.total_due if contract is not None else None,
+                  "paid": contract.total_paid if contract is not None else None,
+                  "outstanding": (
+                      contract.total_due - contract.total_paid
+                      if contract is not None else None
+                  ),
+                  "state": state_label(project.bikes[0]),
+                  "Cash": snap["Cash"],
+                  "AR": snap["Accounts_Receivable"],
+                  "contracts": len(project_contracts(project)),
+                  "claims": len(project.guarantee_claims),
+              }
+
+          def run_full_with_toss_counter(root: Path, label: str):
+              daily, modules = load_tree(root, label)
+              counters = {
+                  "PRIMARY_COLLECTION": {"tosses": 0, "successes": 0},
+                  "LEGACY_DEBT_COLLECTION": {"tosses": 0, "successes": 0},
+              }
+
+              if label == "old":
+                  original_success = daily._success
+
+                  def wrapped_success(probability, scenario_id, trial_id, bike_id, day, event_type):
+                      key = str(event_type)
+                      if key in counters:
+                          counters[key]["tosses"] += 1
+                          result = original_success(
+                              probability, scenario_id, trial_id, bike_id, day, event_type
+                          )
+                          if result:
+                              counters[key]["successes"] += 1
+                          return result
+                      return original_success(
+                          probability, scenario_id, trial_id, bike_id, day, event_type
+                      )
+
+                  daily._success = wrapped_success
+              else:
+                  rng = modules["rng"]
+                  original_det = rng.deterministic_success
+
+                  def wrapped_det(probability, seed_bytes):
+                      frame = inspect.currentframe().f_back
+                      function_name = frame.f_code.co_name if frame is not None else ""
+                      if function_name == "_collect_ordinary":
+                          event_type = frame.f_locals.get("event_type")
+                      elif function_name == "_m8" and frame is not None and "remaining" in frame.f_locals:
+                          event_type = "LEGACY_DEBT_COLLECTION"
+                      else:
+                          event_type = None
+                      result = original_det(probability, seed_bytes)
+                      if event_type in counters:
+                          counters[event_type]["tosses"] += 1
+                          if result:
+                              counters[event_type]["successes"] += 1
+                      return result
+
+                  rng.deterministic_success = wrapped_det
+
+              project = daily.create_initial_project(recovery_rate_pct=0)
+              day = START
+              while not project.simulation_stopped:
+                  daily.run_day(
+                      project, day, P, "C030_G000", TRIAL_ID, 0,
+                  )
+                  day += timedelta(days=1)
+
+              output = {
+                  "tree": label,
+                  "scenario_id": "C030_G000",
+                  "days": len(project.daily_balance_checks),
+                  "final_close_date": (
+                      project.final_close_date.isoformat()
+                      if project.final_close_date else None
+                  ),
+                  "Final_Net_Project_Equity": project.final_net_project_equity,
+                  "contracts": len(project_contracts(project)),
+                  "claims": len(project.guarantee_claims),
+                  "decision_counts": {
+                      k: {
+                          "tosses": v["tosses"],
+                          "successes": v["successes"],
+                          "success_rate": (
+                              v["successes"] / v["tosses"]
+                              if v["tosses"] else None
+                          ),
+                      }
+                      for k, v in counters.items()
+                  },
+              }
+              return output
+
+          def isolated_function_test(root: Path, label: str):
+              daily, modules = load_tree(root, label)
+              successes = []
+              base = date(2027, 1, 1)
+              for i in range(100000):
+                  day = base + timedelta(days=i)
+                  bike_id = f"BK{i+1:06d}"
+                  if label == "old":
+                      ok = daily._success(
+                          P, "C030_G000", 1, bike_id, day, "PRIMARY_COLLECTION"
+                      )
+                  else:
+                      seed = modules["rng"].derive_seed(
+                          20270101, "C030_G000", 1, bike_id, day, "PRIMARY_COLLECTION"
+                      )
+                      ok = modules["rng"].deterministic_success(P, seed)
+                  successes.append(1 if ok else 0)
+
+              success_rate = sum(successes) / len(successes)
+              max_success = max_run(successes, 1)
+              max_failure = max_run(successes, 0)
+
+              same_bike = []
+              for i in range(100000):
+                  day = base + timedelta(days=i)
+                  bike_id = "BK000001"
+                  if label == "old":
+                      ok = daily._success(
+                          P, "C030_G000", 1, bike_id, day, "PRIMARY_COLLECTION"
+                      )
+                  else:
+                      seed = modules["rng"].derive_seed(
+                          20270101, "C030_G000", 1, bike_id, day, "PRIMARY_COLLECTION"
+                      )
+                      ok = modules["rng"].deterministic_success(P, seed)
+                  same_bike.append(1 if ok else 0)
+
+              correlation = adjacent_correlation(same_bike)
+              return {
+                  "tree": label,
+                  "n_groups": 100000,
+                  "successes": sum(successes),
+                  "success_rate": success_rate,
+                  "max_success_streak": max_success,
+                  "max_failure_streak": max_failure,
+                  "same_bike_adjacent_correlation": correlation,
+                  "same_bike_n": len(same_bike),
+              }
+
+          def max_run(values, target):
+              best = current = 0
+              for value in values:
+                  if value == target:
+                      current += 1
+                      best = max(best, current)
+                  else:
+                      current = 0
+              return best
+
+          def adjacent_correlation(values):
+              x = values[:-1]
+              y = values[1:]
+              n = len(x)
+              mx = sum(x) / n
+              my = sum(y) / n
+              num = sum((a-mx)*(b-my) for a,b in zip(x,y))
+              denx = math.sqrt(sum((a-mx)**2 for a in x))
+              deny = math.sqrt(sum((b-my)**2 for b in y))
+              return num / (denx * deny) if denx and deny else None
+
+          def build_shared_toss_table(trials: int, max_calendar_days: int):
+              generator = random.Random(8602026)
+              return [
+                  bytearray(1 if generator.random() < P else 0 for _ in range(max_calendar_days + 1))
+                  for _ in range(trials + 1)
+              ]
+
+          def run_one_contract_trials(root: Path, label: str, toss_table):
+              daily, modules = load_tree(root, label)
+              context = {"trial_id": None, "day": None}
+
+              if label == "old":
+                  original_success = daily._success
+
+                  def shared_success(probability, scenario_id, trial_id, bike_id, day, event_type):
+                      if event_type == "PRIMARY_COLLECTION" and context["trial_id"] is not None:
+                          idx = (day - CONTRACT_START).days
+                          if 0 <= idx < len(toss_table[trial_id]):
+                              return bool(toss_table[trial_id][idx])
+                      return original_success(
+                          probability, scenario_id, trial_id, bike_id, day, event_type
+                      )
+
+                  daily._success = shared_success
+              else:
+                  rng = modules["rng"]
+                  original_det = rng.deterministic_success
+
+                  def shared_det(probability, seed_bytes):
+                      frame = inspect.currentframe().f_back
+                      if (
+                          frame is not None
+                          and frame.f_code.co_name == "_collect_ordinary"
+                          and context["trial_id"] is not None
+                          and context["day"] is not None
+                      ):
+                          idx = (context["day"] - CONTRACT_START).days
+                          return bool(toss_table[context["trial_id"]][idx])
+                      return original_det(probability, seed_bytes)
+
+                  rng.deterministic_success = shared_det
+
+              results = []
+              first_diff_rows = None
+              first_diff_meta = None
+
+              for trial_id in range(1, len(toss_table)):
+                  project, bike = one_contract_project(daily)
+                  day = START
+                  rows = []
+                  end_kind = None
+                  end_date = None
+
+                  while True:
+                      context["trial_id"] = trial_id
+                      context["day"] = day
+                      daily.run_day(project, day, P, "C030_G000", trial_id, 0)
+                      rows.append(daily_snapshot(modules["accounting"], project, day))
+                      contract = first_contract(project)
+                      status = sval(contract.status) if contract is not None else None
+
+                      if status in {"TERMINATED", "MATURED", "SETTLED"}:
+                          if status == "TERMINATED":
+                              end_kind = "TERMINATED"
+                          else:
+                              end_kind = "MATURED"
+                          end_date = day
+                          break
+
+                      day += timedelta(days=1)
+
+                  item = {
+                      "trial_id": trial_id,
+                      "end_kind": end_kind,
+                      "end_date": end_date.isoformat(),
+                      "business_day_index": business_index(CONTRACT_START, end_date),
+                      "final_outstanding": rows[-1]["outstanding"],
+                  }
+                  results.append(item)
+
+                  if first_diff_rows is None:
+                      old_pair = None
+                      first_diff_meta = None
+                      # Filled by caller after both versions are available.
+                  context["trial_id"] = None
+                  context["day"] = None
+
+              return results
+
+          def detailed_trial(root: Path, label: str, trial_id: int, toss_table):
+              daily, modules = load_tree(root, label)
+              context = {"trial_id": trial_id, "day": None}
+
+              if label == "old":
+                  original_success = daily._success
+
+                  def shared_success(probability, scenario_id, tid, bike_id, day, event_type):
+                      if event_type == "PRIMARY_COLLECTION":
+                          idx = (day - CONTRACT_START).days
+                          return bool(toss_table[tid][idx])
+                      return original_success(probability, scenario_id, tid, bike_id, day, event_type)
+
+                  daily._success = shared_success
+              else:
+                  rng = modules["rng"]
+                  original_det = rng.deterministic_success
+
+                  def shared_det(probability, seed_bytes):
+                      frame = inspect.currentframe().f_back
+                      if frame is not None and frame.f_code.co_name == "_collect_ordinary":
+                          idx = (context["day"] - CONTRACT_START).days
+                          return bool(toss_table[trial_id][idx])
+                      return original_det(probability, seed_bytes)
+
+                  rng.deterministic_success = shared_det
+
+              project, bike = one_contract_project(daily)
+              day = START
+              rows = []
+              while True:
+                  context["day"] = day
+                  daily.run_day(project, day, P, "C030_G000", trial_id, 0)
+                  rows.append(daily_snapshot(modules["accounting"], project, day))
+                  contract = first_contract(project)
+                  status = sval(contract.status) if contract is not None else None
+                  if status in {"TERMINATED", "MATURED", "SETTLED"}:
+                      break
+                  day += timedelta(days=1)
+              return rows
+
+          def quantiles(values):
+              if not values:
+                  return {"mean": None, "P10": None, "P50": None, "P90": None}
+              import numpy as np
+              arr = np.asarray(values, dtype=float)
+              return {
+                  "mean": float(arr.mean()),
+                  "P10": float(np.quantile(arr, 0.10, method="linear")),
+                  "P50": float(np.quantile(arr, 0.50, method="linear")),
+                  "P90": float(np.quantile(arr, 0.90, method="linear")),
+              }
+
+          def maturity_theory():
+              end = date(2029, 1, 2)
+              d = CONTRACT_START
+              n_business = 0
+              while d <= end:
+                  if is_business(d):
+                      n_business += 1
+                  d += timedelta(days=1)
+
+              # Arrears state k is the number of unpaid business-day rents.
+              # At k=0: success stays at 0; failure goes to 1.
+              # At 1<=k<=29: success goes to k-1; failure goes to k+1.
+              dp = [0.0] * 30
+              dp[0] = 1.0
+              for _ in range(n_business):
+                  nxt = [0.0] * 30
+                  nxt[0] += dp[0] * P
+                  for k in range(1, 30):
+                      nxt[k-1] += dp[k] * P
+                  for k in range(0, 29):
+                      nxt[k+1] += dp[k] * (1.0 - P)
+                  dp = nxt
+
+              return {
+                  "contract_start": CONTRACT_START.isoformat(),
+                  "contract_maturity": end.isoformat(),
+                  "business_rent_days_inclusive": n_business,
+                  "p_success": P,
+                  "p_failure": 1.0 - P,
+                  "termination_threshold_days": 30,
+                  "survival_probability_to_maturity_without_termination": sum(dp),
+                  "survival_percent": sum(dp) * 100.0,
+              }
+
+          def first_differing_trial(old_results, current_results):
+              for a, b in zip(old_results, current_results):
+                  if (
+                      a["end_kind"], a["end_date"], a["business_day_index"]
+                  ) != (
+                      b["end_kind"], b["end_date"], b["business_day_index"]
+                  ):
+                      return a["trial_id"]
+              return None
+
+          def daily_first_diff(old_rows, current_rows):
+              n = min(len(old_rows), len(current_rows))
+              for i in range(n):
+                  a, b = old_rows[i], current_rows[i]
+                  fields = ("due", "paid", "outstanding", "state")
+                  if any(a[f] != b[f] for f in fields):
+                      return {
+                          "index": i,
+                          "date": a["date"],
+                          "old": {f: a[f] for f in fields},
+                          "current": {f: b[f] for f in fields},
+                      }
+              if len(old_rows) != len(current_rows):
+                  return {
+                      "index": n,
+                      "date_old": old_rows[-1]["date"] if old_rows else None,
+                      "date_current": current_rows[-1]["date"] if current_rows else None,
+                      "length_old": len(old_rows),
+                      "length_current": len(current_rows),
+                  }
+              return None
+
+          def paired_daily_table(old_rows, current_rows):
+              n = max(len(old_rows), len(current_rows))
+              out = []
+              for i in range(n):
+                  a = old_rows[i] if i < len(old_rows) else None
+                  b = current_rows[i] if i < len(current_rows) else None
+                  out.append({
+                      "day_old": a["date"] if a else None,
+                      "day_current": b["date"] if b else None,
+                      "old_due": a["due"] if a else None,
+                      "old_paid": a["paid"] if a else None,
+                      "old_outstanding": a["outstanding"] if a else None,
+                      "old_state": a["state"] if a else None,
+                      "current_due": b["due"] if b else None,
+                      "current_paid": b["paid"] if b else None,
+                      "current_outstanding": b["outstanding"] if b else None,
+                      "current_state": b["state"] if b else None,
+                  })
+              return out
+
+          print("===== FULL C030 RANDOM TOSS COUNTS =====")
+          print(json.dumps(run_full_with_toss_counter(OLD, "old"), ensure_ascii=False, sort_keys=True))
+          print(json.dumps(run_full_with_toss_counter(CURRENT, "current"), ensure_ascii=False, sort_keys=True))
+
+          print("===== ISOLATED DECISION FUNCTION =====")
+          print(json.dumps(isolated_function_test(OLD, "old"), ensure_ascii=False, sort_keys=True))
+          print(json.dumps(isolated_function_test(CURRENT, "current"), ensure_ascii=False, sort_keys=True))
+
+          print("===== ONE CONTRACT 2000 SHARED TOSSES =====")
+          toss_table = build_shared_toss_table(2000, 800)
+          old_results = run_one_contract_trials(OLD, "old", toss_table)
+          current_results = run_one_contract_trials(CURRENT, "current", toss_table)
+
+          def summarize(results):
+              terminated = [x["business_day_index"] for x in results if x["end_kind"] == "TERMINATED"]
+              matured = [x for x in results if x["end_kind"] == "MATURED"]
+              return {
+                  "n_trials": len(results),
+                  "termination_day_business_index": quantiles(terminated),
+                  "matured_without_termination_count": len(matured),
+                  "matured_without_termination_rate": len(matured) / len(results),
+                  "first_10_results": results[:10],
+              }
+
+          print(json.dumps({
+              "old": summarize(old_results),
+              "current": summarize(current_results),
+              "first_differing_trial_id": first_differing_trial(old_results, current_results),
+          }, ensure_ascii=False, sort_keys=True))
+
+          first_trial = first_differing_trial(old_results, current_results)
+          if first_trial is not None:
+              old_rows = detailed_trial(OLD, "old", first_trial, toss_table)
+              current_rows = detailed_trial(CURRENT, "current", first_trial, toss_table)
+              print("===== FIRST DIFFERING ONE-CONTRACT TRIAL =====")
+              print(json.dumps({
+                  "trial_id": first_trial,
+                  "first_daily_difference": daily_first_diff(old_rows, current_rows),
+                  "paired_daily_log": paired_daily_table(old_rows, current_rows),
+              }, ensure_ascii=False, sort_keys=True))
+          else:
+              print("===== FIRST DIFFERING ONE-CONTRACT TRIAL =====")
+              print(json.dumps({
+                  "trial_id": None,
+                  "first_daily_difference": None,
+                  "paired_daily_log": [],
+              }, ensure_ascii=False, sort_keys=True))
+
+          print("===== THEORETICAL 24-MONTH SURVIVAL =====")
+          print(json.dumps(maturity_theory(), ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Run all diagnostic experiments
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -u /tmp/diag_c030b.py | tee /tmp/diag_c030b_output.txt
+
+      - name: Preserve raw diagnostic output as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: diag-c030b-output
+          path: /tmp/diag_c030b_output.txt
+          if-no-files-found: error
