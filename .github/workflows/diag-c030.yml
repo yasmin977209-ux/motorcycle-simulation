@@ -29,6 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin "$OLD_SHA"
+          git fetch --no-tags --depth=1 origin "$CURRENT_SHA"
           mkdir -p /tmp/diag_c030/old /tmp/diag_c030/current
           git archive "$OLD_SHA" | tar -x -C /tmp/diag_c030/old
           git archive "$CURRENT_SHA" | tar -x -C /tmp/diag_c030/current
