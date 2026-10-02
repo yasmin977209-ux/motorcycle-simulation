@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import Callable
 
 import constants
 import dateutils
@@ -1125,6 +1126,8 @@ def run_deterministic_trial(
     trial_id: int = 1,
     scenario_id: str = "C100_G100",
     master_seed: int = constants.MASTER_SEED,
+    collection_probability: float = 1.0,
+    on_day_end: Callable[[Project, date], None] | None = None,
 ) -> Project:
     project = create_initial_project(recovery_rate_pct=recovery_rate_pct)
     current = constants.PROJECT_START_DATE
@@ -1132,12 +1135,14 @@ def run_deterministic_trial(
         run_day(
             project,
             current,
-            collection_probability=1.0,
+            collection_probability=collection_probability,
             scenario_id=scenario_id,
             trial_id=trial_id,
             recovery_rate_pct=recovery_rate_pct,
             master_seed=master_seed,
         )
+        if on_day_end is not None:
+            on_day_end(project, current)
         current += timedelta(days=1)
     return project
 
