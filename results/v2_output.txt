@@ -4,7 +4,7 @@ rootdir: /home/runner/work/motorcycle-simulation/motorcycle-simulation
 collected 163 items
 
 tests/test_acceptance_16_v2.py .......FF..FF.FFF........................ [ 25%]
-.F.FFF...F..FF.................FFF.F..F.F..F....FFFFF.F..............F.. [ 69%]
+.F.FFF...F..FF........................F.F.......FFFFF.F................. [ 69%]
 F............s.................F.F.......F..ssss..                       [100%]
 
 =================================== FAILURES ===================================
@@ -240,23 +240,23 @@ _____________________ test_046_يوم_النضج_ليس_اول_يوم_تسوية
 
     def test_046_يوم_النضج_ليس_اول_يوم_تسوية():
         p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
-        daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+        daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
 >       assert b.current_state == 'POST_MATURITY_SETTLEMENT' and b.settlement_start_date is None
-E       AssertionError: assert (<BikeState.OW..._TRANSFERRED'> == 'POST_MATURITY_SETTLEMENT'
+E       AssertionError: assert (<BikeState.PO...Y_SETTLEMENT'> == 'POST_MATURITY_SETTLEMENT'
 E         
-E         - POST_MATURITY_SETTLEMENT
-E         + OWNED_TRANSFERRED)
+E           POST_MATURITY_SETTLEMENT and datetime.date(2031, 1, 2) is None)
+E        +  where datetime.date(2031, 1, 2) = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...ount_if_applicable=9000, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
 
 tests/test_acceptance_16_v2.py:276: AssertionError
 _____________ test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول ______________
 
     def test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول():
         p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
-        daily_engine.run_day(p,date(2031,1,2),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
+        daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
         daily_engine.run_day(p,date(2031,1,4),collection_probability=1.0,scenario_id='C100_G100',trial_id=1)
 >       assert b.settlement_start_date == date(2031,1,4)
-E       AssertionError: assert None == datetime.date(2031, 1, 4)
-E        +  where None = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...nt_if_applicable=359950, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
+E       AssertionError: assert datetime.date(2031, 1, 2) == datetime.date(2031, 1, 4)
+E        +  where datetime.date(2031, 1, 2) = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...ount_if_applicable=None, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
 E        +  and   datetime.date(2031, 1, 4) = date(2031, 1, 4)
 
 tests/test_acceptance_16_v2.py:283: AssertionError
@@ -439,42 +439,6 @@ current_date = datetime.date(2031, 2, 15)
 E               AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
 
 daily_engine.py:845: AttributeError
-______________________ test_073_عقد_ثانوي_ثان_مستاجر_جديد ______________________
-
-    def test_073_عقد_ثانوي_ثان_مستاجر_جديد():
->       p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.current_state='AVAILABLE_FOR_SECONDARY'; old=c.tenant_id; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==1 and b.current_tenant_id!=old
-                                                                                                                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       AssertionError: assert (0 == 1)
-E        +  where 0 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=0, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-
-tests/test_acceptance_16_v2.py:404: AssertionError
-___________________________ test_074_عقد_ثانوي_ثالث ____________________________
-
-    def test_074_عقد_ثانوي_ثالث():
->       p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=2; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==3
-                                                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       AssertionError: assert 2 == 3
-E        +  where 2 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=2, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-
-tests/test_acceptance_16_v2.py:408: AssertionError
-___________________________ test_075_عقد_ثانوي_رابع ____________________________
-
-    def test_075_عقد_ثانوي_رابع():
->       p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); b.secondary_cycle_count=3; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); assert b.secondary_cycle_count==4
-                                                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       AssertionError: assert 3 == 4
-E        +  where 3 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=3, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-
-tests/test_acceptance_16_v2.py:412: AssertionError
-_______________ test_077_عداد_الجمعة_يبدأ_من_صفر_مع_كل_عقد_ثانوي _______________
-
-    def test_077_عداد_الجمعة_يبدأ_من_صفر_مع_كل_عقد_ثانوي():
->       p=_new_project(); b,c=_add_active_contract(p,contract_type='SECONDARY',start=date(2031,1,4),state='ACTIVE_SECONDARY'); c.friday_counter=7; b.current_state='AVAILABLE_FOR_SECONDARY'; daily_engine._m3(p,date(2031,1,5)); newc=next(x for x in p.contracts.values() if x.contract_id==b.current_contract_id); assert newc.friday_counter==0
-                                                                                                                                                                                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       AssertionError: assert 7 == 0
-E        +  where 7 = Contract(contract_id='CT00000001', bike_id='T000011', tenant_id='TN00000001', guarantor_id='GR00000001', contract_type...2031, 1, 4), maturity_date=None, status=<ContractStatus.ACTIVE: 'ACTIVE'>, total_due=0, total_paid=0, friday_counter=7).friday_counter
-
-tests/test_acceptance_16_v2.py:420: AssertionError
 ____________________ test_080_السماح_بالشراء_في_2030_12_31 _____________________
 
     def test_080_السماح_بالشراء_في_2030_12_31():
@@ -519,16 +483,6 @@ amount = 350000
 E       AttributeError: 'Project' object has no attribute '_day_metrics'
 
 daily_engine.py:218: AttributeError
-_____________________ test_085_لا_اغلاق_مع_PREP_غير_مكتملة _____________________
-
-    def test_085_لا_اغلاق_مع_PREP_غير_مكتملة():
->       p=_new_project(); _mark_all_initial_owned(p); b=p.bikes[0]; b.current_state='PREP'; b.prep_paid=False; assert not closure_preconditions_met(p,date(2031,1,1))
-                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       assert not True
-E        +  where True = closure_preconditions_met(Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]), datetime.date(2031, 1, 1))
-E        +    where datetime.date(2031, 1, 1) = date(2031, 1, 1)
-
-tests/test_acceptance_16_v2.py:456: AssertionError
 _______________ test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم ________________
 
     def test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم():
@@ -753,29 +707,6 @@ E       assert 100 == 0
 E        +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
 
 tests/test_acceptance_16_v2.py:497: AssertionError
-______________________ test_111_منع_ازدواج_ايراد_التحصيل _______________________
-
-    def test_111_منع_ازدواج_ايراد_التحصيل():
->       p=Project(); initialize_accounting(p); accrue_before=p.revenue_primary; from accounting import accrue_rent, collect_from_ar; c=Contract('CT1','B1','T1','G1','PRIMARY',1500,date(2031,1,1)); accrue_rent(p,c,amount=1500); collect_from_ar(p,1500); assert p.revenue_primary==accrue_before+1500
-                                                                                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-tests/test_acceptance_16_v2.py:562: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-project = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[])
-contract = Contract(contract_id='CT1', bike_id='B1', tenant_id='T1', guarantor_id='G1', contract_type='PRIMARY', daily_rate=1500,...1, 1, 1), maturity_date=None, status=<ContractStatus.ACTIVE: 'ACTIVE'>, total_due=1500, total_paid=0, friday_counter=0)
-amount = 1500
-
-    def accrue_rent(project: Project, contract: Contract, amount: int | None = None) -> int:
-        rent = contract.daily_rate if amount is None else amount
-        if rent < 0:
-            raise ValueError("rent amount must not be negative")
-        contract.total_due += rent
->       if contract.contract_type.value == "PRIMARY":
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E       AttributeError: 'str' object has no attribute 'value'
-
-accounting.py:51: AttributeError
 ______________________ test_114_منع_ازدواج_مصروف_التجهيز _______________________
 
     def test_114_منع_ازدواج_مصروف_التجهيز():
@@ -908,12 +839,20 @@ daily_engine.py:218: AttributeError
 ____________ test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك _____________
 
     def test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك():
->       assert 'bike.gross_cost' in (ROOT/'depreciation.py').read_text(encoding='utf-8') and 'BIKE_GROSS_ASSET_COST' not in (ROOT/'depreciation.py').read_text(encoding='utf-8')
-E       assert ('bike.gross_cost' in '"""Chapter 8 depreciation and ownership write-off rules."""\n\nfrom __future__ import annotations\n\nfrom dataclasses...ciationResult",\n    "OwnershipWriteoffResult",\n    "apply_daily_depreciation",\n    "apply_ownership_writeoff",\n]\n')
-E        +  where '"""Chapter 8 depreciation and ownership write-off rules."""\n\nfrom __future__ import annotations\n\nfrom dataclasses...ciationResult",\n    "OwnershipWriteoffResult",\n    "apply_daily_depreciation",\n    "apply_ownership_writeoff",\n]\n' = read_text(encoding='utf-8')
-E        +    where read_text = (PosixPath('/home/runner/work/motorcycle-simulation/motorcycle-simulation') / 'depreciation.py').read_text
+        p=Project(); initialize_accounting(p)
+        bike=Bike('BX','INITIAL',date(2026,12,26),date(2027,1,1),gross_cost=360000,accumulated_depreciation=100,net_book_value=359900,current_state=BikeState.OWNED_TRANSFERRED,pending_writeoff_today=True)
+        p.bikes.append(bike)
+        p.gross_bike_assets=360000
+        p.accumulated_depreciation=100
+        old_accumulated=bike.accumulated_depreciation
+        project_accumulated_before=p.accumulated_depreciation
+        result=apply_ownership_writeoff(bike.gross_cost,bike.accumulated_depreciation)
+        assert result.writeoff_amount == bike.gross_cost - old_accumulated
+        assert result.project_accumulated_depreciation_delta == -old_accumulated
+>       daily_engine._begin_day(p,date(2031,1,1))
+E       TypeError: _begin_day() takes 1 positional argument but 2 were given
 
-tests/test_acceptance_16_v2.py:708: AssertionError
+tests/test_acceptance_16_v2.py:718: TypeError
 -------------------- generated xml file: /tmp/v2_junit.xml ---------------------
 =========================== short test summary info ============================
 FAILED tests/test_acceptance_16_v2.py::test_008_شراء_توسع_بـ350000_يخصم_من_cash_و_partner1_rb_معا - AttributeError: 'Project' object has no attribute '_day_metrics'
@@ -925,29 +864,18 @@ FAILED tests/test_acceptance_16_v2.py::test_016_لا_شراء_توسع_جديد_
 FAILED tests/test_acceptance_16_v2.py::test_017_استمرار_تمويل_PREP_بعد_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_043_الثانوي_يفسخ_عند_10000 - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_045_يوم_النضج_يستحق_ايجارا_عاديا - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
-FAILED tests/test_acceptance_16_v2.py::test_046_يوم_النضج_ليس_اول_يوم_تسوية - AssertionError: assert (<BikeState.OW..._TRANSFERRED'> == 'POST_MATURITY_SETTLEMENT'
+FAILED tests/test_acceptance_16_v2.py::test_046_يوم_النضج_ليس_اول_يوم_تسوية - AssertionError: assert (<BikeState.PO...Y_SETTLEMENT'> == 'POST_MATURITY_SETTLEMENT'
   
-  - POST_MATURITY_SETTLEMENT
-  + OWNED_TRANSFERRED)
-FAILED tests/test_acceptance_16_v2.py::test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول - AssertionError: assert None == datetime.date(2031, 1, 4)
- +  where None = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...nt_if_applicable=359950, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
+    POST_MATURITY_SETTLEMENT and datetime.date(2031, 1, 2) is None)
+ +  where datetime.date(2031, 1, 2) = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...ount_if_applicable=9000, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
+FAILED tests/test_acceptance_16_v2.py::test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول - AssertionError: assert datetime.date(2031, 1, 2) == datetime.date(2031, 1, 4)
+ +  where datetime.date(2031, 1, 2) = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r...ount_if_applicable=None, balance_before=None, balance_after=None, trigger_reason='', notes='')], receivables_ledger=[]).settlement_start_date
  +  and   datetime.date(2031, 1, 4) = date(2031, 1, 4)
 FAILED tests/test_acceptance_16_v2.py::test_051_اكتمال_السداد_في_اليوم_3 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_054_فشل_التسوية_بعد_تجاوز_اليوم_30 - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
-FAILED tests/test_acceptance_16_v2.py::test_073_عقد_ثانوي_ثان_مستاجر_جديد - AssertionError: assert (0 == 1)
- +  where 0 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=0, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-FAILED tests/test_acceptance_16_v2.py::test_074_عقد_ثانوي_ثالث - AssertionError: assert 2 == 3
- +  where 2 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=2, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-FAILED tests/test_acceptance_16_v2.py::test_075_عقد_ثانوي_رابع - AssertionError: assert 3 == 4
- +  where 3 = Bike(bike_id='T000011', source=<BikeSource.INITIAL: 'INITIAL'>, purchase_date=datetime.date(2026, 12, 26), scheduled_r..._count=0, secondary_cycle_count=3, usage_days=0, lifecycle_cycle_number=1, lifecycle_history=[], receivables_ledger=[]).secondary_cycle_count
-FAILED tests/test_acceptance_16_v2.py::test_077_عداد_الجمعة_يبدأ_من_صفر_مع_كل_عقد_ثانوي - AssertionError: assert 7 == 0
- +  where 7 = Contract(contract_id='CT00000001', bike_id='T000011', tenant_id='TN00000001', guarantor_id='GR00000001', contract_type...2031, 1, 4), maturity_date=None, status=<ContractStatus.ACTIVE: 'ACTIVE'>, total_due=0, total_paid=0, friday_counter=7).friday_counter
 FAILED tests/test_acceptance_16_v2.py::test_080_السماح_بالشراء_في_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_082_استمرار_الدراجة_المشتراة_في_2030_12_31 - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_085_لا_اغلاق_مع_PREP_غير_مكتملة - assert not True
- +  where True = closure_preconditions_met(Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=0, guara...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]), datetime.date(2031, 1, 1))
- +    where datetime.date(2031, 1, 1) = date(2031, 1, 1)
 FAILED tests/test_acceptance_16_v2.py::test_090_تحصيل_الثانوي_قبل_الاغلاق_في_نفس_اليوم - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_091_رسم_الجمعة_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_092_الاستهلاك_في_يوم_الاغلاق - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
@@ -955,11 +883,8 @@ FAILED tests/test_acceptance_16_v2.py::test_093_انهاء_العقود_الثا
 FAILED tests/test_acceptance_16_v2.py::test_094_انشاء_مطالبة_ADMINISTRATIVE_CLOSURE_للمتأخرات - AssertionError: Final_Net_Project_Equity must equal Total_Equity after M17
 FAILED tests/test_acceptance_16_v2.py::test_096_AR_صفر_بعد_الاغلاق - assert 100 == 0
  +  where 100 = Project(project_cash=0, partner1_reinvestment_balance=0, partner2_reinvestment_balance=0, accounts_receivable=100, gua...t_rollforward=[], equity_rollforward=[], daily_snapshots=[], daily_balance_checks=[], execution_trace=[], error_log=[]).accounts_receivable
-FAILED tests/test_acceptance_16_v2.py::test_111_منع_ازدواج_ايراد_التحصيل - AttributeError: 'str' object has no attribute 'value'
 FAILED tests/test_acceptance_16_v2.py::test_114_منع_ازدواج_مصروف_التجهيز - AttributeError: 'Project' object has no attribute '_day_metrics'
 FAILED tests/test_acceptance_16_v2.py::test_145_فشل_التسوية_وسقوط_التمليك - AttributeError: 'Project' object has no attribute '_recovery_rate_pct'
 FAILED tests/test_acceptance_16_v2.py::test_147_شراء_في_آخر_يوم_مسموح - AttributeError: 'Project' object has no attribute '_day_metrics'
-FAILED tests/test_acceptance_16_v2.py::test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك - assert ('bike.gross_cost' in '"""Chapter 8 depreciation and ownership write-off rules."""\n\nfrom __future__ import annotations\n\nfrom dataclasses...ciationResult",\n    "OwnershipWriteoffResult",\n    "apply_daily_depreciation",\n    "apply_ownership_writeoff",\n]\n')
- +  where '"""Chapter 8 depreciation and ownership write-off rules."""\n\nfrom __future__ import annotations\n\nfrom dataclasses...ciationResult",\n    "OwnershipWriteoffResult",\n    "apply_daily_depreciation",\n    "apply_ownership_writeoff",\n]\n' = read_text(encoding='utf-8')
- +    where read_text = (PosixPath('/home/runner/work/motorcycle-simulation/motorcycle-simulation') / 'depreciation.py').read_text
-================== 32 failed, 126 passed, 5 skipped in 8.60s ===================
+FAILED tests/test_acceptance_16_v2.py::test_155_gross_cost_هو_المصدر_الوحيد_للشطب_والاستهلاك - TypeError: _begin_day() takes 1 positional argument but 2 were given
+================== 26 failed, 132 passed, 5 skipped in 8.18s ===================
