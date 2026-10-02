@@ -11,6 +11,8 @@ from accounting import balance_sheet_snapshot
 
 ROOT = Path(__file__).resolve().parent
 TEST_FILE = ROOT / "tests" / "test_acceptance_16_v2.py"
+import sys
+sys.path.insert(0, str(ROOT / "tests"))
 
 
 def load_tests():
