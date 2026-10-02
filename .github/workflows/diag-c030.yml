@@ -106,27 +106,12 @@ jobs:
 
           def call_run_day(daily, project, day, probability, scenario, trial_id, recovery_rate):
               sig = inspect.signature(daily.run_day)
-              kwargs = {
-                  "project": project,
-                  "current_date": day,
-                  "collection_probability": probability,
-                  "scenario_id": scenario,
-                  "trial_id": trial_id,
-              }
+              positional = [project, day, probability, scenario, trial_id]
               if "recovery_rate_pct" in sig.parameters:
-                  kwargs["recovery_rate_pct"] = recovery_rate
+                  positional.append(recovery_rate)
               if "master_seed" in sig.parameters:
-                  kwargs["master_seed"] = 20270101
-              accepted = {k: v for k, v in kwargs.items() if k in sig.parameters}
-              try:
-                  return daily.run_day(**accepted)
-              except TypeError:
-                  positional = [project, day, probability, scenario, trial_id]
-                  if "recovery_rate_pct" in sig.parameters:
-                      positional.append(recovery_rate)
-                  if "master_seed" in sig.parameters:
-                      positional.append(20270101)
-                  return daily.run_day(*positional)
+                  positional.append(20270101)
+              return daily.run_day(*positional)
 
           def run_trial(root: Path, label: str, probability: float, scenario: str, trial_id: int,
                         recovery_rate: int, pin_current_to_old: bool = False,
