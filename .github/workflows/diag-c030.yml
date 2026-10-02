@@ -1,4 +1,5 @@
 name: diag-c030
+# diagnostic-only workflow
 
 on:
   push:
