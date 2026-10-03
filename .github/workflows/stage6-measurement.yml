@@ -1,0 +1,478 @@
+name: stage6-measurement
+
+on:
+  push:
+    branches: ["tmp/stage6-measure-20261003"]
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      STAGE6_MODE: smoke
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Stage 6 measurement
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf results_stage6
+          mkdir -p results_stage6
+
+          cat > /tmp/stage6_measure.py <<'PY'
+          from __future__ import annotations
+
+          import csv
+          import gzip
+          import json
+          import os
+          import resource
+          import time
+          from collections import Counter, defaultdict
+          from dataclasses import asdict
+          from pathlib import Path
+
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+
+          import constants
+          import daily_engine
+          import monte_carlo
+
+          RESULTS = Path("results_stage6")
+          SCENARIOS = tuple(constants.SCENARIO_IDS)
+          COLLECTION_LEVELS = ("C100", "C085", "C070", "C050", "C030")
+          G_LEVELS = ("G100", "G070", "G050", "G030", "G000")
+          TOP_EVENT_TYPES = 10
+
+          def scenario_sort_key(scenario_id: str):
+              collection, recovery = scenario_id.split("_", 1)
+              return (COLLECTION_LEVELS.index(collection), G_LEVELS.index(recovery))
+
+          def run_trial(scenario_id: str, trial_id: int, master_seed: int) -> dict:
+              collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(
+                  scenario_id
+              )
+              daily_rows = []
+
+              def capture_day(project, current_date):
+                  daily_rows.append(
+                      monte_carlo._daily_snapshot(project, current_date, trial_id)
+                  )
+
+              started = time.perf_counter()
+              project = daily_engine.run_deterministic_trial(
+                  recovery_rate_pct=recovery_rate_pct,
+                  trial_id=trial_id,
+                  scenario_id=scenario_id,
+                  master_seed=master_seed,
+                  collection_probability=collection_probability,
+                  on_day_end=capture_day,
+              )
+              elapsed = time.perf_counter() - started
+
+              result = monte_carlo._trial_result_from_project(
+                  project,
+                  scenario_id=scenario_id,
+                  collection_probability=collection_probability,
+                  recovery_rate_pct=recovery_rate_pct,
+                  trial_id=trial_id,
+              )
+
+              event_counts = Counter(
+                  event.event_type.value for event in project.event_log
+              )
+              rss_kb = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+
+              if scenario_id == "C100_G100":
+                  expected = {
+                      "final_net_project_equity": 209671000,
+                      "partner1_final_entitlement": 146769700,
+                      "partner2_final_entitlement": 62901300,
+                      "final_cash": 209671000,
+                      "final_close_date": "2033-01-06",
+                      "daily_balance_checks": 2198,
+                  }
+                  observed = {
+                      "final_net_project_equity": result.final_net_project_equity,
+                      "partner1_final_entitlement": result.partner1_final_entitlement,
+                      "partner2_final_entitlement": result.partner2_final_entitlement,
+                      "final_cash": result.final_cash,
+                      "final_close_date": result.final_close_date,
+                      "daily_balance_checks": len(project.daily_balance_checks),
+                  }
+                  assert observed == expected, json.dumps(
+                      {"expected": expected, "observed": observed},
+                      ensure_ascii=False,
+                      sort_keys=True,
+                  )
+
+              return {
+                  "scenario_id": scenario_id,
+                  "trial_id": trial_id,
+                  "master_seed": master_seed,
+                  "days": len(project.daily_balance_checks),
+                  "elapsed_seconds": elapsed,
+                  "contracts": len(project.contracts),
+                  "event_log": len(project.event_log),
+                  "event_type_counts": dict(sorted(event_counts.items())),
+                  "top_event_types": event_counts.most_common(TOP_EVENT_TYPES),
+                  "rss_max_kb": rss_kb,
+                  "final_close_date": result.final_close_date,
+                  "trial_result": asdict(result),
+                  "daily_rows": daily_rows,
+              }
+
+          def write_jsonl(path: Path, rows):
+              with path.open("w", encoding="utf-8") as handle:
+                  for row in rows:
+                      handle.write(
+                          json.dumps(
+                              row,
+                              ensure_ascii=False,
+                              sort_keys=True,
+                              separators=(",", ":"),
+                          )
+                          + "\n"
+                      )
+
+          def write_gz_jsonl(path: Path, rows):
+              with gzip.open(path, "wt", encoding="utf-8") as handle:
+                  for row in rows:
+                      handle.write(
+                          json.dumps(
+                              row,
+                              ensure_ascii=False,
+                              sort_keys=True,
+                              separators=(",", ":"),
+                          )
+                          + "\n"
+                      )
+
+          def scenario_summary(rows):
+              if not rows:
+                  raise ValueError("rows must not be empty")
+              event_type_totals = defaultdict(float)
+              for row in rows:
+                  for event_type, count in row["event_type_counts"].items():
+                      event_type_totals[event_type] += count
+              count = len(rows)
+              top = sorted(
+                  (
+                      (name, total / count)
+                      for name, total in event_type_totals.items()
+                  ),
+                  key=lambda item: (-item[1], item[0]),
+              )[:TOP_EVENT_TYPES]
+              return {
+                  "scenario_id": rows[0]["scenario_id"],
+                  "trial_count": count,
+                  "mean_elapsed_seconds": sum(r["elapsed_seconds"] for r in rows) / count,
+                  "min_elapsed_seconds": min(r["elapsed_seconds"] for r in rows),
+                  "max_elapsed_seconds": max(r["elapsed_seconds"] for r in rows),
+                  "mean_days": sum(r["days"] for r in rows) / count,
+                  "max_days": max(r["days"] for r in rows),
+                  "mean_contracts": sum(r["contracts"] for r in rows) / count,
+                  "mean_event_log": sum(r["event_log"] for r in rows) / count,
+                  "mean_rss_max_kb": sum(r["rss_max_kb"] for r in rows) / count,
+                  "top_event_types_mean_count": top,
+              }
+
+          def format_seconds(seconds: float) -> str:
+              return f"{seconds:.6f}"
+
+          def run_smoke():
+              smoke_scenarios = (
+                  "C100_G100",
+                  "C085_G100",
+                  "C070_G100",
+                  "C050_G100",
+                  "C030_G100",
+              )
+              rows = []
+              for scenario_id in smoke_scenarios:
+                  row = run_trial(
+                      scenario_id,
+                      1,
+                      constants.MASTER_SEED if scenario_id == "C100_G100"
+                      else constants.MASTER_SEED + 1,
+                  )
+                  rows.append(row)
+              smoke_summary = [scenario_summary([row]) for row in rows]
+              report = {
+                  "mode": "smoke",
+                  "cpu_count": os.cpu_count(),
+                  "workflow_timeout_minutes": 45,
+                  "rows": [
+                      {
+                          key: value
+                          for key, value in row.items()
+                          if key not in {"trial_result", "daily_rows"}
+                      }
+                      for row in rows
+                  ],
+                  "rough_total_seconds": sum(
+                      row["elapsed_seconds"] for row in rows
+                  ) * 20 * 300 / 5,
+                  "artifact_bytes": 0,
+              }
+              write_jsonl(
+                  RESULTS / "smoke_trials.jsonl",
+                  report["rows"],
+              )
+              (RESULTS / "smoke_report.json").write_text(
+                  json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+                  + "\n",
+                  encoding="utf-8",
+              )
+              print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+
+          def run_full():
+              all_rows = []
+              summary_rows = []
+
+              for scenario_id in sorted(SCENARIOS, key=scenario_sort_key):
+                  trial_ids = (1,) if scenario_id.startswith("C100_") else (1, 2, 3, 4, 5)
+                  scenario_rows = []
+                  for trial_id in trial_ids:
+                      seed = (
+                          constants.MASTER_SEED
+                          if scenario_id.startswith("C100_")
+                          else constants.MASTER_SEED + trial_id
+                      )
+                      row = run_trial(scenario_id, trial_id, seed)
+                      scenario_rows.append(row)
+                      public_row = {
+                          key: value
+                          for key, value in row.items()
+                          if key not in {"trial_result", "daily_rows"}
+                      }
+                      all_rows.append(public_row)
+                      print(
+                          "TRIAL "
+                          + json.dumps(public_row, ensure_ascii=False, sort_keys=True),
+                          flush=True,
+                      )
+                  summary_rows.append(scenario_summary(scenario_rows))
+
+              # Size measurement: 20 repetitions for C085_G100 and C050_G100.
+              size_rows = []
+              for scenario_id in ("C085_G100", "C050_G100"):
+                  trial_rows = []
+                  daily_records = []
+                  for trial_id in range(1, 21):
+                      row = run_trial(
+                          scenario_id,
+                          trial_id,
+                          constants.MASTER_SEED + trial_id,
+                      )
+                      trial_rows.append(row)
+                      for daily in row["daily_rows"]:
+                          daily_records.append(
+                              {
+                                  "scenario_id": scenario_id,
+                                  "trial_id": trial_id,
+                                  **daily,
+                              }
+                          )
+
+                  target_dir = RESULTS / scenario_id
+                  target_dir.mkdir(parents=True, exist_ok=True)
+
+                  parquet_path = target_dir / "trials_summary.parquet"
+                  pq.write_table(
+                      pa.Table.from_pylist(
+                          [row["trial_result"] for row in trial_rows]
+                      ),
+                      parquet_path,
+                  )
+
+                  jsonl_gz_path = target_dir / "daily_slices.jsonl.gz"
+                  write_gz_jsonl(jsonl_gz_path, daily_records)
+
+                  parquet_bytes = parquet_path.stat().st_size
+                  jsonl_gz_bytes = jsonl_gz_path.stat().st_size
+                  size_rows.append(
+                      {
+                          "scenario_id": scenario_id,
+                          "trial_count": 20,
+                          "parquet_bytes_20": parquet_bytes,
+                          "jsonl_gz_bytes_20": jsonl_gz_bytes,
+                          "parquet_bytes_projected_300": parquet_bytes * 300 / 20,
+                          "jsonl_gz_bytes_projected_300": jsonl_gz_bytes * 300 / 20,
+                      }
+                  )
+
+              # Scaling table.
+              by_scenario = {
+                  row["scenario_id"]: row
+                  for row in summary_rows
+              }
+              non_c100 = [
+                  row for row in summary_rows
+                  if not row["scenario_id"].startswith("C100_")
+              ]
+              c100 = [
+                  row for row in summary_rows
+                  if row["scenario_id"].startswith("C100_")
+              ]
+
+              scaling_rows = []
+              for row in summary_rows:
+                  mean_seconds = row["mean_elapsed_seconds"]
+                  scaling_rows.append(
+                      {
+                          "scenario_id": row["scenario_id"],
+                          "mean_seconds_per_trial": mean_seconds,
+                          "expected_300_sequential_seconds": (
+                              mean_seconds * 300
+                              if not row["scenario_id"].startswith("C100_")
+                              else mean_seconds
+                          ),
+                          "expected_300_4_workers_theoretical_seconds": (
+                              mean_seconds * 300 / 4
+                              if not row["scenario_id"].startswith("C100_")
+                              else mean_seconds
+                          ),
+                      }
+                  )
+
+              total_rows = []
+              for n in (300, 350, 400):
+                  sequential = (
+                      sum(row["mean_elapsed_seconds"] for row in c100) * 1
+                      + sum(row["mean_elapsed_seconds"] for row in non_c100) * n
+                  )
+                  theoretical_4_workers = (
+                      sum(row["mean_elapsed_seconds"] for row in c100) * 1
+                      + sum(row["mean_elapsed_seconds"] for row in non_c100) * n / 4
+                  )
+                  total_rows.append(
+                      {
+                          "target_total": 5 + 20 * n,
+                          "non_c100_trials_per_combination": n,
+                          "c100_trials_total": 5,
+                          "sequential_seconds": sequential,
+                          "theoretical_4_worker_seconds": theoretical_4_workers,
+                      }
+                  )
+
+              global_longest = max(
+                  all_rows,
+                  key=lambda row: row["elapsed_seconds"],
+              )
+              all_measurement_public = all_rows
+
+              report = {
+                  "mode": "full",
+                  "cpu_count": os.cpu_count(),
+                  "workflow_timeout_minutes": 45,
+                  "scenario_count": len(summary_rows),
+                  "trial_measurement_rows": len(all_measurement_public),
+                  "scenario_summaries": summary_rows,
+                  "trial_rows": all_measurement_public,
+                  "size_measurements": size_rows,
+                  "scaling": {
+                      "per_scenario": scaling_rows,
+                      "totals": total_rows,
+                  },
+                  "global_longest_trial": {
+                      "scenario_id": global_longest["scenario_id"],
+                      "trial_id": global_longest["trial_id"],
+                      "elapsed_seconds": global_longest["elapsed_seconds"],
+                      "rss_max_kb": global_longest["rss_max_kb"],
+                  },
+                  "c100_golden_checked": True,
+                  "golden": {
+                      "final_net_project_equity": 209671000,
+                      "partner1_final_entitlement": 146769700,
+                      "partner2_final_entitlement": 62901300,
+                      "final_cash": 209671000,
+                      "final_close_date": "2033-01-06",
+                      "daily_balance_checks": 2198,
+                  },
+              }
+
+              write_jsonl(RESULTS / "trial_metrics.jsonl", all_measurement_public)
+              write_jsonl(RESULTS / "scenario_summary.jsonl", summary_rows)
+              write_jsonl(RESULTS / "scaling.jsonl", scaling_rows + total_rows)
+              write_jsonl(RESULTS / "size_measurements.jsonl", size_rows)
+
+              with (RESULTS / "top_event_types.csv").open(
+                  "w", encoding="utf-8", newline=""
+              ) as handle:
+                  writer = csv.writer(handle)
+                  writer.writerow(
+                      ["scenario_id", "trial_count", "mean_event_type", "mean_count"]
+                  )
+                  for row in summary_rows:
+                      for event_type, mean_count in row["top_event_types_mean_count"]:
+                          writer.writerow(
+                              [
+                                  row["scenario_id"],
+                                  row["trial_count"],
+                                  event_type,
+                                  f"{mean_count:.6f}",
+                              ]
+                          )
+
+              (RESULTS / "stage6_report.json").write_text(
+                  json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+                  + "\n",
+                  encoding="utf-8",
+              )
+
+              print(
+                  json.dumps(
+                      {
+                          "mode": "full",
+                          "cpu_count": report["cpu_count"],
+                          "workflow_timeout_minutes": 45,
+                          "trial_measurement_rows": report["trial_measurement_rows"],
+                          "scenario_count": report["scenario_count"],
+                          "size_measurements": size_rows,
+                          "scaling_totals": total_rows,
+                          "global_longest_trial": report["global_longest_trial"],
+                          "golden": report["golden"],
+                      },
+                      ensure_ascii=False,
+                      sort_keys=True,
+                  )
+              )
+
+          if os.environ["STAGE6_MODE"] == "smoke":
+              run_smoke()
+          elif os.environ["STAGE6_MODE"] == "full":
+              run_full()
+          else:
+              raise SystemExit("Unsupported STAGE6_MODE")
+
+          PY
+
+          python /tmp/stage6_measure.py
+          echo "STAGE6_MODE=$STAGE6_MODE"
+          echo "RESULTS_BYTES=$(du -sb results_stage6 | cut -f1)"
+
+      - name: Upload Stage 6 measurement artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-measurement-results
+          path: results_stage6
+          if-no-files-found: error
