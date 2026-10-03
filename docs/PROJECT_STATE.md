@@ -41,7 +41,7 @@
 - المجموعات الأخرى في Run 94 بقيت PASS: Chapter 10 = `2 passed in 0.02s`، Chapter 11 = `3 passed in 0.01s`، Chapter 12 M1-M17 = `3 passed in 0.02s`، Chapter 13 = `6 passed in 0.02s`، paths 2-6 = `5 passed in 0.03s`، no-time-cap = `1 passed in 1.49s`، roll-forward + C100 = `1 passed in 35.03s`.
 - الشرط الحسابي المتعلق بالـroll-forward لم يفشل مستقلاً؛ الاختبار والتدفق الخاصان بالمسار 1 نجحا.
 ### المرحلة 3أ
-الحالة: **NOT STARTED / NOT APPROVED**
+الحالة: **PASS** — Run **115** — GitHub run id `37060162170`.
 
 وجود ملفات تجريبية مرتبطة بـ3أ في `main` لا يُعد بدءاً أو قبولاً للمرحلة. هذه الملفات تدخل في الجرد بوصفها `STALE_PENDING_REBUILD` إلى أن يعاد بناؤها من الصفر وفق المرجع وقرارات المشروع.
 
@@ -112,11 +112,7 @@
 وتوجد في الأرشيف شرائح مصدر مضغوطة `stage7_source/source.b64.*`، بينما `state.json` التاريخي يسجل تشغيلات قبول سابقة منفصلة عن حالة main الحالية.
 
 البنود المؤجلة/المعلقة المعتمدة:
-- **127: DEFERRED** — مدخل المرحلة 5؛ مع adjudication لاحق لمسألة artifact.
 - **158: ADJUDICATION_REQUIRED**.
-- **159: DEFERRED** — مدخل المرحلة 5.
-- **160: DEFERRED** — مدخل المرحلة 5.
-- **161: DEFERRED** — مدخل المرحلة 5؛ مع adjudication لمسألة صيغة التخزين.
 - بوابة الـ163 النهائية: المرحلة 9، لكن إدخال مجموعات الاختبار يتم طبقيّاً كما اعتمد الآن، وليس دفعة واحدة.
 
 ---
@@ -219,13 +215,27 @@
 **stage3a-verification:** Run **115** — success — GitHub run id `37060162170`  
 **stage3b-verification:** Run **94** — success — GitHub run id `37060161894`  
 **Stage 4 Acceptance Port:** Run **43** — success — GitHub run id `37060161884`  
-**v2:** `158 passed / 0 failed / 4 deferred / 1 adjudication`، وملف `results/v2_output.txt` سجل `158 passed, 5 skipped in 8.77s`.  
-**اختبارات 127/159/160/161:** DEFERRED.  
+**v2:** `162 passed / 0 failed / 0 deferred / 1 adjudication`، وملف `results/v2_output.txt` سجل `162 passed, 1 skipped in 9.03s`.  
+**اختبارات 127/159/160/161:** لا DEFERRED.  
 **اختبار 158:** ADJUDICATION_REQUIRED.  
-**Stage 3A:** NOT STARTED / NOT APPROVED.  
+**Stage 3A:** PASS — Run `115` — GitHub run id `37060162170`.  
 **Stage 5 Round 1:** PASS — Run `37062820926` — C100_G100 مطابق للقيم الذهبية.
 **Stage 5 Round 2:** PASS — Run `37064457223` — التسلسلي/التوازي والبصمات الثلاث متطابقة، `all_match=true`.
 **Stage 5 Round 3:** PASS للقياس الفعلي — Run `37068980072`.
+**Round 4 المؤقت:** PASS — Run `37077181116` — SHA `c4aa99dcaf452e5a9d3923079437a12990943bc1`.
+**Round 4 على main:** PASS — Run `37129605565` — commit `b40cd888fe1287085f9b67a5f3356c9695785ab7`.
+**Round 5 على الفرع:** PASS — Run `37086194110` — SHA `825b7cd5024c2ec3e5ccda2e930552d4dcd98b40`.
+**Round 5 على main:** PASS — Run `37129844454` — commit `a64bdc03c484f0979a29a4a1054eb33c9d6ee4d0`.
+**main الحالي:** `25e0d677996bc3746ea7aadda5b99847a8c58271`.
+**Stage 4 v2 على main:** Run `37129844454` — commit `a64bdc03c484f0979a29a4a1054eb33c9d6ee4d0` — `162/0/0/1`.
+**fixtures المؤقتة لـ Stage 5:** `du -sb results_stage5 = 821261` بايت.
+
+### تنويهات Stage 5 المعتمدة
+- `6005/7005/8005` أعداد تكرارات، وليست أحجام bytes مؤكدة.
+- أرقام Round 3 هي شرائح كل تكرار، وليست جدول `DAILY_DISTRIBUTION`.
+- `C085` و`C050` لم تُقَسا بعد.
+- التقدير نطاق، وليس قيمة واحدة.
+- `du -sb` لا يُستعمل للتقدير الكلي.
 
 ### قياسات Round 3 الفعلية
 - `C070_G100`: 300 تكرار، `1331.188912015s` إجمالي، `4.437296373383333s/تكرار`، 4 أنوية، Parquet `7233257` بايت، JSONL.gz `11379674` بايت، أطول تكرار `2214` يوماً، `active_trial_count_series_ok=true`.
@@ -314,4 +324,4 @@
 - **master_seed:** يُمرر في سلسلة اشتقاق الرميات باستخدام SHA-256.
 - **execution_trace:** اختياري ويُفعّل في الاختبار فقط.
 
-الحالة: **DEFERRED TO STAGE 3B**.
+الحالة: **PASS**.
