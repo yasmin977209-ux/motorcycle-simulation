@@ -1,0 +1,157 @@
+name: Stage 6.5 CP2 Matrix
+
+on:
+  push:
+    branches:
+      - "tmp/stage6.5-cp2-20261003"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+timeout-minutes: 45
+
+concurrency:
+  group: stage6.5-cp2-20261003
+  cancel-in-progress: false
+
+jobs:
+  matrix-strategy:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Run chunk
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m scripts.stage6_5_run_chunk \
+            --scenario C070_G100 \
+            --chunk-id ${{ matrix.chunk }} \
+            --chunk-size 375 \
+            --log-events False \
+            --baseline-compare 10
+
+      - name: Measure chunk
+        run: |
+          cat "results_stage6_5/chunk_${{ matrix.chunk }}/chunk_metadata.json"
+
+      - name: Upload chunk artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-5-cp2-chunk-${{ matrix.chunk }}
+          path: results_stage6_5/chunk_${{ matrix.chunk }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  aggregate:
+    name: Aggregate chunk results
+    needs: matrix-strategy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Download chunk artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage6-5-cp2-chunk-*
+          path: results_stage6_5/artifacts
+          merge-multiple: false
+
+      - name: Aggregate chunk results
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          from pathlib import Path
+
+          import pyarrow.parquet as pq
+
+          import monte_carlo
+
+          root = Path("results_stage6_5/artifacts")
+          all_results = []
+          elapsed = []
+
+          for metadata_path in sorted(root.rglob("chunk_metadata.json")):
+              metadata = json.loads(
+                  metadata_path.read_text(encoding="utf-8")
+              )
+              elapsed.append(
+                  float(metadata["elapsed_seconds_total"])
+              )
+
+          for parquet_path in sorted(root.rglob("trials_summary.parquet")):
+              all_results.extend(
+                  monte_carlo.TrialResult(**row)
+                  for row in pq.read_table(parquet_path).to_pylist()
+              )
+
+          all_results.sort(key=lambda item: item.trial_id)
+          max_chunk_elapsed = max(elapsed)
+          aggregate_sha256 = monte_carlo.fingerprint_trial_results(
+              all_results
+          )
+          max_parallel = 8
+          wave_count = (
+              len(elapsed) + max_parallel - 1
+          ) // max_parallel
+          wall_clock_estimate = (
+              wave_count * max_chunk_elapsed
+          )
+
+          payload = {
+              "total_trials": len(all_results),
+              "aggregate_sha256": aggregate_sha256,
+              "max_chunk_elapsed": max_chunk_elapsed,
+              "wall_clock_estimate": wall_clock_estimate,
+          }
+
+          output = Path("results_stage6_5")
+          output.mkdir(parents=True, exist_ok=True)
+          (output / "aggregate_summary.json").write_text(
+              json.dumps(
+                  payload,
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  indent=2,
+              ) + "\n",
+              encoding="utf-8",
+          )
+
+          print(
+              json.dumps(
+                  payload,
+                  ensure_ascii=False,
+                  sort_keys=True,
+              )
+          )
+          PY
