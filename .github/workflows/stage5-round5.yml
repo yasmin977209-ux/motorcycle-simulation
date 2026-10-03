@@ -341,10 +341,9 @@ jobs:
           assert result["daily_balance_checks"] == 2198
           PY
       - name: Commit Stage 5 results to branch only
-        env:
-          BRANCH_NAME: $GITHUB_REF_NAME
         run: |
           set -euo pipefail
+          BRANCH_NAME="$GITHUB_REF_NAME"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           outside="$(git status --short | awk '$2 !~ /^results_stage5\// {print}')"
