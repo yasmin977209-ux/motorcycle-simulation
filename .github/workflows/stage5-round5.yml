@@ -97,24 +97,56 @@ jobs:
               pq.write_table(pa.Table.from_pylist(daily_distribution),
                              f"{RESULTS}/daily_distribution.parquet")
           
+              PY
+
+          cat > /tmp/stage5_round5_worker_manifest.py <<'PY2'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          from dataclasses import asdict
+
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def stable_sha(value):
+              payload = json.dumps(
+                  value,
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  separators=(",", ":"),
+                  default=str,
+              ).encode("utf-8")
+              return hashlib.sha256(payload).hexdigest()
+
+          def main():
               trial_ids = (1, 2, 3)
+
               seq_results, seq_slices = monte_carlo.run_trials_sequentially(
-                  "C070_G100", trial_ids
+                  "C070_G100",
+                  trial_ids,
               )
+
               par2_results, par2_slices = monte_carlo.run_trials_parallel(
-                  "C070_G100", trial_ids, 2
+                  "C070_G100",
+                  trial_ids,
+                  2,
               )
+
               par4_results, par4_slices = monte_carlo.run_trials_parallel(
-                  "C070_G100", trial_ids, 4
+                  "C070_G100",
+                  trial_ids,
+                  4,
               )
-          
+
               def by_id(results):
                   return {result.trial_id: result for result in results}
-          
+
               seq_by_id = by_id(seq_results)
               par2_by_id = by_id(par2_results)
               par4_by_id = by_id(par4_results)
-          
+
               manifest = []
               for trial_id in trial_ids:
                   seq_result = asdict(seq_by_id[trial_id])
@@ -123,11 +155,18 @@ jobs:
                   seq_daily = seq_slices[trial_id]
                   p2_daily = par2_slices[trial_id]
                   p4_daily = par4_slices[trial_id]
+
                   manifest.append({
                       "scenario_id": "C070_G100",
                       "trial_id": trial_id,
-                      "exact_1_eq_2": seq_result == p2_result and seq_daily == p2_daily,
-                      "exact_1_eq_4": seq_result == p4_result and seq_daily == p4_daily,
+                      "exact_1_eq_2": (
+                          seq_result == p2_result
+                          and seq_daily == p2_daily
+                      ),
+                      "exact_1_eq_4": (
+                          seq_result == p4_result
+                          and seq_daily == p4_daily
+                      ),
                       "trial_result_sha256_1": stable_sha(seq_result),
                       "trial_result_sha256_2": stable_sha(p2_result),
                       "trial_result_sha256_4": stable_sha(p4_result),
@@ -135,13 +174,47 @@ jobs:
                       "daily_slice_sha256_2": stable_sha(p2_daily),
                       "daily_slice_sha256_4": stable_sha(p4_daily),
                   })
-          
-              assert all(row["exact_1_eq_2"] and row["exact_1_eq_4"] for row in manifest)
-              with open(f"{RESULTS}/worker_equivalence_manifest.json", "w", encoding="utf-8") as handle:
-                  json.dump(manifest, handle, ensure_ascii=False, indent=2, sort_keys=True)
+
+              assert all(
+                  row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                  for row in manifest
+              )
+
+              with open(
+                  f"{RESULTS}/worker_equivalence_manifest.json",
+                  "w",
+                  encoding="utf-8",
+              ) as handle:
+                  json.dump(
+                      manifest,
+                      handle,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
                   handle.write("\n")
-          
-              print(json.dumps({
+
+              print(
+                  json.dumps(
+                      {
+                          "worker_manifest_rows": len(manifest),
+                          "exact_all": all(
+                              row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                              for row in manifest
+                          ),
+                      },
+                      ensure_ascii=False,
+                      sort_keys=True,
+                  )
+              )
+
+          if __name__ == "__main__":
+              main()
+          PY2
+
+          python /tmp/stage5_round5_worker_manifest.py
+
+          print(json.dumps({
                   "artifacts": [
                       "results_stage5/trials_summary.parquet",
                       "results_stage5/daily_distribution.parquet",
