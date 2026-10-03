@@ -23,6 +23,241 @@ jobs:
       - name: Install requirements
         run: python -m pip install -r requirements.txt
 
+      - name: Build Stage 5 fixtures for v2 parquet tests
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf results_stage5
+          mkdir -p results_stage5
+
+          cat > /tmp/stage5_round5_build.py <<'PY'
+          from __future__ import annotations
+
+          import json
+          from dataclasses import asdict
+
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def main():
+              c100_result, c100_daily = monte_carlo.run_single_trial(
+                  "C100_G100", 1, master_seed=20270101
+              )
+              c100_results = [c100_result]
+              c100_slices = {1: c100_daily}
+              selection = monte_carlo.select_representative_trials(c100_results)
+
+              assert c100_result.final_net_project_equity == 209671000
+              assert c100_result.partner1_final_entitlement == 146769700
+              assert c100_result.partner2_final_entitlement == 62901300
+              assert c100_result.final_cash == 209671000
+              assert c100_result.final_close_date == "2033-01-06"
+              assert len(c100_daily) == 2198
+
+              pq.write_table(
+                  pa.Table.from_pylist([asdict(c100_result)]),
+                  f"{RESULTS}/trials_summary.parquet",
+              )
+
+              pq.write_table(
+                  pa.Table.from_pylist([
+                      {"selection_key": key, "trial_id": int(trial_id)}
+                      for key, trial_id in selection.items()
+                  ]),
+                  f"{RESULTS}/selection.parquet",
+              )
+
+              with open(
+                  f"{RESULTS}/C100_G100_trial_{selection.p50_trial_id:06d}_daily.json",
+                  "w",
+                  encoding="utf-8",
+              ) as handle:
+                  json.dump(
+                      c100_daily,
+                      handle,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
+                  handle.write("\n")
+
+              long_distribution = monte_carlo.build_daily_distribution(
+                  c100_results,
+                  c100_slices,
+              )
+
+              wide_by_date = {}
+              for row in long_distribution:
+                  current = wide_by_date.setdefault(
+                      row["date"],
+                      {
+                          "date": row["date"],
+                          "active_trial_count": row["active_trial_count"],
+                      },
+                  )
+                  for metric in (
+                      "Cash",
+                      "Net_Equity",
+                      "Active_Bikes",
+                      "Owned_Transferred_Bikes",
+                      "Pending_Claims",
+                  ):
+                      current[f"{row['quantile_name']}_{metric}"] = row[metric]
+
+              daily_distribution = [
+                  wide_by_date[key]
+                  for key in sorted(wide_by_date)
+              ]
+
+              pq.write_table(
+                  pa.Table.from_pylist(daily_distribution),
+                  f"{RESULTS}/daily_distribution.parquet",
+              )
+
+              print(json.dumps({
+                  "artifacts": [
+                      "results_stage5/trials_summary.parquet",
+                      "results_stage5/daily_distribution.parquet",
+                      "results_stage5/selection.parquet",
+                  ],
+                  "c100_golden": {
+                      "final_net_project_equity": c100_result.final_net_project_equity,
+                      "partner1_final_entitlement": c100_result.partner1_final_entitlement,
+                      "partner2_final_entitlement": c100_result.partner2_final_entitlement,
+                      "final_cash": c100_result.final_cash,
+                      "final_close_date": c100_result.final_close_date,
+                      "daily_balance_checks": len(c100_daily),
+                  },
+                  "selection": selection,
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY
+
+          python /tmp/stage5_round5_build.py
+
+          cat > /tmp/stage5_round5_worker_manifest.py <<'PY2'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          from dataclasses import asdict
+
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def stable_sha(value):
+              payload = json.dumps(
+                  value,
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  separators=(",", ":"),
+                  default=str,
+              ).encode("utf-8")
+              return hashlib.sha256(payload).hexdigest()
+
+          def main():
+              trial_ids = (1, 2, 3)
+
+              seq_results, seq_slices = monte_carlo.run_trials_sequentially(
+                  "C070_G100",
+                  trial_ids,
+              )
+
+              par2_results, par2_slices = monte_carlo.run_trials_parallel(
+                  "C070_G100",
+                  trial_ids,
+                  2,
+              )
+
+              par4_results, par4_slices = monte_carlo.run_trials_parallel(
+                  "C070_G100",
+                  trial_ids,
+                  4,
+              )
+
+              def by_id(results):
+                  return {result.trial_id: result for result in results}
+
+              seq_by_id = by_id(seq_results)
+              par2_by_id = by_id(par2_results)
+              par4_by_id = by_id(par4_results)
+
+              manifest = []
+              for trial_id in trial_ids:
+                  seq_result = asdict(seq_by_id[trial_id])
+                  p2_result = asdict(par2_by_id[trial_id])
+                  p4_result = asdict(par4_by_id[trial_id])
+                  seq_daily = seq_slices[trial_id]
+                  p2_daily = par2_slices[trial_id]
+                  p4_daily = par4_slices[trial_id]
+
+                  manifest.append({
+                      "scenario_id": "C070_G100",
+                      "trial_id": trial_id,
+                      "exact_1_eq_2": (
+                          seq_result == p2_result
+                          and seq_daily == p2_daily
+                      ),
+                      "exact_1_eq_4": (
+                          seq_result == p4_result
+                          and seq_daily == p4_daily
+                      ),
+                      "trial_result_sha256_1": stable_sha(seq_result),
+                      "trial_result_sha256_2": stable_sha(p2_result),
+                      "trial_result_sha256_4": stable_sha(p4_result),
+                      "daily_slice_sha256_1": stable_sha(seq_daily),
+                      "daily_slice_sha256_2": stable_sha(p2_daily),
+                      "daily_slice_sha256_4": stable_sha(p4_daily),
+                  })
+
+              assert all(
+                  row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                  for row in manifest
+              )
+
+              with open(
+                  f"{RESULTS}/worker_equivalence_manifest.json",
+                  "w",
+                  encoding="utf-8",
+              ) as handle:
+                  json.dump(
+                      manifest,
+                      handle,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
+                  handle.write("\n")
+
+              print(json.dumps({
+                  "worker_manifest_rows": len(manifest),
+                  "exact_all": all(
+                      row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                      for row in manifest
+                  ),
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY2
+
+          python /tmp/stage5_round5_worker_manifest.py
+      - name: Measure temporary Stage 5 fixtures
+        shell: bash
+        run: du -sb results_stage5
+
+      - name: Measure temporary Stage 5 fixtures
+        shell: bash
+        run: du -sb results_stage5
+
       - name: Full Stage 5 Round 3 gates
         env:
           PYTHONPATH: .
@@ -75,6 +310,8 @@ jobs:
             python -m pytest -q tests/test_monte_carlo_round2.py
             echo "== ROUND 3 =="
             python -m pytest -q tests/test_monte_carlo_round3.py
+            echo "== ROUND 4 =="
+            python -m pytest -q tests/test_monte_carlo_round4.py
             echo "== C100_G100 GOLDEN =="
             python - <<'PY'
           import json
