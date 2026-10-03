@@ -54,7 +54,7 @@ Total across these five pytest invocations: 81 passed, 0 failed.
 ```text
 {"elapsed_seconds": 3.2668478490000012, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37676, "trial_id": 1, "trial_result_sha256": "a60bc3e8cce2f3dc00c47314d9365867cb65841699fe81b2d9c49fbf8d3520a3"}
 {"elapsed_seconds": 3.2596894059999926, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37852, "trial_id": 2, "trial_result_sha256": "7fa6a52a8d048c6ba1017e97110f3b68d20fee1c2a09c6d0fa0131cf87b58549"}
-{"elapsed_seconds": 3.2550805230000037, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37768, "trial_id": 3, "trial_result_sha256": "a172127e92ee93a37338985132da2c296178dc801cfa4b845fa4d0f7f8851"}
+{"elapsed_seconds": 3.2550805230000037, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37768, "trial_id": 3, "trial_result_sha256": "a172127e92ee93a37338985132da2c296178dc801cfa4b845314fa4d0f7f8851"}
 {"elapsed_seconds": 3.241626970999988, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37724, "trial_id": 4, "trial_result_sha256": "88cc39c72f5a83d6107ddc03c15afba1fe656cc108d24d73dc64e0f23cc351fc"}
 {"elapsed_seconds": 3.242415403000024, "event_log_len": 0, "lifecycle_history_len_bike0": 0, "log_events": false, "rss_kb": 37728, "trial_id": 5, "trial_result_sha256": "18a9c6731a8e6ac2d2a2bc270bd9f787476a48513daf5f397f07d440f2859fc"}
 ```
