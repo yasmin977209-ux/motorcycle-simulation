@@ -255,6 +255,10 @@ jobs:
           PY2
 
           python /tmp/stage5_round5_worker_manifest.py
+      - name: Measure temporary Stage 5 fixtures
+        shell: bash
+        run: du -sb results_stage5
+
       - name: Run Chapter 16 v2 acceptance
         id: acceptance
         continue-on-error: true
@@ -263,6 +267,11 @@ jobs:
         run: |
           set -o pipefail
           python -m pytest -q tests/test_acceptance_16_v2.py -v 2>&1 | tee /tmp/v2_output.txt
+
+      - name: Round 4
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_monte_carlo_round4.py
 
       - name: Publish v2 results to main
         if: always()
