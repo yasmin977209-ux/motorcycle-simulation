@@ -169,8 +169,8 @@
 | 156 | `_source_text` | `_source_text` | لا |
 | 157 | `_source_text` | `_source_text` | لا |
 | 158 | `read_text` | `pytest.mark.skip; read_text` | لا |
-| 159 | `json.loads; select_representative_trials; read_text; TrialResult` | `pytest.mark.skip; json.loads; select_representative_trials; read_text; TrialResult` | لا |
-| 160 | `json.loads; read_text; exists` | `pytest.mark.skip; json.loads; read_text; exists` | لا |
-| 161 | `json.loads; read_text; date.fromisoformat; isoformat` | `pytest.mark.skip; json.loads; read_text; date.fromisoformat; isoformat` | لا |
+| 159 | `json.loads; select_representative_trials; TrialResult; trials_summary.json` | `pyarrow.parquet.read_table; select_representative_trials; TrialResult; trials_summary.parquet` | لا |
+| 160 | `json.loads; trials_summary.json; representative_trials; daily JSON` | `pyarrow.parquet.read_table; trials_summary.parquet; selection.parquet; daily JSON` | لا |
+| 161 | `json.loads; daily_distribution.json` | `pyarrow.parquet.read_table; daily_distribution.parquet` | لا |
 | 162 | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | `_new_project; _mark_all_initial_owned; closure_preconditions_met` | لا |
 | 163 | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; execute_dynamic_closure` | `_new_project; _mark_all_initial_owned; create_guarantee_claim; p.guarantee_claims.append; invoke_closure_and_get_state` | لا |

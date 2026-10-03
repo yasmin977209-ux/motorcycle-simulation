@@ -609,7 +609,6 @@ def test_125_رأس_المال_لا_يضاف_مرتين(): p=_deterministic_tria
 def test_126_إعادة_التشغيل_بنفس_البذرة_حرفيا():
     a=derive_seed(MASTER_SEED,'C085_G070',1,'BK1',date(2031,1,4),'PRIMARY_COLLECTION'); b=derive_seed(MASTER_SEED,'C085_G070',1,'BK1',date(2031,1,4),'PRIMARY_COLLECTION'); assert a==b and rng_draw(a)==rng_draw(b)
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5 — مقارنة التسلسلي والمتوازي')
 def test_127_تطابق_التسلسلي_والمتوازي():
     import json
     manifest = json.loads((ROOT / 'results_stage5' / 'worker_equivalence_manifest.json').read_text(encoding='utf-8'))
@@ -734,30 +733,28 @@ def test_158_الاحدث_يلغي_الاقدم_توثيقيا():
     ref=Path('/mnt/data/المرجع_النهائي_الموحد_المعتمد.md').read_text(encoding='utf-8'); assert 'الأحدث يلغي الأقدم' in ref
 
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5')
 def test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط():
-    import json
+    import pyarrow.parquet as pq
     from monte_carlo import TrialResult, select_representative_trials
-    rows = json.loads((ROOT / 'results_stage5' / 'trials_summary.json').read_text(encoding='utf-8'))
+    rows = pq.read_table(ROOT / 'results_stage5' / 'trials_summary.parquet').to_pylist()
     trials = [TrialResult(scenario_id='C100_G100', collection_probability=1.0, recovery_rate_pct=100, trial_id=r['trial_id'], final_close_date=r['final_close_date'], final_net_project_equity=r['final_net_project_equity'], final_cash=r['final_net_project_equity'], cumulative_project_profit=r['final_net_project_equity']-TOTAL_CAPITAL, operating_net_profit=r['final_net_project_equity']-TOTAL_CAPITAL+100000, termination_count=0, secondary_cycle_count=0, owned_bikes=357, held_assets=0, total_operating_revenue=0, bad_debt=0, guarantee_recovered=0, partner1_final_entitlement=(r['final_net_project_equity'] * 70) // 100, partner2_final_entitlement=r['final_net_project_equity'] - ((r['final_net_project_equity'] * 70) // 100)) for r in rows]
     sel = select_representative_trials(trials)
     assert sel.p50_trial_id == 1 and sel.p10_trial_id == 1 and sel.p90_trial_id == 1 and sel.loss_case_trial_id == 1
 
 
-@pytest.mark.skip(reason='DEFERRED: مدخلات المرحلة 5')
 def test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا():
-    import json
-    summary = json.loads((ROOT / 'results_stage5' / 'trials_summary.json').read_text(encoding='utf-8'))
-    selection = summary['representative_trials']
+    import pyarrow.parquet as pq
+    summary = pq.read_table(ROOT / 'results_stage5' / 'trials_summary.parquet').to_pylist()
+    selection_rows = pq.read_table(ROOT / 'results_stage5' / 'selection.parquet').to_pylist()
+    selection = {row['selection_key']: row['trial_id'] for row in selection_rows}
     assert set(selection) == {'p50_trial_id', 'p10_trial_id', 'p90_trial_id', 'loss_case_trial_id'}
-    assert all(selection[k] in {r['trial_id'] for r in summary['trials']} for k in selection)
+    assert all(selection[k] in {r['trial_id'] for r in summary} for k in selection)
     assert all((ROOT / 'results_stage5' / f'C100_G100_trial_{selection[k]:06d}_daily.json').exists() for k in selection)
 
 
-@pytest.mark.skip(reason='DEFERRED: DAILY_DISTRIBUTION النهائي يُبنى في المرحلة 5.')
 def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
-    import json
-    rows = json.loads((ROOT / 'results_stage5' / 'daily_distribution.json').read_text(encoding='utf-8'))
+    import pyarrow.parquet as pq
+    rows = pq.read_table(ROOT / 'results_stage5' / 'daily_distribution.parquet').to_pylist()
     assert rows and rows[0]['date'] == '2027-01-01' and rows[-1]['date'] == '2033-01-06'
     assert all((rows[i+1]['date'] > rows[i]['date']) for i in range(len(rows)-1))
 
