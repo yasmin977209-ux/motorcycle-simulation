@@ -254,9 +254,6 @@ jobs:
         shell: bash
         run: du -sb results_stage5
 
-      - name: Measure temporary Stage 5 fixtures
-        shell: bash
-        run: du -sb results_stage5
 
       - name: Full Stage 5 Round 3 gates
         env:
