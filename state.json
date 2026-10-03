@@ -1,7 +1,7 @@
 {
   "stage": "6.5",
-  "cp_completed": "CP1",
-  "sha": "124cd0a69b65a223456bf5a5557cd3417300d94e",
-  "next": "CP2",
+  "cp_completed": "CP2",
+  "sha": "3cb5e78ebcc4aa517270a15d34a4bf1640cc9a59",
+  "next": "CP3",
   "blockers": []
 }
