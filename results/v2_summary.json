@@ -1,9 +1,30 @@
 {
-  "sha": "31b50cb3a44fa9868a956dc41a428187c183a525",
-  "run_started_at": "2026-10-02T23:40:32Z",
+  "sha": "43f76abfb7ba0d60e865b8dc4bcb596adf59f659",
+  "run_started_at": "2026-10-03T01:36:30Z",
   "pass_count": 158,
-  "fail_count": 0,
-  "deferred_count": 4,
+  "fail_count": 4,
+  "deferred_count": 0,
   "adjudication_count": 1,
-  "failed_tests": []
+  "failed_tests": [
+    {
+      "id": "127",
+      "name": "test_127_تطابق_التسلسلي_والمتوازي",
+      "error": "\"\"\"\n        if \"b\" not in mode:\n            encoding = io.text_encoding(encoding)\n>       return io.open(self, mode, buffering, encoding, errors, newline)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/work/motorcycle-simulation/motorcycle-simulation/results_stage5/worker_equivalence_manifest.json'\n\n/opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/pathlib/_local.py:537: FileNotFoundError"
+    },
+    {
+      "id": "159",
+      "name": "test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط",
+      "error": "\n        if file_info.type == FileType.Directory:\n            paths_or_selector = FileSelector(path, recursive=True)\n        elif file_info.type == FileType.File:\n            paths_or_selector = [path]\n        else:\n>           raise FileNotFoundError(path)\nE           FileNotFoundError: /home/runner/work/motorcycle-simulation/motorcycle-simulation/results_stage5/trials_summary.parquet\n\n/opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/pyarrow/dataset.py:437: FileNotFoundError"
+    },
+    {
+      "id": "160",
+      "name": "test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا",
+      "error": "\n        if file_info.type == FileType.Directory:\n            paths_or_selector = FileSelector(path, recursive=True)\n        elif file_info.type == FileType.File:\n            paths_or_selector = [path]\n        else:\n>           raise FileNotFoundError(path)\nE           FileNotFoundError: /home/runner/work/motorcycle-simulation/motorcycle-simulation/results_stage5/trials_summary.parquet\n\n/opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/pyarrow/dataset.py:437: FileNotFoundError"
+    },
+    {
+      "id": "161",
+      "name": "test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات",
+      "error": "     if file_info.type == FileType.Directory:\n            paths_or_selector = FileSelector(path, recursive=True)\n        elif file_info.type == FileType.File:\n            paths_or_selector = [path]\n        else:\n>           raise FileNotFoundError(path)\nE           FileNotFoundError: /home/runner/work/motorcycle-simulation/motorcycle-simulation/results_stage5/daily_distribution.parquet\n\n/opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/pyarrow/dataset.py:437: FileNotFoundError"
+    }
+  ]
 }
