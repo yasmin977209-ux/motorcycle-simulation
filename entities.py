@@ -266,6 +266,7 @@ class Project:
     guarantors: list[Guarantor] = field(default_factory=list)
     guarantee_claims: list[GuaranteeClaim] = field(default_factory=list)
     receivables: list[ReceivableEntry] = field(default_factory=list)
+    log_events: bool = True
     event_log: list[EventLogEntry] = field(default_factory=list)
     cash_rollforward: list[dict] = field(default_factory=list)
     ar_rollforward: list[dict] = field(default_factory=list)
