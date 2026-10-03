@@ -1,0 +1,38 @@
+[
+  {
+    "daily_slice_sha256_1": "dba1cecb04fc0c9928ebbc3c6d59ac7eab470bd6fc30a1a900707c8d26644950",
+    "daily_slice_sha256_2": "dba1cecb04fc0c9928ebbc3c6d59ac7eab470bd6fc30a1a900707c8d26644950",
+    "daily_slice_sha256_4": "dba1cecb04fc0c9928ebbc3c6d59ac7eab470bd6fc30a1a900707c8d26644950",
+    "exact_1_eq_2": true,
+    "exact_1_eq_4": true,
+    "scenario_id": "C070_G100",
+    "trial_id": 1,
+    "trial_result_sha256_1": "ca6f96b4236c4bac82377ba06bc9b2068db24035dc5171892e73cd8d09ca0052",
+    "trial_result_sha256_2": "ca6f96b4236c4bac82377ba06bc9b2068db24035dc5171892e73cd8d09ca0052",
+    "trial_result_sha256_4": "ca6f96b4236c4bac82377ba06bc9b2068db24035dc5171892e73cd8d09ca0052"
+  },
+  {
+    "daily_slice_sha256_1": "173077289436f99b7f8b67ade83146979a35e49cc0a9221e19d3b1a24c47f7cc",
+    "daily_slice_sha256_2": "173077289436f99b7f8b67ade83146979a35e49cc0a9221e19d3b1a24c47f7cc",
+    "daily_slice_sha256_4": "173077289436f99b7f8b67ade83146979a35e49cc0a9221e19d3b1a24c47f7cc",
+    "exact_1_eq_2": true,
+    "exact_1_eq_4": true,
+    "scenario_id": "C070_G100",
+    "trial_id": 2,
+    "trial_result_sha256_1": "b32f0e78ea3766503948cca10bc508156962fecf2ccaa662c31cba4f1c382f1f",
+    "trial_result_sha256_2": "b32f0e78ea3766503948cca10bc508156962fecf2ccaa662c31cba4f1c382f1f",
+    "trial_result_sha256_4": "b32f0e78ea3766503948cca10bc508156962fecf2ccaa662c31cba4f1c382f1f"
+  },
+  {
+    "daily_slice_sha256_1": "25f3be23d82644a9fd2bdbe3c0f18f6f8e82e82e3f32dc553bcca9ca3742aa3c",
+    "daily_slice_sha256_2": "25f3be23d82644a9fd2bdbe3c0f18f6f8e82e82e3f32dc553bcca9ca3742aa3c",
+    "daily_slice_sha256_4": "25f3be23d82644a9fd2bdbe3c0f18f6f8e82e82e3f32dc553bcca9ca3742aa3c",
+    "exact_1_eq_2": true,
+    "exact_1_eq_4": true,
+    "scenario_id": "C070_G100",
+    "trial_id": 3,
+    "trial_result_sha256_1": "88315e79b4fec4f41e2a4518fb8260f35c2d8e0d18338a2fc6846b68f6bf20ff",
+    "trial_result_sha256_2": "88315e79b4fec4f41e2a4518fb8260f35c2d8e0d18338a2fc6846b68f6bf20ff",
+    "trial_result_sha256_4": "88315e79b4fec4f41e2a4518fb8260f35c2d8e0d18338a2fc6846b68f6bf20ff"
+  }
+]
