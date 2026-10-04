@@ -152,7 +152,7 @@ def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
     assert "STAGE7_STATE_RESET=" in preflight
     assert "STAGE7_STATE_ABSENT=" in preflight
-    assert "git/refs/heads/stage7-state/${scenario}" in preflight
+    assert "git/refs/heads/${STATE_BRANCH}" in preflight
     assert '-f "sha=${SOURCE_SHA}"' in preflight
     assert "-F force=true" in preflight
 
