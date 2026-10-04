@@ -156,3 +156,12 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
     assert gate_a["stable"] is True
     assert gate_a["previous_n"] == 450
     assert gate_a["current_n"] == 500
+
+def test_stage8_source_sha_is_literal_in_workflow() -> None:
+    text = (REPO_ROOT / ".github" / "workflows" /
+            "stage8-authoring-verify.yml").read_text(encoding="utf-8")
+    assert (
+        'SOURCE_SHA="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"'
+        in text
+    )
+    assert "${{ env.SOURCE_SHA }}" not in text

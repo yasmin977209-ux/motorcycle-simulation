@@ -22,10 +22,9 @@ jobs:
 
       - name: Fetch pinned SOURCE_SHA for diff
         shell: bash
-        env:
-          SOURCE_SHA: ${{ env.SOURCE_SHA }}
         run: |
           set -euo pipefail
+          SOURCE_SHA="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
           if ! git cat-file -e "${SOURCE_SHA}^{commit}" 2>/dev/null; then
             git fetch --depth=1 origin "${SOURCE_SHA}"
           fi
