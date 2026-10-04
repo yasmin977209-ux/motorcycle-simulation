@@ -125,7 +125,7 @@ jobs:
           class SmokeStateStore(StateStore):
               @property
               def state_branch(self) -> str:
-                  return f"stage7-pause-resume-state/{self.scenario}"
+                  return f"stage7-smoke-v2-state/{self.scenario}"
 
           store = SmokeStateStore(
               repo=os.environ["GITHUB_REPOSITORY"],
