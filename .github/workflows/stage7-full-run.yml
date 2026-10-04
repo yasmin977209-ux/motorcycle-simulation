@@ -93,11 +93,25 @@ jobs:
             git cat-file -e "${SOURCE_SHA}:${path}"
           done
           for scenario in "${SCENARIOS[@]}"; do
-            if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/stage7-state/${scenario}" >/dev/null 2>&1; then
-              gh api --method PATCH \
-                "repos/${GITHUB_REPOSITORY}/git/refs/heads/stage7-state/${scenario}" \
-                -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
-              echo "STAGE7_STATE_RESET=${scenario}"
+            STATE_BRANCH="stage7-state/${scenario}"
+            STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
+            STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
+            if gh api "${STATE_REF}" >/dev/null 2>&1; then
+              state_run_id="$(
+                gh api "${STATE_CONTENTS}" 2>/dev/null |
+                  jq -r '.content // empty' 2>/dev/null |
+                  tr -d '\n' |
+                  base64 -d 2>/dev/null |
+                  jq -r '.run_id // empty' 2>/dev/null || true
+              )"
+              if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
+                echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
+              else
+                gh api --method PATCH \
+                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
+                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
+                echo "STAGE7_STATE_RESET=${scenario}"
+              fi
             else
               echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
@@ -212,16 +226,20 @@ jobs:
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
           ARTIFACT_ID="$(
-            gh api --paginate               "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100"               --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv'             | sort -k2 | tail -1 | cut -f1
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
+              | sort -k2 | tail -1 | cut -f1
           )"
           if [ -n "${ARTIFACT_ID}" ]; then
+            echo "STAGE7_ARTIFACT_RESTORE=RUN_ID:${GITHUB_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
             gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
             mkdir -p /tmp/previous_stage7_blocks
             unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
             find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
             find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
           else
-            echo "No previous Stage 7 block artifact found."
+            echo "No previous Stage 7 block artifact found for this workflow run."
           fi
 
       - name: Adaptive scenario orchestration

@@ -157,6 +157,26 @@ def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     assert "-F force=true" in preflight
 
 
+def test_stage7_preflight_preserves_state_for_same_run_and_resets_other_runs() -> None:
+    text = _workflow_text()
+    preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    assert "STATE_CONTENTS=\"repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}\"" in preflight
+    assert "jq -r '.run_id // empty'" in preflight
+    assert 'if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then' in preflight
+    assert "STAGE7_STATE_RESUME=" in preflight
+    assert "STAGE7_STATE_RESET=" in preflight
+
+
+def test_stage7_restore_artifacts_is_scoped_to_current_workflow_run() -> None:
+    text = _workflow_text()
+    start = text.index("      - name: Restore previous scenario block artifacts when available")
+    end = text.index("      - name: Adaptive scenario orchestration", start)
+    restore = text[start:end]
+    assert "actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" in restore
+    assert "actions/artifacts?per_page=100" not in restore
+    assert "STAGE7_ARTIFACT_RESTORE=RUN_ID:" in restore
+    assert "stage7-blocks-" in restore
+
 def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
     text = _workflow_text()
     assert "JOB_STARTED_AT_EPOCH = time.time()" in text
