@@ -422,6 +422,21 @@ def test_stage7_cp3_pending_is_not_encoded_as_false() -> None:
     assert "cp3_match = None" in report
     assert "cp3_match = False" not in report
 
+def test_cp3_cross_reference_compares_only_overlapping_range() -> None:
+    text = _workflow_text()
+    start = text.index('if SCENARIO == CP3_SCENARIO:')
+    end = text.index('write_json(', start)
+    cross_reference = text[start:end]
+
+    assert "cp3_overlap = min(" in cross_reference
+    assert "len(results)" in cross_reference
+    assert "len(cp3_results)" in cross_reference
+    assert "1 <= result.trial_id <= cp3_overlap" in cross_reference
+    assert "fingerprint_trial_results(stage7_prefix)" in cross_reference
+    assert "fingerprint_trial_results(cp3_prefix)" in cross_reference
+    assert "trial_id <= 6000" not in cross_reference
+    assert "CP3_AGGREGATE_SHA256" not in cross_reference
+
 
 def test_same_run_id_different_attempt_is_allowed_by_lease() -> None:
     store = StateStore(
