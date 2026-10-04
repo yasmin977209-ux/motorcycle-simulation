@@ -86,8 +86,26 @@ def test_stage7_authoring_verify_runs_contract_tests() -> None:
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
     assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
 
-def test_stage7_timeout_contract_is_not_changed_in_commit_B() -> None:
-    assert re.search(r'JOB_TIMEOUT_MINUTES:\s*"360"', _workflow_text())
+def test_stage7_current_timeout_is_45_minutes() -> None:
+    text = _workflow_text()
+    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
+    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 45
+
+
+def test_stage7_workflow_does_not_contain_360_timeout() -> None:
+    timeout_lines = [
+        line
+        for line in _workflow_text().splitlines()
+        if "timeout" in line.lower() or "JOB_TIMEOUT_MINUTES" in line
+    ]
+    assert timeout_lines
+    assert all("360" not in line for line in timeout_lines)
+
+
+def test_stage7_timeout_change_is_documented() -> None:
+    text = _workflow_text()
+    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
+    assert "Operational orchestration cap; model logic has no max_days limit." in text
 
 def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
