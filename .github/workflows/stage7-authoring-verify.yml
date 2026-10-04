@@ -29,13 +29,16 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pyyaml
 
-      - name: AST parse
+      - name: AST parse Stage 7 helpers
         run: |
           python -c "import ast; ast.parse(open('scripts/stage7_run_trial_block.py', encoding='utf-8').read())"
+          python -c "import ast; ast.parse(open('scripts/stage7_state.py', encoding='utf-8').read())"
+          python -c "import ast; ast.parse(open('scripts/stage7_stability.py', encoding='utf-8').read())"
 
       - name: YAML lint
         run: |
           python -c "import yaml; yaml.safe_load(open('.github/workflows/stage7-full-run.yml', encoding='utf-8'))"
+          python -c "import yaml; yaml.safe_load(open('.github/workflows/stage7-authoring-verify.yml', encoding='utf-8'))"
 
       - name: Stage 7 authoring contract tests
         env:

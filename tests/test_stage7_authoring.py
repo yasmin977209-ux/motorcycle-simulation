@@ -395,3 +395,60 @@ def test_stage7_state_module_documents_same_run_id_re_run_policy() -> None:
     ).read_text(encoding="utf-8")
     assert "Same run_id across GitHub re-runs is one logical lease owner." in text
     assert "run_attempt is retained in the record for auditability only." in text
+
+def test_stage7_operational_timeout_is_45_minutes() -> None:
+    text = _workflow_text()
+    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
+    matrix = _workflow()["jobs"]["matrix-simulation"]
+    assert matrix["timeout-minutes"] == 45
+
+
+def test_stage7_workflow_no_longer_exports_unused_log_events_setting() -> None:
+    text = _workflow_text()
+    assert 'LOG_EVENTS:' not in text
+    assert 'os.environ["LOG_EVENTS"]' not in text
+
+
+def test_stage7_timeout_state_is_excluded_from_final_statistics() -> None:
+    text = _workflow_text()
+    assert 'state["included_in_final_stats"] = False' in text
+    assert '"final_stats_included": False' in text
+
+
+def test_stage7_final_report_distinguishes_404_from_other_state_errors() -> None:
+    text = _workflow_text()
+    assert "STATE_NOT_FOUND_404" in text
+    assert "STATE_REMOTE_HTTP_ERROR_" in text
+    assert "STATE_REMOTE_TRANSPORT_ERROR" in text
+
+
+def test_stage7_final_report_excludes_timeout_partial_counts() -> None:
+    text = _workflow_text()
+    assert 'is_timeout = state.get("final_status") == "timeout"' in text
+    assert '"final_trial_count": None if is_timeout else' in text
+    assert '"final_fingerprint": None if is_timeout else' in text
+
+
+def test_stage7_final_report_uses_actual_uploaded_state_path() -> None:
+    text = _workflow_text()
+    assert '**/stage7-final-{scenario}-*/state.json' in text
+
+
+def test_stage7_final_report_reports_state_path_and_error_count() -> None:
+    text = _workflow_text()
+    assert '"state_path": f"stage7-state/{scenario}/state.json"' in text
+    assert '"error_count": error_count' in text
+
+
+def test_stage7_state_initial_stats_inclusion_is_false() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert '"included_in_final_stats": False' in text
+
+
+def test_stage7_authoring_verify_parses_all_stage7_helpers() -> None:
+    text = AUTHORING_VERIFY.read_text(encoding="utf-8")
+    assert "scripts/stage7_run_trial_block.py" in text
+    assert "scripts/stage7_state.py" in text
+    assert "scripts/stage7_stability.py" in text

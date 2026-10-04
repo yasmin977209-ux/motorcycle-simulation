@@ -11,14 +11,14 @@ permissions:
 
 env:
   MASTER_SEED: "20270101"
-  LOG_EVENTS: "false"
   INITIAL_NON_C100_TRIALS: "300"
   INITIAL_C100_TRIALS: "1"
   ESCALATION_STEP: "50"
   STABILITY_CONSECUTIVE_CHECKS: "3"
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
-  JOB_TIMEOUT_MINUTES: "360"
+  # Operational orchestration cap; model logic has no max_days limit.
+  JOB_TIMEOUT_MINUTES: "45"
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   CP3_RUN_ID: "37203438351"
   CP3_SCENARIO: "C070_G100"
@@ -99,7 +99,7 @@ jobs:
           - C030_G050
           - C030_G030
           - C030_G000
-    timeout-minutes: 360
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -184,7 +184,6 @@ jobs:
           JOB_STARTED_AT: ${{ github.run_started_at }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           MASTER_SEED: ${{ env.MASTER_SEED }}
-          LOG_EVENTS: ${{ env.LOG_EVENTS }}
           INITIAL_NON_C100_TRIALS: ${{ env.INITIAL_NON_C100_TRIALS }}
           INITIAL_C100_TRIALS: ${{ env.INITIAL_C100_TRIALS }}
           ESCALATION_STEP: ${{ env.ESCALATION_STEP }}
@@ -231,7 +230,6 @@ jobs:
           RUN_ID = os.environ["RUN_ID"]
           STATE_BRANCH = f"stage7-state/{SCENARIO}"
           MASTER_SEED = int(os.environ["MASTER_SEED"])
-          LOG_EVENTS = os.environ["LOG_EVENTS"].lower() == "true"
           INITIAL_NON_C100 = int(os.environ["INITIAL_NON_C100_TRIALS"])
           INITIAL_C100 = int(os.environ["INITIAL_C100_TRIALS"])
           ESCALATION_STEP = int(os.environ["ESCALATION_STEP"])
@@ -363,6 +361,7 @@ jobs:
               if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
                   state["final_status"] = "timeout"
                   state["reason_if_not_stable"] = "job wall-clock timeout reached"
+                  state["included_in_final_stats"] = False
                   results = all_results()
                   if results:
                       state["final_fingerprint"] = (
@@ -530,6 +529,7 @@ jobs:
                   state["next_check_n"] = target_n
 
               state["stability_history"] = history
+              state["included_in_final_stats"] = state["final_status"] == "stable"
               state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
               state["artifact_identity"] = build_artifact_identity(
                   scenario=SCENARIO,
@@ -571,6 +571,7 @@ jobs:
                           "run_id": RUN_ID,
                           "trial_count": len(results),
                           "final_fingerprint": state["final_fingerprint"],
+                          "included_in_final_stats": True,
                           "cp3_reference": {
                               "required": SCENARIO == CP3_SCENARIO,
                               "run_id": os.environ["CP3_RUN_ID"] if SCENARIO == CP3_SCENARIO else None,
@@ -644,6 +645,7 @@ jobs:
           import base64
           import json
           import os
+          import urllib.error
           import urllib.parse
           import urllib.request
           from pathlib import Path
@@ -693,6 +695,7 @@ jobs:
           per_scenario = []
           for scenario in scenarios:
               state = None
+              state_error = None
               branch = f"stage7-state/{scenario}"
               try:
                   payload = get_json(
@@ -701,11 +704,23 @@ jobs:
                   state = json.loads(
                       base64.b64decode(payload["content"]).decode("utf-8")
                   )
-              except Exception:
+              except urllib.error.HTTPError as exc:
+                  if exc.code == 404:
+                      state_error = "STATE_NOT_FOUND_404"
+                  else:
+                      state_error = f"STATE_REMOTE_HTTP_ERROR_{exc.code}"
+                  state = None
+              except urllib.error.URLError:
+                  state_error = "STATE_REMOTE_TRANSPORT_ERROR"
+                  state = None
+              except (KeyError, ValueError, UnicodeError):
+                  state_error = "STATE_PARSE_ERROR"
                   state = None
 
               artifact_state_files = list(
-                  Path("/tmp/stage7-final-artifacts").glob(f"**/{scenario}/state.json")
+                  Path("/tmp/stage7-final-artifacts").glob(
+                      f"**/stage7-final-{scenario}-*/state.json"
+                  )
               )
               if state is None and artifact_state_files:
                   state = json.loads(
@@ -715,24 +730,30 @@ jobs:
               if state is None:
                   per_scenario.append({
                       "scenario": scenario,
+                      "state_path": f"stage7-state/{scenario}/state.json",
                       "final_trial_count": None,
                       "final_fingerprint": None,
                       "stable_at_n": None,
-                      "final_status": None,
-                      "reason_if_not_stable": "state.json unavailable",
+                      "final_status": "error",
+                      "reason_if_not_stable": state_error or "STATE_UNAVAILABLE",
+                      "final_stats_included": False,
                   })
               else:
+                  is_timeout = state.get("final_status") == "timeout"
                   per_scenario.append({
                       "scenario": scenario,
-                      "final_trial_count": state.get("completed_trials"),
-                      "final_fingerprint": state.get("final_fingerprint"),
+                      "state_path": f"stage7-state/{scenario}/state.json",
+                      "final_trial_count": None if is_timeout else state.get("completed_trials"),
+                      "final_fingerprint": None if is_timeout else state.get("final_fingerprint"),
                       "stable_at_n": state.get("stable_at_n"),
                       "final_status": state.get("final_status"),
                       "reason_if_not_stable": state.get("reason_if_not_stable"),
+                      "final_stats_included": bool(state.get("included_in_final_stats")),
                   })
 
           stable_count = sum(row["final_status"] == "stable" for row in per_scenario)
           timeout_count = sum(row["final_status"] == "timeout" for row in per_scenario)
+          error_count = sum(row["final_status"] == "error" for row in per_scenario)
           max_iterations_count = 0
 
           cp3_match = None
@@ -756,6 +777,7 @@ jobs:
               "total_scenarios": 25,
               "stable_count": stable_count,
               "timeout_count": timeout_count,
+              "error_count": error_count,
               "max_iterations_count": max_iterations_count,
               "per_scenario": per_scenario,
               "cross_reference": {

@@ -298,6 +298,7 @@ class StateStore:
                 "next_check_n": initial_next_check_n,
                 "final_fingerprint": None,
                 "artifact_identity": None,
+                "included_in_final_stats": False,
                 "stability_history": [],
                 "final_status": None,
                 "reason_if_not_stable": None,
