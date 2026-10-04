@@ -1,0 +1,114 @@
+name: stage8-smoke
+
+on:
+  push:
+    branches:
+      - "tmp/stage8-smoke-20261004"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: stage8-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: stage8-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Download Stage 7 C070_G100 artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage7-c070
+
+          ARTIFACT_ID="$(
+            gh api --paginate               "repos/${GITHUB_REPOSITORY}/actions/runs/37225915321/artifacts?per_page=100"               --jq '.artifacts[]
+                | select(.name | startswith("stage7-blocks-C070_G100-"))
+                | .id'               | tail -1
+          )"
+
+          test -n "${ARTIFACT_ID}"
+
+          gh api             "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip"             > /tmp/stage7-c070.zip
+
+          mkdir -p /tmp/stage7-c070/unpacked
+          unzip -q /tmp/stage7-c070.zip -d /tmp/stage7-c070/unpacked
+
+          find /tmp/stage7-c070/unpacked -type f -name "block_*.parquet" | sort
+
+      - name: Build 450-trial parquet from blocks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage8-smoke-out
+
+          python <<'PY'
+          import glob
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+
+          blocks = sorted(
+              glob.glob(
+                  "/tmp/stage7-c070/unpacked/**/block_*.parquet",
+                  recursive=True,
+              )
+          )
+          assert blocks, "no block parquet found"
+
+          tables = [pq.read_table(path) for path in blocks]
+          combined = pa.concat_tables(tables).to_pylist()
+          combined.sort(key=lambda row: row["trial_id"])
+
+          assert len(combined) == 450, f"expected 450, got {len(combined)}"
+
+          pq.write_table(
+              pa.Table.from_pylist(combined),
+              "/tmp/stage8-smoke-out/trials_summary.parquet",
+          )
+
+          print(f"BUILT_DATASET_N={len(combined)}")
+          PY
+
+      - name: Run Stage 8 smoke with resume
+        env:
+          SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python -m run_batch             --scenario C070_G100             --trials 50             --resume-from-checkpoint             --output-dir /tmp/stage8-smoke-out             --master-seed 20270101
+
+          echo "===== state.json ====="
+          cat /tmp/stage8-smoke-out/state.json
+          echo "===== statistics.json ====="
+          cat /tmp/stage8-smoke-out/statistics.json
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage8-smoke-C070_G100
+          path: /tmp/stage8-smoke-out/
+          if-no-files-found: warn
+          retention-days: 7

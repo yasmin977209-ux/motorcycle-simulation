@@ -353,6 +353,17 @@ def _checkpoint_identity_is_valid(
 
     completed_trials = int(checkpoint.get("completed_trials", 0))
     next_trial_id = int(checkpoint.get("next_trial_id", 0))
+    next_check_n = int(checkpoint.get("next_check_n", 0))
+
+    if not scenario.startswith("C100_"):
+        if next_check_n < (
+            completed_trials + constants.ITERATION_ESCALATION_STEP
+        ):
+            raise StateIntegrityError(
+                "checkpoint next_check_n is smaller than "
+                "completed_trials + escalation step"
+            )
+
     trial_id_start = int(identity.get("trial_id_start", 0))
     trial_id_end = int(identity.get("trial_id_end", 0))
     fingerprint = identity.get("fingerprint_sha256")
