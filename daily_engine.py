@@ -144,6 +144,9 @@ def _event(
     contract_id: str | None = None,
     amount: int | None = None,
 ) -> None:
+    if not project.log_events:
+        return
+
     event = EventLogEntry(
         event_id=f"EV{len(project.event_log) + 1:08d}",
         date=current_date,
@@ -1128,8 +1131,10 @@ def run_deterministic_trial(
     master_seed: int = constants.MASTER_SEED,
     collection_probability: float = 1.0,
     on_day_end: Callable[[Project, date], None] | None = None,
+    log_events: bool = True,
 ) -> Project:
     project = create_initial_project(recovery_rate_pct=recovery_rate_pct)
+    project.log_events = log_events
     current = constants.PROJECT_START_DATE
     while not project.simulation_stopped:
         run_day(

@@ -1,0 +1,238 @@
+name: stage6.5-cp1-log-events
+
+on:
+  push:
+    branches:
+      - "tmp/stage6.5-20261003"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cp1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: CP1 unit test
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_stage6_5_log_events.py -v 2>&1 | tee cp1_pytest_stdout.txt
+
+      - name: Stage 1 regression
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_stage1.py
+
+      - name: Stage 2 regression
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_stage2.py tests/test_stage2_entities_additions.py
+
+      - name: Stage 3A regression
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_stage3a.py
+
+      - name: Stage 3B and reference paths regression
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_stage3b_accounting.py tests/test_stage3b_partner_equity.py tests/test_stage3b_m_order.py tests/test_stage3b_closure.py tests/test_stage3b_path1.py tests/test_stage3b_paths.py tests/test_stage3b_no_time_cap.py tests/test_stage3b_determinism.py
+
+      - name: CP1 measurement
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/cp1_worker.py <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import resource
+          import sys
+          import time
+          from dataclasses import asdict
+
+          import daily_engine
+          import monte_carlo
+
+          scenario_id = "C085_G100"
+          trial_id = int(sys.argv[1])
+          log_events = sys.argv[2].lower() == "true"
+
+          started = time.perf_counter()
+          project = daily_engine.run_deterministic_trial(
+              scenario_id=scenario_id,
+              trial_id=trial_id,
+              log_events=log_events,
+          )
+          elapsed = time.perf_counter() - started
+
+          collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(
+              scenario_id
+          )
+          result = monte_carlo._trial_result_from_project(
+              project,
+              scenario_id=scenario_id,
+              collection_probability=collection_probability,
+              recovery_rate_pct=recovery_rate_pct,
+              trial_id=trial_id,
+          )
+          payload = json.dumps(
+              asdict(result),
+              ensure_ascii=False,
+              sort_keys=True,
+              separators=(",", ":"),
+              default=str,
+          ).encode("utf-8")
+          digest = hashlib.sha256(payload).hexdigest()
+          rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+
+          print(json.dumps({
+              "trial_id": trial_id,
+              "log_events": log_events,
+              "elapsed_seconds": elapsed,
+              "rss_kb": rss_kb,
+              "trial_result_sha256": digest,
+              "event_log_len": len(project.event_log),
+              "lifecycle_history_len_bike0": len(project.bikes[0].lifecycle_history),
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+
+          python - <<'PY' | tee cp1_measurement_stdout.txt
+          from __future__ import annotations
+
+          import json
+          import math
+          import subprocess
+          import sys
+
+          rows = []
+          for log_events in (True, False):
+              for trial_id in range(1, 6):
+                  proc = subprocess.run(
+                      [
+                          sys.executable,
+                          "/tmp/cp1_worker.py",
+                          str(trial_id),
+                          str(log_events),
+                      ],
+                      check=True,
+                      capture_output=True,
+                      text=True,
+                  )
+                  line = proc.stdout.strip().splitlines()[-1]
+                  row = json.loads(line)
+                  rows.append(row)
+                  print(json.dumps(row, ensure_ascii=False, sort_keys=True))
+
+          by_key = {(row["trial_id"], row["log_events"]): row for row in rows}
+
+          comparisons = []
+          for trial_id in range(1, 6):
+              true_row = by_key[(trial_id, True)]
+              false_row = by_key[(trial_id, False)]
+              sha_match = true_row["trial_result_sha256"] == false_row["trial_result_sha256"]
+              if not sha_match:
+                  raise AssertionError(f"SHA mismatch trial_id={trial_id}")
+              if not (true_row["event_log_len"] > 0):
+                  raise AssertionError(f"True event_log not positive trial_id={trial_id}")
+              if false_row["event_log_len"] != 0:
+                  raise AssertionError(f"False event_log not zero trial_id={trial_id}")
+              comparisons.append({
+                  "trial_id": trial_id,
+                  "T_True_s": true_row["elapsed_seconds"],
+                  "T_False_s": false_row["elapsed_seconds"],
+                  "difference_pct": (
+                      (false_row["elapsed_seconds"] - true_row["elapsed_seconds"])
+                      / true_row["elapsed_seconds"]
+                      * 100.0
+                  ),
+                  "RSS_True_KB": true_row["rss_kb"],
+                  "RSS_False_KB": false_row["rss_kb"],
+                  "dlog": true_row["event_log_len"] - false_row["event_log_len"],
+                  "SHA_match": "نعم",
+              })
+
+          avg_true_t = sum(x["T_True_s"] for x in comparisons) / len(comparisons)
+          avg_false_t = sum(x["T_False_s"] for x in comparisons) / len(comparisons)
+          avg_true_rss = sum(x["RSS_True_KB"] for x in comparisons) / len(comparisons)
+          avg_false_rss = sum(x["RSS_False_KB"] for x in comparisons) / len(comparisons)
+
+          if not (avg_false_t < avg_true_t):
+              raise AssertionError(
+                  f"False mean time is not lower: true={avg_true_t} false={avg_false_t}"
+              )
+          if not (avg_false_rss < avg_true_rss):
+              raise AssertionError(
+                  f"False mean RSS is not lower: true={avg_true_rss} false={avg_false_rss}"
+              )
+
+          summary = {
+              "scenario_id": "C085_G100",
+              "trials": 5,
+              "all_sha_match": all(x["SHA_match"] == "نعم" for x in comparisons),
+              "all_true_event_log_positive": True,
+              "all_false_event_log_zero": True,
+              "mean_T_True_s": avg_true_t,
+              "mean_T_False_s": avg_false_t,
+              "mean_RSS_True_KB": avg_true_rss,
+              "mean_RSS_False_KB": avg_false_rss,
+              "mean_time_difference_pct": (
+                  (avg_false_t - avg_true_t) / avg_true_t * 100.0
+              ),
+              "time_false_lower": avg_false_t < avg_true_t,
+              "rss_false_lower": avg_false_rss < avg_true_rss,
+          }
+
+          print("TABLE")
+          print("| trial_id | T_True (s) | T_False (s) | الفرق % | RSS_True (KB) | RSS_False (KB) | dlog | SHA match (نعم/لا) |")
+          print("|---:|---:|---:|---:|---:|---:|---:|:---:|")
+          for row in comparisons:
+              print(
+                  f'| {row["trial_id"]} | {row["T_True_s"]:.6f} | '
+                  f'{row["T_False_s"]:.6f} | {row["difference_pct"]:.6f} | '
+                  f'{row["RSS_True_KB"]} | {row["RSS_False_KB"]} | '
+                  f'{row["dlog"]} | {row["SHA_match"]} |'
+              )
+          print("SUMMARY")
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Save CP1 evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6.5-cp1-evidence
+          path: |
+            cp1_pytest_stdout.txt
+            cp1_measurement_stdout.txt
+          if-no-files-found: error
+          retention-days: 7

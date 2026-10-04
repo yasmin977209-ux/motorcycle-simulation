@@ -1,0 +1,61 @@
+name: Stage 6.5 CP3 Aggregator and Verification
+
+on:
+  push:
+    branches:
+      - tmp/stage6.5-cp3-20261003
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  STAGE6_5_MAX_PARALLEL: 16
+
+jobs:
+  cp3-aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Download CP2 chunk artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 37138843161
+          pattern: stage6-5-cp2-chunk-*
+          path: results_stage6_5/artifacts
+          merge-multiple: false
+
+      - name: Run CP3 aggregate
+        run: |
+          python -m scripts.stage6_5_aggregate \
+            --chunks-dir results_stage6_5/artifacts \
+            --output-dir results_stage6_5 \
+            --max-parallel "${STAGE6_5_MAX_PARALLEL}"
+
+      - name: Run CP3 verification
+        run: python -m scripts.stage6_5_verify_cp3
+
+      - name: Show CP3 outputs
+        run: |
+          cat results_stage6_5/aggregate_summary.json
+          cat results_stage6_5/cp3_verification.json
+
+      - name: Upload CP3 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-5-cp3-results
+          path: results_stage6_5/

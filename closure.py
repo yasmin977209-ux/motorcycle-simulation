@@ -53,6 +53,9 @@ def _metric(project: Project, key: str, amount: int) -> None:
 
 
 def _event(project: Project, current_date: date, bike_id: str, event_type: EventType, contract_id: str | None = None, amount: int | None = None) -> None:
+    if not project.log_events:
+        return
+
     event = EventLogEntry(
         event_id=f"EV{len(project.event_log) + 1:08d}",
         date=current_date,
