@@ -19,6 +19,7 @@ env:
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
   JOB_TIMEOUT_MINUTES: "360"
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   CP3_RUN_ID: "37203438351"
   CP3_SCENARIO: "C070_G100"
   CP3_AGGREGATE_SHA256: "c09d39cd3f79e9460d16df4fc2a6a47b6b029983e2f596de4af4009bc169a14a"
@@ -335,22 +336,53 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
-      - name: Determine stable source SHA from main
-        id: source
+      - name: Verify pinned model source SHA
         shell: bash
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
         run: |
           set -euo pipefail
-          git fetch origin main --depth=1
-          SOURCE_SHA="$(git rev-parse origin/main)"
-          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
-          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+
+          MODEL_FILES=(
+            constants.py
+            dateutils.py
+            rng.py
+            entities.py
+            state_machine.py
+            daily_engine.py
+            accounting.py
+            collection.py
+            guarantee.py
+            friday.py
+            settlement.py
+            closure.py
+            partner_equity.py
+            monte_carlo.py
+          )
+
+          for path in "${MODEL_FILES[@]}"; do
+            if ! git cat-file -e "${SOURCE_SHA}:${path}"; then
+              echo "PINNED_SOURCE_FILE_MISSING=${path}" >&2
+              exit 1
+            fi
+          done
+
+          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "MODEL_SOURCE_DRIFT_DETECTED" >&2
+            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
+
+          echo "SOURCE_SHA=${SOURCE_SHA}"
+          echo "MODEL_SOURCE_BOUNDARY_OK"
 
       - name: Initialize or restore scenario state
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           SCENARIO: ${{ matrix.scenario }}
-          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
           RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -416,7 +448,7 @@ jobs:
           PYTHONPATH: .
           GH_TOKEN: ${{ github.token }}
           SCENARIO: ${{ matrix.scenario }}
-          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           JOB_STARTED_AT: ${{ github.run_started_at }}
