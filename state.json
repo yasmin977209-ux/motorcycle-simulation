@@ -1,1 +1,13 @@
-{"stage":"6.5","cp_completed":"CLOSED","sha":"26743c383817e91582270f90bed1c8638ebe59a9","next":"stage7","blockers":[]}
+{
+  "stage": "6.5",
+  "cp_completed": "CLOSED",
+  "sha": "26743c383817e91582270f90bed1c8638ebe59a9",
+  "main_after_merge": "63d469f772fb7ea4c52adbdc0c0ea3ffc4368886",
+  "next": "stage7",
+  "blockers": [],
+  "stage7_prerequisites": {
+    "undefined_business_rules_resolved": true,
+    "cp_workflows_deleted": "c4a54ca21f4ec0f760aa5fada563fc1b68255612",
+    "stage7_design_approved": "conditional_pending_script_source"
+  }
+}
