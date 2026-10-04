@@ -41,13 +41,13 @@ jobs:
 
       - name: Run CP3 aggregate
         run: |
-          python scripts/stage6_5_aggregate.py \
+          python -m scripts.stage6_5_aggregate \
             --chunks-dir results_stage6_5/artifacts \
             --output-dir results_stage6_5 \
             --max-parallel "${STAGE6_5_MAX_PARALLEL}"
 
       - name: Run CP3 verification
-        run: python scripts/stage6_5_verify_cp3.py
+        run: python -m scripts.stage6_5_verify_cp3
 
       - name: Show CP3 outputs
         run: |
