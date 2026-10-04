@@ -1,26 +1,45 @@
 {
   "artifact_identity": {
-    "fingerprint_sha256": "b5eb6c7b46e576d545936318628457ca0a4a1bcbecc6e343b45648831b487b87",
+    "fingerprint_sha256": "0f76a6b5196a3b3b6e09878b4bef81d508ebbcd101d6e7d4ea6a3bac275070d2",
     "scenario": "C070_G100",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "trial_id_end": 5,
+    "trial_id_end": 10,
     "trial_id_start": 1
   },
-  "completed_trials": 5,
-  "final_fingerprint": "b5eb6c7b46e576d545936318628457ca0a4a1bcbecc6e343b45648831b487b87",
+  "completed_trials": 10,
+  "direct_baseline_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "final_fingerprint": "0f76a6b5196a3b3b6e09878b4bef81d508ebbcd101d6e7d4ea6a3bac275070d2",
   "final_status": null,
   "included_in_final_stats": false,
   "lease": {
-    "acquired_at": "2026-10-04T17:27:45.920301Z",
-    "expires_at": "2026-10-04T18:27:45.920301Z",
+    "acquired_at": "2026-10-04T17:28:46.880690Z",
+    "expires_at": "2026-10-04T18:28:46.880690Z",
     "owner": "37220402626",
     "run_attempt": 2,
     "run_id": "37220402626"
   },
   "next_check_n": 300,
-  "next_trial_id": 6,
+  "next_trial_id": 11,
   "reason_if_not_stable": null,
-  "resume_verified": false,
+  "resume_execution_ids": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "resume_verified": true,
   "run_attempt": 2,
   "run_id": "37220402626",
   "scenario": "C070_G100",
