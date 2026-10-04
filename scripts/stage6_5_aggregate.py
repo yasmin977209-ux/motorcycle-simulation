@@ -170,8 +170,7 @@ def main() -> None:
             sort_keys=True,
             indent=2,
         )
-        + "
-",
+        + "\n",
         encoding="utf-8",
     )
 
