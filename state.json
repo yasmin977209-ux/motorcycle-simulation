@@ -1,7 +1,7 @@
 {
   "stage": "6.5",
   "cp_completed": "CP5",
-  "sha": "PENDING_CP5_COMMIT",
+  "sha": "15b5c6e2c54ade5c1ddce07aecdc53d86a60ad95",
   "next": "stage7",
   "blockers": []
 }
