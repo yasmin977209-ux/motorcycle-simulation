@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import json
 from datetime import datetime, timedelta, timezone
 import re
 from pathlib import Path
@@ -470,3 +472,102 @@ def test_stage7_authoring_verify_parses_all_stage7_helpers() -> None:
     assert "scripts/stage7_run_trial_block.py" in text
     assert "scripts/stage7_state.py" in text
     assert "scripts/stage7_stability.py" in text
+
+
+def test_stage7_state_store_rejects_stage_6_5_schema() -> None:
+    store = StateStore(
+        repo="example/repo",
+        token="token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="100",
+        run_attempt="1",
+        local_path=REPO_ROOT / "state.json",
+    )
+    state = {
+        "stage": "6.5",
+        "cp_completed": "CP5",
+        "sha": "15b5c6e2c54ade5c1ddce07aecdc53d86a60ad95",
+        "next": "stage7",
+        "blockers": [],
+    }
+    with pytest.raises(StateIntegrityError):
+        store._validate_identity(state)
+
+
+def test_stage7_state_store_accepts_only_stage_7_schema() -> None:
+    store = StateStore(
+        repo="example/repo",
+        token="token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="100",
+        run_attempt="1",
+        local_path=REPO_ROOT / "state.json",
+    )
+    state = {
+        "stage": "7",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "completed_trials": 0,
+        "next_trial_id": 1,
+        "stability_history": [],
+    }
+    store._validate_identity(state)
+
+
+def test_stage7_new_branch_does_not_inherit_root_state() -> None:
+    root_state = {
+        "stage": "6.5",
+        "cp_completed": "CP5",
+        "sha": "15b5c6e2c54ade5c1ddce07aecdc53d86a60ad95",
+        "next": "stage7",
+        "blockers": [],
+    }
+
+    class FakeSourceBackedStateStore(StateStore):
+        def __init__(self) -> None:
+            super().__init__(
+                repo="example/repo",
+                token="token",
+                scenario="C070_G100",
+                source_sha=APPROVED_SOURCE_SHA,
+                run_id="100",
+                run_attempt="1",
+                local_path=REPO_ROOT / "state.json",
+            )
+            self.branch_sha = APPROVED_SOURCE_SHA
+            self.state = dict(root_state)
+            self.state_blob_sha = "root-state-blob"
+            self.put_payloads = []
+
+        def _request(self, method, path, payload=None):
+            if method == "GET" and path == self._branch_ref_path():
+                return {"object": {"sha": self.branch_sha}}
+            if method == "GET" and path == self._state_contents_path():
+                raw = json.dumps(self.state).encode("utf-8")
+                return {
+                    "sha": self.state_blob_sha,
+                    "content": base64.b64encode(raw).decode("ascii"),
+                }
+            if method == "PUT" and path == "contents/state.json":
+                self.put_payloads.append(dict(payload))
+                raw = base64.b64decode(payload["content"]).decode("utf-8")
+                self.state = json.loads(raw)
+                self.state_blob_sha = "stage7-state-blob"
+                self.branch_sha = "stage7-checkpoint-commit"
+                return {"content": {"sha": self.state_blob_sha}}
+            raise AssertionError(f"unexpected request: {method} {path}")
+
+    store = FakeSourceBackedStateStore()
+    state, _ = store.acquire()
+
+    assert store.branch_sha != APPROVED_SOURCE_SHA
+    assert store.put_payloads[0]["sha"] == "root-state-blob"
+    assert state["stage"] == "7"
+    assert state["scenario"] == "C070_G100"
+    assert state["source_sha"] == APPROVED_SOURCE_SHA
+    assert state["completed_trials"] == 0
+    assert state["next_trial_id"] == 1
+    assert state["stability_history"] == []
+    assert store.state["stage"] == "7"

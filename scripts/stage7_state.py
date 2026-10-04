@@ -173,10 +173,38 @@ class StateStore:
         branch = urllib.parse.quote(self.state_branch, safe="/")
         return f"git/ref/heads/{branch}"
 
-    def ensure_state_branch(self) -> None:
+    def _initial_state(self) -> dict[str, object]:
+        initial_next_check_n = (
+            1 if self.scenario.startswith("C100_") else 300
+        )
+        return {
+            "stage": "7",
+            "scenario": self.scenario,
+            "source_sha": self.source_sha,
+            "run_id": self.run_id,
+            "run_attempt": int(self.run_attempt),
+            "completed_trials": 0,
+            "next_trial_id": 1,
+            "next_check_n": initial_next_check_n,
+            "final_fingerprint": None,
+            "artifact_identity": None,
+            "included_in_final_stats": False,
+            "stability_history": [],
+            "final_status": None,
+            "reason_if_not_stable": None,
+            "stable_at_n": None,
+            "lease": self._lease_record(),
+        }
+
+    def ensure_state_branch(self) -> bool:
         try:
-            self._request("GET", self._branch_ref_path())
-            return
+            payload = self._request("GET", self._branch_ref_path())
+            branch_sha = payload.get("object", {}).get("sha")
+            if branch_sha is None:
+                raise StateIntegrityError(
+                    "state branch ref missing commit SHA"
+                )
+            return str(branch_sha) == self.source_sha
         except StateRemoteNotFound:
             pass
         try:
@@ -189,16 +217,27 @@ class StateStore:
                 },
             )
         except StateConflict:
-            self._request("GET", self._branch_ref_path())
+            payload = self._request("GET", self._branch_ref_path())
+            branch_sha = payload.get("object", {}).get("sha")
+            if branch_sha is None:
+                raise StateIntegrityError(
+                    "state branch ref missing commit SHA"
+                )
+            return str(branch_sha) == self.source_sha
+        return True
 
-    def load_state(self):
+    def _load_state_unvalidated(self):
         payload = self._request("GET", self._state_contents_path())
         raw = base64.b64decode(str(payload["content"])).decode("utf-8")
         state = json.loads(raw)
         if not isinstance(state, dict):
             raise StateIntegrityError("state.json root must be an object")
-        self._validate_identity(state)
         return state, str(payload["sha"])
+
+    def load_state(self):
+        state, blob_sha = self._load_state_unvalidated()
+        self._validate_identity(state)
+        return state, blob_sha
 
     def _put_state(self, state, blob_sha):
         raw = json.dumps(
@@ -247,16 +286,30 @@ class StateStore:
         return expiry > _utc_now()
 
     def _validate_identity(self, state):
-        if state.get("scenario") not in (None, self.scenario):
+        if state.get("stage") != "7":
+            raise StateIntegrityError(
+                f"State stage mismatch: "
+                f"{state.get('stage')} != 7"
+            )
+        if state.get("scenario") != self.scenario:
             raise StateIntegrityError(
                 f"State scenario mismatch: "
                 f"{state.get('scenario')} != {self.scenario}"
             )
-        if state.get("source_sha") not in (None, self.source_sha):
+        if state.get("source_sha") != self.source_sha:
             raise StateIntegrityError(
                 "State source SHA mismatch: "
                 f"{state.get('source_sha')} != {self.source_sha}"
             )
+        for key in (
+            "completed_trials",
+            "next_trial_id",
+            "stability_history",
+        ):
+            if key not in state:
+                raise StateIntegrityError(
+                    f"state.json missing required Stage 7 field: {key}"
+                )
 
     def _write_local(self, state):
         self.local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -281,30 +334,30 @@ class StateStore:
         return remote_sha
 
     def acquire(self):
-        self.ensure_state_branch()
+        branch_needs_initialization = self.ensure_state_branch()
+
+        if branch_needs_initialization:
+            state = self._initial_state()
+            try:
+                existing = self._request(
+                    "GET",
+                    self._state_contents_path(),
+                )
+            except StateRemoteNotFound:
+                blob_sha = self._put_state(state, None)
+            else:
+                blob_sha = self._put_state(
+                    state,
+                    str(existing["sha"]),
+                )
+            remote_sha = self._verify_remote_equals(state)
+            self._write_local(state)
+            return state, remote_sha
+
         try:
             state, blob_sha = self.load_state()
         except StateRemoteNotFound:
-            initial_next_check_n = (
-                1 if self.scenario.startswith("C100_") else 300
-            )
-            state = {
-                "scenario": self.scenario,
-                "source_sha": self.source_sha,
-                "run_id": self.run_id,
-                "run_attempt": int(self.run_attempt),
-                "completed_trials": 0,
-                "next_trial_id": 1,
-                "next_check_n": initial_next_check_n,
-                "final_fingerprint": None,
-                "artifact_identity": None,
-                "included_in_final_stats": False,
-                "stability_history": [],
-                "final_status": None,
-                "reason_if_not_stable": None,
-                "stable_at_n": None,
-                "lease": self._lease_record(),
-            }
+            state = self._initial_state()
             try:
                 blob_sha = self._put_state(state, None)
             except StateConflict:
