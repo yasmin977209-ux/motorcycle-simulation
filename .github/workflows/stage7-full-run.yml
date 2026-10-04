@@ -1,0 +1,883 @@
+name: stage7-full-run
+
+on:
+  push:
+    branches:
+      - "tmp/stage7-full-run-20261004"
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  MASTER_SEED: "20270101"
+  LOG_EVENTS: "false"
+  INITIAL_NON_C100_TRIALS: "300"
+  INITIAL_C100_TRIALS: "1"
+  ESCALATION_STEP: "50"
+  STABILITY_CONSECUTIVE_CHECKS: "3"
+  CI_RELATIVE_EPSILON: "0.01"
+  CI_ABSOLUTE_EPSILON: "1"
+  JOB_TIMEOUT_MINUTES: "360"
+  CP3_RUN_ID: "37203438351"
+  CP3_SCENARIO: "C070_G100"
+  CP3_AGGREGATE_SHA256: "c09d39cd3f79e9460d16df4fc2a6a47b6b029983e2f596de4af4009bc169a14a"
+
+jobs:
+  preflight-gates:
+    name: preflight-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Build Stage 5 fixtures for v2 acceptance
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf results_stage5
+          mkdir -p results_stage5
+          cat > /tmp/stage5_round5_build.py <<'PY'
+          from __future__ import annotations
+          import json
+          from dataclasses import asdict
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def main():
+              c100_result, c100_daily = monte_carlo.run_single_trial(
+                  "C100_G100", 1, master_seed=20270101
+              )
+              c100_results = [c100_result]
+              c100_slices = {1: c100_daily}
+              selection = monte_carlo.select_representative_trials(c100_results)
+
+              assert c100_result.final_net_project_equity == 209671000
+              assert c100_result.partner1_final_entitlement == 146769700
+              assert c100_result.partner2_final_entitlement == 62901300
+              assert c100_result.final_cash == 209671000
+              assert c100_result.final_close_date == "2033-01-06"
+              assert len(c100_daily) == 2198
+
+              pq.write_table(
+                  pa.Table.from_pylist([asdict(c100_result)]),
+                  f"{RESULTS}/trials_summary.parquet",
+              )
+              pq.write_table(
+                  pa.Table.from_pylist(
+                      [{"selection_key": key, "trial_id": int(trial_id)}
+                       for key, trial_id in selection.items()]
+                  ),
+                  f"{RESULTS}/selection.parquet",
+              )
+              with open(
+                  f"{RESULTS}/C100_G100_trial_{selection.p50_trial_id:06d}_daily.json",
+                  "w", encoding="utf-8"
+              ) as handle:
+                  json.dump(c100_daily, handle, ensure_ascii=False, indent=2, sort_keys=True)
+                  handle.write("\n")
+
+              long_distribution = monte_carlo.build_daily_distribution(c100_results, c100_slices)
+              wide_by_date = {}
+              for row in long_distribution:
+                  current = wide_by_date.setdefault(
+                      row["date"],
+                      {"date": row["date"], "active_trial_count": row["active_trial_count"]},
+                  )
+                  for metric in ("Cash","Net_Equity","Active_Bikes","Owned_Transferred_Bikes","Pending_Claims"):
+                      current[f"{row['quantile_name']}_{metric}"] = row[metric]
+
+              pq.write_table(
+                  pa.Table.from_pylist([wide_by_date[key] for key in sorted(wide_by_date)]),
+                  f"{RESULTS}/daily_distribution.parquet",
+              )
+
+              print(json.dumps({
+                  "artifacts": [
+                      f"{RESULTS}/trials_summary.parquet",
+                      f"{RESULTS}/daily_distribution.parquet",
+                      f"{RESULTS}/selection.parquet",
+                  ],
+                  "c100_golden": {
+                      "final_net_project_equity": c100_result.final_net_project_equity,
+                      "partner1_final_entitlement": c100_result.partner1_final_entitlement,
+                      "partner2_final_entitlement": c100_result.partner2_final_entitlement,
+                      "final_cash": c100_result.final_cash,
+                      "final_close_date": c100_result.final_close_date,
+                      "daily_balance_checks": len(c100_daily),
+                  },
+                  "selection": selection,
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY
+          python /tmp/stage5_round5_build.py
+          cat > /tmp/stage5_round5_worker_manifest.py <<'PY2'
+          from __future__ import annotations
+          import hashlib
+          import json
+          from dataclasses import asdict
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def stable_sha(value):
+              payload = json.dumps(
+                  value, ensure_ascii=False, sort_keys=True,
+                  separators=(",", ":"), default=str
+              ).encode("utf-8")
+              return hashlib.sha256(payload).hexdigest()
+
+          def main():
+              trial_ids = (1, 2, 3)
+              seq_results, seq_slices = monte_carlo.run_trials_sequentially("C070_G100", trial_ids)
+              par2_results, par2_slices = monte_carlo.run_trials_parallel("C070_G100", trial_ids, 2)
+              par4_results, par4_slices = monte_carlo.run_trials_parallel("C070_G100", trial_ids, 4)
+
+              def by_id(results):
+                  return {result.trial_id: result for result in results}
+
+              seq_by_id = by_id(seq_results)
+              par2_by_id = by_id(par2_results)
+              par4_by_id = by_id(par4_results)
+              manifest = []
+
+              for trial_id in trial_ids:
+                  seq_result = asdict(seq_by_id[trial_id])
+                  p2_result = asdict(par2_by_id[trial_id])
+                  p4_result = asdict(par4_by_id[trial_id])
+                  seq_daily = seq_slices[trial_id]
+                  p2_daily = par2_slices[trial_id]
+                  p4_daily = par4_slices[trial_id]
+                  manifest.append({
+                      "scenario_id": "C070_G100",
+                      "trial_id": trial_id,
+                      "exact_1_eq_2": seq_result == p2_result and seq_daily == p2_daily,
+                      "exact_1_eq_4": seq_result == p4_result and seq_daily == p4_daily,
+                      "trial_result_sha256_1": stable_sha(seq_result),
+                      "trial_result_sha256_2": stable_sha(p2_result),
+                      "trial_result_sha256_4": stable_sha(p4_result),
+                      "daily_slice_sha256_1": stable_sha(seq_daily),
+                      "daily_slice_sha256_2": stable_sha(p2_daily),
+                      "daily_slice_sha256_4": stable_sha(p4_daily),
+                  })
+
+              assert all(row["exact_1_eq_2"] and row["exact_1_eq_4"] for row in manifest)
+              with open(f"{RESULTS}/worker_equivalence_manifest.json","w",encoding="utf-8") as handle:
+                  json.dump(manifest, handle, ensure_ascii=False, indent=2, sort_keys=True)
+                  handle.write("\n")
+
+              print(json.dumps({
+                  "worker_manifest_rows": len(manifest),
+                  "exact_all": all(row["exact_1_eq_2"] and row["exact_1_eq_4"] for row in manifest),
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY2
+          python /tmp/stage5_round5_worker_manifest.py
+      - name: Measure temporary Stage 5 fixtures
+        shell: bash
+        run: du -sb results_stage5
+
+      - name: Stage 1
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage1.py
+      - name: Stage 2
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage2.py tests/test_stage2_entities_additions.py
+      - name: Stage 3A CH5
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3a.py -k ch5
+      - name: Stage 3A CH6
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3a.py -k ch6
+      - name: Stage 3A CH7
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3a.py -k ch7
+      - name: Stage 3A CH8
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3a.py -k ch8
+      - name: Stage 3A CH9
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3a.py -k ch9
+      - name: Stage 1 regression
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage1.py
+      - name: Stage 2 regression
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage2.py
+      - name: Stage 3B accounting
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_accounting.py
+      - name: Stage 3B partner equity
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_partner_equity.py
+      - name: Stage 3B M1-M17
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_m_order.py
+      - name: Stage 3B closure
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_closure.py
+      - name: Stage 3B path 1
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_path1.py
+      - name: Stage 3B paths 2-6
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_paths.py
+      - name: Stage 3B no time cap
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_no_time_cap.py
+      - name: Stage 3B determinism
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_stage3b_determinism.py
+      - name: v2
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_acceptance_16_v2.py
+      - name: Round 1
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_monte_carlo_round1.py
+      - name: Round 2
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_monte_carlo_round2.py
+      - name: Round 3
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_monte_carlo_round3.py
+      - name: Round 4
+        env: {PYTHONPATH: .}
+        run: python -m pytest -q tests/test_monte_carlo_round4.py
+      - name: C100_G100 Golden
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          import json
+          from daily_engine import run_deterministic_trial
+          project = run_deterministic_trial(
+              recovery_rate_pct=100,
+              trial_id=1,
+              scenario_id="C100_G100",
+              master_seed=20270101,
+          )
+          result = {
+              "final_net_project_equity": project.final_net_project_equity,
+              "partner1_final_entitlement": project.partner1_final_entitlement,
+              "partner2_final_entitlement": project.partner2_final_entitlement,
+              "final_cash": project.project_cash,
+              "final_close_date": project.final_close_date.isoformat(),
+              "daily_balance_checks": len(project.daily_balance_checks),
+          }
+          print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+          assert result["final_net_project_equity"] == 209671000
+          assert result["partner1_final_entitlement"] == 146769700
+          assert result["partner2_final_entitlement"] == 62901300
+          assert result["final_cash"] == 209671000
+          assert result["final_close_date"] == "2033-01-06"
+          assert result["daily_balance_checks"] == 2198
+          PY
+
+  matrix-simulation:
+    name: simulation-${{ matrix.scenario }}
+    needs: preflight-gates
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Determine stable source SHA from main
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          SOURCE_SHA="$(git rev-parse origin/main)"
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Initialize or restore scenario state
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCENARIO: ${{ matrix.scenario }}
+          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          STATE_BRANCH="stage7-state/${SCENARIO}"
+          API_BASE="repos/${GITHUB_REPOSITORY}"
+
+          if gh api "${API_BASE}/contents/state.json?ref=${STATE_BRANCH}" > /tmp/state_response.json 2> /tmp/state_missing.log; then
+            python - <<'PY'
+          import base64, json
+          payload = json.loads(open("/tmp/state_response.json", encoding="utf-8").read())
+          content = base64.b64decode(payload["content"]).decode("utf-8")
+          open("state.json", "w", encoding="utf-8").write(content)
+          open("/tmp/state_blob_sha", "w").write(payload["sha"])
+          PY
+          else
+            gh api --method POST "${API_BASE}/git/refs"               -f "ref=refs/heads/${STATE_BRANCH}"               -f "sha=${SOURCE_SHA}"
+            cat > state.json <<EOF
+          {
+            "scenario": "${SCENARIO}",
+            "source_sha": "${SOURCE_SHA}",
+            "run_id": "${RUN_ID}",
+            "completed_trials": 0,
+            "next_trial_id": 1,
+            "next_check_n": 300,
+            "final_fingerprint": null,
+            "stability_history": [],
+            "final_status": null,
+            "reason_if_not_stable": null,
+            "stable_at_n": null
+          }
+          EOF
+            : > /tmp/state_blob_sha
+          fi
+
+          # Stage 7 creates 25 branches under stage7-state/<scenario>.
+          # These branches hold only state.json (small).
+          # They are NOT deleted automatically. Manual cleanup after Stage 7
+          # closure is required (approved by user).
+
+      - name: Restore previous scenario block artifacts when available
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          mkdir -p "results_stage7/${SCENARIO}/blocks"
+          ARTIFACT_ID="$(
+            gh api --paginate               "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100"               --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv'             | sort -k2 | tail -1 | cut -f1
+          )"
+          if [ -n "${ARTIFACT_ID}" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
+            mkdir -p /tmp/previous_stage7_blocks
+            unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
+            find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+            find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          else
+            echo "No previous Stage 7 block artifact found."
+          fi
+
+      - name: Adaptive scenario orchestration
+        env:
+          PYTHONPATH: .
+          GH_TOKEN: ${{ github.token }}
+          SCENARIO: ${{ matrix.scenario }}
+          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          JOB_STARTED_AT: ${{ github.run_started_at }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          MASTER_SEED: ${{ env.MASTER_SEED }}
+          LOG_EVENTS: ${{ env.LOG_EVENTS }}
+          INITIAL_NON_C100_TRIALS: ${{ env.INITIAL_NON_C100_TRIALS }}
+          INITIAL_C100_TRIALS: ${{ env.INITIAL_C100_TRIALS }}
+          ESCALATION_STEP: ${{ env.ESCALATION_STEP }}
+          STABILITY_CONSECUTIVE_CHECKS: ${{ env.STABILITY_CONSECUTIVE_CHECKS }}
+          CI_RELATIVE_EPSILON: ${{ env.CI_RELATIVE_EPSILON }}
+          CI_ABSOLUTE_EPSILON: ${{ env.CI_ABSOLUTE_EPSILON }}
+          JOB_TIMEOUT_MINUTES: ${{ env.JOB_TIMEOUT_MINUTES }}
+          CP3_SCENARIO: ${{ env.CP3_SCENARIO }}
+          CP3_AGGREGATE_SHA256: ${{ env.CP3_AGGREGATE_SHA256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/stage7_orchestrator.py <<'PY'
+          from __future__ import annotations
+          import base64
+          import json
+          import math
+          import os
+          import subprocess
+          import sys
+          import time
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import numpy as np
+          import pyarrow.parquet as pq
+          from scipy.stats import t
+          import monte_carlo
+
+          REPO = os.environ["GITHUB_REPOSITORY"]
+          TOKEN = os.environ["GH_TOKEN"]
+          SCENARIO = os.environ["SCENARIO"]
+          SOURCE_SHA = os.environ["SOURCE_SHA"]
+          RUN_ID = os.environ["RUN_ID"]
+          STATE_BRANCH = f"stage7-state/{SCENARIO}"
+          MASTER_SEED = int(os.environ["MASTER_SEED"])
+          LOG_EVENTS = os.environ["LOG_EVENTS"].lower() == "true"
+          INITIAL_NON_C100 = int(os.environ["INITIAL_NON_C100_TRIALS"])
+          INITIAL_C100 = int(os.environ["INITIAL_C100_TRIALS"])
+          ESCALATION_STEP = int(os.environ["ESCALATION_STEP"])
+          REQUIRED_CONSECUTIVE = int(os.environ["STABILITY_CONSECUTIVE_CHECKS"])
+          RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
+          ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
+          JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
+          CP3_SCENARIO = os.environ["CP3_SCENARIO"]
+          CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
+          RESULTS_DIR = Path("results_stage7") / SCENARIO
+          BLOCKS_DIR = RESULTS_DIR / "blocks"
+          BLOCKS_DIR.mkdir(parents=True, exist_ok=True)
+
+          def api(method, path, payload=None):
+              req = urllib.request.Request(
+                  f"https://api.github.com/repos/{REPO}/{path}",
+                  method=method,
+                  headers={
+                      "Authorization": f"Bearer {TOKEN}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              if payload is not None:
+                  req.data = json.dumps(payload).encode("utf-8")
+                  req.add_header("Content-Type", "application/json")
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  raw = response.read()
+              return json.loads(raw.decode("utf-8")) if raw else {}
+
+          def load_state():
+              payload = api("GET", "contents/state.json?" + urllib.parse.urlencode({"ref": STATE_BRANCH}))
+              raw = base64.b64decode(payload["content"]).decode("utf-8")
+              return json.loads(raw), payload["sha"]
+
+          def save_state(state, blob_sha):
+              raw = json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+              payload = {
+                  "message": f"stage7: checkpoint {SCENARIO} n={state['completed_trials']}",
+                  "content": base64.b64encode(raw.encode("utf-8")).decode("ascii"),
+                  "branch": STATE_BRANCH,
+                  "sha": blob_sha,
+              }
+              return api("PUT", "contents/state.json", payload)["content"]["sha"]
+
+          def all_results():
+              rows = []
+              for path in sorted(BLOCKS_DIR.glob("block_*.parquet")):
+                  rows.extend(pq.read_table(path).to_pylist())
+              return sorted(
+                  [monte_carlo.TrialResult(**row) for row in rows],
+                  key=lambda x: x.trial_id,
+              )
+
+          def statistics(results):
+              values = {
+                  "final_net_project_equity": np.array([r.final_net_project_equity for r in results], dtype=float),
+                  "partner1_final_entitlement": np.array([r.partner1_final_entitlement for r in results], dtype=float),
+                  "partner2_final_entitlement": np.array([r.partner2_final_entitlement for r in results], dtype=float),
+              }
+              n = len(results)
+              if n < 2:
+                  raise ValueError("At least two observations are required for a t-based CI.")
+              out = {}
+              t_critical = float(t.ppf(0.975, n - 1))
+              for key, sample in values.items():
+                  mean = float(sample.mean())
+                  sd = float(sample.std(ddof=1))
+                  half_ci = t_critical * sd / math.sqrt(n)
+                  limit = max(ABSOLUTE_EPSILON, RELATIVE_EPSILON * abs(mean))
+                  out[key] = {
+                      "n": n,
+                      "mean": mean,
+                      "sample_std": sd,
+                      "t_critical": t_critical,
+                      "half_ci_95": half_ci,
+                      "limit": limit,
+                      "stable": half_ci < limit,
+                  }
+              return out
+
+          def elapsed_since_job_start():
+              started = datetime.fromisoformat(
+                  os.environ["JOB_STARTED_AT"].replace("Z", "+00:00")
+              ).astimezone(timezone.utc)
+              job_started_at = started.timestamp()
+              return time.time() - job_started_at
+
+          def write_json(path, value):
+              path.write_text(
+                  json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                  encoding="utf-8",
+              )
+
+          state, blob_sha = load_state()
+          state["source_sha"] = SOURCE_SHA
+          state["run_id"] = RUN_ID
+          completed = int(state.get("completed_trials", 0))
+
+          if SCENARIO.startswith("C100_"):
+              target_n = INITIAL_C100
+          else:
+              target_n = max(INITIAL_NON_C100, int(state.get("next_check_n", INITIAL_NON_C100)))
+
+          if state.get("final_status") == "stable":
+              print(json.dumps({
+                  "scenario": SCENARIO,
+                  "status": "already_stable",
+                  "stable_at_n": state.get("stable_at_n"),
+              }, sort_keys=True))
+              raise SystemExit(0)
+
+          while True:
+              if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
+                  state["final_status"] = "timeout"
+                  state["reason_if_not_stable"] = "job wall-clock timeout reached"
+                  results = all_results()
+                  if results:
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                  blob_sha = save_state(state, blob_sha)
+                  print(json.dumps({
+                      "scenario": SCENARIO,
+                      "status": "timeout",
+                      "completed_trials": completed,
+                  }, sort_keys=True))
+                  raise SystemExit(0)
+
+              trial_start = completed + 1
+              trial_end = target_n
+
+              if trial_end >= trial_start:
+                  subprocess.run([
+                      sys.executable,
+                      "-m", "scripts.stage7_run_trial_block",
+                      "--scenario", SCENARIO,
+                      "--trial-id-start", str(trial_start),
+                      "--trial-id-end", str(trial_end),
+                      "--source-sha", SOURCE_SHA,
+                      "--run-id", RUN_ID,
+                      "--output-dir", "results_stage7",
+                      "--master-seed", str(MASTER_SEED),
+                  ], check=True)
+                  completed = trial_end
+
+              state["completed_trials"] = completed
+              state["next_trial_id"] = completed + 1
+              results = all_results()
+
+              if SCENARIO.startswith("C100_"):
+                  state["stable_at_n"] = 1
+                  state["final_status"] = "stable"
+                  state["reason_if_not_stable"] = None
+              else:
+                  stats = statistics(results)
+                  stable_now = all(row["stable"] for row in stats.values())
+                  state["stability_history"].append({
+                      "n": len(results),
+                      "stable": stable_now,
+                      "metrics": stats,
+                  })
+                  if stable_now:
+                      recent = [
+                          item["stable"]
+                          for item in state["stability_history"][-REQUIRED_CONSECUTIVE:]
+                      ]
+                      if len(recent) == REQUIRED_CONSECUTIVE and all(recent):
+                          state["stable_at_n"] = len(results)
+                          state["final_status"] = "stable"
+                          state["reason_if_not_stable"] = None
+                      else:
+                          target_n = completed + ESCALATION_STEP
+                  else:
+                      target_n = completed + ESCALATION_STEP
+                  state["next_check_n"] = target_n
+
+              state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+              blob_sha = save_state(state, blob_sha)
+
+              write_json(
+                  RESULTS_DIR / "statistics.json",
+                  {
+                      "scenario": SCENARIO,
+                      "trial_count": len(results),
+                      "final_fingerprint": state["final_fingerprint"],
+                      "stability_history": state["stability_history"],
+                  },
+              )
+
+              if state["final_status"] == "stable":
+                  cp3_match = None
+                  if SCENARIO == CP3_SCENARIO:
+                      prefix = [result for result in results if result.trial_id <= 6000]
+                      if len(prefix) == 6000:
+                          cp3_match = (
+                              monte_carlo.fingerprint_trial_results(prefix)
+                              == CP3_AGGREGATE_SHA256
+                          )
+                      else:
+                          cp3_match = False
+
+                  write_json(
+                      RESULTS_DIR / "final_fingerprint.json",
+                      {
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "run_id": RUN_ID,
+                          "trial_count": len(results),
+                          "final_fingerprint": state["final_fingerprint"],
+                          "cp3_reference": {
+                              "required": SCENARIO == CP3_SCENARIO,
+                              "run_id": os.environ["CP3_RUN_ID"] if SCENARIO == CP3_SCENARIO else None,
+                              "reference_sha256": CP3_AGGREGATE_SHA256 if SCENARIO == CP3_SCENARIO else None,
+                              "matched": cp3_match,
+                          },
+                      },
+                  )
+                  break
+
+          print(json.dumps({
+              "scenario": SCENARIO,
+              "final_trial_count": state["completed_trials"],
+              "final_fingerprint": state["final_fingerprint"],
+              "stable_at_n": state["stable_at_n"],
+              "final_status": state["final_status"],
+              "reason_if_not_stable": state["reason_if_not_stable"],
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+          python /tmp/stage7_orchestrator.py
+
+      - name: Upload scenario block artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-blocks-${{ matrix.scenario }}-${{ github.run_attempt }}
+          path: results_stage7/${{ matrix.scenario }}/blocks
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload final scenario artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-final-${{ matrix.scenario }}-${{ github.run_attempt }}
+          path: |
+            results_stage7/${{ matrix.scenario }}/final_fingerprint.json
+            results_stage7/${{ matrix.scenario }}/statistics.json
+            state.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  final-report:
+    name: final-report
+    needs: matrix-simulation
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+
+    # if: always() does not run on job timeout.
+    # On timeout, only state.json (persisted before timeout) remains.
+    # final_fingerprint will be rebuilt on next run's resume.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Download all final scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage7-final-*
+          path: /tmp/stage7-final-artifacts
+          merge-multiple: false
+      - name: Produce unified Stage 7 summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results_stage7
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          scenarios = [
+              "C100_G100",
+              "C100_G070",
+              "C100_G050",
+              "C100_G030",
+              "C100_G000",
+              "C085_G100",
+              "C085_G070",
+              "C085_G050",
+              "C085_G030",
+              "C085_G000",
+              "C070_G100",
+              "C070_G070",
+              "C070_G050",
+              "C070_G030",
+              "C070_G000",
+              "C050_G100",
+              "C050_G070",
+              "C050_G050",
+              "C050_G030",
+              "C050_G000",
+              "C030_G100",
+              "C030_G070",
+              "C030_G050",
+              "C030_G030",
+              "C030_G000",
+          ]
+
+          def get_json(path):
+              request = urllib.request.Request(
+                  f"https://api.github.com/repos/{repo}/{path}",
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.loads(response.read().decode("utf-8"))
+
+          per_scenario = []
+          for scenario in scenarios:
+              state = None
+              branch = f"stage7-state/{scenario}"
+              try:
+                  payload = get_json(
+                      "contents/state.json?" + urllib.parse.urlencode({"ref": branch})
+                  )
+                  state = json.loads(
+                      base64.b64decode(payload["content"]).decode("utf-8")
+                  )
+              except Exception:
+                  state = None
+
+              artifact_state_files = list(
+                  Path("/tmp/stage7-final-artifacts").glob(f"**/{scenario}/state.json")
+              )
+              if state is None and artifact_state_files:
+                  state = json.loads(
+                      artifact_state_files[-1].read_text(encoding="utf-8")
+                  )
+
+              if state is None:
+                  per_scenario.append({
+                      "scenario": scenario,
+                      "final_trial_count": None,
+                      "final_fingerprint": None,
+                      "stable_at_n": None,
+                      "final_status": None,
+                      "reason_if_not_stable": "state.json unavailable",
+                  })
+              else:
+                  per_scenario.append({
+                      "scenario": scenario,
+                      "final_trial_count": state.get("completed_trials"),
+                      "final_fingerprint": state.get("final_fingerprint"),
+                      "stable_at_n": state.get("stable_at_n"),
+                      "final_status": state.get("final_status"),
+                      "reason_if_not_stable": state.get("reason_if_not_stable"),
+                  })
+
+          stable_count = sum(row["final_status"] == "stable" for row in per_scenario)
+          timeout_count = sum(row["final_status"] == "timeout" for row in per_scenario)
+          max_iterations_count = 0
+
+          cp3_match = False
+          c070 = next((row for row in per_scenario if row["scenario"] == "C070_G100"), None)
+
+          if c070 is not None:
+              artifact_fingerprints = list(
+                  Path("/tmp/stage7-final-artifacts").glob(
+                      "**/C070_G100/final_fingerprint.json"
+                  )
+              )
+              if artifact_fingerprints:
+                  payload = json.loads(
+                      artifact_fingerprints[-1].read_text(encoding="utf-8")
+                  )
+                  cp3_match = bool(
+                      payload.get("cp3_reference", {}).get("matched")
+                  )
+
+          summary = {
+              "total_scenarios": 25,
+              "stable_count": stable_count,
+              "timeout_count": timeout_count,
+              "max_iterations_count": max_iterations_count,
+              "per_scenario": per_scenario,
+              "cross_reference": {
+                  "C070_G100": cp3_match
+              },
+          }
+
+          Path("results_stage7/summary.json").write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Upload unified Stage 7 summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-summary-${{ github.run_attempt }}
+          path: results_stage7/summary.json
+          if-no-files-found: error
+          retention-days: 90
