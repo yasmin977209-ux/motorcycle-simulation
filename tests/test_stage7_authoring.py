@@ -52,6 +52,11 @@ def _metrics(means: tuple[float, float, float], stable: bool = True) -> dict[str
     keys = ("final_net_project_equity", "partner1_final_entitlement", "partner2_final_entitlement")
     return {key: {"mean": value, "stable": stable} for key, value in zip(keys, means)}
 
+
+def test_requirements_include_pyyaml() -> None:
+    requirements = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
+    assert "pyyaml" in requirements.lower()
+
 def test_stage7_workflow_pins_approved_source_sha() -> None:
     assert _workflow()["env"]["SOURCE_SHA"] == APPROVED_SOURCE_SHA
 
