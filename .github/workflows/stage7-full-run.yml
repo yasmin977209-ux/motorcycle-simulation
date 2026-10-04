@@ -52,36 +52,54 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          SCENARIOS=(
+            C100_G100 C100_G070 C100_G050 C100_G030 C100_G000
+            C085_G100 C085_G070 C085_G050 C085_G030 C085_G000
+            C070_G100 C070_G070 C070_G050 C070_G030 C070_G000
+            C050_G100 C050_G070 C050_G050 C050_G030 C050_G000
+            C030_G100 C030_G070 C030_G050 C030_G030 C030_G000
+          )
           stale_runs="$(
             gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
               --jq '.workflow_runs[] | select(.conclusion == null) | [.id,.status] | join(" ")'
           )"
+          stale_ids=()
           while read -r run_id status; do
+            [ -n "${run_id}" ] || continue
             if [ "${run_id}" != "${GITHUB_RUN_ID}" ]; then
               gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" >/dev/null
               echo "CANCELLED_STALE_RUN=${run_id} STATUS=${status}"
+              stale_ids+=("${run_id}")
             fi
           done <<< "${stale_runs}"
+          for run_id in "${stale_ids[@]}"; do
+            stopped=false
+            for attempt in $(seq 1 30); do
+              status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq ".status")"
+              if [ "${status}" = "completed" ]; then
+                stopped=true
+                break
+              fi
+              sleep 2
+            done
+            if [ "${stopped}" != "true" ]; then
+              echo "STALE_RUN_CANCELLATION_TIMEOUT=${run_id}" >&2
+              exit 1
+            fi
+            echo "STALE_RUN_STOPPED=${run_id}"
+          done
           git cat-file -e "${SOURCE_SHA}^{commit}"
           for path in constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py; do
             git cat-file -e "${SOURCE_SHA}:${path}"
           done
-          for scenario in C100_G100 C100_G070 C100_G050 C100_G030 C100_G000; do
-            state_content="$(
-              gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=stage7-state/${scenario}" \
-                --jq '.content' 2>/dev/null | base64 --decode || true
-            )"
-            if [ -n "${state_content}" ]; then
-              mismatch_reason="$(
-                python -c 'import json,sys; print(json.load(sys.stdin).get("reason_if_not_stable") or "")' \
-                  <<<"${state_content}"
-              )"
-              if [ "${mismatch_reason}" = "independent C100 trial result mismatch" ]; then
-                gh api --method PATCH \
-                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/stage7-state/${scenario}" \
-                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
-                echo "C100_POISONED_STATE_RESET=${scenario}"
-              fi
+          for scenario in "${SCENARIOS[@]}"; do
+            if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/stage7-state/${scenario}" >/dev/null 2>&1; then
+              gh api --method PATCH \
+                "repos/${GITHUB_REPOSITORY}/git/refs/heads/stage7-state/${scenario}" \
+                -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
+              echo "STAGE7_STATE_RESET=${scenario}"
+            else
+              echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
           done
           python - <<'PY'

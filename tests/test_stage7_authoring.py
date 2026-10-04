@@ -126,7 +126,7 @@ def test_stage7_workflow_has_concurrency_guard() -> None:
     }
 
 
-def test_stage7_preflight_cancels_stale_stage7_runs() -> None:
+def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
     assert "actions: write" in text[:text.index("jobs:")]
@@ -136,14 +136,21 @@ def test_stage7_preflight_cancels_stale_stage7_runs() -> None:
     assert "select(.conclusion == null)" in preflight
     assert "actions/runs/${run_id}/cancel" in preflight
     assert "CANCELLED_STALE_RUN=" in preflight
+    assert "STALE_RUN_CANCELLATION_TIMEOUT=" in preflight
+    assert "STALE_RUN_STOPPED=" in preflight
 
 
-def test_stage7_preflight_can_reset_only_poisoned_c100_state() -> None:
+def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    assert "SCENARIOS=(" in preflight
     assert "C100_G100 C100_G070 C100_G050 C100_G030 C100_G000" in preflight
-    assert "independent C100 trial result mismatch" in preflight
-    assert "C100_POISONED_STATE_RESET=" in preflight
+    assert "C085_G100 C085_G070 C085_G050 C085_G030 C085_G000" in preflight
+    assert "C070_G100 C070_G070 C070_G050 C070_G030 C070_G000" in preflight
+    assert "C050_G100 C050_G070 C050_G050 C050_G030 C050_G000" in preflight
+    assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
+    assert "STAGE7_STATE_RESET=" in preflight
+    assert "STAGE7_STATE_ABSENT=" in preflight
     assert "git/refs/heads/stage7-state/${scenario}" in preflight
     assert '-f "sha=${SOURCE_SHA}"' in preflight
     assert "-F force=true" in preflight
