@@ -1,19 +1,26 @@
 {
-  "artifact_identity": null,
-  "completed_trials": 0,
-  "final_fingerprint": null,
+  "artifact_identity": {
+    "fingerprint_sha256": "b5eb6c7b46e576d545936318628457ca0a4a1bcbecc6e343b45648831b487b87",
+    "scenario": "C070_G100",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "trial_id_end": 5,
+    "trial_id_start": 1
+  },
+  "completed_trials": 5,
+  "final_fingerprint": "b5eb6c7b46e576d545936318628457ca0a4a1bcbecc6e343b45648831b487b87",
   "final_status": null,
   "included_in_final_stats": false,
   "lease": {
-    "acquired_at": "2026-10-04T16:45:33.192478Z",
-    "expires_at": "2026-10-04T17:45:33.192478Z",
+    "acquired_at": "2026-10-04T16:45:44.627725Z",
+    "expires_at": "2026-10-04T17:45:44.627725Z",
     "owner": "37217931638",
     "run_attempt": 1,
     "run_id": "37217931638"
   },
   "next_check_n": 300,
-  "next_trial_id": 1,
+  "next_trial_id": 6,
   "reason_if_not_stable": null,
+  "resume_verified": false,
   "run_attempt": 1,
   "run_id": "37217931638",
   "scenario": "C070_G100",
