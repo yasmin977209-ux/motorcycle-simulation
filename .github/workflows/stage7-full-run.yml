@@ -483,11 +483,17 @@ jobs:
           import numpy as np
           import pyarrow.parquet as pq
           from scipy.stats import t
+          import constants
           import monte_carlo
+          import rng
+          import daily_engine
+          from dataclasses import asdict
+          from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
 
           REPO = os.environ["GITHUB_REPOSITORY"]
           TOKEN = os.environ["GH_TOKEN"]
           SCENARIO = os.environ["SCENARIO"]
+          collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(SCENARIO)
           SOURCE_SHA = os.environ["SOURCE_SHA"]
           RUN_ID = os.environ["RUN_ID"]
           STATE_BRANCH = f"stage7-state/{SCENARIO}"
@@ -588,14 +594,22 @@ jobs:
               )
 
           state, blob_sha = load_state()
+          if state.get("source_sha") not in (None, SOURCE_SHA):
+              raise RuntimeError(
+                  f"State source SHA mismatch: {state.get('source_sha')} != {SOURCE_SHA}"
+              )
           state["source_sha"] = SOURCE_SHA
           state["run_id"] = RUN_ID
           completed = int(state.get("completed_trials", 0))
+          history = list(state.get("stability_history", []))
 
           if SCENARIO.startswith("C100_"):
               target_n = INITIAL_C100
           else:
-              target_n = max(INITIAL_NON_C100, int(state.get("next_check_n", INITIAL_NON_C100)))
+              target_n = max(
+                  INITIAL_NON_C100,
+                  int(state.get("next_check_n", INITIAL_NON_C100)),
+              )
 
           if state.get("final_status") == "stable":
               print(json.dumps({
@@ -611,7 +625,9 @@ jobs:
                   state["reason_if_not_stable"] = "job wall-clock timeout reached"
                   results = all_results()
                   if results:
-                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["final_fingerprint"] = (
+                          monte_carlo.fingerprint_trial_results(results)
+                      )
                   blob_sha = save_state(state, blob_sha)
                   print(json.dumps({
                       "scenario": SCENARIO,
@@ -642,32 +658,126 @@ jobs:
               results = all_results()
 
               if SCENARIO.startswith("C100_"):
-                  state["stable_at_n"] = 1
-                  state["final_status"] = "stable"
-                  state["reason_if_not_stable"] = None
-              else:
-                  stats = statistics(results)
-                  stable_now = all(row["stable"] for row in stats.values())
-                  state["stability_history"].append({
-                      "n": len(results),
-                      "stable": stable_now,
-                      "metrics": stats,
-                  })
-                  if stable_now:
-                      recent = [
-                          item["stable"]
-                          for item in state["stability_history"][-REQUIRED_CONSECUTIVE:]
-                      ]
-                      if len(recent) == REQUIRED_CONSECUTIVE and all(recent):
-                          state["stable_at_n"] = len(results)
-                          state["final_status"] = "stable"
-                          state["reason_if_not_stable"] = None
-                      else:
-                          target_n = completed + ESCALATION_STEP
+                  if len(results) != 1:
+                      raise RuntimeError(
+                          f"C100 primary sample must remain n=1, got {len(results)}"
+                      )
+
+                  primary = results[0]
+                  verification_project = daily_engine.run_deterministic_trial(
+                      recovery_rate_pct=recovery_rate_pct,
+                      trial_id=2,
+                      scenario_id=SCENARIO,
+                      master_seed=MASTER_SEED,
+                      collection_probability=collection_probability,
+                      log_events=False,
+                  )
+                  verification = monte_carlo._trial_result_from_project(
+                      verification_project,
+                      scenario_id=SCENARIO,
+                      collection_probability=collection_probability,
+                      recovery_rate_pct=recovery_rate_pct,
+                      trial_id=2,
+                  )
+
+                  seed_primary = rng.seed_hex(
+                      MASTER_SEED,
+                      SCENARIO,
+                      1,
+                      "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE,
+                      "PRIMARY_COLLECTION",
+                  )
+                  seed_verification = rng.seed_hex(
+                      MASTER_SEED,
+                      SCENARIO,
+                      2,
+                      "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE,
+                      "PRIMARY_COLLECTION",
+                  )
+                  equality = asdict(primary) == asdict(verification)
+
+                  c100_proof = {
+                      "scenario": SCENARIO,
+                      "primary_trial_id": 1,
+                      "verification_trial_id": 2,
+                      "primary_seed_hex": seed_primary,
+                      "verification_seed_hex": seed_verification,
+                      "different_trial_id": True,
+                      "different_derived_seed": seed_primary != seed_verification,
+                      "exact_result_equality": equality,
+                      "stable": equality,
+                  }
+                  write_json(
+                      RESULTS_DIR / "c100_independent_verification.json",
+                      c100_proof,
+                  )
+
+                  state["c100_independent_verification"] = c100_proof
+                  if equality:
+                      state["stable_at_n"] = 1
+                      state["final_status"] = "stable"
+                      state["reason_if_not_stable"] = None
                   else:
-                      target_n = completed + ESCALATION_STEP
+                      state["stable_at_n"] = None
+                      state["final_status"] = None
+                      state["reason_if_not_stable"] = (
+                          "independent C100 trial result mismatch"
+                      )
+              else:
+                  current_stats = statistics(results)
+                  previous = history[-1] if history else None
+
+                  gate_a = evaluate_gate_a(
+                      previous_n=previous.get("n") if previous else None,
+                      previous_metrics=previous.get("metrics") if previous else None,
+                      current_n=len(results),
+                      current_metrics=current_stats,
+                      escalation_step=ESCALATION_STEP,
+                      relative_epsilon=RELATIVE_EPSILON,
+                      absolute_epsilon=ABSOLUTE_EPSILON,
+                  )
+                  gate_b = evaluate_gate_b(current_stats)
+
+                  check_entry = {
+                      "n": len(results),
+                      "gate_a": gate_a,
+                      "gate_b": gate_b,
+                      "metrics": current_stats,
+                  }
+                  history.append(check_entry)
+                  state["stability_history"] = history
+
+                  checked_points = [
+                      item
+                      for item in history
+                      if item.get("gate_a", {}).get("checked") is True
+                  ]
+                  recent = checked_points[-REQUIRED_CONSECUTIVE:]
+                  stable_now = (
+                      len(recent) == REQUIRED_CONSECUTIVE
+                      and all(
+                          item["gate_a"]["stable"] and item["gate_b"]["stable"]
+                          for item in recent
+                      )
+                  )
+
+                  if stable_now:
+                      state["stable_at_n"] = len(results)
+                      state["final_status"] = "stable"
+                      state["reason_if_not_stable"] = None
+                  else:
+                      state["stable_at_n"] = None
+                      state["final_status"] = None
+                      state["reason_if_not_stable"] = (
+                          "dual stability gates not yet satisfied"
+                      )
+
+                  target_n = completed + ESCALATION_STEP
                   state["next_check_n"] = target_n
 
+              state["stability_history"] = history
               state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
               blob_sha = save_state(state, blob_sha)
 
@@ -677,7 +787,7 @@ jobs:
                       "scenario": SCENARIO,
                       "trial_count": len(results),
                       "final_fingerprint": state["final_fingerprint"],
-                      "stability_history": state["stability_history"],
+                      "stability_history": history,
                   },
               )
 
@@ -691,7 +801,7 @@ jobs:
                               == CP3_AGGREGATE_SHA256
                           )
                       else:
-                          cp3_match = False
+                          cp3_match = None
 
                   write_json(
                       RESULTS_DIR / "final_fingerprint.json",
@@ -711,14 +821,6 @@ jobs:
                   )
                   break
 
-          print(json.dumps({
-              "scenario": SCENARIO,
-              "final_trial_count": state["completed_trials"],
-              "final_fingerprint": state["final_fingerprint"],
-              "stable_at_n": state["stable_at_n"],
-              "final_status": state["final_status"],
-              "reason_if_not_stable": state["reason_if_not_stable"],
-          }, ensure_ascii=False, sort_keys=True))
           PY
           python /tmp/stage7_orchestrator.py
 

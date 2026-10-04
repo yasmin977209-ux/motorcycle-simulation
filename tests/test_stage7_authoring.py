@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "stage7-full-run.yml"
 AUTHORING_VERIFY = REPO_ROOT / ".github" / "workflows" / "stage7-authoring-verify.yml"
@@ -34,9 +36,12 @@ def _workflow_text() -> str:
 def _workflow() -> dict:
     return yaml.safe_load(_workflow_text())
 
+def _metrics(means: tuple[float, float, float], stable: bool = True) -> dict[str, dict[str, float | bool]]:
+    keys = ("final_net_project_equity", "partner1_final_entitlement", "partner2_final_entitlement")
+    return {key: {"mean": value, "stable": stable} for key, value in zip(keys, means)}
+
 def test_stage7_workflow_pins_approved_source_sha() -> None:
-    spec = _workflow()
-    assert spec["env"]["SOURCE_SHA"] == APPROVED_SOURCE_SHA
+    assert _workflow()["env"]["SOURCE_SHA"] == APPROVED_SOURCE_SHA
 
 def test_stage7_workflow_has_no_dynamic_origin_main_source_resolution() -> None:
     text = _workflow_text()
@@ -56,26 +61,95 @@ def test_stage7_workflow_verifies_pinned_commit_and_model_integrity() -> None:
     assert "MODEL_SOURCE_BOUNDARY_OK" in text
 
 def test_stage7_source_sha_is_passed_to_matrix_state_and_orchestrator() -> None:
-    spec = _workflow()
-    matrix_steps = spec["jobs"]["matrix-simulation"]["steps"]
-    env_blocks = [step.get("env", {}) for step in matrix_steps if isinstance(step, dict)]
+    steps = _workflow()["jobs"]["matrix-simulation"]["steps"]
+    env_blocks = [step.get("env", {}) for step in steps if isinstance(step, dict)]
     assert any(block.get("SOURCE_SHA") == "${{ env.SOURCE_SHA }}" for block in env_blocks)
 
 def test_stage7_still_declares_exactly_25_scenarios() -> None:
-    spec = _workflow()
-    scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
+    scenarios = _workflow()["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
     assert len(scenarios) == 25
     assert len(set(scenarios)) == 25
 
 def test_stage7_authoring_verify_runs_contract_tests() -> None:
-    text = AUTHORING_VERIFY.read_text(encoding="utf-8")
-    assert "tests/test_stage7_authoring.py" in text
+    assert "tests/test_stage7_authoring.py" in AUTHORING_VERIFY.read_text(encoding="utf-8")
 
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
-    text = TRIAL_BLOCK.read_text(encoding="utf-8")
-    assert '"source_sha": source_sha' in text
+    assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
 
-def test_stage7_timeout_contract_is_not_changed_in_commit_A() -> None:
+def test_stage7_timeout_contract_is_not_changed_in_commit_B() -> None:
+    assert re.search(r'JOB_TIMEOUT_MINUTES:\s*"360"', _workflow_text())
+
+def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
+    previous = _metrics((1000, 700, 300), stable=False)
+    current = _metrics((1001, 700.5, 300.2), stable=False)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_b = evaluate_gate_b(current)
+    assert gate_a["stable"] is True
+    assert gate_b["stable"] is False
+    assert not (gate_a["stable"] and gate_b["stable"])
+
+def test_gate_a_fail_gate_b_pass_is_not_stable() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1105, 770, 330), stable=True)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_b = evaluate_gate_b(current)
+    assert gate_a["stable"] is False
+    assert gate_b["stable"] is True
+    assert not (gate_a["stable"] and gate_b["stable"])
+
+def test_gate_a_fail_gate_b_fail_is_not_stable() -> None:
+    previous = _metrics((1000, 700, 300), stable=False)
+    current = _metrics((1105, 770, 330), stable=False)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_b = evaluate_gate_b(current)
+    assert gate_a["stable"] is False
+    assert gate_b["stable"] is False
+    assert not (gate_a["stable"] and gate_b["stable"])
+
+def test_gate_a_pass_gate_b_pass_requires_three_consecutive_points() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    p350 = _metrics((1001, 700.5, 300.2), stable=True)
+    p400 = _metrics((1002, 701.0, 300.4), stable=True)
+    p450 = _metrics((1003, 701.5, 300.6), stable=True)
+    pairs = ((300, previous, 350, p350), (350, p350, 400, p400), (400, p400, 450, p450))
+    checks = []
+    for previous_n, previous_metrics, current_n, current_metrics in pairs:
+        gate_a = evaluate_gate_a(previous_n=previous_n, previous_metrics=previous_metrics, current_n=current_n, current_metrics=current_metrics, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+        gate_b = evaluate_gate_b(current_metrics)
+        checks.append(gate_a["stable"] and gate_b["stable"])
+    assert checks == [True, True, True]
+
+def test_c100_n1_without_rerun_is_not_allowed_to_be_stable() -> None:
     text = _workflow_text()
-    assert re.search(r'JOB_TIMEOUT_MINUTES:\s*"360"', text)
+    assert "C100 primary sample must remain n=1" in text
+    assert '"verification_trial_id": 2' in text
 
+def test_c100_independent_rerun_uses_different_trial_id_and_derived_seed() -> None:
+    text = _workflow_text()
+    assert "trial_id=2" in text
+    assert "different_trial_id" in text
+    assert "different_derived_seed" in text
+    assert "exact_result_equality" in text
+
+def test_c100_mismatch_cannot_be_declared_stable() -> None:
+    text = _workflow_text()
+    assert 'state["final_status"] = None' in text
+    assert "independent C100 trial result mismatch" in text
+
+def test_c100_stability_is_after_independent_equality_proof() -> None:
+    text = _workflow_text()
+    equality_pos = text.index("equality = asdict(primary) == asdict(verification)")
+    stable_pos = text.index('state["final_status"] = "stable"')
+    assert equality_pos < stable_pos
+
+def test_gate_a_requires_exact_n_plus_escalation_step() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1001, 700.5, 300.2), stable=True)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=351, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    assert gate_a["checked"] is False
+
+def test_joint_gate_requires_all_three_metrics() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1001, 900, 300.2), stable=True)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    assert gate_a["stable"] is False
