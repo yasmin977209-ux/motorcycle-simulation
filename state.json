@@ -1,7 +1,20 @@
 {
-  "stage": "6.5",
-  "cp_completed": "CP5",
-  "sha": "15b5c6e2c54ade5c1ddce07aecdc53d86a60ad95",
-  "next": "stage7",
-  "blockers": []
+  "stage": "8",
+  "cp_completed": "CLOSED",
+  "sha": "9c59e5f62b7d098d222960e6d065cd2faf029544",
+  "next": "stage9",
+  "blockers": [],
+  "stage7": {
+    "closed": true,
+    "run_id": "37225915321",
+    "scenarios_stable": 25,
+    "commit": "dfbb7371b3c904991a4daf36d34a67272631b347"
+  },
+  "stage8": {
+    "closed": true,
+    "smoke_run_id": "37234010912",
+    "smoke_scenario": "C070_G100",
+    "smoke_final_n": 500,
+    "smoke_commit": "9c59e5f62b7d098d222960e6d065cd2faf029544"
+  }
 }
