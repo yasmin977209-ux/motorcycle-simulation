@@ -242,6 +242,56 @@ jobs:
             echo "No previous Stage 7 block artifact found for this workflow run."
           fi
 
+      - name: Prepare CP3 overlap reference
+        if: matrix.scenario == 'C070_G100'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CP3_RUN_ID: ${{ env.CP3_RUN_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage7_cp3_reference/unpacked
+          if ! ARTIFACT_ID="$(
+            gh api --paginate \\
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${CP3_RUN_ID}/artifacts?per_page=100" \\
+              --jq '.artifacts[] | select(.name == "stage6-5-cp3-results") | .id' \\
+              | tail -1
+          )"; then
+            echo "::warning::CP3 reference artifact lookup unavailable; cross-reference will be marked unavailable."
+            exit 0
+          fi
+          if [ -z "${ARTIFACT_ID}" ]; then
+            echo "::warning::CP3 reference artifact is unavailable (possibly expired); cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! gh api \\
+            "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \\
+            > /tmp/stage7_cp3_reference.zip; then
+            echo "::warning::CP3 reference artifact download failed; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! unzip -q \\
+            /tmp/stage7_cp3_reference.zip \\
+            -d /tmp/stage7_cp3_reference/unpacked; then
+            echo "::warning::CP3 reference artifact extraction failed; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! cp \\
+            /tmp/stage7_cp3_reference/unpacked/trials_summary_6000.parquet \\
+            /tmp/stage7_cp3_reference/trials_summary_6000.parquet; then
+            echo "::warning::CP3 reference parquet is unavailable; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if [ ! -s /tmp/stage7_cp3_reference/trials_summary_6000.parquet ]; then
+            echo "::warning::CP3 reference parquet is empty; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
       - name: Adaptive scenario orchestration
         env:
           PYTHONPATH: .
@@ -627,16 +677,64 @@ jobs:
               )
 
               if state["final_status"] == "stable":
+                  # KNOWN_DESIGN_DIFFERENCE:
+                  # Stage 7 may reach statistical stability at n=450 while
+                  # the preserved CP3 reference dataset contains 6000 trials.
+                  # Therefore CP3 cross-reference compares only the common
+                  # trial range 1..min(len(Stage 7), len(CP3)).
+                  # This is an integrity cross-reference and does not require
+                  # Stage 7 to be extended to 6000 trials.
+                  # Resume/checkpoint architecture:
+                  # docs/STAGE7_11_RESUME_POLICY.md
                   cp3_match = None
+                  cp3_overlap = None
+                  cp3_reference_trial_count = None
+                  cp3_overlap_fingerprint = None
+                  stage7_overlap_fingerprint = None
                   if SCENARIO == CP3_SCENARIO:
-                      prefix = [result for result in results if result.trial_id <= 6000]
-                      if len(prefix) == 6000:
-                          cp3_match = (
-                              monte_carlo.fingerprint_trial_results(prefix)
-                              == CP3_AGGREGATE_SHA256
+                      cp3_reference_path = Path(
+                          "/tmp/stage7_cp3_reference/trials_summary_6000.parquet"
+                      )
+                      if not cp3_reference_path.exists():
+                          print(
+                              "WARNING: CP3 reference parquet unavailable; "
+                              "cross-reference marked unavailable."
                           )
+                          cp3_match = "unavailable"
                       else:
-                          cp3_match = None
+                          cp3_rows = pq.read_table(cp3_reference_path).to_pylist()
+                          cp3_results = [
+                              monte_carlo.TrialResult(**row)
+                              for row in cp3_rows
+                          ]
+                          cp3_reference_trial_count = len(cp3_results)
+                          cp3_overlap = min(len(results), len(cp3_results))
+
+                          stage7_prefix = [
+                              result
+                              for result in results
+                              if 1 <= result.trial_id <= cp3_overlap
+                          ]
+                          cp3_prefix = [
+                              result
+                              for result in cp3_results
+                              if 1 <= result.trial_id <= cp3_overlap
+                          ]
+
+                          if (
+                              len(stage7_prefix) != cp3_overlap
+                              or len(cp3_prefix) != cp3_overlap
+                          ):
+                              raise RuntimeError(
+                                  "CP3 overlap trial sequence mismatch"
+                              )
+
+                          stage7_overlap_fingerprint = monte_carlo.fingerprint_trial_results(stage7_prefix)
+                          cp3_overlap_fingerprint = monte_carlo.fingerprint_trial_results(cp3_prefix)
+                          cp3_match = (
+                              stage7_overlap_fingerprint
+                              == cp3_overlap_fingerprint
+                          )
 
                   write_json(
                       RESULTS_DIR / "final_fingerprint.json",
@@ -651,6 +749,10 @@ jobs:
                               "required": SCENARIO == CP3_SCENARIO,
                               "run_id": os.environ["CP3_RUN_ID"] if SCENARIO == CP3_SCENARIO else None,
                               "reference_sha256": CP3_AGGREGATE_SHA256 if SCENARIO == CP3_SCENARIO else None,
+                              "reference_trial_count": cp3_reference_trial_count,
+                              "overlap_trial_count": cp3_overlap,
+                              "stage7_overlap_fingerprint": stage7_overlap_fingerprint,
+                              "reference_overlap_fingerprint": cp3_overlap_fingerprint,
                               "matched": cp3_match,
                           },
                           "artifact_identity": state["artifact_identity"],
@@ -844,9 +946,7 @@ jobs:
                   payload = json.loads(
                       artifact_fingerprints[-1].read_text(encoding="utf-8")
                   )
-                  cp3_match = bool(
-                      payload.get("cp3_reference", {}).get("matched")
-                  )
+                  cp3_match = payload.get("cp3_reference", {}).get("matched")
 
           summary = {
               "total_scenarios": 25,
