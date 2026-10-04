@@ -16,5 +16,7 @@
     "smoke_scenario": "C070_G100",
     "smoke_final_n": 500,
     "smoke_commit": "9c59e5f62b7d098d222960e6d065cd2faf029544"
-  }
+  },
+  "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
+  "consolidation_note": "Stage 8 code consolidated on main post-closure."
 }
