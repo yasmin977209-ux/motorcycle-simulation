@@ -153,3 +153,35 @@ def test_joint_gate_requires_all_three_metrics() -> None:
     current = _metrics((1001, 900, 300.2), stable=True)
     gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
     assert gate_a["stable"] is False
+
+
+def test_stage7_preflight_does_not_rerun_passed_stages() -> None:
+    text = _workflow_text()
+    preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    forbidden = (
+        "tests/test_stage1.py",
+        "tests/test_stage2.py",
+        "tests/test_stage3a.py",
+        "tests/test_stage3b_accounting.py",
+        "tests/test_stage3b_partner_equity.py",
+        "tests/test_stage3b_m_order.py",
+        "tests/test_stage3b_closure.py",
+        "tests/test_stage3b_path1.py",
+        "tests/test_stage3b_paths.py",
+        "tests/test_stage3b_no_time_cap.py",
+        "tests/test_stage3b_determinism.py",
+        "tests/test_acceptance_16_v2.py",
+        "tests/test_monte_carlo_round1.py",
+        "tests/test_monte_carlo_round2.py",
+        "tests/test_monte_carlo_round3.py",
+        "tests/test_monte_carlo_round4.py",
+    )
+    for marker in forbidden:
+        assert marker not in preflight
+
+
+def test_stage7_preflight_is_stage7_specific() -> None:
+    text = _workflow_text()
+    preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    assert "STAGE7_PREFLIGHT_OK" in preflight
+    assert "SOURCE_SHA" in preflight
