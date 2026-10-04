@@ -137,6 +137,7 @@ def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
     assert "actions/runs/${run_id}/cancel" in preflight
     assert "CANCELLED_STALE_RUN=" in preflight
     assert "STALE_RUN_CANCELLATION_TIMEOUT=" in preflight
+    assert "for attempt in $(seq 1 90); do" in preflight
     assert "STALE_RUN_STOPPED=" in preflight
 
 
