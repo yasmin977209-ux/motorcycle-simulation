@@ -5,6 +5,10 @@ on:
     branches:
       - "tmp/stage7-full-run-20261004"
 
+concurrency:
+  group: stage7-full-run
+  cancel-in-progress: false
+
 permissions:
   contents: write
   actions: read
@@ -18,7 +22,7 @@ env:
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
   # Operational orchestration cap; model logic has no max_days limit.
-  JOB_TIMEOUT_MINUTES: "45"
+  JOB_TIMEOUT_MINUTES: "90"
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   CP3_RUN_ID: "37203438351"
   CP3_SCENARIO: "C070_G100"
@@ -99,7 +103,7 @@ jobs:
           - C030_G050
           - C030_G030
           - C030_G000
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -181,7 +185,6 @@ jobs:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          JOB_STARTED_AT: ${{ github.run_started_at }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           MASTER_SEED: ${{ env.MASTER_SEED }}
           INITIAL_NON_C100_TRIALS: ${{ env.INITIAL_NON_C100_TRIALS }}
@@ -205,7 +208,7 @@ jobs:
           import subprocess
           import sys
           import time
-          from datetime import datetime, timezone
+          JOB_STARTED_AT_EPOCH = time.time()
           from pathlib import Path
           import numpy as np
           import pyarrow.parquet as pq
@@ -280,11 +283,7 @@ jobs:
               return out
 
           def elapsed_since_job_start():
-              started = datetime.fromisoformat(
-                  os.environ["JOB_STARTED_AT"].replace("Z", "+00:00")
-              ).astimezone(timezone.utc)
-              job_started_at = started.timestamp()
-              return time.time() - job_started_at
+              return time.time() - JOB_STARTED_AT_EPOCH
 
           def write_json(path, value):
               path.write_text(
@@ -792,6 +791,7 @@ jobs:
           print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
           PY
       - name: Upload unified Stage 7 summary
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: stage7-summary-${{ github.run_attempt }}

@@ -88,10 +88,10 @@ def test_stage7_authoring_verify_runs_contract_tests() -> None:
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
     assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
 
-def test_stage7_current_timeout_is_45_minutes() -> None:
+def test_stage7_current_timeout_is_90_minutes() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
-    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 45
+    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
+    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 90
 
 
 def test_stage7_workflow_does_not_contain_360_timeout() -> None:
@@ -101,13 +101,33 @@ def test_stage7_workflow_does_not_contain_360_timeout() -> None:
         if "timeout" in line.lower() or "JOB_TIMEOUT_MINUTES" in line
     ]
     assert timeout_lines
-    assert all("360" not in line for line in timeout_lines)
+    assert all(
+        stale not in line
+        for line in timeout_lines
+        for stale in ("45", "360")
+    )
 
 
 def test_stage7_timeout_change_is_documented() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
+    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
     assert "Operational orchestration cap; model logic has no max_days limit." in text
+
+def test_stage7_workflow_has_concurrency_guard() -> None:
+    concurrency = _workflow()["concurrency"]
+    assert concurrency == {
+        "group": "stage7-full-run",
+        "cancel-in-progress": False,
+    }
+
+
+def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
+    text = _workflow_text()
+    assert "JOB_STARTED_AT_EPOCH = time.time()" in text
+    assert "return time.time() - JOB_STARTED_AT_EPOCH" in text
+    assert 'os.environ["JOB_STARTED_AT"]' not in text
+    assert "JOB_STARTED_AT:" not in text
+    assert "github.run_started_at" not in text
 
 def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
@@ -416,11 +436,11 @@ def test_stage7_state_module_documents_same_run_id_re_run_policy() -> None:
     assert "Same run_id across GitHub re-runs is one logical lease owner." in text
     assert "run_attempt is retained in the record for auditability only." in text
 
-def test_stage7_operational_timeout_is_45_minutes() -> None:
+def test_stage7_operational_timeout_is_90_minutes() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "45"' in text
+    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
     matrix = _workflow()["jobs"]["matrix-simulation"]
-    assert matrix["timeout-minutes"] == 45
+    assert matrix["timeout-minutes"] == 90
 
 
 def test_stage7_workflow_no_longer_exports_unused_log_events_setting() -> None:
