@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import re
 from pathlib import Path
 
+import pytest
 import yaml
 
+from scripts.stage7_state import (
+    LeaseConflict,
+    StateIntegrityError,
+    StateRemoteNotFound,
+    StateStore,
+    build_artifact_identity,
+    validate_trial_sequence,
+)
 from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -185,3 +195,203 @@ def test_stage7_preflight_is_stage7_specific() -> None:
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
     assert "STAGE7_PREFLIGHT_OK" in preflight
     assert "SOURCE_SHA" in preflight
+
+def test_stage7_state_module_has_distinct_remote_404_exception() -> None:
+    assert issubclass(StateRemoteNotFound, RuntimeError)
+    assert "404" in Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+
+
+def test_stage7_state_module_has_retry_backoff_contract() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert "MAX_ATTEMPTS = 4" in text
+    assert "RETRYABLE_HTTP_STATUS" in text
+    assert "time.sleep" in text
+    assert "2**attempt" in text
+
+
+def test_stage7_state_module_has_concurrency_lease_contract() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert "LeaseConflict" in text
+    assert "lease_owner" in text
+    assert "expires_at" in text
+    assert "StateConflict" in text
+
+
+def test_stage7_state_module_persists_initial_state_remotely() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert "self._put_state(state, None)" in text
+    assert '"completed_trials": 0' in text
+    assert '"next_trial_id": 1' in text
+
+
+def test_stage7_state_module_has_local_remote_sync_verification() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert "_verify_remote_equals" in text
+    assert "_write_local" in text
+
+
+def test_stage7_workflow_uses_transactional_state_store() -> None:
+    text = _workflow_text()
+    assert "StateStore(" in text
+    assert "state, blob_sha = store.acquire()" in text
+    assert "store.save_state(state, blob_sha)" in text
+    assert "atexit.register(store.release)" in text
+
+
+def test_stage7_workflow_does_not_keep_the_old_nonpersistent_initializer() -> None:
+    text = _workflow_text()
+    assert "Initialize or restore scenario state" not in text
+    assert "StateStore(" in text
+
+
+def test_stage7_pause_resume_uses_persisted_next_trial_id() -> None:
+    text = _workflow_text()
+    assert 'run_attempt=os.environ["RUN_ATTEMPT"]' in text
+    assert "next_trial_id = int(" in text
+    assert "validate_trial_sequence(" in text
+
+
+def test_stage7_artifact_identity_contains_exact_required_identity_fields() -> None:
+    identity = build_artifact_identity(
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        trial_id_start=1,
+        trial_id_end=300,
+        fingerprint_sha256="abc123",
+    )
+    assert identity == {
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "trial_id_start": 1,
+        "trial_id_end": 300,
+        "fingerprint_sha256": "abc123",
+    }
+
+
+def test_stage7_trial_sequence_rejects_gap_and_duplicate() -> None:
+    with pytest.raises(StateIntegrityError):
+        validate_trial_sequence(
+            trial_ids=[1, 2, 4],
+            completed_trials=3,
+            next_trial_id=4,
+        )
+    with pytest.raises(StateIntegrityError):
+        validate_trial_sequence(
+            trial_ids=[1, 2, 2],
+            completed_trials=3,
+            next_trial_id=4,
+        )
+
+
+def test_stage7_trial_sequence_accepts_exact_resume_boundary() -> None:
+    validate_trial_sequence(
+        trial_ids=list(range(1, 6)),
+        completed_trials=5,
+        next_trial_id=6,
+    )
+
+
+def test_stage7_workflow_binds_artifact_identity_to_state_and_final_artifact() -> None:
+    text = _workflow_text()
+    assert 'state["artifact_identity"] = build_artifact_identity(' in text
+    assert '"artifact_identity": state["artifact_identity"]' in text
+
+
+def test_stage7_cp3_pending_is_not_encoded_as_false() -> None:
+    text = _workflow_text()
+    report = text[text.index("  final-report:"):]
+    assert "cp3_match = None" in report
+    assert "cp3_match = False" not in report
+
+
+def test_same_run_id_different_attempt_is_allowed_by_lease() -> None:
+    store = StateStore(
+        repo="example/repo",
+        token="token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="100",
+        run_attempt="2",
+        local_path=REPO_ROOT / "state.json",
+    )
+    now = datetime.now(timezone.utc)
+    lease = {
+        "owner": "100",
+        "run_id": "100",
+        "run_attempt": 1,
+        "acquired_at": (
+            now - timedelta(minutes=1)
+        ).isoformat().replace("+00:00", "Z"),
+        "expires_at": (
+            now + timedelta(minutes=10)
+        ).isoformat().replace("+00:00", "Z"),
+    }
+    assert store._lease_is_active_for_other_owner(lease) is False
+
+
+def test_different_run_id_is_rejected_while_lease_is_active() -> None:
+    store = StateStore(
+        repo="example/repo",
+        token="token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="200",
+        run_attempt="1",
+        local_path=REPO_ROOT / "state.json",
+    )
+    now = datetime.now(timezone.utc)
+    lease = {
+        "owner": "100",
+        "run_id": "100",
+        "run_attempt": 1,
+        "acquired_at": (
+            now - timedelta(minutes=1)
+        ).isoformat().replace("+00:00", "Z"),
+        "expires_at": (
+            now + timedelta(minutes=10)
+        ).isoformat().replace("+00:00", "Z"),
+    }
+    assert store._lease_is_active_for_other_owner(lease) is True
+
+
+def test_expired_lease_is_available_to_a_new_run_id() -> None:
+    store = StateStore(
+        repo="example/repo",
+        token="token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="200",
+        run_attempt="1",
+        local_path=REPO_ROOT / "state.json",
+    )
+    now = datetime.now(timezone.utc)
+    lease = {
+        "owner": "100",
+        "run_id": "100",
+        "run_attempt": 1,
+        "acquired_at": (
+            now - timedelta(minutes=20)
+        ).isoformat().replace("+00:00", "Z"),
+        "expires_at": (
+            now - timedelta(minutes=10)
+        ).isoformat().replace("+00:00", "Z"),
+    }
+    assert store._lease_is_active_for_other_owner(lease) is False
+
+
+def test_stage7_state_module_documents_same_run_id_re_run_policy() -> None:
+    text = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+    assert "Same run_id across GitHub re-runs is one logical lease owner." in text
+    assert "run_attempt is retained in the record for auditability only." in text

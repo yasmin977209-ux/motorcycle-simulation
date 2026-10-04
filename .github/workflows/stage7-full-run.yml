@@ -152,51 +152,6 @@ jobs:
           echo "SOURCE_SHA=${SOURCE_SHA}"
           echo "MODEL_SOURCE_BOUNDARY_OK"
 
-      - name: Initialize or restore scenario state
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SCENARIO: ${{ matrix.scenario }}
-          SOURCE_SHA: ${{ env.SOURCE_SHA }}
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          STATE_BRANCH="stage7-state/${SCENARIO}"
-          API_BASE="repos/${GITHUB_REPOSITORY}"
-
-          if gh api "${API_BASE}/contents/state.json?ref=${STATE_BRANCH}" > /tmp/state_response.json 2> /tmp/state_missing.log; then
-            python - <<'PY'
-          import base64, json
-          payload = json.loads(open("/tmp/state_response.json", encoding="utf-8").read())
-          content = base64.b64decode(payload["content"]).decode("utf-8")
-          open("state.json", "w", encoding="utf-8").write(content)
-          open("/tmp/state_blob_sha", "w").write(payload["sha"])
-          PY
-          else
-            gh api --method POST "${API_BASE}/git/refs"               -f "ref=refs/heads/${STATE_BRANCH}"               -f "sha=${SOURCE_SHA}"
-            cat > state.json <<EOF
-          {
-            "scenario": "${SCENARIO}",
-            "source_sha": "${SOURCE_SHA}",
-            "run_id": "${RUN_ID}",
-            "completed_trials": 0,
-            "next_trial_id": 1,
-            "next_check_n": 300,
-            "final_fingerprint": null,
-            "stability_history": [],
-            "final_status": null,
-            "reason_if_not_stable": null,
-            "stable_at_n": null
-          }
-          EOF
-            : > /tmp/state_blob_sha
-          fi
-
-          # Stage 7 creates 25 branches under stage7-state/<scenario>.
-          # These branches hold only state.json (small).
-          # They are NOT deleted automatically. Manual cleanup after Stage 7
-          # closure is required (approved by user).
-
       - name: Restore previous scenario block artifacts when available
         shell: bash
         env:
@@ -244,15 +199,13 @@ jobs:
           set -euo pipefail
           cat > /tmp/stage7_orchestrator.py <<'PY'
           from __future__ import annotations
-          import base64
+          import atexit
           import json
           import math
           import os
           import subprocess
           import sys
           import time
-          import urllib.parse
-          import urllib.request
           from datetime import datetime, timezone
           from pathlib import Path
           import numpy as np
@@ -263,6 +216,11 @@ jobs:
           import rng
           import daily_engine
           from dataclasses import asdict
+          from scripts.stage7_state import (
+              StateStore,
+              build_artifact_identity,
+              validate_trial_sequence,
+          )
           from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -286,38 +244,6 @@ jobs:
           RESULTS_DIR = Path("results_stage7") / SCENARIO
           BLOCKS_DIR = RESULTS_DIR / "blocks"
           BLOCKS_DIR.mkdir(parents=True, exist_ok=True)
-
-          def api(method, path, payload=None):
-              req = urllib.request.Request(
-                  f"https://api.github.com/repos/{REPO}/{path}",
-                  method=method,
-                  headers={
-                      "Authorization": f"Bearer {TOKEN}",
-                      "Accept": "application/vnd.github+json",
-                      "X-GitHub-Api-Version": "2022-11-28",
-                  },
-              )
-              if payload is not None:
-                  req.data = json.dumps(payload).encode("utf-8")
-                  req.add_header("Content-Type", "application/json")
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  raw = response.read()
-              return json.loads(raw.decode("utf-8")) if raw else {}
-
-          def load_state():
-              payload = api("GET", "contents/state.json?" + urllib.parse.urlencode({"ref": STATE_BRANCH}))
-              raw = base64.b64decode(payload["content"]).decode("utf-8")
-              return json.loads(raw), payload["sha"]
-
-          def save_state(state, blob_sha):
-              raw = json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-              payload = {
-                  "message": f"stage7: checkpoint {SCENARIO} n={state['completed_trials']}",
-                  "content": base64.b64encode(raw.encode("utf-8")).decode("ascii"),
-                  "branch": STATE_BRANCH,
-                  "sha": blob_sha,
-              }
-              return api("PUT", "contents/state.json", payload)["content"]["sha"]
 
           def all_results():
               rows = []
@@ -368,15 +294,54 @@ jobs:
                   encoding="utf-8",
               )
 
-          state, blob_sha = load_state()
-          if state.get("source_sha") not in (None, SOURCE_SHA):
-              raise RuntimeError(
-                  f"State source SHA mismatch: {state.get('source_sha')} != {SOURCE_SHA}"
-              )
-          state["source_sha"] = SOURCE_SHA
-          state["run_id"] = RUN_ID
+          store = StateStore(
+              repo=REPO,
+              token=TOKEN,
+              scenario=SCENARIO,
+              source_sha=SOURCE_SHA,
+              run_id=RUN_ID,
+              run_attempt=os.environ["RUN_ATTEMPT"],
+              local_path=Path("state.json"),
+          )
+          state, blob_sha = store.acquire()
+          atexit.register(store.release)
+
           completed = int(state.get("completed_trials", 0))
+          next_trial_id = int(
+              state.get("next_trial_id", completed + 1)
+          )
           history = list(state.get("stability_history", []))
+          results = all_results()
+
+          validate_trial_sequence(
+              trial_ids=[result.trial_id for result in results],
+              completed_trials=completed,
+              next_trial_id=next_trial_id,
+          )
+
+          if results:
+              expected_fingerprint = (
+                  monte_carlo.fingerprint_trial_results(results)
+              )
+              expected_identity = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=completed,
+                  fingerprint_sha256=expected_fingerprint,
+              )
+              if state.get("final_fingerprint") != expected_fingerprint:
+                  raise RuntimeError(
+                      "State/artifact fingerprint mismatch: "
+                      f"{state.get('final_fingerprint')} != "
+                      f"{expected_fingerprint}"
+                  )
+              if state.get("artifact_identity") != expected_identity:
+                  raise RuntimeError("State/artifact identity mismatch")
+          elif state.get("artifact_identity") is not None:
+              raise RuntimeError(
+                  "State contains artifact identity but no restored results"
+              )
 
           if SCENARIO.startswith("C100_"):
               target_n = INITIAL_C100
@@ -403,7 +368,14 @@ jobs:
                       state["final_fingerprint"] = (
                           monte_carlo.fingerprint_trial_results(results)
                       )
-                  blob_sha = save_state(state, blob_sha)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                  blob_sha = store.save_state(state, blob_sha)
                   print(json.dumps({
                       "scenario": SCENARIO,
                       "status": "timeout",
@@ -431,6 +403,11 @@ jobs:
               state["completed_trials"] = completed
               state["next_trial_id"] = completed + 1
               results = all_results()
+              validate_trial_sequence(
+                  trial_ids=[result.trial_id for result in results],
+                  completed_trials=completed,
+                  next_trial_id=int(state["next_trial_id"]),
+              )
 
               if SCENARIO.startswith("C100_"):
                   if len(results) != 1:
@@ -554,7 +531,14 @@ jobs:
 
               state["stability_history"] = history
               state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
-              blob_sha = save_state(state, blob_sha)
+              state["artifact_identity"] = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=completed,
+                  fingerprint_sha256=state["final_fingerprint"],
+              )
+              blob_sha = store.save_state(state, blob_sha)
 
               write_json(
                   RESULTS_DIR / "statistics.json",
@@ -562,6 +546,7 @@ jobs:
                       "scenario": SCENARIO,
                       "trial_count": len(results),
                       "final_fingerprint": state["final_fingerprint"],
+                      "artifact_identity": state["artifact_identity"],
                       "stability_history": history,
                   },
               )
@@ -592,6 +577,7 @@ jobs:
                               "reference_sha256": CP3_AGGREGATE_SHA256 if SCENARIO == CP3_SCENARIO else None,
                               "matched": cp3_match,
                           },
+                          "artifact_identity": state["artifact_identity"],
                       },
                   )
                   break
@@ -749,7 +735,7 @@ jobs:
           timeout_count = sum(row["final_status"] == "timeout" for row in per_scenario)
           max_iterations_count = 0
 
-          cp3_match = False
+          cp3_match = None
           c070 = next((row for row in per_scenario if row["scenario"] == "C070_G100"), None)
 
           if c070 is not None:
