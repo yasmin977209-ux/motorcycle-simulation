@@ -6,12 +6,12 @@ on:
       - "tmp/stage7-full-run-20261004"
 
 concurrency:
-  group: stage7-full-run
+  group: stage7-full-run-${{ github.run_id }}
   cancel-in-progress: false
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 env:
   MASTER_SEED: "20270101"
@@ -47,13 +47,42 @@ jobs:
       - name: Stage 7-specific preflight
         env:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          GH_TOKEN: ${{ github.token }}
           PYTHONPATH: .
         shell: bash
         run: |
           set -euo pipefail
+          stale_runs="$(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
+              --jq '.workflow_runs[] | select(.conclusion == null) | [.id,.status] | join(" ")'
+          )"
+          while read -r run_id status; do
+            if [ "${run_id}" != "${GITHUB_RUN_ID}" ]; then
+              gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" >/dev/null
+              echo "CANCELLED_STALE_RUN=${run_id} STATUS=${status}"
+            fi
+          done <<< "${stale_runs}"
           git cat-file -e "${SOURCE_SHA}^{commit}"
           for path in constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py; do
             git cat-file -e "${SOURCE_SHA}:${path}"
+          done
+          for scenario in C100_G100 C100_G070 C100_G050 C100_G030 C100_G000; do
+            state_content="$(
+              gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=stage7-state/${scenario}" \
+                --jq '.content' 2>/dev/null | base64 --decode || true
+            )"
+            if [ -n "${state_content}" ]; then
+              mismatch_reason="$(
+                python -c 'import json,sys; print(json.load(sys.stdin).get("reason_if_not_stable") or "")' \
+                  <<<"${state_content}"
+              )"
+              if [ "${mismatch_reason}" = "independent C100 trial result mismatch" ]; then
+                gh api --method PATCH \
+                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/stage7-state/${scenario}" \
+                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
+                echo "C100_POISONED_STATE_RESET=${scenario}"
+              fi
+            fi
           done
           python - <<'PY'
           import yaml

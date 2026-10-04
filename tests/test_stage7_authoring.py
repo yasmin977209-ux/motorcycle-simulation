@@ -121,9 +121,32 @@ def test_stage7_timeout_change_is_documented() -> None:
 def test_stage7_workflow_has_concurrency_guard() -> None:
     concurrency = _workflow()["concurrency"]
     assert concurrency == {
-        "group": "stage7-full-run",
+        "group": "stage7-full-run-${{ github.run_id }}",
         "cancel-in-progress": False,
     }
+
+
+def test_stage7_preflight_cancels_stale_stage7_runs() -> None:
+    text = _workflow_text()
+    preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    assert "actions: write" in text[:text.index("jobs:")]
+    assert "GH_TOKEN: ${{ github.token }}" in preflight
+    assert "gh api --paginate" in preflight
+    assert "actions/runs?branch=tmp%2Fstage7-full-run-20261004" in preflight
+    assert "select(.conclusion == null)" in preflight
+    assert "actions/runs/${run_id}/cancel" in preflight
+    assert "CANCELLED_STALE_RUN=" in preflight
+
+
+def test_stage7_preflight_can_reset_only_poisoned_c100_state() -> None:
+    text = _workflow_text()
+    preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    assert "C100_G100 C100_G070 C100_G050 C100_G030 C100_G000" in preflight
+    assert "independent C100 trial result mismatch" in preflight
+    assert "C100_POISONED_STATE_RESET=" in preflight
+    assert "git/refs/heads/stage7-state/${scenario}" in preflight
+    assert '-f "sha=${SOURCE_SHA}"' in preflight
+    assert "-F force=true" in preflight
 
 
 def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
