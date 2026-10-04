@@ -446,7 +446,18 @@ jobs:
                       constants.INITIAL_FLEET_DELIVERY_DATE,
                       "PRIMARY_COLLECTION",
                   )
-                  equality = asdict(primary) == asdict(verification)
+                  primary_dict = asdict(primary)
+                  verification_dict = asdict(verification)
+
+                  primary_trial_id = primary_dict.pop("trial_id")
+                  verification_trial_id = verification_dict.pop("trial_id")
+
+                  if primary_trial_id == verification_trial_id:
+                      raise AssertionError(
+                          "C100 independence requires distinct trial_id"
+                      )
+
+                  equality = primary_dict == verification_dict
 
                   c100_proof = {
                       "scenario": SCENARIO,

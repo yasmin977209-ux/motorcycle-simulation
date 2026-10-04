@@ -191,9 +191,22 @@ def test_c100_mismatch_cannot_be_declared_stable() -> None:
     assert 'state["final_status"] = None' in text
     assert "independent C100 trial result mismatch" in text
 
+def test_c100_verification_excludes_trial_id_from_comparison() -> None:
+    text = _workflow_text()
+    assert 'primary_dict = asdict(primary)' in text
+    assert 'verification_dict = asdict(verification)' in text
+    assert 'primary_trial_id = primary_dict.pop("trial_id")' in text
+    assert 'verification_trial_id = verification_dict.pop("trial_id")' in text
+    assert 'if primary_trial_id == verification_trial_id:' in text
+    assert 'raise AssertionError(' in text
+    assert "C100 independence requires distinct trial_id" in text
+    assert 'equality = primary_dict == verification_dict' in text
+    assert 'equality = asdict(primary) == asdict(verification)' not in text
+
+
 def test_c100_stability_is_after_independent_equality_proof() -> None:
     text = _workflow_text()
-    equality_pos = text.index("equality = asdict(primary) == asdict(verification)")
+    equality_pos = text.index("equality = primary_dict == verification_dict")
     stable_pos = text.index('state["final_status"] = "stable"')
     assert equality_pos < stable_pos
 
