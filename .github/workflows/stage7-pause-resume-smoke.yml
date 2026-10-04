@@ -3,7 +3,7 @@ name: stage7-pause-resume-smoke
 on:
   push:
     branches:
-      - "tmp/stage7-pause-resume-smoke-20261004"
+      - "tmp/stage7-pause-resume-smoke-v2-20261004"
 
 permissions:
   contents: write
