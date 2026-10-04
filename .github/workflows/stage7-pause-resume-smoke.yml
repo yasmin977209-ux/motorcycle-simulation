@@ -1,0 +1,439 @@
+name: stage7-pause-resume-smoke
+
+on:
+  push:
+    branches:
+      - "tmp/stage7-pause-resume-smoke-v3-20261004"
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  SCENARIO: "C070_G100"
+  MASTER_SEED: "20270101"
+  LEASE_SECONDS: "3600"
+
+jobs:
+  smoke:
+    name: pause-resume-${{ github.run_attempt }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify pinned model source
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+          MODEL_FILES=(
+            constants.py dateutils.py rng.py entities.py state_machine.py
+            daily_engine.py accounting.py collection.py guarantee.py friday.py
+            settlement.py closure.py partner_equity.py monte_carlo.py
+          )
+          for path in "${MODEL_FILES[@]}"; do
+            git cat-file -e "${SOURCE_SHA}:${path}"
+          done
+          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "MODEL_SOURCE_DRIFT_DETECTED" >&2
+            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
+          echo "SOURCE_SHA=${SOURCE_SHA}"
+          echo "MODEL_SOURCE_BOUNDARY_OK"
+
+      - name: Restore execution 1 checkpoint artifact
+        if: ${{ github.run_attempt == 2 }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARTIFACT_ID="$(
+            gh api --paginate               "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts?per_page=100"               --jq '.artifacts[] | select(.name == "stage7-pause-resume-smoke-" + env.RUN_ID + "-1") | .id' |
+            head -n 1
+          )"
+          if [ -z "${ARTIFACT_ID}" ]; then
+            echo "SMOKE_EXECUTION_1_ARTIFACT_NOT_FOUND" >&2
+            exit 1
+          fi
+          rm -rf results_stage7_smoke
+          mkdir -p results_stage7_smoke
+          gh api             "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip"             > /tmp/stage7_pause_resume_smoke_attempt1.zip
+          unzip -q /tmp/stage7_pause_resume_smoke_attempt1.zip             -d results_stage7_smoke
+
+      - name: Smoke execution
+        env:
+          PYTHONPATH: .
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          SCENARIO: ${{ env.SCENARIO }}
+          MASTER_SEED: ${{ env.MASTER_SEED }}
+          LEASE_SECONDS: ${{ env.LEASE_SECONDS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/stage7_pause_resume_smoke.py <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          import pyarrow.parquet as pq
+
+          import monte_carlo
+          from scripts.stage7_state import (
+              StateStore,
+              build_artifact_identity,
+              validate_trial_sequence,
+          )
+
+          SOURCE_SHA = os.environ["SOURCE_SHA"]
+          SCENARIO = os.environ["SCENARIO"]
+          MASTER_SEED = int(os.environ["MASTER_SEED"])
+          RUN_ID = os.environ["RUN_ID"]
+          RUN_ATTEMPT = int(os.environ["RUN_ATTEMPT"])
+          LEASE_SECONDS = int(os.environ["LEASE_SECONDS"])
+          ROOT = Path("results_stage7_smoke")
+          RESUME_DIR = ROOT / "resume"
+          DIRECT_DIR = ROOT / "direct"
+          STATE_LOCAL = ROOT / "state.json"
+          RESUME_DIR.mkdir(parents=True, exist_ok=True)
+
+          class SmokeStateStore(StateStore):
+              @property
+              def state_branch(self) -> str:
+                  return f"stage7-smoke-v3-state/{self.scenario}"
+
+          store = SmokeStateStore(
+              repo=os.environ["GITHUB_REPOSITORY"],
+              token=os.environ["GH_TOKEN"],
+              scenario=SCENARIO,
+              source_sha=SOURCE_SHA,
+              run_id=RUN_ID,
+              run_attempt=str(RUN_ATTEMPT),
+              local_path=STATE_LOCAL,
+              lease_seconds=LEASE_SECONDS,
+          )
+
+          def load_results(root: Path) -> list[monte_carlo.TrialResult]:
+              rows = []
+              for path in sorted(root.glob("**/blocks/block_*.parquet")):
+                  rows.extend(pq.read_table(path).to_pylist())
+              return sorted(
+                  [monte_carlo.TrialResult(**row) for row in rows],
+                  key=lambda result: result.trial_id,
+              )
+
+          def run_block(start: int, end: int, output_dir: Path) -> None:
+              subprocess.run(
+                  [
+                      sys.executable,
+                      "-m",
+                      "scripts.stage7_run_trial_block",
+                      "--scenario",
+                      SCENARIO,
+                      "--trial-id-start",
+                      str(start),
+                      "--trial-id-end",
+                      str(end),
+                      "--source-sha",
+                      SOURCE_SHA,
+                      "--run-id",
+                      RUN_ID,
+                      "--output-dir",
+                      str(output_dir),
+                      "--master-seed",
+                      str(MASTER_SEED),
+                  ],
+                  check=True,
+              )
+
+          if RUN_ATTEMPT == 1:
+              state, blob_sha = store.acquire()
+              if state["completed_trials"] != 0 or state["next_trial_id"] != 1:
+                  raise AssertionError(
+                      f"unexpected initial state: {state}"
+                  )
+
+              run_block(1, 5, RESUME_DIR)
+              results = load_results(RESUME_DIR)
+              validate_trial_sequence(
+                  trial_ids=[result.trial_id for result in results],
+                  completed_trials=5,
+                  next_trial_id=6,
+              )
+              fingerprint = monte_carlo.fingerprint_trial_results(results)
+              state["completed_trials"] = 5
+              state["next_trial_id"] = 6
+              state["final_fingerprint"] = fingerprint
+              state["artifact_identity"] = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=5,
+                  fingerprint_sha256=fingerprint,
+              )
+              state["resume_verified"] = False
+              store.save_state(state, blob_sha)
+
+              execution1 = {
+                  "run_id": RUN_ID,
+                  "run_attempt": RUN_ATTEMPT,
+                  "completed_trials": 5,
+                  "next_trial_id": 6,
+                  "executed_ids": [1, 2, 3, 4, 5],
+                  "fingerprint": fingerprint,
+                  "artifact_identity": state["artifact_identity"],
+                  "lease_owner": store.lease_owner,
+              }
+              (ROOT / "execution1_manifest.json").write_text(
+                  json.dumps(
+                      execution1,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
+                  + "\n",
+                  encoding="utf-8",
+              )
+              print(
+                  json.dumps(
+                      {
+                          "SMOKE_EXECUTION": 1,
+                          "completed_trials": 5,
+                          "next_trial_id": 6,
+                          "executed_ids": [1, 2, 3, 4, 5],
+                          "resume_reexecution_ids": [],
+                          "lease_owner": store.lease_owner,
+                      },
+                      sort_keys=True,
+                  )
+              )
+              print("CHECKPOINT_COMPLETE_EXECUTION_1")
+              print(
+                  json.dumps(
+                      {
+                          "execution": 1,
+                          "completed_trials": 5,
+                          "next_trial_id": 6,
+                          "artifact": (
+                              f"stage7-pause-resume-smoke-{RUN_ID}-"
+                              f"{os.environ['GITHUB_RUN_ATTEMPT']}"
+                          ),
+                      },
+                      sort_keys=True,
+                  )
+              )
+              # Deliberately keep the lease active so attempt 2 proves the
+              # same-run-id re-run policy instead of merely reacquiring a free lease.
+              raise SystemExit(1)
+
+          if RUN_ATTEMPT != 2:
+              raise AssertionError(
+                  f"unsupported smoke run_attempt={RUN_ATTEMPT}"
+              )
+
+          manifest_path = ROOT / "execution1_manifest.json"
+          if not manifest_path.exists():
+              raise AssertionError("execution 1 manifest is missing")
+          execution1 = json.loads(
+              manifest_path.read_text(encoding="utf-8")
+          )
+          if execution1["executed_ids"] != [1, 2, 3, 4, 5]:
+              raise AssertionError(
+                  f"execution 1 IDs mismatch: {execution1['executed_ids']}"
+              )
+
+          state, blob_sha = store.acquire()
+          if state["completed_trials"] != 5:
+              raise AssertionError(
+                  "resume completed_trials mismatch: "
+                  f"{state['completed_trials']}"
+              )
+          if state["next_trial_id"] != 6:
+              raise AssertionError(
+                  "resume next_trial_id mismatch: "
+                  f"{state['next_trial_id']}"
+              )
+
+          before_resume = load_results(RESUME_DIR)
+          if [result.trial_id for result in before_resume] != [1, 2, 3, 4, 5]:
+              raise AssertionError(
+                  "execution 1 artifact was not exactly trials 1..5"
+              )
+
+          run_block(6, 10, RESUME_DIR)
+          resumed_results = load_results(RESUME_DIR)
+          validate_trial_sequence(
+              trial_ids=[result.trial_id for result in resumed_results],
+              completed_trials=10,
+              next_trial_id=11,
+          )
+
+          resumed_ids = [result.trial_id for result in resumed_results]
+          resume_execution_ids = [6, 7, 8, 9, 10]
+          if resumed_ids != list(range(1, 11)):
+              raise AssertionError(f"resumed_ids mismatch: {resumed_ids}")
+
+          run_block(1, 10, DIRECT_DIR)
+          direct_results = load_results(DIRECT_DIR)
+          direct_ids = [result.trial_id for result in direct_results]
+          if direct_ids != list(range(1, 11)):
+              raise AssertionError(
+                  f"direct baseline IDs mismatch: {direct_ids}"
+              )
+
+          resume_fingerprint = monte_carlo.fingerprint_trial_results(
+              resumed_results
+          )
+          direct_fingerprint = monte_carlo.fingerprint_trial_results(
+              direct_results
+          )
+          fingerprint_equal = resume_fingerprint == direct_fingerprint
+
+          state["completed_trials"] = 10
+          state["next_trial_id"] = 11
+          state["final_fingerprint"] = resume_fingerprint
+          state["artifact_identity"] = build_artifact_identity(
+              scenario=SCENARIO,
+              source_sha=SOURCE_SHA,
+              trial_id_start=1,
+              trial_id_end=10,
+              fingerprint_sha256=resume_fingerprint,
+          )
+          state["resume_execution_ids"] = resume_execution_ids
+          state["direct_baseline_ids"] = direct_ids
+          state["resume_verified"] = (
+              state["completed_trials"] == 10
+              and state["next_trial_id"] == 11
+              and resumed_ids == list(range(1, 11))
+              and resume_execution_ids == [6, 7, 8, 9, 10]
+              and execution1["executed_ids"] == [1, 2, 3, 4, 5]
+              and fingerprint_equal
+              and state["artifact_identity"]
+              == build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=10,
+                  fingerprint_sha256=resume_fingerprint,
+              )
+          )
+
+          store.save_state(state, blob_sha)
+          store.release()
+
+          evidence = {
+              "run_id": RUN_ID,
+              "run_attempt": RUN_ATTEMPT,
+              "scenario": SCENARIO,
+              "source_sha": SOURCE_SHA,
+              "state_before": {
+                  "completed_trials": 5,
+                  "next_trial_id": 6,
+              },
+              "state_after": {
+                  "completed_trials": state["completed_trials"],
+                  "next_trial_id": state["next_trial_id"],
+              },
+              "execution1_ids": execution1["executed_ids"],
+              "resume_execution_ids": resume_execution_ids,
+              "resumed_ids": resumed_ids,
+              "direct_baseline_ids": direct_ids,
+              "resume_fingerprint": resume_fingerprint,
+              "direct_fingerprint": direct_fingerprint,
+              "resume_fingerprint_equals_direct": fingerprint_equal,
+              "resume_reexecution_1_5": False,
+              "resume_verified": bool(state["resume_verified"]),
+              "artifact_identity": state["artifact_identity"],
+              "artifact_identity_matches_state": (
+                  state["artifact_identity"]
+                  == build_artifact_identity(
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      trial_id_start=1,
+                      trial_id_end=10,
+                      fingerprint_sha256=resume_fingerprint,
+                  )
+              ),
+          }
+          (ROOT / "smoke_evidence.json").write_text(
+              json.dumps(
+                  evidence,
+                  ensure_ascii=False,
+                  indent=2,
+                  sort_keys=True,
+              )
+              + "\n",
+              encoding="utf-8",
+          )
+          print(
+              json.dumps(
+                  evidence,
+                  ensure_ascii=False,
+                  sort_keys=True,
+              )
+          )
+          if not evidence["resume_verified"]:
+              raise SystemExit(2)
+
+          print("SMOKE_RESUME_VERIFIED")
+          print(
+              json.dumps(
+                  {
+                      "execution": 2,
+                      "completed_trials": 10,
+                      "next_trial_id": 11,
+                      "resume_fingerprint": resume_fingerprint,
+                      "direct_fingerprint": direct_fingerprint,
+                      "fingerprints_equal": True,
+                  },
+                  sort_keys=True,
+              )
+          )
+          PY
+          python /tmp/stage7_pause_resume_smoke.py
+
+      - name: Upload execution 1 checkpoint artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-pause-resume-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            results_stage7_smoke/state.json
+            results_stage7_smoke/execution1_manifest.json
+            results_stage7_smoke/resume
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload final smoke evidence
+        if: always() && github.run_attempt == 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-pause-resume-smoke-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results_stage7_smoke/smoke_evidence.json
+          if-no-files-found: error
+          retention-days: 7
