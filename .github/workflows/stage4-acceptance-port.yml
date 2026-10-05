@@ -1,14 +1,16 @@
+# SAFETY: This workflow MUST NOT write to main.
+# Results are published as artifacts only.
+# Trigger is restricted to non-main branches.
 name: Stage 4 Acceptance Port
 
 on:
   push:
-    branches: [main]
+    branches: [stage4-verify-*]
     paths-ignore:
       - "results/**"
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   acceptance-port:
@@ -268,13 +270,7 @@ jobs:
           set -o pipefail
           python -m pytest -q tests/test_acceptance_16_v2.py -v 2>&1 | tee /tmp/v2_output.txt
 
-      - name: Round 4
-        env:
-          PYTHONPATH: .
-        run: python -m pytest -q tests/test_monte_carlo_round4.py
-
-      - name: Publish v2 results to main
-        if: always()
+      - name: Prepare v2 results
         env:
           TEST_SHA: ${{ github.sha }}
         run: |
@@ -345,14 +341,17 @@ jobs:
           )
           PY
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git reset --soft origin/main
-          git add results/
-          git diff --cached --quiet && echo "no changes" && exit 0
-          git commit -m "Record Stage 4 v2 acceptance results [skip ci]"
-          git push origin HEAD:main
+
+      - name: Upload v2 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage4-acceptance-results-${{ github.run_id }}
+          path: results/v2_*
+
+      - name: Round 4
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_monte_carlo_round4.py
 
       - name: Fail workflow when acceptance failed
         if: steps.acceptance.outcome == 'failure'
