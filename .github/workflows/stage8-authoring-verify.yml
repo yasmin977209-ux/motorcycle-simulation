@@ -3,7 +3,7 @@ name: stage8-authoring-verify
 on:
   push:
     branches:
-      - "tmp/stage8-consolidate-v2-20261005"
+      - "tmp/stage8-authoring-20261004"
 
 permissions:
   contents: read
