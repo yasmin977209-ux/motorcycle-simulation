@@ -4,12 +4,7 @@ on:
   push:
     branches:
       - "tmp/stage8-authoring-20261004"
-  workflow_dispatch:
-    inputs:
-      target_ref:
-        description: "Git ref or SHA to verify"
-        required: true
-        default: "tmp/stage8-authoring-20261004"
+      - "tmp/stage8-consolidate-v2-20261005"
 
 permissions:
   contents: read
@@ -20,27 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Validate target_ref
-        if: github.event_name == 'workflow_dispatch'
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf /tmp/validate || true
-          git init -q /tmp/validate
-          cd /tmp/validate
-          git remote add origin \
-            "https://github.com/${GITHUB_REPOSITORY}.git"
-          if ! git fetch --depth=1 origin "${{ inputs.target_ref }}"; then
-            echo "Invalid target_ref: ${{ inputs.target_ref }}" >&2
-            exit 1
-          fi
-          git cat-file -e FETCH_HEAD^{commit}
-          echo "VALIDATED_REF=${{ inputs.target_ref }}"
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_ref || 'tmp/stage8-authoring-20261004' }}
+          ref: github.sha
           fetch-depth: 1
 
       - name: Fetch pinned SOURCE_SHA for diff
