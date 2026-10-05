@@ -8,6 +8,37 @@
 - الاختبار 144: `apply_legacy_debt_collection` معزولة عن RNG؛ v2 يفحص الصيغة الحتمية مع `remaining_debt=800` ويحافظ على `payment==800`.
 - الاختبارات 127/159/160/161 = DEFERRED، والاختبار 158 = ADJUDICATION.
 
+## USER-AUTHORIZED REFERENCE OVERRIDE — Test 158
+
+تاريخ الاعتماد: `2026-10-05T22:03:21Z`
+
+أوافق صراحةً على Override تنفيذي للمرجع النهائي
+في Acceptance Gate بالنسبة إلى Test 158 فقط.
+
+يُستبعد Test 158، المصنف K_TEST، من effective
+Acceptance Gate بوصفه اختباراً توثيقياً/حوكمياً
+لا يمثل business behavior للمحرك.
+
+يبقى العدد الرسمي والتاريخي 163.
+يبقى Test 158 محفوظاً برقم 158.
+لا يُعاد ترقيم 159–163.
+لا يُحذف Test 158 من السجل.
+لا يُعدّل assertion Test 158.
+لا يُعدّل المرجع النهائي.
+
+official inventory = `163`
+effective acceptance gate = `162`
+excluded as K_TEST = `158`
+
+هذا Override قرار تنفيذي مصرح به ولا يُعدّل به
+`المرجع_النهائي_الموحد_المعتمد.md`.
+
+ملاحظة: هذا Override يؤثر على عرض Gate في
+`stage4-acceptance-port.yml`. تحديث الـworkflow
+مؤجل إلى دفعة مستقلة.
+
+approval_commit_sha: `PENDING`
+
 | رقم | الاستدعاء القديم | الاستدعاء الجديد | هل تغيّر المعنى؟ |
 |---:|---|---|---|
 | 1 | `_new_project` | `_new_project` | لا |
