@@ -1,0 +1,73 @@
+name: stage7-authoring-verify
+
+on:
+  push:
+    branches:
+      - "tmp/stage7-authoring-20261004"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage7-authoring-20261004
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pyyaml
+
+      - name: AST parse Stage 7 helpers
+        run: |
+          python -c "import ast; ast.parse(open('scripts/stage7_run_trial_block.py', encoding='utf-8').read())"
+          python -c "import ast; ast.parse(open('scripts/stage7_state.py', encoding='utf-8').read())"
+          python -c "import ast; ast.parse(open('scripts/stage7_stability.py', encoding='utf-8').read())"
+
+      - name: YAML lint
+        run: |
+          python -c "import yaml; yaml.safe_load(open('.github/workflows/stage7-full-run.yml', encoding='utf-8'))"
+          python -c "import yaml; yaml.safe_load(open('.github/workflows/stage7-authoring-verify.yml', encoding='utf-8'))"
+
+      - name: Stage 7 authoring contract tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q tests/test_stage7_authoring.py
+
+      - name: All 25 scenarios parse
+        run: |
+          python - <<'PY'
+          import yaml
+          import monte_carlo
+
+          spec = yaml.safe_load(
+              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
+          )
+          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
+
+          assert len(scenarios) == 25, f"expected 25, got {len(scenarios)}"
+          assert len(set(scenarios)) == 25, "duplicate scenarios"
+
+          for scenario in scenarios:
+              probability, recovery = monte_carlo.parse_scenario_id(scenario)
+              print(scenario, probability, recovery)
+
+          print("ALL_25_OK")
+          PY
+
+      - name: "\n check in stage7_run_trial_block"
+        run: |
+          grep -c '+ "\\n",' scripts/stage7_run_trial_block.py
+          cat -A scripts/stage7_run_trial_block.py | grep -n 'write_text\|"\\n"' | head -20

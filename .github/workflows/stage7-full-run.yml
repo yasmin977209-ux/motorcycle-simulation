@@ -1,0 +1,976 @@
+name: stage7-full-run
+
+on:
+  push:
+    branches:
+      - "tmp/stage7-full-run-20261004"
+
+concurrency:
+  group: stage7-full-run-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  MASTER_SEED: "20270101"
+  INITIAL_NON_C100_TRIALS: "300"
+  INITIAL_C100_TRIALS: "1"
+  ESCALATION_STEP: "50"
+  STABILITY_CONSECUTIVE_CHECKS: "3"
+  CI_RELATIVE_EPSILON: "0.01"
+  CI_ABSOLUTE_EPSILON: "1"
+  # Operational orchestration cap; model logic has no max_days limit.
+  JOB_TIMEOUT_MINUTES: "90"
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  CP3_RUN_ID: "37203438351"
+  CP3_SCENARIO: "C070_G100"
+  CP3_AGGREGATE_SHA256: "c09d39cd3f79e9460d16df4fc2a6a47b6b029983e2f596de4af4009bc169a14a"
+
+jobs:
+  preflight-gates:
+    name: preflight-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Stage 7-specific preflight
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          SCENARIOS=(
+            C100_G100 C100_G070 C100_G050 C100_G030 C100_G000
+            C085_G100 C085_G070 C085_G050 C085_G030 C085_G000
+            C070_G100 C070_G070 C070_G050 C070_G030 C070_G000
+            C050_G100 C050_G070 C050_G050 C050_G030 C050_G000
+            C030_G100 C030_G070 C030_G050 C030_G030 C030_G000
+          )
+          stale_runs="$(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
+              --jq '.workflow_runs[] | select(.conclusion == null) | [.id,.status] | join(" ")'
+          )"
+          stale_ids=()
+          while read -r run_id status; do
+            [ -n "${run_id}" ] || continue
+            if [ "${run_id}" != "${GITHUB_RUN_ID}" ]; then
+              gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" >/dev/null
+              echo "CANCELLED_STALE_RUN=${run_id} STATUS=${status}"
+              stale_ids+=("${run_id}")
+            fi
+          done <<< "${stale_runs}"
+          for run_id in "${stale_ids[@]}"; do
+            stopped=false
+            for attempt in $(seq 1 90); do
+              status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq ".status")"
+              if [ "${status}" = "completed" ]; then
+                stopped=true
+                break
+              fi
+              sleep 2
+            done
+            if [ "${stopped}" != "true" ]; then
+              echo "STALE_RUN_CANCELLATION_TIMEOUT=${run_id}" >&2
+              exit 1
+            fi
+            echo "STALE_RUN_STOPPED=${run_id}"
+          done
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+          for path in constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py; do
+            git cat-file -e "${SOURCE_SHA}:${path}"
+          done
+          for scenario in "${SCENARIOS[@]}"; do
+            STATE_BRANCH="stage7-state/${scenario}"
+            STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
+            STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
+            if gh api "${STATE_REF}" >/dev/null 2>&1; then
+              state_run_id="$(
+                gh api "${STATE_CONTENTS}" 2>/dev/null |
+                  jq -r '.content // empty' 2>/dev/null |
+                  tr -d '\n' |
+                  base64 -d 2>/dev/null |
+                  jq -r '.run_id // empty' 2>/dev/null || true
+              )"
+              if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
+                echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
+              else
+                gh api --method PATCH \
+                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
+                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
+                echo "STAGE7_STATE_RESET=${scenario}"
+              fi
+            else
+              echo "STAGE7_STATE_ABSENT=${scenario}"
+            fi
+          done
+          python - <<'PY'
+          import yaml
+          import monte_carlo
+
+          spec = yaml.safe_load(
+              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
+          )
+          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
+          assert len(scenarios) == 25
+          assert len(set(scenarios)) == 25
+          for scenario in scenarios:
+              monte_carlo.parse_scenario_id(scenario)
+          print("STAGE7_PREFLIGHT_OK")
+          PY
+  matrix-simulation:
+    name: simulation-${{ matrix.scenario }}
+    needs: preflight-gates
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify pinned model source SHA
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+        run: |
+          set -euo pipefail
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+
+          MODEL_FILES=(
+            constants.py
+            dateutils.py
+            rng.py
+            entities.py
+            state_machine.py
+            daily_engine.py
+            accounting.py
+            collection.py
+            guarantee.py
+            friday.py
+            settlement.py
+            closure.py
+            partner_equity.py
+            monte_carlo.py
+          )
+
+          for path in "${MODEL_FILES[@]}"; do
+            if ! git cat-file -e "${SOURCE_SHA}:${path}"; then
+              echo "PINNED_SOURCE_FILE_MISSING=${path}" >&2
+              exit 1
+            fi
+          done
+
+          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "MODEL_SOURCE_DRIFT_DETECTED" >&2
+            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
+
+          echo "SOURCE_SHA=${SOURCE_SHA}"
+          echo "MODEL_SOURCE_BOUNDARY_OK"
+
+      - name: Restore previous scenario block artifacts when available
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          mkdir -p "results_stage7/${SCENARIO}/blocks"
+          ARTIFACT_ID="$(
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
+              | sort -k2 | tail -1 | cut -f1
+          )"
+          if [ -n "${ARTIFACT_ID}" ]; then
+            echo "STAGE7_ARTIFACT_RESTORE=RUN_ID:${GITHUB_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
+            mkdir -p /tmp/previous_stage7_blocks
+            unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
+            find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+            find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          else
+            echo "No previous Stage 7 block artifact found for this workflow run."
+          fi
+
+      - name: Prepare CP3 overlap reference
+        if: matrix.scenario == 'C070_G100'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CP3_RUN_ID: ${{ env.CP3_RUN_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage7_cp3_reference/unpacked
+          if ! ARTIFACT_ID="$(
+            gh api --paginate \\
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${CP3_RUN_ID}/artifacts?per_page=100" \\
+              --jq '.artifacts[] | select(.name == "stage6-5-cp3-results") | .id' \\
+              | tail -1
+          )"; then
+            echo "::warning::CP3 reference artifact lookup unavailable; cross-reference will be marked unavailable."
+            exit 0
+          fi
+          if [ -z "${ARTIFACT_ID}" ]; then
+            echo "::warning::CP3 reference artifact is unavailable (possibly expired); cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! gh api \\
+            "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \\
+            > /tmp/stage7_cp3_reference.zip; then
+            echo "::warning::CP3 reference artifact download failed; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! unzip -q \\
+            /tmp/stage7_cp3_reference.zip \\
+            -d /tmp/stage7_cp3_reference/unpacked; then
+            echo "::warning::CP3 reference artifact extraction failed; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if ! cp \\
+            /tmp/stage7_cp3_reference/unpacked/trials_summary_6000.parquet \\
+            /tmp/stage7_cp3_reference/trials_summary_6000.parquet; then
+            echo "::warning::CP3 reference parquet is unavailable; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+          if [ ! -s /tmp/stage7_cp3_reference/trials_summary_6000.parquet ]; then
+            echo "::warning::CP3 reference parquet is empty; cross-reference will be marked unavailable."
+            exit 0
+          fi
+
+      - name: Adaptive scenario orchestration
+        env:
+          PYTHONPATH: .
+          GH_TOKEN: ${{ github.token }}
+          SCENARIO: ${{ matrix.scenario }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          MASTER_SEED: ${{ env.MASTER_SEED }}
+          INITIAL_NON_C100_TRIALS: ${{ env.INITIAL_NON_C100_TRIALS }}
+          INITIAL_C100_TRIALS: ${{ env.INITIAL_C100_TRIALS }}
+          ESCALATION_STEP: ${{ env.ESCALATION_STEP }}
+          STABILITY_CONSECUTIVE_CHECKS: ${{ env.STABILITY_CONSECUTIVE_CHECKS }}
+          CI_RELATIVE_EPSILON: ${{ env.CI_RELATIVE_EPSILON }}
+          CI_ABSOLUTE_EPSILON: ${{ env.CI_ABSOLUTE_EPSILON }}
+          JOB_TIMEOUT_MINUTES: ${{ env.JOB_TIMEOUT_MINUTES }}
+          CP3_SCENARIO: ${{ env.CP3_SCENARIO }}
+          CP3_AGGREGATE_SHA256: ${{ env.CP3_AGGREGATE_SHA256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/stage7_orchestrator.py <<'PY'
+          from __future__ import annotations
+          import atexit
+          import json
+          import math
+          import os
+          import subprocess
+          import sys
+          import time
+          JOB_STARTED_AT_EPOCH = time.time()
+          from pathlib import Path
+          import numpy as np
+          import pyarrow.parquet as pq
+          from scipy.stats import t
+          import constants
+          import monte_carlo
+          import rng
+          import daily_engine
+          from dataclasses import asdict
+          from scripts.stage7_state import (
+              StateStore,
+              build_artifact_identity,
+              validate_trial_sequence,
+          )
+          from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
+
+          REPO = os.environ["GITHUB_REPOSITORY"]
+          TOKEN = os.environ["GH_TOKEN"]
+          SCENARIO = os.environ["SCENARIO"]
+          collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(SCENARIO)
+          SOURCE_SHA = os.environ["SOURCE_SHA"]
+          RUN_ID = os.environ["RUN_ID"]
+          STATE_BRANCH = f"stage7-state/{SCENARIO}"
+          MASTER_SEED = int(os.environ["MASTER_SEED"])
+          INITIAL_NON_C100 = int(os.environ["INITIAL_NON_C100_TRIALS"])
+          INITIAL_C100 = int(os.environ["INITIAL_C100_TRIALS"])
+          ESCALATION_STEP = int(os.environ["ESCALATION_STEP"])
+          REQUIRED_CONSECUTIVE = int(os.environ["STABILITY_CONSECUTIVE_CHECKS"])
+          RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
+          ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
+          JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
+          CP3_SCENARIO = os.environ["CP3_SCENARIO"]
+          CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
+          RESULTS_DIR = Path("results_stage7") / SCENARIO
+          BLOCKS_DIR = RESULTS_DIR / "blocks"
+          BLOCKS_DIR.mkdir(parents=True, exist_ok=True)
+
+          def all_results():
+              rows = []
+              for path in sorted(BLOCKS_DIR.glob("block_*.parquet")):
+                  rows.extend(pq.read_table(path).to_pylist())
+              return sorted(
+                  [monte_carlo.TrialResult(**row) for row in rows],
+                  key=lambda x: x.trial_id,
+              )
+
+          def statistics(results):
+              values = {
+                  "final_net_project_equity": np.array([r.final_net_project_equity for r in results], dtype=float),
+                  "partner1_final_entitlement": np.array([r.partner1_final_entitlement for r in results], dtype=float),
+                  "partner2_final_entitlement": np.array([r.partner2_final_entitlement for r in results], dtype=float),
+              }
+              n = len(results)
+              if n < 2:
+                  raise ValueError("At least two observations are required for a t-based CI.")
+              out = {}
+              t_critical = float(t.ppf(0.975, n - 1))
+              for key, sample in values.items():
+                  mean = float(sample.mean())
+                  sd = float(sample.std(ddof=1))
+                  half_ci = t_critical * sd / math.sqrt(n)
+                  limit = max(ABSOLUTE_EPSILON, RELATIVE_EPSILON * abs(mean))
+                  out[key] = {
+                      "n": n,
+                      "mean": mean,
+                      "sample_std": sd,
+                      "t_critical": t_critical,
+                      "half_ci_95": half_ci,
+                      "limit": limit,
+                      "stable": half_ci < limit,
+                  }
+              return out
+
+          def elapsed_since_job_start():
+              return time.time() - JOB_STARTED_AT_EPOCH
+
+          def write_json(path, value):
+              path.write_text(
+                  json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                  encoding="utf-8",
+              )
+
+          store = StateStore(
+              repo=REPO,
+              token=TOKEN,
+              scenario=SCENARIO,
+              source_sha=SOURCE_SHA,
+              run_id=RUN_ID,
+              run_attempt=os.environ["RUN_ATTEMPT"],
+              local_path=Path("state.json"),
+          )
+          state, blob_sha = store.acquire()
+          atexit.register(store.release)
+
+          completed = int(state.get("completed_trials", 0))
+          next_trial_id = int(
+              state.get("next_trial_id", completed + 1)
+          )
+          history = list(state.get("stability_history", []))
+          results = all_results()
+
+          validate_trial_sequence(
+              trial_ids=[result.trial_id for result in results],
+              completed_trials=completed,
+              next_trial_id=next_trial_id,
+          )
+
+          if results:
+              expected_fingerprint = (
+                  monte_carlo.fingerprint_trial_results(results)
+              )
+              expected_identity = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=completed,
+                  fingerprint_sha256=expected_fingerprint,
+              )
+              if state.get("final_fingerprint") != expected_fingerprint:
+                  raise RuntimeError(
+                      "State/artifact fingerprint mismatch: "
+                      f"{state.get('final_fingerprint')} != "
+                      f"{expected_fingerprint}"
+                  )
+              if state.get("artifact_identity") != expected_identity:
+                  raise RuntimeError("State/artifact identity mismatch")
+          elif state.get("artifact_identity") is not None:
+              raise RuntimeError(
+                  "State contains artifact identity but no restored results"
+              )
+
+          if SCENARIO.startswith("C100_"):
+              target_n = INITIAL_C100
+          else:
+              target_n = max(
+                  INITIAL_NON_C100,
+                  int(state.get("next_check_n", INITIAL_NON_C100)),
+              )
+
+          if state.get("final_status") == "stable":
+              print(json.dumps({
+                  "scenario": SCENARIO,
+                  "status": "already_stable",
+                  "stable_at_n": state.get("stable_at_n"),
+              }, sort_keys=True))
+              raise SystemExit(0)
+
+          while True:
+              if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
+                  state["final_status"] = "timeout"
+                  state["reason_if_not_stable"] = "job wall-clock timeout reached"
+                  state["included_in_final_stats"] = False
+                  results = all_results()
+                  if results:
+                      state["final_fingerprint"] = (
+                          monte_carlo.fingerprint_trial_results(results)
+                      )
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                  blob_sha = store.save_state(state, blob_sha)
+                  print(json.dumps({
+                      "scenario": SCENARIO,
+                      "status": "timeout",
+                      "completed_trials": completed,
+                  }, sort_keys=True))
+                  raise SystemExit(0)
+
+              trial_start = completed + 1
+              trial_end = target_n
+
+              if trial_end >= trial_start:
+                  subprocess.run([
+                      sys.executable,
+                      "-m", "scripts.stage7_run_trial_block",
+                      "--scenario", SCENARIO,
+                      "--trial-id-start", str(trial_start),
+                      "--trial-id-end", str(trial_end),
+                      "--source-sha", SOURCE_SHA,
+                      "--run-id", RUN_ID,
+                      "--output-dir", "results_stage7",
+                      "--master-seed", str(MASTER_SEED),
+                  ], check=True)
+                  completed = trial_end
+
+              state["completed_trials"] = completed
+              state["next_trial_id"] = completed + 1
+              results = all_results()
+              validate_trial_sequence(
+                  trial_ids=[result.trial_id for result in results],
+                  completed_trials=completed,
+                  next_trial_id=int(state["next_trial_id"]),
+              )
+
+              if SCENARIO.startswith("C100_"):
+                  if len(results) != 1:
+                      raise RuntimeError(
+                          f"C100 primary sample must remain n=1, got {len(results)}"
+                      )
+
+                  primary = results[0]
+                  verification_project = daily_engine.run_deterministic_trial(
+                      recovery_rate_pct=recovery_rate_pct,
+                      trial_id=2,
+                      scenario_id=SCENARIO,
+                      master_seed=MASTER_SEED,
+                      collection_probability=collection_probability,
+                      log_events=False,
+                  )
+                  verification = monte_carlo._trial_result_from_project(
+                      verification_project,
+                      scenario_id=SCENARIO,
+                      collection_probability=collection_probability,
+                      recovery_rate_pct=recovery_rate_pct,
+                      trial_id=2,
+                  )
+
+                  seed_primary = rng.seed_hex(
+                      MASTER_SEED,
+                      SCENARIO,
+                      1,
+                      "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE,
+                      "PRIMARY_COLLECTION",
+                  )
+                  seed_verification = rng.seed_hex(
+                      MASTER_SEED,
+                      SCENARIO,
+                      2,
+                      "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE,
+                      "PRIMARY_COLLECTION",
+                  )
+                  primary_dict = asdict(primary)
+                  verification_dict = asdict(verification)
+
+                  primary_trial_id = primary_dict.pop("trial_id")
+                  verification_trial_id = verification_dict.pop("trial_id")
+
+                  if primary_trial_id == verification_trial_id:
+                      raise AssertionError(
+                          "C100 independence requires distinct trial_id"
+                      )
+
+                  equality = primary_dict == verification_dict
+
+                  c100_proof = {
+                      "scenario": SCENARIO,
+                      "primary_trial_id": 1,
+                      "verification_trial_id": 2,
+                      "primary_seed_hex": seed_primary,
+                      "verification_seed_hex": seed_verification,
+                      "different_trial_id": True,
+                      "different_derived_seed": seed_primary != seed_verification,
+                      "exact_result_equality": equality,
+                      "stable": equality,
+                  }
+                  write_json(
+                      RESULTS_DIR / "c100_independent_verification.json",
+                      c100_proof,
+                  )
+
+                  state["c100_independent_verification"] = c100_proof
+                  if equality:
+                      state["stable_at_n"] = 1
+                      state["final_status"] = "stable"
+                      state["reason_if_not_stable"] = None
+                  else:
+                      state["stable_at_n"] = None
+                      state["final_status"] = None
+                      state["reason_if_not_stable"] = (
+                          "independent C100 trial result mismatch"
+                      )
+              else:
+                  current_stats = statistics(results)
+                  previous = history[-1] if history else None
+
+                  gate_a = evaluate_gate_a(
+                      previous_n=previous.get("n") if previous else None,
+                      previous_metrics=previous.get("metrics") if previous else None,
+                      current_n=len(results),
+                      current_metrics=current_stats,
+                      escalation_step=ESCALATION_STEP,
+                      relative_epsilon=RELATIVE_EPSILON,
+                      absolute_epsilon=ABSOLUTE_EPSILON,
+                  )
+                  gate_b = evaluate_gate_b(current_stats)
+
+                  check_entry = {
+                      "n": len(results),
+                      "gate_a": gate_a,
+                      "gate_b": gate_b,
+                      "metrics": current_stats,
+                  }
+                  history.append(check_entry)
+                  state["stability_history"] = history
+
+                  checked_points = [
+                      item
+                      for item in history
+                      if item.get("gate_a", {}).get("checked") is True
+                  ]
+                  recent = checked_points[-REQUIRED_CONSECUTIVE:]
+                  stable_now = (
+                      len(recent) == REQUIRED_CONSECUTIVE
+                      and all(
+                          item["gate_a"]["stable"] and item["gate_b"]["stable"]
+                          for item in recent
+                      )
+                  )
+
+                  if stable_now:
+                      state["stable_at_n"] = len(results)
+                      state["final_status"] = "stable"
+                      state["reason_if_not_stable"] = None
+                  else:
+                      state["stable_at_n"] = None
+                      state["final_status"] = None
+                      state["reason_if_not_stable"] = (
+                          "dual stability gates not yet satisfied"
+                      )
+
+                  target_n = completed + ESCALATION_STEP
+                  state["next_check_n"] = target_n
+
+              state["stability_history"] = history
+              state["included_in_final_stats"] = state["final_status"] == "stable"
+              state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+              state["artifact_identity"] = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=completed,
+                  fingerprint_sha256=state["final_fingerprint"],
+              )
+              blob_sha = store.save_state(state, blob_sha)
+
+              write_json(
+                  RESULTS_DIR / "statistics.json",
+                  {
+                      "scenario": SCENARIO,
+                      "trial_count": len(results),
+                      "final_fingerprint": state["final_fingerprint"],
+                      "artifact_identity": state["artifact_identity"],
+                      "stability_history": history,
+                  },
+              )
+
+              if state["final_status"] == "stable":
+                  # KNOWN_DESIGN_DIFFERENCE:
+                  # Stage 7 may reach statistical stability at n=450 while
+                  # the preserved CP3 reference dataset contains 6000 trials.
+                  # Therefore CP3 cross-reference compares only the common
+                  # trial range 1..min(len(Stage 7), len(CP3)).
+                  # This is an integrity cross-reference and does not require
+                  # Stage 7 to be extended to 6000 trials.
+                  # Resume/checkpoint architecture:
+                  # docs/STAGE7_11_RESUME_POLICY.md
+                  cp3_match = None
+                  cp3_overlap = None
+                  cp3_reference_trial_count = None
+                  cp3_overlap_fingerprint = None
+                  stage7_overlap_fingerprint = None
+                  if SCENARIO == CP3_SCENARIO:
+                      cp3_reference_path = Path(
+                          "/tmp/stage7_cp3_reference/trials_summary_6000.parquet"
+                      )
+                      if not cp3_reference_path.exists():
+                          print(
+                              "WARNING: CP3 reference parquet unavailable; "
+                              "cross-reference marked unavailable."
+                          )
+                          cp3_match = "unavailable"
+                      else:
+                          cp3_rows = pq.read_table(cp3_reference_path).to_pylist()
+                          cp3_results = [
+                              monte_carlo.TrialResult(**row)
+                              for row in cp3_rows
+                          ]
+                          cp3_reference_trial_count = len(cp3_results)
+                          cp3_overlap = min(len(results), len(cp3_results))
+
+                          stage7_prefix = [
+                              result
+                              for result in results
+                              if 1 <= result.trial_id <= cp3_overlap
+                          ]
+                          cp3_prefix = [
+                              result
+                              for result in cp3_results
+                              if 1 <= result.trial_id <= cp3_overlap
+                          ]
+
+                          if (
+                              len(stage7_prefix) != cp3_overlap
+                              or len(cp3_prefix) != cp3_overlap
+                          ):
+                              raise RuntimeError(
+                                  "CP3 overlap trial sequence mismatch"
+                              )
+
+                          stage7_overlap_fingerprint = monte_carlo.fingerprint_trial_results(stage7_prefix)
+                          cp3_overlap_fingerprint = monte_carlo.fingerprint_trial_results(cp3_prefix)
+                          cp3_match = (
+                              stage7_overlap_fingerprint
+                              == cp3_overlap_fingerprint
+                          )
+
+                  write_json(
+                      RESULTS_DIR / "final_fingerprint.json",
+                      {
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "run_id": RUN_ID,
+                          "trial_count": len(results),
+                          "final_fingerprint": state["final_fingerprint"],
+                          "included_in_final_stats": True,
+                          "cp3_reference": {
+                              "required": SCENARIO == CP3_SCENARIO,
+                              "run_id": os.environ["CP3_RUN_ID"] if SCENARIO == CP3_SCENARIO else None,
+                              "reference_sha256": CP3_AGGREGATE_SHA256 if SCENARIO == CP3_SCENARIO else None,
+                              "reference_trial_count": cp3_reference_trial_count,
+                              "overlap_trial_count": cp3_overlap,
+                              "stage7_overlap_fingerprint": stage7_overlap_fingerprint,
+                              "reference_overlap_fingerprint": cp3_overlap_fingerprint,
+                              "matched": cp3_match,
+                          },
+                          "artifact_identity": state["artifact_identity"],
+                      },
+                  )
+                  break
+
+          PY
+          python /tmp/stage7_orchestrator.py
+
+      - name: Upload scenario block artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-blocks-${{ matrix.scenario }}-${{ github.run_attempt }}
+          path: results_stage7/${{ matrix.scenario }}/blocks
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload final scenario artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-final-${{ matrix.scenario }}-${{ github.run_attempt }}
+          path: |
+            results_stage7/${{ matrix.scenario }}/final_fingerprint.json
+            results_stage7/${{ matrix.scenario }}/statistics.json
+            state.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  final-report:
+    name: final-report
+    needs: matrix-simulation
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+
+    # if: always() does not run on job timeout.
+    # On timeout, only state.json (persisted before timeout) remains.
+    # final_fingerprint will be rebuilt on next run's resume.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Download all final scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage7-final-*
+          path: /tmp/stage7-final-artifacts
+          merge-multiple: false
+      - name: Produce unified Stage 7 summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results_stage7
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          scenarios = [
+              "C100_G100",
+              "C100_G070",
+              "C100_G050",
+              "C100_G030",
+              "C100_G000",
+              "C085_G100",
+              "C085_G070",
+              "C085_G050",
+              "C085_G030",
+              "C085_G000",
+              "C070_G100",
+              "C070_G070",
+              "C070_G050",
+              "C070_G030",
+              "C070_G000",
+              "C050_G100",
+              "C050_G070",
+              "C050_G050",
+              "C050_G030",
+              "C050_G000",
+              "C030_G100",
+              "C030_G070",
+              "C030_G050",
+              "C030_G030",
+              "C030_G000",
+          ]
+
+          def get_json(path):
+              request = urllib.request.Request(
+                  f"https://api.github.com/repos/{repo}/{path}",
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.loads(response.read().decode("utf-8"))
+
+          per_scenario = []
+          for scenario in scenarios:
+              state = None
+              state_error = None
+              branch = f"stage7-state/{scenario}"
+              try:
+                  payload = get_json(
+                      "contents/state.json?" + urllib.parse.urlencode({"ref": branch})
+                  )
+                  state = json.loads(
+                      base64.b64decode(payload["content"]).decode("utf-8")
+                  )
+              except urllib.error.HTTPError as exc:
+                  if exc.code == 404:
+                      state_error = "STATE_NOT_FOUND_404"
+                  else:
+                      state_error = f"STATE_REMOTE_HTTP_ERROR_{exc.code}"
+                  state = None
+              except urllib.error.URLError:
+                  state_error = "STATE_REMOTE_TRANSPORT_ERROR"
+                  state = None
+              except (KeyError, ValueError, UnicodeError):
+                  state_error = "STATE_PARSE_ERROR"
+                  state = None
+
+              artifact_state_files = list(
+                  Path("/tmp/stage7-final-artifacts").glob(
+                      f"**/stage7-final-{scenario}-*/state.json"
+                  )
+              )
+              if state is None and artifact_state_files:
+                  state = json.loads(
+                      artifact_state_files[-1].read_text(encoding="utf-8")
+                  )
+
+              if state is None:
+                  per_scenario.append({
+                      "scenario": scenario,
+                      "state_path": f"stage7-state/{scenario}/state.json",
+                      "final_trial_count": None,
+                      "final_fingerprint": None,
+                      "stable_at_n": None,
+                      "final_status": "error",
+                      "reason_if_not_stable": state_error or "STATE_UNAVAILABLE",
+                      "final_stats_included": False,
+                  })
+              else:
+                  is_timeout = state.get("final_status") == "timeout"
+                  per_scenario.append({
+                      "scenario": scenario,
+                      "state_path": f"stage7-state/{scenario}/state.json",
+                      "final_trial_count": None if is_timeout else state.get("completed_trials"),
+                      "final_fingerprint": None if is_timeout else state.get("final_fingerprint"),
+                      "stable_at_n": state.get("stable_at_n"),
+                      "final_status": state.get("final_status"),
+                      "reason_if_not_stable": state.get("reason_if_not_stable"),
+                      "final_stats_included": bool(state.get("included_in_final_stats")),
+                  })
+
+          stable_count = sum(row["final_status"] == "stable" for row in per_scenario)
+          timeout_count = sum(row["final_status"] == "timeout" for row in per_scenario)
+          error_count = sum(row["final_status"] == "error" for row in per_scenario)
+          max_iterations_count = 0
+
+          cp3_match = None
+          c070 = next((row for row in per_scenario if row["scenario"] == "C070_G100"), None)
+
+          if c070 is not None:
+              artifact_fingerprints = list(
+                  Path("/tmp/stage7-final-artifacts").glob(
+                      "**/C070_G100/final_fingerprint.json"
+                  )
+              )
+              if artifact_fingerprints:
+                  payload = json.loads(
+                      artifact_fingerprints[-1].read_text(encoding="utf-8")
+                  )
+                  cp3_match = payload.get("cp3_reference", {}).get("matched")
+
+          summary = {
+              "total_scenarios": 25,
+              "stable_count": stable_count,
+              "timeout_count": timeout_count,
+              "error_count": error_count,
+              "max_iterations_count": max_iterations_count,
+              "per_scenario": per_scenario,
+              "cross_reference": {
+                  "C070_G100": cp3_match
+              },
+          }
+
+          Path("results_stage7/summary.json").write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Upload unified Stage 7 summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-summary-${{ github.run_attempt }}
+          path: results_stage7/summary.json
+          if-no-files-found: error
+          retention-days: 90
