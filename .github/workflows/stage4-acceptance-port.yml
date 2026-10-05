@@ -297,6 +297,7 @@ jobs:
           testcases = list(root.iter("testcase"))
 
           pass_count = fail_count = deferred_count = adjudication_count = 0
+          adjudication_test_id = None
           failed_tests = []
 
           for case in testcases:
@@ -312,6 +313,7 @@ jobs:
                   reason = skipped.attrib.get("message", "") or (skipped.text or "")
                   if "ADJUDICATION" in reason.upper():
                       adjudication_count += 1
+                      adjudication_test_id = int(test_id) if test_id is not None else None
                   else:
                       deferred_count += 1
               elif failure is not None or error is not None:
@@ -329,10 +331,12 @@ jobs:
           summary = {
               "sha": os.environ["TEST_SHA"],
               "run_started_at": os.environ["RUN_STARTED_AT"],
+              "inventory": len(testcases),
               "pass_count": pass_count,
               "fail_count": fail_count,
               "deferred_count": deferred_count,
               "adjudication_count": adjudication_count,
+              "adjudication_test_id": adjudication_test_id,
               "failed_tests": failed_tests,
           }
           Path("results/v2_summary.json").write_text(
@@ -341,6 +345,78 @@ jobs:
           )
           PY
 
+      - name: Enforce Test 158 Override Gate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import copy
+          import json
+          from pathlib import Path
+
+          def enforce_gate(summary):
+              failures = []
+              if summary.get("inventory") != 163:
+                  failures.append(
+                      f"TEST_158_OVERRIDE_GATE_FAILED: inventory != 163 (actual={summary.get('inventory')!r})"
+                  )
+              if summary.get("adjudication_count") != 1:
+                  failures.append(
+                      f"TEST_158_OVERRIDE_GATE_FAILED: adjudication_count != 1 (actual={summary.get('adjudication_count')!r})"
+                  )
+              if summary.get("adjudication_test_id") != 158:
+                  failures.append(
+                      f"TEST_158_OVERRIDE_GATE_FAILED: adjudication_test_id != 158 (actual={summary.get('adjudication_test_id')!r})"
+                  )
+              if summary.get("pass_count") != 162:
+                  failures.append(
+                      f"TEST_158_OVERRIDE_GATE_FAILED: pass_count != 162 (actual={summary.get('pass_count')!r})"
+                  )
+              if summary.get("fail_count") != 0:
+                  failures.append(
+                      f"TEST_158_OVERRIDE_GATE_FAILED: fail_count != 0 (actual={summary.get('fail_count')!r})"
+                  )
+              if failures:
+                  raise SystemExit("\\n".join(failures))
+
+          baseline = {
+              "inventory": 163,
+              "pass_count": 162,
+              "fail_count": 0,
+              "adjudication_count": 1,
+              "adjudication_test_id": 158,
+          }
+
+          workflow_gate_tests = [
+              ("inventory != 163", {**baseline, "inventory": 162}, "inventory != 163"),
+              ("skip is not Test 158", {**baseline, "adjudication_test_id": 157}, "adjudication_test_id != 158"),
+              ("fail_count > 0", {**baseline, "fail_count": 1}, "fail_count != 0"),
+          ]
+
+          for label, case, expected_fragment in workflow_gate_tests:
+              try:
+                  enforce_gate(copy.deepcopy(case))
+              except SystemExit as exc:
+                  message = str(exc)
+                  if expected_fragment not in message:
+                      raise SystemExit(
+                          f"WORKFLOW_GATE_TEST_FAIL: {label}: unexpected failure text: {message}"
+                      )
+                  print(f"WORKFLOW_GATE_TEST_PASS: {label}")
+              else:
+                  raise SystemExit(f"WORKFLOW_GATE_TEST_FAIL: {label}: gate did not fail")
+
+          summary_path = Path("results/v2_summary.json")
+          summary = json.loads(summary_path.read_text(encoding="utf-8"))
+          enforce_gate(summary)
+          print(
+              "TEST_158_OVERRIDE_GATE_PASS: "
+              f"inventory={summary.get('inventory')} "
+              f"pass_count={summary.get('pass_count')} "
+              f"fail_count={summary.get('fail_count')} "
+              f"adjudication_count={summary.get('adjudication_count')} "
+              f"adjudication_test_id={summary.get('adjudication_test_id')}"
+          )
+          PY
 
       - name: Upload v2 results
         uses: actions/upload-artifact@v4
