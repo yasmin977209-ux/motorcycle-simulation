@@ -37,7 +37,7 @@ excluded as K_TEST = `158`
 `stage4-acceptance-port.yml`. تحديث الـworkflow
 مؤجل إلى دفعة مستقلة.
 
-approval_commit_sha: `PENDING`
+approval_commit_sha: `268ea807a86d34319eb95ba43b965cecd95fe7f0`
 
 | رقم | الاستدعاء القديم | الاستدعاء الجديد | هل تغيّر المعنى؟ |
 |---:|---|---|---|
