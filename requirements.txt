@@ -3,3 +3,4 @@ numpy>=2.3,<3
 pyarrow
 python-dateutil>=2.9,<3
 scipy>=1.17,<2
+pyyaml
