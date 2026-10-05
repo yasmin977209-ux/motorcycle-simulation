@@ -1,7 +1,8 @@
 {
   "stage": "8",
+  "schema_version": "1.0",
   "cp_completed": "CLOSED",
-  "sha": "4bf56a542bdd13f4ad102baad3c8ff035adac45c",
+  "sha": "b22f09608011a9d9a0cbe2a4700a9b88d3a9075e",
   "next": "stage9",
   "blockers": [],
   "stage7": {
