@@ -11,16 +11,20 @@
   "cp_completed": "CLOSED",
   "dataset_fingerprint": "31658e2be50c05d4fdf97bf49eb6214472df6f9b1ce5ed96f80a18a7009eae00",
   "final_fingerprint": "31658e2be50c05d4fdf97bf49eb6214472df6f9b1ce5ed96f80a18a7009eae00",
+  "final_status": "stable",
   "identity_fingerprint": "d63e162256835a3801fea3b9602187f069e268daf26f2b237113c9f6b6dbaeb8",
+  "included_in_final_stats": true,
   "lease": {
-    "acquired_at": "2026-10-06T14:54:59.338931Z",
-    "expires_at": "2026-10-06T15:54:59.338931Z",
+    "acquired_at": "2026-10-06T14:55:00.818980Z",
+    "expires_at": "2026-10-06T15:55:00.818980Z",
     "owner": "37482745008",
     "run_attempt": 1,
     "run_id": "37482745008"
   },
   "next": "stage8",
+  "next_check_n": 500,
   "next_trial_id": 451,
+  "reason_if_not_stable": null,
   "run_attempt": 1,
   "run_id": "37482745008",
   "scenario": "C070_G100",
@@ -322,8 +326,65 @@
         }
       },
       "n": 450
+    },
+    {
+      "gate_a": {
+        "checked": false,
+        "current_n": 450,
+        "expected_current_n": 500,
+        "metrics": {},
+        "previous_n": 450,
+        "reason": "current n is not previous n plus escalation step",
+        "stable": false
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 16512.129816637254,
+          "limit": 2090882.2333333334,
+          "mean": 209088223.33333334,
+          "n": 450,
+          "sample_std": 178233.36723518156,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 11558.490871646078,
+          "limit": 1463617.5633333335,
+          "mean": 146361756.33333334,
+          "n": 450,
+          "sample_std": 124763.3570646271,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 4953.638944991176,
+          "limit": 627264.67,
+          "mean": 62726467.0,
+          "n": 450,
+          "sample_std": 53470.010170554466,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        }
+      },
+      "n": 450
     }
   ],
+  "stable_at_n": 450,
   "stage": "7",
   "stage7_identity_v2": {
     "dataset_fingerprint": "31658e2be50c05d4fdf97bf49eb6214472df6f9b1ce5ed96f80a18a7009eae00",
