@@ -17,7 +17,12 @@ from scipy.stats import t
 
 import constants
 import monte_carlo
-from scripts.stage7_state import StateIntegrityError, StateStore
+from scripts.stage7_state import (
+    StateIntegrityError,
+    StateStore,
+    build_stage7_identity_v2,
+    compute_identity_fingerprint,
+)
 
 
 TRIALS_PARQUET = "trials_summary.parquet"
@@ -30,6 +35,14 @@ STABILITY_FIELDS = (
     "partner1_final_entitlement",
     "partner2_final_entitlement",
 )
+
+EXPECTED_STAGE7_POLICY_IDS = {
+    "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+    "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
+    "state_schema_version": "stage7_state_v2",
+}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -330,6 +343,8 @@ def _checkpoint_identity_is_valid(
     *,
     scenario: str,
     source_sha: str,
+    master_seed: int,
+    expected_dataset_fingerprint: str,
 ) -> None:
     if checkpoint.get("stage") != "7":
         raise StateIntegrityError("checkpoint stage must be 7")
@@ -341,6 +356,26 @@ def _checkpoint_identity_is_valid(
     identity = checkpoint.get("artifact_identity")
     if not isinstance(identity, dict):
         raise StateIntegrityError("checkpoint artifact_identity is missing")
+
+    identity_v2 = checkpoint.get("stage7_identity_v2")
+    if not isinstance(identity_v2, dict):
+        raise StateIntegrityError("checkpoint stage7_identity_v2 is missing")
+    expected_identity_v2 = build_stage7_identity_v2(
+        source_sha=source_sha,
+        master_seed=master_seed,
+        scenario=scenario,
+        dataset_fingerprint=expected_dataset_fingerprint,
+    )
+    if identity_v2 != expected_identity_v2:
+        raise StateIntegrityError("checkpoint stage7_identity_v2 mismatch")
+
+    for key, expected_value in EXPECTED_STAGE7_POLICY_IDS.items():
+        if identity_v2.get(key) != expected_value:
+            raise StateIntegrityError(
+                f"checkpoint {key} mismatch"
+            )
+    if checkpoint.get("identity_fingerprint") != compute_identity_fingerprint(identity_v2):
+        raise StateIntegrityError("checkpoint identity_fingerprint mismatch")
 
     if identity.get("scenario") != scenario:
         raise StateIntegrityError(
@@ -388,6 +423,8 @@ def load_stage7_checkpoint(
     *,
     scenario: str,
     source_sha: str,
+    master_seed: int,
+    expected_dataset_fingerprint: str,
 ) -> dict[str, Any]:
     repo = os.environ.get("GITHUB_REPOSITORY")
     token = os.environ.get("GH_TOKEN")
@@ -407,12 +444,16 @@ def load_stage7_checkpoint(
             Path(tempfile.gettempdir())
             / f"stage8-read-{scenario}-state.json"
         ),
+        master_seed=master_seed,
+        expected_dataset_fingerprint=expected_dataset_fingerprint,
     )
     checkpoint, _ = store.load_state()
     _checkpoint_identity_is_valid(
         checkpoint,
         scenario=scenario,
         source_sha=source_sha,
+        master_seed=master_seed,
+        expected_dataset_fingerprint=expected_dataset_fingerprint,
     )
     return checkpoint
 
@@ -469,6 +510,9 @@ def _new_state(
                 "completed_trials": checkpoint["completed_trials"],
                 "next_trial_id": checkpoint["next_trial_id"],
                 "artifact_identity": checkpoint["artifact_identity"],
+                "state_schema_version": checkpoint["state_schema_version"],
+                "stage7_identity_v2": checkpoint["stage7_identity_v2"],
+                "identity_fingerprint": checkpoint["identity_fingerprint"],
             }
             if checkpoint is not None
             else None
@@ -495,8 +539,8 @@ def _validate_resume_dataset(
         )
 
     actual_fingerprint = monte_carlo.fingerprint_trial_results(results)
-    expected_fingerprint = checkpoint["artifact_identity"][
-        "fingerprint_sha256"
+    expected_fingerprint = checkpoint["stage7_identity_v2"][
+        "dataset_fingerprint"
     ]
     if actual_fingerprint != expected_fingerprint:
         raise StateIntegrityError(
@@ -597,11 +641,30 @@ def run_batch(
 
     monte_carlo.parse_scenario_id(scenario)
 
+    _ensure_output_contract(
+        output_dir,
+        resume_from_checkpoint=resume_from_checkpoint,
+    )
+
+    results = (
+        _load_dataset(output_dir)
+        if resume_from_checkpoint
+        else []
+    )
+
+    expected_dataset_fingerprint = (
+        monte_carlo.fingerprint_trial_results(results)
+        if results
+        else ""
+    )
+
     checkpoint = None
     if resume_from_checkpoint:
         checkpoint = load_stage7_checkpoint(
             scenario=scenario,
             source_sha=source_sha,
+            master_seed=master_seed,
+            expected_dataset_fingerprint=expected_dataset_fingerprint,
         )
 
     resolved_start = resolve_start_trial_id(
@@ -620,17 +683,6 @@ def run_batch(
         raise StateIntegrityError(
             "C100 policy permits exactly one trial"
         )
-
-    _ensure_output_contract(
-        output_dir,
-        resume_from_checkpoint=resume_from_checkpoint,
-    )
-
-    results = (
-        _load_dataset(output_dir)
-        if resume_from_checkpoint
-        else []
-    )
 
     if resume_from_checkpoint:
         _validate_resume_dataset(results, checkpoint)
