@@ -5,6 +5,7 @@ on:
     branches:
       - "tmp/stage7-full-run-20261004"
       - "tmp/wf-002f2-pilot-20261006"
+      - "tmp/wf-002f3-pilot-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
