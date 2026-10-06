@@ -15,6 +15,7 @@ on:
       - "tmp/wf-002f3h-fix7-20261006"
       - "tmp/wf-002f3i-verify-20261006"
       - "tmp/wf-002f3k-fix9a-20261006"
+      - "tmp/wf-002f5-f4-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -238,9 +239,7 @@ jobs:
           fi
 
           echo "SOURCE_SHA=${SOURCE_SHA}"
-          echo "MODEL_SOURCE_BOUNDARY_OK"
-
-      - name: Restore previous scenario block artifacts when available
+              - name: Restore previous scenario block artifacts when available
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -248,29 +247,45 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
-          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-(pilot|fix|verify) ]] && [ "$SCENARIO" = "C100_G100" ]; then
-            ARTIFACT_ID="11312276587"
-            echo "STAGE7_PILOT_ARTIFACT_RESTORE=OFFICIAL_RUN:37225915321 ARTIFACT_ID:$ARTIFACT_ID SCENARIO:$SCENARIO"
-          else
-            ARTIFACT_SOURCE_RUN="${CP3_RUN_ID:-${GITHUB_RUN_ID}}"
-            JQ_FILTER=".artifacts[] | select(.name | startswith(\"stage7-blocks-${SCENARIO}-\")) | [.id,.created_at] | @tsv"
-            ARTIFACT_ID="$(
-              gh api --paginate \
-                "repos/$GITHUB_REPOSITORY/actions/runs/${ARTIFACT_SOURCE_RUN}/artifacts?per_page=100" \
-                --jq "${JQ_FILTER}" \
-              | sort -k2 | tail -1 | cut -f1
-            )"
-            echo "STAGE7_ARTIFACT_LOOKUP=SOURCE_RUN:${ARTIFACT_SOURCE_RUN} RESOLVED_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
-          fi
-          if [ -n "${ARTIFACT_ID}" ]; then
-            echo "STAGE7_ARTIFACT_RESTORE=ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
-            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
-            mkdir -p /tmp/previous_stage7_blocks
-            unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
-            find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
-            find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
-          else
-            echo "No previous Stage 7 block artifact found for scenario ${SCENARIO}."
+          case "${SCENARIO}" in
+            C100_G100) ARTIFACT_ID="11312276587" ;;
+            C100_G070) ARTIFACT_ID="11311843040" ;;
+            C100_G050) ARTIFACT_ID="11311992664" ;;
+            C100_G030) ARTIFACT_ID="11312320486" ;;
+            C100_G000) ARTIFACT_ID="11312176891" ;;
+            C085_G100) ARTIFACT_ID="11312088905" ;;
+            C085_G070) ARTIFACT_ID="11313126058" ;;
+            C085_G050) ARTIFACT_ID="11313071154" ;;
+            C085_G030) ARTIFACT_ID="11313066122" ;;
+            C085_G000) ARTIFACT_ID="11312590249" ;;
+            C070_G100) ARTIFACT_ID="11312239690" ;;
+            C070_G070) ARTIFACT_ID="11312294476" ;;
+            C070_G050) ARTIFACT_ID="11313185526" ;;
+            C070_G030) ARTIFACT_ID="11312915385" ;;
+            C070_G000) ARTIFACT_ID="11312109145" ;;
+            C050_G100) ARTIFACT_ID="11312766984" ;;
+            C050_G070) ARTIFACT_ID="11312963284" ;;
+            C050_G050) ARTIFACT_ID="11312971843" ;;
+            C050_G030) ARTIFACT_ID="11313227800" ;;
+            C050_G000) ARTIFACT_ID="11312813109" ;;
+            C030_G100) ARTIFACT_ID="11313136372" ;;
+            C030_G070) ARTIFACT_ID="11313072117" ;;
+            C030_G050) ARTIFACT_ID="11313056625" ;;
+            C030_G030) ARTIFACT_ID="11313116830" ;;
+            C030_G000) ARTIFACT_ID="11313086528" ;;
+            *)
+              echo "UNKNOWN_SCENARIO=${SCENARIO}"
+              exit 1
+              ;;
+          esac
+          echo "STAGE7_ARTIFACT_RESTORE=SCENARIO:${SCENARIO} ARTIFACT_ID:${ARTIFACT_ID}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
+          mkdir -p /tmp/previous_stage7_blocks
+          unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
+          find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          echo "STAGE7_BLOCKS_RESTORED=${SCENARIO} COUNT=$(ls -1 results_stage7/${SCENARIO}/blocks/ | wc -l)"
+enario ${SCENARIO}."
           fi
 
       - name: Verify and stage official C100_G100 dataset/checkpoint provenance
