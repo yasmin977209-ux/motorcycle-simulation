@@ -1,1 +1,54 @@
-{"artifact_identity":{"fingerprint_sha256":"6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529","scenario":"C100_G070","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","trial_id_end":1,"trial_id_start":1},"c100_independent_verification":{"different_derived_seed":true,"different_trial_id":true,"exact_result_equality":true,"primary_seed_hex":"138b8ebefbfe1a45d3f8db2a4b1282f98aadf03a840f8f960fa75dec75ed9053","primary_trial_id":1,"scenario":"C100_G070","stable":true,"verification_seed_hex":"6b63a915ae296bf6ebc2b546d6c63ac8e943f1b371115a6f1fb5dd1c1f6504c9","verification_trial_id":2},"completed_trials":1,"final_fingerprint":"6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529","final_status":"stable","identity_fingerprint":"db9c46a0380a043a94cedc6db9f1ef31f9bf299aa45a0f91872ece3dc2e0f2b6","included_in_final_stats":true,"lease":null,"next_check_n":1,"next_trial_id":2,"reason_if_not_stable":null,"run_attempt":1,"run_id":"37225915321","scenario":"C100_G070","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","stability_history":[],"stable_at_n":1,"stage":"7","stage7_identity_v2":{"dataset_fingerprint":"6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529","master_seed":20270101,"rng_policy_id":"RNG_SHA256_DERIVED_V1","sampling_policy_id":"SAMPLING_ADAPTIVE_1_300_PLUS50_V1","scenario":"C100_G070","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","stability_policy_id":"STABILITY_GATES_A_B_3_CONSECUTIVE_V1","state_schema_version":"stage7_state_v2","trial_id_policy_id":"TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"},"state_schema_version":"stage7_state_v2"}
+{
+  "artifact_identity": {
+    "fingerprint_sha256": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+    "scenario": "C100_G070",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "trial_id_end": 1,
+    "trial_id_start": 1
+  },
+  "c100_independent_verification": {
+    "different_derived_seed": true,
+    "different_trial_id": true,
+    "exact_result_equality": true,
+    "primary_seed_hex": "138b8ebefbfe1a45d3f8db2a4b1282f98aadf03a840f8f960fa75dec75ed9053",
+    "primary_trial_id": 1,
+    "scenario": "C100_G070",
+    "stable": true,
+    "verification_seed_hex": "6b63a915ae296bf6ebc2b546d6c63ac8e943f1b371115a6f1fb5dd1c1f6504c9",
+    "verification_trial_id": 2
+  },
+  "completed_trials": 1,
+  "final_fingerprint": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+  "final_status": "stable",
+  "identity_fingerprint": "db9c46a0380a043a94cedc6db9f1ef31f9bf299aa45a0f91872ece3dc2e0f2b6",
+  "included_in_final_stats": true,
+  "lease": {
+    "acquired_at": "2026-10-06T13:40:31.313887Z",
+    "expires_at": "2026-10-06T14:40:31.313887Z",
+    "owner": "37472504897",
+    "run_attempt": 1,
+    "run_id": "37472504897"
+  },
+  "next_check_n": 1,
+  "next_trial_id": 2,
+  "reason_if_not_stable": null,
+  "run_attempt": 1,
+  "run_id": "37472504897",
+  "scenario": "C100_G070",
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "stability_history": [],
+  "stable_at_n": 1,
+  "stage": "7",
+  "stage7_identity_v2": {
+    "dataset_fingerprint": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+    "master_seed": 20270101,
+    "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+    "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+    "scenario": "C100_G070",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+    "state_schema_version": "stage7_state_v2",
+    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"
+  },
+  "state_schema_version": "stage7_state_v2"
+}
