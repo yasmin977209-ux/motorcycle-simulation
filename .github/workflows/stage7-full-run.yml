@@ -10,6 +10,7 @@ on:
       - "tmp/wf-002f3c-fix2-20261006"
       - "tmp/wf-002f3d-resolver-fix-20261006"
       - "tmp/wf-002f3e-fix4-20261006"
+      - "tmp/wf-002f3f-fix5-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -135,18 +136,23 @@ jobs:
               if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
                 echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
               else
-                state_has_v2="$(
-                  gh api "${STATE_CONTENTS}" 2>/dev/null |
-                    jq -r '.content // empty' 2>/dev/null |
-                    tr -d '\n' |
-                    base64 -d 2>/dev/null |
-                    jq -e 'has("stage7_identity_v2")' >/dev/null 2>&1 &&
-                    echo true ||
-                    echo false
-                )
-                if [ "${state_has_v2}" = "true" ]; then
-                  echo "SKIP_RESET_V2_DETECTED=${scenario}"
-                  continue
+                state_json=$(gh api "${STATE_CONTENTS}" --jq '.content' 2>/dev/null || echo "")
+                if [ -n "${state_json}" ]; then
+                  decoded=$(echo "${state_json}" | base64 -d 2>/dev/null || echo "")
+                  if [ -n "${decoded}" ]; then
+                    has_v2=$(echo "${decoded}" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    print('true' if 'stage7_identity_v2' in data else 'false')
+except Exception:
+    print('false')
+" 2>/dev/null || echo "false")
+                    if [ "${has_v2}" = "true" ]; then
+                      echo "SKIP_RESET_V2_DETECTED=${scenario}"
+                      continue
+                    fi
+                  fi
                 fi
                 gh api --method PATCH \
                   "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
