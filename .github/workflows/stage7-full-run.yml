@@ -13,6 +13,7 @@ on:
       - "tmp/wf-002f3f-fix5-20261006"
       - "tmp/wf-002f3g-fix6-20261006"
       - "tmp/wf-002f3h-fix7-20261006"
+      - "tmp/wf-002f3i-verify-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
