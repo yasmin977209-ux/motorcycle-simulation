@@ -1,25 +1,25 @@
 {
   "artifact_identity": {
-    "fingerprint_sha256": "fbc08cd6c4d5a5286349c748ebc1ccca5afff7362d7d0dc1c9c717a4926693e1",
+    "fingerprint_sha256": "558d460ca2461447a38cbfcfe900e7d2815db301ba4787b987ee354fbe6ba067",
     "scenario": "C030_G070",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "trial_id_end": 300,
+    "trial_id_end": 350,
     "trial_id_start": 1
   },
-  "completed_trials": 300,
-  "final_fingerprint": "fbc08cd6c4d5a5286349c748ebc1ccca5afff7362d7d0dc1c9c717a4926693e1",
+  "completed_trials": 350,
+  "final_fingerprint": "558d460ca2461447a38cbfcfe900e7d2815db301ba4787b987ee354fbe6ba067",
   "final_status": null,
-  "identity_fingerprint": "2b389e0805f340ae3349a714165f0c6a78c9d8a6bec09a786a72bb3b3da58f2a",
+  "identity_fingerprint": "4018606645031f7a69ba239dd398ef171e4cea07f57efcde2dfef8c516c5b81c",
   "included_in_final_stats": false,
   "lease": {
-    "acquired_at": "2026-10-06T03:23:26.552674Z",
-    "expires_at": "2026-10-06T04:23:26.552674Z",
+    "acquired_at": "2026-10-06T03:24:25.905761Z",
+    "expires_at": "2026-10-06T04:24:25.905761Z",
     "owner": "37406221591",
     "run_attempt": 1,
     "run_id": "37406221591"
   },
-  "next_check_n": 350,
-  "next_trial_id": 301,
+  "next_check_n": 400,
+  "next_trial_id": 351,
   "reason_if_not_stable": "dual stability gates not yet satisfied",
   "run_attempt": 1,
   "run_id": "37406221591",
@@ -81,12 +81,92 @@
         }
       },
       "n": 300
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 350,
+        "expected_current_n": 350,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 3393.5476190522313,
+            "current_mean": 61920616.28571428,
+            "limit": 619240.0983333334,
+            "previous_mean": 61924009.833333336,
+            "relative_change": 5.480180673354109e-05,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 2375.4833333343267,
+            "current_mean": 43344431.4,
+            "limit": 433468.0688333333,
+            "previous_mean": 43346806.88333333,
+            "relative_change": 5.4801806733489527e-05,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 1018.0642857141793,
+            "current_mean": 18576184.885714285,
+            "limit": 185772.0295,
+            "previous_mean": 18577202.95,
+            "relative_change": 5.4801806733460877e-05,
+            "stable": true
+          }
+        },
+        "previous_n": 300,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 210881.6074027943,
+          "limit": 619206.1628571429,
+          "mean": 61920616.28571428,
+          "n": 350,
+          "sample_std": 2005930.749851815,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 147617.125181956,
+          "limit": 433444.314,
+          "mean": 43344431.4,
+          "n": 350,
+          "sample_std": 1404151.5248962704,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 63264.48222083828,
+          "limit": 185761.84885714285,
+          "mean": 18576184.885714285,
+          "n": 350,
+          "sample_std": 601779.2249555445,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        }
+      },
+      "n": 350
     }
   ],
   "stable_at_n": null,
   "stage": "7",
   "stage7_identity_v2": {
-    "dataset_fingerprint": "fbc08cd6c4d5a5286349c748ebc1ccca5afff7362d7d0dc1c9c717a4926693e1",
+    "dataset_fingerprint": "558d460ca2461447a38cbfcfe900e7d2815db301ba4787b987ee354fbe6ba067",
     "master_seed": 20270101,
     "rng_policy_id": "RNG_SHA256_DERIVED_V1",
     "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
