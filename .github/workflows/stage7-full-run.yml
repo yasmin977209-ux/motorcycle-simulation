@@ -8,6 +8,7 @@ on:
       - "tmp/wf-002f3-pilot-20261006"
       - "tmp/wf-002f3b-fix-20261006"
       - "tmp/wf-002f3c-fix2-20261006"
+      - "tmp/wf-002f3d-resolver-fix-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -45,9 +46,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ] || [ "$GITHUB_REF_NAME" = "tmp/wf-002f3-pilot-20261006" ] || [ "$GITHUB_REF_NAME" = "tmp/wf-002f3b-fix-20261006" ]; then
-            SCENARIOS_JSON='["C100_G100"]'
+          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z]+-pilot- ]] || \
+             [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z]+-fix ]]; then
             STAGE7_PILOT_MODE="true"
+            SCENARIOS_JSON='["C100_G100"]'
           else
             SCENARIOS_JSON='["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
             STAGE7_PILOT_MODE="false"
@@ -132,6 +134,19 @@ jobs:
               if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
                 echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
               else
+                state_has_v2="$(
+                  gh api "${STATE_CONTENTS}" 2>/dev/null |
+                    jq -r '.content // empty' 2>/dev/null |
+                    tr -d '\n' |
+                    base64 -d 2>/dev/null |
+                    jq -e 'has("stage7_identity_v2")' >/dev/null 2>&1 &&
+                    echo true ||
+                    echo false
+                )
+                if [ "${state_has_v2}" = "true" ]; then
+                  echo "SKIP_RESET_V2_DETECTED=${scenario}"
+                  continue
+                fi
                 gh api --method PATCH \
                   "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
                   -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
