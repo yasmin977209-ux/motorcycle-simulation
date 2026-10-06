@@ -1,26 +1,26 @@
 {
   "artifact_identity": {
-    "fingerprint_sha256": "119655f34cdba0ccae6f89b35e295f14192c46c3f41a7689d6ff232cf33f4e7d",
+    "fingerprint_sha256": "89f15aba78ba4f978a6128a799411f70a6e73854c0f8c6b10cd06b1527d541d4",
     "scenario": "C050_G100",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "trial_id_end": 400,
+    "trial_id_end": 450,
     "trial_id_start": 1
   },
-  "completed_trials": 400,
-  "final_fingerprint": "119655f34cdba0ccae6f89b35e295f14192c46c3f41a7689d6ff232cf33f4e7d",
-  "final_status": null,
-  "identity_fingerprint": "1333eff3f3b591181e084c78e175a11ea0d5337b35072d0d0f5dfb8188d4a151",
-  "included_in_final_stats": false,
+  "completed_trials": 450,
+  "final_fingerprint": "89f15aba78ba4f978a6128a799411f70a6e73854c0f8c6b10cd06b1527d541d4",
+  "final_status": "stable",
+  "identity_fingerprint": "b18c0b39590370a5abf3037361262adf20a7d6c5e1c6947ed56ed463f7ef3e23",
+  "included_in_final_stats": true,
   "lease": {
-    "acquired_at": "2026-10-06T03:15:16.238834Z",
-    "expires_at": "2026-10-06T04:15:16.238834Z",
+    "acquired_at": "2026-10-06T03:17:56.137559Z",
+    "expires_at": "2026-10-06T04:17:56.137559Z",
     "owner": "37406221591",
     "run_attempt": 1,
     "run_id": "37406221591"
   },
-  "next_check_n": 450,
-  "next_trial_id": 401,
-  "reason_if_not_stable": "dual stability gates not yet satisfied",
+  "next_check_n": 500,
+  "next_trial_id": 451,
+  "reason_if_not_stable": null,
   "run_attempt": 1,
   "run_id": "37406221591",
   "scenario": "C050_G100",
@@ -241,12 +241,92 @@
         }
       },
       "n": 400
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 450,
+        "expected_current_n": 450,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 261081.8611111045,
+            "current_mean": 316174587.8888889,
+            "limit": 3164356.6975000002,
+            "previous_mean": 316435669.75,
+            "relative_change": 0.0008250708945593024,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 182757.30277776718,
+            "current_mean": 221322211.52222222,
+            "limit": 2215049.68825,
+            "previous_mean": 221504968.825,
+            "relative_change": 0.0008250708945592755,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 78324.5583333373,
+            "current_mean": 94852376.36666666,
+            "limit": 949307.00925,
+            "previous_mean": 94930700.925,
+            "relative_change": 0.0008250708945593652,
+            "stable": true
+          }
+        },
+        "previous_n": 400,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 850043.8718376294,
+          "limit": 3161745.878888889,
+          "mean": 316174587.8888889,
+          "n": 450,
+          "sample_std": 9175447.580517296,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 595030.7102863406,
+          "limit": 2213222.115222222,
+          "mean": 221322211.52222222,
+          "n": 450,
+          "sample_std": 6422813.306362107,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 255013.1615512888,
+          "limit": 948523.7636666666,
+          "mean": 94852376.36666666,
+          "n": 450,
+          "sample_std": 2752634.274155189,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        }
+      },
+      "n": 450
     }
   ],
-  "stable_at_n": null,
+  "stable_at_n": 450,
   "stage": "7",
   "stage7_identity_v2": {
-    "dataset_fingerprint": "119655f34cdba0ccae6f89b35e295f14192c46c3f41a7689d6ff232cf33f4e7d",
+    "dataset_fingerprint": "89f15aba78ba4f978a6128a799411f70a6e73854c0f8c6b10cd06b1527d541d4",
     "master_seed": 20270101,
     "rng_policy_id": "RNG_SHA256_DERIVED_V1",
     "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
