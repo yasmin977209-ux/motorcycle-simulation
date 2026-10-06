@@ -20,16 +20,35 @@
   "completed_trials": 1,
   "final_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
   "final_status": "stable",
+  "identity_fingerprint": "34ec0818f0b7c08313c1d92a6127a7c948b360d537e98247194231b6749d3cbe",
   "included_in_final_stats": true,
-  "lease": null,
+  "lease": {
+    "acquired_at": "2026-10-06T03:07:40.394010Z",
+    "expires_at": "2026-10-06T04:07:40.394010Z",
+    "owner": "37407450081",
+    "run_attempt": 1,
+    "run_id": "37407450081"
+  },
   "next_check_n": 1,
   "next_trial_id": 2,
   "reason_if_not_stable": null,
   "run_attempt": 1,
-  "run_id": "37225915321",
+  "run_id": "37407450081",
   "scenario": "C100_G100",
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "stability_history": [],
   "stable_at_n": 1,
-  "stage": "7"
+  "stage": "7",
+  "stage7_identity_v2": {
+    "dataset_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+    "master_seed": 20270101,
+    "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+    "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+    "scenario": "C100_G100",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+    "state_schema_version": "stage7_state_v2",
+    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"
+  },
+  "state_schema_version": "stage7_state_v2"
 }
