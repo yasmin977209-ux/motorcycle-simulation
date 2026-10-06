@@ -1,26 +1,26 @@
 {
   "artifact_identity": {
-    "fingerprint_sha256": "b5918f496580438f4b6ac486a75766c27e3783dc04f81e557a90498a4bdce3ec",
+    "fingerprint_sha256": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
     "scenario": "C070_G050",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "trial_id_end": 400,
+    "trial_id_end": 450,
     "trial_id_start": 1
   },
-  "completed_trials": 400,
-  "final_fingerprint": "b5918f496580438f4b6ac486a75766c27e3783dc04f81e557a90498a4bdce3ec",
-  "final_status": null,
-  "identity_fingerprint": "cf7fc0c1a44c2034ece67ee367525f9775f2571efbc95ce526004eca754ad7c0",
-  "included_in_final_stats": false,
+  "completed_trials": 450,
+  "final_fingerprint": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+  "final_status": "stable",
+  "identity_fingerprint": "2f1459beb455ccd4336df3e8ea5e75cdd0fcb241d051b08503beed59bc4750fb",
+  "included_in_final_stats": true,
   "lease": {
-    "acquired_at": "2026-10-06T03:12:13.411464Z",
-    "expires_at": "2026-10-06T04:12:13.411464Z",
+    "acquired_at": "2026-10-06T03:14:34.085611Z",
+    "expires_at": "2026-10-06T04:14:34.085611Z",
     "owner": "37406221591",
     "run_attempt": 1,
     "run_id": "37406221591"
   },
-  "next_check_n": 450,
-  "next_trial_id": 401,
-  "reason_if_not_stable": "dual stability gates not yet satisfied",
+  "next_check_n": 500,
+  "next_trial_id": 451,
+  "reason_if_not_stable": null,
   "run_attempt": 1,
   "run_id": "37406221591",
   "scenario": "C070_G050",
@@ -241,12 +241,92 @@
         }
       },
       "n": 400
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 450,
+        "expected_current_n": 450,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 696.6666666567326,
+            "current_mean": 209093013.33333334,
+            "limit": 2090937.1,
+            "previous_mean": 209093710.0,
+            "relative_change": 3.3318394257614566e-06,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 487.66666665673256,
+            "current_mean": 146365109.33333334,
+            "limit": 1463655.97,
+            "previous_mean": 146365597.0,
+            "relative_change": 3.331839425741095e-06,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 209.0,
+            "current_mean": 62727904.0,
+            "limit": 627281.13,
+            "previous_mean": 62728113.0,
+            "relative_change": 3.331839425808967e-06,
+            "stable": true
+          }
+        },
+        "previous_n": 400,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 14994.725912190996,
+          "limit": 2090930.1333333335,
+          "mean": 209093013.33333334,
+          "n": 450,
+          "sample_std": 161854.3773442005,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 10496.308138533697,
+          "limit": 1463651.0933333335,
+          "mean": 146365109.33333334,
+          "n": 450,
+          "sample_std": 113298.06414094035,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 4498.417773657298,
+          "limit": 627279.04,
+          "mean": 62727904.0,
+          "n": 450,
+          "sample_std": 48556.31320326015,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        }
+      },
+      "n": 450
     }
   ],
-  "stable_at_n": null,
+  "stable_at_n": 450,
   "stage": "7",
   "stage7_identity_v2": {
-    "dataset_fingerprint": "b5918f496580438f4b6ac486a75766c27e3783dc04f81e557a90498a4bdce3ec",
+    "dataset_fingerprint": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
     "master_seed": 20270101,
     "rng_policy_id": "RNG_SHA256_DERIVED_V1",
     "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
