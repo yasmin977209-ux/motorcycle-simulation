@@ -1,35 +1,43 @@
 {
-  "stage": "7",
-  "cp_completed": "CLOSED",
-  "sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "next": "stage8",
-  "blockers": [],
-  "scenario": "C100_G100",
-  "state_schema_version": "stage7_state_v2",
-  "completed_trials": 1,
-  "next_trial_id": 2,
-  "stability_history": [],
   "artifact_identity": {
     "fingerprint_sha256": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
     "scenario": "C100_G100",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "trial_id_start": 1,
-    "trial_id_end": 1
+    "trial_id_end": 1,
+    "trial_id_start": 1
   },
-  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "run_id": "37225915321",
-  "final_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+  "blockers": [],
+  "completed_trials": 1,
+  "cp_completed": "CLOSED",
   "dataset_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+  "final_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+  "identity_fingerprint": "34ec0818f0b7c08313c1d92a6127a7c948b360d537e98247194231b6749d3cbe",
+  "lease": {
+    "acquired_at": "2026-10-06T02:53:14.546933Z",
+    "expires_at": "2026-10-06T03:53:14.546933Z",
+    "owner": "37406221591",
+    "run_attempt": 1,
+    "run_id": "37406221591"
+  },
+  "next": "stage8",
+  "next_trial_id": 2,
+  "run_attempt": 1,
+  "run_id": "37406221591",
+  "scenario": "C100_G100",
+  "sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "stability_history": [],
+  "stage": "7",
   "stage7_identity_v2": {
-    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "dataset_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
     "master_seed": 20270101,
     "rng_policy_id": "RNG_SHA256_DERIVED_V1",
     "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
-    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
-    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
-    "state_schema_version": "stage7_state_v2",
     "scenario": "C100_G100",
-    "dataset_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+    "state_schema_version": "stage7_state_v2",
+    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"
   },
-  "identity_fingerprint": "34ec0818f0b7c08313c1d92a6127a7c948b360d537e98247194231b6749d3cbe"
+  "state_schema_version": "stage7_state_v2"
 }
