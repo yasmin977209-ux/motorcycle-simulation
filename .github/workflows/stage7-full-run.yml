@@ -15,6 +15,7 @@ on:
       - "tmp/wf-002f3h-fix7-20261006"
       - "tmp/wf-002f3i-verify-20261006"
       - "tmp/wf-002f3k-fix9a-20261006"
+      - "tmp/wf-002f4-full-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -52,7 +53,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-(pilot|fix|verify) ]]; then
+          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f4-full- ]]; then
+            STAGE7_PILOT_MODE="false"
+            SCENARIOS_JSON='["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
+          elif [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-(pilot|fix|verify) ]]; then
             STAGE7_PILOT_MODE="true"
             SCENARIOS_JSON='["C100_G100"]'
           else
