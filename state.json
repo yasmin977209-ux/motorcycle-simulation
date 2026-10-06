@@ -11,13 +11,7 @@
   "final_status": "stable",
   "identity_fingerprint": "f0c54746d735df2cb74e11eb12bc1f0b937b826bd7a55cee69f4ae8f7953ca4e",
   "included_in_final_stats": true,
-  "lease": {
-    "acquired_at": "2026-10-06T03:23:02.957573Z",
-    "expires_at": "2026-10-06T04:23:02.957573Z",
-    "owner": "37406221591",
-    "run_attempt": 1,
-    "run_id": "37406221591"
-  },
+  "lease": null,
   "next_check_n": 500,
   "next_trial_id": 451,
   "reason_if_not_stable": null,
