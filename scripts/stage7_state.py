@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import time
@@ -14,6 +15,12 @@ RETRYABLE_HTTP_STATUS = frozenset({429, 500, 502, 503, 504})
 MAX_ATTEMPTS = 4
 RETRY_BASE_SECONDS = 1.0
 DEFAULT_LEASE_SECONDS = 3600
+
+RNG_POLICY_ID = "RNG_SHA256_DERIVED_V1"
+SAMPLING_POLICY_ID = "SAMPLING_ADAPTIVE_1_300_PLUS50_V1"
+STABILITY_POLICY_ID = "STABILITY_GATES_A_B_3_CONSECUTIVE_V1"
+TRIAL_ID_POLICY_ID = "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"
+STATE_SCHEMA_VERSION = "stage7_state_v2"
 
 
 class StateRemoteNotFound(RuntimeError):
@@ -60,6 +67,37 @@ def build_artifact_identity(
         "fingerprint_sha256": fingerprint_sha256,
     }
 
+def build_stage7_identity_v2(
+    *,
+    source_sha: str,
+    master_seed: int,
+    scenario: str,
+    dataset_fingerprint: str,
+) -> dict[str, object]:
+    return {
+        "source_sha": source_sha,
+        "master_seed": int(master_seed),
+        "rng_policy_id": RNG_POLICY_ID,
+        "sampling_policy_id": SAMPLING_POLICY_ID,
+        "stability_policy_id": STABILITY_POLICY_ID,
+        "trial_id_policy_id": TRIAL_ID_POLICY_ID,
+        "state_schema_version": STATE_SCHEMA_VERSION,
+        "scenario": scenario,
+        "dataset_fingerprint": dataset_fingerprint,
+    }
+
+
+def compute_identity_fingerprint(identity_v2: dict[str, object]) -> str:
+    canonical_json = json.dumps(
+        identity_v2,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    domain_input = "stage7_identity_v2:" + canonical_json
+    return hashlib.sha256(domain_input.encode("utf-8")).hexdigest()
+
+
 
 def validate_trial_sequence(
     *,
@@ -89,6 +127,8 @@ class StateStore:
         run_id: str,
         run_attempt: str,
         local_path: Path,
+        master_seed: int,
+        expected_dataset_fingerprint: str | None = None,
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
     ) -> None:
         self.repo = repo
@@ -98,6 +138,8 @@ class StateStore:
         self.run_id = str(run_id)
         self.run_attempt = str(run_attempt)
         self.local_path = local_path
+        self.master_seed = int(master_seed)
+        self.expected_dataset_fingerprint = expected_dataset_fingerprint
         self.lease_seconds = int(lease_seconds)
         if self.lease_seconds < 1:
             raise ValueError("lease_seconds must be >= 1")
@@ -179,6 +221,7 @@ class StateStore:
         )
         return {
             "stage": "7",
+            "state_schema_version": STATE_SCHEMA_VERSION,
             "scenario": self.scenario,
             "source_sha": self.source_sha,
             "run_id": self.run_id,
@@ -188,6 +231,8 @@ class StateStore:
             "next_check_n": initial_next_check_n,
             "final_fingerprint": None,
             "artifact_identity": None,
+            "stage7_identity_v2": None,
+            "identity_fingerprint": None,
             "included_in_final_stats": False,
             "stability_history": [],
             "final_status": None,
@@ -285,6 +330,47 @@ class StateStore:
             ) from exc
         return expiry > _utc_now()
 
+    def _migrate_v1_to_v2(self, state):
+        if self.expected_dataset_fingerprint is None:
+            raise StateIntegrityError(
+                "v1 checkpoint migration requires an independently verified "
+                "dataset fingerprint"
+            )
+        if not state.get("run_id"):
+            raise StateIntegrityError(
+                "v1 checkpoint migration requires run_id provenance"
+            )
+        artifact_identity = state.get("artifact_identity")
+        if not isinstance(artifact_identity, dict):
+            raise StateIntegrityError(
+                "v1 checkpoint migration requires artifact_identity provenance"
+            )
+        if artifact_identity.get("scenario") != self.scenario:
+            raise StateIntegrityError("v1 artifact_identity scenario mismatch")
+        if artifact_identity.get("source_sha") != self.source_sha:
+            raise StateIntegrityError("v1 artifact_identity source SHA mismatch")
+        dataset_fingerprint = artifact_identity.get("fingerprint_sha256")
+        if not isinstance(dataset_fingerprint, str) or not dataset_fingerprint:
+            raise StateIntegrityError(
+                "v1 checkpoint migration requires fingerprint_sha256 provenance"
+            )
+        if dataset_fingerprint != self.expected_dataset_fingerprint:
+            raise StateIntegrityError(
+                "v1 checkpoint dataset fingerprint differs from independently "
+                "verified dataset"
+            )
+        identity_v2 = build_stage7_identity_v2(
+            source_sha=self.source_sha,
+            master_seed=self.master_seed,
+            scenario=self.scenario,
+            dataset_fingerprint=dataset_fingerprint,
+        )
+        state["state_schema_version"] = STATE_SCHEMA_VERSION
+        state["stage7_identity_v2"] = identity_v2
+        state["identity_fingerprint"] = compute_identity_fingerprint(identity_v2)
+        return state
+
+
     def _validate_identity(self, state):
         if state.get("stage") != "7":
             raise StateIntegrityError(
@@ -301,6 +387,16 @@ class StateStore:
                 "State source SHA mismatch: "
                 f"{state.get('source_sha')} != {self.source_sha}"
             )
+
+        state_schema_version = state.get("state_schema_version")
+        if state_schema_version is None:
+            self._migrate_v1_to_v2(state)
+        elif state_schema_version != STATE_SCHEMA_VERSION:
+            raise StateIntegrityError(
+                "unsupported Stage 7 state schema version: "
+                f"{state_schema_version!r}"
+            )
+
         for key in (
             "completed_trials",
             "next_trial_id",
@@ -310,6 +406,46 @@ class StateStore:
                 raise StateIntegrityError(
                     f"state.json missing required Stage 7 field: {key}"
                 )
+
+        completed_trials = int(state.get("completed_trials", 0))
+        if completed_trials <= 0:
+            return
+
+        identity_v2 = state.get("stage7_identity_v2")
+        if not isinstance(identity_v2, dict):
+            raise StateIntegrityError("state.json missing stage7_identity_v2")
+
+        artifact_identity = state.get("artifact_identity")
+        if not isinstance(artifact_identity, dict):
+            raise StateIntegrityError("state.json missing artifact_identity")
+
+        dataset_fingerprint = artifact_identity.get("fingerprint_sha256")
+        expected_identity = build_stage7_identity_v2(
+            source_sha=self.source_sha,
+            master_seed=self.master_seed,
+            scenario=self.scenario,
+            dataset_fingerprint=str(dataset_fingerprint),
+        )
+        if identity_v2 != expected_identity:
+            raise StateIntegrityError("Stage 7 identity v2 mismatch")
+
+        expected_identity_fingerprint = compute_identity_fingerprint(
+            identity_v2
+        )
+        if state.get("identity_fingerprint") != expected_identity_fingerprint:
+            raise StateIntegrityError(
+                "Stage 7 identity fingerprint mismatch"
+            )
+
+        if (
+            self.expected_dataset_fingerprint is not None
+            and identity_v2["dataset_fingerprint"]
+            != self.expected_dataset_fingerprint
+        ):
+            raise StateIntegrityError(
+                "Stage 7 dataset fingerprint differs from independently "
+                "verified dataset"
+            )
 
     def _write_local(self, state):
         self.local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -429,5 +565,7 @@ __all__ = [
     "StateIntegrityError",
     "StateStore",
     "build_artifact_identity",
+    "build_stage7_identity_v2",
+    "compute_identity_fingerprint",
     "validate_trial_sequence",
 ]

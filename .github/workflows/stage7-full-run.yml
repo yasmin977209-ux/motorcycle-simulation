@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "tmp/stage7-full-run-20261004"
+      - "tmp/wf-002f2-pilot-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -33,7 +34,21 @@ jobs:
     name: preflight-gates
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      scenarios: ${{ steps.resolve-scenarios.outputs.scenarios }}
     steps:
+      - name: Resolve scenario matrix
+        id: resolve-scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ]; then
+            SCENARIOS_JSON='["C100_G100"]'
+          else
+            SCENARIOS_JSON='["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
+          fi
+          echo "scenarios=$SCENARIOS_JSON" >> "$GITHUB_OUTPUT"
+          echo "SCENARIOS_JSON=$SCENARIOS_JSON" >> "$GITHUB_ENV"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -52,12 +67,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SCENARIOS=(
-            C100_G100 C100_G070 C100_G050 C100_G030 C100_G000
-            C085_G100 C085_G070 C085_G050 C085_G030 C085_G000
-            C070_G100 C070_G070 C070_G050 C070_G030 C070_G000
-            C050_G100 C050_G070 C050_G050 C050_G030 C050_G000
-            C030_G100 C030_G070 C030_G050 C030_G030 C030_G000
+          mapfile -t SCENARIOS < <(python - <<'PY'
+          import json
+          import os
+          for scenario in json.loads(os.environ["SCENARIOS_JSON"]):
+              print(scenario)
+          PY
           )
           stale_runs="$(
             gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
@@ -96,6 +111,10 @@ jobs:
             STATE_BRANCH="stage7-state/${scenario}"
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
             STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
+            if [ "${GITHUB_REF_NAME}" = "tmp/wf-002f2-pilot-20261006" ] && [ "${scenario}" = "C100_G100" ]; then
+              echo "STAGE7_PILOT_STATE_BRANCH_PRESERVED=${STATE_BRANCH}"
+              continue
+            fi
             if gh api "${STATE_REF}" >/dev/null 2>&1; then
               state_run_id="$(
                 gh api "${STATE_CONTENTS}" 2>/dev/null |
@@ -138,32 +157,7 @@ jobs:
       fail-fast: false
       max-parallel: 10
       matrix:
-        scenario:
-          - C100_G100
-          - C100_G070
-          - C100_G050
-          - C100_G030
-          - C100_G000
-          - C085_G100
-          - C085_G070
-          - C085_G050
-          - C085_G030
-          - C085_G000
-          - C070_G100
-          - C070_G070
-          - C070_G050
-          - C070_G030
-          - C070_G000
-          - C050_G100
-          - C050_G070
-          - C050_G050
-          - C050_G030
-          - C050_G000
-          - C030_G100
-          - C030_G070
-          - C030_G050
-          - C030_G030
-          - C030_G000
+        scenario: ${{ fromJSON(needs.preflight-gates.outputs.scenarios) }}
     timeout-minutes: 90
     steps:
       - name: Checkout
@@ -225,12 +219,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
-          ARTIFACT_ID="$(
-            gh api --paginate \
-              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
-              --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
-              | sort -k2 | tail -1 | cut -f1
-          )"
+          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ] && [ "$SCENARIO" = "C100_G100" ]; then
+            ARTIFACT_ID="11312276587"
+            echo "STAGE7_PILOT_ARTIFACT_RESTORE=OFFICIAL_RUN:37225915321 ARTIFACT_ID:$ARTIFACT_ID SCENARIO:$SCENARIO"
+          else
+            ARTIFACT_ID="$("
+              gh api --paginate \
+                "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" \
+                --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
+                | sort -k2 | tail -1 | cut -f1
+            )"
+          fi
           if [ -n "${ARTIFACT_ID}" ]; then
             echo "STAGE7_ARTIFACT_RESTORE=RUN_ID:${GITHUB_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
             gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
@@ -242,6 +241,122 @@ jobs:
             echo "No previous Stage 7 block artifact found for this workflow run."
           fi
 
+      - name: Verify and stage official C100_G100 dataset/checkpoint provenance
+        if: github.ref_name == 'tmp/wf-002f2-pilot-20261006' && matrix.scenario == 'C100_G100'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BLOCK_ARTIFACT_ID="11312276587"
+          FINAL_ARTIFACT_ID="11312087286"
+          EXPECTED_DATASET_FINGERPRINT="95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+          EXPECTED_SOURCE_SHA="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          EXPECTED_RUN_ID="37225915321"
+
+          mkdir -p /tmp/stage7_official_final
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$FINAL_ARTIFACT_ID/zip" > /tmp/stage7_official_final.zip
+          unzip -q /tmp/stage7_official_final.zip -d /tmp/stage7_official_final
+          STATE_SOURCE="$(find /tmp/stage7_official_final -type f -name state.json | head -1)"
+          test -n "$STATE_SOURCE"
+          cp "$STATE_SOURCE" /tmp/stage7_official_state.json
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          expected_source_sha = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          expected_run_id = "37225915321"
+          expected_fingerprint = "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+          state = json.loads(Path("/tmp/stage7_official_state.json").read_text(encoding="utf-8"))
+
+          if state.get("stage") != "7":
+              raise SystemExit(f"STOP-MIGRATION-C100_G100: checkpoint stage={state.get('stage')!r}")
+          if state.get("scenario") != "C100_G100":
+              raise SystemExit("STOP-MIGRATION-C100_G100: checkpoint scenario mismatch")
+          if state.get("source_sha") != expected_source_sha:
+              raise SystemExit("STOP-MIGRATION-C100_G100: checkpoint source SHA mismatch")
+          if state.get("run_id") != expected_run_id:
+              raise SystemExit("STOP-MIGRATION-C100_G100: checkpoint run_id mismatch")
+          artifact_identity = state.get("artifact_identity")
+          if not isinstance(artifact_identity, dict):
+              raise SystemExit("STOP-MIGRATION-C100_G100: artifact_identity missing")
+          if artifact_identity.get("fingerprint_sha256") != expected_fingerprint:
+              raise SystemExit("STOP-MIGRATION-C100_G100: checkpoint fingerprint mismatch")
+          if state.get("final_fingerprint") != expected_fingerprint:
+              raise SystemExit("STOP-MIGRATION-C100_G100: final_fingerprint mismatch")
+          if state.get("completed_trials") != 1 or state.get("next_trial_id") != 2:
+              raise SystemExit("STOP-MIGRATION-C100_G100: trial progress provenance mismatch")
+
+          print("OFFICIAL_V1_CHECKPOINT_PROVENANCE_OK")
+          PY
+
+          unzip -l /tmp/stage7_official_final.zip | grep -q "state.json"
+          BLOCK_METADATA="/tmp/stage7_official_block_metadata.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BLOCK_ARTIFACT_ID/zip" > /tmp/stage7_official_block.zip
+          rm -rf /tmp/stage7_official_block
+          mkdir -p /tmp/stage7_official_block
+          unzip -q /tmp/stage7_official_block.zip -d /tmp/stage7_official_block
+          cp /tmp/stage7_official_block/block_1_1_metadata.json "$BLOCK_METADATA"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          metadata = json.loads(Path("/tmp/stage7_official_block_metadata.json").read_text(encoding="utf-8"))
+          expected = "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+          if metadata.get("fingerprint_sha256") != expected:
+              raise SystemExit("STOP-MIGRATION-C100_G100: block metadata fingerprint mismatch")
+          print("OFFICIAL_BLOCK_METADATA_PROVENANCE_OK")
+          PY
+
+          python - <<'PY'
+          import json
+          import os
+          import pyarrow.parquet as pq
+          import monte_carlo
+
+          block_dir = "results_stage7/C100_G100/blocks"
+          rows = []
+          for name in sorted(os.listdir(block_dir)):
+              if name.endswith(".parquet"):
+                  rows.extend(pq.read_table(os.path.join(block_dir, name)).to_pylist())
+          results = [monte_carlo.TrialResult(**row) for row in rows]
+          if not results:
+              raise SystemExit("STOP-MIGRATION-C100_G100: restored dataset is empty")
+          derived = monte_carlo.fingerprint_trial_results(results)
+          expected = "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+          if derived != expected:
+              raise SystemExit(f"STOP-MIGRATION-C100_G100: derived={derived} expected={expected}")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as handle:
+              handle.write(f"PILOT_EXPECTED_DATASET_FINGERPRINT={derived}\n")
+          print(json.dumps({
+              "scenario": "C100_G100",
+              "block_artifact_id": 11312276587,
+              "final_checkpoint_artifact_id": 11312087286,
+              "derived_dataset_fingerprint": derived,
+              "expected_dataset_fingerprint": expected,
+              "derived_equals_stored": True,
+          }, sort_keys=True))
+          PY
+
+          STATE_B64="$(base64 -w 0 /tmp/stage7_official_state.json)"
+          CURRENT_STATE_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/state.json?ref=stage7-state/C100_G100" --jq ".sha // empty" 2>/dev/null || true)"
+          if [ -n "$CURRENT_STATE_SHA" ]; then
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/state.json" \
+              -f message="stage7: restore official v1 checkpoint for F2 pilot" \
+              -f content="$STATE_B64" \
+              -f branch="stage7-state/C100_G100" \
+              -f sha="$CURRENT_STATE_SHA" >/dev/null
+          else
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/state.json" \
+              -f message="stage7: restore official v1 checkpoint for F2 pilot" \
+              -f content="$STATE_B64" \
+              -f branch="stage7-state/C100_G100" >/dev/null
+          fi
+
+          echo "OFFICIAL_V1_CHECKPOINT_STAGED_FOR_V2_MIGRATION RUN_ID=$EXPECTED_RUN_ID"
+          echo "STAGE7_PILOT_ARTIFACT_RESTORE=OFFICIAL_RUN:$EXPECTED_RUN_ID ARTIFACT_ID:$BLOCK_ARTIFACT_ID"
       - name: Prepare CP3 overlap reference
         if: matrix.scenario == 'C070_G100'
         continue-on-error: true
@@ -336,6 +451,8 @@ jobs:
           from scripts.stage7_state import (
               StateStore,
               build_artifact_identity,
+              build_stage7_identity_v2,
+              compute_identity_fingerprint,
               validate_trial_sequence,
           )
           from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
@@ -406,6 +523,28 @@ jobs:
                   encoding="utf-8",
               )
 
+          def attach_stage7_identity(state, results):
+              fingerprint = monte_carlo.fingerprint_trial_results(results)
+              state["final_fingerprint"] = fingerprint
+              state["artifact_identity"] = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=len(results),
+                  fingerprint_sha256=fingerprint,
+              )
+              identity_v2 = build_stage7_identity_v2(
+                  source_sha=SOURCE_SHA,
+                  master_seed=MASTER_SEED,
+                  scenario=SCENARIO,
+                  dataset_fingerprint=fingerprint,
+              )
+              state["state_schema_version"] = "stage7_state_v2"
+              state["stage7_identity_v2"] = identity_v2
+              state["identity_fingerprint"] = compute_identity_fingerprint(
+                  identity_v2
+              )
+
           store = StateStore(
               repo=REPO,
               token=TOKEN,
@@ -414,6 +553,15 @@ jobs:
               run_id=RUN_ID,
               run_attempt=os.environ["RUN_ATTEMPT"],
               local_path=Path("state.json"),
+              master_seed=MASTER_SEED,
+              expected_dataset_fingerprint=(
+                  os.environ.get("PILOT_EXPECTED_DATASET_FINGERPRINT")
+                  or (
+                      monte_carlo.fingerprint_trial_results(all_results())
+                      if all_results()
+                      else None
+                  )
+              ),
           )
           state, blob_sha = store.acquire()
           atexit.register(store.release)
@@ -655,14 +803,7 @@ jobs:
 
               state["stability_history"] = history
               state["included_in_final_stats"] = state["final_status"] == "stable"
-              state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
-              state["artifact_identity"] = build_artifact_identity(
-                  scenario=SCENARIO,
-                  source_sha=SOURCE_SHA,
-                  trial_id_start=1,
-                  trial_id_end=completed,
-                  fingerprint_sha256=state["final_fingerprint"],
-              )
+              attach_stage7_identity(state, results)
               blob_sha = store.save_state(state, blob_sha)
 
               write_json(
