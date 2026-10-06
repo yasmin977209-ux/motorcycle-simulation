@@ -5,9 +5,17 @@
   "next": "stage8",
   "blockers": [],
   "scenario": "C100_G100",
+  "state_schema_version": "stage7_state_v2",
   "completed_trials": 1,
   "next_trial_id": 2,
-  "trial_id_end": 1,
+  "stability_history": [],
+  "artifact_identity": {
+    "fingerprint_sha256": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+    "scenario": "C100_G100",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "trial_id_start": 1,
+    "trial_id_end": 1
+  },
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "run_id": "37225915321",
   "final_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
