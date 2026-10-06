@@ -11,12 +11,18 @@
   "final_status": "stable",
   "identity_fingerprint": "25736db48949b20999885ebffc33295080acefa511f3d12a254486fae87a7537",
   "included_in_final_stats": true,
-  "lease": null,
+  "lease": {
+    "acquired_at": "2026-10-06T14:54:41.933350Z",
+    "expires_at": "2026-10-06T15:54:41.933350Z",
+    "owner": "37482745008",
+    "run_attempt": 1,
+    "run_id": "37482745008"
+  },
   "next_check_n": 500,
   "next_trial_id": 451,
   "reason_if_not_stable": null,
   "run_attempt": 1,
-  "run_id": "37472504897",
+  "run_id": "37482745008",
   "scenario": "C085_G100",
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "stability_history": [
