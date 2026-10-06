@@ -7,6 +7,7 @@ on:
       - "tmp/wf-002f2-pilot-20261006"
       - "tmp/wf-002f3-pilot-20261006"
       - "tmp/wf-002f3b-fix-20261006"
+      - "tmp/wf-002f3c-fix2-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -141,19 +142,20 @@ jobs:
             fi
           done
           python - <<'PY'
+          import json
           import os
           import yaml
           import monte_carlo
 
-          spec = yaml.safe_load(
-              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
-          )
-          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
+          scenarios = json.loads(os.environ.get("SCENARIOS_JSON", "[]"))
           if os.environ.get("STAGE7_PILOT_MODE") == "true":
-              assert len(scenarios) == 1
-              assert scenarios[0] == "C100_G100"
+              assert len(scenarios) == 1, \
+                  f"pilot expects 1 scenario, got {len(scenarios)}"
+              assert scenarios[0] == "C100_G100", \
+                  f"pilot expects C100_G100, got {scenarios[0]}"
           else:
-              assert len(scenarios) == 25
+              assert len(scenarios) == 25, \
+                  f"full mode expects 25 scenarios, got {len(scenarios)}"
           assert len(set(scenarios)) == len(scenarios)
           for scenario in scenarios:
               monte_carlo.parse_scenario_id(scenario)
