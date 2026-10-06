@@ -14,6 +14,7 @@ on:
       - "tmp/wf-002f3g-fix6-20261006"
       - "tmp/wf-002f3h-fix7-20261006"
       - "tmp/wf-002f3i-verify-20261006"
+      - "tmp/wf-002f3k-fix9a-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -51,8 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-pilot- ]] || \
-             [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-fix ]]; then
+          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-(pilot|fix|verify) ]]; then
             STAGE7_PILOT_MODE="true"
             SCENARIOS_JSON='["C100_G100"]'
           else
@@ -248,10 +248,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
-          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ] && [ "$SCENARIO" = "C100_G100" ]; then
-            ARTIFACT_ID="11312276587"
-            echo "STAGE7_PILOT_ARTIFACT_RESTORE=OFFICIAL_RUN:37225915321 ARTIFACT_ID:$ARTIFACT_ID SCENARIO:$SCENARIO"
-          elif [ "$GITHUB_REF_NAME" = "tmp/wf-002f3h-fix7-20261006" ] && [ "$SCENARIO" = "C100_G100" ]; then
+          if [[ "$GITHUB_REF_NAME" =~ ^tmp/wf-002f[0-9a-z-]+-(pilot|fix|verify) ]] && [ "$SCENARIO" = "C100_G100" ]; then
             ARTIFACT_ID="11312276587"
             echo "STAGE7_PILOT_ARTIFACT_RESTORE=OFFICIAL_RUN:37225915321 ARTIFACT_ID:$ARTIFACT_ID SCENARIO:$SCENARIO"
           else
@@ -277,7 +274,12 @@ jobs:
           fi
 
       - name: Verify and stage official C100_G100 dataset/checkpoint provenance
-        if: github.ref_name == 'tmp/wf-002f2-pilot-20261006' && matrix.scenario == 'C100_G100'
+        if: |
+          startsWith(github.ref_name, 'tmp/wf-002f') &&
+          (contains(github.ref_name, '-pilot-') ||
+           contains(github.ref_name, '-fix') ||
+           contains(github.ref_name, '-verify-')) &&
+          matrix.scenario == 'C100_G100'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
