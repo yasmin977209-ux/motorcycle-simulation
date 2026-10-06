@@ -12,13 +12,7 @@
   "dataset_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
   "final_fingerprint": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
   "identity_fingerprint": "34ec0818f0b7c08313c1d92a6127a7c948b360d537e98247194231b6749d3cbe",
-  "lease": {
-    "acquired_at": "2026-10-06T02:53:14.546933Z",
-    "expires_at": "2026-10-06T03:53:14.546933Z",
-    "owner": "37406221591",
-    "run_attempt": 1,
-    "run_id": "37406221591"
-  },
+  "lease": null,
   "next": "stage8",
   "next_trial_id": 2,
   "run_attempt": 1,
