@@ -1,1 +1,340 @@
-{"artifact_identity":{"fingerprint_sha256":"024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5","scenario":"C070_G050","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","trial_id_end":450,"trial_id_start":1},"completed_trials":450,"final_fingerprint":"024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5","final_status":"stable","identity_fingerprint":"2f1459beb455ccd4336df3e8ea5e75cdd0fcb241d051b08503beed59bc4750fb","included_in_final_stats":true,"lease":null,"next_check_n":500,"next_trial_id":451,"reason_if_not_stable":null,"run_attempt":1,"run_id":"37225915321","scenario":"C070_G050","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","stability_history":[{"gate_a":{"checked":false,"current_n":300,"expected_current_n":null,"metrics":{},"previous_n":null,"reason":"no previous stability point","stable":false},"gate_b":{"checked":true,"metrics":{"final_net_project_equity":{"stable":true},"partner1_final_entitlement":{"stable":true},"partner2_final_entitlement":{"stable":true}},"stable":true},"metrics":{"final_net_project_equity":{"half_ci_95":19168.954796346377,"limit":2090884.8166666667,"mean":209088481.66666666,"n":300,"sample_std":168713.3648989928,"stable":true,"t_critical":1.9679296690656698},"partner1_final_entitlement":{"half_ci_95":13418.268357442463,"limit":1463619.3716666666,"mean":146361937.16666666,"n":300,"sample_std":118099.35542929496,"stable":true,"t_critical":1.9679296690656698},"partner2_final_entitlement":{"half_ci_95":5750.686438903913,"limit":627265.4450000001,"mean":62726544.5,"n":300,"sample_std":50614.009469697834,"stable":true,"t_critical":1.9679296690656698}},"n":300},{"gate_a":{"checked":true,"current_n":350,"expected_current_n":350,"metrics":{"final_net_project_equity":{"absolute_change":4088.3333333432674,"current_mean":209092570,"limit":2090884.8166666667,"previous_mean":209088481.66666666,"relative_change":0.000019553125551224654,"stable":true},"partner1_final_entitlement":{"absolute_change":2861.8333333432674,"current_mean":146364799,"limit":1463619.3716666666,"previous_mean":146361937.16666666,"relative_change":0.000019553125551245016,"stable":true},"partner2_final_entitlement":{"absolute_change":1226.5,"current_mean":62727771,"limit":627265.4450000001,"previous_mean":62726544.5,"relative_change":0.000019553125551177142,"stable":true}},"previous_n":300,"stable":true},"gate_b":{"checked":true,"metrics":{"final_net_project_equity":{"stable":true},"partner1_final_entitlement":{"stable":true},"partner2_final_entitlement":{"stable":true}},"stable":true},"metrics":{"final_net_project_equity":{"half_ci_95":17028.434901251785,"limit":2090925.7,"mean":209092570,"n":350,"sample_std":161976.48344470176,"stable":true,"t_critical":1.96678455657484},"partner1_final_entitlement":{"half_ci_95":11919.904430876251,"limit":1463647.99,"mean":146364799,"n":350,"sample_std":113383.53841129124,"stable":true,"t_critical":1.96678455657484},"partner2_final_entitlement":{"half_ci_95":5108.5304703755355,"limit":627277.71,"mean":62727771,"n":350,"sample_std":48592.94503341053,"stable":true,"t_critical":1.96678455657484}},"n":350},{"gate_a":{"checked":true,"current_n":400,"expected_current_n":400,"metrics":{"final_net_project_equity":{"absolute_change":1140,"current_mean":209093710,"limit":2090925.7,"previous_mean":209092570,"relative_change":0.0000054521306041625485,"stable":true},"partner1_final_entitlement":{"absolute_change":798,"current_mean":146365597,"limit":1463647.99,"previous_mean":146364799,"relative_change":0.0000054521306041625485,"stable":true},"partner2_final_entitlement":{"absolute_change":342,"current_mean":62728113,"limit":627277.71,"previous_mean":62727771,"relative_change":0.0000054521306041625485,"stable":true}},"previous_n":350,"stable":true},"gate_b":{"checked":true,"metrics":{"final_net_project_equity":{"stable":true},"partner1_final_entitlement":{"stable":true},"partner2_final_entitlement":{"stable":true}},"stable":true},"metrics":{"final_net_project_equity":{"half_ci_95":15555.191061804657,"limit":2090937.1,"mean":209093710,"n":400,"sample_std":158247.87716290672,"stable":true,"t_critical":1.965927295920882},"partner1_final_entitlement":{"half_ci_95":10888.633743263259,"limit":1463655.97,"mean":146365597,"n":400,"sample_std":110773.5140140347,"stable":true,"t_critical":1.965927295920882},"partner2_final_entitlement":{"half_ci_95":4666.557318541397,"limit":627281.13,"mean":62728113,"n":400,"sample_std":47474.36314887202,"stable":true,"t_critical":1.965927295920882}},"n":400},{"gate_a":{"checked":true,"current_n":450,"expected_current_n":450,"metrics":{"final_net_project_equity":{"absolute_change":696.6666666567326,"current_mean":209093013.33333334,"limit":2090937.1,"previous_mean":209093710,"relative_change":0.0000033318394257614566,"stable":true},"partner1_final_entitlement":{"absolute_change":487.66666665673256,"current_mean":146365109.33333334,"limit":1463655.97,"previous_mean":146365597,"relative_change":0.000003331839425741095,"stable":true},"partner2_final_entitlement":{"absolute_change":209,"current_mean":62727904,"limit":627281.13,"previous_mean":62728113,"relative_change":0.000003331839425808967,"stable":true}},"previous_n":400,"stable":true},"gate_b":{"checked":true,"metrics":{"final_net_project_equity":{"stable":true},"partner1_final_entitlement":{"stable":true},"partner2_final_entitlement":{"stable":true}},"stable":true},"metrics":{"final_net_project_equity":{"half_ci_95":14994.725912190996,"limit":2090930.1333333335,"mean":209093013.33333334,"n":450,"sample_std":161854.3773442005,"stable":true,"t_critical":1.9652614680903735},"partner1_final_entitlement":{"half_ci_95":10496.308138533697,"limit":1463651.0933333335,"mean":146365109.33333334,"n":450,"sample_std":113298.06414094035,"stable":true,"t_critical":1.9652614680903735},"partner2_final_entitlement":{"half_ci_95":4498.417773657298,"limit":627279.04,"mean":62727904,"n":450,"sample_std":48556.31320326015,"stable":true,"t_critical":1.9652614680903735}},"n":450}],"stable_at_n":450,"stage":"7","stage7_identity_v2":{"dataset_fingerprint":"024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5","master_seed":20270101,"rng_policy_id":"RNG_SHA256_DERIVED_V1","sampling_policy_id":"SAMPLING_ADAPTIVE_1_300_PLUS50_V1","scenario":"C070_G050","source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","stability_policy_id":"STABILITY_GATES_A_B_3_CONSECUTIVE_V1","state_schema_version":"stage7_state_v2","trial_id_policy_id":"TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"},"state_schema_version":"stage7_state_v2"}
+{
+  "artifact_identity": {
+    "fingerprint_sha256": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+    "scenario": "C070_G050",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "trial_id_end": 450,
+    "trial_id_start": 1
+  },
+  "completed_trials": 450,
+  "final_fingerprint": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+  "final_status": "stable",
+  "identity_fingerprint": "2f1459beb455ccd4336df3e8ea5e75cdd0fcb241d051b08503beed59bc4750fb",
+  "included_in_final_stats": true,
+  "lease": {
+    "acquired_at": "2026-10-06T13:40:55.087864Z",
+    "expires_at": "2026-10-06T14:40:55.087864Z",
+    "owner": "37472504897",
+    "run_attempt": 1,
+    "run_id": "37472504897"
+  },
+  "next_check_n": 500,
+  "next_trial_id": 451,
+  "reason_if_not_stable": null,
+  "run_attempt": 1,
+  "run_id": "37472504897",
+  "scenario": "C070_G050",
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "stability_history": [
+    {
+      "gate_a": {
+        "checked": false,
+        "current_n": 300,
+        "expected_current_n": null,
+        "metrics": {},
+        "previous_n": null,
+        "reason": "no previous stability point",
+        "stable": false
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 19168.954796346377,
+          "limit": 2090884.8166666667,
+          "mean": 209088481.66666666,
+          "n": 300,
+          "sample_std": 168713.3648989928,
+          "stable": true,
+          "t_critical": 1.9679296690656698
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 13418.268357442463,
+          "limit": 1463619.3716666666,
+          "mean": 146361937.16666666,
+          "n": 300,
+          "sample_std": 118099.35542929496,
+          "stable": true,
+          "t_critical": 1.9679296690656698
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 5750.686438903913,
+          "limit": 627265.4450000001,
+          "mean": 62726544.5,
+          "n": 300,
+          "sample_std": 50614.009469697834,
+          "stable": true,
+          "t_critical": 1.9679296690656698
+        }
+      },
+      "n": 300
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 350,
+        "expected_current_n": 350,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 4088.3333333432674,
+            "current_mean": 209092570,
+            "limit": 2090884.8166666667,
+            "previous_mean": 209088481.66666666,
+            "relative_change": 1.9553125551224654e-05,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 2861.8333333432674,
+            "current_mean": 146364799,
+            "limit": 1463619.3716666666,
+            "previous_mean": 146361937.16666666,
+            "relative_change": 1.9553125551245016e-05,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 1226.5,
+            "current_mean": 62727771,
+            "limit": 627265.4450000001,
+            "previous_mean": 62726544.5,
+            "relative_change": 1.9553125551177142e-05,
+            "stable": true
+          }
+        },
+        "previous_n": 300,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 17028.434901251785,
+          "limit": 2090925.7,
+          "mean": 209092570,
+          "n": 350,
+          "sample_std": 161976.48344470176,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 11919.904430876251,
+          "limit": 1463647.99,
+          "mean": 146364799,
+          "n": 350,
+          "sample_std": 113383.53841129124,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 5108.5304703755355,
+          "limit": 627277.71,
+          "mean": 62727771,
+          "n": 350,
+          "sample_std": 48592.94503341053,
+          "stable": true,
+          "t_critical": 1.96678455657484
+        }
+      },
+      "n": 350
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 400,
+        "expected_current_n": 400,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 1140,
+            "current_mean": 209093710,
+            "limit": 2090925.7,
+            "previous_mean": 209092570,
+            "relative_change": 5.4521306041625485e-06,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 798,
+            "current_mean": 146365597,
+            "limit": 1463647.99,
+            "previous_mean": 146364799,
+            "relative_change": 5.4521306041625485e-06,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 342,
+            "current_mean": 62728113,
+            "limit": 627277.71,
+            "previous_mean": 62727771,
+            "relative_change": 5.4521306041625485e-06,
+            "stable": true
+          }
+        },
+        "previous_n": 350,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 15555.191061804657,
+          "limit": 2090937.1,
+          "mean": 209093710,
+          "n": 400,
+          "sample_std": 158247.87716290672,
+          "stable": true,
+          "t_critical": 1.965927295920882
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 10888.633743263259,
+          "limit": 1463655.97,
+          "mean": 146365597,
+          "n": 400,
+          "sample_std": 110773.5140140347,
+          "stable": true,
+          "t_critical": 1.965927295920882
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 4666.557318541397,
+          "limit": 627281.13,
+          "mean": 62728113,
+          "n": 400,
+          "sample_std": 47474.36314887202,
+          "stable": true,
+          "t_critical": 1.965927295920882
+        }
+      },
+      "n": 400
+    },
+    {
+      "gate_a": {
+        "checked": true,
+        "current_n": 450,
+        "expected_current_n": 450,
+        "metrics": {
+          "final_net_project_equity": {
+            "absolute_change": 696.6666666567326,
+            "current_mean": 209093013.33333334,
+            "limit": 2090937.1,
+            "previous_mean": 209093710,
+            "relative_change": 3.3318394257614566e-06,
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "absolute_change": 487.66666665673256,
+            "current_mean": 146365109.33333334,
+            "limit": 1463655.97,
+            "previous_mean": 146365597,
+            "relative_change": 3.331839425741095e-06,
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "absolute_change": 209,
+            "current_mean": 62727904,
+            "limit": 627281.13,
+            "previous_mean": 62728113,
+            "relative_change": 3.331839425808967e-06,
+            "stable": true
+          }
+        },
+        "previous_n": 400,
+        "stable": true
+      },
+      "gate_b": {
+        "checked": true,
+        "metrics": {
+          "final_net_project_equity": {
+            "stable": true
+          },
+          "partner1_final_entitlement": {
+            "stable": true
+          },
+          "partner2_final_entitlement": {
+            "stable": true
+          }
+        },
+        "stable": true
+      },
+      "metrics": {
+        "final_net_project_equity": {
+          "half_ci_95": 14994.725912190996,
+          "limit": 2090930.1333333335,
+          "mean": 209093013.33333334,
+          "n": 450,
+          "sample_std": 161854.3773442005,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner1_final_entitlement": {
+          "half_ci_95": 10496.308138533697,
+          "limit": 1463651.0933333335,
+          "mean": 146365109.33333334,
+          "n": 450,
+          "sample_std": 113298.06414094035,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        },
+        "partner2_final_entitlement": {
+          "half_ci_95": 4498.417773657298,
+          "limit": 627279.04,
+          "mean": 62727904,
+          "n": 450,
+          "sample_std": 48556.31320326015,
+          "stable": true,
+          "t_critical": 1.9652614680903735
+        }
+      },
+      "n": 450
+    }
+  ],
+  "stable_at_n": 450,
+  "stage": "7",
+  "stage7_identity_v2": {
+    "dataset_fingerprint": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+    "master_seed": 20270101,
+    "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+    "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+    "scenario": "C070_G050",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "stability_policy_id": "STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+    "state_schema_version": "stage7_state_v2",
+    "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1"
+  },
+  "state_schema_version": "stage7_state_v2"
+}
