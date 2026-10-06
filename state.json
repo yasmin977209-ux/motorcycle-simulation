@@ -2,7 +2,7 @@
   "stage": "8",
   "schema_version": "1.0",
   "cp_completed": "CLOSED",
-  "sha": "b22f09608011a9d9a0cbe2a4700a9b88d3a9075e",
+  "sha": "ff3c8766f2e5252d8c2c5ab36378c0ef3702b48e",
   "next": "stage9",
   "blockers": [],
   "stage7": {
@@ -21,5 +21,40 @@
   "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
   "consolidation_note": "Stage 8 code consolidated on main post-closure.",
   "head_sha": "7c88deca1dbba44ea4e7a3a30435ebbe55b733a8",
-  "verify_at": "tmp/stage8-consolidate-v2-20261005"
+  "verify_at": "tmp/stage8-consolidate-v2-20261005",
+  "stage7_f4_evidence": {
+    "run_id": "37482745008",
+    "branch": "tmp/wf-002f6-f4safe-20261006",
+    "commit": "9fa357e83a07544d070eb717a945257ce9954d6f",
+    "simulation_jobs": "25/25 success",
+    "restore_count_gt_zero": "25/25",
+    "derived_equals_stored": "25/25",
+    "official_fingerprint_match": "25/25",
+    "golden_c100_match": true,
+    "state_branches_v2": "25/25 unchanged",
+    "state_integrity_errors": 0,
+    "verified_at": "2026-10-06T15:19:16Z"
+  },
+  "resolved_anomalies": [
+    {
+      "id": "STATE-ANOMALY-002",
+      "description": "C100_G100 branch drift",
+      "resolved_by": "F3b-pilot-RESTORE + F4 verification",
+      "evidence": "Run 37482745008 success, 25/25 v2"
+    },
+    {
+      "id": "STATE-ANOMALY-003",
+      "description": "lease lifecycle writes during failure",
+      "status": "ACKNOWLEDGED-NOT-BLOCKING",
+      "note": "lease field not required for F4 success; behavior documented"
+    }
+  ],
+  "known_safe_workflows": {
+    "read_only_push_main": [
+      "stage3a-verification.yml",
+      "stage3b-verification.yml",
+      "stage5-main-postround2-validation.yml"
+    ],
+    "note": "لا تكتب main. مراجعة الحوكمة مؤجلة."
+  }
 }

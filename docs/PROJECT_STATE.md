@@ -1,9 +1,10 @@
 # PROJECT STATE
 
-**تاريخ الحالة:** 2026-10-02  
+**تاريخ الحالة:** 2026-10-06  
 **المستودع:** `yasmin977209-ux/motorcycle-simulation`  
 **الفرع الحاكم:** `main`  
-**آخر SHA لتوثيق هذه الحالة:** `6694326ffbe24ce10d1752460ac9ff028b38f2ad`
+**تصنيف الوثيقة:** **CURRENT**  
+**آخر SHA لتوثيق هذه الحالة:** ff3c8766f2e5252d8c2c5ab36378c0ef3702b48e  
 
 ## 1. حالة البناء
 
@@ -325,3 +326,49 @@
 - **execution_trace:** اختياري ويُفعّل في الاختبار فقط.
 
 الحالة: **PASS**.
+
+
+---
+
+## 13. Stage 7 F4 Completion
+
+**الحالة:** **CURRENT / COMPLETED**
+
+مرجع الإثبات الكامل: `docs/STAGE7_FINAL_EVIDENCE.md`.
+
+- F4 Run: `37482745008`
+- Branch: `tmp/wf-002f6-f4safe-20261006`
+- Commit: `9fa357e83a07544d070eb717a945257ce9954d6f`
+- Simulation jobs: **25/25 success**
+- Restore evidence: **25/25** مع `COUNT>0`
+- `derived == stored`: **25/25**
+- Official fingerprint match: **25/25**
+- C100 golden match: **true**
+- State branches: **25/25 v2 unchanged**
+- State integrity errors: **0**
+
+الـofficial Stage 7 artifact set مصدره Run `37225915321`، وهو المرجع التشغيلي السابق للـ25 توليفة.
+
+## 14. Stage 8 Closure
+
+**الحالة:** **CLOSED**
+
+- Smoke Run: `37234010912`
+- Scenario: `C070_G100`
+- Final N: **500**
+- Smoke/closure evidence بقي ضمن نطاق Stage 8، ولم تُعاد التكرارات `1–450`.
+- Stage 8 ليس منتج بيانات جديداً مستقلاً؛ دوره كان التحقق من الاستئناف/الاستقرار وإغلاق المرحلة.
+
+## 15. Current Stage: Pre-Stage9
+
+الحالة الحالية هي **Pre-Stage9**. لا يبدأ تنفيذ Stage 9 ضمن هذا التحديث.
+
+Stage 9 مخصص للمراجعة المالية النهائية الشاملة وفق المرجع، بما في ذلك اختبارات Roll-forward الخمسة، توازن الميزانية بفارق صفر لكل التكرارات والتوليفات المطلوبة، وفحص Excel الناتج من خلايا الخطأ. المرجع يحدد ذلك في الباب 19، ولا يجيز إدخال سقف زمني في منطق المحرك.
+
+### Known-safe workflow exceptions
+
+- `stage3a-verification.yml`
+- `stage3b-verification.yml`
+- `stage5-main-postround2-validation.yml`
+
+هذه الـworkflows لا تكتب إلى `main` وفق المراجعة الحالية؛ مراجعة الحوكمة الخاصة بالـpush triggers مؤجلة ولا تدخل في تعديل Phase A.
