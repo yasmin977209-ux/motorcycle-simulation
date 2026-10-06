@@ -6,6 +6,7 @@ on:
       - "tmp/stage7-full-run-20261004"
       - "tmp/wf-002f2-pilot-20261006"
       - "tmp/wf-002f3-pilot-20261006"
+      - "tmp/wf-002f3b-fix-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -43,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ]; then
+          if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ] || [ "$GITHUB_REF_NAME" = "tmp/wf-002f3-pilot-20261006" ] || [ "$GITHUB_REF_NAME" = "tmp/wf-002f3b-fix-20261006" ]; then
             SCENARIOS_JSON='["C100_G100"]'
             STAGE7_PILOT_MODE="true"
           else
@@ -115,7 +116,7 @@ jobs:
             STATE_BRANCH="stage7-state/${scenario}"
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
             STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
-            if [ "${GITHUB_REF_NAME}" = "tmp/wf-002f2-pilot-20261006" ] && [ "${scenario}" = "C100_G100" ]; then
+            if [ "${STAGE7_PILOT_MODE}" = "true" ] && [ "${scenario}" = "C100_G100" ]; then
               echo "STAGE7_PILOT_STATE_BRANCH_PRESERVED=${STATE_BRANCH}"
               continue
             fi
@@ -140,6 +141,7 @@ jobs:
             fi
           done
           python - <<'PY'
+          import os
           import yaml
           import monte_carlo
 
