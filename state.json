@@ -1,7 +1,27 @@
 {
-  "stage": "6.5",
-  "cp_completed": "CP5",
-  "sha": "15b5c6e2c54ade5c1ddce07aecdc53d86a60ad95",
-  "next": "stage7",
-  "blockers": []
+  "artifact_identity": null,
+  "completed_trials": 0,
+  "final_fingerprint": null,
+  "final_status": null,
+  "identity_fingerprint": null,
+  "included_in_final_stats": false,
+  "lease": {
+    "acquired_at": "2026-10-06T03:17:37.549224Z",
+    "expires_at": "2026-10-06T04:17:37.549224Z",
+    "owner": "37406221591",
+    "run_attempt": 1,
+    "run_id": "37406221591"
+  },
+  "next_check_n": 300,
+  "next_trial_id": 1,
+  "reason_if_not_stable": null,
+  "run_attempt": 1,
+  "run_id": "37406221591",
+  "scenario": "C030_G070",
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "stability_history": [],
+  "stable_at_n": null,
+  "stage": "7",
+  "stage7_identity_v2": null,
+  "state_schema_version": "stage7_state_v2"
 }
