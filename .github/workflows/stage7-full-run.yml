@@ -44,11 +44,14 @@ jobs:
           set -euo pipefail
           if [ "$GITHUB_REF_NAME" = "tmp/wf-002f2-pilot-20261006" ]; then
             SCENARIOS_JSON='["C100_G100"]'
+            STAGE7_PILOT_MODE="true"
           else
             SCENARIOS_JSON='["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]'
+            STAGE7_PILOT_MODE="false"
           fi
           echo "scenarios=$SCENARIOS_JSON" >> "$GITHUB_OUTPUT"
           echo "SCENARIOS_JSON=$SCENARIOS_JSON" >> "$GITHUB_ENV"
+          echo "STAGE7_PILOT_MODE=$STAGE7_PILOT_MODE" >> "$GITHUB_ENV"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -143,8 +146,12 @@ jobs:
               open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
           )
           scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
-          assert len(scenarios) == 25
-          assert len(set(scenarios)) == 25
+          if os.environ.get("STAGE7_PILOT_MODE") == "true":
+              assert len(scenarios) == 1
+              assert scenarios[0] == "C100_G100"
+          else:
+              assert len(scenarios) == 25
+          assert len(set(scenarios)) == len(scenarios)
           for scenario in scenarios:
               monte_carlo.parse_scenario_id(scenario)
           print("STAGE7_PREFLIGHT_OK")
