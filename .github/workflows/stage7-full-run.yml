@@ -11,6 +11,7 @@ on:
       - "tmp/wf-002f3d-resolver-fix-20261006"
       - "tmp/wf-002f3e-fix4-20261006"
       - "tmp/wf-002f3f-fix5-20261006"
+      - "tmp/wf-002f3g-fix6-20261006"
 
 concurrency:
   group: stage7-full-run-${{ github.run_id }}
@@ -140,15 +141,7 @@ jobs:
                 if [ -n "${state_json}" ]; then
                   decoded=$(echo "${state_json}" | base64 -d 2>/dev/null || echo "")
                   if [ -n "${decoded}" ]; then
-                    has_v2=$(echo "${decoded}" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print('true' if 'stage7_identity_v2' in data else 'false')
-except Exception:
-    print('false')
-" 2>/dev/null || echo "false")
-                    if [ "${has_v2}" = "true" ]; then
+                    if echo "${decoded}" | grep -q '"stage7_identity_v2"'; then
                       echo "SKIP_RESET_V2_DETECTED=${scenario}"
                       continue
                     fi
