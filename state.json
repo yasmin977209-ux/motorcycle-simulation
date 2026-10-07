@@ -58,14 +58,15 @@
     "note": "لا تكتب main. مراجعة الحوكمة مؤجلة."
   },
   "stage9a_evidence": {
-    "status": "CLOSED",
+    "status": "CLOSED-RESOLVED",
     "run_id": "37671448546",
     "run_head_sha": "5e25a94743f44554093934c57404c0b168e69651",
     "excel_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
     "manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
     "sheets_count": 185,
     "excel_errors": 0,
-    "verified_at": "2026-10-07T21:13:29Z"
+    "verified_at": "2026-10-07T21:13:29Z",
+    "manifest_blob_sha": "e796fa2443493b607f1f9c60b58eb63607959c26"
   },
   "stage9b_evidence": {
     "status": "CLOSED",
@@ -87,6 +88,6 @@
     "total_trials": 9005,
     "scope_note": "Stage 9C is PARTIAL. The available authoritative artifacts support 5 audited representative trial histories (10,382 daily rows), not the full 9,005-trial daily accounting ledger."
   },
-  "canonical_content_sha": "9a51fe1f7ef2399a94fefc82817078fe77361b33",
+  "canonical_content_sha": "ea5d7c1d5020129679b0617d78832dd2e9f1727f",
   "state_sha_semantics_note": "state.sha = last commit that contains the previous approved state.json update; canonical_content_sha = last production/content commit before state-sync commits."
 }
