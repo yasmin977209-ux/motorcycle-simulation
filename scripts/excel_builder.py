@@ -470,7 +470,13 @@ def write_acctg_sheet(wb, scenario, payload):
     headers=["date","Operating_Revenue","Operating_Expenses","Operating_Net_Profit","Cumulative_Project_Profit","Cash","Accounts_Receivable","Guarantee_Claim_Receivable","Gross_Bike_Assets","Accumulated_Depreciation","Net_Equity"]
     rows=[[r.get(h) if h!="Net_Equity" else r.get("Net_Equity") for h in headers] for r in daily]
     write_table(ws,headers,rows,number_formats={h:FINANCE_FMT for h in headers if h!="date"})
+    balance_checks=payload["accounting"].get("daily_balance_checks",[])
     start=ws.max_row+3
+    if balance_checks:
+        ws.cell(start,1,"Daily Balance Checks").font=Font(bold=True)
+        bh=list(balance_checks[0])
+        write_table(ws,bh,[[r.get(x) for x in bh] for r in balance_checks],start_row=start+1,number_formats={x:FINANCE_FMT for x in bh})
+        start=ws.max_row+3
     for title,key in [("Cash Roll-forward","cash_rollforward"),("AR Roll-forward","ar_rollforward"),("Asset Roll-forward","asset_rollforward"),("Equity Roll-forward","equity_rollforward")]:
         ws.cell(start,1,title).font=Font(bold=True)
         data=payload["accounting"].get(key,[])
