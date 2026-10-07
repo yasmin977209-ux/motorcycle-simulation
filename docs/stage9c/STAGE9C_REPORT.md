@@ -131,20 +131,27 @@ Therefore:
 
 The following P50 representative payloads were checked directly from the enriched scenario packages:
 
-| Scenario | Daily rows | Cash RF | AR RF | Asset RF | Equity RF | Balance checks |
-|---|---:|---:|---:|---:|---:|---:|
-| C100_G100 | 2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 |
-| C085_G100 | 2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 |
-| C070_G100 | 2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 |
-| C050_G100 | 2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 |
-| C030_G000 | 1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 |
+| Scenario | Daily rows | Cash RF | AR RF | Gross Assets RF | Accumulated Depreciation RF | Equity RF | Balance checks |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| C100_G100 | 2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 |
+| C085_G100 | 2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 | 2,198/2,198 |
+| C070_G100 | 2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 | 2,200/2,200 |
+| C050_G100 | 2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 | 2,235/2,235 |
+| C030_G000 | 1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 | 1,551/1,551 |
 
 All tested representative balance differences were exactly zero.
 
 Total representative daily rows tested:
 **10,382**
 
-This is evidence of correct representative accounting payloads, not proof of all 9005 Trial histories.
+The accounting implementation stores Gross Assets and Accumulated Depreciation in the same `asset_rollforward` record but validates them as two separate roll-forward equations. The acceptance inventory also separates them as tests 108 and 109. Therefore the representative roll-forward breakdown is **5 categories × 10,382 daily rows = 51,910 roll-forward checks**:
+1. Cash Roll-forward: 10,382
+2. AR Roll-forward: 10,382
+3. Gross Assets Roll-forward: 10,382
+4. Accumulated Depreciation Roll-forward: 10,382
+5. Equity Roll-forward: 10,382
+
+This remains representative-only evidence and does not establish full 9005-Trial daily coverage.
 
 ### C-4 Balance Sheet Equality
 
@@ -278,3 +285,16 @@ The next allowed action is closure review of the Stage 9C partial status and, on
 
 **التصنيف:** STAGE-9C-PARTIAL-FINAL.
 **الحالة:** ACCEPTED-BY-USER.
+
+## تصحيح تفصيل Roll-forward
+
+**التاريخ:** 2026-10-07T23:47:12Z
+
+**المصدر الفعلي:** البند 10.6 من المرجع يَفصل الأصول الإجمالية (3أ) ومجمع الإهلاك (3ب)، واختبارات القبول 106–110 تفصل البنود الخمسة: Cash، AR، Gross Assets، Accumulated Depreciation، Equity.
+
+**النطاق التمثيلي:** 10,382 صفوف يومية عبر 5 P50 representatives.
+
+**Roll-forward checks المحققة تمثيلياً:** 51,910 = 5 × 10,382، موزعة بالتساوي على الأنواع الخمسة أعلاه.
+
+**Balance checks:** 10,382.
+
