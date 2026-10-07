@@ -284,7 +284,7 @@ jobs:
           response=json.loads(subprocess.check_output([
               "gh","api","--method","PUT",
               f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/docs/stage9a/dataset_manifest.json",
-              "-f","message=feat(stage9a): add verified dataset manifest",
+              "-f","message=feat(stage9a): add verified dataset manifest [skip ci]",
               "-f",f"content={content}",
               "-f","branch=tmp/stage9a-10-build-20261007"
           ],text=True))
@@ -437,7 +437,7 @@ jobs:
           response=json.loads(subprocess.check_output([
               "gh","api","--method","PUT",
               f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/docs/stage9a/dataset_manifest.json",
-              "-f","message=fix(stage9a): finalize manifest identity after Excel gate",
+              "-f","message=fix(stage9a): finalize manifest identity after Excel gate [skip ci]",
               "-f",f"content={content}",
               "-f","branch=tmp/stage9a-10-build-20261007"
           ],text=True))
