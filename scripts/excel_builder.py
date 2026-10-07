@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import hashlib
+import tarfile
 from datetime import datetime, date
 from pathlib import Path
 from typing import Any
@@ -115,6 +116,27 @@ def load_scenario_daily_distribution(dataset_root: Path, scenario: str):
     if not path.exists():
         raise FileNotFoundError(path)
     return pq.read_table(path).to_pylist()
+
+
+def load_rep_payload(dataset_root: Path, scenario: str, label: str) -> dict:
+    direct = dataset_root / scenario / "representatives" / f"{label}.json"
+    if direct.exists():
+        return load_json(direct)
+    tar_path = dataset_root / scenario / f"{scenario}.tar.gz"
+    if not tar_path.exists():
+        raise FileNotFoundError(tar_path)
+    target = f"representatives/{label}.json"
+    with tarfile.open(tar_path, "r:gz") as tf:
+        member = next(
+            (m for m in tf.getmembers() if m.name.lstrip("./") == target),
+            None,
+        )
+        if member is None:
+            raise FileNotFoundError(f"{tar_path}:{target}")
+        handle = tf.extractfile(member)
+        if handle is None:
+            raise RuntimeError(f"cannot read {tar_path}:{target}")
+        return json.load(handle)
 
 
 def metric_stats(rows, field):
@@ -371,8 +393,7 @@ def write_representatives(wb, manifest, rep_path):
     rep_all = load_json(rep_path)["scenarios"]
     for s in EXPECTED_SCENARIOS:
         for label in ("P10","P50","P90","Loss"):
-            rep_path_json = Path(manifest["_dataset_root"]) / s / "representatives" / f"{label}.json"
-            payload = load_json(rep_path_json)
+            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, label)
             summary = payload["summary"]
             rows.append([
                 s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
@@ -532,11 +553,7 @@ def build_workbook(
     rep_all=load_json(Path(representatives_path))["scenarios"]
     for scenario in EXPECTED_SCENARIOS:
         p50=int(rep_all[scenario]["P50"])
-        rep_dir=root/scenario/"representatives"
-        rep_path=rep_dir/"P50.json"
-        if not rep_path.exists():
-            raise FileNotFoundError(rep_path)
-        payload=load_json(rep_path)
+        payload=load_rep_payload(root, scenario, "P50")
         total_capital = int(manifest["total_capital"])
         write_stats_sheet(wb,scenario,all_rows[scenario],total_capital)
         write_scenario_detail(wb,scenario,payload)
