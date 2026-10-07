@@ -3,7 +3,7 @@ name: stage9a-06-enrich
 on:
   push:
     branches:
-      - tmp/stage9a-06-enrich-20261007-v2
+      - tmp/stage9a-06-enrich-20261007-v3
 
 permissions:
   actions: read
@@ -31,7 +31,7 @@ jobs:
       - name: Checkout enrichment control branch
         uses: actions/checkout@v4
         with:
-          ref: tmp/stage9a-06-enrich-20261007-v2
+          ref: tmp/stage9a-06-enrich-20261007-v3
           fetch-depth: 0
 
       - name: Setup Python
