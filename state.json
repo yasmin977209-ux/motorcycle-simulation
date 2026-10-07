@@ -1,9 +1,9 @@
 {
-  "stage": "8",
+  "stage": "9C-PARTIAL",
   "schema_version": "1.0",
-  "cp_completed": "CLOSED",
+  "cp_completed": "STAGE-9A-CLOSED + STAGE-9B-CLOSED + STAGE-9C-PARTIAL",
   "sha": "ab5e10d796525175bd4211edb59c132d8a4866cf",
-  "next": "stage9",
+  "next": "9C-FULL أو Stage 10 (بانتظار قرار)",
   "blockers": [],
   "stage7": {
     "closed": true,
