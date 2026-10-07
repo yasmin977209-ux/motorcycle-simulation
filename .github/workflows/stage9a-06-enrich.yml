@@ -31,7 +31,7 @@ jobs:
       - name: Checkout enrichment control branch
         uses: actions/checkout@v4
         with:
-          ref: tmp/stage9a-06-enrich-20261007
+          ref: tmp/stage9a-06-enrich-20261007-v2
           fetch-depth: 0
 
       - name: Setup Python
