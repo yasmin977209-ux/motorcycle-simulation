@@ -329,7 +329,7 @@ def write_daily_distribution(wb, dataset_root):
     for s in EXPECTED_SCENARIOS:
         for r in load_scenario_daily_distribution(dataset_root,s):
             rows.append([s]+[r.get(h) for h in headers[1:]])
-    fmts={h:FINANCE_FMT for h in headers if any(k in h for k in ["Cash","Net_Equity"])}
+    fmts={h:FINANCE_FMT for h in headers if h not in {"scenario","date"}}
     write_table(ws,headers,rows,number_formats=fmts)
     style_sheet(ws,"B2")
 
@@ -454,7 +454,7 @@ def write_generic(wb, title, sheet_name, items):
         return
     if isinstance(items[0],dict):
         headers=list(items[0])
-        write_table(ws,headers,[[x.get(h) for h in headers] for x in items])
+        write_table(ws,headers,[[x.get(h) for h in headers] for x in items],number_formats={h:FINANCE_FMT for h in headers})
     style_sheet(ws)
 
 
