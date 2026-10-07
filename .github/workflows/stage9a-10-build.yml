@@ -307,7 +307,7 @@ jobs:
               "trial_id_policy_id":"TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
               "schema_identity":"stage7_state_v2",
               "scenario_mapping":{
-                  s:(lambda pct: f"C{int(s[1:4]):03d}_G{'00' if pct == 0 else str(pct)}")(int(s[5:]))
+                  s:(lambda pct: f"C{int(s[1:4]):03d}_G{'00' if pct == 0 else str(pct)}")(int(s[6:]))
                   for s in SCENARIOS
               },
               "scenarios":scenarios,
