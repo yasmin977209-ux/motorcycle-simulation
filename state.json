@@ -74,11 +74,16 @@
     "verified_at": "2026-10-07T22:00:13Z"
   },
   "stage9c_evidence": {
-    "status": "PARTIAL",
-    "roll_forward_count": 45025,
-    "balance_check_count": 45025,
-    "acceptance_status": "162_PASS_1_EXCLUDED",
-    "verified_at": "2026-10-07T22:00:13Z"
+    "roll_forward_target": 45025,
+    "roll_forward_achieved": "REPRESENTATIVE_ONLY: 10,382 daily accounting rows across 5 P50 payloads",
+    "roll_forward_scope": "5 representative P50 payloads; full 9,005-Trial / 45,025 trial-level scope unavailable",
+    "balance_check_target": 45025,
+    "balance_check_achieved": "REPRESENTATIVE_ONLY: 10,382 daily balance checks across 5 P50 payloads",
+    "balance_check_scope": "5 representative P50 payloads; full 9,005-Trial daily balance coverage unavailable",
+    "tested_trials": 5,
+    "total_trials": 9005,
+    "scope_note": "Full 45,025 target is a theoretical required scope, not an achieved execution count. No missing daily values are inferred.",
+    "acceptance_status": "162_PASS_1_EXCLUDED"
   },
   "canonical_content_sha": "9a51fe1f7ef2399a94fefc82817078fe77361b33"
 }
