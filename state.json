@@ -83,7 +83,8 @@
     "tested_trials": 5,
     "total_trials": 9005,
     "scope_note": "Full 45,025 target is a theoretical required scope, not an achieved execution count. No missing daily values are inferred.",
-    "acceptance_status": "162_PASS_1_EXCLUDED"
+    "acceptance_status": "162_PASS_1_EXCLUDED",
+    "status": "PARTIAL-FINAL-ACCEPTED"
   },
   "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
   "sha_semantics": "parent_state_commit_pointer"

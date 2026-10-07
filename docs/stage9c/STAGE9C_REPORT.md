@@ -253,3 +253,28 @@ The product is not being downgraded because 9C lacks full-scope source rows. The
 **Stage 10 is not authorized by this report.**
 
 The next allowed action is closure review of the Stage 9C partial status and, only with explicit authorization and required daily Trial-level data, completion of the missing 9C gates.
+
+
+## قرار نهائي (مستخدم)
+
+**التاريخ:** 2026-10-08T01:32:17+02:00
+
+**الحكم:** STAGE-9C-PARTIAL — مقبول نهائيًا.
+
+**السبب:** عدم توفر authoritative daily accounting ledger كامل لكل 9005 trial.
+
+**النطاق المُنجز:** representative-only:
+- 5 P50 representatives.
+- 51,910 total accounting checks = 41,528 roll-forward checks + 10,382 balance checks.
+- 0 failures.
+
+**النطاق غير المُنجز:**
+- Full trial-level roll-forward (45,025 expected).
+- Excel↔Dataset independent 20-point gate.
+
+**القرار:** قبول PARTIAL كحالة نهائية.
+لا يُرفع إلى PASS إلا بتوفر الدليل الكامل.
+لا يُخفَّض إلى FAIL لأن العينات المفحوصة اجتازت كل الفحوصات بدون انحراف.
+
+**التصنيف:** STAGE-9C-PARTIAL-FINAL.
+**الحالة:** ACCEPTED-BY-USER.
