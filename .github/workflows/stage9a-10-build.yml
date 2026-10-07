@@ -185,7 +185,7 @@ jobs:
               import tarfile
               with tarfile.open(tarball,"r:gz") as tf:
                   for name in ["daily_distribution.parquet","trial_results.parquet","scenario_metadata.json","trial_fingerprints.json"]:
-                      member=tf.getmember(name)
+                      member=tf.getmember("./"+name)
                       fh=tf.extractfile(member)
                       if fh is None:
                           raise SystemExit(f"MISSING_MEMBER {s}/{name}")
