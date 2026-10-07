@@ -319,9 +319,17 @@ def write_sensitivity(wb, summaries):
 
 def write_validation(wb, validation):
     ws = wb.create_sheet("VALIDATION_SUMMARY")
+    source = validation.get("source_sha", "")
+    run_id = validation.get("run_id", "")
     rows = validation.get("tests", [])
     headers = ["ID","Name","Expected","Actual","Status","Evidence","Source","Run"]
-    write_table(ws, headers, [[r.get(k) for k in headers] for r in rows])
+    materialized = []
+    for r in rows:
+        materialized.append([
+            r.get("ID"), r.get("Name"), r.get("Expected"), r.get("Actual"),
+            r.get("Status"), r.get("Evidence"), source, run_id
+        ])
+    write_table(ws, headers, materialized)
     style_sheet(ws)
 
 
