@@ -223,6 +223,17 @@ jobs:
           }
           reps=json.load(open("docs/stage9a/representative_trial_ids.json",encoding="utf-8"))
           assert reps["total_trials_required_for_daily"] == 9005 and reps["total_trials_required_for_representatives"] == 100
+          enrichment_run_ids = {
+              s: 37655041728 for s in [
+                  "C100_G100","C100_G070","C100_G050","C100_G030","C100_G000",
+                  "C085_G100","C085_G070","C085_G050","C085_G030","C085_G000",
+                  "C070_G100","C070_G070","C070_G050","C070_G030","C070_G000",
+                  "C050_G030","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"
+              ]
+          }
+          enrichment_run_ids.update({
+              s: 37662891608 for s in ["C050_G100","C050_G070","C050_G050","C050_G000"]
+          })
 
           def canonical(v):
               return json.dumps(
