@@ -57,8 +57,8 @@ jobs:
           python - <<'PY'
           import json
           p=json.load(open("docs/stage9a/representative_trial_ids.json",encoding="utf-8"))
-          assert p["total_trials"] == 9005
-          assert p["total_representatives"] == 100
+          assert p["total_trials_required_for_daily"] == 9005
+          assert p["total_trials_required_for_representatives"] == 100
           assert len(p["scenarios"]) == 25
           print("REPRESENTATIVES_OK")
           PY
@@ -162,7 +162,7 @@ jobs:
               "C030_G000":11313086528,
           }
           reps=json.load(open("docs/stage9a/representative_trial_ids.json",encoding="utf-8"))
-          assert reps["total_trials"] == 9005 and reps["total_representatives"] == 100
+          assert reps["total_trials_required_for_daily"] == 9005 and reps["total_trials_required_for_representatives"] == 100
 
           def canonical(v):
               return json.dumps(
