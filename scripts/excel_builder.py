@@ -324,10 +324,33 @@ def write_final_closure(wb, all_rows):
 
 def write_daily_distribution(wb, dataset_root):
     ws = wb.create_sheet("DAILY_DISTRIBUTION")
-    headers = ["scenario","date","active_trial_count","P10_Cash","P25_Cash","P50_Cash","P75_Cash","P90_Cash","P10_Net_Equity","P25_Net_Equity","P50_Net_Equity","P75_Net_Equity","P90_Net_Equity","P10_Active_Bikes","P25_Active_Bikes","P50_Active_Bikes","P75_Active_Bikes","P90_Active_Bikes","P10_Owned_Transferred_Bikes","P25_Owned_Transferred_Bikes","P50_Owned_Transferred_Bikes","P75_Owned_Transferred_Bikes","P90_Owned_Transferred_Bikes","P10_Pending_Claims","P25_Pending_Claims","P50_Pending_Claims","P75_Pending_Claims","P90_Pending_Claims"]
+    headers = [
+        "scenario","date","active_trial_count",
+        "P10_Cash","P25_Cash","P50_Cash","P75_Cash","P90_Cash",
+        "P10_Net_Equity","P25_Net_Equity","P50_Net_Equity","P75_Net_Equity","P90_Net_Equity",
+        "P10_Active_Bikes","P25_Active_Bikes","P50_Active_Bikes","P75_Active_Bikes","P90_Active_Bikes",
+        "P10_Owned_Transferred_Bikes","P25_Owned_Transferred_Bikes","P50_Owned_Transferred_Bikes","P75_Owned_Transferred_Bikes","P90_Owned_Transferred_Bikes",
+        "P10_Pending_Claims","P25_Pending_Claims","P50_Pending_Claims","P75_Pending_Claims","P90_Pending_Claims"
+    ]
+    metrics=["Cash","Net_Equity","Active_Bikes","Owned_Transferred_Bikes","Pending_Claims"]
+    quantiles=["P10","P25","P50","P75","P90"]
     rows=[]
     for s in EXPECTED_SCENARIOS:
-        for r in load_scenario_daily_distribution(dataset_root,s):
+        raw=load_scenario_daily_distribution(dataset_root,s)
+        if not raw:
+            continue
+        if "quantile_name" in raw[0]:
+            by_date={}
+            for item in raw:
+                d=item["date"]
+                record=by_date.setdefault(d,{"date":d,"active_trial_count":item.get("active_trial_count")})
+                q=item["quantile_name"]
+                for metric in metrics:
+                    record[f"{q}_{metric}"]=item.get(metric)
+            ordered=[by_date[d] for d in sorted(by_date)]
+        else:
+            ordered=raw
+        for r in ordered:
             rows.append([s]+[r.get(h) for h in headers[1:]])
     fmts={h:FINANCE_FMT for h in headers if h not in {"scenario","date"}}
     write_table(ws,headers,rows,number_formats=fmts)
