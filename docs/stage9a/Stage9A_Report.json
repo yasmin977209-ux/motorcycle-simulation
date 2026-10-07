@@ -1,0 +1,22 @@
+{
+  "acceptance": {
+    "excluded": 1,
+    "excluded_test": "158",
+    "fail": 0,
+    "inventory": 163,
+    "pass": 162
+  },
+  "enrichment_runs": [
+    37655041728,
+    37662891608
+  ],
+  "excel_errors": 0,
+  "manifest_commit_sha": "16f52cd940164a37292e095e4b74fd9bd084f69b",
+  "manifest_global_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+  "official_run_id": "37225915321",
+  "sheets_count": 185,
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "stage": "9A",
+  "status": "STAGE-9A-CLOSED",
+  "xlsx_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d"
+}
