@@ -223,6 +223,17 @@ jobs:
                   "enriched_artifact_id":enriched_ids[s],
               }
 
+          def jsonable(value):
+              if isinstance(value,(date,datetime)):
+                  return value.isoformat()
+              if isinstance(value,tuple):
+                  return [jsonable(x) for x in value]
+              if isinstance(value,dict):
+                  return {str(k):jsonable(v) for k,v in value.items()}
+              if isinstance(value,list):
+                  return [jsonable(x) for x in value]
+              return value
+
           manifest={
               "schema_version":"1.0",
               "reference_sha256":"ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
@@ -236,7 +247,8 @@ jobs:
               "trial_id_policy_id":"TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
               "schema_identity":"stage7_state_v2",
               "scenario_mapping":{
-                  s:f"C{int(s[1:4]):03d}_G{int(s[5:]):d}" for s in SCENARIOS
+                  s:(lambda pct: f"C{int(s[1:4]):03d}_G{'00' if pct == 0 else str(pct)}")(int(s[5:]))
+                  for s in SCENARIOS
               },
               "scenarios":scenarios,
               "trial_fingerprints":trial_fingerprints,
@@ -251,7 +263,7 @@ jobs:
               },
               "total_capital":int(constants.TOTAL_CAPITAL),
               "constants":[
-                  {"name":k,"value":v,"python_type":type(v).__name__}
+                  {"name":k,"value":jsonable(v),"python_type":type(v).__name__}
                   for k,v in sorted(constants.__dict__.items())
                   if k.isupper() and not k.startswith("_")
               ],
