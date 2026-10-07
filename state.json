@@ -2,7 +2,7 @@
   "stage": "9C-PARTIAL",
   "schema_version": "1.0",
   "cp_completed": "STAGE-9A-CLOSED + STAGE-9B-CLOSED + STAGE-9C-PARTIAL",
-  "sha": "ab5e10d796525175bd4211edb59c132d8a4866cf",
+  "sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
   "next": "9C-FULL أو Stage 10 (بانتظار قرار)",
   "blockers": [],
   "stage7": {
@@ -85,5 +85,6 @@
     "scope_note": "Full 45,025 target is a theoretical required scope, not an achieved execution count. No missing daily values are inferred.",
     "acceptance_status": "162_PASS_1_EXCLUDED"
   },
-  "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c"
+  "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
+  "sha_semantics": "parent_state_commit_pointer"
 }

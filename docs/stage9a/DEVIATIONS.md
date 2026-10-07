@@ -62,3 +62,15 @@ The current source search did not establish an authoritative repository occurren
 **UNVERIFIABLE**
 
 This is not converted into a fabricated YES/NO state.
+
+
+## C100 — Official unresolved override status
+
+C100: REFERENCE=200 / EXECUTED=1 / OVERRIDE=UNRESOLVED.
+ينتظر قراراً رسمياً.
+
+### state.sha vs canonical_content_sha
+
+- `state.sha` semantics: `parent_state_commit_pointer` — يشير إلى الـcommit السابق الذي يحمل أحدث حالة معتمدة، ولا يُستخدم كمرجع لـ`main HEAD`.
+- `canonical_content_sha` يبقى منفصلاً عن `state.sha`، ولا يحل محل دلالة `state.sha` الجديدة.
+- في الحالة الحالية: `state.sha = a7db0153299b3af8f89111bec52bb07d1356509c`، بينما `canonical_content_sha = a7db0153299b3af8f89111bec52bb07d1356509c`؛ تساوي القيمتين هنا نتيجة أن C-7 هو آخر commit غيّر الحالة الدلالية قبل تسجيل C-8، وليس لأن `state.sha` يشير إلى `main HEAD`.
