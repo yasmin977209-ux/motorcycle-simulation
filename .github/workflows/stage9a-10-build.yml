@@ -51,7 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf /tmp/stage9a10
-          mkdir -p /tmp/stage9a10/dataset /tmp/stage9a10/official
+          mkdir -p /tmp/stage9a10/dataset /tmp/stage9a10/official docs/stage9a
           gh api "repos/${GITHUB_REPOSITORY}/contents/docs/stage9a/representative_trial_ids.json?ref=tmp/stage9a-03-extract-20261007" \
             --jq '.content' | tr -d '\\n' | base64 -d > docs/stage9a/representative_trial_ids.json
           python - <<'PY'
