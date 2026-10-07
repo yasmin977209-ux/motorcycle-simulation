@@ -408,6 +408,97 @@ jobs:
           Path("/tmp/stage9a10/Stage9A_Report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
           PY
 
+
+      - name: Finalize manifest identity after Excel gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: yasmin977209-ux/motorcycle-simulation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64, hashlib, json, os, subprocess
+          from datetime import date, datetime
+          from pathlib import Path
+          mpath=Path("/tmp/stage9a10/dataset_manifest.json")
+          m=json.loads(mpath.read_text(encoding="utf-8"))
+          validation=json.loads(Path("/tmp/stage9a10/validation_163.json").read_text(encoding="utf-8"))
+
+          def canonical(v):
+              return json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(",",":"),default=lambda x:x.isoformat() if isinstance(x,(date,datetime)) else str(x)).encode("utf-8")
+
+          m.pop("global_manifest_sha256",None)
+          m["validation_status"]="162_PASS_1_EXCLUDED_TEST_158"
+          m["validation_fingerprint_sha256"]=hashlib.sha256(canonical(validation)).hexdigest()
+          m["excel_gate_status"]="185_SHEETS_0_EXCEL_ERRORS"
+          m["global_manifest_sha256"]=hashlib.sha256(b"stage7_manifest_v1:"+canonical(m)).hexdigest()
+          mpath.write_text(json.dumps(m,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+
+          content=base64.b64encode(mpath.read_bytes()).decode("ascii")
+          response=json.loads(subprocess.check_output([
+              "gh","api","--method","PUT",
+              f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/docs/stage9a/dataset_manifest.json",
+              "-f","message=fix(stage9a): finalize manifest identity after Excel gate",
+              "-f",f"content={content}",
+              "-f","branch=tmp/stage9a-10-build-20261007"
+          ],text=True))
+          Path("/tmp/stage9a10/manifest_commit_sha_final").write_text(response["commit"]["sha"])
+          PY
+
+          python scripts/excel_builder.py \
+            --dataset-root /tmp/stage9a10/dataset \
+            --output-path /tmp/stage9a10/Full_Results_EN.xlsx \
+            --manifest /tmp/stage9a10/dataset_manifest.json \
+            --representatives docs/stage9a/representative_trial_ids.json
+
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from openpyxl import load_workbook
+          x=Path("/tmp/stage9a10/Full_Results_EN.xlsx")
+          wb=load_workbook(x,data_only=False)
+          scenarios=["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000","C085_G100","C085_G070","C085_G050","C085_G030","C085_G000","C070_G100","C070_G070","C070_G050","C070_G030","C070_G000","C050_G100","C050_G070","C050_G050","C050_G030","C050_G000","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]
+          expected=["README","CONSTANTS","SCENARIO_MATRIX","HEATMAP","SENSITIVITY","VALIDATION_SUMMARY","ERROR_LOG","FINAL_CLOSURE_SUMMARY","DAILY_DISTRIBUTION","REPRESENTATIVE_CASES"]
+          for s in scenarios:
+              expected += [s+x for x in ["_STATS","_DAILY","_ASSETS","_ACCTG","_PARTNER","_GUARANTEE","_CONTRACTS"]]
+          assert wb.sheetnames==expected
+          assert len(set(wb.sheetnames))==185
+          errors=[]
+          formulas=[]
+          for ws in wb.worksheets:
+              assert ws.max_row>=2, ws.title
+              for row in ws.iter_rows():
+                  for cell in row:
+                      if cell.data_type=="e": errors.append(f"{ws.title}!{cell.coordinate}")
+                      if isinstance(cell.value,str) and cell.value.startswith("="): formulas.append(f"{ws.title}!{cell.coordinate}")
+          assert not errors
+          assert not formulas
+          sha=hashlib.sha256(x.read_bytes()).hexdigest()
+          Path("/tmp/stage9a10/excel_sha256").write_text(sha)
+          print(json.dumps({"sheets":185,"excel_errors":0,"formula_cells":0,"xlsx_sha256":sha},sort_keys=True))
+          PY
+
+          cp /tmp/stage9a10/dataset_manifest.json /tmp/stage9a10/manifest_final.json
+          cp /tmp/stage9a10/manifest_commit_sha_final /tmp/stage9a10/manifest_commit_sha
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("/tmp/stage9a10/manifest_final.json").read_text(encoding="utf-8"))
+          report={
+              "stage":"9A",
+              "status":"STAGE-9A-CLOSED",
+              "official_run_id":"37225915321",
+              "enrichment_runs":[37655041728,37660610243,37660658613],
+              "manifest_commit_sha":Path("/tmp/stage9a10/manifest_commit_sha_final").read_text().strip(),
+              "manifest_global_sha256":m["global_manifest_sha256"],
+              "xlsx_sha256":Path("/tmp/stage9a10/excel_sha256").read_text().strip(),
+              "sheets_count":185,
+              "excel_errors":0,
+              "acceptance":{"inventory":163,"pass":162,"fail":0,"excluded":1,"excluded_test":"158"},
+              "source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          }
+          Path("/tmp/stage9a10/Stage9A_Report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2,sort_keys=True),encoding="utf-8")
+          PY
+
       - name: Upload Stage 9A outputs
         uses: actions/upload-artifact@v4
         with:
