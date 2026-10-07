@@ -58,7 +58,7 @@
     "note": "لا تكتب main. مراجعة الحوكمة مؤجلة."
   },
   "stage9a_evidence": {
-    "status": "CLOSED",
+    "status": "CLOSED-RESOLVED",
     "run_id": "37671448546",
     "run_head_sha": "5e25a94743f44554093934c57404c0b168e69651",
     "excel_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
