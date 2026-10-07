@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import hashlib
 import json
 from datetime import date, datetime, timedelta
 from enum import Enum
@@ -249,7 +250,15 @@ def main() -> None:
         result = scenario_result(project, scenario_id, collection_probability, recovery_rate_pct, trial_id)
         if result.final_close_date is None:
             raise AssertionError(f"trial {trial_id} has no final_close_date")
-        digest = monte_carlo.fingerprint_trial_results([result])
+        digest = hashlib.sha256(
+            json.dumps(
+                dataclasses.asdict(result),
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode("utf-8")
+        ).hexdigest()
         if digest != official_hashes[trial_id]:
             raise RuntimeError(
                 f"DATASET_INTEGRITY_FAILURE: scenario={scenario_id} trial_id={trial_id} "
@@ -281,7 +290,13 @@ def main() -> None:
             "source_sha": args.source_sha,
             "run_id": args.official_run_id,
             "trial_count": args.trial_count,
-            "fingerprint_algorithm": "monte_carlo.fingerprint_trial_results(single_trial_result)",
+            "fingerprint_algorithm": "sha256(canonical_json(asdict(TrialResult)))",
+        "canonical_json": {
+            "ensure_ascii": False,
+            "sort_keys": True,
+            "separators": [",", ":"],
+            "default": "str",
+        },
             "fingerprints": trial_fingerprints,
         },
     )
