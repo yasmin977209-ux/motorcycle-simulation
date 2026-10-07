@@ -72,6 +72,14 @@ def py_value(value: Any) -> Any:
         return float(value)
     if isinstance(value, np.bool_):
         return bool(value)
+    if isinstance(value, (dict, list, tuple)):
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
     return ensure_date(value)
 
 
