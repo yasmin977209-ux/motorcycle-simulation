@@ -681,8 +681,8 @@
     }
   ],
   "dataset_status": "enriched_and_fingerprint_reconciled",
-  "excel_gate_status": "pending",
-  "global_manifest_sha256": "7bf07bdfa9384fca11c333c2ed5b4625c9c08fd7693786d8395eed52f0219c7e",
+  "excel_gate_status": "185_SHEETS_0_EXCEL_ERRORS",
+  "global_manifest_sha256": "8796b86a65e68d35b11a9a81fea1a9f556b394cc2dcf5100fc4feffc606cdbc4",
   "master_seed": 20270101,
   "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
   "representative_trials": {
@@ -10585,5 +10585,6 @@
     ]
   },
   "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
-  "validation_status": "pending"
+  "validation_fingerprint_sha256": "b6dd5866b2da827525cec07d68375cfe2733998c18476c20fabe505c23817d57",
+  "validation_status": "162_PASS_1_EXCLUDED_TEST_158"
 }
