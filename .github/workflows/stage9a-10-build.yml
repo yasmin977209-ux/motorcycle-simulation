@@ -124,6 +124,13 @@ jobs:
               "C050_G100","C050_G070","C050_G050","C050_G030","C050_G000",
               "C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"
           ]
+          enrichment_run_ids={s:37655041728 for s in [
+              "C100_G100","C100_G070","C100_G050","C100_G030","C100_G000",
+              "C085_G100","C085_G070","C085_G050","C085_G030","C085_G000",
+              "C070_G100","C070_G070","C070_G050","C070_G030","C070_G000",
+              "C050_G030","C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"
+          ]}
+          v3_run_id=37662891608
           fixed={
               "C100_G100":11498636066,"C100_G070":11497369182,"C100_G050":11497164787,
               "C100_G030":11497898524,"C100_G000":11496939782,"C085_G100":11499553926,
@@ -143,7 +150,10 @@ jobs:
               name=f"stage9a06-enriched-{s}"
               if name not in by_name:
                   raise SystemExit(f"MISSING_V3_ARTIFACT {name}")
+              if int(by_name[name]["workflow_run"]["id"]) != v3_run_id:
+                  raise SystemExit(f"V3_RUN_ID_MISMATCH {s}")
               fixed[s]=by_name[name]["id"]
+              enrichment_run_ids[s]=v3_run_id
           if len(fixed)!=25:
               raise SystemExit("ENRICHED_ARTIFACT_MANIFEST_COUNT_MISMATCH")
 
@@ -308,6 +318,7 @@ jobs:
                   "official_block_artifacts":BLOCK_IDS,
                   "official_summary_artifact_id":11313318432,
                   "enriched_artifacts":enriched_ids,
+                  "enrichment_run_ids":enrichment_run_ids,
               },
               "total_capital":int(constants.TOTAL_CAPITAL),
               "constants":[
@@ -451,7 +462,8 @@ jobs:
               "sheets_count":185,
               "excel_errors":0,
               "acceptance":{"inventory":163,"pass":162,"fail":0,"excluded":1,"excluded_test":"158"},
-              "source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+              "source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+              "enrichment_artifact_run_ids":m["artifact_manifest"]["enrichment_run_ids"]
           }
           Path("/tmp/stage9a10/Stage9A_Report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
           PY
