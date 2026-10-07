@@ -3,7 +3,7 @@ name: stage9a-03-verify
 on:
   push:
     branches:
-      - tmp/stage9a-03-verify-20261007
+      - tmp/stage9a-03-verify-20261007-v2
 
 permissions:
   actions: read
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout verification branch
         uses: actions/checkout@v4
         with:
-          ref: tmp/stage9a-03-verify-20261007
+          ref: tmp/stage9a-03-verify-20261007-v2
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -235,12 +235,14 @@ jobs:
                   }
 
           trial_ids_match = sum(
-              all(scenario_rows[s]["details"][label]["trial_match"] for label in ("P50", "P10", "P90", "Loss"))
+              scenario_rows[s]["details"][label]["trial_match"]
               for s in scenarios
+              for label in ("P50", "P10", "P90", "Loss")
           )
           values_match = sum(
-              all(scenario_rows[s]["details"][label]["value_match"] for label in ("P50", "P10", "P90", "Loss"))
+              scenario_rows[s]["details"][label]["value_match"]
               for s in scenarios
+              for label in ("P50", "P10", "P90", "Loss")
           )
 
           c050_p50 = scenario_rows["C050_G100"]["details"]["P50"]["value_new"]
@@ -272,8 +274,9 @@ jobs:
                   "total_scenarios": 25,
                   "trial_ids_match": trial_ids_match,
                   "values_match": values_match,
-                  "all_four_metrics_match": trial_ids_match == 25 and values_match == 25,
-                  "overall_verdict": "PASS" if trial_ids_match == 25 and values_match == 25 else "FAIL",
+                  "comparison_points": 100,
+                  "all_four_metrics_match": trial_ids_match == 100 and values_match == 100,
+                  "overall_verdict": "PASS" if trial_ids_match == 100 and values_match == 100 else "FAIL",
               },
           }
 
