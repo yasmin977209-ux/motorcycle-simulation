@@ -64,10 +64,23 @@ The current source search did not establish an authoritative repository occurren
 This is not converted into a fabricated YES/NO state.
 
 
-## C100 — Official unresolved override status
+## C100 Sampling Override (قرار مستخدم رسمي)
 
-C100: REFERENCE=200 / EXECUTED=1 / OVERRIDE=UNRESOLVED.
-ينتظر قراراً رسمياً.
+**التاريخ:** 2026-10-08T01:32:17+02:00
+
+**القاعدة في المرجع:** C100 = 200 تكرار
+(الباب 2.5 من المرجع).
+
+**القيمة المنفذة فعلاً:** C100 = 1.
+
+**القرار:** اعتماد C100 = 1 رسميًا.
+السبب: C100 هو المستوى الحتمي الوحيد (collection_probability = 1.0)،
+فالتباين صفري رياضيًا، ولا حاجة إحصائية لتكرارات متعددة.
+تكرار واحد يكفي لإثبات الحتمية والتحقق التنفيذي.
+
+**المرجعيات المتأثرة:** الباب 2.5.
+**التصنيف:** OVERRIDE-ACCEPTED-BY-USER.
+**الحالة:** RESOLVED.
 
 ### state.sha vs canonical_content_sha
 
