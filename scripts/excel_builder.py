@@ -466,8 +466,9 @@ def write_stats_sheet(wb, scenario, rows, total_capital):
 
 def write_daily_sheet(wb, scenario, payload):
     ws=wb.create_sheet(f"{scenario}_DAILY")
-    rows=payload["daily"]
-    headers=list(rows[0]) if rows else ["date"]
+    daily=payload["daily"]
+    headers=list(daily[0]) if daily else ["date"]
+    rows=[[row.get(header) for header in headers] for row in daily]
     write_table(ws,headers,rows,number_formats={h:FINANCE_FMT for h in headers if h not in {"date","Final_Close_Date"}})
     style_sheet(ws,"B2")
 
