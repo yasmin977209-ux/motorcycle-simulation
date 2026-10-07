@@ -223,7 +223,7 @@ def build_scenario_summary(all_rows):
     return out
 
 
-def write_scenario_matrix(wb, summaries):
+def write_scenario_matrix(wb, summaries, manifest):
     ws = wb.create_sheet("SCENARIO_MATRIX")
     headers = [
         "scenario","actual_trials","stability","P10_Profit","P50_Profit","P90_Profit",
@@ -234,7 +234,7 @@ def write_scenario_matrix(wb, summaries):
     for s in EXPECTED_SCENARIOS:
         x = summaries[s]
         rows.append([
-            s, x["trial_count"], "stable", x["p10_profit"], x["p50_profit"], x["p90_profit"],
+            s, x["trial_count"], manifest["scenarios"][s].get("final_status", "stable"), x["p10_profit"], x["p50_profit"], x["p90_profit"],
             x["p10_cash"], x["p50_cash"], x["p90_cash"], x["loss_probability"],
             x["p50_termination"], x["p90_termination"], x["mean_held_assets"], ""
         ])
@@ -336,18 +336,56 @@ def write_daily_distribution(wb, dataset_root):
 
 def write_representatives(wb, manifest, rep_path):
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
-    headers=["scenario","case","trial_id","final_close_date","final_net_project_equity","final_cash","cumulative_project_profit","termination_count","secondary_cycle_count","owned_bikes","held_assets"]
-    rows=[]
-    rep_all=load_json(rep_path)["scenarios"]
+    headers = [
+        "scenario","case","record_type","trial_id","date","final_close_date",
+        "Cash","Net_Equity","Active_Bikes","Owned_Transferred_Bikes","Pending_Claims",
+        "Partner1_Reinvestment_Balance","Partner2_Reinvestment_Balance",
+        "final_net_project_equity","final_cash","cumulative_project_profit",
+        "termination_count","secondary_cycle_count","owned_bikes","held_assets",
+        "total_operating_revenue","bad_debt","guarantee_recovered"
+    ]
+    rows = []
+    rep_all = load_json(rep_path)["scenarios"]
     for s in EXPECTED_SCENARIOS:
-        r=rep_all[s]
-        trial_rows=pq.read_table(Path(manifest["_dataset_root"]) / s / "trial_results.parquet").to_pylist()
-        by_id={x["trial_id"]:x for x in trial_rows}
         for label in ("P10","P50","P90","Loss"):
-            x=by_id[int(r[label])]
-            rows.append([s,label,x["trial_id"],x["final_close_date"],x["final_net_project_equity"],x["final_cash"],x["cumulative_project_profit"],x["termination_count"],x["secondary_cycle_count"],x["owned_bikes"],x["held_assets"]])
-    write_table(ws,headers,rows,number_formats={"final_net_project_equity":FINANCE_FMT,"final_cash":FINANCE_FMT,"cumulative_project_profit":FINANCE_FMT})
-    style_sheet(ws)
+            rep_path_json = Path(manifest["_dataset_root"]) / s / "representatives" / f"{label}.json"
+            payload = load_json(rep_path_json)
+            summary = payload["summary"]
+            rows.append([
+                s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
+                None,None,None,None,None,None,None,
+                summary["final_net_project_equity"],summary["final_cash"],
+                summary["cumulative_project_profit"],summary["termination_count"],
+                summary["secondary_cycle_count"],summary["owned_bikes"],summary["held_assets"],
+                summary["total_operating_revenue"],summary["bad_debt"],summary["guarantee_recovered"]
+            ])
+            for daily in payload.get("daily",[]):
+                rows.append([
+                    s,label,"DAILY",summary["trial_id"],daily.get("date"),daily.get("Final_Close_Date"),
+                    daily.get("Cash"),daily.get("Net_Equity"),daily.get("Active_Bikes"),
+                    daily.get("Owned_Transferred_Bikes"),daily.get("Pending_Claims"),
+                    daily.get("Partner1_Reinvestment_Balance"),
+                    daily.get("Partner2_Reinvestment_Balance"),
+                    None,None,None,None,None,None,None,None,None,None
+                ])
+    write_table(
+        ws,
+        headers,
+        rows,
+        number_formats={
+            "Cash":FINANCE_FMT,
+            "Net_Equity":FINANCE_FMT,
+            "Partner1_Reinvestment_Balance":FINANCE_FMT,
+            "Partner2_Reinvestment_Balance":FINANCE_FMT,
+            "final_net_project_equity":FINANCE_FMT,
+            "final_cash":FINANCE_FMT,
+            "cumulative_project_profit":FINANCE_FMT,
+            "total_operating_revenue":FINANCE_FMT,
+            "bad_debt":FINANCE_FMT,
+            "guarantee_recovered":FINANCE_FMT,
+        }
+    )
+    style_sheet(ws,"E2")
 
 
 def write_stats_sheet(wb, scenario, rows, total_capital):
@@ -460,7 +498,7 @@ def build_workbook(
     wb=Workbook()
     write_readme(wb,manifest,validation,[])
     write_constants(wb,manifest)
-    write_scenario_matrix(wb,summaries)
+    write_scenario_matrix(wb,summaries,manifest)
     write_heatmap(wb,summaries)
     write_sensitivity(wb,summaries)
     write_validation(wb,validation)
