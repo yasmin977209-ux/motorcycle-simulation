@@ -272,7 +272,7 @@ The next allowed action is closure review of the Stage 9C partial status and, on
 
 **النطاق المُنجز:** representative-only:
 - 5 P50 representatives.
-- 51,910 total accounting checks = 41,528 roll-forward checks + 10,382 balance checks.
+- 51,910 roll-forward checks = 5 categories × 10,382 daily rows; balance checks = 10,382.
 - 0 failures.
 
 **النطاق غير المُنجز:**
@@ -298,3 +298,25 @@ The next allowed action is closure review of the Stage 9C partial status and, on
 
 **Balance checks:** 10,382.
 
+
+
+## إغلاق نهائي
+
+**التاريخ:** 2026-10-07T23:47:12Z
+
+**الحالة النهائية:** STAGE-9C-PARTIAL-CLOSED
+
+**المرجعيات المثبتة:**
+- roll_forward_target: 45025 (نظري)
+- roll_forward_achieved: 51910 (5 categories × 10382 representative daily rows)
+- balance_check_achieved: 10382
+- tested_trials: 5
+- total_trials: 9005
+- scope: representative_only
+- failures: 0
+
+**القرار:** الإغلاق النهائي مقبول.
+لا يُرفع إلى PASS الكامل بسبب عدم توفر authoritative daily accounting ledger لـ9005 trial.
+
+**التصنيف:** ACCEPTED-BY-USER.
+**الحالة:** CLOSED.
