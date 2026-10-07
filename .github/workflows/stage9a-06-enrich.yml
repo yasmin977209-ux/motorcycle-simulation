@@ -88,6 +88,7 @@ jobs:
           git fetch origin "${SOURCE_SHA}" --depth=1
           git checkout --detach "${SOURCE_SHA}"
           test "$(git rev-parse HEAD)" = "${SOURCE_SHA}"
+          mkdir -p scripts docs/stage9a
           cp /tmp/stage9a_enrich.py scripts/stage9a_enrich.py
           cp /tmp/representative_trial_ids.json docs/stage9a/representative_trial_ids.json
 
