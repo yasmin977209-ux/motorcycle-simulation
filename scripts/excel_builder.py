@@ -448,7 +448,11 @@ def write_stats_sheet(wb, scenario, rows, total_capital):
         out.append([label,*metric_stats(rows,field)])
     profits=np.asarray([r["cumulative_project_profit"] for r in rows],dtype=float)
     out.append(["ROI",*(metric_stats([{"roi": p / total_capital} for p in profits],"roi"))])
-    write_table(ws,headers,out,number_formats={h:(PERCENT_FMT if h=="ROI" else FINANCE_FMT) for h in headers[1:]})
+    write_table(ws,headers,out,number_formats={h:FINANCE_FMT for h in headers[1:]})
+    for row in ws.iter_rows(min_row=2):
+        if row[0].value == "ROI":
+            for cell in row[1:]:
+                cell.number_format = PERCENT_FMT
     style_sheet(ws)
 
 
