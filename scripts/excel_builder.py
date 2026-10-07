@@ -350,15 +350,15 @@ def write_representatives(wb, manifest, rep_path):
     style_sheet(ws)
 
 
-def write_stats_sheet(wb, scenario, rows):
+def write_stats_sheet(wb, scenario, rows, total_capital):
     ws=wb.create_sheet(f"{scenario}_STATS")
     headers=["metric","Mean","Median","Std","Min","Max","P5","P10","P25","P50","P75","P90","P95"]
     out=[]
     for label,field in numeric_metrics(rows):
         out.append([label,*metric_stats(rows,field)])
     profits=np.asarray([r["cumulative_project_profit"] for r in rows],dtype=float)
-    out.append(["ROI",*(metric_stats([{ "roi": p / 3700000 } for p in profits],"roi"))])
-    write_table(ws,headers,out,number_formats={h:FINANCE_FMT for h in headers[1:]})
+    out.append(["ROI",*(metric_stats([{"roi": p / total_capital} for p in profits],"roi"))])
+    write_table(ws,headers,out,number_formats={h:(PERCENT_FMT if h=="ROI" else FINANCE_FMT) for h in headers[1:]})
     style_sheet(ws)
 
 
@@ -476,7 +476,8 @@ def build_workbook(
         if not rep_path.exists():
             raise FileNotFoundError(rep_path)
         payload=load_json(rep_path)
-        write_stats_sheet(wb,scenario,all_rows[scenario])
+        total_capital = int(manifest["total_capital"])
+        write_stats_sheet(wb,scenario,all_rows[scenario],total_capital)
         write_scenario_detail(wb,scenario,payload)
     actual=len(wb.sheetnames)
     expected=185
