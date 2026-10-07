@@ -232,12 +232,15 @@ def main() -> None:
     final_close_dates = {}
     fingerprint_matches = 0
 
+    representative_trial_ids = set(representative_ids.values())
+
     for trial_id in range(1, args.trial_count + 1):
         day_rows = []
 
         def capture(project: Any, current_date: date) -> None:
             day_rows.append(daily_snapshot(project, current_date, trial_id))
 
+        log_events = trial_id in representative_trial_ids
         project = daily_engine.run_deterministic_trial(
             recovery_rate_pct=recovery_rate_pct,
             trial_id=trial_id,
@@ -245,7 +248,7 @@ def main() -> None:
             master_seed=constants.MASTER_SEED,
             collection_probability=collection_probability,
             on_day_end=capture,
-            log_events=True,
+            log_events=log_events,
         )
         result = scenario_result(project, scenario_id, collection_probability, recovery_rate_pct, trial_id)
         if result.final_close_date is None:
@@ -317,7 +320,7 @@ def main() -> None:
             "daily_date_start": daily_distribution[0]["date"],
             "daily_date_end": daily_distribution[-1]["date"],
             "daily_row_count": len(daily_distribution),
-            "log_events": True,
+            "log_events": "representative_trials_only",
         },
     )
 
