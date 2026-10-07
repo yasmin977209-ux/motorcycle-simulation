@@ -1,0 +1,121 @@
+name: stage9a-06-enrich
+
+on:
+  push:
+    branches:
+      - tmp/stage9a-06-enrich-20261007
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  enrich:
+    name: Deterministic dataset enrichment
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {scenario: C100_G100, trial_count: 1, artifact_id: 11312276587}
+          - {scenario: C100_G070, trial_count: 1, artifact_id: 11311843040}
+          - {scenario: C100_G050, trial_count: 1, artifact_id: 11311992664}
+          - {scenario: C100_G030, trial_count: 1, artifact_id: 11312320486}
+          - {scenario: C100_G000, trial_count: 1, artifact_id: 11312176891}
+          - {scenario: C085_G100, trial_count: 450, artifact_id: 11312088905}
+          - {scenario: C085_G070, trial_count: 450, artifact_id: 11313126058}
+          - {scenario: C085_G050, trial_count: 450, artifact_id: 11313071154}
+          - {scenario: C085_G030, trial_count: 450, artifact_id: 11313066122}
+          - {scenario: C085_G000, trial_count: 450, artifact_id: 11312590249}
+          - {scenario: C070_G100, trial_count: 450, artifact_id: 11312239690}
+          - {scenario: C070_G070, trial_count: 450, artifact_id: 11312294476}
+          - {scenario: C070_G050, trial_count: 450, artifact_id: 11313185526}
+          - {scenario: C070_G030, trial_count: 450, artifact_id: 11312915385}
+          - {scenario: C070_G000, trial_count: 450, artifact_id: 11312109145}
+          - {scenario: C050_G100, trial_count: 450, artifact_id: 11312766984}
+          - {scenario: C050_G070, trial_count: 450, artifact_id: 11312963284}
+          - {scenario: C050_G050, trial_count: 450, artifact_id: 11312971843}
+          - {scenario: C050_G030, trial_count: 450, artifact_id: 11313227800}
+          - {scenario: C050_G000, trial_count: 450, artifact_id: 11312813109}
+          - {scenario: C030_G100, trial_count: 450, artifact_id: 11313136372}
+          - {scenario: C030_G070, trial_count: 450, artifact_id: 11313072117}
+          - {scenario: C030_G050, trial_count: 450, artifact_id: 11313056625}
+          - {scenario: C030_G030, trial_count: 450, artifact_id: 11313116830}
+          - {scenario: C030_G000, trial_count: 450, artifact_id: 11313086528}
+
+    env:
+      SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+      OFFICIAL_RUN_ID: "37225915321"
+
+    steps:
+      - name: Checkout enrichment control branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage9a-06-enrich-20261007
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install source requirements
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Verify official artifact identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage9a06/artifact /tmp/stage9a06/output
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${{ matrix.artifact_id }}" > /tmp/stage9a06/artifact/meta.json
+          test "$(jq -r '.workflow_run.id' /tmp/stage9a06/artifact/meta.json)" = "${OFFICIAL_RUN_ID}"
+          test "$(jq -r '.expired' /tmp/stage9a06/artifact/meta.json)" = "false"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${{ matrix.artifact_id }}/zip" > /tmp/stage9a06/artifact.zip
+          unzip -q /tmp/stage9a06/artifact.zip -d /tmp/stage9a06/artifact
+          test "$(find /tmp/stage9a06/artifact -name '*_metadata.json' | wc -l)" -ge 1
+
+      - name: Save control files before source checkout
+        run: |
+          cp scripts/stage9a_enrich.py /tmp/stage9a_enrich.py
+          cp docs/stage9a/representative_trial_ids.json /tmp/representative_trial_ids.json
+
+      - name: Checkout official dataset source
+        run: |
+          set -euo pipefail
+          git fetch origin "${SOURCE_SHA}" --depth=1
+          git checkout --detach "${SOURCE_SHA}"
+          test "$(git rev-parse HEAD)" = "${SOURCE_SHA}"
+          cp /tmp/stage9a_enrich.py scripts/stage9a_enrich.py
+          cp /tmp/representative_trial_ids.json docs/stage9a/representative_trial_ids.json
+
+      - name: Run deterministic enrichment
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python scripts/stage9a_enrich.py \
+            --scenario "${{ matrix.scenario }}" \
+            --trial-count "${{ matrix.trial_count }}" \
+            --official-run-id "${OFFICIAL_RUN_ID}" \
+            --source-sha "${SOURCE_SHA}" \
+            --artifact-dir /tmp/stage9a06/artifact \
+            --representatives docs/stage9a/representative_trial_ids.json \
+            --output-dir "/tmp/stage9a06/output/${{ matrix.scenario }}"
+          test -s "/tmp/stage9a06/output/${{ matrix.scenario }}/daily_distribution.parquet"
+          test -s "/tmp/stage9a06/output/${{ matrix.scenario }}/trial_results.parquet"
+          test -s "/tmp/stage9a06/output/${{ matrix.scenario }}/scenario_metadata.json"
+
+      - name: Package scenario dataset
+        run: |
+          set -euo pipefail
+          tar -C "/tmp/stage9a06/output/${{ matrix.scenario }}" -czf "/tmp/${{ matrix.scenario }}.tar.gz" .
+
+      - name: Upload scenario enriched dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9a06-enriched-${{ matrix.scenario }}
+          path: /tmp/${{ matrix.scenario }}.tar.gz
+          if-no-files-found: error
