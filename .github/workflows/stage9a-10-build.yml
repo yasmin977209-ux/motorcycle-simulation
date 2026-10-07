@@ -129,23 +129,11 @@ jobs:
             test -n "${tarball}"
             mkdir -p "/tmp/stage9a10/dataset/${s}"
             cp "${tarball}" "/tmp/stage9a10/dataset/${s}/${s}.tar.gz"
-            python - <<PY
-import tarfile
-from pathlib import Path
-src=Path("${tarball}")
-dst=Path("/tmp/stage9a10/dataset/${s}")
-keep={"daily_distribution.parquet","trial_results.parquet","scenario_metadata.json","trial_fingerprints.json"}
-with tarfile.open(src,"r:gz") as tf:
-    for member in tf.getmembers():
-        name=member.name.lstrip("./")
-        if name in keep:
-            handle=tf.extractfile(member)
-            if handle is None:
-                raise RuntimeError(name)
-            (dst/name).write_bytes(handle.read())
-for required in keep:
-    assert (dst/required).exists(), required
-PY
+            tar -xzf "${tarball}" -C "/tmp/stage9a10/dataset/${s}"               ./daily_distribution.parquet               ./trial_results.parquet               ./scenario_metadata.json               ./trial_fingerprints.json
+            test -s "/tmp/stage9a10/dataset/${s}/daily_distribution.parquet"
+            test -s "/tmp/stage9a10/dataset/${s}/trial_results.parquet"
+            test -s "/tmp/stage9a10/dataset/${s}/scenario_metadata.json"
+            test -s "/tmp/stage9a10/dataset/${s}/trial_fingerprints.json"
             echo "${s} ${aid}"
           done
 
