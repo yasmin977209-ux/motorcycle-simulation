@@ -1,0 +1,410 @@
+name: stage9a-10-build
+
+on:
+  push:
+    branches:
+      - tmp/stage9a-10-build-20261007
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  build:
+    name: Build and audit Stage 9A workbook
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout build branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage9a-10-build-20261007
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Verify Stage 7 run identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RUN_ID=37225915321
+          EXPECTED_HEAD=e0b2fab6710833774937d778097363d7a8ee8e59
+          EXPECTED_SOURCE=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+          RUN_HEAD="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" --jq '.head_sha')"
+          test "${RUN_HEAD}" = "${EXPECTED_HEAD}"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" --jq '.status')" = "completed"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" --jq '.conclusion')" = "success"
+          echo "STAGE7_HEAD_OK=${RUN_HEAD}"
+          echo "SOURCE_SHA=${EXPECTED_SOURCE}"
+
+      - name: Prepare dataset workspace
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/stage9a10
+          mkdir -p /tmp/stage9a10/dataset /tmp/stage9a10/official
+          gh api "repos/${GITHUB_REPOSITORY}/contents/docs/stage9a/representative_trial_ids.json?ref=tmp/stage9a-03-extract-20261007" \
+            --jq '.content' | tr -d '\\n' | base64 -d > docs/stage9a/representative_trial_ids.json
+          python - <<'PY'
+          import json
+          p=json.load(open("docs/stage9a/representative_trial_ids.json",encoding="utf-8"))
+          assert p["total_trials"] == 9005
+          assert p["total_representatives"] == 100
+          assert len(p["scenarios"]) == 25
+          print("REPRESENTATIVES_OK")
+          PY
+
+      - name: Download official Stage 7 block metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          declare -A IDS
+          IDS[C100_G100]=11312276587
+          IDS[C100_G070]=11311843040
+          IDS[C100_G050]=11311992664
+          IDS[C100_G030]=11312320486
+          IDS[C100_G000]=11312176891
+          IDS[C085_G100]=11312088905
+          IDS[C085_G070]=11313126058
+          IDS[C085_G050]=11313071154
+          IDS[C085_G030]=11313066122
+          IDS[C085_G000]=11312590249
+          IDS[C070_G100]=11312239690
+          IDS[C070_G070]=11312294476
+          IDS[C070_G050]=11313185526
+          IDS[C070_G030]=11312915385
+          IDS[C070_G000]=11312109145
+          IDS[C050_G100]=11312766984
+          IDS[C050_G070]=11312963284
+          IDS[C050_G050]=11312971843
+          IDS[C050_G030]=11313227800
+          IDS[C050_G000]=11312813109
+          IDS[C030_G100]=11313136372
+          IDS[C030_G070]=11313072117
+          IDS[C030_G050]=11313056625
+          IDS[C030_G030]=11313116830
+          IDS[C030_G000]=11313086528
+          for s in C100_G100 C100_G070 C100_G050 C100_G030 C100_G000 \
+                   C085_G100 C085_G070 C085_G050 C085_G030 C085_G000 \
+                   C070_G100 C070_G070 C070_G050 C070_G030 C070_G000 \
+                   C050_G100 C050_G070 C050_G050 C050_G030 C050_G000 \
+                   C030_G100 C030_G070 C030_G050 C030_G030 C030_G000; do
+            aid=${IDS[$s]}
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${aid}/zip" > "/tmp/stage9a10/official/${s}.zip"
+            mkdir -p "/tmp/stage9a10/official/${s}"
+            unzip -q "/tmp/stage9a10/official/${s}.zip" -d "/tmp/stage9a10/official/${s}"
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/11313318432/zip" > /tmp/stage9a10/summary.zip
+          unzip -q /tmp/stage9a10/summary.zip -d /tmp/stage9a10/summary
+
+      - name: Download latest reconciled enriched datasets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for s in C100_G100 C100_G070 C100_G050 C100_G030 C100_G000 \
+                   C085_G100 C085_G070 C085_G050 C085_G030 C085_G000 \
+                   C070_G100 C070_G070 C070_G050 C070_G030 C070_G000 \
+                   C050_G100 C050_G070 C050_G050 C050_G030 C050_G000 \
+                   C030_G100 C030_G070 C030_G050 C030_G030 C030_G000; do
+            aid="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+              --jq ".artifacts[] | select(.name == \"stage9a06-enriched-${s}\" and .expired == false) | [.id,.created_at] | @tsv" \
+              | sort -k2 | tail -1 | cut -f1)"
+            test -n "${aid}"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${aid}/zip" > "/tmp/stage9a10/${s}.zip"
+            rm -rf "/tmp/stage9a10/extract_${s}"
+            mkdir -p "/tmp/stage9a10/extract_${s}"
+            unzip -q "/tmp/stage9a10/${s}.zip" -d "/tmp/stage9a10/extract_${s}"
+            tarball="$(find "/tmp/stage9a10/extract_${s}" -name '*.tar.gz' -print -quit)"
+            test -n "${tarball}"
+            mkdir -p "/tmp/stage9a10/dataset/${s}"
+            tar -xzf "${tarball}" -C "/tmp/stage9a10/dataset/${s}"
+            echo "${s} ${aid}"
+          done
+
+      - name: Generate and commit dataset manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, subprocess
+          from datetime import date, datetime
+          from pathlib import Path
+          import constants
+
+          SCENARIOS = [
+              "C100_G100","C100_G070","C100_G050","C100_G030","C100_G000",
+              "C085_G100","C085_G070","C085_G050","C085_G030","C085_G000",
+              "C070_G100","C070_G070","C070_G050","C070_G030","C070_G000",
+              "C050_G100","C050_G070","C050_G050","C050_G030","C050_G000",
+              "C030_G100","C030_G070","C030_G050","C030_G030","C030_G000",
+          ]
+          BLOCK_IDS = {
+              "C100_G100":11312276587,"C100_G070":11311843040,"C100_G050":11311992664,
+              "C100_G030":11312320486,"C100_G000":11312176891,"C085_G100":11312088905,
+              "C085_G070":11313126058,"C085_G050":11313071154,"C085_G030":11313066122,
+              "C085_G000":11312590249,"C070_G100":11312239690,"C070_G070":11312294476,
+              "C070_G050":11313185526,"C070_G030":11312915385,"C070_G000":11312109145,
+              "C050_G100":11312766984,"C050_G070":11312963284,"C050_G050":11312971843,
+              "C050_G030":11313227800,"C050_G000":11312813109,"C030_G100":11313136372,
+              "C030_G070":11313072117,"C030_G050":11313056625,"C030_G030":11313116830,
+              "C030_G000":11313086528,
+          }
+          reps=json.load(open("docs/stage9a/representative_trial_ids.json",encoding="utf-8"))
+          assert reps["total_trials"] == 9005 and reps["total_representatives"] == 100
+
+          def canonical(v):
+              return json.dumps(
+                  v,
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  separators=(",",":"),
+                  default=lambda x: x.isoformat() if isinstance(x,(date,datetime)) else str(x)
+              ).encode("utf-8")
+
+          summary_files=list(Path("/tmp/stage9a10/summary").rglob("summary.json"))
+          assert summary_files
+          summary=json.loads(summary_files[0].read_text(encoding="utf-8"))
+          per_scenario={x["scenario"]:x for x in summary["per_scenario"]}
+          assert set(per_scenario)==set(SCENARIOS)
+
+          trial_fingerprints={}
+          block_fingerprints={}
+          enriched_ids={}
+          scenarios={}
+          for s in SCENARIOS:
+              metas=sorted(Path("/tmp/stage9a10/official").joinpath(s).rglob("*_metadata.json"))
+              assert metas
+              hashes=[]
+              block_fingerprints[s]={}
+              for mp in metas:
+                  m=json.loads(mp.read_text(encoding="utf-8"))
+                  assert m["scenario"] == s
+                  assert str(m["run_id"]) == "37225915321"
+                  assert m["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+                  key=f'{m["trial_id_start"]}-{m["trial_id_end"]}'
+                  block_fingerprints[s][key]=m["fingerprint_sha256"]
+                  hashes.extend(m["per_trial_sha256"])
+              expected_count=1 if s.startswith("C100_") else 450
+              assert len(hashes)==expected_count
+              trial_fingerprints[s]=hashes
+
+              data_root=Path("/tmp/stage9a10/dataset")/s
+              meta=json.loads((data_root/"scenario_metadata.json").read_text(encoding="utf-8"))
+              tf=json.loads((data_root/"trial_fingerprints.json").read_text(encoding="utf-8"))
+              assert meta["source_sha"]=="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+              assert str(meta["run_id"])=="37225915321"
+              assert meta["trial_count"]==expected_count
+              derived=[tf["fingerprints"][str(i)] for i in range(1,expected_count+1)]
+              assert derived == hashes
+              enriched_ids[s]=None
+              artifact_list=json.loads(subprocess.check_output(["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts?per_page=100"],text=True))["artifacts"]
+              matches=[a for a in artifact_list if a["name"]==f"stage9a06-enriched-{s}" and not a["expired"]]
+              assert matches
+              enriched_ids[s]=max(matches,key=lambda a:a["created_at"])["id"]
+              scenarios[s]={
+                  "trial_count":expected_count,
+                  "scenario_fingerprint":per_scenario[s]["final_fingerprint"],
+                  "stable_at_n":per_scenario[s]["stable_at_n"],
+                  "final_status":per_scenario[s]["final_status"],
+                  "block_artifact_id":BLOCK_IDS[s],
+                  "representative_trials":reps["scenarios"][s],
+                  "enriched_artifact_id":enriched_ids[s],
+              }
+
+          manifest={
+              "schema_version":"1.0",
+              "reference_sha256":"ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+              "source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+              "run_id":"37225915321",
+              "run_head_sha":"e0b2fab6710833774937d778097363d7a8ee8e59",
+              "master_seed":int(constants.MASTER_SEED),
+              "rng_policy_id":"RNG_SHA256_DERIVED_V1",
+              "sampling_policy_id":"SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+              "stability_policy_id":"STABILITY_GATES_A_B_3_CONSECUTIVE_V1",
+              "trial_id_policy_id":"TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
+              "schema_identity":"stage7_state_v2",
+              "scenario_mapping":{
+                  s:f"C{int(s[1:4]):03d}_G{int(s[5:]):d}" for s in SCENARIOS
+              },
+              "scenarios":scenarios,
+              "trial_fingerprints":trial_fingerprints,
+              "block_fingerprints":block_fingerprints,
+              "total_trials":9005,
+              "total_representatives":100,
+              "representative_trials":reps["scenarios"],
+              "artifact_manifest":{
+                  "official_block_artifacts":BLOCK_IDS,
+                  "official_summary_artifact_id":11313318432,
+                  "enriched_artifacts":enriched_ids,
+              },
+              "total_capital":int(constants.TOTAL_CAPITAL),
+              "constants":[
+                  {"name":k,"value":v,"python_type":type(v).__name__}
+                  for k,v in sorted(constants.__dict__.items())
+                  if k.isupper() and not k.startswith("_")
+              ],
+              "dataset_status":"enriched_and_fingerprint_reconciled",
+              "validation_status":"pending",
+              "excel_gate_status":"pending"
+          }
+          manifest["global_manifest_sha256"]=hashlib.sha256(
+              b"stage7_manifest_v1:"+canonical(manifest)
+          ).hexdigest()
+
+          p=Path("/tmp/stage9a10/dataset_manifest.json")
+          p.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print("GLOBAL_MANIFEST_SHA256",manifest["global_manifest_sha256"])
+
+          import base64, subprocess
+          content=base64.b64encode(p.read_bytes()).decode("ascii")
+          response=json.loads(subprocess.check_output([
+              "gh","api","--method","PUT",
+              f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/docs/stage9a/dataset_manifest.json",
+              "-f","message=feat(stage9a): add verified dataset manifest",
+              "-f",f"content={content}",
+              "-f","branch=tmp/stage9a-10-build-20261007"
+          ],text=True))
+          commit_sha=response["commit"]["sha"]
+          print("MANIFEST_COMMIT_SHA",commit_sha)
+          Path("/tmp/stage9a10/manifest_commit_sha").write_text(commit_sha)
+          Path("docs/stage9a/dataset_manifest.json").write_bytes(p.read_bytes())
+          PY
+
+      - name: Run 163-test acceptance inventory
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          pytest -q tests/test_acceptance_16_v2.py --disable-warnings --maxfail=0 --junitxml=/tmp/stage9a10/acceptance.xml | tee /tmp/stage9a10/acceptance.txt
+          python - <<'PY'
+          import json,xml.etree.ElementTree as ET
+          from pathlib import Path
+          root=ET.parse("/tmp/stage9a10/acceptance.xml").getroot()
+          suite=root.find(".//testsuite")
+          total=int(suite.attrib.get("tests","0"))
+          failures=int(suite.attrib.get("failures","0"))
+          errors=int(suite.attrib.get("errors","0"))
+          skipped=int(suite.attrib.get("skipped","0"))
+          passed=total-failures-errors-skipped
+          tests=[]
+          for tc in suite.findall("testcase"):
+              ident=(tc.attrib.get("classname","")+"::"+tc.attrib.get("name","")).strip(":")
+              status="PASS"
+              evidence=""
+              if tc.find("failure") is not None or tc.find("error") is not None:
+                  status="FAIL"
+                  node=tc.find("failure") or tc.find("error")
+                  evidence=(node.text or "")[-4000:]
+              elif tc.find("skipped") is not None:
+                  status="EXCLUDED"
+                  evidence=(tc.find("skipped").attrib.get("message") if tc.find("skipped") is not None else "")
+              tests.append({"ID":ident,"Name":tc.attrib.get("name"),"Expected":"per acceptance test","Actual":status,"Status":status,"Evidence":evidence})
+          out={"inventory":total,"pass":passed,"fail":failures+errors,"excluded":skipped,"tests":tests}
+          Path("/tmp/stage9a10/validation_163.json").write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding="utf-8")
+          assert total==163
+          assert passed==162
+          assert failures==0 and errors==0 and skipped==1
+          PY
+          cp /tmp/stage9a10/validation_163.json /tmp/stage9a10/dataset/validation_163.json
+
+      - name: Build 185-sheet workbook
+        run: |
+          set -euo pipefail
+          cp docs/stage9a/representative_trial_ids.json /tmp/stage9a10/dataset/representative_trial_ids.json
+          python scripts/excel_builder.py \
+            --dataset-root /tmp/stage9a10/dataset \
+            --output-path /tmp/stage9a10/Full_Results_EN.xlsx \
+            --manifest /tmp/stage9a10/dataset_manifest.json \
+            --representatives docs/stage9a/representative_trial_ids.json
+
+      - name: Structural Excel audit and no-error scan
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from openpyxl import load_workbook
+          x=Path("/tmp/stage9a10/Full_Results_EN.xlsx")
+          wb=load_workbook(x,data_only=False)
+          expected_global=["README","CONSTANTS","SCENARIO_MATRIX","HEATMAP","SENSITIVITY","VALIDATION_SUMMARY","ERROR_LOG","FINAL_CLOSURE_SUMMARY","DAILY_DISTRIBUTION","REPRESENTATIVE_CASES"]
+          expected=expected_global[:]
+          scenarios=[
+              "C100_G100","C100_G070","C100_G050","C100_G030","C100_G000",
+              "C085_G100","C085_G070","C085_G050","C085_G030","C085_G000",
+              "C070_G100","C070_G070","C070_G050","C070_G030","C070_G000",
+              "C050_G100","C050_G070","C050_G050","C050_G030","C050_G000",
+              "C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"]
+          for s in scenarios:
+              expected += [s+x for x in ["_STATS","_DAILY","_ASSETS","_ACCTG","_PARTNER","_GUARANTEE","_CONTRACTS"]]
+          assert wb.sheetnames==expected
+          assert len(wb.sheetnames)==185
+          assert len(set(wb.sheetnames))==185
+          nonempty=[ws.title for ws in wb.worksheets if ws.max_row<2]
+          assert not nonempty, nonempty
+          formula_cells=[]
+          error_cells=[]
+          for ws in wb.worksheets:
+              for row in ws.iter_rows():
+                  for cell in row:
+                      if isinstance(cell.value,str) and cell.value.startswith("="):
+                          formula_cells.append(f"{ws.title}!{cell.coordinate}")
+                      if cell.data_type=="e":
+                          error_cells.append(f"{ws.title}!{cell.coordinate}")
+          assert not formula_cells, formula_cells[:20]
+          assert not error_cells, error_cells
+          h=hashlib.sha256(x.read_bytes()).hexdigest()
+          Path("/tmp/stage9a10/excel_sha256").write_text(h)
+          print(json.dumps({"sheets":len(wb.sheetnames),"formula_cells":len(formula_cells),"excel_errors":len(error_cells),"xlsx_sha256":h},sort_keys=True))
+          PY
+
+      - name: Final manifest and report package
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path("/tmp/stage9a10/dataset_manifest.json").read_text(encoding="utf-8"))
+          m["validation_status"]="162_PASS_1_EXCLUDED_TEST_158"
+          m["excel_gate_status"]="185_SHEETS_0_EXCEL_ERRORS"
+          m["xlsx_sha256"]=Path("/tmp/stage9a10/excel_sha256").read_text().strip()
+          Path("/tmp/stage9a10/manifest_final.json").write_text(json.dumps(m,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          report={
+              "stage":"9A",
+              "status":"STAGE-9A-CLOSED",
+              "official_run_id":"37225915321",
+              "enrichment_runs":[37655041728,37660610243,37660658613],
+              "manifest_commit_sha":Path("/tmp/stage9a10/manifest_commit_sha").read_text().strip(),
+              "manifest_global_sha256":m["global_manifest_sha256"],
+              "xlsx_sha256":m["xlsx_sha256"],
+              "sheets_count":185,
+              "excel_errors":0,
+              "acceptance":{"inventory":163,"pass":162,"fail":0,"excluded":1,"excluded_test":"158"},
+              "source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          }
+          Path("/tmp/stage9a10/Stage9A_Report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+          PY
+
+      - name: Upload Stage 9A outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9a-final-output
+          path: |
+            /tmp/stage9a10/Full_Results_EN.xlsx
+            /tmp/stage9a10/manifest_final.json
+            /tmp/stage9a10/Stage9A_Report.json
+            /tmp/stage9a10/validation_163.json
+            /tmp/stage9a10/excel_sha256
+            /tmp/stage9a10/manifest_commit_sha
+          if-no-files-found: error
