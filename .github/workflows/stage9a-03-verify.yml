@@ -1,0 +1,293 @@
+name: stage9a-03-verify
+
+on:
+  push:
+    branches:
+      - tmp/stage9a-03-verify-20261007
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify-parquet:
+    name: Verify Stage 9A-03 Parquet with PyArrow
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage9a-03-verify-20261007
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install verification dependencies
+        run: python -m pip install --disable-pip-version-check pyarrow numpy pytest
+
+      - name: Verify pytest is executable
+        run: python -m pytest --version
+
+      - name: Prepare verified Stage 7 artifact map
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage9a03_verify/blocks
+          cat > /tmp/stage9a03_verify/artifacts.tsv <<'EOF'
+          C100_G100	11312276587
+          C100_G070	11311843040
+          C100_G050	11311992664
+          C100_G030	11312320486
+          C100_G000	11312176891
+          C085_G100	11312088905
+          C085_G070	11313126058
+          C085_G050	11313071154
+          C085_G030	11313066122
+          C085_G000	11312590249
+          C070_G100	11312239690
+          C070_G070	11312294476
+          C070_G050	11313185526
+          C070_G030	11312915385
+          C070_G000	11312109145
+          C050_G100	11312766984
+          C050_G070	11312963284
+          C050_G050	11312971843
+          C050_G030	11313227800
+          C050_G000	11312813109
+          C030_G100	11313136372
+          C030_G070	11313072117
+          C030_G050	11313056625
+          C030_G030	11313116830
+          C030_G000	11313086528
+          EOF
+
+      - name: Download and validate all 25 Stage 7 block artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_RUN_ID: "37225915321"
+          EXPECTED_HEAD_SHA: "e0b2fab6710833774937d778097363d7a8ee8e59"
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r scenario artifact_id; do
+            [ -n "${scenario}" ] || continue
+
+            meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}")"
+            name="$(jq -r '.name' <<<"${meta}")"
+            run_id="$(jq -r '.workflow_run.id' <<<"${meta}")"
+            head_sha="$(jq -r '.workflow_run.head_sha' <<<"${meta}")"
+            expired="$(jq -r '.expired' <<<"${meta}")"
+
+            test "${name}" = "stage7-blocks-${scenario}-1"
+            test "${run_id}" = "${EXPECTED_RUN_ID}"
+            test "${head_sha}" = "${EXPECTED_HEAD_SHA}"
+            test "${expired}" = "false"
+
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > "/tmp/stage9a03_verify/blocks/${scenario}.zip"
+            mkdir -p "/tmp/stage9a03_verify/blocks/${scenario}"
+            unzip -q "/tmp/stage9a03_verify/blocks/${scenario}.zip" -d "/tmp/stage9a03_verify/blocks/${scenario}"
+
+            parquet_count="$(find "/tmp/stage9a03_verify/blocks/${scenario}" -type f -name '*.parquet' | wc -l)"
+            test "${parquet_count}" -ge 1
+          done < /tmp/stage9a03_verify/artifacts.tsv
+
+      - name: Read every block with PyArrow and compare representatives
+        shell: bash
+        env:
+          SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          RUN_ID: "37225915321"
+          RUN_HEAD_SHA: "e0b2fab6710833774937d778097363d7a8ee8e59"
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          import numpy as np
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+
+          repo = Path(".")
+          baseline_path = repo / "docs" / "stage9a" / "representative_trial_ids.json"
+          baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+
+          scenarios = [
+              "C100_G100", "C100_G070", "C100_G050", "C100_G030", "C100_G000",
+              "C085_G100", "C085_G070", "C085_G050", "C085_G030", "C085_G000",
+              "C070_G100", "C070_G070", "C070_G050", "C070_G030", "C070_G000",
+              "C050_G100", "C050_G070", "C050_G050", "C050_G030", "C050_G000",
+              "C030_G100", "C030_G070", "C030_G050", "C030_G030", "C030_G000",
+          ]
+          explanatory_columns = [
+              "final_close_date",
+              "termination_count",
+              "secondary_cycle_count",
+              "owned_bikes",
+              "held_assets",
+              "cumulative_project_profit",
+              "total_operating_revenue",
+              "bad_debt",
+              "guarantee_recovered",
+          ]
+
+          def pick_trial(trial_ids, values, target):
+              return min(
+                  zip(trial_ids, values),
+                  key=lambda item: (abs(int(item[1]) - float(target)), int(item[0])),
+              )
+
+          scenario_rows = {}
+          loaded_rows = 0
+
+          for scenario in scenarios:
+              parquet_files = sorted(
+                  (Path("/tmp/stage9a03_verify/blocks") / scenario).rglob("*.parquet")
+              )
+              assert parquet_files, f"No Parquet files for {scenario}"
+
+              tables = []
+              for path in parquet_files:
+                  table = pq.read_table(path)
+                  required = {"trial_id", "final_net_project_equity"}
+                  missing = required - set(table.column_names)
+                  assert not missing, f"{scenario}: missing {sorted(missing)}"
+                  tables.append(table.select(sorted(required | set(explanatory_columns))))
+
+              table = pa.concat_tables(tables, promote_options="default")
+              expected_n = 1 if scenario.startswith("C100_") else 450
+              assert table.num_rows == expected_n, (scenario, table.num_rows, expected_n)
+
+              trial_ids = [int(x) for x in table["trial_id"].to_pylist()]
+              equities = [int(x) for x in table["final_net_project_equity"].to_pylist()]
+              assert trial_ids == list(range(1, expected_n + 1)), scenario
+              assert len(set(trial_ids)) == expected_n, scenario
+              loaded_rows += expected_n
+
+              targets = {
+                  "P10": float(np.quantile(np.asarray(equities, dtype=np.int64), 0.10, method="linear")),
+                  "P50": float(np.quantile(np.asarray(equities, dtype=np.int64), 0.50, method="linear")),
+                  "P90": float(np.quantile(np.asarray(equities, dtype=np.int64), 0.90, method="linear")),
+              }
+
+              picks = {label: pick_trial(trial_ids, equities, target)[0] for label, target in targets.items()}
+              loss_value = min(equities)
+              loss_trial = min(tid for tid, value in zip(trial_ids, equities) if value == loss_value)
+              picks["Loss"] = loss_trial
+
+              values_by_trial = dict(zip(trial_ids, equities))
+              old = baseline["scenarios"][scenario]
+              details = {}
+              for label in ("P50", "P10", "P90", "Loss"):
+                  new_trial = picks[label]
+                  new_value = values_by_trial[new_trial]
+                  old_trial = int(old[label])
+                  old_value = int(old[f"{label}_value"])
+                  details[label] = {
+                      "trial_new": new_trial,
+                      "trial_old": old_trial,
+                      "trial_match": new_trial == old_trial,
+                      "value_new": new_value,
+                      "value_old": old_value,
+                      "value_match": new_value == old_value,
+                  }
+
+              scenario_rows[scenario] = {
+                  "trial_count": expected_n,
+                  "details": details,
+              }
+
+              if scenario in {"C050_G100", "C085_G100"}:
+                  cols = {
+                      name: table[name].to_pylist()
+                      for name in explanatory_columns
+                  }
+                  row_by_trial = {
+                      tid: {name: cols[name][idx] for name in explanatory_columns}
+                      for idx, tid in enumerate(trial_ids)
+                  }
+
+                  def mean_int(name):
+                      vals = [int(x) for x in cols[name]]
+                      return sum(vals) / len(vals)
+
+                  scenario_rows[scenario]["distribution_summary"] = {
+                      "final_net_project_equity_mean": sum(equities) / len(equities),
+                      "final_net_project_equity_min": min(equities),
+                      "final_net_project_equity_max": max(equities),
+                      "p50_trial_row": row_by_trial[picks["P50"]],
+                      "mean_explanatory_fields": {
+                          "termination_count": mean_int("termination_count"),
+                          "secondary_cycle_count": mean_int("secondary_cycle_count"),
+                          "owned_bikes": mean_int("owned_bikes"),
+                          "held_assets": mean_int("held_assets"),
+                          "cumulative_project_profit": mean_int("cumulative_project_profit"),
+                          "total_operating_revenue": mean_int("total_operating_revenue"),
+                          "bad_debt": mean_int("bad_debt"),
+                          "guarantee_recovered": mean_int("guarantee_recovered"),
+                      },
+                      "final_close_date_min": min(str(x) for x in cols["final_close_date"]),
+                      "final_close_date_max": max(str(x) for x in cols["final_close_date"]),
+                  }
+
+          trial_ids_match = sum(
+              all(scenario_rows[s]["details"][label]["trial_match"] for label in ("P50", "P10", "P90", "Loss"))
+              for s in scenarios
+          )
+          values_match = sum(
+              all(scenario_rows[s]["details"][label]["value_match"] for label in ("P50", "P10", "P90", "Loss"))
+              for s in scenarios
+          )
+
+          c050_p50 = scenario_rows["C050_G100"]["details"]["P50"]["value_new"]
+          c085_p50 = scenario_rows["C085_G100"]["details"]["P50"]["value_new"]
+
+          report = {
+              "source_sha": __import__("os").environ["SOURCE_SHA"],
+              "run_id": __import__("os").environ["RUN_ID"],
+              "run_head_sha": __import__("os").environ["RUN_HEAD_SHA"],
+              "generated_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+              "reader": {
+                  "library": "pyarrow",
+                  "pyarrow_version": pa.__version__,
+                  "numpy_version": np.__version__,
+              },
+              "total_rows_read": loaded_rows,
+              "scenarios": scenario_rows,
+              "anomaly_analysis": {
+                  "comparison": {
+                      "c050_g100_p50_final_net_project_equity": c050_p50,
+                      "c085_g100_p50_final_net_project_equity": c085_p50,
+                      "c050_g100_gt_c085_g100": c050_p50 > c085_p50,
+                      "delta_c050_minus_c085": c050_p50 - c085_p50,
+                  },
+                  "c050_g100": scenario_rows["C050_G100"]["distribution_summary"],
+                  "c085_g100": scenario_rows["C085_G100"]["distribution_summary"],
+              },
+              "summary": {
+                  "total_scenarios": 25,
+                  "trial_ids_match": trial_ids_match,
+                  "values_match": values_match,
+                  "all_four_metrics_match": trial_ids_match == 25 and values_match == 25,
+                  "overall_verdict": "PASS" if trial_ids_match == 25 and values_match == 25 else "FAIL",
+              },
+          }
+
+          Path("verification_report.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True),
+              encoding="utf-8",
+          )
+          print(json.dumps(report["summary"], ensure_ascii=False, sort_keys=True))
+          print(json.dumps(report["anomaly_analysis"]["comparison"], ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9a-03-verify-report
+          path: verification_report.json
+          if-no-files-found: error
