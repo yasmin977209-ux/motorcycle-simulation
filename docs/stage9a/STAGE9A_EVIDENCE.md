@@ -37,3 +37,19 @@ Stage 9A canonicalization consists of:
 5. explicit deviations record.
 
 This file distinguishes product evidence from procedure/provenance evidence.
+
+## CP-MEGA-FORENSIC-CLOSURE-9ABC-V6 — Canonical Manifest Determination
+
+### Determination
+- Final workbook embedded manifest SHA-256: `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`.
+- Artifact `stage9a-final-output` contains the same manifest identity; the archived `manifest_final.json` recomputes to the same `892da438...` using the workflow-defined `stage7_manifest_v1:` canonical hashing procedure.
+- The archived artifact manifest Git blob SHA is `e796fa2443493b607f1f9c60b58eb63607959c26`.
+- The later build-branch manifest at `tmp/stage9a-10-build-20261007` has blob SHA `0cef8b9d9bab6263707ea35c5c4478afd0778cb4` and declares `global_manifest_sha256 = 8796b86a65e68d35b11a9a81fea1a9f556b394cc2dcf5100fc4feffc606cdbc4`.
+- The `8796...` manifest is byte-distinct from the archived `892...` manifest and was introduced by the later build commits `c2b6da82d60fe56f5416850857f5dcc3d78677ac` and `25cd61505abec2d4dcfe39e4bc83871e41c45eba`.
+- The final Excel does not reference `8796...`; its embedded manifest reference is `892...`.
+
+### Canonical result
+**CANONICAL MANIFEST SHA-256 = `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`.**
+
+The later `8796...` identity is retained as forensic provenance of the temporary build branch and is not treated as the canonical product manifest because it is not the identity embedded in the produced Excel artifact.
+
