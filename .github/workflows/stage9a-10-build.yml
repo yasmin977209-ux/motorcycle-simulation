@@ -328,7 +328,7 @@ jobs:
                   status="EXCLUDED"
                   evidence=(tc.find("skipped").attrib.get("message") if tc.find("skipped") is not None else "")
               tests.append({"ID":ident,"Name":tc.attrib.get("name"),"Expected":"per acceptance test","Actual":status,"Status":status,"Evidence":evidence})
-          out={"inventory":total,"pass":passed,"fail":failures+errors,"excluded":skipped,"tests":tests}
+          out={"inventory":total,"pass":passed,"fail":failures+errors,"excluded":skipped,"source_sha":"f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b","run_id":${${ github.run_id }}, "tests":tests}
           Path("/tmp/stage9a10/validation_163.json").write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding="utf-8")
           assert total==163
           assert passed==162
