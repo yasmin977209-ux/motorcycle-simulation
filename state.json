@@ -79,5 +79,7 @@
     "balance_check_count": 45025,
     "acceptance_status": "162_PASS_1_EXCLUDED",
     "verified_at": "2026-10-07T22:00:13Z"
-  }
+  },
+  "canonical_content_sha": "9a51fe1f7ef2399a94fefc82817078fe77361b33",
+  "state_sha_semantics_note": "state.sha = last commit that contains the previous approved state.json update; canonical_content_sha = last production/content commit before state-sync commits."
 }
