@@ -107,35 +107,78 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/11313318432/zip" > /tmp/stage9a10/summary.zip
           unzip -q /tmp/stage9a10/summary.zip -d /tmp/stage9a10/summary
 
-      - name: Download latest reconciled enriched datasets
+      - name: Download verified enriched datasets from fixed v3 Run
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: yasmin977209-ux/motorcycle-simulation
         run: |
           set -euo pipefail
-          for s in C100_G100 C100_G070 C100_G050 C100_G030 C100_G000 \
-                   C085_G100 C085_G070 C085_G050 C085_G030 C085_G000 \
-                   C070_G100 C070_G070 C070_G050 C070_G030 C070_G000 \
-                   C050_G100 C050_G070 C050_G050 C050_G030 C050_G000 \
-                   C030_G100 C030_G070 C030_G050 C030_G030 C030_G000; do
-            aid="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
-              --jq ".artifacts[] | select(.name == \"stage9a06-enriched-${s}\" and .expired == false) | [.id,.created_at] | @tsv" \
-              | sort -k2 | tail -1 | cut -f1)"
-            test -n "${aid}"
-            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${aid}/zip" > "/tmp/stage9a10/${s}.zip"
-            rm -rf "/tmp/stage9a10/extract_${s}"
-            mkdir -p "/tmp/stage9a10/extract_${s}"
-            unzip -q "/tmp/stage9a10/${s}.zip" -d "/tmp/stage9a10/extract_${s}"
-            tarball="$(find "/tmp/stage9a10/extract_${s}" -name '*.tar.gz' -print -quit)"
-            test -n "${tarball}"
-            mkdir -p "/tmp/stage9a10/dataset/${s}"
-            cp "${tarball}" "/tmp/stage9a10/dataset/${s}/${s}.tar.gz"
-            tar -xzf "${tarball}" -C "/tmp/stage9a10/dataset/${s}"               ./daily_distribution.parquet               ./trial_results.parquet               ./scenario_metadata.json               ./trial_fingerprints.json
-            test -s "/tmp/stage9a10/dataset/${s}/daily_distribution.parquet"
-            test -s "/tmp/stage9a10/dataset/${s}/trial_results.parquet"
-            test -s "/tmp/stage9a10/dataset/${s}/scenario_metadata.json"
-            test -s "/tmp/stage9a10/dataset/${s}/trial_fingerprints.json"
-            echo "${s} ${aid}"
-          done
+          python - <<'PY'
+          import json, os, subprocess, zipfile
+          from pathlib import Path
+
+          scenarios=[
+              "C100_G100","C100_G070","C100_G050","C100_G030","C100_G000",
+              "C085_G100","C085_G070","C085_G050","C085_G030","C085_G000",
+              "C070_G100","C070_G070","C070_G050","C070_G030","C070_G000",
+              "C050_G100","C050_G070","C050_G050","C050_G030","C050_G000",
+              "C030_G100","C030_G070","C030_G050","C030_G030","C030_G000"
+          ]
+          fixed={
+              "C100_G100":11498636066,"C100_G070":11497369182,"C100_G050":11497164787,
+              "C100_G030":11497898524,"C100_G000":11496939782,"C085_G100":11499553926,
+              "C085_G070":11498798098,"C085_G050":11498784380,"C085_G030":11499958237,
+              "C085_G000":11499442661,"C070_G100":11499938620,"C070_G070":11499668344,
+              "C070_G050":11498901762,"C070_G030":11499331345,"C070_G000":11500301100,
+              "C030_G100":11498980727,"C030_G070":11498204610,"C030_G050":11498069095,
+              "C030_G030":11497409735,"C030_G000":11498686202
+          }
+          v3_run_id=37662891608
+          arts=json.loads(subprocess.check_output([
+              "gh","api",
+              f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{v3_run_id}/artifacts?per_page=100"
+          ],text=True))["artifacts"]
+          by_name={a["name"]:a for a in arts if not a["expired"]}
+          for s in ["C050_G100","C050_G070","C050_G050","C050_G000"]:
+              name=f"stage9a06-enriched-{s}"
+              if name not in by_name:
+                  raise SystemExit(f"MISSING_V3_ARTIFACT {name}")
+              fixed[s]=by_name[name]["id"]
+          if len(fixed)!=25:
+              raise SystemExit("ENRICHED_ARTIFACT_MANIFEST_COUNT_MISMATCH")
+
+          root=Path("/tmp/stage9a10")
+          root.joinpath("enriched_artifact_ids.json").write_text(
+              json.dumps({"run_id":v3_run_id,"artifacts":fixed},sort_keys=True,indent=2),
+              encoding="utf-8"
+          )
+          for s in scenarios:
+              aid=fixed[s]
+              zip_path=root/f"{s}.zip"
+              subprocess.run(
+                  ["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts/{aid}/zip"],
+                  check=True,stdout=zip_path.open("wb")
+              )
+              extract=root/f"extract_{s}"
+              extract.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(zip_path) as z:
+                  z.extractall(extract)
+              tarballs=list(extract.rglob("*.tar.gz"))
+              if len(tarballs)!=1:
+                  raise SystemExit(f"ENRICHED_TARBALL_COUNT_{s}={len(tarballs)}")
+              tarball=tarballs[0]
+              ds=root/"dataset"/s
+              ds.mkdir(parents=True,exist_ok=True)
+              (ds/f"{s}.tar.gz").write_bytes(tarball.read_bytes())
+              import tarfile
+              with tarfile.open(tarball,"r:gz") as tf:
+                  for name in ["daily_distribution.parquet","trial_results.parquet","scenario_metadata.json","trial_fingerprints.json"]:
+                      member=tf.getmember(name)
+                      fh=tf.extractfile(member)
+                      if fh is None:
+                          raise SystemExit(f"MISSING_MEMBER {s}/{name}")
+                      (ds/name).write_bytes(fh.read())
+          PY
 
       - name: Generate and commit dataset manifest
         env:
