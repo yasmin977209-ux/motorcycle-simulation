@@ -159,28 +159,19 @@ def build_representative_payload(project: Any, result: monte_carlo.TrialResult, 
     }
 
 
-def build_daily_distribution(
-    rows_by_trial: dict[int, list[dict[str, Any]]],
-    final_close_dates: dict[int, str | None],
-) -> list[dict[str, Any]]:
+def build_daily_distribution(by_date: dict[str, dict[str, list[int]]]) -> list[dict[str, Any]]:
     metrics = ("Cash", "Net_Equity", "Active_Bikes", "Owned_Transferred_Bikes", "Pending_Claims")
-    all_dates = sorted({row["date"] for rows in rows_by_trial.values() for row in rows})
+    all_dates = sorted(by_date)
     if not all_dates:
         return []
     start = date.fromisoformat(all_dates[0])
     end = date.fromisoformat(all_dates[-1])
-    expected_dates = [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
+    expected_dates = [
+        (start + timedelta(days=i)).isoformat()
+        for i in range((end - start).days + 1)
+    ]
     if all_dates != expected_dates:
         raise AssertionError("daily dates contain gaps")
-    by_date = {d: {m: [] for m in metrics} for d in expected_dates}
-    for trial_id, rows in rows_by_trial.items():
-        final_close = final_close_dates[trial_id]
-        if final_close is None:
-            raise AssertionError(f"missing final_close_date for trial {trial_id}")
-        for row in rows:
-            if final_close >= row["date"]:
-                for metric in metrics:
-                    by_date[row["date"]][metric].append(row[metric])
     output = []
     quantiles = (("P10", 0.10), ("P25", 0.25), ("P50", 0.50), ("P75", 0.75), ("P90", 0.90))
     for d in expected_dates:
@@ -190,7 +181,9 @@ def build_daily_distribution(
         record = {"date": d, "active_trial_count": active_count}
         for label, q in quantiles:
             for metric in metrics:
-                record[f"{label}_{metric}"] = float(np.quantile(np.asarray(by_date[d][metric]), q, method="linear"))
+                record[f"{label}_{metric}"] = float(
+                    np.quantile(np.asarray(by_date[d][metric]), q, method="linear")
+                )
         output.append(record)
     return output
 
@@ -228,8 +221,16 @@ def main() -> None:
 
     trial_results = []
     trial_fingerprints = {}
-    rows_by_trial = {}
-    final_close_dates = {}
+    distribution_values = {
+        d: {
+            "Cash": [],
+            "Net_Equity": [],
+            "Active_Bikes": [],
+            "Owned_Transferred_Bikes": [],
+            "Pending_Claims": [],
+        }
+        for d in []
+    }
     fingerprint_matches = 0
 
     representative_trial_ids = set(representative_ids.values())
@@ -270,8 +271,19 @@ def main() -> None:
         fingerprint_matches += 1
         for row in day_rows:
             row["Final_Close_Date"] = result.final_close_date
-        rows_by_trial[trial_id] = day_rows
-        final_close_dates[trial_id] = result.final_close_date
+            if result.final_close_date >= row["date"]:
+                bucket = distribution_values.setdefault(
+                    row["date"],
+                    {
+                        "Cash": [],
+                        "Net_Equity": [],
+                        "Active_Bikes": [],
+                        "Owned_Transferred_Bikes": [],
+                        "Pending_Claims": [],
+                    },
+                )
+                for metric in bucket:
+                    bucket[metric].append(row[metric])
         trial_fingerprints[str(trial_id)] = digest
         trial_results.append(dataclasses.asdict(result))
 
@@ -282,7 +294,7 @@ def main() -> None:
     if fingerprint_matches != args.trial_count:
         raise RuntimeError(f"per-trial fingerprint reconciliation failed: {fingerprint_matches}/{args.trial_count}")
 
-    daily_distribution = build_daily_distribution(rows_by_trial, final_close_dates)
+    daily_distribution = build_daily_distribution(distribution_values)
     pq.write_table(pa.Table.from_pylist(daily_distribution), output / "daily_distribution.parquet", compression="zstd")
     pq.write_table(pa.Table.from_pylist(trial_results), output / "trial_results.parquet", compression="zstd")
 
