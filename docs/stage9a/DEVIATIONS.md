@@ -87,3 +87,30 @@ This is not converted into a fabricated YES/NO state.
 - `state.sha` semantics: `parent_state_commit_pointer` — يشير إلى الـcommit السابق الذي يحمل أحدث حالة معتمدة، ولا يُستخدم كمرجع لـ`main HEAD`.
 - `canonical_content_sha` يبقى منفصلاً عن `state.sha`، ولا يحل محل دلالة `state.sha` الجديدة.
 - في الحالة الحالية: `state.sha = a7db0153299b3af8f89111bec52bb07d1356509c`، بينما `canonical_content_sha = a7db0153299b3af8f89111bec52bb07d1356509c`؛ تساوي القيمتين هنا نتيجة أن C-7 هو آخر commit غيّر الحالة الدلالية قبل تسجيل C-8، وليس لأن `state.sha` يشير إلى `main HEAD`.
+
+
+## Orphan Commit During C-2 (GitHub API Workflow Artifact)
+
+**التاريخ:** 2026-10-07T23:47:12Z
+
+**الـSHA:** 59cc18d2aae47df5247729150b7ea58912be5f20
+
+**السياق:**
+أثناء تنفيذ CP-MEGA-FINAL-DECISIONS، أُنشئ commit C-2
+عبر GitHub API (create_commit)، لكن الـref (branch)
+لم يُحرَّك إليه. أُعيد تطبيق تغييرات C-2 كـcommit
+جديد على رأس السلسلة (a5e8ed4c...).
+
+**الحالة:**
+- الـcommit `59cc18d2aae47df5247729150b7ea58912be5f20` موجود ككائن Commit فعلي في GitHub.
+- استعلام GitHub API للـbranches-where-head أعاد قائمة فارغة؛ لا يوجد branch يشير إليه كـhead.
+- ليس ضمن `main` الحالي.
+- لا يظهر كـhead لأي فرع نشط في قائمة branch refs الحالية.
+
+**الأثر:**
+- لا أثر على سلامة main.
+- لا أثر على المنتج.
+- لا أثر على provenance.
+
+**التصنيف:** GITHUB-API-WORKFLOW-ARTIFACT.
+**الحالة:** DOCUMENTED-NOT-BLOCKING.
