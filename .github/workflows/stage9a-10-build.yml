@@ -351,11 +351,11 @@ jobs:
           p.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
           print("GLOBAL_MANIFEST_SHA256",manifest["global_manifest_sha256"])
 
-          import subprocess
+          import base64, subprocess
           upload=Path("/tmp/stage9a10/manifest_upload.json")
           upload.write_text(json.dumps({
               "message":"feat(stage9a): add verified dataset manifest [skip ci]",
-              "content":p.read_bytes().decode("utf-8").encode("utf-8").hex(),
+              "content":base64.b64encode(p.read_bytes()).decode("ascii"),
               "branch":"tmp/stage9a-10-build-20261007"
           }),encoding="utf-8")
           response=json.loads(subprocess.check_output([
@@ -515,10 +515,11 @@ jobs:
           m["global_manifest_sha256"]=hashlib.sha256(b"stage7_manifest_v1:"+canonical(m)).hexdigest()
           mpath.write_text(json.dumps(m,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
 
+          import base64
           upload=Path("/tmp/stage9a10/final_manifest_upload.json")
           upload.write_text(json.dumps({
               "message":"fix(stage9a): finalize manifest identity after Excel gate [skip ci]",
-              "content":mpath.read_text(encoding="utf-8"),
+              "content":base64.b64encode(mpath.read_bytes()).decode("ascii"),
               "branch":"tmp/stage9a-10-build-20261007"
           }),encoding="utf-8")
           response=json.loads(subprocess.check_output([
