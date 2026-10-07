@@ -75,10 +75,17 @@
   },
   "stage9c_evidence": {
     "status": "PARTIAL",
-    "roll_forward_count": 45025,
-    "balance_check_count": 45025,
     "acceptance_status": "162_PASS_1_EXCLUDED",
-    "verified_at": "2026-10-07T22:00:13Z"
+    "verified_at": "2026-10-07T22:00:13Z",
+    "roll_forward_target": 45025,
+    "roll_forward_achieved": 5,
+    "roll_forward_scope": "5 representative trial histories only; 10,382 daily rows within those histories. Full 45,025 trial-level scope was not executed.",
+    "balance_check_target": 45025,
+    "balance_check_achieved": 5,
+    "balance_check_scope": "5 representative trial histories only; 10,382 daily rows within those histories. Full 45,025 trial-level scope was not executed.",
+    "tested_trials": 5,
+    "total_trials": 9005,
+    "scope_note": "Stage 9C is PARTIAL. The available authoritative artifacts support 5 audited representative trial histories (10,382 daily rows), not the full 9,005-trial daily accounting ledger."
   },
   "canonical_content_sha": "9a51fe1f7ef2399a94fefc82817078fe77361b33",
   "state_sha_semantics_note": "state.sha = last commit that contains the previous approved state.json update; canonical_content_sha = last production/content commit before state-sync commits."
