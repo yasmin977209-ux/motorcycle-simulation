@@ -66,5 +66,18 @@
     "sheets_count": 185,
     "excel_errors": 0,
     "verified_at": "2026-10-07T21:13:29Z"
+  },
+  "stage9b_evidence": {
+    "status": "CLOSED",
+    "errors_count": 0,
+    "formulas_count": 0,
+    "verified_at": "2026-10-07T22:00:13Z"
+  },
+  "stage9c_evidence": {
+    "status": "PARTIAL",
+    "roll_forward_count": 45025,
+    "balance_check_count": 45025,
+    "acceptance_status": "162_PASS_1_EXCLUDED",
+    "verified_at": "2026-10-07T22:00:13Z"
   }
 }
