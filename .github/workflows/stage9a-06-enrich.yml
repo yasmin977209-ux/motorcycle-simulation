@@ -3,7 +3,7 @@ name: stage9a-06-enrich
 on:
   push:
     branches:
-      - tmp/stage9a-06-enrich-20261007
+      - tmp/stage9a-06-enrich-20261007-v2
 
 permissions:
   actions: read
@@ -13,36 +13,15 @@ jobs:
   enrich:
     name: Deterministic dataset enrichment
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {scenario: C100_G100, trial_count: 1, artifact_id: 11312276587}
-          - {scenario: C100_G070, trial_count: 1, artifact_id: 11311843040}
-          - {scenario: C100_G050, trial_count: 1, artifact_id: 11311992664}
-          - {scenario: C100_G030, trial_count: 1, artifact_id: 11312320486}
-          - {scenario: C100_G000, trial_count: 1, artifact_id: 11312176891}
-          - {scenario: C085_G100, trial_count: 450, artifact_id: 11312088905}
-          - {scenario: C085_G070, trial_count: 450, artifact_id: 11313126058}
-          - {scenario: C085_G050, trial_count: 450, artifact_id: 11313071154}
-          - {scenario: C085_G030, trial_count: 450, artifact_id: 11313066122}
-          - {scenario: C085_G000, trial_count: 450, artifact_id: 11312590249}
-          - {scenario: C070_G100, trial_count: 450, artifact_id: 11312239690}
-          - {scenario: C070_G070, trial_count: 450, artifact_id: 11312294476}
-          - {scenario: C070_G050, trial_count: 450, artifact_id: 11313185526}
-          - {scenario: C070_G030, trial_count: 450, artifact_id: 11312915385}
-          - {scenario: C070_G000, trial_count: 450, artifact_id: 11312109145}
           - {scenario: C050_G100, trial_count: 450, artifact_id: 11312766984}
           - {scenario: C050_G070, trial_count: 450, artifact_id: 11312963284}
           - {scenario: C050_G050, trial_count: 450, artifact_id: 11312971843}
-          - {scenario: C050_G030, trial_count: 450, artifact_id: 11313227800}
           - {scenario: C050_G000, trial_count: 450, artifact_id: 11312813109}
-          - {scenario: C030_G100, trial_count: 450, artifact_id: 11313136372}
-          - {scenario: C030_G070, trial_count: 450, artifact_id: 11313072117}
-          - {scenario: C030_G050, trial_count: 450, artifact_id: 11313056625}
-          - {scenario: C030_G030, trial_count: 450, artifact_id: 11313116830}
-          - {scenario: C030_G000, trial_count: 450, artifact_id: 11313086528}
 
     env:
       SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
