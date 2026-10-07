@@ -190,7 +190,7 @@ def write_readme(wb, manifest, validation, excel_errors):
     ws.title = "README"
     rows = [
         ("Project", "motorcycle-simulation — Motorcycle Rental Simulation — Sana'a"),
-        ("Generation date", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ("Workbook build provenance", f"Stage 9A from official Run {manifest['run_id']}"),
         ("Scenario count", len(EXPECTED_SCENARIOS)),
         ("Total trials", manifest["total_trials"]),
         ("Total representatives", manifest["total_representatives"]),
