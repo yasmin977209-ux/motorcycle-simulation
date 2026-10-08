@@ -1,0 +1,51 @@
+name: stage12-c085-g070-repair
+
+on:
+  push:
+    branches:
+      - "tmp/stage12-materialize-20261008"
+    paths:
+      - ".github/workflows/stage12-c085-g070-repair.yml"
+      - "scripts/stage12_c085_g070_repair.py"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  MASTER_SEED: "20270101"
+
+jobs:
+  repair:
+    name: repair-C085_G070-1-400
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify source boundary
+        run: |
+          set -euo pipefail
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+          MODEL_FILES=(constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py)
+          git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+      - name: Materialize corrected chunk
+        run: |
+          set -euo pipefail
+          mkdir -p out/C085_G070/1_400
+          export PYTHONPATH="$GITHUB_WORKSPACE${PYTHONPATH:+:$PYTHONPATH}"
+          python scripts/stage12_c085_g070_repair.py             --scenario C085_G070             --start 1             --end 400             --out out/C085_G070/1_400
+      - name: Upload corrected chunk
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage12-accounting-corrected-C085_G070-1-400
+          path: out/C085_G070/1_400
+          if-no-files-found: error
+          retention-days: 30
