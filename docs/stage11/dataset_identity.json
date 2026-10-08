@@ -1,0 +1,347 @@
+{
+  "created_at": "2026-10-08T13:53:11Z",
+  "created_by_cp": "CP-MEGA-S11-0b-v3",
+  "baseline_commit": "17f4e8d0ddc1908e2c34bf927ef1d1b7a1c4bf30",
+  "sources": {
+    "stage7": {
+      "run_id": "37225915321",
+      "run_head_sha": "e0b2fab6710833774937d778097363d7a8ee8e59",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_range": [
+        1,
+        450
+      ]
+    },
+    "stage9a": {
+      "run_id": "37671448546",
+      "global_manifest_sha256_9005": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "note": "هذا الـSHA هو هوية Stage 9A للـ9005 baseline فقط، وليس للـ11005"
+    },
+    "stage10": {
+      "run_id": "37709936740",
+      "branch_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
+      "trial_range": [
+        451,
+        550
+      ]
+    }
+  },
+  "identity_method": "authoritative per-scenario fingerprints recorded by Stage 9A and Stage 10; no new canonicalization performed by this CP",
+  "total_canonical_trials": 11005,
+  "scenarios_count": 25,
+  "global_identity_note": "لا يوجد global_manifest_sha256 جديد خاص بالـ11005 في هذا CP. قيمة 892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6 هي هوية Stage 9A للـ9005 baseline فقط. هوية dataset النهائي (11005) في هذا السجل ممثلة رسميًا بالبصمات per-scenario المسجلة في Stage 10، دون إعادة حساب أو اختراع canonicalization جديدة.",
+  "per_scenario": {
+    "C030_G000": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "0e7871e2708766fcfb70caa3f5ab739bc22f71ebfd8ef019d9ac34d6662ea5ff",
+      "combined_dataset_fingerprint_sha256_stage10": "2cb52a9170f835ac8daae7588f95d3aa086a73cd0200b1aa97c4e618dcbb3b8b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C030_G030": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "6d2ff81cde9b728971b1c8c18ca181743f0a62257a217e6e9717aad06c0ac1ff",
+      "combined_dataset_fingerprint_sha256_stage10": "a5541d72c212e3953c4ed11b1fe03ab9e89ba00f1c0b05348f413cc13822691b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C030_G050": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "0fdc89810f2d15bb52af0feb12781368e6f9bc18c0ff20277223edd0fe20fdb7",
+      "combined_dataset_fingerprint_sha256_stage10": "ce59996de32731bde321006f194142854737793871123e741df21191e0391c4b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C030_G070": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "209feb45da1941284c90e393eacc7d5da1d740ccc759c20ea5eb35fb668e3512",
+      "combined_dataset_fingerprint_sha256_stage10": "8de72e47111abc1c7e15a1460001bfa3020a2bbf8c8ceaf82deed16abf4df690",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C030_G100": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "b35d2d49d1981f33473881823d8bc0217744ea7feb56bede36470b2d716bc4df",
+      "combined_dataset_fingerprint_sha256_stage10": "307bd866bfe0322adec7a283ab9a29e86d8cb299d2dd15f2770922ca4cd11308",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C050_G000": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "dc428780bd6603269c0816842c4f7ead8153ec14bde69bdbe820ab40ad99f3fc",
+      "combined_dataset_fingerprint_sha256_stage10": "2e6bda707dc44882fdca6ba10c1249992b6d529d33574872d759c7b883ed2188",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C050_G030": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "daadc53a577836c50987c383bb17a749c178409d748dccda84c8123e5ae33e1f",
+      "combined_dataset_fingerprint_sha256_stage10": "fbc857a1318fe87e7eeca4a1879c8424a308b1a53ad02506969d24fb98491196",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C050_G050": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "f5f2a664594d0ec55989f4552d812ee4e693ff89304797fc36b52439256e4427",
+      "combined_dataset_fingerprint_sha256_stage10": "ede8c949c11f7215534bf34232ca918542e5b2e18152f8723208e5a13c6b95c8",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C050_G070": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "b8cf856f8fa77dab4731a2c145d1ac8f7ba856b2da0c772424af82fbfdbf558f",
+      "combined_dataset_fingerprint_sha256_stage10": "22ecf74930ff07b7318faf53f4929b343cb1c9bad93d3cccb69eeb599ee7539b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C050_G100": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "89f15aba78ba4f978a6128a799411f70a6e73854c0f8c6b10cd06b1527d541d4",
+      "combined_dataset_fingerprint_sha256_stage10": "05614a6280863b422103225c385292ac1a722338b70c0c6756c23af3dc878926",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C070_G000": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "2cbd7f991599c17849cbf5f720d6559d59ed37691dc9c97c3b889ff13e8e2e99",
+      "combined_dataset_fingerprint_sha256_stage10": "f158340602c169c56a158d7151ecde210b3b92bdd9922b7c7b5dff39f1063608",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C070_G030": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "84b9e7bea2fc729cb4d29f8c0e90a635dc345fe091ceb81024a7c1e7517e0c7c",
+      "combined_dataset_fingerprint_sha256_stage10": "fb953cebb484f15538c310229c687ebe868430a363679987dd11b8e3f583478b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C070_G050": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+      "combined_dataset_fingerprint_sha256_stage10": "6006c98ad76a5d906a8e2b4eca2faedc7c584213f60b2198782322150b2ffa82",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C070_G070": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "64b743c1f06f088d6386027d4c6a778cd93c978ddc80551d20230e4cafe27b2c",
+      "combined_dataset_fingerprint_sha256_stage10": "4d5dc82fced74abee95d5a34a2aeb00aee07ca3de58351f5f9b5c333b803b34c",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C070_G100": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "31658e2be50c05d4fdf97bf49eb6214472df6f9b1ce5ed96f80a18a7009eae00",
+      "combined_dataset_fingerprint_sha256_stage10": "19f69c89013e182cbc6893bf3c0ccd33af14d244542f98a3460aa50ff001242b",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C085_G000": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "4f7efd567f2d251673ad7d0aaeb95cd57248ed89e4fcca7ef5df0a8cb4653a2f",
+      "combined_dataset_fingerprint_sha256_stage10": "fb330c6fd85971140ab27fc878e778affcd957ef44ab64675735fbc3fbc485c5",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C085_G030": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "609b0010f805d91ba184ede3e8093dfde6ae7ec162dab1d1b060a132439f946e",
+      "combined_dataset_fingerprint_sha256_stage10": "dc8a28bec6ca9a0c183bb68bda2aa365dcdd31a45127676813f94fe76edbbce7",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C085_G050": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "318d000bd215f11b025528221643972591446288abf375832cd0523494a807f7",
+      "combined_dataset_fingerprint_sha256_stage10": "f4d9f3874213f7da3cda6ecf1644a43751f23a5d5d64f39a5a1df7e52de42d8a",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C085_G070": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "6f5d8c05f380b13c0176badb231375722a4abffb9a6323d59970e0c176bb7619",
+      "combined_dataset_fingerprint_sha256_stage10": "62ee2197b613986e7f0062b4d5f08f8f05739dde0624895d35dc4607850ec814",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C085_G100": {
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_stage9a": "cdfd307333c8d16db2968730cf78eb3e1b6633b6e8769f988468f180489ee100",
+      "combined_dataset_fingerprint_sha256_stage10": "eba464e979c8b15e96bbae8783380732c78fc8404cb39fe30f1ae1e1940425e6",
+      "is_deterministic": false,
+      "stability_status": "STABLE",
+      "consecutive_count": 3
+    },
+    "C100_G000": {
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_stage9a": "1b6390fe7326200133e133d68a4b260694bc2f72a9a58b8461da5494e231272c",
+      "combined_dataset_fingerprint_sha256_stage10": null,
+      "is_deterministic": true,
+      "stability_status": "NOT_APPLICABLE_C100",
+      "consecutive_count": null
+    },
+    "C100_G030": {
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_stage9a": "f342dc950b12810108825d842a93b51e6816fe4c2e90bc7fd49d0b51762f0a70",
+      "combined_dataset_fingerprint_sha256_stage10": null,
+      "is_deterministic": true,
+      "stability_status": "NOT_APPLICABLE_C100",
+      "consecutive_count": null
+    },
+    "C100_G050": {
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_stage9a": "86e095f84d26fc6398af1fbd624d353b6c01009feda9434ab37af788b420b5c3",
+      "combined_dataset_fingerprint_sha256_stage10": null,
+      "is_deterministic": true,
+      "stability_status": "NOT_APPLICABLE_C100",
+      "consecutive_count": null
+    },
+    "C100_G070": {
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_stage9a": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+      "combined_dataset_fingerprint_sha256_stage10": null,
+      "is_deterministic": true,
+      "stability_status": "NOT_APPLICABLE_C100",
+      "consecutive_count": null
+    },
+    "C100_G100": {
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_stage9a": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+      "combined_dataset_fingerprint_sha256_stage10": null,
+      "is_deterministic": true,
+      "stability_status": "NOT_APPLICABLE_C100",
+      "consecutive_count": null
+    }
+  },
+  "validation": {
+    "all_25_present": true,
+    "no_gaps_in_trial_ids": true,
+    "no_duplicate_trial_ids": true,
+    "source_sha_matches": true,
+    "master_seed": 20270101,
+    "sum_N_check": {
+      "expected": 11005,
+      "computed": 11005,
+      "match": true
+    }
+  }
+}
