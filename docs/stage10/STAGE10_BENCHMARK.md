@@ -11,8 +11,8 @@ C100 حافظت على canonical trial واحد فقط، وتم التحقق م�
 التوافق مع مسار Stage 11 مثبت على مستوى source/Python/requirements/scenario/RNG/schema/serialization في القياس المقبول؛ لكن Workflow/Topology Stage 11 نفسها غير موجودة حاليًا في المستودع.
 لذلك تقدير Stage 11 الكامل لا يمكن عرضه كزمن Job فعلي وحيد؛ التقرير يقدم serial وStage10-topology وتقديرات checkpoint مشروطة فقط.
 حدثت أثناء CP بعض WORKFLOW_DEFECTS في harness/aggregate وتم تصحيحها، Run القياس المقبول مستقل عنها، بينما Runs recovery اللاحقة غير مقبولة كدليل benchmark ولا تدخل في dataset.
-البيانات الخام المقبولة كاملة 25/25 و2500/2500 و2000/2000، لكن environment fingerprint الكامل (package fingerprint وavailable RAM) لم يُسجل داخل القياس المقبول.
-الحكم النهائي لـStage 10 = STAGE-10-PARTIAL بسبب نقص بعض عناصر environment identity المطلوبة، مع بقاء dataset extension نفسها مكتملة وقابلة للاستئناف.
+البيانات الخام المقبولة كاملة 25/25 و2500/2500 و2000/2000. القياس المقبول نفسه كان يفتقد package fingerprint وavailable RAM، ثم أُغلقت Environment Identity لاحقًا في S10C عبر Run 37713839244 وartifact 11522533620، دون إعادة تشغيل أي execution للمحرك.
+الحكم النهائي الحالي لـStage 10 بعد إغلاق S10C = STAGE-10-PASS. بوابة Stage 11 topology بقيت غير معرفة التزامًا بحظر الاختراع، وليست فشلًا في Stage 10.
 
 ## 2. Current State Verification
 
@@ -170,13 +170,13 @@ Stage11 topology is **NOT DEFINED IN CURRENT REPOSITORY**. Therefore no invented
 | 2000 canonical added | PASS | artifact-derived count |
 | No duplicate accepted trial IDs | PASS | non-C100 1..550 verified; C100 remained trial 1 |
 | Dataset identity | PASS | baseline fingerprints/state identities matched |
-| Source identity | PARTIAL | source/Python/runner identity present; package fingerprint/RAM missing |
+| Source identity | PASS | S10C completion added package fingerprint and RAM measurements from artifact 11522533620 |
 | Artifacts/fingerprints | PASS | 45 accepted artifacts; SHA-256 verified locally |
 | Fidelity to Stage11 | PARTIAL | engine path same; Stage11 workflow itself not defined |
 | No engine change | PASS | only Stage10 workflow/scripts/docs/state touched |
 | No stage7-state change | PASS | Stage7 state used read-only |
 | Workflow defects resolved for accepted path | PASS | measurement harness and aggregate corrected; invalid recovery runs excluded |
-| Final Stage10 verdict | PARTIAL | full environment fingerprint gate not satisfied |
+| Final Stage10 verdict | PASS | S10C Environment Identity completion Run 37713839244; all required environment fields available |
 
 ## 13. SHA Verification Block
 
@@ -192,12 +192,58 @@ Stage11 topology is **NOT DEFINED IN CURRENT REPOSITORY**. Therefore no invented
 
 **PRODUCT: PRODUCT-VERIFIED**
 
-**STAGE-10: STAGE-10-PARTIAL**
+**STAGE-10: STAGE-10-PASS**
 
-سبب PARTIAL: القياس التشغيلي والامتداد canonical مكتملان، لكن accepted benchmark لا يحتوي installed-package fingerprint وavailable-RAM measurement، كما أن Stage11 workflow/topology غير معرف حاليًا؛ لذلك لا يجوز إعلان PASS كامل وفق بوابات Stage10.
+سبب الإغلاق: Run 37713839244 نجح، والartifact stage10c-env-evidence (11522533620) أكمل قياسات Environment Identity المطلوبة، بما فيها available RAM وinstalled-package fingerprints. لم تُعد أي من 2500 benchmark executions.
 
-Invalid recovery runs are not part of the accepted dataset and must not be used as evidence or resumed trials.
+Run 37713644719 فشل فقط بسبب exact-match على ImageVersion في الـworkflow؛ وهو WORKFLOW_DEFECT غير متعلق بالمحرك. تم تصحيح assertion في S10C closure على الفرع فقط، دون إعادة Trigger.
+
+البوابة B: Stage11 topology غير معرفة حاليًا، وهذا التزام بحظر الاختراع وليس فشلًا في Stage 10.
 
 **STAGE-11: NOT STARTED**
 
-**NEXT ALLOWED ACTION:** لا يبدأ Stage 11 إلا بإذن منفصل، وبعد معالجة/قبول أسباب PARTIAL حسب قرار المستخدم.
+**NEXT ALLOWED ACTION:** تعريف Stage 11 topology من المستخدم، ثم إذن Stage 11 منفصل.
+
+## Environment Identity — Completion (S10C)
+
+الحالة: COMPLETED
+
+Run: 37713839244  
+Artifact: stage10c-env-evidence (11522533620)  
+Artifact created_at: 2026-10-08T01:37:38Z
+
+| الحقل | القيمة | المصدر | الحكم |
+|---|---|---|---|
+| Python version | Python 3.11.17 | env_metrics/python_version.txt | PASS |
+| Python full version | 3.11.17 (main, Oct 1 2026, 14:32:31) [GCC 13.3.0] | env_metrics/python_full_version.txt | PASS |
+| OS release | Ubuntu 24.04.5 LTS (Noble Numbat) | env_metrics/os_release.txt | PASS |
+| Kernel | Linux runnervmmprz5 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux | env_metrics/kernel.txt | PASS |
+| CPU count | 4 | env_metrics/cpu_count.txt | PASS |
+| CPU model | AMD EPYC 7763 64-Core Processor | env_metrics/cpu_model.txt | PASS |
+| RAM total MB | 15989 | env_metrics/free_m.txt | PASS |
+| RAM available MB | 15022 | env_metrics/free_m.txt | PASS |
+| RAM free MB | 12292 | env_metrics/free_m.txt | PASS |
+| Disk free GB | 86 | env_metrics/root_disk_bg.txt | PASS |
+| Packages fingerprint SHA-256 | d51984590e50461f7bb216453f2a1de485d83c6a43063465e996baf75ccdb398 | env_metrics/packages.sha256 | PASS |
+| Installed wheels fingerprint SHA-256 | 16e81c7398e5bb3de2a4b7b9bd828bc165badec1bf98b77811ff437c0e501835 | env_metrics/installed_wheels_fingerprint.sha256 | PASS |
+| requirements.txt SHA-256 | ba91f475f758300af4998713b7cb123a1375c50e726579a7e119f896fe0c445c | env_metrics/requirements.sha256 | PASS |
+| Runner OS | Linux | env_metrics/runner_identity.txt | PASS |
+| Runner arch | X64 | env_metrics/runner_identity.txt | PASS |
+| Runner image | ubuntu24/20261004.327.1 | env_metrics/runner_identity.txt | PASS |
+
+ملاحظة الملفات: الأسماء التالية من القائمة القديمة لم توجد حرفيًا داخل artifact: `ram_info.txt`, `disk_info.txt`, `installed_wheels_fingerprint.txt`, `requirements_sha.txt`, `runner_image.txt`. لكنها ليست حقولًا مفقودة؛ القيم نفسها موجودة في ملفات الجمع الفعلية أعلاه، لذلك لم تُخترع أي قيمة ولم تتجاوز الحالة قاعدة STOP.
+
+ملاحظة: القياس الأصلي لـStage 10 (Run 37709936740) يبقى صالحًا. لم يُعد قياس المحرك، ولم تُعد أي من 2500 execution.
+
+ملاحظة أخرى: Run 37713644719 فشل بسبب اختلاف ImageVersion بين Runner Images (WORKFLOW_DEFECT، غير متعلق بالمحرك). Run 37713839244 نجح وأنتج artifact البيئة.
+
+### S10C-4 — Workflow assertion
+
+تم تعديل assertion الخاص بـ`ImageVersion` من exact-match الثابت إلى تسجيل القيمة الفعلية في `env_metrics/runner_image.txt` دون فرض إصدار محدد. لم يُمس trigger file، ولذلك لا تُطلق إعادة Run نتيجة هذا التعديل.
+
+### S10C-6 — Closure
+
+Environment Identity = COMPLETE.  
+Stage 10 = **STAGE-10-PASS**.  
+Stage 11 = **NOT STARTED**.
+

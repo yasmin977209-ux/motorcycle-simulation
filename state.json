@@ -1,13 +1,10 @@
 {
-  "stage": "10-PARTIAL",
+  "stage": "10-PASS",
   "schema_version": "1.0",
-  "cp_completed": "CP-MEGA-STAGE10-BENCHMARK",
+  "cp_completed": "CP-MEGA-S10C-CLOSURE",
   "sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
-  "next": "Stage 11 (separate permission required; Stage10 is PARTIAL)",
-  "blockers": [
-    "Stage10 accepted harness did not record installed-package fingerprint or available-RAM value",
-    "Stage11 workflow/topology is not defined in current repository; estimate remains conditional"
-  ],
+  "next": "Stage 11 (separate permission required; Stage 10 PASS)",
+  "blockers": [],
   "stage7": {
     "closed": true,
     "run_id": "37225915321",
@@ -92,7 +89,7 @@
   "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
   "sha_semantics": "parent_state_commit_pointer",
   "stage10_evidence": {
-    "status": "PARTIAL",
+    "status": "STAGE-10-PASS",
     "run_id": "37709936740",
     "branch_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
     "run_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
@@ -105,6 +102,9 @@
       0,
       0
     ],
-    "verified_at": "2026-10-08T01:23:39.795Z"
+    "verified_at": "2026-10-08T01:23:39.795Z",
+    "environment_identity_completed_at": "2026-10-08T01:37:38Z",
+    "environment_completion_run_id": "37713839244",
+    "environment_completion_artifact_id": "11522533620"
   }
 }

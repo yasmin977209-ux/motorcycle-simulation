@@ -1,6 +1,6 @@
 {
   "schema_version": "stage10-benchmark-v1",
-  "status": "PARTIAL",
+  "status": "PASS",
   "measurement_run_id": 37709936740,
   "branch_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
   "run_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
@@ -386,5 +386,48 @@
     37711508265,
     37711587801
   ],
-  "verified_at": "2026-10-08T01:23:39.471Z"
+  "verified_at": "2026-10-08T01:23:39.471Z",
+  "environment_completion": {
+    "completion_run_id": "37713839244",
+    "completion_run_head_sha": "d9c3d36518b9e8d32fa5a8b72fe79583fb049ce5",
+    "artifact_id": "11522533620",
+    "linked_to_original_run": "37709936740",
+    "captured_at": "2026-10-08T01:37:38Z",
+    "environment": {
+      "python_version": "Python 3.11.17",
+      "python_full_version": "3.11.17 (main, Oct  1 2026, 14:32:31) [GCC 13.3.0]",
+      "os_release": "Ubuntu 24.04.5 LTS (Noble Numbat)",
+      "kernel": "Linux runnervmmprz5 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "cpu_count": 4,
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "ram_total_mb": 15989,
+      "ram_available_mb": 15022,
+      "ram_free_mb": 12292,
+      "disk_free_gb": 86,
+      "packages_fingerprint_sha256": "d51984590e50461f7bb216453f2a1de485d83c6a43063465e996baf75ccdb398",
+      "installed_wheels_fingerprint_sha256": "16e81c7398e5bb3de2a4b7b9bd828bc165badec1bf98b77811ff437c0e501835",
+      "requirements_sha256": "ba91f475f758300af4998713b7cb123a1375c50e726579a7e119f896fe0c445c",
+      "runner_os": "Linux",
+      "runner_arch": "X64",
+      "runner_image": "ubuntu24/20261004.327.1"
+    },
+    "artifact_created_at": "2026-10-08T01:37:38Z",
+    "field_sources": {
+      "ram": "env_metrics/free_m.txt",
+      "disk": "env_metrics/root_disk_bg.txt",
+      "packages": "env_metrics/packages.sha256",
+      "installed_wheels": "env_metrics/installed_wheels_fingerprint.sha256",
+      "requirements": "env_metrics/requirements.sha256",
+      "runner_identity": "env_metrics/runner_identity.txt",
+      "runner_environment": "env_metrics/runner_env.txt"
+    },
+    "legacy_expected_files_missing": [
+      "env_metrics/ram_info.txt",
+      "env_metrics/disk_info.txt",
+      "env_metrics/installed_wheels_fingerprint.txt",
+      "env_metrics/requirements_sha.txt",
+      "env_metrics/runner_image.txt"
+    ],
+    "field_level_completion": true
+  }
 }

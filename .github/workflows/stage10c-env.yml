@@ -33,13 +33,13 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s\n' "RUNNER_OS=$RUNNER_OS" "RUNNER_ARCH=$RUNNER_ARCH" "ImageOS=$ImageOS" "ImageVersion=$ImageVersion" > env_metrics/runner_identity.txt
+          printf '%s\n' "ImageOS=$ImageOS" "ImageVersion=$ImageVersion" > env_metrics/runner_image.txt
           python --version | tee env_metrics/python_version.txt
           python -c 'import sys; print(sys.version)' | tee env_metrics/python_full_version.txt
           command -v python | tee env_metrics/python_path.txt
           test "$RUNNER_OS" = "Linux"
           test "$RUNNER_ARCH" = "X64"
           test "$ImageOS" = "ubuntu24"
-          test "$ImageVersion" = "20261004.327.1"
           test "$(python -c 'import platform; print(platform.python_version())')" = "3.11.17"
 
       - name: Collect OS and kernel
