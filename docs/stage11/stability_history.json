@@ -1,0 +1,430 @@
+{
+  "created_at": "2026-10-08T02:35:37Z",
+  "reconstruction_attempted": true,
+  "reconstruction_source": "artifacts Stage 7 + Stage 10",
+  "per_scenario": {
+    "C030_G000": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C030_G030": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C030_G050": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C030_G070": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C030_G100": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C050_G000": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C050_G030": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C050_G050": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C050_G070": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C050_G100": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C070_G000": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C070_G030": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C070_G050": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C070_G070": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C070_G100": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C085_G000": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C085_G030": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C085_G050": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C085_G070": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    },
+    "C085_G100": {
+      "final_net_project_equity": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner1_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "partner2_final_entitlement": {
+        "at_450": true,
+        "at_500": true,
+        "at_550": true,
+        "consecutive_count": 3
+      },
+      "status": "STABLE"
+    }
+  },
+  "fallback_applied_to": [],
+  "fallback_reason": null,
+  "documentation_note": "individual trial records were available for all 20 non-C100 scenarios; consecutive_count was reconstructed from Gate B at N=450, 500, 550 using all canonical trials up to each N. Each scenario had all three indicators stable at all three points, yielding consecutive_count = 3 and STATUS = STABLE. C100 was not included in this reconstruction."
+}
