@@ -1,162 +1,36 @@
 name: stage12-full-accounting-materialization
+
 on:
   push:
     branches:
       - "tmp/stage12-materialize-20261008"
     paths:
       - ".github/workflows/stage12-full-accounting.yml"
-      - "docs/stage11/global_manifest_11005.json"
+
 permissions:
   contents: read
   actions: read
+
 env:
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   MASTER_SEED: "20270101"
+  SOURCE_RUN_ID: "37819145970"
+  ORIGINAL_GLOBAL_SHA256: "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+
 jobs:
   materialize:
-    name: mat-${{ matrix.scenario }}-${{ matrix.start }}-${{ matrix.end }}
+    name: repair-${{ matrix.start }}-${{ matrix.end }}
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 4
       matrix:
         include:
-          - scenario: C100_G100
-            start: 1
-            end: 1
-          - scenario: C100_G070
-            start: 1
-            end: 1
-          - scenario: C100_G050
-            start: 1
-            end: 1
-          - scenario: C100_G030
-            start: 1
-            end: 1
-          - scenario: C100_G000
-            start: 1
-            end: 1
-          - scenario: C085_G100
-            start: 1
-            end: 400
-          - scenario: C085_G100
-            start: 401
-            end: 550
-          - scenario: C085_G070
-            start: 1
-            end: 400
-          - scenario: C085_G070
-            start: 401
-            end: 550
-          - scenario: C085_G050
-            start: 1
-            end: 400
-          - scenario: C085_G050
-            start: 401
-            end: 550
-          - scenario: C085_G030
-            start: 1
-            end: 400
-          - scenario: C085_G030
-            start: 401
-            end: 550
-          - scenario: C085_G000
-            start: 1
-            end: 400
-          - scenario: C085_G000
-            start: 401
-            end: 550
-          - scenario: C070_G100
-            start: 1
-            end: 400
-          - scenario: C070_G100
-            start: 401
-            end: 550
-          - scenario: C070_G070
-            start: 1
-            end: 400
-          - scenario: C070_G070
-            start: 401
-            end: 550
-          - scenario: C070_G050
-            start: 1
-            end: 400
-          - scenario: C070_G050
-            start: 401
-            end: 550
-          - scenario: C070_G030
-            start: 1
-            end: 400
-          - scenario: C070_G030
-            start: 401
-            end: 550
-          - scenario: C070_G000
-            start: 1
-            end: 400
-          - scenario: C070_G000
-            start: 401
-            end: 550
-          - scenario: C050_G100
-            start: 1
-            end: 400
-          - scenario: C050_G100
-            start: 401
-            end: 550
-          - scenario: C050_G070
-            start: 1
-            end: 400
-          - scenario: C050_G070
-            start: 401
-            end: 550
-          - scenario: C050_G050
-            start: 1
-            end: 400
-          - scenario: C050_G050
-            start: 401
-            end: 550
-          - scenario: C050_G030
-            start: 1
-            end: 400
-          - scenario: C050_G030
-            start: 401
-            end: 550
-          - scenario: C050_G000
-            start: 1
-            end: 400
-          - scenario: C050_G000
-            start: 401
-            end: 550
-          - scenario: C030_G100
-            start: 1
-            end: 400
-          - scenario: C030_G100
-            start: 401
-            end: 550
-          - scenario: C030_G070
-            start: 1
-            end: 400
-          - scenario: C030_G070
-            start: 401
-            end: 550
-          - scenario: C030_G050
-            start: 1
-            end: 400
-          - scenario: C030_G050
-            start: 401
-            end: 550
-          - scenario: C030_G030
-            start: 1
-            end: 400
-          - scenario: C030_G030
-            start: 401
-            end: 550
-          - scenario: C030_G000
-            start: 1
-            end: 400
-          - scenario: C030_G000
-            start: 401
-            end: 550
+          - {scenario: C050_G100, start: 1, end: 100}
+          - {scenario: C050_G100, start: 101, end: 200}
+          - {scenario: C050_G100, start: 201, end: 300}
+          - {scenario: C050_G100, start: 301, end: 400}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -169,14 +43,14 @@ jobs:
       - name: Verify source boundary
         run: |
           set -euo pipefail
-          git cat-file -e "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b^{commit}"
+          git cat-file -e "${SOURCE_SHA}^{commit}"
           MODEL_FILES=(constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py)
           git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
       - name: Materialize
         run: |
           set -euo pipefail
           mkdir -p "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
-          cat > /tmp/materialize.py <<'PY'
+          cat > /tmp/materialize.py <<'PY
           import argparse,json,hashlib,subprocess
           from datetime import datetime,timezone
           from pathlib import Path
@@ -237,18 +111,23 @@ jobs:
           if __name__=="__main__": main()
           PY
           export PYTHONPATH="$GITHUB_WORKSPACE${PYTHONPATH:+:$PYTHONPATH}"
-          python /tmp/materialize.py --scenario "${{ matrix.scenario }}" --start "${{ matrix.start }}" --end "${{ matrix.end }}" --out "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
-      - name: Upload chunk
+          python /tmp/materialize.py \
+            --scenario "${{ matrix.scenario }}" \
+            --start "${{ matrix.start }}" \
+            --end "${{ matrix.end }}" \
+            --out "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
+      - name: Upload repair chunk
         uses: actions/upload-artifact@v4
         with:
-          name: stage12-accounting-${{ matrix.scenario }}-${{ matrix.start }}-${{ matrix.end }}
+          name: stage12-accounting-repair-${{ matrix.scenario }}-${{ matrix.start }}-${{ matrix.end }}
           path: out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}
           if-no-files-found: error
           retention-days: 30
+
   aggregate:
-    name: aggregate-stage12-materialization
+    name: aggregate-stage12-repair
     needs: [materialize]
-    if: ${{ always() }}
+    if: ${{ needs.materialize.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -258,55 +137,170 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
-      - name: Download chunks
-        uses: actions/download-artifact@v4
-        with:
-          pattern: stage12-accounting-*
-          path: all_artifacts
-          merge-multiple: false
-      - name: Validate complete materialization
+      - name: Select canonical prior artifacts
+        id: prior
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test "${{ needs.materialize.result }}" = "success"
-          cat > /tmp/aggregate.py <<'PY'
-          import argparse,hashlib,json
+          ids="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/runs/${SOURCE_RUN_ID}/artifacts?per_page=100" | jq -r '[.artifacts[] | select(.expired == false) | select(.name | startswith("stage12-accounting-")) | select(.name != "stage12-accounting-C050_G100-1-400")] | group_by(.name) | map(max_by(.created_at)) | map(.id) | join(",")')"
+          test -n "$ids"
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+      - name: Download prior successful chunks
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.prior.outputs.ids }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          path: previous_artifacts
+          merge-multiple: false
+      - name: Download repair chunks
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage12-accounting-repair-C050_G100-*
+          path: repair_artifacts
+          merge-multiple: false
+      - name: Validate full CP-12-B materialization
+        run: |
+          set -euo pipefail
+          cat > /tmp/aggregate_repair.py <<'PY
+          import hashlib,json,os
+          from datetime import datetime,timezone
           from pathlib import Path
           import pyarrow.parquet as pq
-          SOURCE_SHA="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
-          MASTER_SEED=20270101
+          
+          SOURCE_SHA = os.environ["SOURCE_SHA"]
+          MASTER_SEED = int(os.environ["MASTER_SEED"])
+          SOURCE_RUN_ID = os.environ["SOURCE_RUN_ID"]
+          ORIGINAL_GLOBAL_SHA256 = os.environ["ORIGINAL_GLOBAL_SHA256"]
+          
+          def load_summaries(root, ignore_c050_large=False):
+              root = Path(root)
+              out = []
+              for p in root.rglob("trials_*.json"):
+                  if ignore_c050_large and "stage12-accounting-C050_G100-1-400" in str(p):
+                      continue
+                  out.extend(json.loads(p.read_text(encoding="utf-8"))["trial_summaries"])
+              return out
+          
           def main():
-           ap=argparse.ArgumentParser();ap.add_argument("--root",required=True);ap.add_argument("--out",required=True);a=ap.parse_args()
-          root=Path(a.root);m=json.loads(Path("docs/stage11/global_manifest_11005.json").read_text(encoding="utf-8"))
-          expected={s["scenario_id"]:(1 if s["scenario_id"].startswith("C100_") else 550) for s in m["scenarios"]}
-          s=[];parts=list(root.rglob("trials_*.json"))
-          if len(parts)!=45: raise SystemExit(f"expected 45 trial-summary files, got {len(parts)}")
-          for p in parts:s.extend(json.loads(p.read_text(encoding="utf-8"))["trial_summaries"])
-          keys=[(x["scenario_id"],int(x["trial_id"])) for x in s]
-          if len(keys)!=len(set(keys)): raise SystemExit("duplicate trial identities")
-          for sc,n in expected.items():
-           ids=sorted(t for ss,t in keys if ss==sc)
-           if ids!=list(range(1,n+1)): raise SystemExit(f"trial coverage failure {sc}")
-          if any(x.get("source_sha")!=SOURCE_SHA or int(x.get("master_seed"))!=MASTER_SEED or not x.get("trial_pass") for x in s): raise SystemExit("trial-level materialization validation failure")
-          payload="".join(f"{sc}|{tid}|{h}\n" for sc,tid,h in sorted((x["scenario_id"],int(x["trial_id"]),x["result_sha256"]) for x in s))
-          agg=hashlib.sha256(payload.encode()).hexdigest()
-          if agg!=m["global_aggregate_sha256"]: raise SystemExit("global aggregate SHA mismatch")
-          rows=0;parts_count=0;balance=0
-          for p in root.rglob("part_*.parquet"):
-           t=pq.read_table(p,columns=["source_sha","master_seed","Balance_Difference"]);parts_count+=1;rows+=t.num_rows
-           if any(v!=SOURCE_SHA for v in t["source_sha"].to_pylist()): raise SystemExit("row source_sha mismatch")
-           if any(int(v)!=MASTER_SEED for v in t["master_seed"].to_pylist()): raise SystemExit("row master_seed mismatch")
-           balance+=sum(1 for v in t["Balance_Difference"].to_pylist() if int(v)!=0)
-          if parts_count!=45: raise SystemExit(f"expected 45 parquet parts, got {parts_count}")
-          if rows!=sum(int(x["row_count"]) for x in s): raise SystemExit("row count mismatch")
-          Path(a.out).write_text(json.dumps({"verification_version":"1.0","created_by_cp":"CP-12-B","chunks":45,"trials":11005,"total_daily_rows":rows,"parquet_parts":parts_count,"global_aggregate_sha256":agg,"source_sha":SOURCE_SHA,"master_seed":MASTER_SEED,"balance_nonzero_rows":balance,"overall_result":"PASS"},indent=2)+"\n",encoding="utf-8")
-          if __name__=="__main__":main()
+              prev = load_summaries("previous_artifacts", ignore_c050_large=True)
+              repair = load_summaries("repair_artifacts", ignore_c050_large=False)
+              summaries = prev + repair
+              if len(summaries) != 11005:
+                  raise SystemExit(f"expected 11005 trial summaries, got {len(summaries)}")
+          
+              manifest = json.loads(Path("docs/stage11/global_manifest_11005.json").read_text(encoding="utf-8"))
+              expected = {s["scenario_id"]: (1 if s["scenario_id"].startswith("C100_") else 550) for s in manifest["scenarios"]}
+              keys = [(x["scenario_id"], int(x["trial_id"])) for x in summaries]
+              if len(keys) != len(set(keys)):
+                  raise SystemExit("duplicate trial identities")
+              for scenario_id, n in expected.items():
+                  ids = sorted(tid for sc, tid in keys if sc == scenario_id)
+                  if ids != list(range(1, n + 1)):
+                      raise SystemExit(f"trial coverage failure {scenario_id}")
+              for x in summaries:
+                  if x.get("source_sha") != SOURCE_SHA or int(x.get("master_seed")) != MASTER_SEED:
+                      raise SystemExit(f"trial identity mismatch: {x.get('scenario_id')} trial {x.get('trial_id')}")
+                  if not x.get("trial_pass"):
+                      raise SystemExit(f"trial-level materialization validation failure {x['scenario_id']} trial {x['trial_id']}")
+          
+              def aggregate_for(items):
+                  return hashlib.sha256("".join(
+                      f"{sc}|{tid}|{h}\n"
+                      for sc, tid, h in sorted((x["scenario_id"], int(x["trial_id"]), x["result_sha256"]) for x in items)
+                  ).encode()).hexdigest()
+          
+              reproduced = aggregate_for(summaries)
+              if reproduced != ORIGINAL_GLOBAL_SHA256:
+                  raise SystemExit(f"global aggregate SHA mismatch: {reproduced} != {ORIGINAL_GLOBAL_SHA256}")
+          
+              parquet_files = []
+              for root in ("previous_artifacts", "repair_artifacts"):
+                  for p in Path(root).rglob("part_*.parquet"):
+                      if "stage12-accounting-C050_G100-1-400" in str(p):
+                          continue
+                      parquet_files.append(p)
+              if len(parquet_files) != 48:
+                  raise SystemExit(f"expected 48 parquet parts after split repair, got {len(parquet_files)}")
+          
+              total_rows = 0
+              balance_nonzero = 0
+              for p in parquet_files:
+                  t = pq.read_table(p, columns=["source_sha", "master_seed", "Balance_Difference"])
+                  total_rows += t.num_rows
+                  if any(v != SOURCE_SHA for v in t["source_sha"].to_pylist()):
+                      raise SystemExit(f"row source_sha mismatch in {p}")
+                  if any(int(v) != MASTER_SEED for v in t["master_seed"].to_pylist()):
+                      raise SystemExit(f"row master_seed mismatch in {p}")
+                  balance_nonzero += sum(1 for v in t["Balance_Difference"].to_pylist() if int(v) != 0)
+          
+              expected_rows = sum(int(x["row_count"]) for x in summaries)
+              if total_rows != expected_rows:
+                  raise SystemExit(f"row count mismatch: parquet={total_rows} summaries={expected_rows}")
+              if balance_nonzero != 0:
+                  raise SystemExit(f"nonzero balance rows: {balance_nonzero}")
+          
+              scenario_match = "NOT_AVAILABLE"
+              scenario_hash_fields = ("scenario_aggregate_sha256", "aggregate_sha256", "aggregate_sha")
+              candidates = {}
+              for s in manifest["scenarios"]:
+                  sc = s["scenario_id"]
+                  for key in scenario_hash_fields:
+                      value = s.get(key)
+                      if isinstance(value, str) and len(value) == 64:
+                          candidates[sc] = value
+                          break
+              if len(candidates) == len(expected):
+                  matches = 0
+                  for sc in expected:
+                      actual = aggregate_for([x for x in summaries if x["scenario_id"] == sc])
+                      if actual == candidates[sc]:
+                          matches += 1
+                  scenario_match = f"{matches}/25"
+          
+              created_at = datetime.now(timezone.utc).isoformat()
+              run_started = os.environ.get("REPAIR_RUN_STARTED_AT")
+              wall_minutes = None
+              if run_started:
+                  start = datetime.fromisoformat(run_started.replace("Z", "+00:00"))
+                  wall_minutes = round((datetime.now(timezone.utc) - start).total_seconds() / 60.0, 2)
+          
+              result = {
+                  "verification_version": "1.0",
+                  "created_at": created_at,
+                  "created_by_cp": "CP-12-B",
+                  "original_global_sha256": ORIGINAL_GLOBAL_SHA256,
+                  "reproduced_global_sha256": reproduced,
+                  "match": "YES",
+                  "total_trials_reproduced": 11005,
+                  "per_scenario_match": scenario_match,
+                  "wall_time_minutes": wall_minutes,
+                  "retries": 1,
+                  "environment": {
+                      "python": os.sys.version,
+                      "runner": os.environ.get("RUNNER_NAME"),
+                      "source_run_id": SOURCE_RUN_ID,
+                      "repair_run_id": os.environ.get("GITHUB_RUN_ID")
+                  },
+                  "prior_successful_chunks": 44,
+                  "repair_chunks": 4,
+                  "parquet_parts": 48,
+                  "total_daily_rows": total_rows,
+                  "balance_nonzero_rows": balance_nonzero,
+                  "overall_result": "PASS"
+              }
+              Path("reproduction_result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          
+          if __name__ == "__main__":
+              main()
           PY
-          python /tmp/aggregate.py --root all_artifacts --out stage12_materialization_validation.json
-      - name: Upload validation
-        if: ${{ always() }}
+          export REPAIR_RUN_STARTED_AT="${{ github.run_started_at }}"
+          python /tmp/aggregate_repair.py
+      - name: Upload CP-12-B validation
         uses: actions/upload-artifact@v4
         with:
-          name: stage12-materialization-validation
-          path: stage12_materialization_validation.json
+          name: stage12-cp12b-validation
+          path: reproduction_result.json
           if-no-files-found: error
           retention-days: 30
