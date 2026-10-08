@@ -1,0 +1,304 @@
+name: stage11-verify-c100
+
+on:
+  push:
+    branches:
+      - "tmp/stage11-c100-verify-20261008"
+    paths:
+      - .stage11-c100-verify-trigger
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: "37225915321"
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  MASTER_SEED: "20270101"
+  CANONICAL_DATE: "2027-01-02"
+  CANONICAL_BIKE_ID: "BK0001"
+
+jobs:
+  verify-matrix:
+    name: verify-${{ matrix.scenario }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: C100_G100
+            recovery_rate_pct: 100
+            artifact_id: 11312276587
+            expected_fingerprint: "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571"
+          - scenario: C100_G070
+            recovery_rate_pct: 70
+            artifact_id: 11311843040
+            expected_fingerprint: "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529"
+          - scenario: C100_G050
+            recovery_rate_pct: 50
+            artifact_id: 11311992664
+            expected_fingerprint: "86e095f84d26fc6398af1fbd624d353b6c01009feda9434ab37af788b420b5c3"
+          - scenario: C100_G030
+            recovery_rate_pct: 30
+            artifact_id: 11312320486
+            expected_fingerprint: "f342dc950b12810108825d842a93b51e6816fe4c2e90bc7fd49d0b51762f0a70"
+          - scenario: C100_G000
+            recovery_rate_pct: 0
+            artifact_id: 11312176891
+            expected_fingerprint: "1b6390fe7326200133e133d68a4b260694bc2f72a9a58b8461da5494e231272c"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage11-c100-verify-20261008
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Download official Stage 7 block artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          artifact-ids: ${{ matrix.artifact_id }}
+          path: canonical_input
+
+      - name: Execute D7 C100 verification
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+          RECOVERY_RATE_PCT: ${{ matrix.recovery_rate_pct }}
+          EXPECTED_FINGERPRINT: ${{ matrix.expected_fingerprint }}
+          TRIAL_ID: "C100_VERIFICATION"
+          MASTER_SEED_VALUE: ${{ env.MASTER_SEED }}
+          CANONICAL_DATE_VALUE: ${{ env.CANONICAL_DATE }}
+          CANONICAL_BIKE_ID_VALUE: ${{ env.CANONICAL_BIKE_ID }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import date
+          from pathlib import Path
+
+          import pyarrow.parquet as pq
+
+          import daily_engine
+          from entities import BikeState
+          from rng import derive_seed
+
+          scenario = os.environ["SCENARIO"]
+          recovery_rate_pct = int(os.environ["RECOVERY_RATE_PCT"])
+          expected_fingerprint = os.environ["EXPECTED_FINGERPRINT"]
+          verification_trial_id = os.environ["TRIAL_ID"]
+          if not isinstance(verification_trial_id, str) or verification_trial_id != "C100_VERIFICATION":
+              raise AssertionError("D7 requires trial_id to be the exact string C100_VERIFICATION")
+          master_seed = int(os.environ["MASTER_SEED_VALUE"])
+          canonical_date = date.fromisoformat(os.environ["CANONICAL_DATE_VALUE"])
+          canonical_bike_id = os.environ["CANONICAL_BIKE_ID_VALUE"]
+
+          parquet_files = sorted(Path("canonical_input").rglob("*.parquet"))
+          metadata_files = sorted(Path("canonical_input").rglob("*_metadata.json"))
+          if len(parquet_files) != 1:
+              raise AssertionError(f"expected exactly one canonical parquet, found {len(parquet_files)}")
+          if len(metadata_files) != 1:
+              raise AssertionError(f"expected exactly one canonical metadata file, found {len(metadata_files)}")
+
+          metadata = json.loads(metadata_files[0].read_text(encoding="utf-8"))
+          if metadata["run_id"] != "37225915321":
+              raise AssertionError(f"unexpected source run_id: {metadata['run_id']!r}")
+          if metadata["source_sha"] != os.environ["SOURCE_SHA"]:
+              raise AssertionError(f"unexpected source_sha: {metadata['source_sha']!r}")
+          if metadata["scenario"] != scenario:
+              raise AssertionError(f"unexpected scenario: {metadata['scenario']!r}")
+          if metadata["trial_count"] != 1 or metadata["trial_id_start"] != 1 or metadata["trial_id_end"] != 1:
+              raise AssertionError(f"unexpected canonical trial identity: {metadata}")
+          if metadata["fingerprint_sha256"] != expected_fingerprint:
+              raise AssertionError("official Stage 7 fingerprint does not match the recorded Stage 9A fingerprint")
+          if metadata["per_trial_sha256"] and len(metadata["per_trial_sha256"]) != 1:
+              raise AssertionError("unexpected per_trial_sha256 cardinality")
+
+          rows = pq.read_table(parquet_files[0]).to_pylist()
+          if len(rows) != 1:
+              raise AssertionError(f"expected one canonical row, found {len(rows)}")
+          canonical = rows[0]
+          if canonical["scenario_id"] != scenario or canonical["trial_id"] != 1:
+              raise AssertionError(f"unexpected canonical row identity: {canonical}")
+
+          verification_seed = derive_seed(
+              master_seed,
+              scenario,
+              verification_trial_id,
+              canonical_bike_id,
+              canonical_date,
+              "C100_VERIFICATION",
+          ).hex()
+          if not verification_seed or len(verification_seed) != 64:
+              raise AssertionError("C100 verification seed derivation failed")
+
+          if scenario == "C100_G100" or scenario == "C100_G070" or scenario == "C100_G050" or scenario == "C100_G030":
+              probability = 1.0
+          elif scenario == "C100_G000":
+              probability = 0.0
+          else:
+              raise AssertionError(f"non-C100 scenario in D7 matrix: {scenario}")
+
+          project = daily_engine.run_deterministic_trial(
+              recovery_rate_pct=recovery_rate_pct,
+              trial_id=verification_trial_id,
+              scenario_id=scenario,
+              master_seed=master_seed,
+              collection_probability=probability,
+              log_events=False,
+          )
+
+          actual = {
+              "final_net_project_equity": project.final_net_project_equity,
+              "final_cash": project.project_cash,
+              "cumulative_project_profit": project.cumulative_project_profit,
+              "operating_net_profit": project.operating_net_profit,
+              "termination_count": sum(b.termination_count for b in project.bikes),
+              "held_assets": sum(1 for b in project.bikes if b.current_state is BikeState.HELD_AS_ASSET),
+              "partner1_final_entitlement": project.partner1_final_entitlement,
+              "partner2_final_entitlement": project.partner2_final_entitlement,
+          }
+
+          verification = {
+              "scenario": scenario,
+              "canonical_trial_id": canonical["trial_id"],
+              "verification_trial_id": verification_trial_id,
+              "verification_seed_hex": verification_seed,
+              "verification_bike_id": canonical_bike_id,
+              "verification_date": canonical_date.isoformat(),
+              "fields": {},
+          }
+
+          for field_name, actual_value in actual.items():
+              canonical_value = canonical[field_name]
+              match = actual_value == canonical_value
+              verification["fields"][field_name] = {
+                  "canonical_value": canonical_value,
+                  "verify_value": actual_value,
+                  "match": match,
+              }
+              if not match:
+                  raise AssertionError(
+                      f"D7 mismatch {scenario} {field_name}: canonical={canonical_value!r} verify={actual_value!r}"
+                  )
+
+          verification["status"] = "PASS"
+          Path("verification_result.json").write_text(
+              json.dumps(verification, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(verification, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload C100 verification artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage11-c100-verify-${{ matrix.scenario }}
+          path: verification_result.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    name: aggregate-stage11-c100
+    needs: [verify-matrix]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/stage11-c100-verify-20261008
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download C100 verification artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage11-c100-verify-*
+          path: verification_results
+          merge-multiple: false
+
+      - name: Aggregate D7
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          expected = {
+              "C100_G100",
+              "C100_G070",
+              "C100_G050",
+              "C100_G030",
+              "C100_G000",
+          }
+          results = {}
+          for path in sorted(Path("verification_results").rglob("verification_result.json")):
+              payload = json.loads(path.read_text(encoding="utf-8"))
+              results[payload["scenario"]] = payload
+
+          actual = set(results)
+          if actual != expected:
+              missing = sorted(expected - actual)
+              extra = sorted(actual - expected)
+              raise SystemExit(f"D7 aggregate identity mismatch: missing={missing} extra={extra}")
+          failures = [scenario for scenario, payload in results.items() if payload.get("status") != "PASS"]
+          if failures:
+              raise SystemExit(f"D7 verification failures: {failures}")
+
+          checks = []
+          for scenario in sorted(results):
+              payload = results[scenario]
+              for field_name, field in payload["fields"].items():
+                  checks.append({
+                      "scenario": scenario,
+                      "field": field_name,
+                      "canonical_value": field["canonical_value"],
+                      "verify_value": field["verify_value"],
+                      "match": field["match"],
+                  })
+
+          final = {
+              "status": "PASS",
+              "scenarios": sorted(results),
+              "scenario_count": len(results),
+              "field_count": len(checks),
+              "checks": checks,
+              "source_run_id": 37225915321,
+              "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+              "verification_trial_id": "C100_VERIFICATION",
+              "canonical_trial_count_per_scenario": 1,
+          }
+          Path("stage11-c100-verify-final.json").write_text(
+              json.dumps(final, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(final, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload final D7 aggregate artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage11-c100-verify-final
+          path: stage11-c100-verify-final.json
+          if-no-files-found: warn
+          retention-days: 30
