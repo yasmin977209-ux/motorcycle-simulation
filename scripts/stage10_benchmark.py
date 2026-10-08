@@ -20,7 +20,7 @@ def load_manifest(): return json.loads(Path("docs/stage9a/dataset_manifest.json"
 def load_state(): return json.loads(Path("baseline_state.json").read_text(encoding="utf-8"))
 
 def verify_source(source_sha):
-    subprocess.run(["git","cat-file","-e",f"{source_sha}^{{commit}"],check=True)
+    subprocess.run(["git","cat-file","-e",f"{source_sha}^{{commit}}"],check=True)
     files="constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py".split()
     r=subprocess.run(["git","diff","--quiet",source_sha,"HEAD","--",*files])
     if r.returncode!=0: raise RuntimeError("MODEL_SOURCE_DRIFT_DETECTED")
