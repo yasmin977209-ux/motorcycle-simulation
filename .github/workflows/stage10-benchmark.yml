@@ -6,6 +6,7 @@ on:
     paths:
       - ".stage10-benchmark-trigger"
       - ".stage10-aggregate-trigger"
+      - ".stage10-cancel-trigger"
 permissions:
   contents: read
   actions: read
@@ -14,9 +15,24 @@ env:
   SOURCE_RUN_ID: "37225915321"
   MASTER_SEED: "20270101"
   RECOVERY_MEASUREMENT_RUN_ID: "37709936740"
+  OLD_RECOVERY_RUN_ID: "37711587801"
 jobs:
+  emergency-cancel-old-recovery:
+    if: ${{ contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel incorrect recovery Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_RUN_ID: ${{ env.OLD_RECOVERY_RUN_ID }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${TARGET_RUN_ID}/cancel"
+          echo "Cancelled Run ${TARGET_RUN_ID}"
+
   bench-matrix:
-    if: ${{ !contains(join(github.event.commits.*.modified, ','), '.stage10-aggregate-trigger') }}
+    if: ${{ !contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') && !contains(github.event.head_commit.message, '[STAGE10-AGGREGATE-RECOVERY]') }}
     name: bench-${{ matrix.scenario }}-${{ matrix.chunk_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -348,6 +364,7 @@ jobs:
 
   aggregate:
     name: aggregate-stage10
+    if: ${{ !contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') }}
     needs: [bench-matrix]
     if: ${{ always() }}
     runs-on: ubuntu-latest
