@@ -1,0 +1,54 @@
+name: stage12-materialize
+
+on:
+  push:
+    branches: ["tmp/stage12-b2-clean-20261008"]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        include: [{scenario: C100_G100, chunk_id: 1, start: 1, end: 1}, {scenario: C100_G070, chunk_id: 1, start: 1, end: 1}, {scenario: C100_G050, chunk_id: 1, start: 1, end: 1}, {scenario: C100_G030, chunk_id: 1, start: 1, end: 1}, {scenario: C100_G000, chunk_id: 1, start: 1, end: 1}, {scenario: C085_G100, chunk_id: 1, start: 1, end: 150}, {scenario: C085_G100, chunk_id: 2, start: 151, end: 300}, {scenario: C085_G100, chunk_id: 3, start: 301, end: 450}, {scenario: C085_G100, chunk_id: 4, start: 451, end: 550}, {scenario: C085_G070, chunk_id: 1, start: 1, end: 150}, {scenario: C085_G070, chunk_id: 2, start: 151, end: 300}, {scenario: C085_G070, chunk_id: 3, start: 301, end: 450}, {scenario: C085_G070, chunk_id: 4, start: 451, end: 550}, {scenario: C085_G050, chunk_id: 1, start: 1, end: 150}, {scenario: C085_G050, chunk_id: 2, start: 151, end: 300}, {scenario: C085_G050, chunk_id: 3, start: 301, end: 450}, {scenario: C085_G050, chunk_id: 4, start: 451, end: 550}, {scenario: C085_G030, chunk_id: 1, start: 1, end: 150}, {scenario: C085_G030, chunk_id: 2, start: 151, end: 300}, {scenario: C085_G030, chunk_id: 3, start: 301, end: 450}, {scenario: C085_G030, chunk_id: 4, start: 451, end: 550}, {scenario: C085_G000, chunk_id: 1, start: 1, end: 150}, {scenario: C085_G000, chunk_id: 2, start: 151, end: 300}, {scenario: C085_G000, chunk_id: 3, start: 301, end: 450}, {scenario: C085_G000, chunk_id: 4, start: 451, end: 550}, {scenario: C070_G100, chunk_id: 1, start: 1, end: 150}, {scenario: C070_G100, chunk_id: 2, start: 151, end: 300}, {scenario: C070_G100, chunk_id: 3, start: 301, end: 450}, {scenario: C070_G100, chunk_id: 4, start: 451, end: 550}, {scenario: C070_G070, chunk_id: 1, start: 1, end: 150}, {scenario: C070_G070, chunk_id: 2, start: 151, end: 300}, {scenario: C070_G070, chunk_id: 3, start: 301, end: 450}, {scenario: C070_G070, chunk_id: 4, start: 451, end: 550}, {scenario: C070_G050, chunk_id: 1, start: 1, end: 150}, {scenario: C070_G050, chunk_id: 2, start: 151, end: 300}, {scenario: C070_G050, chunk_id: 3, start: 301, end: 450}, {scenario: C070_G050, chunk_id: 4, start: 451, end: 550}, {scenario: C070_G030, chunk_id: 1, start: 1, end: 150}, {scenario: C070_G030, chunk_id: 2, start: 151, end: 300}, {scenario: C070_G030, chunk_id: 3, start: 301, end: 450}, {scenario: C070_G030, chunk_id: 4, start: 451, end: 550}, {scenario: C070_G000, chunk_id: 1, start: 1, end: 150}, {scenario: C070_G000, chunk_id: 2, start: 151, end: 300}, {scenario: C070_G000, chunk_id: 3, start: 301, end: 450}, {scenario: C070_G000, chunk_id: 4, start: 451, end: 550}, {scenario: C050_G100, chunk_id: 1, start: 1, end: 150}, {scenario: C050_G100, chunk_id: 2, start: 151, end: 300}, {scenario: C050_G100, chunk_id: 3, start: 301, end: 450}, {scenario: C050_G100, chunk_id: 4, start: 451, end: 550}, {scenario: C050_G070, chunk_id: 1, start: 1, end: 150}, {scenario: C050_G070, chunk_id: 2, start: 151, end: 300}, {scenario: C050_G070, chunk_id: 3, start: 301, end: 450}, {scenario: C050_G070, chunk_id: 4, start: 451, end: 550}, {scenario: C050_G050, chunk_id: 1, start: 1, end: 150}, {scenario: C050_G050, chunk_id: 2, start: 151, end: 300}, {scenario: C050_G050, chunk_id: 3, start: 301, end: 450}, {scenario: C050_G050, chunk_id: 4, start: 451, end: 550}, {scenario: C050_G030, chunk_id: 1, start: 1, end: 150}, {scenario: C050_G030, chunk_id: 2, start: 151, end: 300}, {scenario: C050_G030, chunk_id: 3, start: 301, end: 450}, {scenario: C050_G030, chunk_id: 4, start: 451, end: 550}, {scenario: C050_G000, chunk_id: 1, start: 1, end: 150}, {scenario: C050_G000, chunk_id: 2, start: 151, end: 300}, {scenario: C050_G000, chunk_id: 3, start: 301, end: 450}, {scenario: C050_G000, chunk_id: 4, start: 451, end: 550}, {scenario: C030_G100, chunk_id: 1, start: 1, end: 150}, {scenario: C030_G100, chunk_id: 2, start: 151, end: 300}, {scenario: C030_G100, chunk_id: 3, start: 301, end: 450}, {scenario: C030_G100, chunk_id: 4, start: 451, end: 550}, {scenario: C030_G070, chunk_id: 1, start: 1, end: 150}, {scenario: C030_G070, chunk_id: 2, start: 151, end: 300}, {scenario: C030_G070, chunk_id: 3, start: 301, end: 450}, {scenario: C030_G070, chunk_id: 4, start: 451, end: 550}, {scenario: C030_G050, chunk_id: 1, start: 1, end: 150}, {scenario: C030_G050, chunk_id: 2, start: 151, end: 300}, {scenario: C030_G050, chunk_id: 3, start: 301, end: 450}, {scenario: C030_G050, chunk_id: 4, start: 451, end: 550}, {scenario: C030_G030, chunk_id: 1, start: 1, end: 150}, {scenario: C030_G030, chunk_id: 2, start: 151, end: 300}, {scenario: C030_G030, chunk_id: 3, start: 301, end: 450}, {scenario: C030_G030, chunk_id: 4, start: 451, end: 550}, {scenario: C030_G000, chunk_id: 1, start: 1, end: 150}, {scenario: C030_G000, chunk_id: 2, start: 151, end: 300}, {scenario: C030_G000, chunk_id: 3, start: 301, end: 450}, {scenario: C030_G000, chunk_id: 4, start: 451, end: 550}]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/stage12_materialize_one_chunk.py --scenario "${{ matrix.scenario }}" --start "${{ matrix.start }}" --end "${{ matrix.end }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage12-daily-${{ matrix.scenario }}-${{ matrix.chunk_id }}
+          path: docs/stage12/daily_accounting/${{ matrix.scenario }}_${{ matrix.start }}_${{ matrix.end }}.parquet
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: materialize
+    if: ${{ needs.materialize.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage12-daily-*
+          path: artifacts
+          merge-multiple: true
+      - run: python scripts/stage12_aggregate.py --root artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage12-cp12b-result
+          path: docs/stage12/reproduction_result.json
+          if-no-files-found: error
+          retention-days: 30
