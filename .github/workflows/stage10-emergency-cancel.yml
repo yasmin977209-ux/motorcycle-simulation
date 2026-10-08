@@ -1,0 +1,27 @@
+name: stage10-emergency-cancel
+
+on:
+  push:
+    branches:
+      - "tmp/stage10-bench-20261008"
+    paths:
+      - ".stage10-cancel-trigger"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cancel-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel incorrect aggregate-recovery run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_RUN_ID: "37711587801"
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST             "repos/${GITHUB_REPOSITORY}/actions/runs/${TARGET_RUN_ID}/cancel"
+          echo "Requested cancellation for Run ${TARGET_RUN_ID}"
