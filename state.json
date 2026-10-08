@@ -1,9 +1,9 @@
 {
-  "stage": "10-PASS",
+  "stage": "11-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-MEGA-S10C-CLOSURE",
-  "sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
-  "next": "Stage 11 (separate permission required; Stage 10 PASS)",
+  "cp_completed": "CP-MEGA-S11-CLOSURE",
+  "sha": "4e7faff740c856473f6f2f48e1749b00aa594593",
+  "next": "Stage 12 (separate permission required; Stage 11 CLOSED)",
   "blockers": [],
   "stage7": {
     "closed": true,
@@ -20,7 +20,7 @@
   },
   "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
   "consolidation_note": "Stage 8 code consolidated on main post-closure.",
-  "head_sha": "7c88deca1dbba44ea4e7a3a30435ebbe55b733a8",
+  "head_sha": "4e7faff740c856473f6f2f48e1749b00aa594593",
   "verify_at": "tmp/stage8-consolidate-v2-20261005",
   "stage7_f4_evidence": {
     "run_id": "37482745008",
