@@ -1658,5 +1658,27 @@
     "C085_G070",
     "C085_G100"
   ],
-  "status_note": "Artifact trial-level identity is complete for all 11005 trials, but CP-11-B is FAIL because the required Stage7 next_trial_id replay check is not satisfied for the 20 non-C100 scenarios. This manifest does not authenticate replay closure."
+  "status_note": "Artifact trial-level identity is complete for all 11005 trials, but CP-11-B is FAIL because the required Stage7 next_trial_id replay check is not satisfied for the 20 non-C100 scenarios. This manifest does not authenticate replay closure.",
+  "g7_revised_verification": {
+    "result": "PASS",
+    "method": "stage7_state_plus_stage10_artifact_identity",
+    "verified_at": "2026-10-08T17:02:50Z",
+    "assertions": {
+      "stage7_next_trial_id_matches": "25/25",
+      "stage10_additions_match": "20/20",
+      "no_overlap": "25/25",
+      "no_gap": "25/25"
+    },
+    "evidence": {
+      "stage7_state_branches_accessed": 25,
+      "stage10_artifact_identities_accessed": 20,
+      "per_trial_sha_evidence": "VERIFIED"
+    }
+  },
+  "classification_note": {
+    "original_classification_in_cp_11_b": "WORKFLOW_DEFECT",
+    "corrected_classification": "K_SPEC",
+    "reason": "G7 check assumed stage7-state reflects full dataset; it reflects Stage 7 only.",
+    "corrected_by_cp": "CP-11-B-Rev1"
+  }
 }
