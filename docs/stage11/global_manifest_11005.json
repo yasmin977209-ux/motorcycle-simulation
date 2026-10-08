@@ -1,0 +1,1662 @@
+{
+  "manifest_version": "1.0",
+  "created_at": "2026-10-08T16:40:24.882Z",
+  "created_by_cp": "CP-11-B",
+  "identity_scope": "25_SCENARIOS",
+  "manifest_status": "FAIL",
+  "total_trials_expected": 11005,
+  "total_trials_evidenced": 11005,
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "master_seed": 20270101,
+  "identity_level": "TRIAL",
+  "global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+  "global_aggregate_algorithm": "SHA-256 over UTF-8 canonical records 'scenario_id|trial_id|trial_hash\\n', sorted by scenario_id ascending then trial_id ascending.",
+  "scenarios": [
+    {
+      "scenario_id": "C030_G000",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "2cb52a9170f835ac8daae7588f95d3aa086a73cd0200b1aa97c4e618dcbb3b8b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313086528,
+          "name": "stage7-blocks-C030_G000-1",
+          "digest": "sha256:20ac2cb628bbad15aad87fb38b3481af7bbab5c2b6383523653ed7d6239e694e",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521927219,
+          "name": "stage10-bench-C030_G000-1",
+          "digest": "sha256:1e5150224df80321fab45ad51f1d9ebb2c549ab6f9542149befe1257af098ee9",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "0e7871e2708766fcfb70caa3f5ab739bc22f71ebfd8ef019d9ac34d6662ea5ff",
+          "scenario": "C030_G000",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "2cb52a9170f835ac8daae7588f95d3aa086a73cd0200b1aa97c4e618dcbb3b8b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C030_G000",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C030_G030",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "a5541d72c212e3953c4ed11b1fe03ab9e89ba00f1c0b05348f413cc13822691b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313116830,
+          "name": "stage7-blocks-C030_G030-1",
+          "digest": "sha256:f1864908c368f95e30afc146f49da48bc44f08df5b5a9a439d19e43998c6de37",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11522066499,
+          "name": "stage10-bench-C030_G030-1",
+          "digest": "sha256:bfd36514099caf0254f18843bd44c410ef430708ec05d16784812cca16181cec",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "6d2ff81cde9b728971b1c8c18ca181743f0a62257a217e6e9717aad06c0ac1ff",
+          "scenario": "C030_G030",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "a5541d72c212e3953c4ed11b1fe03ab9e89ba00f1c0b05348f413cc13822691b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C030_G030",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C030_G050",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "ce59996de32731bde321006f194142854737793871123e741df21191e0391c4b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313056625,
+          "name": "stage7-blocks-C030_G050-1",
+          "digest": "sha256:1fdde3a36c2ce84427214c3ed7855b5cd97a2edf57a64e3d7950e7e6032d2cbb",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521568447,
+          "name": "stage10-bench-C030_G050-1",
+          "digest": "sha256:247342556a8a7c75bf9eba8e7c57d2f49e415f1db0dd5db08a41a1088b56f66a",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "0fdc89810f2d15bb52af0feb12781368e6f9bc18c0ff20277223edd0fe20fdb7",
+          "scenario": "C030_G050",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "ce59996de32731bde321006f194142854737793871123e741df21191e0391c4b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C030_G050",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C030_G070",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "8de72e47111abc1c7e15a1460001bfa3020a2bbf8c8ceaf82deed16abf4df690",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313072117,
+          "name": "stage7-blocks-C030_G070-1",
+          "digest": "sha256:4c0611fa1c46d6d402b30f689daa1846a4504e88dad2423eaa322b62414f7428",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11522086062,
+          "name": "stage10-bench-C030_G070-1",
+          "digest": "sha256:502f59e19a81e3904f6c4028e82a41c6ac4b991025f15668812442d9fc1fa546",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "209feb45da1941284c90e393eacc7d5da1d740ccc759c20ea5eb35fb668e3512",
+          "scenario": "C030_G070",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "8de72e47111abc1c7e15a1460001bfa3020a2bbf8c8ceaf82deed16abf4df690",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C030_G070",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C030_G100",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "307bd866bfe0322adec7a283ab9a29e86d8cb299d2dd15f2770922ca4cd11308",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313136372,
+          "name": "stage7-blocks-C030_G100-1",
+          "digest": "sha256:332947da668a9b49d6dfa31889c334d1595ae0079d6872e73b060b2f12d162dc",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521453747,
+          "name": "stage10-bench-C030_G100-1",
+          "digest": "sha256:129acb0bf80b41c11419a44563048aca6868ec256c9e11b1529bd1825fcf0bbc",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "b35d2d49d1981f33473881823d8bc0217744ea7feb56bede36470b2d716bc4df",
+          "scenario": "C030_G100",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "307bd866bfe0322adec7a283ab9a29e86d8cb299d2dd15f2770922ca4cd11308",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C030_G100",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C050_G000",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "2e6bda707dc44882fdca6ba10c1249992b6d529d33574872d759c7b883ed2188",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312813109,
+          "name": "stage7-blocks-C050_G000-1",
+          "digest": "sha256:b1fc0e25efe8e41226ca6082ef2fd391f7b3a8351e7c5dfdd1ca8604b098384a",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521429557,
+          "name": "stage10-bench-C050_G000-1",
+          "digest": "sha256:7382e480846101eff47c81c22c4b259b772a6839db5e2eb2151fa47ee71559ed",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "dc428780bd6603269c0816842c4f7ead8153ec14bde69bdbe820ab40ad99f3fc",
+          "scenario": "C050_G000",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "2e6bda707dc44882fdca6ba10c1249992b6d529d33574872d759c7b883ed2188",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C050_G000",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C050_G030",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "fbc857a1318fe87e7eeca4a1879c8424a308b1a53ad02506969d24fb98491196",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313227800,
+          "name": "stage7-blocks-C050_G030-1",
+          "digest": "sha256:adaba0e34bbace583698966fae4fbbe1d3974ea4f14bc95de9616f8d27eb0629",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521967872,
+          "name": "stage10-bench-C050_G030-1",
+          "digest": "sha256:d73d4bb69fbd5982cbeed955b749e1fd54bd57241990de21d7f24029d5be9822",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "daadc53a577836c50987c383bb17a749c178409d748dccda84c8123e5ae33e1f",
+          "scenario": "C050_G030",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "fbc857a1318fe87e7eeca4a1879c8424a308b1a53ad02506969d24fb98491196",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C050_G030",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C050_G050",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "ede8c949c11f7215534bf34232ca918542e5b2e18152f8723208e5a13c6b95c8",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312971843,
+          "name": "stage7-blocks-C050_G050-1",
+          "digest": "sha256:43e6fee79f1e9ea8fddbced3f1f898a3afc8720e32bc19d08843397820a622b6",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521917867,
+          "name": "stage10-bench-C050_G050-1",
+          "digest": "sha256:8bb160a977fa25ad3f23b5b6909822e77cfb0a934c4842c71e41c5f5e3868109",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "f5f2a664594d0ec55989f4552d812ee4e693ff89304797fc36b52439256e4427",
+          "scenario": "C050_G050",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "ede8c949c11f7215534bf34232ca918542e5b2e18152f8723208e5a13c6b95c8",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C050_G050",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C050_G070",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "22ecf74930ff07b7318faf53f4929b343cb1c9bad93d3cccb69eeb599ee7539b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312963284,
+          "name": "stage7-blocks-C050_G070-1",
+          "digest": "sha256:a78eb4bfbd1df1510f3ed16733515df6a3f831ea74e4e59e16e3c50bfac7008d",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11522185658,
+          "name": "stage10-bench-C050_G070-1",
+          "digest": "sha256:22b2c7565cc8f0fe552ec33095efd99cf9114a591f1e138ed63de30bcbc76581",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "b8cf856f8fa77dab4731a2c145d1ac8f7ba856b2da0c772424af82fbfdbf558f",
+          "scenario": "C050_G070",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "22ecf74930ff07b7318faf53f4929b343cb1c9bad93d3cccb69eeb599ee7539b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C050_G070",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C050_G100",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "05614a6280863b422103225c385292ac1a722338b70c0c6756c23af3dc878926",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312766984,
+          "name": "stage7-blocks-C050_G100-1",
+          "digest": "sha256:19365167c46ded233f583cd90ce81a9ec514ff6ac4393982d5ea4527c617b945",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521718148,
+          "name": "stage10-bench-C050_G100-1",
+          "digest": "sha256:f644b358f98e61f2dbc77643aa56feccbed2277c38048b9a3c0b089a4120f247",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "89f15aba78ba4f978a6128a799411f70a6e73854c0f8c6b10cd06b1527d541d4",
+          "scenario": "C050_G100",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "05614a6280863b422103225c385292ac1a722338b70c0c6756c23af3dc878926",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C050_G100",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C070_G000",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "f158340602c169c56a158d7151ecde210b3b92bdd9922b7c7b5dff39f1063608",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312109145,
+          "name": "stage7-blocks-C070_G000-1",
+          "digest": "sha256:c8ea7e4bf5740efb64d1eb4a5c58963751eb6fbc1826d39f3264e546f9be315f",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11522130563,
+          "name": "stage10-bench-C070_G000-1",
+          "digest": "sha256:1227343a6bb28d22dff432617ce8a0e6a7b426f7bb39c0d4bad8f17438665143",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "2cbd7f991599c17849cbf5f720d6559d59ed37691dc9c97c3b889ff13e8e2e99",
+          "scenario": "C070_G000",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "f158340602c169c56a158d7151ecde210b3b92bdd9922b7c7b5dff39f1063608",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C070_G000",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C070_G030",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "fb953cebb484f15538c310229c687ebe868430a363679987dd11b8e3f583478b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312915385,
+          "name": "stage7-blocks-C070_G030-1",
+          "digest": "sha256:5cc26b359fd657e258610f69f331a34e9248739514783fa90fe1737e9f58e098",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11522130280,
+          "name": "stage10-bench-C070_G030-1",
+          "digest": "sha256:8614c331dac87a6b39481b7760c1c72dc18ce3c922ff56556ed49defa7759e0c",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "84b9e7bea2fc729cb4d29f8c0e90a635dc345fe091ceb81024a7c1e7517e0c7c",
+          "scenario": "C070_G030",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "fb953cebb484f15538c310229c687ebe868430a363679987dd11b8e3f583478b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C070_G030",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C070_G050",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "6006c98ad76a5d906a8e2b4eca2faedc7c584213f60b2198782322150b2ffa82",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313185526,
+          "name": "stage7-blocks-C070_G050-1",
+          "digest": "sha256:c3eff809cd8807c101acf53cf385b6a93836f21248e077115c312d07406d8e0d",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11520854203,
+          "name": "stage10-bench-C070_G050-1",
+          "digest": "sha256:48ccfa76c01f8404f40aa1141bcbc5bd9f3858192967e634f5f0963442aa8352",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "024d54b0bd45cd044de12b32e11c0cb265747141f8c923a794827e4b931830b5",
+          "scenario": "C070_G050",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "6006c98ad76a5d906a8e2b4eca2faedc7c584213f60b2198782322150b2ffa82",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C070_G050",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C070_G070",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "4d5dc82fced74abee95d5a34a2aeb00aee07ca3de58351f5f9b5c333b803b34c",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312294476,
+          "name": "stage7-blocks-C070_G070-1",
+          "digest": "sha256:578f793f8315366e890fecf4b692cca9e875cdf17ad3c7ea65a3bb218c1fa910",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521812497,
+          "name": "stage10-bench-C070_G070-1",
+          "digest": "sha256:d588316b2a5b777ac24fb3aad640f7d5b61d853b9611526c40d227a01eac1385",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "64b743c1f06f088d6386027d4c6a778cd93c978ddc80551d20230e4cafe27b2c",
+          "scenario": "C070_G070",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "4d5dc82fced74abee95d5a34a2aeb00aee07ca3de58351f5f9b5c333b803b34c",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C070_G070",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C070_G100",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "19f69c89013e182cbc6893bf3c0ccd33af14d244542f98a3460aa50ff001242b",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312239690,
+          "name": "stage7-blocks-C070_G100-1",
+          "digest": "sha256:e686a6c605758e68d63aa90c6cd9decbda8551a2d62ec4e16583537c20e0c120",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11520898788,
+          "name": "stage10-bench-C070_G100-1",
+          "digest": "sha256:e8278c5d0df4d208859ec14265a6cd665fea2e17e5a8a15ba908e65dbf36272d",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "31658e2be50c05d4fdf97bf49eb6214472df6f9b1ce5ed96f80a18a7009eae00",
+          "scenario": "C070_G100",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "19f69c89013e182cbc6893bf3c0ccd33af14d244542f98a3460aa50ff001242b",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C070_G100",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C085_G000",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "fb330c6fd85971140ab27fc878e778affcd957ef44ab64675735fbc3fbc485c5",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312590249,
+          "name": "stage7-blocks-C085_G000-1",
+          "digest": "sha256:9eea2effd521e685f747b2a5d159bfd21b9177acbaf7ece45bf21174192b959f",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521931777,
+          "name": "stage10-bench-C085_G000-1",
+          "digest": "sha256:d82946050a0cfbd7423bb6263587d9c6266ae3b31f4c93d17f292e062634cb41",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "4f7efd567f2d251673ad7d0aaeb95cd57248ed89e4fcca7ef5df0a8cb4653a2f",
+          "scenario": "C085_G000",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "fb330c6fd85971140ab27fc878e778affcd957ef44ab64675735fbc3fbc485c5",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C085_G000",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C085_G030",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "dc8a28bec6ca9a0c183bb68bda2aa365dcdd31a45127676813f94fe76edbbce7",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313066122,
+          "name": "stage7-blocks-C085_G030-1",
+          "digest": "sha256:9d239bd736503f84480a5a2b11e99558b4d275d0d903e35021e50c49949905cf",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521941330,
+          "name": "stage10-bench-C085_G030-1",
+          "digest": "sha256:8b0896abb30313004c9d53ca8014899a5ed1826c054a22a15eb5781b19b80c59",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "609b0010f805d91ba184ede3e8093dfde6ae7ec162dab1d1b060a132439f946e",
+          "scenario": "C085_G030",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "dc8a28bec6ca9a0c183bb68bda2aa365dcdd31a45127676813f94fe76edbbce7",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C085_G030",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C085_G050",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "f4d9f3874213f7da3cda6ecf1644a43751f23a5d5d64f39a5a1df7e52de42d8a",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313071154,
+          "name": "stage7-blocks-C085_G050-1",
+          "digest": "sha256:025f0b4579425df3ff9a00b96bdc210a9c967bebd1ad12495933080aebd0c5fc",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521822235,
+          "name": "stage10-bench-C085_G050-1",
+          "digest": "sha256:6536d01ff07678c094b47244d160b7ce8dbff576513724a92e859d1a6465e1d0",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "318d000bd215f11b025528221643972591446288abf375832cd0523494a807f7",
+          "scenario": "C085_G050",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "f4d9f3874213f7da3cda6ecf1644a43751f23a5d5d64f39a5a1df7e52de42d8a",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C085_G050",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C085_G070",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "62ee2197b613986e7f0062b4d5f08f8f05739dde0624895d35dc4607850ec814",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11313126058,
+          "name": "stage7-blocks-C085_G070-1",
+          "digest": "sha256:dd33e370297070431db6ce6793dcb3fe80db78c813346711f5d4dd67abb91f43",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521561571,
+          "name": "stage10-bench-C085_G070-1",
+          "digest": "sha256:ec65d54322916ff61cf1d604df25f4a21da169aa847596c1984fd1f1a0c61ebe",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "6f5d8c05f380b13c0176badb231375722a4abffb9a6323d59970e0c176bb7619",
+          "scenario": "C085_G070",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "62ee2197b613986e7f0062b4d5f08f8f05739dde0624895d35dc4607850ec814",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C085_G070",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C085_G100",
+      "N": 550,
+      "trial_id_min": 1,
+      "trial_id_max": 550,
+      "stage9a_trial_count": 450,
+      "stage10_additions": 100,
+      "scenario_fingerprint_sha256": "eba464e979c8b15e96bbae8783380732c78fc8404cb39fe30f1ae1e1940425e6",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312088905,
+          "name": "stage7-blocks-C085_G100-1",
+          "digest": "sha256:8043746cd6778055231c57da57a775222da9df01c67d15b3134152c5f2f4cf9b",
+          "trial_range": [
+            1,
+            450
+          ]
+        },
+        {
+          "stage": "Stage10",
+          "artifact_id": 11521762421,
+          "name": "stage10-bench-C085_G100-1",
+          "digest": "sha256:42f4ebbc0defddd39848aa58e6548bc55128159b477b31190a9dcdf7fb0434cd",
+          "trial_range": [
+            451,
+            550
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "cdfd307333c8d16db2968730cf78eb3e1b6633b6e8769f988468f180489ee100",
+          "scenario": "C085_G100",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 450
+        },
+        "stage10_extension": {
+          "combined_fingerprint_sha256": "eba464e979c8b15e96bbae8783380732c78fc8404cb39fe30f1ae1e1940425e6",
+          "trial_id_start": 451,
+          "trial_id_end": 550,
+          "trial_count": 100
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..300",
+          "301..350",
+          "351..400",
+          "401..450",
+          "451..550"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C085_G100",
+        "declared_trial_id_max": 550,
+        "next_trial_id": 451,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "FAIL"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C100_G000",
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_sha256": "1b6390fe7326200133e133d68a4b260694bc2f72a9a58b8461da5494e231272c",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312176891,
+          "name": "stage7-blocks-C100_G000-1",
+          "digest": "sha256:1cff5e2044891ce706784b73161846cd4b71a404cd9eb0cdb566a658364b0f9c",
+          "trial_range": [
+            1,
+            1
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "1b6390fe7326200133e133d68a4b260694bc2f72a9a58b8461da5494e231272c",
+          "scenario": "C100_G000",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 1
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..1"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C100_G000",
+        "declared_trial_id_max": 1,
+        "next_trial_id": 2,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "PASS"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C100_G030",
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_sha256": "f342dc950b12810108825d842a93b51e6816fe4c2e90bc7fd49d0b51762f0a70",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312320486,
+          "name": "stage7-blocks-C100_G030-1",
+          "digest": "sha256:357a056f67888372edfceedfd99cfc1d5598c888f3afa52c2e91d55db32d0fc1",
+          "trial_range": [
+            1,
+            1
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "f342dc950b12810108825d842a93b51e6816fe4c2e90bc7fd49d0b51762f0a70",
+          "scenario": "C100_G030",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 1
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..1"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C100_G030",
+        "declared_trial_id_max": 1,
+        "next_trial_id": 2,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "PASS"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C100_G050",
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_sha256": "86e095f84d26fc6398af1fbd624d353b6c01009feda9434ab37af788b420b5c3",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11311992664,
+          "name": "stage7-blocks-C100_G050-1",
+          "digest": "sha256:faa82eb3bc7ab686d95b8aca11cc9a39056d383ce7ada6db09000bf34ed39391",
+          "trial_range": [
+            1,
+            1
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "86e095f84d26fc6398af1fbd624d353b6c01009feda9434ab37af788b420b5c3",
+          "scenario": "C100_G050",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 1
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..1"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C100_G050",
+        "declared_trial_id_max": 1,
+        "next_trial_id": 2,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "PASS"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C100_G070",
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_sha256": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11311843040,
+          "name": "stage7-blocks-C100_G070-1",
+          "digest": "sha256:85c6d5c3cd9710a05af7023d28648e196b5c8cbccf0a5fd8c43cf18c49582c76",
+          "trial_range": [
+            1,
+            1
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
+          "scenario": "C100_G070",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 1
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..1"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C100_G070",
+        "declared_trial_id_max": 1,
+        "next_trial_id": 2,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "PASS"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    },
+    {
+      "scenario_id": "C100_G100",
+      "N": 1,
+      "trial_id_min": 1,
+      "trial_id_max": 1,
+      "stage9a_trial_count": 1,
+      "stage10_additions": 0,
+      "scenario_fingerprint_sha256": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+      "canonical_artifacts": [
+        {
+          "stage": "Stage7",
+          "artifact_id": 11312276587,
+          "name": "stage7-blocks-C100_G100-1",
+          "digest": "sha256:baf5f9eca6f29ba9e898cb0fa9ab9e0552549cef8f1aeffadf21a7dd064b6316",
+          "trial_range": [
+            1,
+            1
+          ]
+        }
+      ],
+      "artifact_identity": {
+        "stage7_checkpoint": {
+          "fingerprint_sha256": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
+          "scenario": "C100_G100",
+          "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          "trial_id_start": 1,
+          "trial_id_end": 1
+        }
+      },
+      "trial_identity": {
+        "type": "per_trial_sha256",
+        "mapping": "ordered per-trial SHA-256 metadata entries to trial IDs in the declared block range",
+        "evidenced_ranges": [
+          "1..1"
+        ]
+      },
+      "replay_evidence": {
+        "stage7_state_branch": "stage7-state/C100_G100",
+        "declared_trial_id_max": 1,
+        "next_trial_id": 2,
+        "check": "next_trial_id - 1 == trial_id_max",
+        "result": "PASS"
+      },
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "identity_status": "COMPLETE_TRIAL_LEVEL_EVIDENCE"
+    }
+  ],
+  "validation": {
+    "scenario_count": 25,
+    "duplicate_scenario_ids": false,
+    "sum_N": 11005,
+    "trial_range_gaps": false,
+    "duplicate_trials": false,
+    "all_scenarios_canonical": true,
+    "all_trial_level_hashes_available": true,
+    "scenario_fingerprint_match_to_dataset_identity": true
+  },
+  "gates": {
+    "G1": {
+      "result": "PASS",
+      "evidence": "sum(N)=11005; total_trials_evidenced=11005 from artifact per-trial ranges"
+    },
+    "G2": {
+      "result": "PASS",
+      "evidence": "25/25 final scenario fingerprints match docs/stage11/dataset_identity.json"
+    },
+    "G3": {
+      "result": "PASS",
+      "evidence": "25/25 SOURCE_SHA = f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+    },
+    "G4": {
+      "result": "PASS",
+      "evidence": "25/25 master_seed = 20270101"
+    },
+    "G5": {
+      "result": "PASS",
+      "evidence": "deterministic TRIAL-level SHA-256 recomputes to 7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+    },
+    "G6": {
+      "result": "PASS",
+      "evidence": "25/25 scenarios have complete trial-level artifact evidence covering every declared trial ID"
+    },
+    "G7": {
+      "result": "FAIL",
+      "evidence": "20 non-C100 scenarios have Stage7 next_trial_id=451 while declared trial_id_max=550; required equality would be 551. C100 scenarios have next_trial_id=2 and trial_id_max=1."
+    },
+    "G8": {
+      "result": "PASS",
+      "evidence": "to be confirmed by branch-vs-parent diff after manifest creation; this CP modifies manifest only"
+    }
+  },
+  "statistics_policy": {
+    "official_statistics_scope": "PER_SCENARIO",
+    "pooled_cross_scenario_statistics": "DESCRIPTIVE_ONLY"
+  },
+  "g7_failed_scenarios": [
+    "C030_G000",
+    "C030_G030",
+    "C030_G050",
+    "C030_G070",
+    "C030_G100",
+    "C050_G000",
+    "C050_G030",
+    "C050_G050",
+    "C050_G070",
+    "C050_G100",
+    "C070_G000",
+    "C070_G030",
+    "C070_G050",
+    "C070_G070",
+    "C070_G100",
+    "C085_G000",
+    "C085_G030",
+    "C085_G050",
+    "C085_G070",
+    "C085_G100"
+  ],
+  "status_note": "Artifact trial-level identity is complete for all 11005 trials, but CP-11-B is FAIL because the required Stage7 next_trial_id replay check is not satisfied for the 20 non-C100 scenarios. This manifest does not authenticate replay closure."
+}
