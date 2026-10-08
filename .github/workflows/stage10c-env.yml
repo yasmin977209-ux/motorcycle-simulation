@@ -1,0 +1,131 @@
+name: stage10c-environment-identity
+on:
+  push:
+    branches:
+      - tmp/stage10c-env-20261008
+    paths:
+      - .stage10c-env-trigger
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  collect-environment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.17"
+
+      - name: Create evidence directory
+        run: mkdir -p env_metrics
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify original runner image and Python identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "RUNNER_OS=$RUNNER_OS" "RUNNER_ARCH=$RUNNER_ARCH" "ImageOS=$ImageOS" "ImageVersion=$ImageVersion" > env_metrics/runner_identity.txt
+          python --version | tee env_metrics/python_version.txt
+          python -c 'import sys; print(sys.version)' | tee env_metrics/python_full_version.txt
+          command -v python | tee env_metrics/python_path.txt
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+          test "$ImageOS" = "ubuntu24"
+          test "$ImageVersion" = "20261004.327.1"
+          test "$(python -c 'import platform; print(platform.python_version())')" = "3.11.17"
+
+      - name: Collect OS and kernel
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -a | tee env_metrics/kernel.txt
+          cat /etc/os-release | tee env_metrics/os_release.txt
+
+      - name: Collect CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          nproc | tee env_metrics/cpu_count.txt
+          awk -F: '/^model name[[:space:]]*:/ {gsub(/^[[:space:]]+/, "", $2); print $2; exit}' /proc/cpuinfo | tee env_metrics/cpu_model.txt
+          lscpu | tee env_metrics/lscpu.txt
+
+      - name: Collect RAM
+        shell: bash
+        run: |
+          set -euo pipefail
+          free -m | tee env_metrics/free_m.txt
+          cat /proc/meminfo | head -5 | tee env_metrics/meminfo_head5.txt
+
+      - name: Collect disk
+        shell: bash
+        run: |
+          set -euo pipefail
+          df -h | tee env_metrics/disk_df_h.txt
+          df -BG / | tee env_metrics/root_disk_bg.txt
+
+      - name: Collect packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip freeze > env_metrics/packages.txt
+          sha256sum env_metrics/packages.txt | tee env_metrics/packages.sha256
+          python -m pip freeze --all | sort | sha256sum | tee env_metrics/installed_wheels_fingerprint.sha256
+          python -m pip freeze --all | sort > env_metrics/packages_sorted_all.txt
+          sha256sum requirements.txt | tee env_metrics/requirements.sha256
+
+      - name: Collect runner environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          env | grep -E '^(RUNNER|Image)' | sort | tee env_metrics/runner_env.txt
+
+      - name: Collect consolidated environment summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "python_version=$(cat env_metrics/python_version.txt)"
+            echo "python_full_version=$(cat env_metrics/python_full_version.txt)"
+            echo "python_path=$(cat env_metrics/python_path.txt)"
+            echo "cpu_count=$(cat env_metrics/cpu_count.txt)"
+            echo "cpu_model=$(cat env_metrics/cpu_model.txt)"
+            echo "packages_fingerprint=$(awk '{print \$1}' env_metrics/packages.sha256)"
+            echo "installed_wheels_fingerprint=$(awk '{print \$1}' env_metrics/installed_wheels_fingerprint.sha256)"
+            echo "requirements_sha256=$(awk '{print \$1}' env_metrics/requirements.sha256)"
+            echo "runner_os=$RUNNER_OS"
+            echo "runner_arch=$RUNNER_ARCH"
+            echo "runner_image=$ImageOS/$ImageVersion"
+          } | tee env_metrics/environment_summary.txt
+
+      - name: Upload environment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage10c-env-evidence
+          path: env_metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Write job summary
+        shell: bash
+        run: |
+          {
+            echo "## Stage 10C — Environment Identity"
+            echo
+            echo "- Runner: $RUNNER_OS / $RUNNER_ARCH"
+            echo "- Image: $ImageOS / $ImageVersion"
+            echo "- Python: $(cat env_metrics/python_version.txt)"
+            echo "- CPU count: $(cat env_metrics/cpu_count.txt)"
+            echo "- Package fingerprint: $(awk '{print \$1}' env_metrics/packages.sha256)"
+            echo "- Installed wheels fingerprint: $(awk '{print \$1}' env_metrics/installed_wheels_fingerprint.sha256)"
+            echo "- requirements.txt SHA-256: $(awk '{print \$1}' env_metrics/requirements.sha256)"
+            echo
+            echo "No simulation engine invocation was performed."
+          } >> "$GITHUB_STEP_SUMMARY"
