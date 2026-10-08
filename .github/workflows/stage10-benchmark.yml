@@ -5,7 +5,6 @@ on:
       - "tmp/stage10-bench-20261008"
     paths:
       - ".stage10-benchmark-trigger"
-      - ".stage10-cancel-trigger"
 permissions:
   contents: read
   actions: read
@@ -13,22 +12,7 @@ env:
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   SOURCE_RUN_ID: "37225915321"
   MASTER_SEED: "20270101"
-  OLD_RECOVERY_RUN_ID: "37711587801"
 jobs:
-  emergency-cancel-old-recovery:
-    if: ${{ contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Cancel incorrect recovery Run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_RUN_ID: ${{ env.OLD_RECOVERY_RUN_ID }}
-        run: |
-          set -euo pipefail
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${TARGET_RUN_ID}/cancel"
-          echo "Cancelled Run ${TARGET_RUN_ID}"
-
   bench-matrix:
     name: bench-${{ matrix.scenario }}-${{ matrix.chunk_id }}
     runs-on: ubuntu-latest
@@ -361,7 +345,6 @@ jobs:
 
   aggregate:
     name: aggregate-stage10
-    if: ${{ !contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') }}
     needs: [bench-matrix]
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -371,29 +354,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Resolve measurement Run ID
-        id: measurement-run
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${{ contains(join(github.event.commits.*.modified, ','), '.stage10-aggregate-trigger') }}" == "true" ]]; then
-            echo "run_id=${RECOVERY_MEASUREMENT_RUN_ID}" >> "${GITHUB_OUTPUT}"
-          else
-            echo "run_id=${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
-          fi
       - name: Download benchmark artifacts
         uses: actions/download-artifact@v4
         with:
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ steps.measurement-run.outputs.run_id }}
           pattern: stage10-bench-*
           path: all_artifacts
           merge-multiple: false
       - name: Aggregate measurements
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python -m scripts.stage10_aggregate "${{ steps.measurement-run.outputs.run_id }}"
+        run: python -m scripts.stage10_aggregate "${GITHUB_RUN_ID}"
       - name: Upload final metrics
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
