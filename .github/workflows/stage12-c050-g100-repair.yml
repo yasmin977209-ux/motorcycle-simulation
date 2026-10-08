@@ -1,0 +1,306 @@
+name: stage12-c050-g100-repair
+
+on:
+  push:
+    branches:
+      - "tmp/stage12-materialize-20261008"
+    paths:
+      - ".github/workflows/stage12-c050-g100-repair.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  MASTER_SEED: "20270101"
+  SOURCE_RUN_ID: "37819145970"
+  ORIGINAL_GLOBAL_SHA256: "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+
+jobs:
+  materialize:
+    name: repair-${{ matrix.start }}-${{ matrix.end }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {scenario: C050_G100, start: 1, end: 100}
+          - {scenario: C050_G100, start: 101, end: 200}
+          - {scenario: C050_G100, start: 201, end: 300}
+          - {scenario: C050_G100, start: 301, end: 400}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify source boundary
+        run: |
+          set -euo pipefail
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+          MODEL_FILES=(constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py)
+          git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+      - name: Materialize
+        run: |
+          set -euo pipefail
+          mkdir -p "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
+          cat > /tmp/materialize.py <<'PY
+          import argparse,json,hashlib,subprocess
+          from datetime import datetime,timezone
+          from pathlib import Path
+          import pyarrow as pa, pyarrow.parquet as pq
+          import constants,daily_engine,monte_carlo
+          from closure import closure_preconditions_met
+          from entities import BikeState,ClaimStatus
+          from settlement import first_settlement_business_day_after,settlement_business_days_elapsed
+          SOURCE_SHA="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          MASTER_SEED=20270101
+          FORBIDDEN={"MINI_PREP","PENDING_RECALL","TERMINATION_PENDING"}
+          
+          def main():
+           ap=argparse.ArgumentParser();ap.add_argument("--scenario",required=True);ap.add_argument("--start",type=int,required=True);ap.add_argument("--end",type=int,required=True);ap.add_argument("--out",required=True);a=ap.parse_args()
+           subprocess.run(["git","cat-file","-e",f"{SOURCE_SHA}^{{commit}}"],check=True)
+           files="constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py".split()
+           subprocess.run(["git","diff","--quiet",SOURCE_SHA,"HEAD","--",*files],check=True)
+           cp,rr=monte_carlo.parse_scenario_id(a.scenario)
+           if a.scenario.startswith("C100_") and (a.start,a.end)!=(1,1): raise SystemExit("bad C100 range")
+           if not a.scenario.startswith("C100_") and a.end-a.start+1>400: raise SystemExit("chunk>400")
+           out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
+           schema=pa.schema([( "scenario_id",pa.string()),("trial_id",pa.int64()),("date",pa.string()),("source_sha",pa.string()),("master_seed",pa.int64()),("Opening_Cash",pa.int64()),("cash_inflows",pa.int64()),("cash_outflows",pa.int64()),("Closing_Cash",pa.int64()),("Opening_AR",pa.int64()),("ar_accruals",pa.int64()),("ar_collections",pa.int64()),("ar_transfers_to_guarantee",pa.int64()),("Closing_AR",pa.int64()),("Opening_Gross_Bike_Assets",pa.int64()),("capitalized_purchases_and_customs",pa.int64()),("gross_writeoffs_on_ownership",pa.int64()),("Closing_Gross_Bike_Assets",pa.int64()),("Opening_Accumulated_Depreciation",pa.int64()),("depreciation_expense",pa.int64()),("ad_removed_on_writeoff",pa.int64()),("Closing_Accumulated_Depreciation",pa.int64()),("Net_Bike_Assets",pa.int64()),("Capital",pa.int64()),("Retained_Earnings",pa.int64()),("Opening_Equity",pa.int64()),("Operating_Net_Profit",pa.int64()),("Closing_Equity",pa.int64()),("Guarantee_Claim_Receivable",pa.int64()),("Total_Assets",pa.int64()),("Liabilities",pa.int64()),("Balance_Difference",pa.int64()),("Final_Close_Date",pa.string()),("Simulation_Stopped",pa.bool_()),("Active_Bikes",pa.int64()),("Owned_Transferred_Bikes",pa.int64()),("Pending_Claims",pa.int64())])
+           writer=pq.ParquetWriter(out/f"part_{a.start}_{a.end}.parquet",schema,compression="zstd");summaries=[]
+           try:
+            for tid in range(a.start,a.end+1):
+             rows=[];forbidden=[];settlement_bad=[];cashflow_bad=[]
+             prev={"cash":constants.OPENING_CASH,"ar":0,"gross":constants.OPENING_BIKE_ASSETS,"ad":0,"equity":constants.TOTAL_CAPITAL+constants.OPENING_RETAINED_LOSS,"oil":0,"prep":0}
+             def cap(p,d):
+              nonlocal prev
+              m=dict(getattr(p,"_day_metrics",{}));cc=p.project_cash;ca=p.accounts_receivable;cg=p.gross_bike_assets;cad=p.accumulated_depreciation;ce=p.capital+p.retained_earnings;na=cg-cad;ta=cc+ca+p.guarantee_claim_receivable+na
+              residual=m.get("cash_outflows",0)-((p.expense_oil_service-prev["oil"])+(p.expense_prep-prev["prep"])+m.get("capitalized_purchases_and_customs",0))
+              if residual!=0: cashflow_bad.append({"date":d.isoformat(),"residual":residual})
+              for b in p.bikes:
+                if b.current_state.value in FORBIDDEN: forbidden.append({"date":d.isoformat(),"bike_id":b.bike_id,"state":b.current_state.value})
+                if b.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+                 c=p.contracts.get(b.current_contract_id) if b.current_contract_id else None
+                 if c is None or c.maturity_date is None or b.settlement_start_date is None: settlement_bad.append({"date":d.isoformat(),"bike_id":b.bike_id,"reason":"missing settlement metadata"})
+                 else:
+                  es=first_settlement_business_day_after(c.maturity_date);ee=settlement_business_days_elapsed(b.settlement_start_date,d)
+                  if b.settlement_start_date!=es or b.settlement_business_days_elapsed!=ee: settlement_bad.append({"date":d.isoformat(),"bike_id":b.bike_id,"reason":"settlement clock mismatch"})
+              rows.append({"scenario_id":a.scenario,"trial_id":tid,"date":d.isoformat(),"source_sha":SOURCE_SHA,"master_seed":MASTER_SEED,"Opening_Cash":prev["cash"],"cash_inflows":m.get("cash_inflows",0),"cash_outflows":m.get("cash_outflows",0),"Closing_Cash":cc,"Opening_AR":prev["ar"],"ar_accruals":m.get("ar_accruals",0),"ar_collections":m.get("ar_collections",0),"ar_transfers_to_guarantee":m.get("ar_transfers_to_guarantee",0),"Closing_AR":ca,"Opening_Gross_Bike_Assets":prev["gross"],"capitalized_purchases_and_customs":m.get("capitalized_purchases_and_customs",0),"gross_writeoffs_on_ownership":m.get("gross_writeoffs_on_ownership",0),"Closing_Gross_Bike_Assets":cg,"Opening_Accumulated_Depreciation":prev["ad"],"depreciation_expense":m.get("depreciation_expense",0),"ad_removed_on_writeoff":m.get("ad_removed_on_writeoff",0),"Closing_Accumulated_Depreciation":cad,"Net_Bike_Assets":na,"Capital":p.capital,"Retained_Earnings":p.retained_earnings,"Opening_Equity":prev["equity"],"Operating_Net_Profit":ce-prev["equity"],"Closing_Equity":ce,"Guarantee_Claim_Receivable":p.guarantee_claim_receivable,"Total_Assets":ta,"Liabilities":0,"Balance_Difference":ta-ce,"Final_Close_Date":p.final_close_date.isoformat() if p.final_close_date else None,"Simulation_Stopped":bool(p.simulation_stopped),"Active_Bikes":sum(1 for x in p.bikes if x.current_state in daily_engine.POSSESSION_STATES),"Owned_Transferred_Bikes":sum(1 for x in p.bikes if x.current_state is BikeState.OWNED_TRANSFERRED),"Pending_Claims":sum(1 for x in p.guarantee_claims if x.status is ClaimStatus.PENDING)})
+              prev={"cash":cc,"ar":ca,"gross":cg,"ad":cad,"equity":ce,"oil":p.expense_oil_service,"prep":p.expense_prep}
+             p=daily_engine.run_deterministic_trial(recovery_rate_pct=rr,trial_id=tid,scenario_id=a.scenario,master_seed=MASTER_SEED,collection_probability=cp,on_day_end=cap,log_events=False)
+             if not rows or not p.final_close_date or not p.simulation_stopped: raise SystemExit(f"trial {tid} did not close")
+             if len(rows)!=(p.final_close_date-constants.PROJECT_START_DATE).days+1: raise SystemExit(f"daily row count mismatch trial {tid}")
+             if len({(r["scenario_id"],r["trial_id"],r["date"]) for r in rows})!=len(rows): raise SystemExit(f"duplicate pk trial {tid}")
+             final_eq=p.capital+p.retained_earnings
+             claims_ok=all(isinstance(x.recovery_rate_pct,int) and not isinstance(x.recovery_rate_pct,bool) and x.status is ClaimStatus.SETTLED and x.recovered_amount is not None and x.bad_debt_amount is not None and x.recovered_amount==(x.claim_amount*x.recovery_rate_pct)//100 and x.bad_debt_amount==x.claim_amount-x.recovered_amount for x in p.guarantee_claims)
+             owned_ok=all(x.current_state is not BikeState.OWNED_TRANSFERRED or x.net_book_value==0 for x in p.bikes)
+             closure_ok=closure_preconditions_met(p,p.final_close_date)
+             equity_ok=p.final_net_project_equity==final_eq
+             tr=monte_carlo._trial_result_from_project(p,scenario_id=a.scenario,collection_probability=cp,recovery_rate_pct=rr,trial_id=tid)
+             h=monte_carlo.fingerprint_trial_results([tr])
+             writer.write_table(pa.Table.from_pylist(rows,schema=schema))
+             summaries.append({"scenario_id":a.scenario,"trial_id":tid,"row_count":len(rows),"start_date":rows[0]["date"],"final_close_date":p.final_close_date.isoformat(),"source_sha":SOURCE_SHA,"master_seed":MASTER_SEED,"result_sha256":h,"forbidden":forbidden,"settlement_bad":settlement_bad,"cashflow_bad":cashflow_bad,"dynamic_closure":closure_ok,"guarantee":claims_ok,"ownership_writeoff":owned_ok,"final_equity_after_m17":equity_ok,"trial_pass":closure_ok and claims_ok and owned_ok and equity_ok and not forbidden and not settlement_bad and not cashflow_bad})
+           finally: writer.close()
+           (out/f"trials_{a.start}_{a.end}.json").write_text(json.dumps({"trial_summaries":summaries,"scenario":a.scenario,"range":[a.start,a.end],"source_sha":SOURCE_SHA,"master_seed":MASTER_SEED},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          if __name__=="__main__": main()
+          PY
+          export PYTHONPATH="$GITHUB_WORKSPACE${PYTHONPATH:+:$PYTHONPATH}"
+          python /tmp/materialize.py \
+            --scenario "${{ matrix.scenario }}" \
+            --start "${{ matrix.start }}" \
+            --end "${{ matrix.end }}" \
+            --out "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
+      - name: Upload repair chunk
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage12-accounting-repair-${{ matrix.scenario }}-${{ matrix.start }}-${{ matrix.end }}
+          path: out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    name: aggregate-stage12-repair
+    needs: [materialize]
+    if: ${{ needs.materialize.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Select canonical prior artifacts
+        id: prior
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ids="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/runs/${SOURCE_RUN_ID}/artifacts?per_page=100" | jq -r '[.artifacts[] | select(.expired == false) | select(.name | startswith("stage12-accounting-")) | select(.name != "stage12-accounting-C050_G100-1-400")] | group_by(.name) | map(max_by(.created_at)) | map(.id) | join(",")')"
+          test -n "$ids"
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+      - name: Download prior successful chunks
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.prior.outputs.ids }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          path: previous_artifacts
+          merge-multiple: false
+      - name: Download repair chunks
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage12-accounting-repair-C050_G100-*
+          path: repair_artifacts
+          merge-multiple: false
+      - name: Validate full CP-12-B materialization
+        run: |
+          set -euo pipefail
+          cat > /tmp/aggregate_repair.py <<'PY
+          import hashlib,json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          
+          SOURCE_SHA = os.environ["SOURCE_SHA"]
+          MASTER_SEED = int(os.environ["MASTER_SEED"])
+          SOURCE_RUN_ID = os.environ["SOURCE_RUN_ID"]
+          ORIGINAL_GLOBAL_SHA256 = os.environ["ORIGINAL_GLOBAL_SHA256"]
+          
+          def load_summaries(root, ignore_c050_large=False):
+              root = Path(root)
+              out = []
+              for p in root.rglob("trials_*.json"):
+                  if ignore_c050_large and "stage12-accounting-C050_G100-1-400" in str(p):
+                      continue
+                  out.extend(json.loads(p.read_text(encoding="utf-8"))["trial_summaries"])
+              return out
+          
+          def main():
+              prev = load_summaries("previous_artifacts", ignore_c050_large=True)
+              repair = load_summaries("repair_artifacts", ignore_c050_large=False)
+              summaries = prev + repair
+              if len(summaries) != 11005:
+                  raise SystemExit(f"expected 11005 trial summaries, got {len(summaries)}")
+          
+              manifest = json.loads(Path("docs/stage11/global_manifest_11005.json").read_text(encoding="utf-8"))
+              expected = {s["scenario_id"]: (1 if s["scenario_id"].startswith("C100_") else 550) for s in manifest["scenarios"]}
+              keys = [(x["scenario_id"], int(x["trial_id"])) for x in summaries]
+              if len(keys) != len(set(keys)):
+                  raise SystemExit("duplicate trial identities")
+              for scenario_id, n in expected.items():
+                  ids = sorted(tid for sc, tid in keys if sc == scenario_id)
+                  if ids != list(range(1, n + 1)):
+                      raise SystemExit(f"trial coverage failure {scenario_id}")
+              for x in summaries:
+                  if x.get("source_sha") != SOURCE_SHA or int(x.get("master_seed")) != MASTER_SEED:
+                      raise SystemExit(f"trial identity mismatch: {x.get('scenario_id')} trial {x.get('trial_id')}")
+                  if not x.get("trial_pass"):
+                      raise SystemExit(f"trial-level materialization validation failure {x['scenario_id']} trial {x['trial_id']}")
+          
+              def aggregate_for(items):
+                  return hashlib.sha256("".join(
+                      f"{sc}|{tid}|{h}\n"
+                      for sc, tid, h in sorted((x["scenario_id"], int(x["trial_id"]), x["result_sha256"]) for x in items)
+                  ).encode()).hexdigest()
+          
+              reproduced = aggregate_for(summaries)
+              if reproduced != ORIGINAL_GLOBAL_SHA256:
+                  raise SystemExit(f"global aggregate SHA mismatch: {reproduced} != {ORIGINAL_GLOBAL_SHA256}")
+          
+              parquet_files = []
+              for root in ("previous_artifacts", "repair_artifacts"):
+                  for p in Path(root).rglob("part_*.parquet"):
+                      if "stage12-accounting-C050_G100-1-400" in str(p):
+                          continue
+                      parquet_files.append(p)
+              if len(parquet_files) != 48:
+                  raise SystemExit(f"expected 48 parquet parts after split repair, got {len(parquet_files)}")
+          
+              total_rows = 0
+              balance_nonzero = 0
+              for p in parquet_files:
+                  t = pq.read_table(p, columns=["source_sha", "master_seed", "Balance_Difference"])
+                  total_rows += t.num_rows
+                  if any(v != SOURCE_SHA for v in t["source_sha"].to_pylist()):
+                      raise SystemExit(f"row source_sha mismatch in {p}")
+                  if any(int(v) != MASTER_SEED for v in t["master_seed"].to_pylist()):
+                      raise SystemExit(f"row master_seed mismatch in {p}")
+                  balance_nonzero += sum(1 for v in t["Balance_Difference"].to_pylist() if int(v) != 0)
+          
+              expected_rows = sum(int(x["row_count"]) for x in summaries)
+              if total_rows != expected_rows:
+                  raise SystemExit(f"row count mismatch: parquet={total_rows} summaries={expected_rows}")
+              if balance_nonzero != 0:
+                  raise SystemExit(f"nonzero balance rows: {balance_nonzero}")
+          
+              scenario_match = "NOT_AVAILABLE"
+              scenario_hash_fields = ("scenario_aggregate_sha256", "aggregate_sha256", "aggregate_sha")
+              candidates = {}
+              for s in manifest["scenarios"]:
+                  sc = s["scenario_id"]
+                  for key in scenario_hash_fields:
+                      value = s.get(key)
+                      if isinstance(value, str) and len(value) == 64:
+                          candidates[sc] = value
+                          break
+              if len(candidates) == len(expected):
+                  matches = 0
+                  for sc in expected:
+                      actual = aggregate_for([x for x in summaries if x["scenario_id"] == sc])
+                      if actual == candidates[sc]:
+                          matches += 1
+                  scenario_match = f"{matches}/25"
+          
+              created_at = datetime.now(timezone.utc).isoformat()
+              run_started = os.environ.get("REPAIR_RUN_STARTED_AT")
+              wall_minutes = None
+              if run_started:
+                  start = datetime.fromisoformat(run_started.replace("Z", "+00:00"))
+                  wall_minutes = round((datetime.now(timezone.utc) - start).total_seconds() / 60.0, 2)
+          
+              result = {
+                  "verification_version": "1.0",
+                  "created_at": created_at,
+                  "created_by_cp": "CP-12-B",
+                  "original_global_sha256": ORIGINAL_GLOBAL_SHA256,
+                  "reproduced_global_sha256": reproduced,
+                  "match": "YES",
+                  "total_trials_reproduced": 11005,
+                  "per_scenario_match": scenario_match,
+                  "wall_time_minutes": wall_minutes,
+                  "retries": 1,
+                  "environment": {
+                      "python": os.sys.version,
+                      "runner": os.environ.get("RUNNER_NAME"),
+                      "source_run_id": SOURCE_RUN_ID,
+                      "repair_run_id": os.environ.get("GITHUB_RUN_ID")
+                  },
+                  "prior_successful_chunks": 44,
+                  "repair_chunks": 4,
+                  "parquet_parts": 48,
+                  "total_daily_rows": total_rows,
+                  "balance_nonzero_rows": balance_nonzero,
+                  "overall_result": "PASS"
+              }
+              Path("reproduction_result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          
+          if __name__ == "__main__":
+              main()
+          PY
+          export REPAIR_RUN_STARTED_AT="${{ github.run_started_at }}"
+          python /tmp/aggregate_repair.py
+      - name: Upload CP-12-B validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage12-cp12b-validation
+          path: reproduction_result.json
+          if-no-files-found: error
+          retention-days: 30
