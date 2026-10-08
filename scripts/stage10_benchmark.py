@@ -69,8 +69,7 @@ def percentile(vals,q):
     a=sorted(vals); k=(len(a)-1)*q; lo=int(k); hi=min(lo+1,len(a)-1)
     return float(a[lo] if lo==hi else a[lo]+(a[hi]-a[lo])*(k-lo))
 
-def write_json(path,d): Path(path).write_text(json.dumps(d,ensure_ascii=False,indent=2,sort_keys=True)+"
-",encoding="utf-8")
+def write_json(path,d): Path(path).write_text(json.dumps(d,ensure_ascii=False,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
 
 def main(argv):
     if len(argv)!=10: raise SystemExit("usage: mode scenario start end artifact_id expected_run current_run source_sha master_seed baseline_root")
