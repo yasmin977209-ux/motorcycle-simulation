@@ -16,7 +16,7 @@ jobs:
   materialize:
     name: mat-${{ matrix.scenario }}-${{ matrix.start }}-${{ matrix.end }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       max-parallel: 10
