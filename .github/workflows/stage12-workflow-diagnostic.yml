@@ -1,0 +1,24 @@
+name: stage12-workflow-diagnostic
+on:
+  push:
+    branches:
+      - "tmp/stage12-materialize-20261008"
+    paths:
+      - ".github/workflows/stage12-workflow-diagnostic.yml"
+      - ".github/workflows/stage12-full-accounting.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint Stage 12 workflow
+        uses: raven-actions/actionlint@v2
+        with:
+          matcher: false
