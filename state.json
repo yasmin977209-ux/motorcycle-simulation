@@ -1,10 +1,13 @@
 {
-  "stage": "9C-PARTIAL",
+  "stage": "10-PARTIAL",
   "schema_version": "1.0",
-  "cp_completed": "STAGE-9A-CLOSED + STAGE-9B-CLOSED + STAGE-9C-PARTIAL",
+  "cp_completed": "CP-MEGA-STAGE10-BENCHMARK",
   "sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
-  "next": "9C-FULL أو Stage 10 (بانتظار قرار)",
-  "blockers": [],
+  "next": "Stage 11 (separate permission required; Stage10 is PARTIAL)",
+  "blockers": [
+    "Stage10 accepted harness did not record installed-package fingerprint or available-RAM value",
+    "Stage11 workflow/topology is not defined in current repository; estimate remains conditional"
+  ],
   "stage7": {
     "closed": true,
     "run_id": "37225915321",
@@ -87,5 +90,21 @@
     "status": "PARTIAL-FINAL-ACCEPTED"
   },
   "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
-  "sha_semantics": "parent_state_commit_pointer"
+  "sha_semantics": "parent_state_commit_pointer",
+  "stage10_evidence": {
+    "status": "PARTIAL",
+    "run_id": "37709936740",
+    "branch_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
+    "run_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "scenarios_tested": 25,
+    "benchmark_executions": 2500,
+    "canonical_trials_added": 2000,
+    "stage11_estimate_central_hours": 0,
+    "stage11_estimate_range_hours": [
+      0,
+      0
+    ],
+    "verified_at": "2026-10-08T01:23:39.795Z"
+  }
 }

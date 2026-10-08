@@ -5,7 +5,6 @@ on:
       - "tmp/stage10-bench-20261008"
     paths:
       - ".stage10-benchmark-trigger"
-      - ".stage10-aggregate-trigger"
       - ".stage10-cancel-trigger"
 permissions:
   contents: read
@@ -14,7 +13,6 @@ env:
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   SOURCE_RUN_ID: "37225915321"
   MASTER_SEED: "20270101"
-  RECOVERY_MEASUREMENT_RUN_ID: "37709936740"
   OLD_RECOVERY_RUN_ID: "37711587801"
 jobs:
   emergency-cancel-old-recovery:
@@ -32,7 +30,6 @@ jobs:
           echo "Cancelled Run ${TARGET_RUN_ID}"
 
   bench-matrix:
-    if: ${{ !contains(github.event.head_commit.message, '[STAGE10-CANCEL-OLD]') && !contains(github.event.head_commit.message, '[STAGE10-AGGREGATE-RECOVERY]') }}
     name: bench-${{ matrix.scenario }}-${{ matrix.chunk_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
