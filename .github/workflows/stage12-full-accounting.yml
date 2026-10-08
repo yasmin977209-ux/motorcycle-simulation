@@ -236,6 +236,7 @@ jobs:
            (out/f"trials_{a.start}_{a.end}.json").write_text(json.dumps({"trial_summaries":summaries,"scenario":a.scenario,"range":[a.start,a.end],"source_sha":SOURCE_SHA,"master_seed":MASTER_SEED},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
           if __name__=="__main__": main()
           PY
+          export PYTHONPATH="$GITHUB_WORKSPACE${PYTHONPATH:+:$PYTHONPATH}"
           python /tmp/materialize.py --scenario "${{ matrix.scenario }}" --start "${{ matrix.start }}" --end "${{ matrix.end }}" --out "out/${{ matrix.scenario }}/${{ matrix.start }}_${{ matrix.end }}"
       - name: Upload chunk
         uses: actions/upload-artifact@v4
