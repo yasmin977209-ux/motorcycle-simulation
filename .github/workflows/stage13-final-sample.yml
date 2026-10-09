@@ -1,0 +1,102 @@
+name: Stage13 Final Sample Replay
+
+on:
+  push:
+    branches:
+      - tmp/stage13.3-final-excel-20261010
+
+permissions:
+  contents: read
+
+jobs:
+  sample-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: .
+      SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+    steps:
+      - name: Checkout pinned branch source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install declared dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify source identity and no engine drift
+        id: source_integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          git merge-base --is-ancestor "$SOURCE_SHA" "$GITHUB_SHA"
+          for file in constants.py entities.py dateutils.py rng.py accounting.py closure.py collection.py guarantee.py partner_equity.py friday.py settlement.py state_machine.py daily_engine.py monte_carlo.py; do
+            git diff --exit-code "$SOURCE_SHA" "$GITHUB_SHA" -- "$file"
+          done
+          python -m compileall -q scripts/stage13_rerun_sample.py
+          mkdir -p results_stage13/data
+          printf '{"source_sha":"%s","run_head_sha":"%s","run_id":"%s","run_attempt":"%s","branch":"%s"}\n' \
+            "$SOURCE_SHA" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_REF_NAME" \
+            > results_stage13/run_context.json
+          echo "SOURCE_SHA=$SOURCE_SHA"
+          echo "RUN_HEAD_SHA=$GITHUB_SHA"
+          echo "RUN_ID=$GITHUB_RUN_ID"
+          echo "BRANCH=$GITHUB_REF_NAME"
+          echo "ENGINE_SOURCE_UNCHANGED=PASS"
+
+      - name: Run complete repository tests without modifying any test
+        id: acceptance
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          python -m pytest -q --junitxml=results_stage13/pytest.xml \
+            > results_stage13/pytest_stdout.txt 2>&1
+          code=$?
+          cat results_stage13/pytest_stdout.txt
+          printf '%s\n' "$code" > results_stage13/pytest_exit_code.txt
+          exit "$code"
+
+      - name: Re-run exactly trial IDs 1..25 for all 25 scenarios
+        id: sample
+        if: always() && steps.source_integrity.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/stage13_rerun_sample.py \
+            --source-sha "$SOURCE_SHA" \
+            --output-dir results_stage13/data
+
+      - name: Upload cohort and evidence, including on acceptance failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-final-sample-data
+          path: results_stage13/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Gate workflow completion
+        if: always()
+        env:
+          SOURCE_INTEGRITY_OUTCOME: ${{ steps.source_integrity.outcome }}
+          ACCEPTANCE_OUTCOME: ${{ steps.acceptance.outcome }}
+          SAMPLE_OUTCOME: ${{ steps.sample.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'SOURCE_INTEGRITY_OUTCOME=%s\n' "$SOURCE_INTEGRITY_OUTCOME"
+          printf 'ACCEPTANCE_OUTCOME=%s\n' "$ACCEPTANCE_OUTCOME"
+          printf 'SAMPLE_OUTCOME=%s\n' "$SAMPLE_OUTCOME"
+          if [[ "$SOURCE_INTEGRITY_OUTCOME" != "success" || "$ACCEPTANCE_OUTCOME" != "success" || "$SAMPLE_OUTCOME" != "success" ]]; then
+            echo "FAIL: at least one source/test/sample gate did not PASS"
+            exit 1
+          fi
+          echo "SOURCE_INTEGRITY_TESTS_SAMPLE=PASS"
