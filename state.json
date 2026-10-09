@@ -3,9 +3,12 @@
   "schema_version": "1.0",
   "cp_completed": "CP-12-D",
   "sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
-  "next": "CP-12-E — wait for explicit user instruction; not started",
+  "next": "CP-12-E remains BLOCKED_NOT_PASS; requires an explicitly authorized scope to materialize the missing full final outputs under a new dataset identity; no subsequent CP started.",
   "blockers": [
-    "CP-12-E has not been authorized or started; await the user's next explicit command."
+    "CP-12-E BLOCKED_NOT_PASS: six required final deliverables are missing.",
+    "Current CP-12-B artifacts contain daily accounting fields and result hashes, but not the full event/contract/asset/claim/representative-trial data needed to generate all required final outputs.",
+    "Do not reuse historical outputs with an incompatible dataset identity and do not rerun completed trials under the current dataset identity.",
+    "The canonical acceptance run records 162 passed and test 158 skipped; its assertion body independently passed against the authoritative reference, but the canonical wrapper remains skipped."
   ],
   "stage7": {
     "closed": true,
@@ -877,5 +880,68 @@
       "CP-12-B daily schema has no per-bike lifecycle history or per-bike settlement start/due timestamps; no per-bike settlement-duration census is claimed.",
       "This CP-12-D run validates terminal closure outcomes from every daily row and relies on the pinned CP-12-B acceptance/regression evidence for code-path behavior; the daily dataset alone cannot expose each bike's historical state transitions."
     ]
+  },
+  "stage12_cp12e_audit": {
+    "status": "BLOCKED_NOT_PASS",
+    "audited_at": "2026-10-09T18:41:15Z",
+    "completed_cp_remains": "CP-12-D",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101,
+    "global_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "prior_runs": {
+      "CP-12-B": {
+        "run_id": "37964656154",
+        "head_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+        "conclusion": "success"
+      },
+      "CP-12-C": {
+        "run_id": "37971902520",
+        "head_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+        "conclusion": "success"
+      },
+      "CP-12-D": {
+        "run_id": "37972735159",
+        "head_sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+        "conclusion": "success"
+      }
+    },
+    "verified": {
+      "trials": 11005,
+      "daily_rows": 22546465,
+      "scenarios": 25,
+      "cp_b_to_c_scenario_sha_chain": "25/25 match",
+      "cp_c_to_d_scenario_sha_chain": "25/25 match",
+      "cp_c_checks": 18,
+      "cp_c_total_violations": 0,
+      "cp_d_checks": 22,
+      "cp_d_total_violations": 0,
+      "terminal_stopped_rows": 11005,
+      "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+      "acceptance_test_158_body": "PASS independently; canonical CP-12-B suite reported 162 passed, 1 skipped",
+      "github_schedule_triggers_found": 0,
+      "main_head_sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1"
+    },
+    "final_deliverables": {
+      "expected": [
+        "النتائج_الكاملة_AR.xlsx",
+        "Full_Results_EN.xlsx",
+        "التقرير_الكامل_AR",
+        "Full_Report_EN",
+        "الملخص_AR",
+        "Summary_EN"
+      ],
+      "status": "MISSING",
+      "generated": false
+    },
+    "failure": {
+      "literal": "المخرجات النهائية الإلزامية الست غير متاحة؛ لا توجد ملفات Excel النهائية ولا التقارير والملخصات النهائية الستة في المخرجات الحالية.",
+      "classification": "WORKFLOW_DEFECT",
+      "impact": "يمنع إعلان CP-12-E PASS أو إتمام التسليم النهائي.",
+      "probable_cause": "CP-12-B حفظ السجلات المحاسبية اليومية وبصمات TrialResult فقط، لا كل التفاصيل اللازمة للمخرجات النهائية.",
+      "proposed_fix": "اعتماد CP مستقل لجمع المخرجات التفصيلية الناقصة ضمن هوية dataset جديدة، مع منع إعادة/خلط trials المكتملة، ثم توليد الملفات الستة وتدقيقها قبل إعادة محاولة CP-12-E."
+    },
+    "main_modified": false,
+    "merged": false,
+    "next_cp_started": false
   }
 }
