@@ -1,110 +1,26 @@
 {
-  "stage": "11-CLOSED",
+  "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-MEGA-S11-CLOSURE",
-  "sha": "4e7faff740c856473f6f2f48e1749b00aa594593",
-  "next": "Stage 12 (separate permission required; Stage 11 CLOSED)",
-  "blockers": [],
-  "stage7": {
-    "closed": true,
-    "run_id": "37225915321",
-    "scenarios_stable": 25,
-    "commit": "dfbb7371b3c904991a4daf36d34a67272631b347"
-  },
-  "stage8": {
-    "closed": true,
-    "smoke_run_id": "37234010912",
-    "smoke_scenario": "C070_G100",
-    "smoke_final_n": 500,
-    "smoke_commit": "9c59e5f62b7d098d222960e6d065cd2faf029544"
-  },
-  "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
-  "consolidation_note": "Stage 8 code consolidated on main post-closure.",
-  "head_sha": "4e7faff740c856473f6f2f48e1749b00aa594593",
-  "verify_at": "tmp/stage8-consolidate-v2-20261005",
-  "stage7_f4_evidence": {
-    "run_id": "37482745008",
-    "branch": "tmp/wf-002f6-f4safe-20261006",
-    "commit": "9fa357e83a07544d070eb717a945257ce9954d6f",
-    "simulation_jobs": "25/25 success",
-    "restore_count_gt_zero": "25/25",
-    "derived_equals_stored": "25/25",
-    "official_fingerprint_match": "25/25",
-    "golden_c100_match": true,
-    "state_branches_v2": "25/25 unchanged",
-    "state_integrity_errors": 0,
-    "verified_at": "2026-10-06T15:19:16Z"
-  },
-  "resolved_anomalies": [
-    {
-      "id": "STATE-ANOMALY-002",
-      "description": "C100_G100 branch drift",
-      "resolved_by": "F3b-pilot-RESTORE + F4 verification",
-      "evidence": "Run 37482745008 success, 25/25 v2"
-    },
-    {
-      "id": "STATE-ANOMALY-003",
-      "description": "lease lifecycle writes during failure",
-      "status": "ACKNOWLEDGED-NOT-BLOCKING",
-      "note": "lease field not required for F4 success; behavior documented"
-    }
-  ],
-  "known_safe_workflows": {
-    "read_only_push_main": [
-      "stage3a-verification.yml",
-      "stage3b-verification.yml",
-      "stage5-main-postround2-validation.yml"
-    ],
-    "note": "لا تكتب main. مراجعة الحوكمة مؤجلة."
-  },
-  "stage9a_evidence": {
-    "status": "CLOSED-RESOLVED",
-    "run_id": "37671448546",
-    "run_head_sha": "5e25a94743f44554093934c57404c0b168e69651",
-    "excel_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
-    "manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
-    "sheets_count": 185,
-    "excel_errors": 0,
-    "verified_at": "2026-10-07T21:13:29Z"
-  },
-  "stage9b_evidence": {
-    "status": "CLOSED",
-    "errors_count": 0,
-    "formulas_count": 0,
-    "verified_at": "2026-10-07T22:00:13Z"
-  },
-  "stage9c_evidence": {
-    "roll_forward_target": 45025,
-    "roll_forward_achieved": "REPRESENTATIVE_ONLY: 10,382 daily accounting rows across 5 P50 payloads",
-    "roll_forward_scope": "5 representative P50 payloads; full 9,005-Trial / 45,025 trial-level scope unavailable",
-    "balance_check_target": 45025,
-    "balance_check_achieved": "REPRESENTATIVE_ONLY: 10,382 daily balance checks across 5 P50 payloads",
-    "balance_check_scope": "5 representative P50 payloads; full 9,005-Trial daily balance coverage unavailable",
-    "tested_trials": 5,
-    "total_trials": 9005,
-    "scope_note": "Full 45,025 target is a theoretical required scope, not an achieved execution count. No missing daily values are inferred.",
-    "acceptance_status": "162_PASS_1_EXCLUDED",
-    "status": "PARTIAL-FINAL-ACCEPTED"
-  },
-  "canonical_content_sha": "a7db0153299b3af8f89111bec52bb07d1356509c",
+  "cp_completed": "CP-MEGA-S12-CLOSURE",
+  "sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1",
   "sha_semantics": "parent_state_commit_pointer",
-  "stage10_evidence": {
-    "status": "STAGE-10-PASS",
-    "run_id": "37709936740",
-    "branch_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
-    "run_head_sha": "ca73f2df37baacebbcad965f5c433f129675820",
-    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "scenarios_tested": 25,
-    "benchmark_executions": 2500,
-    "canonical_trials_added": 2000,
-    "stage11_estimate_central_hours": 0,
-    "stage11_estimate_range_hours": [
-      0,
-      0
-    ],
-    "verified_at": "2026-10-08T01:23:39.795Z",
-    "environment_identity_completed_at": "2026-10-08T01:37:38Z",
-    "environment_completion_run_id": "37713839244",
-    "environment_completion_artifact_id": "11522533620"
+  "next": "Stage 13 (separate permission required; Stage 12 CLOSED)",
+  "blockers": [],
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "head_sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1",
+  "stage12_closure_evidence": {
+    "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
+    "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
+    "cp12b_run_id": "37964656154",
+    "cp12c_run_id": "37971902520",
+    "cp12c_commit": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+    "cp12d_run_id": "37972735159",
+    "cp12d_commit": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+    "global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "total_trials": 11005,
+    "total_daily_rows": 22546465,
+    "retries": 0,
+    "acceptance_gate": "162 effective / 163 inventory / Test158=K_TEST",
+    "sha_semantics_note": "parent_state_commit_pointer approved"
   }
 }

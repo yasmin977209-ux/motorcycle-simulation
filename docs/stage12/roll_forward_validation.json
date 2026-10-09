@@ -1,0 +1,384 @@
+{
+  "created_by_cp": "CP-12-C",
+  "source_cp": "CP-12-B",
+  "source_run_id": "37964656154",
+  "source_run_head_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "master_seed": 20270101,
+  "schema_version": "stage12-daily-accounting-v1",
+  "expected_global_sha256_from_cp12b": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+  "expected_daily_rows_from_cp12b": 22546465,
+  "overall_result": "PASS",
+  "scenario_count": 25,
+  "total_trials": 11005,
+  "total_daily_rows": 22546465,
+  "checks": {
+    "cash_rollforward": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "accounts_receivable_rollforward": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "gross_bike_assets_rollforward": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "accumulated_depreciation_rollforward": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "net_bike_assets_derived": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "equity_rollforward": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "equity_equals_capital_plus_retained_earnings": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "total_assets_components": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "liabilities_zero": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "balance_difference_matches": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "balance_difference_zero": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "row_source_identity": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "row_scenario_identity": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "row_seed_identity": {
+      "rows_checked": 22546465,
+      "violations": 0,
+      "examples": []
+    },
+    "trial_id_sequence": {
+      "rows_checked": 10980,
+      "violations": 0,
+      "examples": []
+    },
+    "date_continuity": {
+      "rows_checked": 22546440,
+      "violations": 0,
+      "examples": []
+    },
+    "daily_opening_continuity": {
+      "rows_checked": 22546440,
+      "violations": 0,
+      "examples": []
+    },
+    "trial_result_fingerprint_constant": {
+      "rows_checked": 22546440,
+      "violations": 0,
+      "examples": []
+    }
+  },
+  "scenarios": {
+    "C030_G000": {
+      "file": "C030_G000.parquet",
+      "content_sha256": "b89d0fffcd98465aa9891e76c84559c466706643cbece02967b12bae2d96e85d",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 854716,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2031-02-25"
+    },
+    "C030_G030": {
+      "file": "C030_G030.parquet",
+      "content_sha256": "2b95f26624abb6c4f3a7145e457c3f2f8764a9d037e2de326a9dd768d42d40c9",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 859478,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2031-03-23"
+    },
+    "C030_G050": {
+      "file": "C030_G050.parquet",
+      "content_sha256": "aec638c6313f602148bf5fefaaa9885f5a9b9abd46ad0467f83292b6680d99c4",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 861912,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2031-04-24"
+    },
+    "C030_G070": {
+      "file": "C030_G070.parquet",
+      "content_sha256": "77be80edb5d5ab71dbe8faeab52b3ffb88098f25176aff6f4112f2f5d19f1a0c",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 864738,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2031-05-03"
+    },
+    "C030_G100": {
+      "file": "C030_G100.parquet",
+      "content_sha256": "a2e01d1db937216f2121e5dbf554c8371af23754cc60e22848b20c4ad700b702",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 868051,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2031-04-14"
+    },
+    "C050_G000": {
+      "file": "C050_G000.parquet",
+      "content_sha256": "6beecb837a3c6b71f34aedbeb958e8dd176cce3d60b2dfa1b95ee9bd57e6a380",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1225547,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-02-02"
+    },
+    "C050_G030": {
+      "file": "C050_G030.parquet",
+      "content_sha256": "defeb970853ee9ebcd7af349cc902404996ecff250a23bb5c7e1f3686849c983",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1225634,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-31"
+    },
+    "C050_G050": {
+      "file": "C050_G050.parquet",
+      "content_sha256": "f4531eebeb1f30e0160b47229d50d1177a9a2f72007f5b8cd3d0234a46e112c6",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1225576,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-02-08"
+    },
+    "C050_G070": {
+      "file": "C050_G070.parquet",
+      "content_sha256": "08659990ead7a7da5a275d4496479bfc81badad820652dc6ba0a0765b42a7c82",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1225701,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-25"
+    },
+    "C050_G100": {
+      "file": "C050_G100.parquet",
+      "content_sha256": "81b6e72e588964d54b33f9951f25c8a5c8ec9e458b1c7287c0f130efca7b460c",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1226094,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-02-09"
+    },
+    "C070_G000": {
+      "file": "C070_G000.parquet",
+      "content_sha256": "3f6543a6f4cc2ed97274ab41164c87077305f53060a53a99b3eb73654ead3644",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1210420,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C070_G030": {
+      "file": "C070_G030.parquet",
+      "content_sha256": "3c499fbfbc1f6caa28e6617134d2b09e956813422f51ae7908e22c6aa8eed4a6",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1210441,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-12"
+    },
+    "C070_G050": {
+      "file": "C070_G050.parquet",
+      "content_sha256": "b4463fbf1885dd04b26453e0842a1c6ad433043c05f61c206561f9eb171a5213",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1210338,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C070_G070": {
+      "file": "C070_G070.parquet",
+      "content_sha256": "51a39d399667b69691f574f6fe56ddebba9c86d556c2835c192873fe40be5cf5",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1210406,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-09"
+    },
+    "C070_G100": {
+      "file": "C070_G100.parquet",
+      "content_sha256": "90fd4f7102a7741d361f29726700ee87516cfa7e05543d5f3537d0cbfa41b238",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1210445,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-08"
+    },
+    "C085_G000": {
+      "file": "C085_G000.parquet",
+      "content_sha256": "f77beafdcfe43132faa00abab80141f8bf6153fbf35efacfe282d38f0c6ddf38",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1209203,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-08"
+    },
+    "C085_G030": {
+      "file": "C085_G030.parquet",
+      "content_sha256": "e5b8a3efe0cf78b8d98896507c4cd97db3f2910f332f73a97f16df4e996d7c54",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1209167,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C085_G050": {
+      "file": "C085_G050.parquet",
+      "content_sha256": "104687ab9d841da2b4360477e390839a414733829f4513cbf98db69655674772",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1209190,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C085_G070": {
+      "file": "C085_G070.parquet",
+      "content_sha256": "61d7a844865d47545d23f84fa71e51491c658e5293be490a5c97992374d3fc93",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1209210,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-08"
+    },
+    "C085_G100": {
+      "file": "C085_G100.parquet",
+      "content_sha256": "200645be63674cb2c65bff0bfb89ddc00bdfab9a3cda5e5e5b8d93ba7e23e43a",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 550,
+      "daily_rows": 1209208,
+      "first_trial_id": 1,
+      "last_trial_id": 550,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C100_G000": {
+      "file": "C100_G000.parquet",
+      "content_sha256": "df1797e95324433c0db4d450056ca1e5f7e16f1acf6279b8fd83dae275669e52",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 1,
+      "daily_rows": 2198,
+      "first_trial_id": 1,
+      "last_trial_id": 1,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C100_G030": {
+      "file": "C100_G030.parquet",
+      "content_sha256": "51533c10feaddd6124796dee76280662f0c4e79a2bc3cbb7c14acf27436e1c96",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 1,
+      "daily_rows": 2198,
+      "first_trial_id": 1,
+      "last_trial_id": 1,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C100_G050": {
+      "file": "C100_G050.parquet",
+      "content_sha256": "848ea1bc628c286be4f57d6dc807e2c398ab5d45fada7e5cfdf86db9652d3db1",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 1,
+      "daily_rows": 2198,
+      "first_trial_id": 1,
+      "last_trial_id": 1,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C100_G070": {
+      "file": "C100_G070.parquet",
+      "content_sha256": "cfb67a65f99a548d0175f15290d0f446c79c07008ffaa6fd3ab931e63aa8cbaa",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 1,
+      "daily_rows": 2198,
+      "first_trial_id": 1,
+      "last_trial_id": 1,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    },
+    "C100_G100": {
+      "file": "C100_G100.parquet",
+      "content_sha256": "b2965dd4e2426631dcb503012817c63fe206c61e9f054d95c49716e1e3c448ae",
+      "content_sha256_matches_cp12b_manifest": true,
+      "trials": 1,
+      "daily_rows": 2198,
+      "first_trial_id": 1,
+      "last_trial_id": 1,
+      "first_date": "2027-01-01",
+      "last_date": "2033-01-06"
+    }
+  }
+}
