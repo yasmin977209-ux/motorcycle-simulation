@@ -3,9 +3,11 @@
   "schema_version": "1.0",
   "cp_completed": "CP-12-D",
   "sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
-  "next": "CP-12-E — wait for explicit user instruction; not started",
+  "next": "CP-12-E remains BLOCKED_NOT_PASS; resolve the documented blockers before any final close.",
   "blockers": [
-    "CP-12-E has not been authorized or started; await the user's next explicit command."
+    "WORKFLOW_DEFECT: The six mandatory final deliverables are missing; CP-12-B/C/D artifacts do not contain all detail needed to produce them faithfully.",
+    "WORKFLOW_DEFECT: Canonical acceptance evidence is 162 passed, 1 skipped; the reference requires all 163 tests to PASS. Test 158's exact assertion passed independently against the supplied reference, but canonical pytest still records it as skipped.",
+    "K_SPEC: state.json.sha currently uses parent_state_commit_pointer (code/parent SHA), but governance says sha is the last state-update commit. A practical convention must be explicitly resolved."
   ],
   "stage7": {
     "closed": true,
@@ -877,5 +879,145 @@
       "CP-12-B daily schema has no per-bike lifecycle history or per-bike settlement start/due timestamps; no per-bike settlement-duration census is claimed.",
       "This CP-12-D run validates terminal closure outcomes from every daily row and relies on the pinned CP-12-B acceptance/regression evidence for code-path behavior; the daily dataset alone cannot expose each bike's historical state transitions."
     ]
+  },
+  "stage12_cp12e_audit": {
+    "status": "BLOCKED_NOT_PASS",
+    "audit_mode": "local final audit over artifacts retrieved from the pinned GitHub Actions runs; no CP-12-E GitHub Actions run was launched",
+    "audited_at_utc": "2026-10-09T18:52:34Z",
+    "reference": {
+      "file": "المرجع_النهائي_الموحد_المعتمد.md",
+      "sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+      "rule_0_11_phrase_verified": true
+    },
+    "source_identity": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "expected_global_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+      "reproduced_global_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+      "exact_match": true,
+      "trials": 11005,
+      "daily_rows": 22546465,
+      "scenarios": 25,
+      "retries": 0
+    },
+    "pinned_runs": {
+      "CP_12_B": {
+        "run_id": "37964656154",
+        "head_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+        "conclusion": "success",
+        "artifact_id": "11634128090",
+        "artifact_zip_sha256": "d5c99b26a009ce2571361bff90724f4dd2aa055c72e50cf0fc9dba543da23551"
+      },
+      "CP_12_C": {
+        "run_id": "37971902520",
+        "head_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+        "conclusion": "success",
+        "artifact_id": "11636856147",
+        "artifact_zip_sha256": "fe677294001f4239d72b53524efa1759897d8ae85ad0d843161e1a094435ce87",
+        "checks": 18,
+        "violations": 0
+      },
+      "CP_12_D": {
+        "run_id": "37972735159",
+        "head_sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+        "conclusion": "success",
+        "artifact_id": "11636767404",
+        "artifact_zip_sha256": "16287336a360bc08ad3ce34de220765f6ed815f9f62cb44071cc3232e0014bd8",
+        "checks": 22,
+        "violations": 0,
+        "terminal_stopped_rows": 11005
+      }
+    },
+    "hash_chain": {
+      "CP_B_to_C_scenarios_match": 25,
+      "CP_B_to_C_expected": 25,
+      "CP_C_to_D_scenarios_match": 25,
+      "CP_C_to_D_expected": 25
+    },
+    "acceptance_163": {
+      "status": "BLOCKED_NOT_PASS",
+      "required_pass_count": 163,
+      "canonical_passed": 162,
+      "canonical_skipped": 1,
+      "skipped_test": "test_158_الاحدث_يلغي_الاقدم_توثيقيا",
+      "skip_reason": "ADJUDICATION: الاختبار 158 يخالف القاعدة 8",
+      "independent_exact_body_check": {
+        "status": "PASS",
+        "passed": 1,
+        "junit_sha256": "f0ebaa54ed5a83856b86b70442aeb2667b818f79f5a5cd918d271112b9642f66"
+      },
+      "explanation": "Do not count the independent assertion execution as changing the canonical run's SKIPPED result."
+    },
+    "final_six_deliverables": {
+      "status": "FAIL",
+      "required": [
+        "النتائج_الكاملة_AR.xlsx",
+        "Full_Results_EN.xlsx",
+        "التقرير_الكامل_AR",
+        "Full_Report_EN",
+        "الملخص_AR",
+        "Summary_EN"
+      ],
+      "missing": [
+        "النتائج_الكاملة_AR.xlsx",
+        "Full_Results_EN.xlsx",
+        "التقرير_الكامل_AR",
+        "Full_Report_EN",
+        "الملخص_AR",
+        "Summary_EN"
+      ],
+      "source_reason": "The pinned CP-12-B/C/D artifacts include daily accounting rows, per-trial fingerprints and audit evidence, but do not include the full event, transaction, contract, asset and claim histories required for the reference's full output package."
+    },
+    "scheduler_audit": {
+      "main_workflow_count": 16,
+      "schedule_triggers_found": 0,
+      "action_taken": "No scheduled workflow exists to disable; unrelated manual workflows were left unchanged."
+    },
+    "main": {
+      "sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1",
+      "modified": false,
+      "merge_performed": false
+    },
+    "state_sha_semantics": {
+      "status": "UNRESOLVED_K_SPEC",
+      "current_sha_field": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+      "last_state_update_commit_before_CP12E": "5a0a4e98e203e55ccaa5d51f013169a87b310dda",
+      "stored_semantics": "parent_state_commit_pointer",
+      "governance_text": "sha = commit آخر تحديث للحالة",
+      "required_action": "User approval of a workable convention; no implicit semantics change performed."
+    },
+    "blockers": [
+      {
+        "classification": "WORKFLOW_DEFECT",
+        "literal": "المخرجات النهائية الإلزامية الست غير متاحة؛ لا توجد ملفات Excel النهائية ولا التقارير والملخصات النهائية الستة في المخرجات الحالية.",
+        "impact": "Prevents final closure and delivery.",
+        "proposed_fix": "A separately scoped and authorized collection CP must capture missing per-trial details without rerunning or mixing completed trials."
+      },
+      {
+        "classification": "WORKFLOW_DEFECT",
+        "literal": "162 passed, 1 skipped in 9.99s; skipped test: test_158_الاحدث_يلغي_الاقدم_توثيقيا; reason: ADJUDICATION: الاختبار 158 يخالف القاعدة 8",
+        "impact": "Canonical acceptance does not show 163/163 PASS.",
+        "proposed_fix": "Provide the authoritative reference to the exact test environment with hash verification; execute the canonical acceptance gate without modifying the test body."
+      },
+      {
+        "classification": "K_SPEC",
+        "literal": "state.json.sha points to a parent/code commit while governance says it points to the last state-update commit.",
+        "impact": "Final state commit provenance convention is unresolved.",
+        "proposed_fix": "Obtain the user's explicit choice of a practical, non-self-referential SHA convention."
+      }
+    ],
+    "audit_files": {
+      "json": "CP12E_final_audit.json",
+      "json_sha256": "f400902dc8f5d9bbce35a288f953c22a84275c4b38b2eb974c2e651c22760f05",
+      "markdown": "CP12E_final_audit_AR.md",
+      "markdown_sha256": "c8d91a97acecfa128b7f4e9569ec6666f3144d4aa6a97bf680aa049f767503c4"
+    },
+    "completion": {
+      "CP_12_E_started": true,
+      "CP_12_E_passed": false,
+      "CP_12_E_closed": false,
+      "next_CP_started": false,
+      "main_unchanged": true
+    }
   }
 }
