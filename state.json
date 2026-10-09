@@ -1,10 +1,12 @@
 {
   "stage": "12",
   "schema_version": "1.0",
-  "cp_completed": "CP-12-C",
-  "sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
-  "next": "CP-12-D — explicitly authorized; not started",
-  "blockers": [],
+  "cp_completed": "CP-12-D",
+  "sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+  "next": "CP-12-E — wait for explicit user instruction; not started",
+  "blockers": [
+    "CP-12-E has not been authorized or started; await the user's next explicit command."
+  ],
   "stage7": {
     "closed": true,
     "run_id": "37225915321",
@@ -20,7 +22,7 @@
   },
   "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
   "consolidation_note": "Stage 8 code consolidated on main post-closure.",
-  "head_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+  "head_sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
   "verify_at": "tmp/stage8-consolidate-v2-20261005",
   "stage7_f4_evidence": {
     "run_id": "37482745008",
@@ -108,7 +110,7 @@
     "environment_completion_artifact_id": "11522533620"
   },
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "run_id": "37971902520",
+  "run_id": "37972735159",
   "artifact_manifest": {
     "run_id": "37964656154",
     "workflow": "stage12-b3-25jobs",
@@ -549,6 +551,331 @@
     ],
     "limitations": [
       "The CP-12-B daily schema does not include per-bike state history or per-bike settlement start/due dates; CP-12-D may validate final daily closure outcomes and previously passed code/path gates, but must not claim a full per-bike settlement-duration census."
+    ]
+  },
+  "stage12_cp12d_evidence": {
+    "status": "PASS",
+    "verified_at": "2026-10-09T18:22:42Z",
+    "run_id": "37972735159",
+    "branch": "tmp/stage12-d-closure-20261009",
+    "run_head_sha": "4b39e45c58aac3f7272002f4f241f930ca3c800c",
+    "source_cp12c_run_id": "37971902520",
+    "source_cp12c_run_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+    "source_cp12b_run_id": "37964656154",
+    "source_cp12b_run_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101,
+    "global_dataset_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "scenarios": 25,
+    "trials": 11005,
+    "daily_rows": 22546465,
+    "terminal_stopped_rows": 11005,
+    "unit_tests": "4 passed in 0.14s",
+    "closure_gates": [
+      {
+        "name": "final_close_date_present",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "final_close_date_after_expansion_cutoff",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "simulation_stopped_matches_final_close_date",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_no_active_possession_bikes",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_no_pending_claims",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_accounts_receivable_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_guarantee_receivable_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_balance_difference_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_assets_equal_equity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "terminal_liabilities_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "active_bikes_nonnegative",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "owned_transferred_bikes_nonnegative",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "pending_claims_nonnegative",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "trial_id_sequence",
+        "rows_checked": 10980,
+        "violations": 0
+      },
+      {
+        "name": "date_continuity",
+        "rows_checked": 22546220,
+        "violations": 0
+      },
+      {
+        "name": "final_close_date_constant",
+        "rows_checked": 22557445,
+        "violations": 0
+      },
+      {
+        "name": "owned_transferred_bikes_monotonic",
+        "rows_checked": 22546220,
+        "violations": 0
+      },
+      {
+        "name": "trial_closure_summary",
+        "rows_checked": 11005,
+        "violations": 0
+      },
+      {
+        "name": "trial_result_fingerprint_constant",
+        "rows_checked": 22546220,
+        "violations": 0
+      },
+      {
+        "name": "row_source_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_scenario_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_seed_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      }
+    ],
+    "scenario_close_date_summary": {
+      "C030_G000": {
+        "trials": 550,
+        "rows": 854716,
+        "close_min": "2031-02-20",
+        "close_max": "2031-07-13",
+        "distinct_close_dates": 90
+      },
+      "C030_G030": {
+        "trials": 550,
+        "rows": 859478,
+        "close_min": "2031-02-25",
+        "close_max": "2031-07-23",
+        "distinct_close_dates": 89
+      },
+      "C030_G050": {
+        "trials": 550,
+        "rows": 861912,
+        "close_min": "2031-03-02",
+        "close_max": "2031-08-31",
+        "distinct_close_dates": 85
+      },
+      "C030_G070": {
+        "trials": 550,
+        "rows": 864738,
+        "close_min": "2031-03-04",
+        "close_max": "2031-08-30",
+        "distinct_close_dates": 83
+      },
+      "C030_G100": {
+        "trials": 550,
+        "rows": 868051,
+        "close_min": "2031-03-13",
+        "close_max": "2031-07-27",
+        "distinct_close_dates": 81
+      },
+      "C050_G000": {
+        "trials": 550,
+        "rows": 1225547,
+        "close_min": "2033-01-16",
+        "close_max": "2033-02-12",
+        "distinct_close_dates": 24
+      },
+      "C050_G030": {
+        "trials": 550,
+        "rows": 1225634,
+        "close_min": "2033-01-12",
+        "close_max": "2033-02-12",
+        "distinct_close_dates": 22
+      },
+      "C050_G050": {
+        "trials": 550,
+        "rows": 1225576,
+        "close_min": "2033-01-05",
+        "close_max": "2033-02-12",
+        "distinct_close_dates": 23
+      },
+      "C050_G070": {
+        "trials": 550,
+        "rows": 1225701,
+        "close_min": "2033-01-11",
+        "close_max": "2033-02-12",
+        "distinct_close_dates": 22
+      },
+      "C050_G100": {
+        "trials": 550,
+        "rows": 1226094,
+        "close_min": "2033-01-15",
+        "close_max": "2033-02-12",
+        "distinct_close_dates": 21
+      },
+      "C070_G000": {
+        "trials": 550,
+        "rows": 1210420,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-23",
+        "distinct_close_dates": 14
+      },
+      "C070_G030": {
+        "trials": 550,
+        "rows": 1210441,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-25",
+        "distinct_close_dates": 16
+      },
+      "C070_G050": {
+        "trials": 550,
+        "rows": 1210338,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-22",
+        "distinct_close_dates": 14
+      },
+      "C070_G070": {
+        "trials": 550,
+        "rows": 1210406,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-22",
+        "distinct_close_dates": 13
+      },
+      "C070_G100": {
+        "trials": 550,
+        "rows": 1210445,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-22",
+        "distinct_close_dates": 13
+      },
+      "C085_G000": {
+        "trials": 550,
+        "rows": 1209203,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-12",
+        "distinct_close_dates": 7
+      },
+      "C085_G030": {
+        "trials": 550,
+        "rows": 1209167,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-15",
+        "distinct_close_dates": 7
+      },
+      "C085_G050": {
+        "trials": 550,
+        "rows": 1209190,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-10",
+        "distinct_close_dates": 5
+      },
+      "C085_G070": {
+        "trials": 550,
+        "rows": 1209210,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-13",
+        "distinct_close_dates": 7
+      },
+      "C085_G100": {
+        "trials": 550,
+        "rows": 1209208,
+        "close_min": "2033-01-05",
+        "close_max": "2033-01-13",
+        "distinct_close_dates": 8
+      },
+      "C100_G000": {
+        "trials": 1,
+        "rows": 2198,
+        "close_min": "2033-01-06",
+        "close_max": "2033-01-06",
+        "distinct_close_dates": 1
+      },
+      "C100_G030": {
+        "trials": 1,
+        "rows": 2198,
+        "close_min": "2033-01-06",
+        "close_max": "2033-01-06",
+        "distinct_close_dates": 1
+      },
+      "C100_G050": {
+        "trials": 1,
+        "rows": 2198,
+        "close_min": "2033-01-06",
+        "close_max": "2033-01-06",
+        "distinct_close_dates": 1
+      },
+      "C100_G070": {
+        "trials": 1,
+        "rows": 2198,
+        "close_min": "2033-01-06",
+        "close_max": "2033-01-06",
+        "distinct_close_dates": 1
+      },
+      "C100_G100": {
+        "trials": 1,
+        "rows": 2198,
+        "close_min": "2033-01-06",
+        "close_max": "2033-01-06",
+        "distinct_close_dates": 1
+      }
+    },
+    "artifact": {
+      "artifact_id": "11636767404",
+      "name": "stage12-cp12d-closure-audit",
+      "size_bytes": 4490,
+      "github_zip_sha256": "16287336a360bc08ad3ce34de220765f6ed815f9f62cb44071cc3232e0014bd8"
+    },
+    "prior_closure_regression_evidence": {
+      "source_run_id": "37964656154",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "test_stage3b_closure": "6 passed in the pinned CP-12-B acceptance/regression sequence",
+      "test_stage3b_paths": "5 passed in the pinned CP-12-B acceptance/regression sequence",
+      "meaning": "Earlier canonical tests support the four preconditions and successful/failed post-maturity settlement paths; not a per-bike census of the CP-12-B daily Parquet schema."
+    },
+    "limitations": [
+      "CP-12-B daily schema has no per-bike lifecycle history or per-bike settlement start/due timestamps; no per-bike settlement-duration census is claimed.",
+      "This CP-12-D run validates terminal closure outcomes from every daily row and relies on the pinned CP-12-B acceptance/regression evidence for code-path behavior; the daily dataset alone cannot expose each bike's historical state transitions."
     ]
   }
 }
