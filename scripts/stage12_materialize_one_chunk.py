@@ -1,4 +1,7 @@
 import argparse
+import hashlib
+import json
+from dataclasses import asdict
 from pathlib import Path
 
 import pyarrow as pa
@@ -48,7 +51,8 @@ def main():
             project, scenario_id=a.scenario, collection_probability=cp,
             recovery_rate_pct=rr, trial_id=tid
         )
-        trial_sha = monte_carlo.fingerprint_trial_results([result])
+        trial_payload = json.dumps(asdict(result), ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        trial_sha = hashlib.sha256(trial_payload).hexdigest()
         series = (
             project.daily_snapshots, project.cash_rollforward, project.ar_rollforward,
             project.asset_rollforward, project.equity_rollforward, daily_meta

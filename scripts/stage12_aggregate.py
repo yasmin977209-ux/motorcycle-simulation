@@ -14,8 +14,8 @@ def main():
     p.add_argument("--root", required=True)
     root = Path(p.parse_args().root)
     files = sorted(root.rglob("*.parquet"))
-    if len(files) != 225:
-        raise SystemExit(f"expected 225 parquet files, got {len(files)}")
+    if len(files) != 85:
+        raise SystemExit(f"expected 85 parquet files, got {len(files)}")
     keys, trials, total_rows, sources = set(), [], 0, set()
     for path in files:
         rows = pq.read_table(path, columns=["scenario_id", "trial_id", "date", "source_sha", "result_sha256"]).to_pylist()
