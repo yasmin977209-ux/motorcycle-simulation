@@ -1,13 +1,17 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-MEGA-S12-CLOSURE",
-  "sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS",
+  "sha": "9c66046f0723ae29b2b8e4301f04975e8f9addca",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Stage 13 (separate permission required; Stage 12 CLOSED)",
-  "blockers": [],
+  "next": "CP-B1: Stage 11 Manifest reconciliation (separate CP; no replay; user-authorized sequence)",
+  "blockers": [
+    "CP-B1 pending: main does not yet contain the Stage 11 global manifest reconciled to the user-approved G7 semantics; the temporary CP-11-B-Rev1 evidence is not yet canonical on main.",
+    "CP-B2 pending: main does not yet contain the updated Stage 12 accounting data contract adopting 25 materialization jobs plus validate and aggregate.",
+    "CP-D pending after CP-C: the independent Stage 9C 20-point Parquet versus _STATS gate remains NOT_EXECUTED and must not be claimed PASS before evidence."
+  ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "f3f99261e92f0a3bacaf977b65280dda9c660aa1",
+  "head_sha": "9c66046f0723ae29b2b8e4301f04975e8f9addca",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -22,5 +26,13 @@
     "retries": 0,
     "acceptance_gate": "162 effective / 163 inventory / Test158=K_TEST",
     "sha_semantics_note": "parent_state_commit_pointer approved"
+  },
+  "governance_decision_log": {
+    "date": "2026-10-09",
+    "file": "docs/governance/DECISIONS_LOG.md",
+    "pull_request": 15,
+    "branch": "tmp/governance-decisions-20261009",
+    "decision_log_commit": "7171d3f10794c09e7b621904b3dfc2ac7f9573be",
+    "note": "CP-A governance decisions are recorded; no engine, tests, or workflow changed. This state pointer identifies the source HEAD before the atomic PR merge."
   }
 }
