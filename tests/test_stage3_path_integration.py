@@ -198,7 +198,7 @@ def test_path5_repeated_secondary_default_two_cycles():
         1 for event in target.lifecycle_history
         if event.event_type.value == "SECONDARY_TERMINATED"
     )
-    assert len([c for c in project.contracts if c.contract_type is ContractType.SECONDARY]) >= 2
+    assert len([c for c in project.contracts.values() if c.contract_type is ContractType.SECONDARY]) >= 2
     assert secondary_starts >= 1
     assert secondary_terminations >= 2
 
