@@ -1,0 +1,134 @@
+{
+  "manifest_version": "1.1",
+  "created_at": "2026-10-10",
+  "created_by_cp": "CP-B1",
+  "identity_scope": "25_SCENARIOS",
+  "manifest_status": "PASS",
+  "total_trials_expected": 11005,
+  "total_trials_evidenced": 11005,
+  "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+  "master_seed": 20270101,
+  "identity_level": "TRIAL",
+  "global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+  "global_aggregate_algorithm": "SHA-256 over UTF-8 canonical records 'scenario_id|trial_id|trial_hash\\n', sorted by scenario_id ascending then trial_id ascending.",
+  "scenario_counts": {
+    "C100_G100": 1,
+    "C100_G070": 1,
+    "C100_G050": 1,
+    "C100_G030": 1,
+    "C100_G000": 1,
+    "C085_G100": 550,
+    "C085_G070": 550,
+    "C085_G050": 550,
+    "C085_G030": 550,
+    "C085_G000": 550,
+    "C070_G100": 550,
+    "C070_G070": 550,
+    "C070_G050": 550,
+    "C070_G030": 550,
+    "C070_G000": 550,
+    "C050_G100": 550,
+    "C050_G070": 550,
+    "C050_G050": 550,
+    "C050_G030": 550,
+    "C050_G000": 550,
+    "C030_G100": 550,
+    "C030_G070": 550,
+    "C030_G050": 550,
+    "C030_G030": 550,
+    "C030_G000": 550
+  },
+  "identity_evidence": {
+    "dataset_identity_file": "docs/stage11/dataset_identity.json",
+    "dataset_identity_blob_sha": "72a481d509d39820fba78732724fde4fa9f25134",
+    "historical_source_manifest": {
+      "branch": "tmp/stage11-manifest-11005-20261008",
+      "commit": "f17e1a59a91df8d4a967ebc3cbbd035ca1230439",
+      "file": "docs/stage11/global_manifest_11005.json",
+      "blob_sha": "27e94a0ddb573b4d09701faac9978168f62ded89"
+    },
+    "source_sha_matches_main_state": true,
+    "master_seed": 20270101,
+    "per_scenario_fingerprints_match": "25/25",
+    "total_trial_count": 11005,
+    "per_trial_SHA256_evidence": "VERIFIED in referenced historical manifest"
+  },
+  "gates": {
+    "G1": {
+      "result": "PASS",
+      "evidence": "sum(N)=11005 and total_trials_evidenced=11005."
+    },
+    "G2": {
+      "result": "PASS",
+      "evidence": "25/25 final scenario fingerprints match dataset_identity.json."
+    },
+    "G3": {
+      "result": "PASS",
+      "evidence": "25/25 SOURCE_SHA equals source_sha."
+    },
+    "G4": {
+      "result": "PASS",
+      "evidence": "25/25 master_seed equals 20270101."
+    },
+    "G5": {
+      "result": "PASS",
+      "evidence": "Canonical per-trial SHA-256 aggregate equals global_aggregate_sha256."
+    },
+    "G6": {
+      "result": "PASS",
+      "evidence": "Complete per-trial artifact identity covers all declared trial IDs; detailed records preserved in historical_source_manifest."
+    },
+    "G7": {
+      "result": "PASS",
+      "method": "stage7_checkpoint_plus_stage10_extension_no_replay",
+      "evidence": "Stage 7 checkpoint IDs 1..450 and next_trial_id=451; Stage 10 adds IDs 451..550 for 20 non-C100 scenarios; C100 remains ID 1 with next_trial_id=2; no overlap 25/25; no gap 25/25; per-trial SHA evidence VERIFIED. Do not compare the Stage 7 checkpoint pointer against the merged dataset maximum."
+    },
+    "G8": {
+      "result": "PASS",
+      "evidence": "New manifest and R4 record only; historical source and stage3b-preserved remain unchanged."
+    }
+  },
+  "historical_legacy_evidence": {
+    "old_manifest_status": "FAIL",
+    "old_G7_result": "FAIL",
+    "old_status_note": "Stage 7 next_trial_id replay check did not equal merged trial_id_max for non-C100 scenarios; superseded by the user-approved revised G7 semantics.",
+    "old_G7_failed_scenarios": [
+      "C030_G000",
+      "C030_G030",
+      "C030_G050",
+      "C030_G070",
+      "C030_G100",
+      "C050_G000",
+      "C050_G030",
+      "C050_G050",
+      "C050_G070",
+      "C050_G100",
+      "C070_G000",
+      "C070_G030",
+      "C070_G050",
+      "C070_G070",
+      "C070_G100",
+      "C085_G000",
+      "C085_G030",
+      "C085_G050",
+      "C085_G070",
+      "C085_G100"
+    ],
+    "classification": "K_SPEC",
+    "decision_date": "2026-10-09",
+    "authority": "docs/governance/DECISIONS_LOG.md",
+    "disposition": "Historical evidence only; original file remains unchanged."
+  },
+  "reconciliation": {
+    "date": "2026-10-10",
+    "cp": "CP-B1",
+    "no_trial_rerun": true,
+    "no_historical_file_modified": true,
+    "r4_review": "docs/stage11/R4_manifest_reconciliation.md"
+  },
+  "statistics_policy": {
+    "official_statistics_scope": "PER_SCENARIO",
+    "pooled_cross_scenario_statistics": "DESCRIPTIVE_ONLY"
+  },
+  "status_note": "PASS under user-approved revised G7 no-replay semantics. The historical FAIL is retained unchanged by immutable branch/commit/blob reference; no historical file was rewritten."
+}
