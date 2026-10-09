@@ -32,19 +32,8 @@ jobs:
           set -euo pipefail
           mkdir -p results_stage12_cp12c
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CP12B_RUN_ID}" > results_stage12_cp12c/source_run.json
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          run = json.loads(Path("results_stage12_cp12c/source_run.json").read_text(encoding="utf-8"))
-          assert run["id"] == int(os.environ["CP12B_RUN_ID"]), run
-          assert run["status"] == "completed" and run["conclusion"] == "success", run
-          assert run["head_sha"] == os.environ["CP12B_RUN_SHA"], run
-          assert run["head_branch"] == "tmp/stage12-b3-25jobs-20261009", run
-          print(json.dumps({
-              "run_id": run["id"], "conclusion": run["conclusion"],
-              "head_sha": run["head_sha"], "head_branch": run["head_branch"]
-          }, sort_keys=True))
-          PY
+          python scripts/stage12_verify_source_run.py results_stage12_cp12c/source_run.json
+
       - name: Download the 25 daily Parquet artifacts from pinned CP-12-B
         uses: actions/download-artifact@v4
         with:
