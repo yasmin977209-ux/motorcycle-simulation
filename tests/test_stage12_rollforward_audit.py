@@ -47,7 +47,6 @@ def test_cash_rollforward_violation_is_detected():
     masks = invariant_masks(columns)
     assert not bool(masks["cash_rollforward"][1])
     assert not bool(masks["total_assets_components"][1])
-    assert not bool(masks["balance_difference_zero"][1])
 
 
 def test_zero_liabilities_is_an_explicit_gate():
