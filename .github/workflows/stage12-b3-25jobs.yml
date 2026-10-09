@@ -11,16 +11,70 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install -r requirements.txt
-      - run: python -m pytest -q
-      - run: python scripts/stage12_materialize.py --help
-      - run: python scripts/stage12_aggregate.py --help
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Build fresh temporary acceptance fixtures
+        run: python scripts/stage12_prepare_acceptance_fixtures.py
+      - name: Acceptance and regression gates from the current Stage 5 contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "== Chapter 16 v2 acceptance (163-test contract) =="
+          python -m pytest -q tests/test_acceptance_16_v2.py
+          echo "== Stage 1 =="
+          python -m pytest -q tests/test_stage1.py
+          echo "== Stage 2 =="
+          python -m pytest -q tests/test_stage2.py tests/test_stage2_entities_additions.py
+          echo "== Stage 3A Chapter 5 =="
+          python -m pytest -q tests/test_stage3a.py -k ch5
+          echo "== Stage 3A Chapter 6 =="
+          python -m pytest -q tests/test_stage3a.py -k ch6
+          echo "== Stage 3A Chapter 7 =="
+          python -m pytest -q tests/test_stage3a.py -k ch7
+          echo "== Stage 3A Chapter 8 =="
+          python -m pytest -q tests/test_stage3a.py -k ch8
+          echo "== Stage 3A Chapter 9 =="
+          python -m pytest -q tests/test_stage3a.py -k ch9
+          echo "== Stage 1 regression =="
+          python -m pytest -q tests/test_stage1.py
+          echo "== Stage 2 regression =="
+          python -m pytest -q tests/test_stage2.py
+          echo "== Stage 3B accounting =="
+          python -m pytest -q tests/test_stage3b_accounting.py
+          echo "== Stage 3B partner equity =="
+          python -m pytest -q tests/test_stage3b_partner_equity.py
+          echo "== Stage 3B M1..M17 order =="
+          python -m pytest -q tests/test_stage3b_m_order.py
+          echo "== Stage 3B closure =="
+          python -m pytest -q tests/test_stage3b_closure.py
+          echo "== Stage 4.4 path 1 =="
+          python -m pytest -q tests/test_stage3b_path1.py
+          echo "== Stage 4.4 paths 2..6 =="
+          python -m pytest -q tests/test_stage3b_paths.py
+          echo "== Dynamic closure; no artificial time cap =="
+          python -m pytest -q tests/test_stage3b_no_time_cap.py
+          echo "== Stage 3B determinism =="
+          python -m pytest -q tests/test_stage3b_determinism.py
+          echo "== Monte Carlo round 1 =="
+          python -m pytest -q tests/test_monte_carlo_round1.py
+          echo "== Monte Carlo round 2 / hash-seed invariance =="
+          python -m pytest -q tests/test_monte_carlo_round2.py
+          echo "== Monte Carlo round 3 =="
+          python -m pytest -q tests/test_monte_carlo_round3.py
+          echo "== Monte Carlo round 4 =="
+          python -m pytest -q tests/test_monte_carlo_round4.py
+      - name: Validate Stage 12 script interfaces
+        run: |
+          python scripts/stage12_materialize.py --help
+          python scripts/stage12_aggregate.py --help
 
   materialize:
     needs: validate
