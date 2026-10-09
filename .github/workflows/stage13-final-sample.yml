@@ -7,29 +7,24 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  sample-replay:
+  acceptance:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     env:
       PYTHONPATH: .
       SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
     steps:
-      - name: Checkout pinned branch source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install declared dependencies
-        run: python -m pip install -r requirements.txt
-
-      - name: Verify source identity and no engine drift
+      - run: python -m pip install -r requirements.txt
+      - name: Verify pinned engine/RNG identity
         id: source_integrity
         shell: bash
         run: |
@@ -39,64 +34,192 @@ jobs:
           for file in constants.py entities.py dateutils.py rng.py accounting.py closure.py collection.py guarantee.py partner_equity.py friday.py settlement.py state_machine.py daily_engine.py monte_carlo.py; do
             git diff --exit-code "$SOURCE_SHA" "$GITHUB_SHA" -- "$file"
           done
-          python -m compileall -q scripts/stage13_rerun_sample.py
-          mkdir -p results_stage13/data
-          printf '{"source_sha":"%s","run_head_sha":"%s","run_id":"%s","run_attempt":"%s","branch":"%s"}\n' \
-            "$SOURCE_SHA" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_REF_NAME" \
-            > results_stage13/run_context.json
-          echo "SOURCE_SHA=$SOURCE_SHA"
-          echo "RUN_HEAD_SHA=$GITHUB_SHA"
-          echo "RUN_ID=$GITHUB_RUN_ID"
-          echo "BRANCH=$GITHUB_REF_NAME"
-          echo "ENGINE_SOURCE_UNCHANGED=PASS"
-
-      - name: Run complete repository tests without modifying any test
-        id: acceptance
+          python -m compileall -q scripts/stage13_prepare_test_fixtures.py scripts/stage13_validate_acceptance.py scripts/stage13_rerun_sample.py scripts/stage13_scenario_worker.py scripts/stage13_assemble.py
+          mkdir -p results_stage13/acceptance
+          echo "ENGINE_AND_RNG_SOURCE_UNCHANGED=PASS"
+      - name: Generate run-local test fixtures
+        id: fixtures
+        run: python scripts/stage13_prepare_test_fixtures.py
+      - name: Run complete pytest suite with JUnit evidence
+        id: acceptance_tests
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          python -m pytest -q --junitxml=results_stage13/pytest.xml \
-            > results_stage13/pytest_stdout.txt 2>&1
+          python -m pytest -q --junitxml=results_stage13/acceptance/pytest.xml > results_stage13/acceptance/pytest_stdout.txt 2>&1
           code=$?
-          cat results_stage13/pytest_stdout.txt
-          printf '%s\n' "$code" > results_stage13/pytest_exit_code.txt
+          cat results_stage13/acceptance/pytest_stdout.txt
+          printf '%s\n' "$code" > results_stage13/acceptance/pytest_exit_code.txt
           exit "$code"
-
-      - name: Re-run exactly trial IDs 1..25 for all 25 scenarios
-        id: sample
-        if: always() && steps.source_integrity.outcome == 'success'
+      - name: Build explicit 163-test acceptance report
+        id: validate_acceptance
+        if: always() && steps.fixtures.outcome == 'success' && steps.acceptance_tests.outcome != 'skipped'
+        run: |
+          python scripts/stage13_validate_acceptance.py \
+            --junit results_stage13/acceptance/pytest.xml \
+            --output results_stage13/acceptance/validation_163.json \
+            --run-id "$GITHUB_RUN_ID" --head-sha "$GITHUB_SHA" --source-sha "$SOURCE_SHA"
+      - name: Gate source, fixtures and acceptance
+        if: always()
+        env:
+          SOURCE_OUTCOME: ${{ steps.source_integrity.outcome }}
+          FIXTURE_OUTCOME: ${{ steps.fixtures.outcome }}
+          TESTS_OUTCOME: ${{ steps.acceptance_tests.outcome }}
+          REPORT_OUTCOME: ${{ steps.validate_acceptance.outcome }}
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/stage13_rerun_sample.py \
-            --source-sha "$SOURCE_SHA" \
-            --output-dir results_stage13/data
-
-      - name: Upload cohort and evidence, including on acceptance failure
+          printf 'SOURCE=%s FIXTURES=%s TESTS=%s REPORT=%s\n' "$SOURCE_OUTCOME" "$FIXTURE_OUTCOME" "$TESTS_OUTCOME" "$REPORT_OUTCOME"
+          [[ "$SOURCE_OUTCOME" == success && "$FIXTURE_OUTCOME" == success && "$TESTS_OUTCOME" == success && "$REPORT_OUTCOME" == success ]]
+          gate=$(python -c "import json; print(json.load(open('results_stage13/acceptance/validation_163.json', encoding='utf-8')).get('status','MISSING'))")
+          echo "ACCEPTANCE_163_STATUS=$gate"
+          [[ "$gate" == PASS ]]
+      - name: Upload acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage13-final-sample-data
-          path: results_stage13/
-          if-no-files-found: error
+          name: stage13-acceptance-evidence
+          path: |
+            results_stage13/acceptance/
+            results_stage5/fixture_identity.json
+          if-no-files-found: warn
           retention-days: 30
-          compression-level: 6
 
-      - name: Gate workflow completion
-        if: always()
-        env:
-          SOURCE_INTEGRITY_OUTCOME: ${{ steps.source_integrity.outcome }}
-          ACCEPTANCE_OUTCOME: ${{ steps.acceptance.outcome }}
-          SAMPLE_OUTCOME: ${{ steps.sample.outcome }}
+  sample:
+    needs: acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    env:
+      PYTHONPATH: .
+      SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+      SCENARIO: ${{ matrix.scenario }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Prepare isolated paths
+        run: mkdir -p results_stage13/previous-checkpoints results_stage13/checkpoints/"$SCENARIO" results_stage13/scenarios/"$SCENARIO"
+      - name: Download checkpoint for exact same-run resume if present
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: stage13-checkpoint-${{ matrix.scenario }}
+          path: results_stage13/previous-checkpoints
+      - name: Check engine identity
         shell: bash
         run: |
           set -euo pipefail
-          printf 'SOURCE_INTEGRITY_OUTCOME=%s\n' "$SOURCE_INTEGRITY_OUTCOME"
-          printf 'ACCEPTANCE_OUTCOME=%s\n' "$ACCEPTANCE_OUTCOME"
-          printf 'SAMPLE_OUTCOME=%s\n' "$SAMPLE_OUTCOME"
-          if [[ "$SOURCE_INTEGRITY_OUTCOME" != "success" || "$ACCEPTANCE_OUTCOME" != "success" || "$SAMPLE_OUTCOME" != "success" ]]; then
-            echo "FAIL: at least one source/test/sample gate did not PASS"
-            exit 1
-          fi
-          echo "SOURCE_INTEGRITY_TESTS_SAMPLE=PASS"
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          git merge-base --is-ancestor "$SOURCE_SHA" "$GITHUB_SHA"
+          for file in constants.py entities.py dateutils.py rng.py accounting.py closure.py collection.py guarantee.py partner_equity.py friday.py settlement.py state_machine.py daily_engine.py monte_carlo.py; do
+            git diff --exit-code "$SOURCE_SHA" "$GITHUB_SHA" -- "$file"
+          done
+      - name: Run 25 identity-bound sample trials with checkpoints
+        run: |
+          python scripts/stage13_scenario_worker.py \
+            --scenario "$SCENARIO" \
+            --output-root results_stage13/scenarios \
+            --checkpoint-root results_stage13/checkpoints \
+            --resume-dir results_stage13/previous-checkpoints \
+            --source-sha "$SOURCE_SHA"
+      - name: Upload resumable checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-checkpoint-${{ matrix.scenario }}
+          path: results_stage13/checkpoints/${{ matrix.scenario }}/
+          if-no-files-found: warn
+          retention-days: 30
+          overwrite: true
+      - name: Upload completed scenario package
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-sample-${{ matrix.scenario }}
+          path: results_stage13/scenarios/${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  assemble:
+    needs: [acceptance, sample]
+    if: ${{ needs.acceptance.result == 'success' && needs.sample.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: .
+      SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Download the 25 scenario packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage13-sample-*
+          path: results_stage13/scenario-artifacts
+          merge-multiple: false
+      - name: Download acceptance evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: stage13-acceptance-evidence
+          path: results_stage13/acceptance-artifacts
+      - name: Verify pinned engine identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          git merge-base --is-ancestor "$SOURCE_SHA" "$GITHUB_SHA"
+          for file in constants.py entities.py dateutils.py rng.py accounting.py closure.py collection.py guarantee.py partner_equity.py friday.py settlement.py state_machine.py daily_engine.py monte_carlo.py; do
+            git diff --exit-code "$SOURCE_SHA" "$GITHUB_SHA" -- "$file"
+          done
+      - name: Build workbook and independently execute all 500 comparisons
+        run: |
+          python scripts/stage13_assemble.py \
+            --scenario-artifacts results_stage13/scenario-artifacts \
+            --acceptance-artifacts results_stage13/acceptance-artifacts \
+            --output-dir results_stage13/final \
+            --run-id "$GITHUB_RUN_ID" --head-sha "$GITHUB_SHA"
+      - name: Upload workbook and audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-sample-final-evidence
+          path: results_stage13/final/
+          if-no-files-found: warn
+          retention-days: 30

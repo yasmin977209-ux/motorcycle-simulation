@@ -28,7 +28,7 @@ import monte_carlo
 import rng
 
 CANONICAL_SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
-TRIAL_IDS = tuple(range(1, 26))
+TRIAL_IDS = tuple(range(26, 51))
 ROLE_ORDER = ("P50", "P10", "P90", "Loss Case", "Max Case")
 
 
@@ -151,9 +151,18 @@ def choose_representatives(results: list[Any]) -> dict[str, int]:
 def representative_project(scenario_id: str, trial_id: int) -> dict[str, Any]:
     probability, recovery = monte_carlo.parse_scenario_id(scenario_id)
     daily_rows: list[dict[str, Any]] = []
+    partner_memo_rows: list[dict[str, Any]] = []
 
     def capture_day(project, current_date) -> None:
-        daily_rows.append(monte_carlo._daily_snapshot(project, current_date, trial_id))
+        snapshot = monte_carlo._daily_snapshot(project, current_date, trial_id)
+        snapshot["Partner1_Reinvestment_Balance"] = project.partner1_reinvestment_balance
+        snapshot["Partner2_Reinvestment_Balance"] = project.partner2_reinvestment_balance
+        daily_rows.append(snapshot)
+        partner_memo_rows.append({
+            "date": current_date.isoformat(),
+            "Partner1_Reinvestment_Balance": project.partner1_reinvestment_balance,
+            "Partner2_Reinvestment_Balance": project.partner2_reinvestment_balance,
+        })
 
     project = daily_engine.run_deterministic_trial(
         recovery_rate_pct=recovery,
@@ -190,6 +199,7 @@ def representative_project(scenario_id: str, trial_id: int) -> dict[str, Any]:
     return {
         "trial_result": dataclasses.asdict(result),
         "daily": daily_rows,
+        "partner_memo": partner_memo_rows,
         "daily_balance_checks": project.daily_balance_checks,
         "cash_rollforward": project.cash_rollforward,
         "ar_rollforward": project.ar_rollforward,
@@ -342,8 +352,8 @@ def main() -> None:
 
     source_sha = args.source_sha
     identity_payload = {
-        "cohort_id": "STAGE13_USER_AUTHORIZED_25_TRIALS_PER_SCENARIO",
-        "cohort_status": "SEPARATE_DIAGNOSTIC_COHORT_NOT_THE_CANONICAL_11005_TRIAL_DATASET",
+        "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
+        "cohort_status": "SEPARATE_DIAGNOSTIC_COHORT_TRIAL_IDS_26_50_NOT_CANONICAL_11005_TRIAL_DATASET",
         "source_sha": source_sha,
         "run_head_sha": os.environ.get("GITHUB_SHA"),
         "run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -370,7 +380,7 @@ def main() -> None:
     write_json(out / "dataset_identity.json", identity_payload)
 
     gate_definition = {
-        "gate_id": "STAGE9C_20_POINT_PARQUET_VS_STATS_V2",
+        "gate_id": "STAGE13_20_POINT_PARQUET_VS_STATS_V2",
         "status": "DEFINED_NOT_EXECUTED",
         "interpretation": "20 points per scenario, 500 exact comparisons across the 25 scenarios",
         "fields": {
@@ -386,7 +396,7 @@ def main() -> None:
         "expected_scenario_count": 25,
         "expected_comparisons_total": 500,
         "acceptance": "All 500 numeric Parquet-to-exported-XLSX _STATS values must be exactly equal after independent recomputation.",
-        "cohort_scope": "trial_ids 1..25 for each scenario; separate from canonical 11,005-trial dataset",
+        "cohort_scope": "trial_ids 26..50 for each scenario; separate from canonical 11,005-trial dataset and the interrupted IDs 1..25 attempt",
         "note": "This consistency gate is not Monte Carlo statistical stability Gate A/B and cannot claim their PASS.",
     }
     write_json(out / "20point_gate_definition.json", gate_definition)

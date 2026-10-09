@@ -24,7 +24,7 @@ def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
 
 
 def _activate_contract(project: Project, bike, contract_type: ContractType, start_date: date):
-    contract = daily_engine._create_contract(project, bike, contract_type, start_date)
+    contract = daily_engine._new_contract(project, bike, contract_type, start_date)
     bike.current_state = (
         "ACTIVE_PRIMARY"
         if contract_type is ContractType.PRIMARY

@@ -1,10 +1,13 @@
 {
-  "gate_id": "STAGE9C_20_POINT_PARQUET_VS_STATS_V2",
+  "gate_id": "STAGE13_20_POINT_PARQUET_VS_STATS_V2",
   "version": "2.0",
   "status": "DEFINED_NOT_EXECUTED",
   "scope": {
     "cohort_id": "STAGE13_USER_AUTHORIZED_25_TRIALS_PER_SCENARIO",
-    "trial_ids_per_scenario": [1, 25],
+    "trial_ids_per_scenario": [
+      1,
+      25
+    ],
     "trials_per_scenario": 25,
     "scenario_count": 25,
     "total_trial_results": 625,
@@ -35,11 +38,26 @@
       }
     ],
     "statistics": [
-      {"name": "MIN", "calculation": "minimum observed value; no interpolation"},
-      {"name": "P10", "calculation": "numpy.quantile(values, 0.10, method='linear')"},
-      {"name": "P50", "calculation": "numpy.quantile(values, 0.50, method='linear')"},
-      {"name": "P90", "calculation": "numpy.quantile(values, 0.90, method='linear')"},
-      {"name": "MAX", "calculation": "maximum observed value; no interpolation"}
+      {
+        "name": "MIN",
+        "calculation": "minimum observed value; no interpolation"
+      },
+      {
+        "name": "P10",
+        "calculation": "numpy.quantile(values, 0.10, method='linear')"
+      },
+      {
+        "name": "P50",
+        "calculation": "numpy.quantile(values, 0.50, method='linear')"
+      },
+      {
+        "name": "P90",
+        "calculation": "numpy.quantile(values, 0.90, method='linear')"
+      },
+      {
+        "name": "MAX",
+        "calculation": "maximum observed value; no interpolation"
+      }
     ],
     "point_count_per_scenario": 20,
     "point_count_total": 500
@@ -82,5 +100,7 @@
     "original_literal_gap": "The four requested fields, exact comparison points, and statistic-to-_STATS mapping were not completely named in the report.",
     "user_instruction_date": "2026-10-10",
     "user_authorized_semantics": "25 trials per each of 25 scenarios, five representative roles including Loss Case by minimum absolute equity and Max Case by maximum absolute equity."
-  }
+  },
+  "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
+  "cohort_scope": "trial_ids 26..50 for each scenario; fresh cohort, separate from canonical 11,005-trial dataset and the interrupted prior attempt using IDs 1..25"
 }
