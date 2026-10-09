@@ -1,12 +1,10 @@
 {
   "stage": "12",
   "schema_version": "1.0",
-  "cp_completed": "CP-12-B",
-  "sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
-  "next": "CP-12-C — requires separate explicit authorization; not started",
-  "blockers": [
-    "CP-12-C is blocked pending explicit user authorization; no phase transition has been performed"
-  ],
+  "cp_completed": "CP-12-C",
+  "sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+  "next": "CP-12-D — explicitly authorized; not started",
+  "blockers": [],
   "stage7": {
     "closed": true,
     "run_id": "37225915321",
@@ -22,7 +20,7 @@
   },
   "consolidated_from": "9c59e5f62b7d098d222960e6d065cd2faf029544",
   "consolidation_note": "Stage 8 code consolidated on main post-closure.",
-  "head_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+  "head_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
   "verify_at": "tmp/stage8-consolidate-v2-20261005",
   "stage7_f4_evidence": {
     "run_id": "37482745008",
@@ -110,7 +108,7 @@
     "environment_completion_artifact_id": "11522533620"
   },
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "run_id": "37964656154",
+  "run_id": "37971902520",
   "artifact_manifest": {
     "run_id": "37964656154",
     "workflow": "stage12-b3-25jobs",
@@ -378,5 +376,179 @@
     "no_tests_changed": true,
     "main_modified": false,
     "result_artifact_id": "11634128090"
+  },
+  "stage12_cp12c_evidence": {
+    "status": "PASS",
+    "verified_at": "2026-10-09T18:15:21Z",
+    "run_id": "37971902520",
+    "branch": "tmp/stage12-c-rollforward-20261009",
+    "run_head_sha": "d4b335926d25d4bc2c6440effc7568260ef5aeb8",
+    "source_run_id": "37964656154",
+    "source_run_head_sha": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101,
+    "scenarios": 25,
+    "trials": 11005,
+    "daily_rows": 22546465,
+    "parquet_content_hashes_match_cp12b_manifest": true,
+    "canonical_accounting_gates": [
+      {
+        "name": "cash_rollforward",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "accounts_receivable_rollforward",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "gross_bike_assets_rollforward",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "accumulated_depreciation_rollforward",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "net_bike_assets_derived",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "equity_rollforward",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "equity_equals_capital_plus_retained_earnings",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "total_assets_components",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "liabilities_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "balance_difference_matches",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "balance_difference_zero",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_source_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_scenario_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_seed_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "trial_id_sequence",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "date_continuity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "daily_opening_continuity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "trial_result_fingerprint_constant",
+        "rows_checked": 22546465,
+        "violations": 0
+      }
+    ],
+    "data_identity_gates": [
+      {
+        "name": "row_source_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_scenario_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "row_seed_identity",
+        "rows_checked": 22546465,
+        "violations": 0
+      },
+      {
+        "name": "trial_id_sequence",
+        "rows_checked": 10980,
+        "violations": 0
+      },
+      {
+        "name": "date_continuity",
+        "rows_checked": 22546440,
+        "violations": 0
+      },
+      {
+        "name": "daily_opening_continuity",
+        "rows_checked": 22546440,
+        "violations": 0
+      },
+      {
+        "name": "trial_result_fingerprint_constant",
+        "rows_checked": 22546440,
+        "violations": 0
+      }
+    ],
+    "auditor_unit_tests": "3 passed",
+    "artifact": {
+      "artifact_id": "11636856147",
+      "name": "stage12-cp12c-accounting-audit",
+      "size_bytes": 3924,
+      "github_zip_sha256": "fe677294001f4239d72b53524efa1759897d8ae85ad0d843161e1a094435ce87"
+    },
+    "failed_attempts": [
+      {
+        "run_id": "37971709350",
+        "type": "WORKFLOW_DEFECT",
+        "literal": "gh: Bad credentials (HTTP 401)",
+        "resolution": "Removed Python embedded in workflow YAML and fixed token interpolation."
+      },
+      {
+        "run_id": "37971758707",
+        "type": "WORKFLOW_DEFECT",
+        "literal": "gh: Bad credentials (HTTP 401)",
+        "resolution": "Fixed token interpolation; helper validates pinned run metadata."
+      },
+      {
+        "run_id": "37971796237",
+        "type": "K_TEST",
+        "literal": "FAILED tests/test_stage12_rollforward_audit.py::test_cash_rollforward_violation_is_detected - assert not True",
+        "resolution": "Corrected the checker unit test to avoid expecting a stored Balance_Difference field to change when only its input cash field is mutated."
+      }
+    ],
+    "limitations": [
+      "The CP-12-B daily schema does not include per-bike state history or per-bike settlement start/due dates; CP-12-D may validate final daily closure outcomes and previously passed code/path gates, but must not claim a full per-bike settlement-duration census."
+    ]
   }
 }
