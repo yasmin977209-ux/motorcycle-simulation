@@ -34,5 +34,34 @@
     "branch": "tmp/governance-decisions-20261009",
     "decision_log_commit": "7171d3f10794c09e7b621904b3dfc2ac7f9573be",
     "note": "CP-A governance decisions are recorded; no engine, tests, or workflow changed. This state pointer identifies the source HEAD before the atomic PR merge."
+  },
+  "governance_decisions": {
+    "D-2026-10-10-01": {
+      "topic": "statistical_policy",
+      "value": "DOUBLING_FROM_300_NO_FLOOR"
+    },
+    "D-2026-10-10-02": {
+      "topic": "effective_test_count",
+      "value": 162,
+      "excluded": [
+        158
+      ]
+    },
+    "D-2026-10-10-03": {
+      "topic": "representative_cases",
+      "cases": [
+        "P50",
+        "P10",
+        "P90",
+        "LossCase",
+        "MaxCase"
+      ],
+      "count": 5
+    },
+    "D-2026-10-10-04": {
+      "topic": "excel_architecture",
+      "orchestrator": "scripts/excel_builder.py",
+      "assembler": "scripts/stage13_assemble.py"
+    }
   }
 }

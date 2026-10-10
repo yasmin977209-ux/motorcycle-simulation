@@ -1,0 +1,75 @@
+name: Preflight Governance Validate
+
+on:
+  push:
+    branches:
+      - 'tmp/preflight-governance-*'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-governance:
+    name: Validate governance artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check PyYAML
+      - name: Validate state.json with Python JSON parser
+        run: python -m json.tool state.json > /dev/null
+      - name: Validate state.json with jq
+        run: jq . state.json > /dev/null
+      - name: Validate YAML and Markdown structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import yaml
+
+          p = Path("docs/governance/REFERENCE_AMENDMENTS.md")
+          lines = p.read_text(encoding="utf-8").splitlines()
+          if not lines or lines[0] != "---":
+              raise SystemExit("REFERENCE_AMENDMENTS.md: missing YAML front matter")
+          try:
+              end = lines.index("---", 1)
+          except ValueError:
+              raise SystemExit("REFERENCE_AMENDMENTS.md: unterminated YAML front matter")
+          metadata = yaml.safe_load("\n".join(lines[1:end]))
+          if not isinstance(metadata, dict) or metadata.get("document") != "REFERENCE_AMENDMENTS":
+              raise SystemExit("REFERENCE_AMENDMENTS.md: invalid YAML metadata")
+          expected = [f"Amendment-{n:02d}" for n in range(1, 5)]
+          if metadata.get("amendments") != expected:
+              raise SystemExit("REFERENCE_AMENDMENTS.md: amendment IDs mismatch")
+          text = p.read_text(encoding="utf-8")
+          sections = ["### النص الأصلي", "### النص المُحدَّث", "### المواضع المتأثرة", "### السبب", "### القيود"]
+          for n in range(1, 5):
+              marker = f"## Amendment-{n:02d}"
+              start = text.find(marker)
+              if start < 0:
+                  raise SystemExit(f"missing {marker}")
+              stop = text.find("## Amendment-", start + len(marker))
+              body = text[start:] if stop < 0 else text[start:stop]
+              for heading in sections + ["**القرار:**", "**التاريخ:**", "**الأصل:**"]:
+                  if heading not in body:
+                      raise SystemExit(f"{marker}: missing {heading}")
+          w = yaml.safe_load(Path(".github/workflows/preflight-governance-validate.yml").read_text(encoding="utf-8"))
+          if not isinstance(w, dict) or "jobs" not in w:
+              raise SystemExit("workflow YAML structure invalid")
+          state = json.loads(Path("state.json").read_text(encoding="utf-8"))
+          keys = {"stage","schema_version","cp_completed","sha","sha_semantics","next","blockers","source_sha","head_sha","stage12_closure_evidence","governance_decision_log","governance_decisions"}
+          if set(state) != keys or len(state) != 12:
+              raise SystemExit("state.json must retain 11 prior fields and add only governance_decisions")
+          wanted = {"D-2026-10-10-01","D-2026-10-10-02","D-2026-10-10-03","D-2026-10-10-04"}
+          if set(state.get("governance_decisions", {})) != wanted:
+              raise SystemExit("state governance decision IDs mismatch")
+          print("PASS: JSON, YAML, amendment Markdown structure")
+          PY
