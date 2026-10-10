@@ -264,9 +264,102 @@ jobs:
           import hashlib
           import json
           import os
+          from datetime import datetime, timezone
           from pathlib import Path
 
           output_dir = Path("results_stage13/final")
+          identity_path = output_dir / "dataset_identity.json"
+          definition_path = output_dir / "20point_gate_definition.json"
+          report_path = output_dir / "20point_gate_report.json"
+          workbook_path = output_dir / "Stage13_Sample_Results_EN.xlsx"
+
+          identity = json.loads(identity_path.read_text(encoding="utf-8"))
+          definition = json.loads(definition_path.read_text(encoding="utf-8"))
+          gate_report = json.loads(report_path.read_text(encoding="utf-8"))
+
+          expected_result_sha = "ba6f1e0dcf6daad1a4e5dcf07c01ff26b8dbac79320b4dcc2a3d3514e276c772"
+          expected_workbook_sha = "26452c0a7968a66057ac364e38cfdd188fd612857f1f1d1d82fb5251058c1ef0"
+          cohort_id = "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2"
+          expected_trial_ids = list(range(26, 51))
+
+          if identity.get("cohort_id") != cohort_id:
+              raise SystemExit(f"RECOVERY_COHORT_ID_FAIL: {identity.get('cohort_id')!r}")
+          if identity.get("source_sha") != "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b":
+              raise SystemExit(f"RECOVERY_SOURCE_SHA_FAIL: {identity.get('source_sha')!r}")
+          if str(identity.get("run_id")) != "38005557997":
+              raise SystemExit(f"RECOVERY_SOURCE_RUN_ID_FAIL: {identity.get('run_id')!r}")
+          if identity.get("run_head_sha") != "648b5315da1ef46146226d7982020a88c4905dcb":
+              raise SystemExit(f"RECOVERY_SOURCE_HEAD_SHA_FAIL: {identity.get('run_head_sha')!r}")
+          if identity.get("status") != "ASSEMBLED_PENDING_20POINT_GATE":
+              raise SystemExit(f"RECOVERY_PRE_NORMALIZATION_STATUS_FAIL: {identity.get('status')!r}")
+          if identity.get("scenario_count") != 25 or identity.get("trial_result_count") != 625:
+              raise SystemExit("RECOVERY_TRIAL_SCOPE_FAIL")
+          if identity.get("unique_scenario_trial_pairs") != 625:
+              raise SystemExit("RECOVERY_UNIQUE_TRIAL_PAIR_COUNT_FAIL")
+          if identity.get("trial_results_fingerprint_sha256") != expected_result_sha:
+              raise SystemExit("RECOVERY_TRIAL_RESULT_FINGERPRINT_FAIL")
+          if identity.get("sampling", {}).get("trial_ids") != expected_trial_ids:
+              raise SystemExit(f"RECOVERY_TRIAL_ID_RANGE_FAIL: {identity.get('sampling', {}).get('trial_ids')!r}")
+          if definition.get("definition_status") != "DEFINED" or "status" in definition:
+              raise SystemExit("RECOVERY_GATE_DEFINITION_STATUS_FAIL")
+          if gate_report.get("cohort_id") != cohort_id or gate_report.get("source_sha") != identity.get("source_sha"):
+              raise SystemExit("RECOVERY_GATE_REPORT_IDENTITY_FAIL")
+          if str(gate_report.get("run_id")) != "38005557997" or gate_report.get("run_head_sha") != "648b5315da1ef46146226d7982020a88c4905dcb":
+              raise SystemExit("RECOVERY_GATE_REPORT_PRODUCER_IDENTITY_FAIL")
+          if "status" not in gate_report or "result" in gate_report or "execution_status" in gate_report:
+              raise SystemExit("RECOVERY_GATE_REPORT_SHAPE_FAIL")
+
+          gate_result = gate_report["status"]
+          comparisons = gate_report.get("comparisons")
+          gates = gate_report.get("gates")
+          scope = gate_report.get("scope", {})
+          workbook_summary = gate_report.get("workbook", {})
+          workbook_sha = hashlib.sha256(workbook_path.read_bytes()).hexdigest() if workbook_path.is_file() else None
+          matched_count = sum(item.get("exact_match") is True for item in comparisons) if isinstance(comparisons, list) else -1
+
+          if gate_result != "PASS":
+              raise SystemExit(f"STAGE13_GATE_RESULT_NOT_PASS: {gate_result!r}")
+          if not isinstance(gates, dict) or not gates or not all(value is True for value in gates.values()):
+              raise SystemExit("STAGE13_GATE_PREREQUISITE_FAIL")
+          if not isinstance(comparisons, list) or len(comparisons) != 500 or matched_count != 500:
+              raise SystemExit(f"STAGE13_500_POINT_GATE_FAIL: matched={matched_count}; expected=500; actual={len(comparisons) if isinstance(comparisons, list) else 'MISSING'}")
+          if scope.get("expected_comparison_count") != 500 or scope.get("actual_comparison_count") != 500:
+              raise SystemExit(f"STAGE13_COMPARISON_SCOPE_FAIL: {scope!r}")
+          if scope.get("trial_count") != 625 or scope.get("trial_ids_per_scenario") != expected_trial_ids:
+              raise SystemExit(f"STAGE13_REPORT_TRIAL_SCOPE_FAIL: {scope!r}")
+          if workbook_sha != expected_workbook_sha or workbook_summary.get("sha256") != expected_workbook_sha:
+              raise SystemExit(f"STAGE13_WORKBOOK_SHA_FAIL: actual={workbook_sha!r}; report={workbook_summary.get('sha256')!r}")
+          if workbook_summary.get("sheets") != 185:
+              raise SystemExit(f"STAGE13_WORKBOOK_SHEETS_FAIL: {workbook_summary.get('sheets')!r}")
+          if workbook_summary.get("excel_error_cells") != 0:
+              raise SystemExit(f"STAGE13_WORKBOOK_ERROR_CELLS_FAIL: {workbook_summary.get('excel_error_cells')!r}")
+          if workbook_summary.get("formula_cells") != 0:
+              raise SystemExit(f"STAGE13_WORKBOOK_FORMULA_CELLS_FAIL: {workbook_summary.get('formula_cells')!r}")
+
+          gate_executed_at = datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
+          gate_report.pop("status")
+          gate_report["result"] = gate_result
+          gate_report["execution_status"] = "COMPLETED"
+          identity.pop("status")
+          identity.update({
+              "assembly_status": "ASSEMBLED",
+              "gate_definition_status": definition["definition_status"],
+              "gate_execution_result": gate_result,
+              "gate_executed_at": gate_executed_at,
+          })
+          report_path.write_text(json.dumps(gate_report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          identity_path.write_text(json.dumps(identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps({
+              "GATE_METADATA_NORMALIZATION": "PASS",
+              "ASSEMBLY_STATUS": identity["assembly_status"],
+              "GATE_DEFINITION_STATUS": identity["gate_definition_status"],
+              "GATE_EXECUTION_RESULT": identity["gate_execution_result"],
+              "GATE_EXECUTED_AT": gate_executed_at,
+              "POINTS_MATCHED": matched_count,
+              "POINTS_EXPECTED": 500,
+              "TRIAL_RESULTS_FINGERPRINT_SHA256": identity["trial_results_fingerprint_sha256"],
+              "WORKBOOK_SHA256": workbook_sha,
+          }, ensure_ascii=False, sort_keys=True))
           cohort_id = "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2"
           trial_ids = list(range(26, 51))
           stability = "diagnostic 25-trial cohort; no Gate A/B statistical status inferred"
@@ -314,12 +407,16 @@ jobs:
                   json.dumps(scenario_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
               )
               verified_scenario_manifest = json.loads(scenario_manifest_path.read_text(encoding="utf-8"))
+              if scenario_manifest_path.name in verified_scenario_manifest["file_hashes_sha256"]:
+                  raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_SELF_HASH_FORBIDDEN: {scenario_root.name}")
               for relative_path, expected_hash in verified_scenario_manifest["file_hashes_sha256"].items():
                   payload_path = scenario_root / relative_path
                   if not payload_path.is_file() or hashlib.sha256(payload_path.read_bytes()).hexdigest() != expected_hash:
                       raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_HASH_FAIL: {scenario_root.name}/{relative_path}")
-              if len(verified_scenario_manifest["file_hashes_sha256"]) != verified_scenario_manifest["file_count_excluding_manifest"]:
-                  raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_COUNT_MISMATCH: {scenario_root.name}")
+              listed_scenario_file_count = len(verified_scenario_manifest["file_hashes_sha256"])
+              actual_scenario_file_count = sum(1 for path in scenario_root.rglob("*") if path.is_file() and path != scenario_manifest_path)
+              if listed_scenario_file_count != verified_scenario_manifest["file_count_excluding_manifest"] or actual_scenario_file_count != verified_scenario_manifest["file_count_excluding_manifest"]:
+                  raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_COUNT_MISMATCH: {scenario_root.name}; listed={listed_scenario_file_count}; actual={actual_scenario_file_count}; manifest={verified_scenario_manifest['file_count_excluding_manifest']}")
           print("SCENARIO_ARTIFACT_MANIFESTS_REBUILT_AND_VERIFIED=25")
 
           global_manifest_path = output_dir / "manifest.json"
@@ -349,6 +446,21 @@ jobs:
 
           manifest_path = output_dir / "artifact_manifest.json"
           artifact_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          identity = json.loads(identity_path.read_text(encoding="utf-8"))
+          definition = json.loads(definition_path.read_text(encoding="utf-8"))
+          gate_report = json.loads(report_path.read_text(encoding="utf-8"))
+          status_summary = {
+              "assembly_status": identity.get("assembly_status"),
+              "gate_definition_status": identity.get("gate_definition_status"),
+              "gate_execution_result": identity.get("gate_execution_result"),
+              "gate_executed_at": identity.get("gate_executed_at"),
+          }
+          if status_summary["assembly_status"] != "ASSEMBLED" or status_summary["gate_definition_status"] != definition.get("definition_status") or status_summary["gate_execution_result"] != gate_report.get("result") or gate_report.get("execution_status") != "COMPLETED" or not status_summary["gate_executed_at"]:
+              raise SystemExit(f"RECOVERY_STATUS_CONSISTENCY_FAIL: {status_summary!r}")
+          if "status" in identity or "status" in definition or "status" in gate_report:
+              raise SystemExit("RECOVERY_LEGACY_AMBIGUOUS_STATUS_REMAINS")
+          artifact_manifest.pop("20point_gate_status", None)
+          artifact_manifest.update(status_summary)
           hashes = {}
           for path in sorted(output_dir.rglob("*")):
               if path.is_file() and path != manifest_path:
@@ -365,9 +477,27 @@ jobs:
               payload_path = output_dir / relative_path
               if not payload_path.is_file() or hashlib.sha256(payload_path.read_bytes()).hexdigest() != expected_hash:
                   raise SystemExit(f"FINAL_ARTIFACT_MANIFEST_HASH_FAIL: {relative_path}")
-          if len(verified_artifact_manifest["file_hashes_sha256"]) != verified_artifact_manifest["file_count_excluding_manifest"]:
-              raise SystemExit("FINAL_ARTIFACT_MANIFEST_COUNT_MISMATCH")
-          print(f"FINAL_ARTIFACT_MANIFEST_INTEGRITY=PASS; FILES={len(verified_artifact_manifest['file_hashes_sha256'])}")
+          if manifest_path.name in verified_artifact_manifest["file_hashes_sha256"]:
+              raise SystemExit("FINAL_ARTIFACT_MANIFEST_SELF_HASH_FORBIDDEN")
+          listed_file_count = len(verified_artifact_manifest["file_hashes_sha256"])
+          actual_file_count = sum(1 for path in output_dir.rglob("*") if path.is_file() and path != manifest_path)
+          if listed_file_count != verified_artifact_manifest["file_count_excluding_manifest"] or actual_file_count != verified_artifact_manifest["file_count_excluding_manifest"]:
+              raise SystemExit(f"FINAL_ARTIFACT_MANIFEST_COUNT_MISMATCH: listed={listed_file_count}; actual={actual_file_count}; manifest={verified_artifact_manifest['file_count_excluding_manifest']}")
+          if "20point_gate_status" in verified_artifact_manifest:
+              raise SystemExit("FINAL_ARTIFACT_MANIFEST_LEGACY_GATE_STATUS_REMAINS")
+          for key, value in status_summary.items():
+              if verified_artifact_manifest.get(key) != value:
+                  raise SystemExit(f"FINAL_ARTIFACT_MANIFEST_STATUS_MISMATCH: {key}")
+          if identity.get("gate_execution_result") != gate_report.get("result") or gate_report.get("execution_status") != "COMPLETED" or definition.get("definition_status") != "DEFINED":
+              raise SystemExit("FINAL_GATE_STATUS_SEMANTICS_MISMATCH")
+          print(json.dumps({
+              "FINAL_ARTIFACT_MANIFEST_INTEGRITY": "PASS",
+              "FILES": listed_file_count,
+              "ASSEMBLY_STATUS": verified_artifact_manifest["assembly_status"],
+              "GATE_DEFINITION_STATUS": verified_artifact_manifest["gate_definition_status"],
+              "GATE_EXECUTION_RESULT": verified_artifact_manifest["gate_execution_result"],
+              "GATE_EXECUTED_AT": verified_artifact_manifest["gate_executed_at"],
+          }, ensure_ascii=False, sort_keys=True))
           PY
       - name: Upload workbook and audit evidence
         if: always()

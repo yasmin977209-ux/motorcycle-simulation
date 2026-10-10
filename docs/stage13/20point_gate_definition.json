@@ -1,7 +1,7 @@
 {
   "gate_id": "STAGE13_20_POINT_PARQUET_VS_STATS_V2",
   "version": "2.0",
-  "status": "DEFINED_NOT_EXECUTED",
+  "definition_status": "DEFINED",
   "scope": {
     "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
     "trial_ids_per_scenario": [

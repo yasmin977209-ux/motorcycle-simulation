@@ -19,7 +19,7 @@ Scope: new, isolated 25-trial-per-scenario cohort; no engine/RNG/reference/test 
 
 - New branch only: \`tmp/stage13.3-final-excel-20261010\`; do not merge and do not change \`main\` or \`state.json\`.
 - \`SOURCE_SHA\` is bound to \`f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b\`; the workflow checks that the authoritative engine/RNG/accounting files have not changed relative to that commit.
-- Run exactly \`trial_id=1..25\` for every one of the 25 scenario IDs, giving 625 initial results. This is a newly materialized diagnostic/export cohort and is never combined with the canonical 11,005-trial cohort.
+- Run exactly \`trial_id=26..50\` for every one of the 25 scenario IDs, giving 625 initial results. This is a newly materialized diagnostic/export cohort and is never combined with the canonical 11,005-trial cohort.
 - Select five roles per scenario. P10/P50/P90 use the linear quantile and nearest result; ties use the smallest ID. Loss Case minimizes absolute final equity; Max Case maximizes absolute final equity; both use the smallest ID for ties. Roles may share a trial ID.
 - Unique selected trial IDs are re-run with event logging enabled. They must match the initial summary bit-for-bit on every \`TrialResult\` field. Every detailed replay must close, its daily balance differences must all be zero, and its final equity must equal the closing \`Total_Equity\`.
 - The 20-point definition is versioned in \`20point_gate_definition.json\`: 4 named final metrics × 5 exact statistics per scenario = 20 points per scenario, 500 points over all 25 scenarios. The actual PASS/FAIL decision can only be issued after the exported XLSX has been reopened and checked independently against \`trial_results.parquet\`.
