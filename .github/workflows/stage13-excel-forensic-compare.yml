@@ -1,0 +1,89 @@
+name: Stage13 Excel Forensic Compare
+
+on:
+  push:
+    branches:
+      - "tmp/stage13.3-excel-forensic-20261010"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare:
+    name: Compare accepted and failed Excel artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Assert both source Artifacts exist and are not expired
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const targets = [
+              { run_id: 38060796014, label: "accepted" },
+              { run_id: 38067364627, label: "failed recovery" },
+            ];
+            for (const target of targets) {
+              const response = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: target.run_id,
+                per_page: 100,
+              });
+              const matches = response.data.artifacts.filter(
+                artifact => artifact.name === "stage13-sample-final-evidence"
+              );
+              if (matches.length !== 1) {
+                throw new Error(
+                  "Expected exactly one source Artifact for Run " +
+                  target.run_id + "; found " + matches.length
+                );
+              }
+              const artifact = matches[0];
+              if (artifact.expired) {
+                throw new Error(
+                  "Source Artifact is expired: Run " + target.run_id
+                );
+              }
+              core.info(JSON.stringify({
+                label: target.label, run_id: target.run_id,
+                artifact_id: artifact.id, name: artifact.name,
+                size_in_bytes: artifact.size_in_bytes, expired: artifact.expired
+              }));
+            }
+
+      - name: Download accepted Artifact from Run 38060796014
+        uses: actions/download-artifact@v4
+        with:
+          name: stage13-sample-final-evidence
+          path: forensic-input/accepted
+          repository: ${{ github.repository }}
+          run-id: "38060796014"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download failed-recovery Artifact from Run 38067364627
+        uses: actions/download-artifact@v4
+        with:
+          name: stage13-sample-final-evidence
+          path: forensic-input/failed
+          repository: ${{ github.repository }}
+          run-id: "38067364627"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compare raw XLSX, ZIP members, XML and cell semantics
+        shell: bash
+        run: python scripts/stage13_excel_forensic_compare.py
+
+      - name: Upload forensic comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-excel-forensic-comparison-${{ github.run_id }}
+          path: forensic-output/
+          if-no-files-found: warn
+          retention-days: 30
