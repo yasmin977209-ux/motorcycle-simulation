@@ -36,7 +36,7 @@ This was an assembly-only recovery, not a rerun of the diagnostic trials:
 - In Run `38060796014`, the `acceptance` and `sample` jobs were intentionally skipped. The assembly job fetched the scenario packages and acceptance evidence from Run `38005557997`, verified the producer implementation identity, built the workbook and executed the 500 comparisons.
 - Recorded assembly output: cohort `STAGE13_SAMPLE_TRIAL_IDS_26_50_V2`; 25 scenarios; trial IDs 26–50; 625 trial results; 125 representative role assignments; 105 unique representative detail trials; 185 workbook sheets; zero Excel error cells; zero formula cells; `GATE_STATUS=PASS`; `POINTS_MATCHED=500` of 500.
 - Trial-results fingerprint: `ba6f1e0dcf6daad1a4e5dcf07c01ff26b8dbac79320b4dcc2a3d3514e276c772`.
-- Workbook SHA-256: `dae115c9bb41be9a9d4558429d874df649e80439f2299aff8a8e4f3a9038b201`.
+- Workbook SHA-256: `26452c0a7968a66057ac364e38cfdd188fd612857f1f1d1d82fb5251058c1ef0` (corrected from the prior assembly log; source is Run `38060796014` output).
 - Post-processing logs: `SCENARIO_ARTIFACT_MANIFESTS_REBUILT_AND_VERIFIED=25` and `FINAL_ARTIFACT_MANIFEST_INTEGRITY=PASS; FILES=316`.
 - Uploaded evidence artifact: `stage13-sample-final-evidence`, artifact ID `11673197601`, archive digest `sha256:4ead98bec5f29e608447360bd3f1755c49aa9f2727a4834ac358e4376d63c774`.
 
