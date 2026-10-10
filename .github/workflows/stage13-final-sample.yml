@@ -298,6 +298,30 @@ jobs:
                   json.dumps(scenario_identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
               )
 
+          scenario_manifest_paths = sorted((output_dir / "dataset").glob("*/artifact_manifest.json"))
+          if len(scenario_manifest_paths) != 25:
+              raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_COUNT_FAIL: {len(scenario_manifest_paths)}")
+          for scenario_manifest_path in scenario_manifest_paths:
+              scenario_root = scenario_manifest_path.parent
+              scenario_manifest = json.loads(scenario_manifest_path.read_text(encoding="utf-8"))
+              scenario_hashes = {}
+              for path in sorted(scenario_root.rglob("*")):
+                  if path.is_file() and path != scenario_manifest_path:
+                      scenario_hashes[path.relative_to(scenario_root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+              scenario_manifest["file_hashes_sha256"] = scenario_hashes
+              scenario_manifest["file_count_excluding_manifest"] = len(scenario_hashes)
+              scenario_manifest_path.write_text(
+                  json.dumps(scenario_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+              )
+              verified_scenario_manifest = json.loads(scenario_manifest_path.read_text(encoding="utf-8"))
+              for relative_path, expected_hash in verified_scenario_manifest["file_hashes_sha256"].items():
+                  payload_path = scenario_root / relative_path
+                  if not payload_path.is_file() or hashlib.sha256(payload_path.read_bytes()).hexdigest() != expected_hash:
+                      raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_HASH_FAIL: {scenario_root.name}/{relative_path}")
+              if len(verified_scenario_manifest["file_hashes_sha256"]) != verified_scenario_manifest["file_count_excluding_manifest"]:
+                  raise SystemExit(f"SCENARIO_ARTIFACT_MANIFEST_COUNT_MISMATCH: {scenario_root.name}")
+          print("SCENARIO_ARTIFACT_MANIFESTS_REBUILT_AND_VERIFIED=25")
+
           global_manifest_path = output_dir / "manifest.json"
           global_manifest = json.loads(global_manifest_path.read_text(encoding="utf-8"))
           global_manifest["sampling"] = sampling
@@ -336,6 +360,14 @@ jobs:
           manifest_path.write_text(
               json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
           )
+          verified_artifact_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          for relative_path, expected_hash in verified_artifact_manifest["file_hashes_sha256"].items():
+              payload_path = output_dir / relative_path
+              if not payload_path.is_file() or hashlib.sha256(payload_path.read_bytes()).hexdigest() != expected_hash:
+                  raise SystemExit(f"FINAL_ARTIFACT_MANIFEST_HASH_FAIL: {relative_path}")
+          if len(verified_artifact_manifest["file_hashes_sha256"]) != verified_artifact_manifest["file_count_excluding_manifest"]:
+              raise SystemExit("FINAL_ARTIFACT_MANIFEST_COUNT_MISMATCH")
+          print(f"FINAL_ARTIFACT_MANIFEST_INTEGRITY=PASS; FILES={len(verified_artifact_manifest['file_hashes_sha256'])}")
           PY
       - name: Upload workbook and audit evidence
         if: always()
