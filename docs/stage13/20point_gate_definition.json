@@ -103,4 +103,8 @@
   },
   "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
   "cohort_scope": "trial_ids 26..50 for each scenario; fresh cohort, separate from canonical 11,005-trial dataset and the interrupted prior attempt using IDs 1..25"
+,
+  "content_sha_method": "sha256_over_sorted_zip_members_excluding_core_xml",
+  "expected_content_sha": "39122f4c3a80973d422fba1f10e7f6eeaa22b6cd2e2df46a4d059fb2f141ef6f",
+  "verification_basis": "CONTENT_SHA (K_SPEC fix, Run 38075354263)"
 }

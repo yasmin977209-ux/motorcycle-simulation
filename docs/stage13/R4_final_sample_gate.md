@@ -24,3 +24,22 @@ Scope: new, isolated 25-trial-per-scenario cohort; no engine/RNG/reference/test 
 - Unique selected trial IDs are re-run with event logging enabled. They must match the initial summary bit-for-bit on every \`TrialResult\` field. Every detailed replay must close, its daily balance differences must all be zero, and its final equity must equal the closing \`Total_Equity\`.
 - The 20-point definition is versioned in \`20point_gate_definition.json\`: 4 named final metrics × 5 exact statistics per scenario = 20 points per scenario, 500 points over all 25 scenarios. The actual PASS/FAIL decision can only be issued after the exported XLSX has been reopened and checked independently against \`trial_results.parquet\`.
 - This consistency gate is not the statistical stability Gate A or Gate B. No sample-size/stability PASS is claimed for 25 trials.
+
+## K_SPEC Classification (Run 38075354263)
+
+- Classification: K_SPEC
+- Evidence: comparison_result = CORE_PROPERTIES_OR_CONTAINER_METADATA_ONLY
+- Only differing ZIP member: docProps/core.xml (openpyxl timestamps)
+- Content SHA excluding core.xml: 39122f4c... (identical)
+- Fix: replace raw SHA gate with content SHA gate
+- Accepted baseline raw SHA: 26452c0a... (preserved, not modified)
+- New expected content SHA: 39122f4c3a80973d422fba1f10e7f6eeaa22b6cd2e2df46a4d059fb2f141ef6f
+
+## Minor Issue (Not Fixed in This CP)
+
+- Field: matches_run_log_sha256 in stage13-excel-forensic-compare.yml
+- Issue: value written with 62 chars instead of 64
+- Impact: cosmetic (helper verification field)
+- Classification: minor, non-blocking
+- Action: recorded only, not fixed in CP-C-fix
+
