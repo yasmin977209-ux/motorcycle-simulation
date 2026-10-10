@@ -86,6 +86,7 @@ jobs:
           retention-days: 30
 
   sample:
+    if: ${{ !contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
     needs: acceptance
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -176,25 +177,50 @@ jobs:
 
   assemble:
     needs: [acceptance, sample]
-    if: ${{ needs.acceptance.result == 'success' && needs.sample.result == 'success' }}
+    if: ${{ always() && needs.acceptance.result == 'success' && (needs.sample.result == 'success' || contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       PYTHONPATH: .
       SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+      SAMPLE_RUN_ID: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') && '38005557997' || github.run_id }}
+      SAMPLE_HEAD_SHA: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') && '648b5315da1ef46146226d7982020a88c4905dcb' || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install -r requirements.txt
-      - name: Download the 25 scenario packages
+      - name: Download the 25 scenario packages from the pinned completed run
+        if: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
         uses: actions/download-artifact@v4
         with:
           pattern: stage13-sample-*
           path: results_stage13/scenario-artifacts
           merge-multiple: false
-      - name: Download acceptance evidence
+          repository: ${{ github.repository }}
+          run-id: 38005557997
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download the 25 scenario packages from this run
+        if: ${{ !contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage13-sample-*
+          path: results_stage13/scenario-artifacts
+          merge-multiple: false
+      - name: Download pinned acceptance evidence from completed sample run
+        if: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
+        uses: actions/download-artifact@v4
+        with:
+          name: stage13-acceptance-evidence
+          path: results_stage13/acceptance-artifacts
+          repository: ${{ github.repository }}
+          run-id: 38005557997
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download acceptance evidence from this run
+        if: ${{ !contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
         uses: actions/download-artifact@v4
         with:
           name: stage13-acceptance-evidence
@@ -214,7 +240,32 @@ jobs:
             --scenario-artifacts results_stage13/scenario-artifacts \
             --acceptance-artifacts results_stage13/acceptance-artifacts \
             --output-dir results_stage13/final \
-            --run-id "$GITHUB_RUN_ID" --head-sha "$GITHUB_SHA"
+            --run-id "$SAMPLE_RUN_ID" --head-sha "$SAMPLE_HEAD_SHA"
+      - name: Record recovery lineage for reused completed trials
+        if: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
+        env:
+          SAMPLE_RUN_ID: ${{ env.SAMPLE_RUN_ID }}
+          SAMPLE_HEAD_SHA: ${{ env.SAMPLE_HEAD_SHA }}
+          ASSEMBLY_RUN_ID: ${{ github.run_id }}
+          ASSEMBLY_HEAD_SHA: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          payload = {
+              "status": "REASSEMBLED_EXISTING_DATASET_NO_TRIALS_RERUN",
+              "sample_run_id": os.environ["SAMPLE_RUN_ID"],
+              "sample_head_sha": os.environ["SAMPLE_HEAD_SHA"],
+              "assembly_run_id": os.environ["ASSEMBLY_RUN_ID"],
+              "assembly_head_sha": os.environ["ASSEMBLY_HEAD_SHA"],
+              "scenario_artifacts_source_run_id": os.environ["SAMPLE_RUN_ID"],
+              "acceptance_evidence_source_run_id": os.environ["SAMPLE_RUN_ID"],
+          }
+          Path("results_stage13/final/recovery_execution.json").write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+          )
+          PY
       - name: Upload workbook and audit evidence
         if: always()
         uses: actions/upload-artifact@v4
