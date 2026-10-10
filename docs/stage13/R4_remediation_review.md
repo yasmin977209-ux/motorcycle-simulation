@@ -27,4 +27,32 @@ Source basis: current main, stage3b-preserved as diagnostic evidence only, and �
 7. Independently recompute MIN/P10/P50/P90/MAX for Final_Net_Project_Equity, Partner1_Final_Entitlement, Partner2_Final_Entitlement and Final_Cash, then compare all 500 numeric values from the exported workbook exactly.
 8. Keep the complete build on the temporary branch. Do not merge, mutate main, or update state.json in this CP.
 
-Not yet PASS: no repair or gate described here becomes PASS until this exact branch revision runs and corresponding logs/artifacts are inspected.
+## Verified execution evidence — 2026-10-10
+
+The exact workflow head `d1531b1ffd1e841ae2ad19d6154ac9d81c617ea1` completed in GitHub Actions Run [38060796014](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38060796014), conclusion `success`.
+
+This was an assembly-only recovery, not a rerun of the diagnostic trials:
+- The original producer run was `38005557997`, head `648b5315da1ef46146226d7982020a88c4905dcb`. Its acceptance job and all 25 scenario jobs succeeded; only its first assembly attempt failed because the shallow checkout lacked the pinned source commit.
+- In Run `38060796014`, the `acceptance` and `sample` jobs were intentionally skipped. The assembly job fetched the scenario packages and acceptance evidence from Run `38005557997`, verified the producer implementation identity, built the workbook and executed the 500 comparisons.
+- Recorded assembly output: cohort `STAGE13_SAMPLE_TRIAL_IDS_26_50_V2`; 25 scenarios; trial IDs 26–50; 625 trial results; 125 representative role assignments; 105 unique representative detail trials; 185 workbook sheets; zero Excel error cells; zero formula cells; `GATE_STATUS=PASS`; `POINTS_MATCHED=500` of 500.
+- Trial-results fingerprint: `ba6f1e0dcf6daad1a4e5dcf07c01ff26b8dbac79320b4dcc2a3d3514e276c772`.
+- Workbook SHA-256: `dae115c9bb41be9a9d4558429d874df649e80439f2299aff8a8e4f3a9038b201`.
+- Post-processing logs: `SCENARIO_ARTIFACT_MANIFESTS_REBUILT_AND_VERIFIED=25` and `FINAL_ARTIFACT_MANIFEST_INTEGRITY=PASS; FILES=316`.
+- Uploaded evidence artifact: `stage13-sample-final-evidence`, artifact ID `11673197601`, archive digest `sha256:4ead98bec5f29e608447360bd3f1755c49aa9f2727a4834ac358e4376d63c774`.
+
+The result proves only the explicit 500-point Parquet-to-XLSX consistency gate for this separate 625-trial diagnostic cohort. It does **not** establish statistical Gate A/B or replace/change the canonical 11,005-trial dataset (fingerprint `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`). Main and `state.json` remain unchanged; PR #20 remains draft and unmerged. The current `main/state.json` still names Stage `12-CLOSED` and next `CP-B1`; this diagnostic recovery does not authorize crossing that CP boundary.
+
+## CP outcome
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Acceptance evidence used for this cohort | PASS (reused from the original producer run) | Run `38005557997`; acceptance artifact; 163-test inventory report |
+| Source/producers match pinned sample revision | PASS | Run `38060796014`, step `Verify source code matches the pinned completed sample cohort` |
+| Scenario coverage and trial identities | PASS | 25 packages; 625 results; IDs 26–50 per scenario; assembler runtime checks |
+| Workbook structure/integrity | PASS | 185 sheets; 0 Excel error cells; 0 formula cells |
+| 500 exact Parquet-to-XLSX comparisons | PASS | Runtime output `POINTS_MATCHED=500`, `POINTS_EXPECTED=500` |
+| 25 nested artifact manifests | PASS | `SCENARIO_ARTIFACT_MANIFESTS_REBUILT_AND_VERIFIED=25` |
+| Outer artifact manifest | PASS | `FINAL_ARTIFACT_MANIFEST_INTEGRITY=PASS; FILES=316` |
+| Statistical Gate A/B | NOT EXECUTED by this cohort | Explicitly out of scope; no PASS inferred |
+| Merge/state update/next CP | NOT AUTHORIZED here | Main unchanged; PR #20 remains draft |
+
