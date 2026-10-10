@@ -1,0 +1,110 @@
+{
+  "gate_id": "STAGE13_20_POINT_PARQUET_VS_STATS_V2",
+  "version": "2.0",
+  "definition_status": "DEFINED",
+  "scope": {
+    "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
+    "trial_ids_per_scenario": [
+      26,
+      50
+    ],
+    "trials_per_scenario": 25,
+    "scenario_count": 25,
+    "total_trial_results": 625,
+    "comparison_scope": "20 statistics comparisons per scenario; 500 comparisons across the 25 scenarios"
+  },
+  "point_definition": {
+    "unit": "One point is one (scenario_id, metric, statistic) comparison between independently recomputed Parquet data and the matching exported XLSX <scenario>_STATS cell.",
+    "metrics": [
+      {
+        "xlsx_metric": "Final_Net_Project_Equity",
+        "parquet_field": "final_net_project_equity",
+        "reason": "Final project equity is the representative-selection metric and an explicit Stage 9C audit metric."
+      },
+      {
+        "xlsx_metric": "Partner1_Final_Entitlement",
+        "parquet_field": "partner1_final_entitlement",
+        "reason": "P1 is explicitly defined in the repository governance decisions and appears in the Stage 9C statistics audit."
+      },
+      {
+        "xlsx_metric": "Partner2_Final_Entitlement",
+        "parquet_field": "partner2_final_entitlement",
+        "reason": "P2 is explicitly defined in the repository governance decisions and appears in the Stage 9C statistics audit."
+      },
+      {
+        "xlsx_metric": "Final_Cash",
+        "parquet_field": "final_cash",
+        "reason": "Final cash is a numeric end-of-trial accounting metric carried in the trial-level data and workbook statistics."
+      }
+    ],
+    "statistics": [
+      {
+        "name": "MIN",
+        "calculation": "minimum observed value; no interpolation"
+      },
+      {
+        "name": "P10",
+        "calculation": "numpy.quantile(values, 0.10, method='linear')"
+      },
+      {
+        "name": "P50",
+        "calculation": "numpy.quantile(values, 0.50, method='linear')"
+      },
+      {
+        "name": "P90",
+        "calculation": "numpy.quantile(values, 0.90, method='linear')"
+      },
+      {
+        "name": "MAX",
+        "calculation": "maximum observed value; no interpolation"
+      }
+    ],
+    "point_count_per_scenario": 20,
+    "point_count_total": 500
+  },
+  "independent_verification": {
+    "source_of_truth": "Parquet trial_results dataset produced from the current execution; the workbook is a presentation/export artifact only.",
+    "calculation": "Re-read trial_results.parquet independently after export, sort by scenario_id/trial_id, recompute each defined statistic, then read the matching values from the exported workbook's <scenario>_STATS cells.",
+    "equality": "Exact numeric equality; no tolerance is permitted.",
+    "required_checks": [
+      "Exactly 25 canonical scenario IDs are present.",
+      "Each scenario has precisely trial_ids 26..50 and 25 rows.",
+      "There are exactly 625 unique (scenario_id, trial_id) pairs and no duplicates.",
+      "The workbook has all 25 <scenario>_STATS worksheets and all four metric rows and five statistic columns.",
+      "All 500 comparisons are numeric, finite, and exactly equal.",
+      "The complete workbook contains 185 worksheets (10 global plus 7 for each of 25 scenarios).",
+      "No Excel error values are present.",
+      "The final workbook is explicitly bound to the cohort fingerprint in dataset_identity.json."
+    ],
+    "pass_rule": "PASS only if every listed prerequisite and all 500 comparisons pass. Missing cells, missing/duplicate trials, identity mismatch, errors, or any numeric mismatch means FAIL."
+  },
+  "selection_definition": {
+    "equity_metric": "Final_Net_Project_Equity",
+    "quantile_method": "numpy.quantile(values, q, method='linear')",
+    "P10_P50_P90": "Select the trial whose final equity is closest to the corresponding quantile; ties use the smallest trial_id.",
+    "Loss_Case": "Select the trial minimizing abs(Final_Net_Project_Equity); ties use the smallest trial_id.",
+    "Max_Case": "User-authorized extension: select the trial maximizing abs(Final_Net_Project_Equity); ties use the smallest trial_id.",
+    "roles_may_share_trial_id": true,
+    "selected_details": "Re-run each unique selected trial with event logging enabled; verify its final result exactly matches the initial cohort result and all daily balance differences are zero."
+  },
+  "limits": {
+    "not_a_statistical_stability_gate": true,
+    "does_not_establish_gate_A_or_gate_B": true,
+    "does_not_replace_canonical_11005_trial_dataset": true,
+    "does_not_reopen_or_change_historical_stage9c_partial_final_accepted_decision": true,
+    "interpretation": "This gate establishes Parquet-to-XLSX statistics consistency for the requested 25-trial-per-scenario cohort only. It must not be represented as a PASS for canonical Monte Carlo sample-size, stability, or full Stage 9C acceptance gates."
+  },
+  "source": {
+    "authoritative_report": "docs/stage9c/STAGE9C_REPORT.md",
+    "authoritative_report_blob_sha": "81fb79720988cfe261fa6d8d29371e616f9f9850",
+    "original_literal_gap": "The four requested fields, exact comparison points, and statistic-to-_STATS mapping were not completely named in the report.",
+    "user_instruction_date": "2026-10-10",
+    "user_authorized_semantics": "25 trials per each of 25 scenarios, five representative roles including Loss Case by minimum absolute equity and Max Case by maximum absolute equity."
+  },
+  "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
+  "cohort_scope": "trial_ids 26..50 for each scenario; fresh cohort, separate from canonical 11,005-trial dataset and the interrupted prior attempt using IDs 1..25"
+,
+  "content_sha_method": "sha256_over_sorted_zip_members_excluding_core_xml",
+  "expected_content_sha": "39122f4c3a80973d422fba1f10e7f6eeaa22b6cd2e2df46a4d059fb2f141ef6f",
+  "verification_basis": "CONTENT_SHA (K_SPEC fix, Run 38075354263)"
+}
