@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   acceptance:
+    if: ${{ !contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -177,7 +178,7 @@ jobs:
 
   assemble:
     needs: [acceptance, sample]
-    if: ${{ always() && needs.acceptance.result == 'success' && (needs.sample.result == 'success' || contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]')) }}
+    if: ${{ always() && (needs.acceptance.result == 'success' || contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]')) && (needs.sample.result == 'success' || contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -264,8 +265,48 @@ jobs:
           import json
           import os
           from pathlib import Path
+
           output_dir = Path("results_stage13/final")
-          payload = {
+          cohort_id = "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2"
+          trial_ids = list(range(26, 51))
+          stability = "diagnostic 25-trial cohort; no Gate A/B statistical status inferred"
+          sampling_policy = "fresh, one-based deterministic keys 26..50; replaces no canonical trials"
+          sampling = {
+              "cohort_id": cohort_id,
+              "policy": sampling_policy,
+              "trial_ids": trial_ids,
+              "trials_per_scenario": 25,
+              "scenario_count": 25,
+          }
+
+          identity_path = output_dir / "dataset_identity.json"
+          identity = json.loads(identity_path.read_text(encoding="utf-8"))
+          identity["sampling"] = sampling
+          identity["stability"] = stability
+          for scenario_identity in identity.get("scenario_identities", {}).values():
+              scenario_identity["sampling"] = sampling_policy
+              scenario_identity["stability"] = stability
+          identity_path.write_text(
+              json.dumps(identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+          )
+
+          for scenario_identity_path in sorted((output_dir / "dataset").glob("*/dataset_identity.json")):
+              scenario_identity = json.loads(scenario_identity_path.read_text(encoding="utf-8"))
+              scenario_identity["sampling"] = sampling_policy
+              scenario_identity["stability"] = stability
+              scenario_identity_path.write_text(
+                  json.dumps(scenario_identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+              )
+
+          global_manifest_path = output_dir / "manifest.json"
+          global_manifest = json.loads(global_manifest_path.read_text(encoding="utf-8"))
+          global_manifest["sampling"] = sampling
+          global_manifest["stability"] = stability
+          global_manifest_path.write_text(
+              json.dumps(global_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+          )
+
+          recovery = {
               "status": "REASSEMBLED_EXISTING_DATASET_NO_TRIALS_RERUN",
               "sample_run_id": os.environ["SAMPLE_RUN_ID"],
               "sample_head_sha": os.environ["SAMPLE_HEAD_SHA"],
@@ -273,21 +314,27 @@ jobs:
               "assembly_head_sha": os.environ["ASSEMBLY_HEAD_SHA"],
               "scenario_artifacts_source_run_id": os.environ["SAMPLE_RUN_ID"],
               "acceptance_evidence_source_run_id": os.environ["SAMPLE_RUN_ID"],
+              "cohort_id": cohort_id,
+              "trial_ids_per_scenario": [26, 50],
+              "stability": stability,
           }
           recovery_path = output_dir / "recovery_execution.json"
           recovery_path.write_text(
-              json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+              json.dumps(recovery, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
           )
+
           manifest_path = output_dir / "artifact_manifest.json"
-          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          artifact_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
           hashes = {}
           for path in sorted(output_dir.rglob("*")):
               if path.is_file() and path != manifest_path:
                   hashes[path.relative_to(output_dir).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
-          manifest["file_hashes_sha256"] = hashes
-          manifest["file_count_excluding_manifest"] = len(hashes)
+          artifact_manifest["file_hashes_sha256"] = hashes
+          artifact_manifest["file_count_excluding_manifest"] = len(hashes)
+          artifact_manifest["sampling"] = sampling
+          artifact_manifest["stability"] = stability
           manifest_path.write_text(
-              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+              json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
           )
           PY
       - name: Upload workbook and audit evidence

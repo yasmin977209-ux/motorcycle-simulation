@@ -3,10 +3,10 @@
   "version": "2.0",
   "status": "DEFINED_NOT_EXECUTED",
   "scope": {
-    "cohort_id": "STAGE13_USER_AUTHORIZED_25_TRIALS_PER_SCENARIO",
+    "cohort_id": "STAGE13_SAMPLE_TRIAL_IDS_26_50_V2",
     "trial_ids_per_scenario": [
-      1,
-      25
+      26,
+      50
     ],
     "trials_per_scenario": 25,
     "scenario_count": 25,
@@ -68,7 +68,7 @@
     "equality": "Exact numeric equality; no tolerance is permitted.",
     "required_checks": [
       "Exactly 25 canonical scenario IDs are present.",
-      "Each scenario has precisely trial_ids 1..25 and 25 rows.",
+      "Each scenario has precisely trial_ids 26..50 and 25 rows.",
       "There are exactly 625 unique (scenario_id, trial_id) pairs and no duplicates.",
       "The workbook has all 25 <scenario>_STATS worksheets and all four metric rows and five statistic columns.",
       "All 500 comparisons are numeric, finite, and exactly equal.",
