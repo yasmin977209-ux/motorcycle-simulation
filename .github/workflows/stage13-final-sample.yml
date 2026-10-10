@@ -250,9 +250,11 @@ jobs:
           ASSEMBLY_HEAD_SHA: ${{ github.sha }}
         run: |
           python - <<'PY'
+          import hashlib
           import json
           import os
           from pathlib import Path
+          output_dir = Path("results_stage13/final")
           payload = {
               "status": "REASSEMBLED_EXISTING_DATASET_NO_TRIALS_RERUN",
               "sample_run_id": os.environ["SAMPLE_RUN_ID"],
@@ -262,8 +264,20 @@ jobs:
               "scenario_artifacts_source_run_id": os.environ["SAMPLE_RUN_ID"],
               "acceptance_evidence_source_run_id": os.environ["SAMPLE_RUN_ID"],
           }
-          Path("results_stage13/final/recovery_execution.json").write_text(
+          recovery_path = output_dir / "recovery_execution.json"
+          recovery_path.write_text(
               json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+          )
+          manifest_path = output_dir / "artifact_manifest.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          hashes = {}
+          for path in sorted(output_dir.rglob("*")):
+              if path.is_file() and path != manifest_path:
+                  hashes[path.relative_to(output_dir).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+          manifest["file_hashes_sha256"] = hashes
+          manifest["file_count_excluding_manifest"] = len(hashes)
+          manifest_path.write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
           )
           PY
       - name: Upload workbook and audit evidence
