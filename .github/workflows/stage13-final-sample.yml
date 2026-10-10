@@ -193,6 +193,16 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -r requirements.txt
+      - name: Verify source code matches the pinned completed sample cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$SAMPLE_HEAD_SHA^{commit}"
+          if [[ "$SAMPLE_RUN_ID" != "$GITHUB_RUN_ID" || "$SAMPLE_HEAD_SHA" != "$GITHUB_SHA" ]]; then
+            for file in constants.py entities.py dateutils.py rng.py accounting.py closure.py collection.py guarantee.py partner_equity.py friday.py settlement.py state_machine.py daily_engine.py monte_carlo.py requirements.txt scripts/stage13_scenario_worker.py scripts/stage13_rerun_sample.py scripts/stage13_prepare_test_fixtures.py scripts/stage13_validate_acceptance.py scripts/stage13_assemble.py scripts/excel_builder.py tests; do
+              git diff --exit-code "$SAMPLE_HEAD_SHA" "$GITHUB_SHA" -- "$file"
+            done
+          fi
       - name: Download the 25 scenario packages from the pinned completed run
         if: ${{ contains(github.event.head_commit.message, '[stage13-reassemble-only:38005557997]') }}
         uses: actions/download-artifact@v4
