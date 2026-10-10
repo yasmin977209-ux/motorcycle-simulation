@@ -266,7 +266,7 @@ jobs:
           }
           recovery_path = output_dir / "recovery_execution.json"
           recovery_path.write_text(
-              json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+              json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
           )
           manifest_path = output_dir / "artifact_manifest.json"
           manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -277,7 +277,7 @@ jobs:
           manifest["file_hashes_sha256"] = hashes
           manifest["file_count_excluding_manifest"] = len(hashes)
           manifest_path.write_text(
-              json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
           )
           PY
       - name: Upload workbook and audit evidence
