@@ -40,6 +40,10 @@ N600_HISTORY_MAP_SHA = "a796c13a0e596916785e5c7af792550de28b13e4abb9a2ef2fc92559
 N600_SAMPLE_MAP_SHA = "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
 N600_HISTORY_ARTIFACT_DIGEST = "df47991b1e94f39c9064497df82989d60d86e88c5627405f03d428d9d9ea0ee0"
 N600_REPORT_ARTIFACT_DIGEST = "67d5033a67eec27bd7a90b735c56f7f7ceff4181e32c88271dd07f39f3b8e8ae"
+N1200_PRIOR_RUN_ID = 38178068848
+N1200_PRIOR_HEAD = "dae9cd6d5ba639ad2265a6d52a1b086a2c9dbe95"
+N1200_PRIOR_BRANCH = "tmp/gateb-historical-1200-verify-20261012"
+N1200_PRIOR_ATTEMPT = 1
 EXPECTED_STAGE12_GLOBAL = "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
 EXPECTED_STAGE9A_GLOBAL = "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
 SCENARIOS = [f"C{c:03d}_G{g:03d}" for c in (85, 70, 50, 30) for g in (100, 70, 50, 30, 0)]
@@ -135,6 +139,58 @@ def list_artifacts(run_id: int) -> dict[str, dict[str, Any]]:
     return result
 
 
+
+def validate_prior_n1200_run_identity(data: dict[str, Any]) -> dict[str, Any]:
+    if int(data.get("id", -1)) != N1200_PRIOR_RUN_ID or data.get("head_sha") != N1200_PRIOR_HEAD or data.get("head_branch") != N1200_PRIOR_BRANCH:
+        fail(f"PRIOR_N1200_RUN_IDENTITY_MISMATCH run={data.get('id')} head={data.get('head_sha')} branch={data.get('head_branch')}")
+    if int(data.get("run_attempt", -1)) != N1200_PRIOR_ATTEMPT:
+        fail(f"PRIOR_N1200_RUN_ATTEMPT_MISMATCH run={N1200_PRIOR_RUN_ID} attempt={data.get('run_attempt')}")
+    if data.get("status") != "completed" or data.get("conclusion") not in ("success", "failure"):
+        fail(f"PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED run={N1200_PRIOR_RUN_ID} status={data.get('status')} conclusion={data.get('conclusion')}")
+    return {key: data.get(key) for key in ("id", "head_sha", "head_branch", "status", "conclusion", "run_attempt", "created_at", "updated_at", "html_url")}
+
+
+def prior_n1200_run_evidence() -> dict[str, Any]:
+    run = validate_prior_n1200_run_identity(gh_json(f"repos/{REPO}/actions/runs/{N1200_PRIOR_RUN_ID}"))
+    jobs_response = gh_json(f"repos/{REPO}/actions/runs/{N1200_PRIOR_RUN_ID}/jobs?per_page=100")
+    jobs = jobs_response.get("jobs")
+    if not isinstance(jobs, list) or int(jobs_response.get("total_count", -1)) != len(jobs):
+        fail("PRIOR_N1200_JOB_LIST_INCOMPLETE")
+    scenario_jobs = {}
+    for scenario in SCENARIOS:
+        expected_name = f"Run only missing IDs 601–1200 — {scenario}"
+        matches = [job for job in jobs if job.get("name") == expected_name]
+        if len(matches) != 1:
+            fail(f"PRIOR_N1200_SCENARIO_JOB_SET_MISMATCH {scenario} matches={len(matches)}")
+        job = matches[0]
+        if job.get("status") != "completed":
+            fail(f"PRIOR_N1200_SCENARIO_JOB_NOT_COMPLETED {scenario} status={job.get('status')}")
+        steps = job.get("steps") or []
+        materialize = next((step for step in steps if step.get("name") == "Materialize only missing IDs 601–1200; restore same-run completed IDs first"), None)
+        artifact_name = f"gateb-n1200-new-{scenario}-attempt-{N1200_PRIOR_ATTEMPT}"
+        scenario_jobs[scenario] = {
+            "job": job,
+            "materialize_step": materialize,
+            "artifact_name": artifact_name,
+        }
+    artifacts = list_artifacts(N1200_PRIOR_RUN_ID)
+    scenario_artifacts = {}
+    for scenario, evidence in scenario_jobs.items():
+        artifact = artifacts.get(evidence["artifact_name"])
+        step = evidence["materialize_step"]
+        step_was_run = step is not None and step.get("status") not in ("pending", "queued") and step.get("conclusion") != "skipped"
+        if artifact is None and step_was_run:
+            fail(f"PRIOR_N1200_OUTPUT_ARTIFACT_MISSING_AFTER_TRIAL_STEP {scenario}; refusing to rerun unverifiable trial IDs")
+        if artifact is not None:
+            scenario_artifacts[scenario] = artifact
+    return {
+        "run": run,
+        "jobs": scenario_jobs,
+        "artifacts": artifacts,
+        "scenario_artifacts": scenario_artifacts,
+    }
+
+
 def download_artifact(artifact: dict[str, Any], target: Path, expected_digest: str | None = None) -> dict[str, Any]:
     artifact_id = int(artifact["id"])
     with target.open("wb") as stream:
@@ -201,6 +257,7 @@ def preflight() -> dict[str, Any]:
     live_main = main.get("object", {}).get("sha")
     if live_main != PINNED_MAIN_SHA:
         fail(f"MAIN_MOVED_SINCE_R4 expected={PINNED_MAIN_SHA} actual={live_main}")
+    prior_n1200 = prior_n1200_run_evidence()
     run300 = validate_run(N300_RUN_ID, N300_HEAD, "success")
     run600 = validate_run(N600_RUN_ID, N600_HEAD, "success")
     stage7 = validate_run(STAGE7_RUN_ID, STAGE7_HEAD, "success")
@@ -216,7 +273,9 @@ def preflight() -> dict[str, Any]:
         "stage7": stage7, "stage10": stage10, "stage12": stage12,
         "n300_checkpoint": {"run": run300, "artifact_id": N300_ARTIFACT_ID, "artifact_api_digest": hit300[0].get("digest")},
         "n600_checkpoint": {"run": run600, "historical_aggregate_artifact_id": N600_HISTORY_ARTIFACT_ID, "n600_report_artifact_id": N600_REPORT_ARTIFACT_ID},
-        "scope": "Use IDs 1..600 as verified analytical inputs; execute only IDs 601..1200 per non-C100 scenario.",
+        "prior_n1200_run": prior_n1200["run"],
+        "prior_n1200_scenario_artifacts": {scenario: {"artifact_id": artifact.get("id"), "digest": artifact.get("digest")} for scenario, artifact in sorted(prior_n1200["scenario_artifacts"].items())},
+        "scope": "Use IDs 1..600 as verified analytical inputs; reuse verified outputs from the prior N=1200 run and execute only IDs 601..1200 with no verified prior output.",
     }
 
 
@@ -402,6 +461,60 @@ def restore_previous_attempts(scenario: str, run_id: int, current_attempt: int) 
     return restored
 
 
+
+def restore_prior_run_outputs(scenario: str, current_run_id: int) -> tuple[dict[int, dict[str, Any]], dict[str, Any] | None]:
+    if current_run_id == N1200_PRIOR_RUN_ID:
+        return {}, None
+    evidence = prior_n1200_run_evidence()
+    artifact_name = f"gateb-n1200-new-{scenario}-attempt-{N1200_PRIOR_ATTEMPT}"
+    artifact = evidence["scenario_artifacts"].get(scenario)
+    if artifact is None:
+        # The prior run evidence proves the materialization step for this scenario never ran.
+        return {}, {"prior_run_id": N1200_PRIOR_RUN_ID, "artifact_name": artifact_name, "artifact_present": False, "restored_trial_count": 0}
+    restored: dict[int, dict[str, Any]] = {}
+    with tempfile.TemporaryDirectory(prefix=f"gateb-n1200-prior-run-{scenario}-") as tmp:
+        archive = Path(tmp) / f"{artifact_name}.zip"
+        download_event = download_artifact(artifact, archive)
+        with zipfile.ZipFile(archive) as zf:
+            for member in sorted(zf.namelist()):
+                basename = Path(member).name
+                if not re.fullmatch(r"trial_[0-9]{5}\.json", basename):
+                    continue
+                if member.startswith("/") or ".." in Path(member).parts:
+                    fail(f"PRIOR_N1200_ARTIFACT_PATH_INVALID {artifact_name}/{member}")
+                payload = json.loads(zf.read(member).decode("utf-8"))
+                trial_id = int(payload.get("trial_id", -1))
+                if trial_id not in NEW_IDS:
+                    fail(f"PRIOR_N1200_TRIAL_ID_OUT_OF_RANGE {scenario}/{trial_id}")
+                validate_trial_payload(payload, scenario, trial_id, N1200_PRIOR_RUN_ID, "new_stage12_gateb_n1200")
+                if int(payload.get("run_attempt", -1)) != N1200_PRIOR_ATTEMPT:
+                    fail(f"PRIOR_N1200_TRIAL_ATTEMPT_IDENTITY_MISMATCH {scenario}/{trial_id}")
+                if trial_id in restored:
+                    fail(f"DUPLICATE_PRIOR_N1200_TRIAL {scenario}/{trial_id}")
+                restored[trial_id] = payload
+    return restored, {
+        "prior_run_id": N1200_PRIOR_RUN_ID,
+        "artifact_id": download_event["artifact_id"],
+        "artifact_name": download_event["name"],
+        "artifact_sha256": download_event["archive_sha256"],
+        "restored_trial_count": len(restored),
+        "restored_trial_ids": sorted(restored),
+    }
+
+
+def persist_trial_payload(output_dir: Path, payload: dict[str, Any], scenario: str, trial_id: int) -> None:
+    validate_trial_payload(payload, scenario, trial_id, expected_origin="new_stage12_gateb_n1200")
+    path = output_dir / f"trial_{trial_id:05d}.json"
+    if path.exists():
+        existing = json.loads(path.read_text(encoding="utf-8"))
+        if existing.get("result_sha256") != payload.get("result_sha256") or existing.get("run_id") != payload.get("run_id") or existing.get("run_attempt") != payload.get("run_attempt"):
+            fail(f"RESTORED_TRIAL_OUTPUT_CONFLICT {scenario}/{trial_id}")
+        return
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def run_new_trials(scenario: str, source_root: Path, input_file: Path, output_root: Path) -> dict[str, Any]:
     if scenario not in SCENARIOS:
         fail(f"UNSUPPORTED_SCENARIO {scenario}")
@@ -425,7 +538,22 @@ def run_new_trials(scenario: str, source_root: Path, input_file: Path, output_ro
     attempt = int(os.environ["GITHUB_RUN_ATTEMPT"])
     output_dir = output_root / "trial_outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
-    prior = restore_previous_attempts(scenario, run_id, attempt)
+    same_run_prior = restore_previous_attempts(scenario, run_id, attempt)
+    prior_run_payloads, prior_run_artifact = restore_prior_run_outputs(scenario, run_id)
+    prior: dict[int, dict[str, Any]] = {}
+    for source_label, source_rows in (("prior_run", prior_run_payloads), ("same_run_attempt", same_run_prior)):
+        for trial_id, payload in source_rows.items():
+            if trial_id in prior:
+                current = prior[trial_id]
+                if current.get("result_sha256") != payload.get("result_sha256") or current.get("run_id") != payload.get("run_id") or current.get("run_attempt") != payload.get("run_attempt"):
+                    fail(f"CONFLICTING_RESTORED_N1200_TRIAL {scenario}/{trial_id} source={source_label}")
+            else:
+                prior[trial_id] = payload
+    # Cross-run artifacts are not visible to this run's aggregate job. Re-materialize
+    # only verified payloads not already present in this run's earlier attempt artifact.
+    for trial_id, payload in prior_run_payloads.items():
+        if trial_id not in same_run_prior:
+            persist_trial_payload(output_dir, payload, scenario, trial_id)
     missing = [trial_id for trial_id in NEW_IDS if trial_id not in prior]
     collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(scenario)
     completed_now = []
@@ -446,10 +574,7 @@ def run_new_trials(scenario: str, source_root: Path, input_file: Path, output_ro
             "log_events": False, "origin": "new_stage12_gateb_n1200",
         }
         validate_trial_payload(payload, scenario, trial_id, run_id, "new_stage12_gateb_n1200")
-        path = output_dir / f"trial_{trial_id:05d}.json"
-        temporary = path.with_suffix(".json.tmp")
-        temporary.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
-        temporary.replace(path)
+        persist_trial_payload(output_dir, payload, scenario, trial_id)
         completed_now.append(trial_id)
         if len(completed_now) % 50 == 0:
             print(f"N1200_TRIAL_PROGRESS={scenario} completed_this_attempt={len(completed_now)} last_trial_id={trial_id}")
@@ -460,6 +585,9 @@ def run_new_trials(scenario: str, source_root: Path, input_file: Path, output_ro
         "scenario_id": scenario, "run_id": run_id, "run_attempt": attempt,
         "source_sha": SOURCE_SHA, "source_commit": SOURCE_COMMIT, "master_seed": MASTER_SEED,
         "historical_ids_rerun": False, "completed_before_attempt": sorted(prior),
+        "restored_from_prior_n1200_run": sorted(prior_run_payloads),
+        "prior_n1200_artifact": prior_run_artifact,
+        "restored_from_same_run_attempt": sorted(same_run_prior),
         "new_ids_materialized_this_attempt": completed_now,
         "trial_count_at_n1200": len(total), "remaining_ids": sorted(set(NEW_IDS) - total),
         "status": "PASS",
@@ -584,12 +712,17 @@ def aggregate_n1200(cumulative_file: Path, new_root: Path, output_file: Path) ->
         fail("N1200_GLOBAL_KEY_COVERAGE_INVALID")
     global_map = ordered_map_sha(all_rows)
     checkpoint_status = "HOLD_UNDEFINED_BUSINESS_RULE" if undefined else ("FAIL_AT_N1200_ESCALATE_TO_N2400" if failed else "PASS_AT_N1200_ONLY")
+    current_audit_run_id = int(os.environ.get("GITHUB_RUN_ID", "-1"))
+    trial_output_run_ids = sorted({int(payload.get("run_id", -1)) for rows in new_by_scenario.values() for payload in rows.values()})
     result = {
         "status": checkpoint_status, "checkpoint": "N=1200", "checkpoint_status": checkpoint_status,
         "overall_gate_b": "NOT_ESTABLISHED_BY_N1200_ALONE",
         "gate_a": "SEPARATE_GATE_NOT_PROMOTED_BY_THIS_CP",
         "source_sha": SOURCE_SHA, "source_commit_for_new_trials": SOURCE_COMMIT, "master_seed": MASTER_SEED,
-        "n300_run_id": N300_RUN_ID, "n600_run_id": N600_RUN_ID, "new_trial_run_id": int(os.environ.get("GITHUB_RUN_ID", "-1")),
+        "n300_run_id": N300_RUN_ID, "n600_run_id": N600_RUN_ID,
+        "new_trial_run_id": trial_output_run_ids[0] if len(trial_output_run_ids) == 1 else None,
+        "trial_output_run_ids": trial_output_run_ids,
+        "checkpoint_audit_run_id": current_audit_run_id,
         "new_trial_run_attempt": int(os.environ.get("GITHUB_RUN_ATTEMPT", "-1")),
         "scenario_count": 20, "historical_and_prior_inputs_verified": 12000,
         "new_trials_expected": EXPECTED_N1200_NEW, "new_trials_verified": sum(len(v) for v in new_by_scenario.values()),
