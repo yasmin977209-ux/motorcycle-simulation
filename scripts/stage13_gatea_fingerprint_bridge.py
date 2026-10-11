@@ -320,7 +320,7 @@ def run_scenario(scenario:str,outroot:Path)->dict:
             gates={
                 "source_rows_rehashed_and_metadata_matches":sum(x["trial_hashes_recomputed_from_parquet"] for x in report["source_blocks"])==len(expected_ids),
                 "stage12_file_hash_matches_cp12b_and_cp12c_reports":st12["file_sha256_actual"]==st12["file_sha256_cp12b_report"]==st12["file_sha256_cp12c_report"],
-                "stage12_identity_schema_and_daily_sequence_valid":st12["unique_trial_keys"]==len(expected_ids) and st12["row_source_seed_valid"] and st12["dates_contiguous"] and st12["result_sha_constant_within_trial"],
+                "stage12_identity_schema_and_daily_sequence_valid":st12["exact_comparison_count"]==len(expected_ids) and st12["row_source_seed_valid"] and st12["dates_contiguous"] and st12["result_sha_constant_within_trial"],
                 "all_trial_hashes_exact":len(trial_checks)==len(expected_ids) and st12["mismatch_count"]==0,
                 "trial_id_coverage_complete":[x["trial_id"] for x in trial_checks]==expected_ids
             }

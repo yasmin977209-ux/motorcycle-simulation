@@ -58,3 +58,14 @@ Base rechecked before correction: main `94b6ea49715c9f845be83b6f106b26c253bf0506
 | Gate A aggregate hash domains | The custom SHA of ordered `scenario|trial_id|result_sha256` mapping is not the Stage 12 global Parquet aggregate SHA. Comparing those two byte domains to one another is invalid. | `K_CODE` — aggregate-gate defect. Compare actual and source-golden trial-map hashes only to each other. Validate Stage 12 official global SHA only against CP12-B/CP12-C global fields and each Parquet file SHA against its scenario reports. |
 
 These three corrections are audit implementation repairs, not a change to Gate A policy. The report must explicitly disclose the Stage 11 head-summary defect, separately retain the Stage 10 metadata literal-backslash-n defect and raw hashes, and claim Gate A PASS only if all 25 scenarios, all 11,005 exact trial hashes, Stage 12 file-identity checks, unique keys, source provenance, and parser/Actions gates pass. Stage 9C and Gate B remain independent gates.
+
+## R4 addendum — Stage 12 evidence dictionary key mismatch (2026-10-11)
+
+Run `38168648208` on candidate SHA `400880fbb26c31cb9000040ff0d2e93d93409696` passed the four strict parser tests and read the canonical source and Stage 12 artifacts, but each scenario stopped at the harness's field lookup with exact error `'unique_trial_keys'`. In `scripts/stage13_gatea_fingerprint_bridge.py`, `validate_stage12()` returns `exact_comparison_count`; the caller incorrectly referenced `unique_trial_keys`. This is an audit-harness **K_CODE** error, not a data mismatch. The gate now compares `exact_comparison_count == expected trial count`; key uniqueness is separately protected by ordered contiguous one-per-trial coverage and duplicate/gap rejection during the stream. No source, historical identity metadata, Parquet, trial or engine code changed.
+
+| Item | Current main | stage3b-preserved | Binding source / current candidate | Judgment |
+|---|---|---|---|---|
+| Stage 12 comparison evidence field | Main owns the existing CP12 reports; no Gate A bridge script is on main. | Diagnostic only, no code reused. | Candidate helper returns `exact_comparison_count` from the number of closed unique trial IDs; previous consumer asked for nonexistent `unique_trial_keys`. | **K_CODE** in the helper, fixed to consume the returned contract field; preserve strict contiguity and duplicate rejection. |
+
+The corrected branch reruns the same pinned, read-only Gate A audit against unchanged artifacts. The earlier failing run remains a recorded failed run and is not overwritten.
+
