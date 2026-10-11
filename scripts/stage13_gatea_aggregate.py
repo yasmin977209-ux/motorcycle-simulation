@@ -67,6 +67,8 @@ def main():
         "all_11005_stage12_hashes_equal_source_goldens":exact_all,
         "stage12_daily_rows_match_cp12b_cp12c":daily_rows==EXPECTED_DAILY_ROWS,
         "actual_and_golden_trial_hash_maps_equal":actual_global==golden_global,
+        "actual_trial_hash_map_matches_official_cp12_global_sha256":actual_global==EXPECTED_GLOBAL,
+        "source_golden_trial_hash_map_matches_official_cp12_global_sha256":golden_global==EXPECTED_GLOBAL,
         "cp12b_cp12c_official_global_identity_confirmed_in_all_scenario_reports":all(reports[s].get("stage12_global_identity",{}).get("both_match_known_identity") is True and reports[s].get("stage12_global_identity",{}).get("cp12b_expected_global_sha256")==EXPECTED_GLOBAL and reports[s].get("stage12_global_identity",{}).get("cp12c_expected_global_sha256")==EXPECTED_GLOBAL for s in reports),
         "stage10_malformed_head_summary_field_explicitly_disclosed":all(reports[s].get("stage10_identity_metadata_deviation",{}).get("classification")=="K_CODE" and reports[s].get("stage10_identity_metadata_deviation",{}).get("recorded_branch_head_sha")=="ca73f2df37baacebbcad965f5c433f129675820" and reports[s].get("stage10_identity_metadata_deviation",{}).get("live_run_api_head_sha")=="ca73f2df37baacebbcad965fc5f433f129675820" and reports[s].get("stage10_identity_metadata_deviation",{}).get("matches_live_run") is False for s in reports),
         "source_sha_provenance_correct":all(reports[s].get("source_sha")==SOURCE_SHA for s in reports),
