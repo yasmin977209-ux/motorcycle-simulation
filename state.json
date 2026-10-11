@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011",
-  "sha": "601d8cf92ee64a64d1ac0a53d31d32c84ee830e3",
+  "sha": "94b6ea49715c9f845be83b6f106b26c253bf0506",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-B2: Stage 12 accounting data contract resolution",
   "blockers": [
@@ -10,7 +10,7 @@
     "CP-D pending after CP-C: the independent Stage 9C 20-point Parquet versus _STATS gate remains NOT_EXECUTED and must not be claimed PASS before evidence."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "601d8cf92ee64a64d1ac0a53d31d32c84ee830e3",
+  "head_sha": "94b6ea49715c9f845be83b6f106b26c253bf0506",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -70,6 +70,16 @@
       "historical_run_id": "37964656154",
       "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
       "historical_sampling_policy": "+50/550",
+      "no_resume_or_identity_change": true
+    },
+    "D-2026-10-11-02": {
+      "topic": "cp_b2_acceptance_and_gate_b_analytical_reuse_extension",
+      "value": "CONTRACT_STATUS_INFORMATIONAL; CP_B2_ACCEPTANCE_REQUIRES_EVIDENCE; HISTORICAL_GATE_B_INPUTS_1..550_ANALYTICAL_ONLY",
+      "historical_run_id": "37964656154",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "historical_sampling_policy": "+50/550",
+      "historical_trial_id_range": "1..550",
+      "non_c100_scenarios": 20,
       "no_resume_or_identity_change": true
     }
   },
