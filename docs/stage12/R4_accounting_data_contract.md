@@ -1,6 +1,6 @@
 # CP-B2 R4 — Stage 12 accounting data contract canonicalization
 
-Date: 2026-10-10  
+Date: 2026-10-10
 Scope: contract and audit documentation only. No engine, tests, RNG, reference, workflow, or state.json changes.
 
 ## Required three-way comparison before change
@@ -176,4 +176,33 @@ The documentation changes were checked against source constants and schema decla
 - Historical provenance: source identity, sampling identity, and historical +50/550 policy remain attached to the existing dataset; only the descriptive note separates that history from future execution policy.
 - Gate label: retained unchanged and not used to infer CP-B2 completion.
 - CP-B2 remains pending explicit review/acceptance and merge authorization. This addendum does not declare CP-B2 complete or `PASS`.
+
+---
+
+## Current R4 refresh — after D-2026-10-11-01 registration — 2026-10-11
+
+This is an additive current-state review. Earlier R4 findings and provenance are preserved; no historical data or JSON identity is rewritten.
+
+### Live repository identity
+
+- Current `main` HEAD: `94b6ea49715c9f845be83b6f106b26c253bf0506`; this includes merged governance PR #26 (merge commit).
+- Current `main/state.json` blob SHA: `77af8022cf2e8d70e8dcc7fb0827479f68c912ad`. It records D-2026-10-11-01 in the existing `governance_decisions` map and still lists CP-B2 as next and Stage 9C as not executed.
+- Current PR #25 branch head before this R4-only correction: `eb631c38af06600d01c899cbd6bc76c9fc464f98`.
+- GitHub comparison `main@94b6ea49715c9f845be83b6f106b26c253bf0506...eb631c38af06600d01c899cbd6bc76c9fc464f98` reports `diverged`, `ahead_by=2`, `behind_by=1`, with merge base `601d8cf92ee64a64d1ac0a53d31d32c84ee830e3`. The actual compare lists only the two intended additions, `docs/stage12/accounting_data_contract.json` and this R4 document. No branch reset or rebase has been performed.
+- Current decision log blob SHA: `5896e166be27170454d4103bd83638bad05b5b62`; amendments blob SHA: `55d410cda50b77ee708374343af6205c6fdfb9e6`; SHA-semantics note blob SHA: `134363f0f2834f8087760b3148910a1a3d3af38b`.
+- Binding reference file SHA-256: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
+
+### Current three-way R4 comparison
+
+| Item | main at `94b6ea49715c9f845be83b6f106b26c253bf0506` | stage3b-preserved at `2e3aa381d833fe430d2aec42e98dd0d29918c3bf` | Binding reference / approved decisions / source | Judgment |
+|---|---|---|---|---|
+| Canonical Stage 12 contract | Both proposed contract files remain absent; roll-forward and closure reports remain historical evidence. | Stage 12 contract and governance files are absent; its Stage 9 state is diagnostic only. | Reference §§14.3–14.4 establish deterministic trial identity; §§15 and 18 govern verified outputs. The accepted topology is the explicit decision in DECISIONS_LOG.md, not a rule copied from stage3b. | **DEVIATION:** canonical contract is still not on main until this PR is accepted. |
+| Schema, key and source constants | No Stage 12 materializer/aggregator source is on main. | No Stage 12 schema/source to compare. | Producer at source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`, blobs `76ffd5b6bd08358dde364f0677c3d82374ce0590` and `fd16864e92d2f4de97e1a9972e3992c38ab4e102`, matches the 38-field contract and four historical identity strings. | **MATCH** for the explicitly compared schema and constants; it does not prove Gate A/B. |
+| Historical sampling versus future policy | D-2026-10-10-01 and Amendment-01 remain normative for future execution; D-2026-10-11-01 and Amendment-05 authorize analytical reuse of historical trials 1–300 for Gate B only, subject to compatibility checks. | No normative policy status; diagnostic only. | Historical Run 37964656154 uses `+50/550`; the accepted future policy doubles from 300. D-2026-10-11-01 prohibits modifying the historical identity or rerunning completed trials. | **MATCH** only when the historical and future policies remain explicitly distinguished. |
+| Contract-level gate label | The decision log, amendment, and state do not define `ACCOUNTING_DATA_CONTRACT_DEFINED=PASS` as CP-B2 completion. | No definition available. | No such binding definition was found in the reviewed reference or approved decision/amendment records. | **UNDEFINED_BUSINESS_RULE:** preserve the label; do not use it to infer CP-B2 PASS. |
+| Implementation state | The live state still lists CP-B2 as next and Stage 9C as pending. | Its Stage 9 state is not authoritative for current execution. | No historical run or roll-forward/closure report substitutes for the new Gate A/Gate B criteria. | **PENDING:** both CP-B2 completion and Stage 9C's independent gate require their own evidence. |
+
+### Scope of this R4 refresh
+
+The only pre-existing content edit in this refresh is removal of the one confirmed trailing-whitespace occurrence at the end of line 3. This addendum records the changed live main identity and the effect of the newly merged governance decision; it does not change the JSON contract, engine, RNG, trial outputs, historical data metadata, or source identity.
 
