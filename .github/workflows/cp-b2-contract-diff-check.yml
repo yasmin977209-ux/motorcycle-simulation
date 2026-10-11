@@ -1,0 +1,33 @@
+name: CP-B2 Contract Diff Check
+on:
+  push:
+    branches:
+      - "tmp/cp-b2-accounting-contract-r4-refresh-20261011"
+permissions:
+  contents: read
+jobs:
+  diff-check:
+    name: Literal git diff --check against pinned main
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify main SHA and execute git diff --check
+        shell: bash
+        env:
+          EXPECTED_BASE_SHA: "94b6ea49715c9f845be83b6f106b26c253bf0506"
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          actual_main="$(git rev-parse origin/main)"
+          if [[ "$actual_main" != "$EXPECTED_BASE_SHA" ]]; then
+            echo "R4 stale: expected main $EXPECTED_BASE_SHA but found $actual_main" >&2
+            exit 2
+          fi
+          echo "Validated HEAD: $GITHUB_SHA"
+          echo "Validated main: $actual_main"
+          git diff --check "$EXPECTED_BASE_SHA...$GITHUB_SHA"

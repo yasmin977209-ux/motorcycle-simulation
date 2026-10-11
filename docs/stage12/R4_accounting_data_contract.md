@@ -205,3 +205,22 @@ This is an additive current-state review. Earlier R4 findings and provenance are
 ### Scope of this R4 refresh
 
 The only pre-existing content edit in this refresh is removal of the one confirmed trailing-whitespace occurrence at the end of line 3. This addendum records the changed live main identity and the effect of the newly merged governance decision; it does not change the JSON contract, engine, RNG, trial outputs, historical data metadata, or source identity.
+## R4 — CP-B2 literal diff check Workflow (2026-10-11)
+
+### Three-way review before the Workflow change
+
+| Item | Current main `94b6ea49715c9f845be83b6f106b26c253bf0506` | `stage3b-preserved` `2e3aa381d833fe430d2aec42e98dd0d29918c3bf` | Normative reference / current CP-B2 branch | Ruling |
+|---|---|---|---|---|
+| Contract document and JSON | `docs/stage12/R4_accounting_data_contract.md` and `docs/stage12/accounting_data_contract.json` are absent from main; main remains unchanged. | The same contract files are absent; this branch is diagnostic evidence only and is not used as a source for implementation. | Candidate branch `03d6aa86f78ce516daa3908e1294c5eec48d595d` carries both contract files. The uploaded normative reference checksum is `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`. | Contract remains a Draft candidate; no JSON or engine changes are in scope for this check. |
+| End-of-line whitespace | No candidate doc exists on main. | No candidate doc exists here. | Latest candidate Markdown blob `767599adb6df6e73200a2011b87456054e0918a8` was inspected line by line; no line ends with spaces or tabs. | **No whitespace edit justified**. Do not rewrite an already-clean file. |
+| Existing CI suitable for literal `git diff --check` | Existing workflows are pinned to their own named branch or main; `.github/workflows/stage4-acceptance-port.yml` has the explicit `stage4-verify-*` trigger, which does not match `tmp/cp-b2-accounting-contract-r4-refresh-20261011`. | Diagnostic only. | Candidate workflow inventory has no CP-B2 diff-check workflow. | Add one read-only job, triggered by an exact branch name only. Pin the expected main SHA, checkout `github.sha`, and execute `git diff --check "$EXPECTED_BASE_SHA...$GITHUB_SHA"`. No `workflow_dispatch`, wildcard trigger, or self-dispatch. |
+| `ACCOUNTING_DATA_CONTRACT_DEFINED` acceptance gate | No normative binding definition was found in the main governance/source files reviewed. | No contract or policy is copied from this branch. | Exact token is absent from uploaded reference and the candidate adds no gate semantics. The normative reference sha256 is recorded above. | **UNDEFINED_BUSINESS_RULE / HOLD** for CP-B2 acceptance. A clean diff check can prove whitespace cleanliness only; it cannot make this gate PASS. |
+
+### Planned job and explicit bounds
+
+The new workflow must verify that the live main ref still equals `94b6ea49715c9f845be83b6f106b26c253bf0506`; if main moves, the job fails and R4 must be refreshed. It then runs literal Git whitespace validation against the branch diff. The commit contains only this workflow plus this R4 evidence update. The existing JSON and accounting contract body are not rewritten. PR #25 remains Draft and unmerged pending the unresolved normative definition and any further CP-B2 acceptance evidence.
+
+### Current governance source verification
+
+`D-2026-10-11-01` is already recorded in main `docs/governance/DECISIONS_LOG.md` (blob `5896e166be27170454d4103bd83638bad05b5b62`) and `Amendment-05` is already recorded in main `docs/governance/REFERENCE_AMENDMENTS.md` (blob `55d410cda50b77ee708374343af6205c6fdfb9e6`). No duplicate governance entries are added by CP-B2.
+
