@@ -87,6 +87,37 @@ def test_n1200_payload_rejects_a_completed_trial_id():
         audit.validate_trial_payload(data, "C085_G100", 601)
 
 
+
+
+def test_prior_n1200_run_identity_must_be_exact_and_completed():
+    good = {
+        "id": audit.N1200_PRIOR_RUN_ID,
+        "head_sha": audit.N1200_PRIOR_HEAD,
+        "head_branch": audit.N1200_PRIOR_BRANCH,
+        "run_attempt": audit.N1200_PRIOR_ATTEMPT,
+        "status": "completed",
+        "conclusion": "success",
+    }
+    assert audit.validate_prior_n1200_run_identity(good)["id"] == audit.N1200_PRIOR_RUN_ID
+
+    bad_head = dict(good, head_sha="0" * 40)
+    with pytest.raises(RuntimeError, match="PRIOR_N1200_RUN_IDENTITY_MISMATCH"):
+        audit.validate_prior_n1200_run_identity(bad_head)
+
+    not_finished = dict(good, status="in_progress")
+    with pytest.raises(RuntimeError, match="PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED"):
+        audit.validate_prior_n1200_run_identity(not_finished)
+
+
+def test_workflow_enables_all_scenario_jobs_with_exact_branch_pin():
+    workflow_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "gateb-historical-1200-verify.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+    assert 'tmp/gateb-parallel20-n1200-20261012' in workflow
+    assert "max-parallel: 20" in workflow
+    assert "workflow_dispatch:" not in workflow
+    assert 'tmp/**' not in workflow
+
+
 def test_student_t_point_passes_and_uses_strict_comparison():
     values = [100_000 + ((i % 5) - 2) for i in range(1200)]
     point = audit.ci_point("C085_G100", "Final_Net_Project_Equity", "final_net_project_equity", values)
