@@ -1,16 +1,16 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011",
-  "sha": "94b6ea49715c9f845be83b6f106b26c253bf0506",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011",
+  "sha": "65d85ca7b1da1cab72ef7fa6d2ac132b32592b53",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-B2: Stage 12 accounting data contract resolution",
+  "next": "CP-C: Gate B N=600 checkpoint — verify historical trial IDs 1..550 as analytical inputs only; materialize only new IDs 551..600 for each non-C100 scenario; preserve historical provenance and do not resume/rerun completed trials.",
   "blockers": [
-    "CP-B2 pending: main does not yet contain the updated Stage 12 accounting data contract adopting 25 materialization jobs plus validate and aggregate.",
-    "CP-D pending after CP-C: the independent Stage 9C 20-point Parquet versus _STATS gate remains NOT_EXECUTED and must not be claimed PASS before evidence."
+    "Gate A acceptance remains separate: PR #30 is still open/draft although its candidate Run 38169163565 reports exact per-trial/global fingerprint matching; verify the exact artifact and record acceptance before claiming Gate A PASS in main.",
+    "CP-D pending after CP-C: Stage 9C 20-point Parquet-versus-_STATS candidate validation succeeded in PR #29 / Run 38165878333, but PR #29 is still open/draft and CP-D is not recorded complete; do not claim CP-D complete until acceptance is recorded."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "94b6ea49715c9f845be83b6f106b26c253bf0506",
+  "head_sha": "65d85ca7b1da1cab72ef7fa6d2ac132b32592b53",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -24,7 +24,29 @@
     "total_daily_rows": 22546465,
     "retries": 0,
     "acceptance_gate": "162 effective / 163 inventory / Test158=K_TEST",
-    "sha_semantics_note": "parent_state_commit_pointer approved"
+    "sha_semantics_note": "parent_state_commit_pointer approved",
+    "cp_b2_20261011": {
+      "status": "CP-B2_ACCEPTANCE_EVIDENCE_PASSED_AND_MERGED",
+      "pull_request": 25,
+      "pull_request_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/25",
+      "merge_commit_sha": "65d85ca7b1da1cab72ef7fa6d2ac132b32592b53",
+      "candidate_head_sha": "f580cf967e01c3f2a0c7612fa77c83c6bb34f956",
+      "contract_version": "1.1",
+      "contract_blob_sha256": "dd3f7f102389def92df16af3b0732b77dd66df6d",
+      "static_validation_run_id": 38172840514,
+      "static_validation_result": "success",
+      "static_validation_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38172840514",
+      "producer_aggregator_source_commit": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+      "historical_run_id": 37964656154,
+      "historical_source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "historical_trials": 11005,
+      "historical_scenarios": 25,
+      "historical_daily_rows": 22546465,
+      "historical_global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+      "approved_decision": "D-2026-10-11-02",
+      "engine_changed": false,
+      "trials_rerun": false
+    }
   },
   "governance_decision_log": {
     "date": "2026-10-09",
