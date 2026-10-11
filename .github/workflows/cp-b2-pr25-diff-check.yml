@@ -1,0 +1,37 @@
+name: CP-B2 PR25 Diff Check
+
+on:
+  push:
+    branches:
+      - "tmp/stage12-cp-b2-diffcheck-20261011"
+
+permissions:
+  contents: read
+
+jobs:
+  diff-check:
+    name: git diff --check for PR #25
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout pinned helper branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run git diff --check on the live PR diff
+        env:
+          EXPECTED_BASE_SHA: "94b6ea49715c9f845be83b6f106b26c253bf0506"
+          TARGET_PR_SHA: "32c4bee6190db73fcf34122fad9645b9b7edae28"
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          actual_base="$(git rev-parse origin/main)"
+          if [[ "$actual_base" != "$EXPECTED_BASE_SHA" ]]; then
+            printf 'main moved: expected %s, got %s\n' "$EXPECTED_BASE_SHA" "$actual_base" >&2
+            exit 2
+          fi
+          git cat-file -e "${TARGET_PR_SHA}^{commit}"
+          git diff --check "${EXPECTED_BASE_SHA}...${TARGET_PR_SHA}"
+          printf 'PASS: git diff --check %s...%s\n' "$EXPECTED_BASE_SHA" "$TARGET_PR_SHA"
