@@ -1,7 +1,7 @@
 # R4 — Gate B N=600: historical metric inputs and new trial range
 
-Date: 2026-10-11  
-Repository: `yasmin977209-ux/motorcycle-simulation`  
+Date: 2026-10-11
+Repository: `yasmin977209-ux/motorcycle-simulation`
 Scope: read-only inspection of inputs and design review before adding a pinned audit workflow/script for the single N=600 checkpoint. This document does not itself execute trials, establish Gate B, modify the canonical historical dataset, or complete CP-C.
 
 Normative reference: uploaded `المرجع_النهائي_الموحد_المعتمد.md`, SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
