@@ -118,7 +118,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install report dependencies
-        run: python -m pip install numpy scipy
+        run: python -m pip install numpy pyarrow scipy
       - name: Download completed and failed scenario reports
         uses: actions/download-artifact@v4
         with:
