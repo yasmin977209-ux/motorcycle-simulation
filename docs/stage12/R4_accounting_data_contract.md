@@ -240,3 +240,26 @@ The corrective candidate is `d22c730bb9e23585d616fb503d99d3dbee675d23`. On this 
 | `ACCOUNTING_DATA_CONTRACT_DEFINED=PASS` has a normative acceptance definition | **HOLD** | The exact gate name/meaning is not defined in the uploaded normative reference; a clean diff check cannot define it |
 
 This check closes only the whitespace-verification subtask. CP-B2 remains **UNDEFINED_BUSINESS_RULE / HOLD**, PR #25 remains Draft and unmerged, and `state.json` remains unchanged because the CP itself has not satisfied its normative acceptance gate.
+
+## R4 update after D-2026-10-11-02 — current CP-B2 static acceptance
+
+Date: 2026-10-11
+Current main at review: `b37d24c6829ec161a39e0c10610e526e471e769b`
+Candidate branch head before this update: `bf2528efa07badf1d78b1c1cfc0d4b89b06011ba`
+Pinned historical Stage 12 source commit: `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`
+PR #18 baseline head: `9eb3a89f77048e2d727d5c7ae1117c0d03ba61c6`
+Normative reference checksum: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
+
+| Item | Current main | `stage3b-preserved` | Reference / approved decisions / actual source | Judgment |
+|---|---|---|---|---|
+| CP-B2 gate meaning | D-2026-10-11-02 is merged; the `gate` value is informational, not independent CP-B2 completion. | Diagnostic Stage-9 branch has no Stage-12 contract and its state uses a different source package identity. | D-02 requires the contract deliverable and all source/schema/policy/historical-identity/static/review/merge evidence. | MATCH to approved decision; CP-B2 remains pending until all listed gates have evidence. |
+| Required fields/types/nullability | Candidate JSON lists 38 ordered fields, a type map, and only `Final_Close_Date` nullable. | No matching Stage-12 producer schema may be copied from this diagnostic branch. | Producer commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`, blob `76ffd5b6bd08358dde364f0677c3d82374ce0590`; aggregate blob `fd16864e92d2f4de97e1a9972e3992c38ab4e102`. | Static job will extract the producer's literal `DAILY_FIELDS` and compare it to the contract and aggregator. |
+| Identity and result provenance | Contract preserves `source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, seed 20270101, 25 scenarios, 11,005 trials, 22,546,465 daily rows, and global SHA `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`. | Diagnostic state refers to a different Stage-9 package identity. | Run 37964656154 and producer/aggregator source commit are separate identities from this documentation PR. | MATCH if the static workflow verifies those literals and leaves historical data/metadata unchanged. |
+| Four policy strings | Candidate fields document the historical values. | Not authoritative for Stage 12. | Source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3` contains the policy constants in both producer and aggregator. | Static job will compare source AST constants literally against each other and the contract. |
+| Historical vs future sampling | The dataset identity retains +50/550; the contract note says new runs use D-2026-10-10-01 doubling from 300 without ceiling. | Not relevant to Stage-12 statistical-policy authority. | D-2026-10-10-01 plus D-2026-10-11-01/02; historical identities remain immutable. | MATCH if exact source and identity checks pass; no trial is rerun by this check. |
+| Whitespace verification | Previous exact `git diff --check` succeeded on Run 38169708645 at the prior base SHA. | Diagnostic only. | Current base moved to `b37d24c6829ec161a39e0c10610e526e471e769b` after governance PR #31. | Refresh the pinned base and rerun the literal command on the updated candidate head. |
+
+The static workflow is read-only: it checks JSON structure, exact producer/aggregator schema/policy literals, the expected 27-job topology, protected historical identity/count/hash values, and exactly the six previously documented JSON differences from PR #18. It does not execute the engine, alter data, or rerun trials.
+
+The earlier sentence classifying the gate's semantics as unresolved is preserved as historical review context and is superseded by merged D-2026-10-11-02. Under D-02, the gate field remains unchanged and informational; CP-B2 acceptance still depends on the complete evidence list and the required PR review/merge.
+
