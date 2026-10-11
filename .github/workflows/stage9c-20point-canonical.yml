@@ -1,0 +1,38 @@
+name: Stage 9C Canonical 20-Point Audit
+
+on:
+  push:
+    branches:
+      - "tmp/stage9c-20point-full-20261011"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  canonical-20-point-audit:
+    name: Read-only full Stage 9C Parquet-to-XLSX audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout exact audit branch
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install independent Parquet/XLSX readers
+        run: python -m pip install numpy pyarrow openpyxl
+      - name: Audit the published canonical 9005-result artifacts
+        shell: bash
+        run: python scripts/stage9c_verify_20point_gate.py
+      - name: Upload the complete audit report and point-level evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9c-canonical-20point-gate-evidence
+          path: results_stage9c/
+          if-no-files-found: warn
+          retention-days: 30
