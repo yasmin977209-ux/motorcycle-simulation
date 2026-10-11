@@ -51,3 +51,38 @@
 2. لا يُعدّل هذا السجل كود المحرك أو الاختبارات أو workflows.
 3. لا يدمج أي فرع تلقائيًا؛ تبقى التغييرات المقترحة خاضعة لمراجعة PR.
 4. لا يرفع Stage 9C من `PARTIAL` إلى `PASS`؛ بوابة Parquet مقابل `_STATS` المستقلة تظل بحاجة إلى تنفيذ ودليل وفق تعريفها المعتمد.
+
+---
+
+## D-2026-10-10-01 — السياسة الإحصائية
+
+**Status:** APPROVED — NORMATIVE
+**Scope:** نقاط البداية والتصعيد الإحصائي وبوابتا Gate A/Gate B.
+**Supersedes:** نقاط البداية والتنفيذ الإحصائي التاريخي في §§2.5 و14.2 للتنفيذ الجديد؛ يظل الأصل دون تعديل. يُلغى الحد الأدنى 5000 وأي تفسير خطي +50.
+**Details:** C100=1 للتحقق من الحتمية بلا CI وبـtrial_id/بذور مختلفة؛ C085/C070/C050/C030 تبدأ عند 300 مع تصعيد مضاعف 300→600→1200→2400→4800→9600→... بلا سقف. Gate A يطابق المرجع/الذهبي. Gate B يطلب نصف CI 95% بتوزيع t أقل من 1% من |mean| للمقاييس Final_Net_Project_Equity وPartner1_Final_Entitlement وPartner2_Final_Entitlement، مع CI_ABSOLUTE_EPSILON=1 قرب الصفر. يُشترط نجاح البوابتين في ثلاث نقاط متتالية؛ وإذا نجح Gate B عند 300/600/1200 مع تغير P50 بأكثر من 5% بين النقاط فالحالة PRELIMINARY_STABLE وتستمر عند 2400. تُسجل كل النقاط في stability_history.json. لم يُعثر على عبارة حرفية +50 داخل §16؛ لا تُنسب للمرجع.
+**Reference:** D-2026-10-10-01؛ REFERENCE_AMENDMENTS.md / Amendment-01.
+
+## D-2026-10-10-02 — العدد الفعّال للاختبارات
+
+**Status:** APPROVED — NORMATIVE
+**Scope:** جرد القبول وتقاريره.
+**Supersedes:** أي احتساب يساوي بين مخزون 163 والاختبارات الفعّالة.
+**Details:** المخزون 163؛ العدد الفعّال 162؛ Test 158 مصنف K_TEST ولا يُصلح أو يُستبدل أو يُحذف. تقرير Stage12-D السابق (162 PASS, 0 FAIL, 1 K_TEST) دليل تشغيل سابق، لا قرار مستقل.
+**Reference:** D-2026-10-10-02؛ REFERENCE_AMENDMENTS.md / Amendment-02.
+
+## D-2026-10-10-03 — خمسة أدوار تمثيلية
+
+**Status:** APPROVED — NORMATIVE
+**Scope:** REPRESENTATIVE_CASES والسجلات اليومية.
+**Supersedes:** الإشارات إلى أربعة أدوار أو ثلاثة أدوار إضافية ضمن المجموعة نفسها.
+**Details:** P50/P10/P90/LossCase/MaxCase. LossCase هو أقل abs(Final_Net_Project_Equity) (الأقرب إلى الصفر) أياً كانت إشارة القيمة؛ MaxCase أعلى قيمة موجبة. كسر التعادل لجميع الأدوار بأصغر trial_id. إن لم توجد قيمة موجبة، تسجل UNDEFINED_BUSINESS_RULE وتتوقف الموافقة على التوليفة حتى توجيه.
+**Reference:** D-2026-10-10-03؛ REFERENCE_AMENDMENTS.md / Amendment-03.
+
+## D-2026-10-10-04 — معمارية Excel
+
+**Status:** APPROVED — ARCHITECTURE TARGET
+**Scope:** التصميم المستقبلي لمسار إنشاء Excel.
+**Supersedes:** أي تفسير يجعل بناء Excel مسؤولية غير مفصولة الطبقات.
+**Details:** scripts/excel_builder.py هو Orchestrator للـCLI/config/mode، وتحميل Parquet/SQLite، والتسجيل والأخطاء دون إنشاء أوراق. scripts/stage13_assemble.py هو Assembler بـassemble_workbook لبناء 185 ورقة والتجزئة والتحقق بلا CLI مستقل. الواجهة build_excel(dataset_path, output_path, mode="canonical") تستدعي load_dataset ثم stage13_assemble.assemble_workbook(data, output_path, mode). canonical=11005 افتراضياً، sample=625، demo تشغيل صغير. هذا هدف معماري لا يثبت تنفيذ الكود الحالي.
+**Reference:** D-2026-10-10-04؛ REFERENCE_AMENDMENTS.md / Amendment-04.
+
