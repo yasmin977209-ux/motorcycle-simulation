@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011",
-  "sha": "e8754af00933aec6b4e810cf9ccdc3d61e3bdc8a",
+  "sha": "601d8cf92ee64a64d1ac0a53d31d32c84ee830e3",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-B2: Stage 12 accounting data contract resolution",
   "blockers": [
@@ -10,7 +10,7 @@
     "CP-D pending after CP-C: the independent Stage 9C 20-point Parquet versus _STATS gate remains NOT_EXECUTED and must not be claimed PASS before evidence."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "e8754af00933aec6b4e810cf9ccdc3d61e3bdc8a",
+  "head_sha": "601d8cf92ee64a64d1ac0a53d31d32c84ee830e3",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -61,6 +61,16 @@
       "topic": "excel_architecture",
       "orchestrator": "scripts/excel_builder.py",
       "assembler": "scripts/stage13_assemble.py"
+    },
+    "D-2026-10-11-01": {
+      "topic": "historical_gate_b_analytical_reuse",
+      "value": "ANALYTICAL_INPUTS_ONLY_FOR_GATE_B",
+      "non_c100_scenarios": 20,
+      "trial_id_range": "1..300",
+      "historical_run_id": "37964656154",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "historical_sampling_policy": "+50/550",
+      "no_resume_or_identity_change": true
     }
   },
   "preflight_merge": {
