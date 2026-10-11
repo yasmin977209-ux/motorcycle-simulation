@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -150,6 +151,25 @@ def validate_prior_n1200_run_identity(data: dict[str, Any]) -> dict[str, Any]:
     return {key: data.get(key) for key in ("id", "head_sha", "head_branch", "status", "conclusion", "run_attempt", "created_at", "updated_at", "html_url")}
 
 
+
+
+def wait_for_prior_n1200_run_completion(timeout_seconds: int = 900, poll_seconds: int = 15) -> dict[str, Any]:
+    started = time.monotonic()
+    while True:
+        data = gh_json(f"repos/{REPO}/actions/runs/{N1200_PRIOR_RUN_ID}")
+        if int(data.get("id", -1)) != N1200_PRIOR_RUN_ID or data.get("head_sha") != N1200_PRIOR_HEAD or data.get("head_branch") != N1200_PRIOR_BRANCH or int(data.get("run_attempt", -1)) != N1200_PRIOR_ATTEMPT:
+            fail(f"PRIOR_N1200_RUN_IDENTITY_MISMATCH run={data.get('id')} head={data.get('head_sha')} branch={data.get('head_branch')} attempt={data.get('run_attempt')}")
+        if data.get("status") == "completed":
+            return validate_prior_n1200_run_identity(data)
+        elapsed = int(time.monotonic() - started)
+        if data.get("status") not in ("queued", "in_progress", "waiting", "requested", "pending"):
+            fail(f"PRIOR_N1200_RUN_UNEXPECTED_STATUS run={N1200_PRIOR_RUN_ID} status={data.get('status')}")
+        if elapsed >= timeout_seconds:
+            fail(f"PRIOR_N1200_RUN_WAIT_TIMEOUT run={N1200_PRIOR_RUN_ID} elapsed_seconds={elapsed}")
+        print(f"PRIOR_N1200_RUN_WAIT run={N1200_PRIOR_RUN_ID} status={data.get('status')} elapsed_seconds={elapsed}")
+        time.sleep(min(poll_seconds, timeout_seconds - elapsed))
+
+
 def prior_n1200_run_evidence() -> dict[str, Any]:
     run = validate_prior_n1200_run_identity(gh_json(f"repos/{REPO}/actions/runs/{N1200_PRIOR_RUN_ID}"))
     jobs_response = gh_json(f"repos/{REPO}/actions/runs/{N1200_PRIOR_RUN_ID}/jobs?per_page=100")
@@ -257,6 +277,7 @@ def preflight() -> dict[str, Any]:
     live_main = main.get("object", {}).get("sha")
     if live_main != PINNED_MAIN_SHA:
         fail(f"MAIN_MOVED_SINCE_R4 expected={PINNED_MAIN_SHA} actual={live_main}")
+    wait_for_prior_n1200_run_completion()
     prior_n1200 = prior_n1200_run_evidence()
     run300 = validate_run(N300_RUN_ID, N300_HEAD, "success")
     run600 = validate_run(N600_RUN_ID, N600_HEAD, "success")
