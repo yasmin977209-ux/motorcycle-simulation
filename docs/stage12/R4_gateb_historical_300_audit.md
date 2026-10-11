@@ -12,3 +12,29 @@ Scope: read-only verification of owner-authorized historical trial IDs 1..300 as
 | Workflow | No full Stage12-to-Stage7 fingerprint-bridge audit exists on main. | No preserved code used. | Exact branch pin, push-only, read-only contents/actions permissions, 30-min job timeouts, no workflow_dispatch/self-dispatch; no engine execution. | DEVIATION resolved by isolated analysis workflow. |
 
 The workflow only downloads published artifacts and calculates N=300 intervals from existing TrialResult rows. It preserves row-level provenance and never modifies or resumes historical data. N=300 is one checkpoint only; this workflow does not prove Gate A or final three-checkpoint Gate B stability.
+
+## Verified N=300 checkpoint result — Run 38161608184
+
+**Run:** https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38161608184  
+**Audit branch head tested:** `78ecff0a209c138b32f1ecf1cdb3260614b1e926`  
+**Combined report artifact:** `gateb-historical-300-n300-report`, artifact ID `11710986152`, SHA-256 `70bee5672a42603ad5a6f83d4ecf2deaec8f6dc453ce693b3507a8161fb3ff38`.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Historical source/parameter compatibility | PASS | All 20 scenario workers validated Stage 7 to Stage 12 input identity |
+| Historical trial fingerprint bridge | PASS | Exact SHA-256 match for each authorized `trial_id=1..300`; Stage 12 Parquet file SHA matched CP12-C `content_sha256` |
+| Completeness / unique keys | PASS | 20/20 scenarios; 6,000/6,000 authorized historical trial results; 60/60 requested metric CI rows present |
+| Gate B at N=300 | **PASS at this checkpoint only** | All 60 Student-t 95% half-width comparisons passed `half_width < 0.01 × abs(mean)`; no near-zero branch was triggered |
+| Final Gate B / three consecutive checkpoints | **NOT ESTABLISHED** | N=600 and N=1200 are not yet evaluated under the new policy |
+| Gate A | **NOT ESTABLISHED** | Independent golden/reference comparison still required |
+
+The report status is `PASS_AT_N300_ONLY`, and its overall field explicitly says `NOT_ESTABLISHED_BY_N300_ALONE`. This is not a Gate B PASS.
+
+### N=600 hold — unresolved scope boundary
+
+The authorized analytical reuse scope currently names only historical `trial_id=1..300`. The historical data source also contains completed IDs `301..550` under `+50/550`. Reusing those IDs as inputs to the new policy is not expressly covered by D-2026-10-11-01, while rerunning completed trials is prohibited. No policy has been inferred for forming N=600 without either unauthorized reuse or rerunning IDs.
+
+Classification: **UNDEFINED_BUSINESS_RULE**. Hold N=600 and later cumulative checkpoint calculations until the governing decision unambiguously specifies how completed IDs 301–550 may be handled. No trials were executed by this audit, and historical data/metadata/fingerprints were not modified.
+
+The combined report preserves row-level scenario/trial fingerprint provenance and contains all actual N=300 means, sample standard deviations, t-critical values, half-widths, limits, and statuses. 
+
