@@ -224,3 +224,6 @@ The new workflow must verify that the live main ref still equals `94b6ea49715c9f
 
 `D-2026-10-11-01` is already recorded in main `docs/governance/DECISIONS_LOG.md` (blob `5896e166be27170454d4103bd83638bad05b5b62`) and `Amendment-05` is already recorded in main `docs/governance/REFERENCE_AMENDMENTS.md` (blob `55d410cda50b77ee708374343af6205c6fdfb9e6`). No duplicate governance entries are added by CP-B2.
 
+## R4 execution correction — exact diff-check evidence (2026-10-11)
+
+Run `38169457230`, candidate SHA `adf4697a1857a8d94216f0823dcc00e6ecaaa1d5`, executed the pinned-main check and then `git diff --check`. The exact failure was `docs/stage12/R4_accounting_data_contract.md:226: new blank line at EOF.` This blank line was introduced by the R4 addendum itself; the earlier check of the contract document confirmed no trailing spaces or tabs on its existing lines. Classification: **K_CODE** (audit/documentation formatting introduced by this change), not a production contract or JSON defect. The corrective commit removes only the extra empty line at EOF and retains one final newline. The same literal `git diff --check` job must run again on the corrective SHA.
