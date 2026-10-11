@@ -1,17 +1,16 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011",
-  "sha": "d81e09b7746485bd99dee9122c55403cbc38bf3b",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012",
+  "sha": "54822f2737fc8e474239598ea15d47ae0f55cb4e",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-C: Gate B N=1200 checkpoint — use verified cumulative inputs 1..600 (historical 1..550 plus N=600 run IDs 551..600) analytically, and materialize only new IDs 601..1200 per non-C100 scenario; never rerun completed trial IDs.",
+  "next": "CP-C statistical evidence is complete at N=300/N=600/N=1200; the P50 >5% condition is not triggered and N=2400 is not required by that condition. Final overall stability remains blocked by the separate Gate A and Stage 9C/CP-D gates. Stop here; no transition to another CP without explicit scope authorization.",
   "blockers": [
-    "Gate A remains separate: PR #30 is still open/draft; its candidate run evidence is not yet a main acceptance record.",
-    "Stage 9C/CP-D remains separate: PR #29 is still open/draft; candidate Run 38165878333 is not a merged CP-D completion record.",
-    "D-2026-10-10-01 mentions a P50 change >5% condition across N=300/600/1200 but does not define the exact percentage-change formula/denominator. Treat that decision branch as UNDEFINED_BUSINESS_RULE and do not invent a formula; do not stop before completing N=1200."
+    "Gate A remains separate: PR #30 is open/draft; candidate run evidence has not been accepted as a main Gate A acceptance record.",
+    "Stage 9C/CP-D remains separate: PR #29 is open/draft; candidate Run 38165878333 is not a merged CP-D completion record."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "d81e09b7746485bd99dee9122c55403cbc38bf3b",
+  "head_sha": "54822f2737fc8e474239598ea15d47ae0f55cb4e",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -163,5 +162,95 @@
     "historical_11005_file_blob": "27e94a0ddb573b4d09701faac9978168f62ded89",
     "superseded_pr": 16,
     "merged_at": "2026-10-11T13:11:48Z"
+  },
+  "run_id": 38179919488,
+  "artifact_manifest": {
+    "manifest_version": "gateb-n300-n600-n1200-p50-reassessment-v1",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "source_commit": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+    "master_seed": 20270101,
+    "scenario_count_non_c100": 20,
+    "ci_points_per_checkpoint": 60,
+    "checkpoint_reports": [
+      {
+        "checkpoint": "N300",
+        "run_id": 38162171123,
+        "head_sha": "4d979ff4de178ed07c81ef26a0707c14e1de15ee",
+        "artifact_id": 11711110209,
+        "archive_sha256": "3800e6788de7e57940e03fb94968961eb6dc6621ffaf3da14d276b9d6d51ba22",
+        "ci_passed": 60,
+        "ci_failed": 0,
+        "ci_undefined": 0
+      },
+      {
+        "checkpoint": "N600",
+        "run_id": 38174743440,
+        "head_sha": "61ae9e2354ff37b1d4d9d13849bd6b264cf9cfa3",
+        "artifact_id": 11715388165,
+        "archive_sha256": "67d5033a67eec27bd7a90b735c56f7f7ceff4181e32c88271dd07f39f3b8e8ae",
+        "ci_passed": 60,
+        "ci_failed": 0,
+        "ci_undefined": 0,
+        "ordered_hash_map_sha256": "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
+      },
+      {
+        "checkpoint": "N1200",
+        "run_id": 38179919488,
+        "head_sha": "54822f2737fc8e474239598ea15d47ae0f55cb4e",
+        "artifact_id": 11717929259,
+        "archive_sha256": "17391caa64a7ed0fb7f3819a5df2f3b69bee982fb16060f3c542c84370bee7c0",
+        "ci_passed": 60,
+        "ci_failed": 0,
+        "ci_undefined": 0,
+        "scenario_trial_keys_verified": 24000,
+        "new_trials_verified": 12000,
+        "ordered_hash_map_sha256": "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
+      }
+    ],
+    "p50_reassessment": {
+      "decision_id": "D-2026-10-12-01",
+      "relative_change_formula": "100 * abs(p50_new - p50_previous) / abs(p50_previous)",
+      "denominator": "absolute previous checkpoint P50",
+      "transitions_checked": 40,
+      "max_change_n300_to_n600_percent": 0.34834102351146556,
+      "max_change_n300_to_n600_scenario": "C050_G000",
+      "max_change_n600_to_n1200_percent": 0.19190074735011312,
+      "max_change_n600_to_n1200_scenario": "C050_G000",
+      "threshold_percent": 5,
+      "escalation_required_scenarios": 0,
+      "n2400_started": false
+    }
+  },
+  "cp_c_20261012": {
+    "status": "PASS_GATEB_STATISTICAL_CHECKPOINTS_AT_N300_N600_N1200",
+    "final_stability_status": "NOT_ESTABLISHED; separate Gate A and Stage 9C/CP-D remain open",
+    "p50_rule_decision": "D-2026-10-12-01",
+    "no_p50_trigger_to_n2400": true,
+    "p50_comparison_count": 40,
+    "max_percent_change_n300_n600": 0.34834102351146556,
+    "max_percent_change_n600_n1200": 0.19190074735011312,
+    "ci_points_by_checkpoint": {
+      "N300": {
+        "passed": 60,
+        "failed": 0,
+        "undefined": 0
+      },
+      "N600": {
+        "passed": 60,
+        "failed": 0,
+        "undefined": 0
+      },
+      "N1200": {
+        "passed": 60,
+        "failed": 0,
+        "undefined": 0
+      }
+    },
+    "n1200_run_id": 38179919488,
+    "n1200_report_artifact_id": 11717929259,
+    "n1200_report_sha256": "17391caa64a7ed0fb7f3819a5df2f3b69bee982fb16060f3c542c84370bee7c0",
+    "ordered_scenario_trial_hash_map_sha256_n1200": "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3",
+    "historical_trials_rerun_during_reassessment": false,
+    "historical_dataset_or_metadata_modified": false
   }
 }
