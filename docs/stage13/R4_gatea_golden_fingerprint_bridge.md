@@ -24,3 +24,16 @@ Scope: read-only comparison of the canonical Stage 12 daily ledger's per-trial `
 ## Scope decision
 
 The normative Gate A text says “matches the approved reference/golden.” Comparing every canonical per-trial output fingerprint is a direct exact-identity comparison to the source golden, adding no numerical threshold or business acceptance criterion. The audit will report its computed evidence without presuming success.
+
+## R4 addendum — Stage 10 metadata encoding defect found in exact source
+
+The sample Stage 10 non-C100 artifact `stage10-bench-C070_G100-1` (artifact ID `11520898788`, run `37709936740`, ZIP SHA-256 `e8278c5d0df4d208859ec14265a6cd665fea2e17e5a8a15ba908e65dbf36272d`) contains a `block_451_550_metadata.json` whose closing bytes are the literal characters `\\n` after the JSON object. Its raw SHA-256 is `cc53708648b99aa67d26365d790f0a6ddf9040bb505baaa02a633d35bcf83cc8`. This was reproduced from the archived artifact without modifying it.
+
+The exact source at Run 37709936740 head `ca73f2df37baacebbcad965fc5f433f129675820`, `scripts/stage10_benchmark.py` blob `d54602982b6422939955ca841a251ecd250b4139`, line 72, contains `write_json(... + "\\\\n", ...)`; this emits a literal backslash+n suffix instead of a JSON file terminator newline. Classification: **K_CODE — Stage 10 metadata serialization defect**. The previous Stage 7 blocks inside the Stage 10 ZIP are valid JSON and match Stage 7 metadata exactly.
+
+Audit disposition:
+- Preserve and record the original Stage 10 metadata bytes and SHA; do not rewrite the historic artifact or its metadata.
+- The audit parser may remove exactly the verified two-byte suffix `\\n` **in memory only**, and only if the original bytes end in `}\` followed by `n` and the remainder parses as one JSON object with no other trailing bytes. It must record the raw hash, this parse disposition, exact workflow source/blob and artifact provenance in the Gate A report. No general permissive JSON recovery is allowed.
+- Validate all per-trial hash arrays and range/run/source identity after parsing. If a file deviates from this exact defect pattern or any block identity/fingerprint mismatch exists, that scenario fails and Gate A remains unestablished.
+- This known formatting defect does not alter the stored hash strings; whether the full Gate A comparison can be accepted remains determined solely by all exact row-level golden comparisons and identity gates, and the defect remains disclosed in the report.
+
