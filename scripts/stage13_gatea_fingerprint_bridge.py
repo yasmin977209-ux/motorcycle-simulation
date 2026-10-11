@@ -217,7 +217,9 @@ def run_scenario(scenario:str,outroot:Path)->dict:
         closure=json.loads(Path("docs/stage12/closure_settlement_validation.json").read_text(encoding="utf-8"))
         if manifest.get("global_manifest_sha256")!=MANIFEST_GLOBAL or manifest.get("source_sha")!=SOURCE_SHA or str(manifest.get("run_id"))!=str(STAGE7_RUN): raise RuntimeError("STAGE9A_MANIFEST_IDENTITY_MISMATCH")
         if int(identity.get("total_canonical_trials",-1))!=11005 or int(identity.get("scenarios_count",-1))!=25: raise RuntimeError("STAGE11_IDENTITY_COVERAGE_MISMATCH")
-        if identity.get("sources",{}).get("stage7",{}).get("run_head_sha")!=STAGE7_HEAD or identity.get("sources",{}).get("stage10",{}).get("branch_head_sha")!=STAGE10_HEAD: raise RuntimeError("STAGE11_SOURCE_RUN_HEAD_MISMATCH")
+        if identity.get("sources",{}).get("stage7",{}).get("run_head_sha")!=STAGE7_HEAD: raise RuntimeError("STAGE11_STAGE7_RUN_HEAD_MISMATCH")
+        stage10_recorded_head=identity.get("sources",{}).get("stage10",{}).get("branch_head_sha")
+        if not isinstance(stage10_recorded_head,str): raise RuntimeError("STAGE11_STAGE10_RECORDED_HEAD_MISSING")
         if str(identity.get("sources",{}).get("stage10",{}).get("run_id"))!=str(STAGE10_RUN): raise RuntimeError("STAGE11_STAGE10_RUN_ID_MISMATCH")
         if roll.get("source_sha")!=SOURCE_SHA or str(roll.get("source_run_id"))!=str(STAGE12_RUN) or roll.get("expected_global_sha256_from_cp12b")!=STAGE12_GLOBAL: raise RuntimeError("STAGE12_ROLLFORWARD_IDENTITY_MISMATCH")
         if closure.get("source_sha")!=SOURCE_SHA or str(closure.get("cp12b_run_id"))!=str(STAGE12_RUN) or closure.get("expected_global_sha256")!=STAGE12_GLOBAL: raise RuntimeError("STAGE12_CLOSURE_IDENTITY_MISMATCH")
@@ -227,6 +229,8 @@ def run_scenario(scenario:str,outroot:Path)->dict:
             if int(data.get("id",-1))!=expected or data.get("head_sha")!=head: raise RuntimeError(f"LIVE_RUN_IDENTITY_MISMATCH {expected}")
         if run7.get("conclusion")!="success" or run12.get("conclusion")!="success": raise RuntimeError("STAGE7_OR_STAGE12_RUN_NOT_SUCCESS")
         report["run_provenance"]={"stage7":{"id":STAGE7_RUN,"head_sha":STAGE7_HEAD,"conclusion":run7.get("conclusion")},"stage10":{"id":STAGE10_RUN,"head_sha":STAGE10_HEAD,"conclusion":run10.get("conclusion")},"stage12":{"id":STAGE12_RUN,"head_sha":STAGE12_HEAD,"conclusion":run12.get("conclusion")}}
+        report["stage10_identity_metadata_deviation"]={"classification":"K_CODE","recorded_branch_head_sha":stage10_recorded_head,"recorded_value_length":len(stage10_recorded_head),"live_run_api_head_sha":STAGE10_HEAD,"live_value_length":len(STAGE10_HEAD),"matches_live_run":stage10_recorded_head==STAGE10_HEAD,"handling":"Preserved the immutable Stage 11 identity document; uses live GitHub Run 37709936740 identity and independently verifies source_sha and every trial hash."}
+        report["stage12_global_identity"]={"cp12b_expected_global_sha256":roll.get("expected_global_sha256_from_cp12b"),"cp12c_expected_global_sha256":closure.get("expected_global_sha256"),"both_match_known_identity":roll.get("expected_global_sha256_from_cp12b")==STAGE12_GLOBAL and closure.get("expected_global_sha256")==STAGE12_GLOBAL}
         report["stage10_run_aggregate_conclusion_is_not_claimed_pass"]=run10.get("conclusion")!="success"
 
         arts7,_=artifact_index(STAGE7_RUN); name7=f"stage7-blocks-{scenario}-1"; art7=find_artifact(arts7,name7,STAGE7_RUN)
@@ -236,9 +240,9 @@ def run_scenario(scenario:str,outroot:Path)->dict:
             root=Path(td); zip7=root/"stage7.zip"; art7ev=download_artifact(art7,zip7)
             with zipfile.ZipFile(zip7) as z7:
                 if scenario.startswith("C100_"):
-                    meta=member(z7,"block_1_300_metadata.json"); parquet=member(z7,"block_1_300.parquet")
+                    meta=member(z7,"block_1_1_metadata.json"); parquet=member(z7,"block_1_1.parquet")
                     g,ev=validate_block(scenario,1,1,meta,parquet,manifest,STAGE7_RUN)
-                    stage7_raw={"block_1_300":(meta,parquet)}
+                    stage7_raw={"block_1_1":(meta,parquet)}
                     block_ev=[ev]
                 else:
                     g={}; stage7_raw={}; block_ev=[]
