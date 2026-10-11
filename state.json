@@ -1,17 +1,16 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010",
-  "sha": "9c66046f0723ae29b2b8e4301f04975e8f9addca",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011",
+  "sha": "e8754af00933aec6b4e810cf9ccdc3d61e3bdc8a",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-B1: Stage 11 Manifest reconciliation (separate CP; no replay; user-authorized sequence)",
+  "next": "CP-B2: Stage 12 accounting data contract resolution",
   "blockers": [
-    "CP-B1 pending: main does not yet contain the Stage 11 global manifest reconciled to the user-approved G7 semantics; the temporary CP-11-B-Rev1 evidence is not yet canonical on main.",
     "CP-B2 pending: main does not yet contain the updated Stage 12 accounting data contract adopting 25 materialization jobs plus validate and aggregate.",
     "CP-D pending after CP-C: the independent Stage 9C 20-point Parquet versus _STATS gate remains NOT_EXECUTED and must not be claimed PASS before evidence."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "7ea2ce1750118afd1f110f60b1209e297b86bcf6",
+  "head_sha": "e8754af00933aec6b4e810cf9ccdc3d61e3bdc8a",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -74,5 +73,17 @@
       "D-2026-10-10-04"
     ],
     "merged_at": "2026-10-11T12:27:00Z"
+  },
+  "cp_b1_20261011": {
+    "merge_commit_sha": "e8754af00933aec6b4e810cf9ccdc3d61e3bdc8a",
+    "branch": "tmp/stage11-manifest-reconciliation-20261011",
+    "manifest_version": "v1.1",
+    "manifest_trials": 11005,
+    "manifest_scenarios": 25,
+    "global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "historical_9005_data_hash": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+    "historical_11005_file_blob": "27e94a0ddb573b4d09701faac9978168f62ded89",
+    "superseded_pr": 16,
+    "merged_at": "2026-10-11T13:11:48Z"
   }
 }
