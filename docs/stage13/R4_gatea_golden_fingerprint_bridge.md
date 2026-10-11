@@ -37,3 +37,14 @@ Audit disposition:
 - Validate all per-trial hash arrays and range/run/source identity after parsing. If a file deviates from this exact defect pattern or any block identity/fingerprint mismatch exists, that scenario fails and Gate A remains unestablished.
 - This known formatting defect does not alter the stored hash strings; whether the full Gate A comparison can be accepted remains determined solely by all exact row-level golden comparisons and identity gates, and the defect remains disclosed in the report.
 
+## R4 addendum — independently re-hash source parquet rows before Gate A comparison
+
+The Gate A runner will not treat `per_trial_sha256` metadata as the only source of golden values. Before comparing Stage 12:
+- Recompute the canonical result SHA-256 for every row in each source Stage 7/Stage 10 block Parquet using the confirmed Stage10 source function at `scripts/stage10_benchmark.py` blob `d54602982b6422939955ca841a251ecd250b4139`, `canonical_json(dataclasses.asdict(x))` with `ensure_ascii=False`, `sort_keys=True`, separators `(",", ":")`, and `default=str`.
+- Require the recomputed values and trial IDs to exactly equal the relevant block metadata `per_trial_sha256` map.
+- Require Stage 7's recorded block `fingerprint_sha256` to match the official Stage 9A `docs/stage9a/dataset_manifest.json` blob `e796fa2443493b607f1f9c60b58eb63607959c26` at global fingerprint `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, for the four blocks covering 1..450 (or the one canonical row for C100).
+- For non-C100, compare the Stage 7 and Stage 10 archive bytes for all copied block Parquets and copied metadata files for IDs 1..450; both parsed metadata values and raw file SHA-256 must be identical. Independently verify the new 451..550 Parquet block against the Stage10 metadata after the exact one-suffix in-memory parser disposition recorded above.
+- Finally compare every recomputed source result SHA to the Stage 12 `result_sha256`, after Stage12 row coverage, date continuity, schema, seed, source SHA and dataset-identity checks pass.
+
+This bounds acceptance to exact hashes from the actual source row data; metadata parsing cannot manufacture an expected trial hash. The source artifacts remain byte-identical, and Gate A is PASS only at 11,005/11,005 source-row, metadata and Stage12 hash matches.
+
