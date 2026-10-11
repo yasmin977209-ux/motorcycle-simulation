@@ -21,3 +21,8 @@ Scope: read-only verification of the historical full Stage 9A 9,005-trial datase
 5. PASS requires all 25 scenarios, 9,005 unique (scenario_id, trial_id) pairs, 185 sheets, no Excel error or formula cells, the exact published workbook hash, and all 500 comparisons passing.
 6. This validation does not imply Gate A or Gate B, does not make changes to the old Stage 9C partial decision records, and does not edit canonical dataset identity. Current instruction authorizes running this independent gate despite the older report's NOT EXECUTED status.
 
+
+
+## Execution correction record — 2026-10-11
+
+Run 38160869693 initially stopped with HTTP 401 from a malformed GH_TOKEN expression. After correcting the token, Run 38160958608 successfully opened the published workbook and verified its exact SHA-256, 185 sheets, all 25 _STATS sheets, zero Excel error cells, and zero formula cells. It did not reach the comparisons because the validator incorrectly required dataset_identity.json. Inspection of the published Stage 9A artifact showed its actual identity schema is scenario_metadata.json plus trial_fingerprints.json; dataset_identity.json is not included. This is an audit-harness schema assumption, not evidence of a data defect. The validator now uses the published metadata/fingerprint files, checks their source/run/scenario/count/parameter identity, and documents the master seed from the producing Stage 7 workflow and source constant.

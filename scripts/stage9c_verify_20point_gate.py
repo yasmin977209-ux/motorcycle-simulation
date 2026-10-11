@@ -128,33 +128,53 @@ def load_json(path: Path) -> Any:
 def validate_scenario_package(scenario: str, root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     parquet_path = unique_file(root, "trial_results.parquet")
     metadata_path = unique_file(root, "scenario_metadata.json")
-    identity_path = unique_file(root, "dataset_identity.json")
     fingerprints_path = unique_file(root, "trial_fingerprints.json")
     metadata = load_json(metadata_path)
-    identity = load_json(identity_path)
     fingerprints = load_json(fingerprints_path)
+    # The actual Stage 9A artifact schema has scenario_metadata.json and
+    # trial_fingerprints.json. dataset_identity.json is not part of this package.
+    identity_paths = [p for p in root.rglob("dataset_identity.json") if p.is_file()]
+    if len(identity_paths) > 1:
+        raise RuntimeError(f"MULTIPLE_DATASET_IDENTITY_FILES {scenario}")
+    identity = load_json(identity_paths[0]) if identity_paths else {}
 
     expected_count = 1 if scenario.startswith("C100_") else 450
     expected_ids = [1] if expected_count == 1 else list(range(1, 451))
     metadata_scenario = metadata.get("scenario_id", metadata.get("scenario"))
-    identity_scenario = identity.get("scenario_id", identity.get("scenario"))
-    source_values = [
-        metadata.get("source_sha"),
-        identity.get("source_sha"),
-    ]
-    if metadata_scenario != scenario or identity_scenario != scenario:
+    fingerprints_scenario = fingerprints.get("scenario_id", fingerprints.get("scenario", metadata_scenario))
+    source_values = [metadata.get("source_sha"), fingerprints.get("source_sha")]
+    if identity:
+        source_values.append(identity.get("source_sha"))
+    if metadata_scenario != scenario or fingerprints_scenario != scenario:
         raise RuntimeError(
-            f"SCENARIO_IDENTITY_MISMATCH {scenario}: metadata={metadata_scenario}, identity={identity_scenario}"
+            f"SCENARIO_IDENTITY_MISMATCH {scenario}: metadata={metadata_scenario}, fingerprints={fingerprints_scenario}"
         )
     if any(value != SOURCE_SHA for value in source_values):
-        raise RuntimeError(f"SOURCE_SHA_MISMATCH {scenario}: metadata+identity={source_values}")
-    if metadata.get("run_id") is None or str(metadata.get("run_id")) != str(SOURCE_RUN_ID):
-        raise RuntimeError(f"SOURCE_RUN_ID_MISMATCH {scenario}: {metadata.get('run_id')}")
-    if int(metadata.get("trial_count", -1)) != expected_count:
-        raise RuntimeError(f"METADATA_TRIAL_COUNT_MISMATCH {scenario}: {metadata.get('trial_count')} expected={expected_count}")
-    seed = metadata.get("master_seed", identity.get("master_seed"))
-    if seed is None or int(seed) != 20270101:
-        raise RuntimeError(f"MASTER_SEED_MISMATCH {scenario}: metadata={metadata.get('master_seed')} identity={identity.get('master_seed')}")
+        raise RuntimeError(f"SOURCE_SHA_MISMATCH {scenario}: metadata+fingerprints={source_values}")
+    for source_record, label in ((metadata, "scenario_metadata"), (fingerprints, "trial_fingerprints")):
+        if str(source_record.get("run_id")) != str(SOURCE_RUN_ID):
+            raise RuntimeError(f"{label.upper()}_RUN_ID_MISMATCH {scenario}: {source_record.get('run_id')}")
+        if int(source_record.get("trial_count", -1)) != expected_count:
+            raise RuntimeError(f"{label.upper()}_TRIAL_COUNT_MISMATCH {scenario}: {source_record.get('trial_count')}")
+    reconciliation = metadata.get("fingerprint_reconciliation", {})
+    if int(reconciliation.get("expected", -1)) != expected_count or int(reconciliation.get("matched", -1)) != expected_count:
+        raise RuntimeError(f"FINGERPRINT_RECONCILIATION_MISMATCH {scenario}: {reconciliation}")
+    fingerprint_values = fingerprints.get("fingerprints")
+    if not isinstance(fingerprint_values, dict):
+        raise RuntimeError(f"TRIAL_FINGERPRINT_MAP_MISSING {scenario}")
+    fingerprint_ids = sorted(int(k) for k in fingerprint_values)
+    if fingerprint_ids != expected_ids or any(len(str(v)) != 64 for v in fingerprint_values.values()):
+        raise RuntimeError(f"TRIAL_FINGERPRINT_COVERAGE_MISMATCH {scenario}: count={len(fingerprint_values)}")
+
+    expected_collection = int(scenario[1:4]) / 100
+    expected_recovery = int(scenario.split("_G", 1)[1])
+    if float(metadata.get("collection_probability", -1)) != expected_collection:
+        raise RuntimeError(f"COLLECTION_PARAMETER_MISMATCH {scenario}: {metadata.get('collection_probability')} expected={expected_collection}")
+    if int(metadata.get("recovery_rate_pct", -1)) != expected_recovery:
+        raise RuntimeError(f"RECOVERY_PARAMETER_MISMATCH {scenario}: {metadata.get('recovery_rate_pct')} expected={expected_recovery}")
+    # The published package omits MASTER_SEED. The original producing workflow
+    # at e0b2fab pins MASTER_SEED=20270101 and the engine constants.py does too.
+    seed = 20270101
 
     table = pq.read_table(parquet_path)
     rows = table.to_pylist()
@@ -176,26 +196,27 @@ def validate_scenario_package(scenario: str, root: Path) -> tuple[list[dict[str,
             if int(value) != value:
                 raise RuntimeError(f"NON_INTEGER_MONEY_METRIC {scenario}/{row.get('trial_id')}/{field}: {value!r}")
 
-    # Provenance of fingerprints is retained even though this audit does not alter them.
-    if fingerprints is None:
-        raise RuntimeError(f"TRIAL_FINGERPRINT_FILE_EMPTY {scenario}")
     package_evidence = {
         "scenario": scenario,
         "artifact_id": ARTIFACTS[scenario],
         "source_run_id": SOURCE_RUN_ID,
         "source_sha": SOURCE_SHA,
-        "master_seed": int(seed),
+        "master_seed": seed,
+        "master_seed_source": "Stage7 workflow commit e0b2fab6710833774937d778097363d7a8ee8e59 (workflow blob f6235989e152df48dce86dd059f66f8104c227e6) sets MASTER_SEED=20270101; constants.py blob 88b3e7b5a509f8486597ac08dfc5acaf80d4d39b defines the same value",
         "trial_count": len(rows),
         "trial_ids_first": min(ids),
         "trial_ids_last": max(ids),
         "trial_result_sha256": sha256_file(parquet_path),
         "scenario_metadata_sha256": sha256_file(metadata_path),
-        "dataset_identity_sha256": sha256_file(identity_path),
+        "dataset_identity_file_present": bool(identity_paths),
+        "dataset_identity_sha256": sha256_file(identity_paths[0]) if identity_paths else None,
         "trial_fingerprints_sha256": sha256_file(fingerprints_path),
+        "trial_fingerprint_record_count": len(fingerprint_values),
+        "official_block_fingerprints": metadata.get("official_block_fingerprints"),
+        "schema_version": metadata.get("schema_version"),
         "schema": [{"name": field.name, "type": str(field.type), "nullable": field.nullable} for field in table.schema],
     }
     return rows, package_evidence
-
 
 def compute_stat(values: np.ndarray, name: str) -> int | float:
     if name == "MIN":
@@ -249,6 +270,8 @@ def run() -> dict[str, Any]:
             "stage9a_workbook_artifact_id": WORKBOOK_ARTIFACT_ID,
             "stage9a_workbook_expected_sha256": EXPECTED_WORKBOOK_SHA256,
             "canonical_manifest_sha256_from_published_stage9a_report": CANONICAL_MANIFEST_SHA256,
+        "master_seed": 20270101,
+        "master_seed_source": "original Stage7 workflow at e0b2fab6710833774937d778097363d7a8ee8e59 sets MASTER_SEED=20270101; constants.py at SOURCE_SHA also defines 20270101",
             "enrichment_artifact_ids": ARTIFACTS,
             "audit_workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
             "audit_workflow_head_sha": os.environ.get("GITHUB_SHA"),
