@@ -2,15 +2,16 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011",
-  "sha": "65d85ca7b1da1cab72ef7fa6d2ac132b32592b53",
+  "sha": "d81e09b7746485bd99dee9122c55403cbc38bf3b",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-C: Gate B N=600 checkpoint — verify historical trial IDs 1..550 as analytical inputs only; materialize only new IDs 551..600 for each non-C100 scenario; preserve historical provenance and do not resume/rerun completed trials.",
+  "next": "CP-C: Gate B N=1200 checkpoint — use verified cumulative inputs 1..600 (historical 1..550 plus N=600 run IDs 551..600) analytically, and materialize only new IDs 601..1200 per non-C100 scenario; never rerun completed trial IDs.",
   "blockers": [
-    "Gate A acceptance remains separate: PR #30 is still open/draft although its candidate Run 38169163565 reports exact per-trial/global fingerprint matching; verify the exact artifact and record acceptance before claiming Gate A PASS in main.",
-    "CP-D pending after CP-C: Stage 9C 20-point Parquet-versus-_STATS candidate validation succeeded in PR #29 / Run 38165878333, but PR #29 is still open/draft and CP-D is not recorded complete; do not claim CP-D complete until acceptance is recorded."
+    "Gate A remains separate: PR #30 is still open/draft; its candidate run evidence is not yet a main acceptance record.",
+    "Stage 9C/CP-D remains separate: PR #29 is still open/draft; candidate Run 38165878333 is not a merged CP-D completion record.",
+    "D-2026-10-10-01 mentions a P50 change >5% condition across N=300/600/1200 but does not define the exact percentage-change formula/denominator. Treat that decision branch as UNDEFINED_BUSINESS_RULE and do not invent a formula; do not stop before completing N=1200."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "65d85ca7b1da1cab72ef7fa6d2ac132b32592b53",
+  "head_sha": "d81e09b7746485bd99dee9122c55403cbc38bf3b",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -46,6 +47,41 @@
       "approved_decision": "D-2026-10-11-02",
       "engine_changed": false,
       "trials_rerun": false
+    },
+    "gate_b_checkpoints": {
+      "n600_20261011": {
+        "status": "PASS_AT_N600_ONLY",
+        "overall_gate_b": "NOT_ESTABLISHED_BY_N600_ALONE",
+        "workflow_run_id": 38174743440,
+        "workflow_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38174743440",
+        "workflow_head_sha": "61ae9e2354ff37b1d4d9d13849bd6b264cf9cfa3",
+        "workflow_result": "success",
+        "workflow_jobs_expected": 43,
+        "workflow_jobs_passed": 43,
+        "historical_aggregate_artifact_id": 11715099731,
+        "historical_scenario_count": 20,
+        "historical_trial_inputs_verified": 11000,
+        "historical_ordered_hash_map_sha256": "a796c13a0e596916785e5c7af792550de28b13e4abb9a2ef2fc9255977c206b3",
+        "newly_materialized_trials": 1000,
+        "new_trial_range_per_non_c100_scenario": "551..600",
+        "new_trial_run_id": 38174743440,
+        "n600_report_artifact_id": 11715388165,
+        "n600_report_artifact_sha256": "67d5033a67eec27bd7a90b735c56f7f7ceff4181e32c88271dd07f39f3b8e8ae",
+        "n600_checkpoint_status": "PASS_AT_N600_ONLY",
+        "ci_points_expected": 60,
+        "ci_points_passed": 60,
+        "ci_points_failed": 0,
+        "ci_points_undefined": 0,
+        "ordered_scenario_trial_hash_map_sha256_n600": "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f",
+        "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        "source_commit": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+        "master_seed": 20270101,
+        "historical_ids_rerun": false,
+        "historical_dataset_modified": false,
+        "historical_metadata_modified": false,
+        "next_checkpoint": "N=1200",
+        "final_gate_b_pass": false
+      }
     }
   },
   "governance_decision_log": {
