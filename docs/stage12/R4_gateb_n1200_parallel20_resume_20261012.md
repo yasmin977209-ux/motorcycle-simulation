@@ -1,9 +1,9 @@
 # R4 — Increase Gate B N=1200 scenario concurrency without rerunning verified trials
 
-Date: 2026-10-12  
-Repository: `yasmin977209-ux/motorcycle-simulation`  
-Main HEAD reviewed: `2325b6ae6e110d9e54e614aa9b1e255be5965375`  
-Candidate CP-C workflow HEAD reviewed: `dae9cd6d5ba639ad2265a6d52a1b086a2c9dbe95`  
+Date: 2026-10-12
+Repository: `yasmin977209-ux/motorcycle-simulation`
+Main HEAD reviewed: `2325b6ae6e110d9e54e614aa9b1e255be5965375`
+Candidate CP-C workflow HEAD reviewed: `dae9cd6d5ba639ad2265a6d52a1b086a2c9dbe95`
 Normative source: `المرجع_النهائي_الموحد_المعتمد.md`, SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
 
 ## R4 three-way comparison
