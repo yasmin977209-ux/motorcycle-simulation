@@ -205,4 +205,3 @@ This is an additive current-state review. Earlier R4 findings and provenance are
 ### Scope of this R4 refresh
 
 The only pre-existing content edit in this refresh is removal of the one confirmed trailing-whitespace occurrence at the end of line 3. This addendum records the changed live main identity and the effect of the newly merged governance decision; it does not change the JSON contract, engine, RNG, trial outputs, historical data metadata, or source identity.
-
