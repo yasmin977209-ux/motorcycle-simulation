@@ -3,7 +3,7 @@ name: Preflight Governance Validate
 on:
   push:
     branches:
-      - 'tmp/preflight-governance-*'
+      - 'tmp/preflight-governance-20261011'
 
 permissions:
   contents: read
@@ -46,12 +46,12 @@ jobs:
           metadata = yaml.safe_load("\n".join(lines[1:end]))
           if not isinstance(metadata, dict) or metadata.get("document") != "REFERENCE_AMENDMENTS":
               raise SystemExit("REFERENCE_AMENDMENTS.md: invalid YAML metadata")
-          expected = [f"Amendment-{n:02d}" for n in range(1, 5)]
+          expected = [f"Amendment-{n:02d}" for n in range(1, 6)]
           if metadata.get("amendments") != expected:
               raise SystemExit("REFERENCE_AMENDMENTS.md: amendment IDs mismatch")
           text = p.read_text(encoding="utf-8")
           sections = ["### النص الأصلي", "### النص المُحدَّث", "### المواضع المتأثرة", "### السبب", "### القيود"]
-          for n in range(1, 5):
+          for n in range(1, 6):
               marker = f"## Amendment-{n:02d}"
               start = text.find(marker)
               if start < 0:
@@ -68,7 +68,7 @@ jobs:
           keys = {"stage","schema_version","cp_completed","sha","sha_semantics","next","blockers","source_sha","head_sha","stage12_closure_evidence","governance_decision_log","governance_decisions"}
           if set(state) != keys or len(state) != 12:
               raise SystemExit("state.json must retain 11 prior fields and add only governance_decisions")
-          wanted = {"D-2026-10-10-01","D-2026-10-10-02","D-2026-10-10-03","D-2026-10-10-04"}
+          wanted = {"D-2026-10-10-01","D-2026-10-10-02","D-2026-10-10-03","D-2026-10-10-04","D-2026-10-11-01"}
           if set(state.get("governance_decisions", {})) != wanted:
               raise SystemExit("state governance decision IDs mismatch")
           print("PASS: JSON, YAML, amendment Markdown structure")
