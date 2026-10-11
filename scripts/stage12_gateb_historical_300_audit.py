@@ -106,7 +106,7 @@ def verify_scenario(scenario, stage12_id, stage7_id, tmp):
         rf=read_json(Path("docs/stage12/roll_forward_validation.json")).get("scenarios",{}).get(scenario)
         if not isinstance(rf,dict): raise RuntimeError("CP12C_SCENARIO_RECORD_MISSING")
         daily_sha=sha256_file(daily)
-        if daily_sha!=rf.get("parquet_sha256"): raise RuntimeError(f"STAGE12_PARQUET_SHA_MISMATCH {daily_sha} expected={rf.get('parquet_sha256')}")
+        if daily_sha!=rf.get("content_sha256"): raise RuntimeError(f"STAGE12_PARQUET_SHA_MISMATCH {daily_sha} expected={rf.get('parquet_sha256')}")
         dt=pq.read_table(daily,columns=["scenario_id","trial_id","source_sha","master_seed","result_sha256"])
         drows=dt.to_pylist()
         if len(drows)!=int(rf.get("daily_rows",-1)): raise RuntimeError(f"STAGE12_ROW_COUNT_MISMATCH {len(drows)} expected={rf.get('daily_rows')}")
