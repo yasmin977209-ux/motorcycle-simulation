@@ -22,7 +22,7 @@ jobs:
       - name: Run git diff --check on the live PR diff
         env:
           EXPECTED_BASE_SHA: "94b6ea49715c9f845be83b6f106b26c253bf0506"
-          TARGET_PR_SHA: "32c4bee6190db73fcf34122fad9645b9b7edae28"
+          TARGET_PR_SHA: "03d6aa86f78ce516daa3908e1294c5eec48d595d"
         shell: bash
         run: |
           set -euo pipefail
