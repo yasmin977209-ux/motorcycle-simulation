@@ -1,0 +1,201 @@
+name: CP-B2 Contract Diff and Static Validation
+
+on:
+  push:
+    branches:
+      - "tmp/cp-b2-accounting-contract-r4-refresh-20261011"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-contract:
+    name: Validate Stage 12 contract against pinned producer and aggregator
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Checkout exact Stage 12 source commit
+        uses: actions/checkout@v4
+        with:
+          ref: "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+          path: stage12-source
+          fetch-depth: 1
+
+      - name: Checkout PR #18 contract baseline
+        uses: actions/checkout@v4
+        with:
+          ref: "9eb3a89f77048e2d727d5c7ae1117c0d03ba61c6"
+          path: pr18-baseline
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify JSON schema, policies, topology, historical identity and exact changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+
+          CONTRACT_PATH = Path("docs/stage12/accounting_data_contract.json")
+          contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+          baseline = json.loads(Path("pr18-baseline/docs/stage12/accounting_data_contract.json").read_text(encoding="utf-8"))
+          producer_path = Path("stage12-source/scripts/stage12_materialize.py")
+          aggregator_path = Path("stage12-source/scripts/stage12_aggregate.py")
+          producer_tree = ast.parse(producer_path.read_text(encoding="utf-8"))
+          aggregator_tree = ast.parse(aggregator_path.read_text(encoding="utf-8"))
+
+          def assigned_node(tree, name):
+              for node in tree.body:
+                  if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+                      return node.value
+                  if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == name:
+                      return node.value
+              raise AssertionError(f"constant not found: {name}")
+
+          def eval_constant(node):
+              if isinstance(node, ast.Constant):
+                  return node.value
+              if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+                  return eval_constant(node.left) + eval_constant(node.right)
+              if isinstance(node, ast.Dict):
+                  return {eval_constant(k): eval_constant(v) for k, v in zip(node.keys, node.values)}
+              if isinstance(node, (ast.List, ast.Tuple)):
+                  return [eval_constant(x) for x in node.elts]
+              raise AssertionError(f"unsupported non-literal source expression: {ast.dump(node)[:240]}")
+
+          def get_constant(tree, name):
+              return eval_constant(assigned_node(tree, name))
+
+          def producer_field_schema(tree):
+              node = assigned_node(tree, "DAILY_FIELDS")
+              if not isinstance(node, ast.List):
+                  raise AssertionError("DAILY_FIELDS is not a literal list")
+              names, types = [], {}
+              for entry in node.elts:
+                  if not isinstance(entry, ast.Tuple) or len(entry.elts) != 2:
+                      raise AssertionError("unexpected DAILY_FIELDS entry")
+                  name_node, type_node = entry.elts
+                  if not isinstance(name_node, ast.Constant) or not isinstance(name_node.value, str):
+                      raise AssertionError("nonliteral DAILY_FIELDS name")
+                  if not isinstance(type_node, ast.Call) or not isinstance(type_node.func, ast.Attribute):
+                      raise AssertionError("nonliteral DAILY_FIELDS type")
+                  type_name = type_node.func.attr
+                  type_name = {"string": "string", "int64": "int64", "bool_": "bool"}.get(type_name)
+                  if type_name is None:
+                      raise AssertionError(f"unhandled pyarrow type {type_node.func.attr}")
+                  names.append(name_node.value)
+                  types[name_node.value] = type_name
+              return names, types
+
+          schema = contract["schema"]
+          identity = contract["dataset_identity"]
+          producer_names, producer_types = producer_field_schema(producer_tree)
+          aggregator_types = get_constant(aggregator_tree, "EXPECTED_COLUMN_TYPES")
+
+          assert len(schema["required_fields"]) == 38, f"expected 38 fields, got {len(schema['required_fields'])}"
+          assert schema["required_fields"] == producer_names, "required field order differs from pinned producer DAILY_FIELDS"
+          assert schema["field_types"] == producer_types, "contract field_types differ from pinned producer DAILY_FIELDS"
+          assert schema["field_types"] == aggregator_types, "contract field_types differ from pinned aggregator EXPECTED_COLUMN_TYPES"
+          assert schema["nullable_fields"] == ["Final_Close_Date"], "nullable fields differ from pinned producer schema"
+          assert schema["primary_key"] == ["scenario_id", "trial_id", "date"], "primary key differs"
+          assert schema["duplicate_missing_policy"]["primary_key_enforced_at_write_time"] is False, "writer-time uniqueness claim must be false"
+          assert schema["duplicate_missing_policy"]["duplicate_action"] == "FAIL", "duplicate action must be FAIL"
+          assert schema["duplicate_missing_policy"]["missing_action"] == "FAIL", "missing action must be FAIL"
+          assert schema["identity_metadata_key"] == eval_constant(assigned_node(aggregator_tree, "IDENTITY_KEY")).decode("utf-8"), "identity metadata key differs"
+          assert schema["per_trial_fingerprint_field"] == "result_sha256", "per-trial fingerprint field differs"
+
+          for key in ("SOURCE_SHA", "MASTER_SEED", "SCHEMA_VERSION", "RNG_POLICY", "SAMPLING_POLICY", "STABILITY_POLICY", "TRIAL_ID_POLICY"):
+              producer_value = get_constant(producer_tree, key)
+              aggregator_value = get_constant(aggregator_tree, key)
+              assert producer_value == aggregator_value, f"{key} differs between producer and aggregator"
+              contract_key = {"SOURCE_SHA": "source_sha", "MASTER_SEED": "master_seed", "SCHEMA_VERSION": "schema_version", "RNG_POLICY": "rng_policy", "SAMPLING_POLICY": "sampling_policy", "STABILITY_POLICY": "stability_policy", "TRIAL_ID_POLICY": "trial_id_policy"}[key]
+              target = identity.get(contract_key, schema.get(contract_key))
+              if key == "SCHEMA_VERSION":
+                  target = schema["schema_version"]
+              assert target == producer_value, f"contract {contract_key} differs from pinned producer/aggregator"
+
+          assert identity["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          assert identity["master_seed"] == 20270101
+          assert contract["execution"]["run_head_sha"] == "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+          topology = contract["execution"]["job_topology"]
+          assert topology == {
+              "scenario_materialization_jobs": 25,
+              "validate_jobs": 1,
+              "aggregate_jobs": 1,
+              "total_jobs": 27,
+              "max_parallel_materialization": 25,
+              "timeout_minutes": {"validate": 45, "materialize": 360, "aggregate": 30},
+              "order": "validate -> 25 scenario materializations -> aggregate after all 25 succeed",
+          }, f"materialization topology mismatch: {topology}"
+          observed = contract["observed_results"]
+          assert observed["total_scenarios"] == 25
+          assert observed["total_trials"] == 11005
+          assert observed["total_daily_rows"] == 22546465
+          expected_hash = "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+          assert observed["original_global_aggregate_sha256"] == expected_hash
+          assert observed["reproduced_global_aggregate_sha256"] == expected_hash
+          assert observed["global_sha256_match"] == "YES"
+          assert contract["outputs_and_constraints"]["required_workbook_worksheets"] == 185
+          note = contract["outputs_and_constraints"]["note"]
+          assert "+50" in note and "doubling" in note and "no ceiling" in note
+          assert contract["gate"] == "ACCOUNTING_DATA_CONTRACT_DEFINED=PASS", "do not rewrite the historical contract label in this CP"
+
+          def recursive_leaf_diff(a, b, path=""):
+              out = []
+              if isinstance(a, dict) and isinstance(b, dict):
+                  for key in sorted(set(a) | set(b)):
+                      p = f"{path}.{key}" if path else key
+                      if key not in a or key not in b:
+                          out.append(p)
+                      else:
+                          out.extend(recursive_leaf_diff(a[key], b[key], p))
+              elif isinstance(a, list) and isinstance(b, list):
+                  if a != b:
+                      out.append(path)
+              elif a != b:
+                  out.append(path)
+              return out
+
+          expected_changed_paths = sorted([
+              "dataset_identity.rng_policy",
+              "dataset_identity.sampling_policy",
+              "dataset_identity.trial_id_policy",
+              "dataset_identity.stability_policy",
+              "outputs_and_constraints.note",
+              "schema.duplicate_missing_policy.primary_key_enforced_at_write_time",
+          ])
+          actual_changed_paths = sorted(recursive_leaf_diff(baseline, contract))
+          assert actual_changed_paths == expected_changed_paths, f"unexpected JSON leaf diff: {actual_changed_paths}"
+          for key in ("source_sha", "master_seed", "schema_version", "scenario_id", "trial_id", "date"):
+              # Identity-critical values are asserted above; this loop documents the protected dimensions.
+              assert key in {"source_sha", "master_seed", "schema_version", "scenario_id", "trial_id", "date"}
+          print("PASS: valid JSON; 38 ordered fields/types/nullability; producer/aggregator policy equality; primary-key failure policy; 27-job topology; historical identity/count/hash; exactly six approved JSON differences.")
+          PY
+
+      - name: Verify main SHA and execute literal git diff --check
+        shell: bash
+        env:
+          EXPECTED_BASE_SHA: "b37d24c6829ec161a39e0c10610e526e471e769b"
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          actual_main="$(git rev-parse origin/main)"
+          if [[ "$actual_main" != "$EXPECTED_BASE_SHA" ]]; then
+            echo "R4 stale: expected main $EXPECTED_BASE_SHA but found $actual_main" >&2
+            exit 2
+          fi
+          echo "Validated candidate HEAD: $GITHUB_SHA"
+          echo "Validated main: $actual_main"
+          git diff --check "$EXPECTED_BASE_SHA...$GITHUB_SHA"
