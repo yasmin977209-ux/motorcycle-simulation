@@ -1,16 +1,15 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012",
-  "sha": "54822f2737fc8e474239598ea15d47ae0f55cb4e",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012",
+  "sha": "5f4933eed90cdd22fc8037a9785447b3fa510df0",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-C statistical evidence is complete at N=300/N=600/N=1200; the P50 >5% condition is not triggered and N=2400 is not required by that condition. Final overall stability remains blocked by the separate Gate A and Stage 9C/CP-D gates. Stop here; no transition to another CP without explicit scope authorization.",
+  "next": "Gate A exact golden fingerprint evidence is accepted through PR #30: 11,005/11,005 trial SHA-256 matches, 22,546,465/22,546,465 daily rows, 25/25 scenarios and 20/20 aggregate gates passed. CP-C Gate B statistical evidence remains complete at N=300/N=600/N=1200 with no P50-triggered N=2400. Overall final stability remains blocked by the separate Stage 9C/CP-D gate. Stop here; do not execute CP-D or transition to another CP without explicit scope authorization.",
   "blockers": [
-    "Gate A remains separate: PR #30 is open/draft; candidate run evidence has not been accepted as a main Gate A acceptance record.",
     "Stage 9C/CP-D remains separate: PR #29 is open/draft; candidate Run 38165878333 is not a merged CP-D completion record."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "54822f2737fc8e474239598ea15d47ae0f55cb4e",
+  "head_sha": "5f4933eed90cdd22fc8037a9785447b3fa510df0",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -252,5 +251,41 @@
     "ordered_scenario_trial_hash_map_sha256_n1200": "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3",
     "historical_trials_rerun_during_reassessment": false,
     "historical_dataset_or_metadata_modified": false
+  },
+  "cp_gate_a_20261012": {
+    "status": "PASS_GATE_A_EXACT_GOLDEN_FINGERPRINT_EVIDENCE",
+    "acceptance_scope": "Gate A only; exact read-only comparison; CP-D and final delivery remain separate",
+    "pull_request": 30,
+    "pull_request_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/30",
+    "tested_head_sha": "95288a2bccb40d6772f5a5d042fdabc152c9d89a",
+    "run_id": 38169163565,
+    "run_result": "success",
+    "jobs_expected": 27,
+    "jobs_passed": 27,
+    "scenario_reports_expected": 25,
+    "scenario_reports_passed": 25,
+    "aggregate_gates_expected": 20,
+    "aggregate_gates_passed": 20,
+    "canonical_trial_comparisons": 11005,
+    "canonical_trial_comparisons_expected": 11005,
+    "stage12_daily_rows": 22546465,
+    "stage12_daily_rows_expected": 22546465,
+    "exact_sha256_mismatches": 0,
+    "official_global_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "actual_ordered_trial_hash_map_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "source_golden_ordered_trial_hash_map_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+    "report_artifact_id": 11713395913,
+    "report_artifact_sha256": "e00afa6a5d5ddbc8f84b5e225755535818460ec016d211fad0d1d2a210cfd996",
+    "workflow_blob_sha": "7070f168e2c66ccffff5409d517aca25c86f9d0d",
+    "aggregator_blob_sha": "0698e1fe1a8907c3469e67348e43d71dcc0e478e",
+    "runner_blob_sha": "177eba71e3517ccb123c179fac6cb361127f92c1",
+    "unit_test_blob_sha": "1ec17cd660fea64d017985dfb9044adda958bab4",
+    "historical_trial_execution": false,
+    "historical_data_or_metadata_modified": false,
+    "production_engine_or_rng_changed": false,
+    "source_k_code_findings_disclosed": [
+      "Stage 10 metadata literal backslash-n suffix",
+      "Stage 11 Stage 10 head summary is 39 characters while live run API head is 40 characters"
+    ]
   }
 }
