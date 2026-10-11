@@ -72,7 +72,7 @@ jobs:
               stage7_artifact: 11313066122
             - scenario: C085_G050
               stage12_artifact: 11634412024
-              stage7_artifact: 11313185526
+              stage7_artifact: 11313071154
             - scenario: C085_G070
               stage12_artifact: 11634340863
               stage7_artifact: 11313126058
