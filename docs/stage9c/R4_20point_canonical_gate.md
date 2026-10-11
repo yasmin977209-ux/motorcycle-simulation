@@ -26,3 +26,35 @@ Scope: read-only verification of the historical full Stage 9A 9,005-trial datase
 ## Execution correction record — 2026-10-11
 
 Run 38160869693 initially stopped with HTTP 401 from a malformed GH_TOKEN expression. After correcting the token, Run 38160958608 successfully opened the published workbook and verified its exact SHA-256, 185 sheets, all 25 _STATS sheets, zero Excel error cells, and zero formula cells. It did not reach the comparisons because the validator incorrectly required dataset_identity.json. Inspection of the published Stage 9A artifact showed its actual identity schema is scenario_metadata.json plus trial_fingerprints.json; dataset_identity.json is not included. This is an audit-harness schema assumption, not evidence of a data defect. The validator now uses the published metadata/fingerprint files, checks their source/run/scenario/count/parameter identity, and documents the master seed from the producing Stage 7 workflow and source constant.
+
+## Verified Stage 9C 20-point gate result — Run 38161359034
+
+**Run:** https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38161359034  
+**Audit branch head tested:** `aebc1bae6b14e00b6f5f4855a1ba7d8c00f25a2d`  
+**Evidence artifact:** `stage9c-canonical-20point-gate-evidence`, artifact ID `11709953624`, SHA-256 `67214a348093240908fbfa211befc66710129c96070cf064e181caf32bfca9fa`.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Published workbook SHA-256 | PASS | Actual `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d` equals the published expected SHA |
+| 185 worksheets / 25 `_STATS` sheets | PASS | Independently reopened workbook |
+| Excel error cells / formula cells | PASS | 0 / 0 |
+| 25 scenario packages and identity checks | PASS | 25/25 scenario packages |
+| Result rows and key uniqueness | PASS | 9,005 rows; 9,005 unique `(scenario_id, trial_id)` pairs |
+| Point coverage | PASS | 500/500 numeric comparisons produced |
+| Exact equality of all points | **FAIL** | 499/500 match; one exact mismatch below |
+
+### Exact mismatch (verbatim numeric values)
+
+- Scenario: `C030_G030`
+- Worksheet metric: `Final_Cash`
+- Statistic: `P90`
+- Parquet recalculation using `numpy.quantile(values, 0.90, method="linear")`: `13185720.000000002`
+- Stored `C030_G030_STATS` value: `13185720`
+- Difference: `0.000000002` (shown for diagnosis only; **no tolerance is applied**).
+- Classification: **K_CODE** — the published XLSX cell does not preserve the exact statistic required by the approved gate. The workflow does not round the comparison or suppress this point.
+- Impact: Stage 9C remains **FAIL**, not PASS. No historical trial or dataset was changed.
+
+The historical builder source at commit `5e25a94743f44554093934c57404c0b168e69651` uses `numpy.quantile(..., method="linear")` for statistics, and the Stage 9A Run `37671448546` used NumPy `2.4.6`, the same installed version shown in the audit workflow. The precise write/serialization point that reduces this one statistic to the stored XLSX number still requires isolation. The gate definition remains unchanged. Do not add epsilon/tolerance, round the recomputation, or alter historical Parquet to obtain PASS.
+
+**Next allowed step:** isolate the exported numeric-cell serialization discrepancy under R4 and regenerate a separate workbook from unchanged source data only if the correction can preserve the exact gate definition and all existing workbook constraints; rerun the complete independent 500-point gate. Gate A/Gate B remain separate.
+
