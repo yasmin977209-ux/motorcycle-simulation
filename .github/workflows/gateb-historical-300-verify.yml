@@ -1,0 +1,137 @@
+name: Gate B Historical Trial 1-300 Identity and N=300 Analysis
+
+on:
+  push:
+    branches:
+      - "tmp/gateb-historical-300-verify-20261011"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify-historical-inputs:
+    name: Verify historical inputs ${{ matrix.scenario }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        include:
+            - scenario: C030_G000
+              stage12_artifact: 11634020857
+              stage7_artifact: 11313086528
+            - scenario: C030_G030
+              stage12_artifact: 11633466266
+              stage7_artifact: 11313116830
+            - scenario: C030_G050
+              stage12_artifact: 11634060847
+              stage7_artifact: 11313056625
+            - scenario: C030_G070
+              stage12_artifact: 11634295127
+              stage7_artifact: 11313072117
+            - scenario: C030_G100
+              stage12_artifact: 11633731337
+              stage7_artifact: 11313136372
+            - scenario: C050_G000
+              stage12_artifact: 11634501915
+              stage7_artifact: 11312813109
+            - scenario: C050_G030
+              stage12_artifact: 11633891917
+              stage7_artifact: 11313227800
+            - scenario: C050_G050
+              stage12_artifact: 11633538351
+              stage7_artifact: 11312971843
+            - scenario: C050_G070
+              stage12_artifact: 11633956636
+              stage7_artifact: 11312963284
+            - scenario: C050_G100
+              stage12_artifact: 11633813338
+              stage7_artifact: 11312766984
+            - scenario: C070_G000
+              stage12_artifact: 11633054556
+              stage7_artifact: 11312109145
+            - scenario: C070_G030
+              stage12_artifact: 11633882202
+              stage7_artifact: 11312915385
+            - scenario: C070_G050
+              stage12_artifact: 11634486809
+              stage7_artifact: 11313185526
+            - scenario: C070_G070
+              stage12_artifact: 11633473363
+              stage7_artifact: 11312294476
+            - scenario: C070_G100
+              stage12_artifact: 11634076431
+              stage7_artifact: 11312239690
+            - scenario: C085_G000
+              stage12_artifact: 11633978084
+              stage7_artifact: 11312590249
+            - scenario: C085_G030
+              stage12_artifact: 11633238307
+              stage7_artifact: 11313066122
+            - scenario: C085_G050
+              stage12_artifact: 11634412024
+              stage7_artifact: 11313185526
+            - scenario: C085_G070
+              stage12_artifact: 11634340863
+              stage7_artifact: 11313126058
+            - scenario: C085_G100
+              stage12_artifact: 11633202857
+              stage7_artifact: 11312088905
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SCENARIO: ${{ matrix.scenario }}
+      STAGE12_ARTIFACT_ID: ${{ matrix.stage12_artifact }}
+      STAGE7_ARTIFACT_ID: ${{ matrix.stage7_artifact }}
+    steps:
+      - name: Checkout audit code and CP12-C report
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Parquet and Student-t dependencies
+        run: python -m pip install numpy pyarrow scipy
+      - name: Validate fingerprint bridge and calculate N=300 CIs
+        run: python scripts/stage12_gateb_historical_300_audit.py --scenario "$SCENARIO" --stage12-artifact "$STAGE12_ARTIFACT_ID" --stage7-artifact "$STAGE7_ARTIFACT_ID"
+      - name: Upload scenario input provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateb-input-${{ matrix.scenario }}
+          path: results_gateb/${{ matrix.scenario }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate-n300-report:
+    name: Aggregate N=300 Gate B evidence and disclose blockers
+    if: always()
+    needs: verify-historical-inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout audit code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install report dependencies
+        run: python -m pip install numpy scipy
+      - name: Download completed and failed scenario reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gateb-input-*
+          path: gateb_scenario_reports
+          merge-multiple: true
+      - name: Aggregate 20-scenario N=300 report
+        run: python scripts/stage12_gateb_historical_300_audit.py --aggregate-dir gateb_scenario_reports
+      - name: Upload combined Gate B report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateb-historical-300-n300-report
+          path: results_gateb/
+          if-no-files-found: warn
+          retention-days: 30
