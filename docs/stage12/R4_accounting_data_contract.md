@@ -227,3 +227,16 @@ The new workflow must verify that the live main ref still equals `94b6ea49715c9f
 ## R4 execution correction — exact diff-check evidence (2026-10-11)
 
 Run `38169457230`, candidate SHA `adf4697a1857a8d94216f0823dcc00e6ecaaa1d5`, executed the pinned-main check and then `git diff --check`. The exact failure was `docs/stage12/R4_accounting_data_contract.md:226: new blank line at EOF.` This blank line was introduced by the R4 addendum itself; the earlier check of the contract document confirmed no trailing spaces or tabs on its existing lines. Classification: **K_CODE** (audit/documentation formatting introduced by this change), not a production contract or JSON defect. The corrective commit removes only the extra empty line at EOF and retains one final newline. The same literal `git diff --check` job must run again on the corrective SHA.
+## R4 execution result — literal Git whitespace gate (2026-10-11)
+
+The corrective candidate is `d22c730bb9e23585d616fb503d99d3dbee675d23`. On this exact head, GitHub Actions Run `38169524595` succeeded: [run evidence](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38169524595). The job verified `origin/main=94b6ea49715c9f845be83b6f106b26c253bf0506` and executed `git diff --check "$EXPECTED_BASE_SHA...$GITHUB_SHA"` with exit code 0. The earlier failure `docs/stage12/R4_accounting_data_contract.md:226: new blank line at EOF.` from Run `38169457230` was solely the additional R4 blank line and was corrected; the exact same command passed on the next SHA.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Candidate SHA checked | PASS | `d22c730bb9e23585d616fb503d99d3dbee675d23` |
+| Main ref matched pinned R4 base | PASS | `94b6ea49715c9f845be83b6f106b26c253bf0506` |
+| Literal `git diff --check` | PASS | Actions Run `38169524595`, job `114559004700`, exit 0 |
+| No trailing spaces/tabs in the contract document | PASS | Direct content inspection at blob `767599adb6df6e73200a2011b87456054e0918a8`; the separate R4 EOF defect is corrected |
+| `ACCOUNTING_DATA_CONTRACT_DEFINED=PASS` has a normative acceptance definition | **HOLD** | The exact gate name/meaning is not defined in the uploaded normative reference; a clean diff check cannot define it |
+
+This check closes only the whitespace-verification subtask. CP-B2 remains **UNDEFINED_BUSINESS_RULE / HOLD**, PR #25 remains Draft and unmerged, and `state.json` remains unchanged because the CP itself has not satisfied its normative acceptance gate.
