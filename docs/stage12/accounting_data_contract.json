@@ -24,10 +24,10 @@
   "dataset_identity": {
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
     "master_seed": 20270101,
-    "rng_policy": "SHA-256 key master_seed|scenario_id|trial_id|bike_id|date|event_type; draw from first 8 digest bytes big-endian divided by 2^64",
-    "sampling_policy": "C100 has trial_id 1..1; every non-C100 scenario has trial_id 1..550; no trial was re-run in CP-B2",
-    "trial_id_policy": "one-based contiguous trial IDs; trial_id is logical identity independent of worker execution order",
-    "stability_policy": "C100 has no CI gate; non-C100 checkpoints start at 300 and increase by 50, three consecutive successful checkpoints; accepted datasets contain 550 trials"
+    "rng_policy": "rng.py:SHA-256(seed key master_seed|scenario_id|trial_id|bike_id|date|event_type); draw=first_8_digest_bytes_big_endian/2^64; probability boundaries are deterministic",
+    "sampling_policy": "one-based contiguous trial IDs; C100 scenarios use 1..1; non-C100 scenarios use 1..550; one materialization per scenario/trial; no cross-run inputs or resume",
+    "trial_id_policy": "one-based contiguous trial IDs from 1 to scenario target; no duplicate IDs",
+    "stability_policy": "C100 uses one deterministic trial and no CI gate; non-C100 checkpoint N=300 then +50; 95% Student-t CI half-width <1% of absolute mean for Final_Net_Project_Equity, Partner1_Final_Entitlement, Partner2_Final_Entitlement; CI_ABSOLUTE_EPSILON=1; three consecutive successful checkpoints; accepted N=550 (checkpoints 450, 500, 550)"
   },
   "schema": {
     "schema_version": "stage12-daily-accounting-v1",
@@ -123,7 +123,7 @@
       "Final_Close_Date"
     ],
     "duplicate_missing_policy": {
-      "primary_key_enforced_at_write_time": true,
+      "primary_key_enforced_at_write_time": false,
       "duplicate_action": "FAIL",
       "missing_action": "FAIL"
     },
@@ -650,6 +650,6 @@
     "required_workbook_worksheets": 185,
     "workbook_structure": "10 global worksheets + 7 worksheets per scenario × 25 scenarios",
     "final_excel_error_cells_allowed": 0,
-    "note": "This contract establishes the Stage 12 daily Parquet schema and provenance; it does not assert that a final 185-sheet workbook has been built or that the separate Stage 9C 20-point gate has passed."
+    "note": "This contract establishes the Stage 12 daily Parquet schema and provenance; it does not assert that a final 185-sheet workbook has been built or that the separate Stage 9C 20-point gate has passed. The dataset_identity section documents the historical provenance of the dataset produced by Run 37964656154 on 2026-10-09. Its stability_policy records the historical +50 checkpoints and accepted N=550 (checkpoints 450, 500, 550); it is not the policy for future execution. New execution must follow D-2026-10-10-01 and Amendment-01: C100=1 without a CI gate, and non-C100 scenarios start at 300 with doubling and no ceiling. Do not infer that the existing dataset was produced under the newer policy or modify its historical identity."
   }
 }

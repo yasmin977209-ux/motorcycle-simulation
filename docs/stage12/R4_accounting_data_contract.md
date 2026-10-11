@@ -56,3 +56,124 @@ This section is an additive current-state review. The 2026-10-10 R4 record above
 - **VIOLATION:** no additional runtime violation is asserted by this documentation-only change. This is **not a CP-B2 PASS** and does not close the policy discrepancy or the independent CP-D gate.
 - No engine, test, RNG, source reference, workflow, or `state.json` changes are included. No trial was rerun. The CP-B2 proposal remains for explicit review, with the policy discrepancy visible.
 
+
+
+---
+
+## R4 Addendum — 2026-10-11 — literal identity reconciliation and bounded documentation correction
+
+**Status:** Additive review record. The 2026-10-10 R4 and the earlier 2026-10-11 review above remain preserved verbatim. This addendum corrects the scope of the prior review: the previous comparison checked the schema shape, nullability, counts and run evidence, but did not compare the four `dataset_identity` policy strings byte-for-byte against the producer and aggregator constants. Its earlier statement that the identity metadata matched was therefore incomplete for these four strings.
+
+### Live identity and evidence pins checked before this addendum
+
+- Repository: `yasmin977209-ux/motorcycle-simulation`.
+- Current `main` HEAD: `601d8cf92ee64a64d1ac0a53d31d32c84ee830e3`.
+- PR #25 branch: `tmp/cp-b2-accounting-contract-r4-refresh-20261011`; pre-change HEAD: `e6c277fe4b183defdb8bdc52cc1a0ea5749c7d6f`; PR remains open and Draft, based on the current `main`.
+- `main/state.json` blob SHA: `a0cb76e175f6196cc304e26138a13398af9f33d1`; it still records CP-B2 as next and source identity `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`.
+- Binding reference: `المرجع_النهائي_الموحد_المعتمد.md`, SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
+- Run 37964656154 source commit: `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`.
+- Producer `scripts/stage12_materialize.py` blob SHA: `76ffd5b6bd08358dde364f0677c3d82374ce0590`.
+- Aggregator `scripts/stage12_aggregate.py` blob SHA: `fd16864e92d2f4de97e1a9972e3992c38ab4e102`.
+- Pre-change contract blob SHA: `424997e7b16ec12addb2d3bd66fc5ad01110a85a`.
+- Pre-change R4 report blob SHA: `15d0851a1c54381f7c99ba8c304e56cb828e5556`.
+
+### 1. Primary-key write-time assertion
+
+The pre-change contract asserted `schema.duplicate_missing_policy.primary_key_enforced_at_write_time = true`. The producer at `0156c5f4272eb0ca7e32442657d0df9eaf4973d3` calls `pq.write_table(...)` for per-trial scratch Parquet and `ParquetWriter.write_table(...)` for the scenario artifact without a uniqueness constraint for `(scenario_id, trial_id, date)` at write time.
+
+The aggregator at the same source commit validates the ordered materialized data after writing: it rejects a repeated `(scenario_id, trial_id)` group, rejects a date that is not exactly the following day within a trial (including a duplicate date), checks trial coverage, and rejects drift in `result_sha256`. CP-12-C and CP-12-D add post-materialization checks for schema, date continuity, coverage and closure. The accepted reports record no violations in their declared scopes; this is not evidence that the data contained duplicates, and no such claim is made here.
+
+The binding reference §§14.4, 18.1 and 18.2 requires stable trial identity, Parquet/SQLite outputs and output/accounting quality. The review found no normative text requiring uniqueness to be enforced by the Parquet writer specifically. Accordingly, the documentation flag is corrected to `false`; `duplicate_action = FAIL` and `missing_action = FAIL` remain unchanged. No product, aggregator, test or workflow is altered by this documentation change.
+
+### 2. Exact comparison of dataset identity policy strings
+
+The following literal constant values were obtained from both `stage12_materialize.py` and `stage12_aggregate.py` at source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`. The producer and aggregator values were compared independently and are identical for all four constants.
+
+#### `rng_policy`
+
+**Pre-change v1.1 value:**
+```text
+SHA-256 key master_seed|scenario_id|trial_id|bike_id|date|event_type; draw from first 8 digest bytes big-endian divided by 2^64
+```
+
+**Producer and aggregator literal; copied unchanged into the contract:**
+```text
+rng.py:SHA-256(seed key master_seed|scenario_id|trial_id|bike_id|date|event_type); draw=first_8_digest_bytes_big_endian/2^64; probability boundaries are deterministic
+```
+
+**Finding:** The former value omitted the `rng.py:` prefix, used different wording around the seed key and draw operation, and omitted the explicit deterministic probability-boundary statement.
+
+#### `sampling_policy`
+
+**Pre-change v1.1 value:**
+```text
+C100 has trial_id 1..1; every non-C100 scenario has trial_id 1..550; no trial was re-run in CP-B2
+```
+
+**Producer and aggregator literal; copied unchanged into the contract:**
+```text
+one-based contiguous trial IDs; C100 scenarios use 1..1; non-C100 scenarios use 1..550; one materialization per scenario/trial; no cross-run inputs or resume
+```
+
+**Finding:** The former value summarized scenario trial bounds and added the CP-B2 no-rerun statement, but omitted one-based contiguous IDs, one materialization per scenario/trial, and the no-cross-run-input/no-resume constraints. The contract now records the source constant; run-history claims remain outside the identity string.
+
+#### `trial_id_policy`
+
+**Pre-change v1.1 value:**
+```text
+one-based contiguous trial IDs; trial_id is logical identity independent of worker execution order
+```
+
+**Producer and aggregator literal; copied unchanged into the contract:**
+```text
+one-based contiguous trial IDs from 1 to scenario target; no duplicate IDs
+```
+
+**Finding:** The former value described logical identity and worker-order independence, but did not match the source constant that specifies IDs begin at 1 and forbids duplicates.
+
+#### `stability_policy`
+
+**Pre-change v1.1 value:**
+```text
+C100 has no CI gate; non-C100 checkpoints start at 300 and increase by 50, three consecutive successful checkpoints; accepted datasets contain 550 trials
+```
+
+**Producer and aggregator literal; copied unchanged into the contract:**
+```text
+C100 uses one deterministic trial and no CI gate; non-C100 checkpoint N=300 then +50; 95% Student-t CI half-width <1% of absolute mean for Final_Net_Project_Equity, Partner1_Final_Entitlement, Partner2_Final_Entitlement; CI_ABSOLUTE_EPSILON=1; three consecutive successful checkpoints; accepted N=550 (checkpoints 450, 500, 550)
+```
+
+**Finding:** The former value summarized +50/550 but omitted the three exact metric names, Student-t confidence-interval condition, `CI_ABSOLUTE_EPSILON=1`, and the precise checkpoint wording. The literal source value remains historical dataset identity and must not be read as the current policy for future execution.
+
+### 3. Historical identity versus future statistical policy
+
+The dataset identity emitted by Run 37964656154 on 2026-10-09 used `C100=1` and, for non-C100 scenarios, checkpoints beginning at 300 with historical +50 increases; the accepted dataset contains 550 trials. Its identity remains `source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101`, schema version `stage12-daily-accounting-v1`, 25 scenarios, 11,005 trials, 22,546,465 daily rows, and global aggregate SHA-256 `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`.
+
+Future execution is governed separately by **D-2026-10-10-01** in `docs/governance/DECISIONS_LOG.md` and **Amendment-01** in `docs/governance/REFERENCE_AMENDMENTS.md`: `C100=1` without a CI gate; non-C100 scenarios start at 300 and double `300 → 600 → 1200 → 2400 → 4800 → 9600 → …`, without a ceiling.
+
+The existing `outputs_and_constraints.note` is extended to state explicitly that `dataset_identity` documents the historical run and that +50/550 is not the future policy. No new JSON field, enum or schema version is introduced. The four identity fields now match the literal producer/aggregator values; this does not rewrite Parquet metadata, replay data, or claim the existing dataset used the future policy.
+
+### 4. Contract gate label
+
+The JSON label `gate = ACCOUNTING_DATA_CONTRACT_DEFINED=PASS` is retained unchanged. No explicit definition of that exact label, or mapping from it to CP-B2 completion, was found in the live decision log, approved amendments or binding reference checked for this R4. It is recorded as a contract-level label only; it must not be read as `CP-B2 = PASS`. Live `main/state.json` still says CP-B2 is pending and the contract is not canonical in `main`.
+
+### 5. Static checks and evidence limits
+
+The documentation changes were checked against source constants and schema declarations. No Parquet artifact was reopened or revalidated in this revision, no published validation report was rewritten, and no simulation or completed trial was rerun. The previous Run 37964656154, CP-12-C and CP-12-D evidence retains its original scope and status.
+
+- Run 37964656154: `completed / success`; source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`.
+- CP-12-C Run 37971902520: `completed / success`; its published roll-forward report records `PASS` and zero reported violations.
+- CP-12-D Run 37972735159: `completed / success`; its published closure/settlement report records `PASS` and zero reported violations.
+- Stage 9C's independent 20-point Parquet-versus-`_STATS` gate remains `NOT_EXECUTED` according to live `main/state.json`; it is separate and is not claimed to pass here.
+- Post-change blob SHA of the contract JSON: `dd3f7f102389def92df16af3b0732b77dd66df6d`.
+- Post-change blob SHA of this R4 report is given in the execution summary rather than embedded in itself, avoiding a self-referential blob hash.
+
+### 6. Result of this bounded documentation review
+
+- Schema: field count/order/types and nullability align with the producer's `DAILY_FIELDS` and `_daily_schema` definitions.
+- Identity text: all four strings match producer and aggregator constants exactly.
+- Primary-key description: accurately records that the writer has no write-time uniqueness guard while retaining downstream `FAIL` behavior.
+- Historical provenance: source identity, sampling identity, and historical +50/550 policy remain attached to the existing dataset; only the descriptive note separates that history from future execution policy.
+- Gate label: retained unchanged and not used to infer CP-B2 completion.
+- CP-B2 remains pending explicit review/acceptance and merge authorization. This addendum does not declare CP-B2 complete or `PASS`.
+
