@@ -1,0 +1,68 @@
+name: Stage 9C Exact Precision Regression and 20-Point Audit
+
+on:
+  push:
+    branches:
+      - "tmp/stage9c-precision-export-20261011"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  regression:
+    name: Full repository regression and acceptance tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout the exact candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run effective regression and acceptance inventory (Test 158 remains skipped by its existing adjudication marker)
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests
+
+  stage9c-exact-gate:
+    name: Rebuild separate precision candidate and run canonical Stage 9C gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: .
+    steps:
+      - name: Checkout the exact candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build a separate candidate from canonical Parquet inputs without rerunning trials
+        run: python scripts/stage9c_rebuild_precision_workbook.py
+      - name: Run the unchanged strict 500-point Parquet vs _STATS gate
+        env:
+          STAGE9C_WORKBOOK_PATH: results_stage9c/Full_Results_EN.xlsx
+          STAGE9C_DATASET_ROOT: .stage9c_work/dataset
+        run: python scripts/stage9c_verify_20point_gate.py
+      - name: Upload precision candidate and full evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9c-precision-regression-and-20point-evidence
+          path: |
+            results_stage9c/
+          if-no-files-found: warn
+          retention-days: 30

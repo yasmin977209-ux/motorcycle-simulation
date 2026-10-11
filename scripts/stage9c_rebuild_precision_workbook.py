@@ -140,7 +140,6 @@ def run() -> dict:
                 download_artifact(artifact_id, zip_path)
                 extract_root = tmp / f"extract_{scenario}"
                 extract_zip(zip_path, extract_root)
-                tar_path = unique_file(extract_root, "*.tar.gz") if False else None
                 tarballs = [p for p in extract_root.rglob("*.tar.gz") if p.is_file()]
                 if len(tarballs) != 1:
                     raise RuntimeError(f"ENRICHED_TARBALL_COUNT {scenario}: {len(tarballs)}")
