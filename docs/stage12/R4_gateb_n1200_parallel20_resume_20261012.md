@@ -27,3 +27,16 @@ Normative source: `المرجع_النهائي_الموحد_المعتمد.md`, 
 ## Verdict
 
 **MATCH**, with the safeguards above. No production file is changed by this R4 record itself.
+
+
+## Addendum — cancelled prior-run evidence and fail-closed recovery (2026-10-12)
+
+The subsequent live workflow evidence clarified that Run \`38178068848\` ended with \`status=completed\`, \`conclusion=cancelled\`, while retaining ten per-scenario attempt-1 artifacts. For those ten scenarios, the simulation/materialization step was started and cancelled, and each has its matching artifact. The other ten matrix jobs have no runner and no steps, and no scenario output artifact. The artifacts are partial; they do not establish N=1200 completion.
+
+Replacement Run \`38179110800\` passed its audit unit tests (9 passed) but failed before simulation with the exact blocker \`PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED run=38178068848 status=completed conclusion=cancelled\`. This is a \`WORKFLOW_DEFECT\`: the preflight rejected the terminal state before reaching the per-job/artifact safeguards; it is not an engine failure and not a reason to change a test to fit engine behavior.
+
+### Corrective constraint
+
+Accept \`cancelled\` only as a terminal state for this exact pinned Run/head/branch/attempt so that the existing evidence audit can run. Do **not** interpret cancellation as proof that a trial did not run. Preserve the checks that require exactly one completed matrix job per scenario, fail with \`PRIOR_N1200_OUTPUT_ARTIFACT_MISSING_AFTER_TRIAL_STEP\` whenever a materialization step ran without a matching artifact, and validate artifact archive digests plus every restored payload's scenario/trial ID, source SHA/commit, seed, origin, attempt, and result SHA before reuse. Re-materialize only validated payloads and compute only trial IDs absent from verified prior artifacts. If any output is unaccounted for, stop without silently rerunning it.
+
+The engine, RNG, master seed, sample ranges, statistical policy, parallel matrix, and branch pin are unchanged. Added tests cover the terminal cancellation case and prove the fail-closed missing-artifact path. The R4 scheduling/resumption judgment remains **MATCH with these controls**; this addendum does not mark Gate B or CP-C as passed.

@@ -146,7 +146,9 @@ def validate_prior_n1200_run_identity(data: dict[str, Any]) -> dict[str, Any]:
         fail(f"PRIOR_N1200_RUN_IDENTITY_MISMATCH run={data.get('id')} head={data.get('head_sha')} branch={data.get('head_branch')}")
     if int(data.get("run_attempt", -1)) != N1200_PRIOR_ATTEMPT:
         fail(f"PRIOR_N1200_RUN_ATTEMPT_MISMATCH run={N1200_PRIOR_RUN_ID} attempt={data.get('run_attempt')}")
-    if data.get("status") != "completed" or data.get("conclusion") not in ("success", "failure"):
+    # A cancelled prior run is terminal, but cancellation alone proves no trial completed.
+    # The caller must inspect every scenario job and require artifacts for any started materialization step.
+    if data.get("status") != "completed" or data.get("conclusion") not in ("success", "failure", "cancelled"):
         fail(f"PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED run={N1200_PRIOR_RUN_ID} status={data.get('status')} conclusion={data.get('conclusion')}")
     return {key: data.get(key) for key in ("id", "head_sha", "head_branch", "status", "conclusion", "run_attempt", "created_at", "updated_at", "html_url")}
 

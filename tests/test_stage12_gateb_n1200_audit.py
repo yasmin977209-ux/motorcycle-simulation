@@ -100,6 +100,13 @@ def test_prior_n1200_run_identity_must_be_exact_and_completed():
     }
     assert audit.validate_prior_n1200_run_identity(good)["id"] == audit.N1200_PRIOR_RUN_ID
 
+    # Cancellation is allowed only as a terminal state that will still undergo per-job and artifact auditing.
+    cancelled = dict(good, conclusion="cancelled")
+    assert audit.validate_prior_n1200_run_identity(cancelled)["conclusion"] == "cancelled"
+    cancelled_not_finished = dict(cancelled, status="in_progress")
+    with pytest.raises(RuntimeError, match="PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED"):
+        audit.validate_prior_n1200_run_identity(cancelled_not_finished)
+
     bad_head = dict(good, head_sha="0" * 40)
     with pytest.raises(RuntimeError, match="PRIOR_N1200_RUN_IDENTITY_MISMATCH"):
         audit.validate_prior_n1200_run_identity(bad_head)
@@ -107,6 +114,65 @@ def test_prior_n1200_run_identity_must_be_exact_and_completed():
     not_finished = dict(good, status="in_progress")
     with pytest.raises(RuntimeError, match="PRIOR_N1200_RUN_NOT_SAFELY_COMPLETED"):
         audit.validate_prior_n1200_run_identity(not_finished)
+
+
+def _install_cancelled_prior_run_fixture(monkeypatch, missing_artifact_scenario: str | None = None):
+    run = {
+        "id": audit.N1200_PRIOR_RUN_ID,
+        "head_sha": audit.N1200_PRIOR_HEAD,
+        "head_branch": audit.N1200_PRIOR_BRANCH,
+        "run_attempt": audit.N1200_PRIOR_ATTEMPT,
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-11T21:51:19Z",
+        "updated_at": "2026-10-11T22:10:30Z",
+        "html_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38178068848",
+    }
+    materialize_name = "Materialize only missing IDs 601–1200; restore same-run completed IDs first"
+    jobs = []
+    artifacts = []
+    for index, scenario in enumerate(audit.SCENARIOS):
+        started = index < 10
+        job = {
+            "name": f"Run only missing IDs 601–1200 — {scenario}",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "steps": ([{"name": materialize_name, "status": "completed", "conclusion": "cancelled"}] if started else []),
+        }
+        jobs.append(job)
+        if started and scenario != missing_artifact_scenario:
+            artifacts.append({
+                "id": 20000 + index,
+                "name": f"gateb-n1200-new-{scenario}-attempt-{audit.N1200_PRIOR_ATTEMPT}",
+                "expired": False,
+                "digest": "sha256:" + (f"{index + 1:064x}"[-64:]),
+            })
+
+    def fake_gh_json(endpoint: str):
+        if endpoint == f"repos/{audit.REPO}/actions/runs/{audit.N1200_PRIOR_RUN_ID}":
+            return run
+        if endpoint == f"repos/{audit.REPO}/actions/runs/{audit.N1200_PRIOR_RUN_ID}/jobs?per_page=100":
+            return {"total_count": len(jobs), "jobs": jobs}
+        if endpoint == f"repos/{audit.REPO}/actions/runs/{audit.N1200_PRIOR_RUN_ID}/artifacts?per_page=100":
+            return {"total_count": len(artifacts), "artifacts": artifacts}
+        raise AssertionError(f"Unexpected GitHub API endpoint: {endpoint}")
+
+    monkeypatch.setattr(audit, "gh_json", fake_gh_json)
+
+
+def test_cancelled_prior_run_reuses_only_scenarios_with_artifacts(monkeypatch):
+    _install_cancelled_prior_run_fixture(monkeypatch)
+    evidence = audit.prior_n1200_run_evidence()
+    assert evidence["run"]["conclusion"] == "cancelled"
+    assert set(evidence["scenario_artifacts"]) == set(audit.SCENARIOS[:10])
+    assert len(evidence["scenario_artifacts"]) == 10
+
+
+def test_cancelled_prior_run_fails_closed_if_started_step_has_no_artifact(monkeypatch):
+    missing = audit.SCENARIOS[3]
+    _install_cancelled_prior_run_fixture(monkeypatch, missing_artifact_scenario=missing)
+    with pytest.raises(RuntimeError, match=f"PRIOR_N1200_OUTPUT_ARTIFACT_MISSING_AFTER_TRIAL_STEP {missing}"):
+        audit.prior_n1200_run_evidence()
 
 
 def test_workflow_enables_all_scenario_jobs_with_exact_branch_pin():
