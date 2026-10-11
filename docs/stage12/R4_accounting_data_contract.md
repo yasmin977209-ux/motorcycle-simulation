@@ -262,4 +262,3 @@ Normative reference checksum: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494ae
 The static workflow is read-only: it checks JSON structure, exact producer/aggregator schema/policy literals, the expected 27-job topology, protected historical identity/count/hash values, and exactly the six previously documented JSON differences from PR #18. It does not execute the engine, alter data, or rerun trials.
 
 The earlier sentence classifying the gate's semantics as unresolved is preserved as historical review context and is superseded by merged D-2026-10-11-02. Under D-02, the gate field remains unchanged and informational; CP-B2 acceptance still depends on the complete evidence list and the required PR review/merge.
-
