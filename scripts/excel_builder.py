@@ -3,7 +3,14 @@ from __future__ import annotations
 import argparse
 import json
 import hashlib
+import math
+import os
+import posixpath
+import re
 import tarfile
+import tempfile
+import zipfile
+import xml.etree.ElementTree as ET
 from datetime import datetime, date
 from pathlib import Path
 from typing import Any
@@ -548,6 +555,149 @@ def collect_excel_errors(path: Path):
     return errors
 
 
+# The Stage 9C gate compares five numeric statistics using exact equality.
+# openpyxl safe_string emits "%.16g", which can collapse a binary float such as
+# 13185720.000000002 to 13185720. These helpers patch only affected gate cells.
+STATS_PRECISION_METRICS = {
+    "Final_Net_Project_Equity",
+    "Partner1_Final_Entitlement",
+    "Partner2_Final_Entitlement",
+    "Final_Cash",
+}
+STATS_PRECISION_COLUMNS = (5, 6, 8, 10, 12)  # MIN, MAX, P10, P50, P90
+
+
+def patch_xlsx_numeric_values(output_path: str | Path, targets: dict[str, dict[str, int | float]]) -> dict:
+    """Patch selected numeric OOXML cells to exact round-trip decimal literals.
+
+    targets maps worksheet name -> cell reference -> expected numeric value.
+    Cells already equal as Python numbers are left unchanged. Every requested
+    cell is verified to exist exactly once.
+    """
+    output_path = Path(output_path)
+    namespaces = {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "office_rel": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+        "package_rel": "http://schemas.openxmlformats.org/package/2006/relationships",
+    }
+    rel_id_attr = "{" + namespaces["office_rel"] + "}id"
+    temp_fd, temp_name = tempfile.mkstemp(
+        prefix=output_path.stem + ".precision-",
+        suffix=output_path.suffix,
+        dir=str(output_path.parent),
+    )
+    os.close(temp_fd)
+    checked = 0
+    patched: list[str] = []
+    by_xml_path: dict[str, list[tuple[str, int | float]]] = {}
+    try:
+        with zipfile.ZipFile(output_path, "r") as source:
+            wb_root = ET.fromstring(source.read("xl/workbook.xml"))
+            rel_root = ET.fromstring(source.read("xl/_rels/workbook.xml.rels"))
+            relationships = {
+                rel.attrib["Id"]: rel.attrib["Target"]
+                for rel in rel_root.findall("package_rel:Relationship", namespaces)
+            }
+            sheet_paths = {}
+            for sheet in wb_root.findall("main:sheets/main:sheet", namespaces):
+                sheet_name = sheet.attrib["name"]
+                rel_id = sheet.attrib[rel_id_attr]
+                target = relationships[rel_id].replace("\\", "/")
+                if target.startswith("/"):
+                    xml_path = target.lstrip("/")
+                elif target.startswith("xl/"):
+                    xml_path = target
+                else:
+                    xml_path = posixpath.normpath(posixpath.join("xl", target))
+                sheet_paths[sheet_name] = xml_path
+
+            for sheet_name, cells in targets.items():
+                if sheet_name not in sheet_paths:
+                    raise RuntimeError(f"PRECISION_SHEET_MISSING: {sheet_name}")
+                xml_path = sheet_paths[sheet_name]
+                for cell_ref, value in cells.items():
+                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+                        raise RuntimeError(f"PRECISION_TARGET_NOT_FINITE_NUMERIC: {sheet_name}!{cell_ref}={value!r}")
+                    by_xml_path.setdefault(xml_path, []).append((cell_ref, value))
+
+            with zipfile.ZipFile(temp_name, "w") as dest:
+                for item in source.infolist():
+                    payload = source.read(item.filename)
+                    for cell_ref, expected in by_xml_path.get(item.filename, []):
+                        cell_pattern = re.compile(
+                            rb'(<c\b(?=[^>]*\br="' + re.escape(cell_ref.encode("ascii")) +
+                            rb'")[^>]*>.*?<v>)(.*?)(</v>.*?</c>)',
+                            flags=re.DOTALL,
+                        )
+                        match = cell_pattern.search(payload)
+                        checked += 1
+                        if match is None:
+                            raise RuntimeError(f"PRECISION_CELL_MISSING: {item.filename}/{cell_ref}")
+                        lexical = match.group(2).decode("ascii")
+                        try:
+                            current = float(lexical)
+                        except ValueError as exc:
+                            raise RuntimeError(
+                                f"PRECISION_CELL_NOT_NUMERIC: {item.filename}/{cell_ref}={lexical!r}"
+                            ) from exc
+                        if current != expected:
+                            exact_lexical = repr(expected) if isinstance(expected, float) else str(expected)
+                            payload, replacements = cell_pattern.subn(
+                                lambda m: m.group(1) + exact_lexical.encode("ascii") + m.group(3),
+                                payload,
+                                count=1,
+                            )
+                            if replacements != 1:
+                                raise RuntimeError(
+                                    f"PRECISION_CELL_PATCH_COUNT: {item.filename}/{cell_ref}={replacements}"
+                                )
+                            patched.append(f"{item.filename}!{cell_ref}")
+                    dest.writestr(item, payload)
+        os.replace(temp_name, output_path)
+    except Exception:
+        try:
+            os.unlink(temp_name)
+        except FileNotFoundError:
+            pass
+        raise
+    return {
+        "target_cells_verified": checked,
+        "cells_patched": len(patched),
+        "patched_cells": patched,
+        "numeric_cells_only": True,
+        "uses_tolerance_or_rounding": False,
+    }
+
+
+def save_workbook_preserving_stats_precision(workbook: Workbook, output_path: str | Path) -> dict:
+    """Save a workbook, restoring only gate cells changed by openpyxl serialization."""
+    targets: dict[str, dict[str, int | float]] = {}
+    for ws in workbook.worksheets:
+        if not ws.title.endswith("_STATS"):
+            continue
+        for row_idx in range(2, ws.max_row + 1):
+            metric = ws.cell(row_idx, 1).value
+            if metric not in STATS_PRECISION_METRICS:
+                continue
+            for col_idx in STATS_PRECISION_COLUMNS:
+                cell = ws.cell(row_idx, col_idx)
+                value = cell.value
+                if isinstance(value, float) and math.isfinite(value):
+                    serialized = float("%.16g" % value)
+                    if serialized != value:
+                        targets.setdefault(ws.title, {})[cell.coordinate] = value
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    workbook.save(output_path)
+    return patch_xlsx_numeric_values(output_path, targets) if targets else {
+        "target_cells_verified": 0,
+        "cells_patched": 0,
+        "patched_cells": [],
+        "numeric_cells_only": True,
+        "uses_tolerance_or_rounding": False,
+    }
+
+
 def build_workbook(
     dataset_root: str,
     output_path: str,
@@ -587,9 +737,9 @@ def build_workbook(
     expected=185
     if actual!=expected:
         return {"success":False,"sheets_count":actual,"excel_errors":[f"SHEET_COUNT:{actual}"],"path":str(output_path)}
-    wb.save(output_path)
+    precision_serialization = save_workbook_preserving_stats_precision(wb, output_path)
     errors_found=collect_excel_errors(Path(output_path))
-    return {"success":len(errors_found)==0,"sheets_count":actual,"excel_errors":errors_found,"path":str(output_path)}
+    return {"success":len(errors_found)==0,"sheets_count":actual,"excel_errors":errors_found,"path":str(output_path),"stats_precision_serialization":precision_serialization}
 
 
 def main():
