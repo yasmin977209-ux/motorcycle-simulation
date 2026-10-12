@@ -1,15 +1,16 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012",
-  "sha": "5f4933eed90cdd22fc8037a9785447b3fa510df0",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012",
+  "sha": "fc08d0ff2586661e2816311608140ec648739a35",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Gate A exact golden fingerprint evidence is accepted through PR #30: 11,005/11,005 trial SHA-256 matches, 22,546,465/22,546,465 daily rows, 25/25 scenarios and 20/20 aggregate gates passed. CP-C Gate B statistical evidence remains complete at N=300/N=600/N=1200 with no P50-triggered N=2400. Overall final stability remains blocked by the separate Stage 9C/CP-D gate. Stop here; do not execute CP-D or transition to another CP without explicit scope authorization.",
+  "next": "CP-D exact XLSX precision gate has passed and is being accepted under D-2026-10-12-02: 500/500 exact comparisons over the canonical 9,005-result Stage 9A dataset; original workbook/Parquet and trial identities unchanged. This does not change the historically accepted Stage 9C PARTIAL status because full daily accounting ledgers for all 9,005 trials remain unavailable. The separate raw pytest diagnostic remains non-PASS with five WORKFLOW_DEFECT cases and two K_TEST cases, all documented in the R4 record; no test was changed to satisfy the candidate. Stop after this CP; do not start Stage 10 or another CP in this execution.",
   "blockers": [
-    "Stage 9C/CP-D remains separate: PR #29 is open/draft; candidate Run 38165878333 is not a merged CP-D completion record."
+    "Full-repository raw diagnostic remains non-PASS (Run 38164248220): five tests in tests/test_stage3_path_integration.py fail with missing daily_engine._create_contract (WORKFLOW_DEFECT); tests/test_stage3b.py trace assertion and tests/test_stage3b_rollforward.py key spelling are K_TEST. These are out of the approved CP-D inventory, remain visible, and are not claimed PASS.",
+    "Historical Stage 9C overall status remains PARTIAL, as documented in docs/stage9c/STAGE9C_REPORT.md: a full daily accounting ledger for all 9,005 trials is unavailable. CP-D's 500-point export-consistency PASS does not upgrade Stage 9C to full PASS."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "5f4933eed90cdd22fc8037a9785447b3fa510df0",
+  "head_sha": "fc08d0ff2586661e2816311608140ec648739a35",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -83,12 +84,12 @@
     }
   },
   "governance_decision_log": {
-    "date": "2026-10-09",
+    "date": "2026-10-12",
     "file": "docs/governance/DECISIONS_LOG.md",
-    "pull_request": 15,
-    "branch": "tmp/governance-decisions-20261009",
-    "decision_log_commit": "7171d3f10794c09e7b621904b3dfc2ac7f9573be",
-    "note": "CP-A governance decisions are recorded; no engine, tests, or workflow changed. This state pointer identifies the source HEAD before the atomic PR merge."
+    "decision": "D-2026-10-12-02",
+    "topic": "cp_d_stage9c_canonical_xlsx_precision_gate_scope",
+    "blob_sha": "pending_commit_record",
+    "note": "Delegated decision fixes CP-D to the canonical 9,005-result Stage 9A dataset and 500 exact comparisons; Stage 13 625-sample gate remains separate. Overall Stage 9C PARTIAL is unchanged."
   },
   "governance_decisions": {
     "D-2026-10-10-01": {
@@ -137,6 +138,12 @@
       "historical_trial_id_range": "1..550",
       "non_c100_scenarios": 20,
       "no_resume_or_identity_change": true
+    },
+    "D-2026-10-12-02": {
+      "topic": "cp_d_stage9c_canonical_xlsx_precision_gate_scope",
+      "value": "CANONICAL_STAGE9A_9005_ROWS; 25_SCENARIOS_X_4_METRICS_X_5_STATS=500_EXACT_COMPARISONS; NO_TOLERANCE; STAGE13_625_COHORT_SEPARATE; DO_NOT_UPGRADE_HISTORICAL_STAGE9C_PARTIAL",
+      "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
+      "date": "2026-10-12"
     }
   },
   "preflight_merge": {
@@ -162,7 +169,7 @@
     "superseded_pr": 16,
     "merged_at": "2026-10-11T13:11:48Z"
   },
-  "run_id": 38179919488,
+  "run_id": 38165878333,
   "artifact_manifest": {
     "manifest_version": "gateb-n300-n600-n1200-p50-reassessment-v1",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
@@ -218,6 +225,63 @@
       "threshold_percent": 5,
       "escalation_required_scenarios": 0,
       "n2400_started": false
+    },
+    "stage9c_cp_d_20261012": {
+      "status": "PASS_CP_D_EXACT_XLSX_PRECISION_GATE_ONLY",
+      "pull_request": 29,
+      "pull_request_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/29",
+      "tested_head_sha": "2680335d365a8f923aec076f1fb72cb410f821fb",
+      "workflow_run_id": 38165878333,
+      "workflow_run_conclusion": "success",
+      "workflow_jobs_expected": 2,
+      "workflow_jobs_passed": 2,
+      "formal_regression_acceptance_path_inventory": "PASS",
+      "canonical_source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "canonical_stage7_run_id": 37225915321,
+      "canonical_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "master_seed": 20270101,
+      "canonical_scenarios": 25,
+      "canonical_trial_results": 9005,
+      "unique_trial_keys": 9005,
+      "comparison_count_expected": 500,
+      "comparison_count_exact": 500,
+      "mismatch_count": 0,
+      "metric_set": [
+        "Final_Net_Project_Equity",
+        "Partner1_Final_Entitlement",
+        "Partner2_Final_Entitlement",
+        "Final_Cash"
+      ],
+      "statistics": [
+        "MIN",
+        "P10",
+        "P50",
+        "P90",
+        "MAX"
+      ],
+      "quantile_method": "numpy.quantile(method=linear)",
+      "exact_equality_no_tolerance": true,
+      "worksheet_count": 185,
+      "stats_worksheets": 25,
+      "excel_error_cells": 0,
+      "formula_cells": 0,
+      "target_cells_patched": 1,
+      "target_cells_verified_after_write": 500,
+      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1",
+      "original_published_workbook_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
+      "precision_report_artifact_id": 11712830094,
+      "precision_report_artifact_sha256": "1b7e165f50dc402286b3ff50a1cf6d3eb664393de3549180fcd5e3ff0b00e18e",
+      "inventory_artifact_id": 11712122192,
+      "inventory_artifact_sha256": "949f39113375bf0476b22ece06a194e0e3ba4e2d0bee29834b49bf3df9c82856",
+      "raw_pytest_run_id": 38164248220,
+      "raw_pytest_result": "11 failed, 338 passed, 1 skipped, 1 warning",
+      "raw_pytest_head_sha": "f91120271475d0d35652a4ea9da45484b85ba9e2",
+      "raw_pytest_disposition": "Four temporary Stage 5 fixture failures resolved by the later accepted fixture-first inventory. Seven out-of-inventory failures remain documented: five WORKFLOW_DEFECT missing _create_contract; two K_TEST (trace disabled in older test; typo in expected rollforward key). No test was modified to satisfy the code.",
+      "historical_trials_rerun": false,
+      "original_workbook_modified": false,
+      "source_parquet_or_metadata_modified": false,
+      "engine_or_rng_changed": false,
+      "historical_stage9c_status": "PARTIAL_ACCEPTED; CP-D DOES NOT UPGRADE TO FULL PASS"
     }
   },
   "cp_c_20261012": {
@@ -287,5 +351,14 @@
       "Stage 10 metadata literal backslash-n suffix",
       "Stage 11 Stage 10 head summary is 39 characters while live run API head is 40 characters"
     ]
+  },
+  "cp_d_20261012": {
+    "status": "PASS_CP_D_EXACT_XLSX_PRECISION_GATE_ONLY",
+    "decision": "D-2026-10-12-02",
+    "run_id": 38165878333,
+    "tested_head_sha": "2680335d365a8f923aec076f1fb72cb410f821fb",
+    "full_stage9c_status": "PARTIAL",
+    "additional_raw_pytest_failures_resolved": false,
+    "stop_after_cp": true
   }
 }
