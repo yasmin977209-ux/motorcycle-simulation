@@ -1,16 +1,15 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012",
-  "sha": "fc08d0ff2586661e2816311608140ec648739a35",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012",
+  "sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-D exact XLSX precision gate has passed and is being accepted under D-2026-10-12-02: 500/500 exact comparisons over the canonical 9,005-result Stage 9A dataset; original workbook/Parquet and trial identities unchanged. This does not change the historically accepted Stage 9C PARTIAL status because full daily accounting ledgers for all 9,005 trials remain unavailable. The separate raw pytest diagnostic remains non-PASS with five WORKFLOW_DEFECT cases and two K_TEST cases, all documented in the R4 record; no test was changed to satisfy the candidate. Stop after this CP; do not start Stage 10 or another CP in this execution.",
+  "next": "Stage 9C ledger re-audit C-1..C-6 PASS from existing, identity-matched Stage 12 accounting ledger and CP-D exact XLSX evidence. The candidate state update is on tmp/stage9c-ledger-reaudit-20261012 and is NOT merged; main retains its prior state until separately authorized merge. Stop here: do not start Stage 10 or another CP in this execution. The seven out-of-inventory raw pytest findings remain visible; no repo-wide all-tests PASS is claimed.",
   "blockers": [
-    "Full-repository raw diagnostic remains non-PASS (Run 38164248220): five tests in tests/test_stage3_path_integration.py fail with missing daily_engine._create_contract (WORKFLOW_DEFECT); tests/test_stage3b.py trace assertion and tests/test_stage3b_rollforward.py key spelling are K_TEST. These are out of the approved CP-D inventory, remain visible, and are not claimed PASS.",
-    "Historical Stage 9C overall status remains PARTIAL, as documented in docs/stage9c/STAGE9C_REPORT.md: a full daily accounting ledger for all 9,005 trials is unavailable. CP-D's 500-point export-consistency PASS does not upgrade Stage 9C to full PASS."
+    "Full-repository raw diagnostic remains non-PASS (Run 38164248220): five tests in tests/test_stage3_path_integration.py fail with missing daily_engine._create_contract (WORKFLOW_DEFECT); tests/test_stage3b.py trace assertion and tests/test_stage3b_rollforward.py key spelling are K_TEST. These seven out-of-inventory findings remain visible; no test was changed to satisfy the candidate and no repo-wide all-tests PASS is claimed."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "fc08d0ff2586661e2816311608140ec648739a35",
+  "head_sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -360,5 +359,95 @@
     "full_stage9c_status": "PARTIAL",
     "additional_raw_pytest_failures_resolved": false,
     "stop_after_cp": true
+  },
+  "stage9c_ledger_reaudit_20261012": {
+    "status": "PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT",
+    "scope": "User-approved read-only reassessment of the 9,005-trial Stage 9A cohort using the existing identity-matched Stage 12 daily-accounting ledger; no simulation or trial rerun.",
+    "canonical_identity": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "stage9a_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "target_scenarios": 25,
+      "target_trials": 9005,
+      "target_trial_scope": "trial_id 1..450 for 20 non-C100 scenarios; trial_id 1 for five C100 scenarios"
+    },
+    "subset_reconciliation": {
+      "exact_trial_hash_matches": 9005,
+      "expected_trial_hash_matches": 9005,
+      "hash_mismatches": 0,
+      "scenario_reports_passed": 25,
+      "scenario_reports_expected": 25,
+      "aggregate_gates_passed": 20,
+      "aggregate_gates_expected": 20,
+      "target_daily_rows": 18449224,
+      "target_daily_rows_basis": "sum of existing Gate A scenario artifact trial_comparisons[].daily_rows for only the canonical Stage 9A trial IDs; computed read-only, no data rows were regenerated",
+      "stage12_superset_trials": 11005,
+      "stage12_superset_daily_rows": 22546465,
+      "stage12_global_aggregate_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+    },
+    "accounting_validation": {
+      "rollforward_status": "PASS",
+      "rollforward_report_blob_sha": "6084e8f68fa649fcf0726daa04f41ae9b0636706",
+      "rollforward_rows_checked_full_stage12": 22546465,
+      "rollforward_violations": 0,
+      "closure_balance_status": "PASS",
+      "closure_report_blob_sha": "81bc3cd9c7666487b69b644dcc3291d0547c8e8b",
+      "closure_rows_checked_full_stage12": 22546465,
+      "closure_violations": 0,
+      "equivalent_schema_version": "stage12-daily-accounting-v1",
+      "schema_version_deviation_documented": true
+    },
+    "exact_xlsx_gate": {
+      "status": "PASS",
+      "run_id": 38165878333,
+      "tested_head_sha": "2680335d365a8f923aec076f1fb72cb410f821fb",
+      "comparisons_expected": 500,
+      "comparisons_exact": 500,
+      "mismatches": 0,
+      "worksheet_count": 185,
+      "stats_worksheets": 25,
+      "excel_error_cells": 0,
+      "formula_cells": 0,
+      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84b1",
+      "original_published_workbook_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
+      "original_workbook_modified": false
+    },
+    "supporting_run_ids": {
+      "stage7_source": 37225915321,
+      "stage12_daily_ledger": 37964656154,
+      "stage12_rollforward_validation": 37971902520,
+      "stage12_closure_validation": 37972735159,
+      "gate_a_fingerprint_bridge": 38169163565,
+      "cp_d_exact_xlsx": 38165878333,
+      "raw_pytest_diagnostic": 38164248220
+    },
+    "gate_results": {
+      "C-1_source_identity": "PASS",
+      "C-2_trial_identity_and_hashes": "PASS",
+      "C-3_daily_rollforward": "PASS",
+      "C-4_daily_balance_and_closure": "PASS",
+      "C-5_effective_acceptance_inventory": "PASS",
+      "C-6_exact_parquet_to_xlsx_stats": "PASS"
+    },
+    "raw_repository_diagnostic": {
+      "status": "NON_PASS_OUT_OF_INVENTORY",
+      "run_id": 38164248220,
+      "exact_result": "11 failed, 338 passed, 1 skipped, 1 warning",
+      "known_remaining": "five WORKFLOW_DEFECT missing _create_contract cases and two K_TEST cases (execution_trace not enabled in old test; expected rollforward key spelling)"
+    },
+    "immutability": {
+      "simulation_or_trials_executed": false,
+      "historical_trial_data_modified": false,
+      "historical_parquet_or_metadata_modified": false,
+      "production_engine_or_rng_changed": false,
+      "tests_modified": false,
+      "workflow_run_started": false
+    },
+    "report": {
+      "file": "Stage9C_Ledger_Reaudit_R4_AR.md",
+      "sha256": "5dcb6ed2f4f0369af93fb732a25a1f72b58de5bc30f5e58e9b042b1559f7e1e9",
+      "repository_committed": false
+    },
+    "canonicalization_status": "PROPOSED_ON_TEMP_BRANCH_NOT_MERGED; main remains unchanged until separately authorized merge"
   }
 }
