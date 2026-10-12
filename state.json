@@ -1,15 +1,13 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012",
-  "sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012",
+  "sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Stage 9C = PASS based on the completed C-1..C-6 re-audit recorded under PR #38, merged as 74b103cd782c9e75e210a090c94fbcb4b01844c4. The only remaining blocker is the repository-wide pytest diagnostic NON-PASS (Run 38164248220): five WORKFLOW_DEFECT cases in tests/test_stage3_path_integration.py, one K_TEST execution_trace case in tests/test_stage3b.py, and one K_TEST OwnERSHIP-key typo in tests/test_stage3b_rollforward.py. CP-3B-PYTEST-DEFECT-INVESTIGATION is complete; await the user's separate decision/authorization for the CP-3B-PYTEST-DEFECT-FIX scope. Do not start the repair CP or Stage 10 without explicit authorization.",
-  "blockers": [
-    "Repository-wide raw pytest diagnostic remains NON-PASS (Run 38164248220): five WORKFLOW_DEFECT cases in tests/test_stage3_path_integration.py due to missing daily_engine._create_contract; one K_TEST case in tests/test_stage3b.py because execution_trace is not enabled in the old test; one K_TEST case in tests/test_stage3b_rollforward.py due to the expected Gross_Writeoffs_On_OwnERSHIP key typo. CP-3B-PYTEST-DEFECT-INVESTIGATION is complete; repair scope awaits separate user authorization. No pytest-wide PASS is claimed."
-  ],
+  "next": "CP-3B-PYTEST-DEFECT-FIX passed its targeted regression and repository-wide pytest gates on candidate branch tmp/cp3b-pytest-defect-fix-20261012. Main remains unchanged at 9eb7abd01499fd6b38d81e3e061ab1cbe27ae035. Review the candidate branch; no PR, merge, or stage transition is authorized by this CP.",
+  "blockers": [],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
+  "head_sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -458,5 +456,111 @@
     "pull_request": 38,
     "merge_commit_sha": "74b103cd782c9e75e210a090c94fbcb4b01844c4",
     "link": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/38"
+  },
+  "cp3b_pytest_defect_fix_20261012": {
+    "status": "PASS_TEST_GATES_ON_CANDIDATE_BRANCH",
+    "branch": "tmp/cp3b-pytest-defect-fix-20261012",
+    "code_commit_sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
+    "tested_head_sha": "3e01bf1f8a8155cff81f25f933d2d4b210336870",
+    "tested_head_workflow_note": "The tested SHA included a temporary verification workflow later removed from the clean candidate branch. The four code/test file Git blob SHAs below were independently compared and are identical to the tested versions.",
+    "run_id": 38314258251,
+    "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38314258251",
+    "run_conclusion": "success",
+    "targeted_tests": [
+      {
+        "path": "tests/test_stage3_path_integration.py",
+        "passed": 5,
+        "failed": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/test_stage3b_path1.py",
+        "passed": 1,
+        "failed": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/test_stage3b_paths.py",
+        "passed": 5,
+        "failed": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/test_stage3b.py",
+        "passed": 6,
+        "failed": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/test_stage3b_rollforward.py",
+        "passed": 1,
+        "failed": 0,
+        "exit_code": 0
+      },
+      {
+        "path": "tests/test_stage3b_m_order.py",
+        "passed": 3,
+        "failed": 0,
+        "exit_code": 0
+      }
+    ],
+    "full_suite": {
+      "command": "python -m pytest -q tests",
+      "passed": 370,
+      "failed": 0,
+      "skipped": 1,
+      "warnings": 1,
+      "duration_seconds": 427.38,
+      "exit_code": 0
+    },
+    "fixture_builder": {
+      "conclusion": "success",
+      "worker_equivalence_manifest_rows": 3,
+      "worker_equivalence_exact_all": true
+    },
+    "artifact_manifest": {
+      "artifact_id": 11776147957,
+      "name": "cp3b-pytest-verification-report",
+      "zip_sha256": "b1418edc0128774d47810571c9fe38397aa2338d6d76609d33b9ca1519f9b363",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38314258251/artifacts/11776147957"
+    },
+    "identical_file_blobs": [
+      {
+        "path": "daily_engine.py",
+        "git_blob_sha": "0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964"
+      },
+      {
+        "path": "tests/test_stage3_path_integration.py",
+        "git_blob_sha": "5826e693ad118838c648696291b20bbea3f2ad0b"
+      },
+      {
+        "path": "tests/test_stage3b.py",
+        "git_blob_sha": "c567a19a78a589be0fef854a8a0ec955e0c8612c"
+      },
+      {
+        "path": "tests/test_stage3b_rollforward.py",
+        "git_blob_sha": "9f8c4cc690e8817c2dde809063508bc823a9122e"
+      }
+    ],
+    "changes": {
+      "daily_engine.py": "Added legacy _create_contract adapter delegating to _new_contract; _new_contract unchanged.",
+      "tests/test_stage3b.py": "Enabled _execution_trace_enabled in the older M1-M17 test; M1-M17 assertion unchanged.",
+      "tests/test_stage3b_rollforward.py": "Corrected Gross_Writeoffs_On_OwnERSHIP to Gross_Writeoffs_On_Ownership; accounting.py unchanged.",
+      "tests/test_stage3_path_integration.py": "Aligned test setup to current BikeState enum values and iterated project.contracts.values() rather than dict keys; no production path logic changed."
+    },
+    "r4_limitation": {
+      "stage3b_preserved_missing_files": [
+        "tests/test_stage3_path_integration.py",
+        "tests/test_stage3b_rollforward.py"
+      ],
+      "note": "Historical three-way comparison is unavailable for these absent historical files; no historical equality is claimed. The specific repairs were explicitly authorized within the user's CP scope, and validation compares against the current main model and available reference requirements."
+    },
+    "governance": {
+      "main_unchanged": true,
+      "main_sha": "9eb7abd01499fd6b38d81e3e061ab1cbe27ae035",
+      "pull_request_opened": false,
+      "merged": false,
+      "next_action": "User review only; do not open PR, merge, or advance stage without separate explicit authorization."
+    }
   }
 }
