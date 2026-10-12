@@ -3,19 +3,19 @@
 from datetime import date, timedelta
 
 import daily_engine
-from entities import ContractStatus, ContractType, Project
+from entities import BikeState, ContractStatus, ContractType, Project
 
 
 def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
     project = daily_engine.create_initial_project(recovery_rate_pct=100)
     target = project.bikes[0]
     for bike in project.bikes[1:]:
-        bike.current_state = "HELD_AS_ASSET"
+        bike.current_state = BikeState.HELD_AS_ASSET
         bike.current_contract_id = None
         bike.current_tenant_id = None
     if blocker:
         spare = project.bikes[1]
-        spare.current_state = "PREP"
+        spare.current_state = BikeState.PREP
         spare.prep_paid = True
         spare.customs_paid = True
         spare.actual_ready_date = date(2099, 1, 1)
@@ -24,11 +24,11 @@ def _isolated_project(*, blocker=True) -> tuple[Project, object, object]:
 
 
 def _activate_contract(project: Project, bike, contract_type: ContractType, start_date: date):
-    contract = daily_engine._create_contract(project, bike, contract_type, start_date)
+    contract = daily_engine._new_contract(project, bike, contract_type, start_date)
     bike.current_state = (
-        "ACTIVE_PRIMARY"
+        BikeState.ACTIVE_PRIMARY
         if contract_type is ContractType.PRIMARY
-        else "ACTIVE_SECONDARY"
+        else BikeState.ACTIVE_SECONDARY
     )
     bike.current_contract_id = contract.contract_id
     bike.current_tenant_id = contract.tenant_id
@@ -198,7 +198,7 @@ def test_path5_repeated_secondary_default_two_cycles():
         1 for event in target.lifecycle_history
         if event.event_type.value == "SECONDARY_TERMINATED"
     )
-    assert len([c for c in project.contracts if c.contract_type is ContractType.SECONDARY]) >= 2
+    assert len([c for c in project.contracts.values() if c.contract_type is ContractType.SECONDARY]) >= 2
     assert secondary_starts >= 1
     assert secondary_terminations >= 2
 

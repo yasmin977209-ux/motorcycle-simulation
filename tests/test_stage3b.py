@@ -20,7 +20,7 @@ def test_ch11_partner_memo_off_balance_sheet():
     assert after["Total_Assets"]==before["Total_Assets"] and after["Total_Equity"]==before["Total_Equity"]
 
 def test_ch12_exact_m1_to_m17_order():
-    p=create_initial_project(); run_day(p,date(2027,1,1),1.0, "C100_G100",1,100)
+    p=create_initial_project(); p._execution_trace_enabled=True; run_day(p,date(2027,1,1),1.0, "C100_G100",1,100)
     assert p.execution_trace[-1]==[f"M{i}" for i in range(1,18)]
 
 def test_ch13_dynamic_closure_conditions():

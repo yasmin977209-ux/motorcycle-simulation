@@ -1,0 +1,45 @@
+# R4 — Stage 13.3 sample replay, representatives, workbook gate
+
+Date: 2026-10-10  
+Scope: new, isolated 25-trial-per-scenario cohort; no engine/RNG/reference/test edits and no main/state.json changes.
+
+## Three-source review
+
+| Item | Current main | \`stage3b-preserved\` | Authoritative reference | Judgment |
+|---|---|---|---|---|
+| P50/P10/P90 rule | \`monte_carlo.select_representative_trials\` uses \`numpy.quantile(..., method='linear')\` and breaks nearest-value ties by smallest \`trial_id\`. | \`monte_carlo.py\` was not found on this diagnostic branch; no selector behavior is inferred. | §§14.5–14.6: P50/P10/P90 are chosen by closeness to the linear quantiles of \`Final_Net_Project_Equity\`, tie-break by smallest ID. | MATCH for P10/P50/P90 mechanics. |
+| Loss Case | Current main chooses the smallest signed equity (then smallest ID), not the smallest absolute value. | Equivalent MC selector is unavailable on this branch; no copy is authorized. | §14.6 defines Loss Case as minimum \`abs(Final_Net_Project_Equity)\`, including positive equities. | Existing \`K_CODE\` deviation identified. New runner applies the user-authorized criterion; no engine selector was silently changed. |
+| Max Case | No Max Case role exists in the current selector. | No equivalent selector available. | §§14.6/15.3 enumerate four roles and do not include Max Case. | Explicit user override adds Max Case = maximum absolute equity; ties choose smallest ID as deterministic extension of existing tie-break convention. |
+| Sample size | Canonical dataset identity is 11,005 trials: 550 for each non-C100 scenario and 1 for each C100 scenario. | Preserved engine is diagnostic only. | Statistical policy uses C100=1 and non-C100=300 with +50 escalations; this is not the same as a 25-per-scenario stability sample. | Explicit user command authorizes a distinct 25-trial-per-scenario export cohort. It must remain a separate dataset; it cannot inherit canonical Gate A/B PASS. |
+| Workbook structure | Canonical builder file \`excel_builder.py\` is not present at the expected root path on main. Historical Stage 9A workbook is for 9,005 trials only. | No authoritative workbook builder to copy from this branch. | §§15.2–15.4 require 185 worksheets: 10 global + 7 per scenario; Python is accounting truth and Excel is the presentation/export layer. | The runner emits canonical trial results and selected-case payloads; the local workbook export must still be checked for 185 sheets and zero Excel errors. |
+| Workflow trigger | Existing \`stage4-acceptance-port.yml\` uses \`stage4-verify-*\`; prior workflow audit identified this as the only known wildcard trigger. Stage 12 materialization workflow used a specific pinned branch. | \`stage3b-verification.yml\` triggers on \`main\` and includes \`workflow_dispatch\`; it is diagnostic only and is not copied. | Project rules prohibit \`workflow_dispatch\` in the approved execution path, require exact branch pinning, no self-dispatch, and job-level timeout. | Proposed Stage13.3 workflow pins only \`tmp/stage13.3-final-excel-20261010\`; this name does not match \`stage4-verify-*\` or the known pinned Stage12 branch. Timeout is inside the job and no dispatch/self-dispatch is used. |
+| Acceptance/testing | \`requirements.txt\` includes pytest and pyarrow. No production engine/test edit is proposed. | Test source is older and not copied. | Reference §16 has 163 inventory tests; governance documents 162 effective checks with Test158 excluded as K_TEST. | Run the current repository tests as evidence. Any test failure remains a failure; no test is modified to accommodate the run. |
+
+## Selected execution controls
+
+- New branch only: \`tmp/stage13.3-final-excel-20261010\`; do not merge and do not change \`main\` or \`state.json\`.
+- \`SOURCE_SHA\` is bound to \`f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b\`; the workflow checks that the authoritative engine/RNG/accounting files have not changed relative to that commit.
+- Run exactly \`trial_id=26..50\` for every one of the 25 scenario IDs, giving 625 initial results. This is a newly materialized diagnostic/export cohort and is never combined with the canonical 11,005-trial cohort.
+- Select five roles per scenario. P10/P50/P90 use the linear quantile and nearest result; ties use the smallest ID. Loss Case minimizes absolute final equity; Max Case maximizes absolute final equity; both use the smallest ID for ties. Roles may share a trial ID.
+- Unique selected trial IDs are re-run with event logging enabled. They must match the initial summary bit-for-bit on every \`TrialResult\` field. Every detailed replay must close, its daily balance differences must all be zero, and its final equity must equal the closing \`Total_Equity\`.
+- The 20-point definition is versioned in \`20point_gate_definition.json\`: 4 named final metrics × 5 exact statistics per scenario = 20 points per scenario, 500 points over all 25 scenarios. The actual PASS/FAIL decision can only be issued after the exported XLSX has been reopened and checked independently against \`trial_results.parquet\`.
+- This consistency gate is not the statistical stability Gate A or Gate B. No sample-size/stability PASS is claimed for 25 trials.
+
+## K_SPEC Classification (Run 38075354263)
+
+- Classification: K_SPEC
+- Evidence: comparison_result = CORE_PROPERTIES_OR_CONTAINER_METADATA_ONLY
+- Only differing ZIP member: docProps/core.xml (openpyxl timestamps)
+- Content SHA excluding core.xml: 39122f4c... (identical)
+- Fix: replace raw SHA gate with content SHA gate
+- Accepted baseline raw SHA: 26452c0a... (preserved, not modified)
+- New expected content SHA: 39122f4c3a80973d422fba1f10e7f6eeaa22b6cd2e2df46a4d059fb2f141ef6f
+
+## Minor Issue (Not Fixed in This CP)
+
+- Field: matches_run_log_sha256 in stage13-excel-forensic-compare.yml
+- Issue: value written with 62 chars instead of 64
+- Impact: cosmetic (helper verification field)
+- Classification: minor, non-blocking
+- Action: recorded only, not fixed in CP-C-fix
+

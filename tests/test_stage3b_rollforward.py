@@ -46,7 +46,7 @@ def test_ch10_rollforward_equations_and_fixed_fields() -> None:
         assert set(asset) == {
             "Opening_Gross_Bike_Assets",
             "Capitalized_Purchases_And_Customs",
-            "Gross_Writeoffs_On_OwnERSHIP",
+            "Gross_Writeoffs_On_Ownership",
             "Closing_Gross_Bike_Assets",
             "Opening_Accumulated_Depreciation",
             "Depreciation_Expense",
