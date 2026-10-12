@@ -2,12 +2,12 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012",
-  "sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
+  "sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-3B-PYTEST-DEFECT-FIX passed its targeted regression and repository-wide pytest gates on candidate branch tmp/cp3b-pytest-defect-fix-20261012. Main remains unchanged at 9eb7abd01499fd6b38d81e3e061ab1cbe27ae035. Review the candidate branch; no PR, merge, or stage transition is authorized by this CP.",
+  "next": "CP-3B-PYTEST-DEFECT-FIX is complete and merged via PR #40 (squash commit 07cfb2ec122d6ae5bb60b81680b3b8b5b5047116). No current blockers (blockers = []). The repository is ready for the final comprehensive audit; do not start the final audit until separate explicit user authorization.",
   "blockers": [],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
+  "head_sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -359,6 +359,10 @@
     "stop_after_cp": true
   },
   "full_stage9c_status": "PASS",
+  "repository_status": "ALL_KNOWN_BLOCKERS_CLOSED",
+  "repository_status_since": "2026-10-12",
+  "repository_status_based_on": "CP-3B-PYTEST-DEFECT-FIX merged via PR #40",
+  "repository_status_evidence": "pytest Run 38314258251 = 370 passed, 0 failed",
   "full_stage9c_status_since": "2026-10-12",
   "full_stage9c_status_based_on": "Stage9C_reaudit_C1_to_C6",
   "full_stage9c_status_pr": 38,
@@ -458,7 +462,7 @@
     "link": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/38"
   },
   "cp3b_pytest_defect_fix_20261012": {
-    "status": "PASS_TEST_GATES_ON_CANDIDATE_BRANCH",
+    "status": "MERGED_INTO_MAIN_VIA_PR_40",
     "branch": "tmp/cp3b-pytest-defect-fix-20261012",
     "code_commit_sha": "b30b9db4f2cbe183b47a2d6e9a5bb90b11a49a1d",
     "tested_head_sha": "3e01bf1f8a8155cff81f25f933d2d4b210336870",
@@ -556,11 +560,16 @@
       "note": "Historical three-way comparison is unavailable for these absent historical files; no historical equality is claimed. The specific repairs were explicitly authorized within the user's CP scope, and validation compares against the current main model and available reference requirements."
     },
     "governance": {
-      "main_unchanged": true,
-      "main_sha": "9eb7abd01499fd6b38d81e3e061ab1cbe27ae035",
-      "pull_request_opened": false,
-      "merged": false,
-      "next_action": "User review only; do not open PR, merge, or advance stage without separate explicit authorization."
-    }
+      "main_unchanged": false,
+      "main_sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
+      "pull_request_opened": true,
+      "merged": true,
+      "next_action": "Merged via PR #40, main HEAD 07cfb2ec122d6ae5bb60b81680b3b8b5b5047116. Do not start final audit until separate explicit user authorization."
+    },
+    "pull_request": 40,
+    "merge_commit_sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
+    "merge_method": "squash",
+    "merge_link": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/40",
+    "merged_at": "2026-10-12T22:25:56Z"
   }
 }
