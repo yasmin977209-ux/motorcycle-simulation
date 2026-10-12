@@ -134,6 +134,17 @@ def _new_contract(
     return contract
 
 
+# Adapter للتوافق التاريخي فقط؛ لا يضيف منطقاً لإنشاء العقد.
+def _create_contract(
+    project: Project,
+    bike: Bike,
+    contract_type: ContractType,
+    current_date: date,
+) -> Contract:
+    """واجهة توافق تاريخية — تُفوّض إلى _new_contract."""
+    return _new_contract(project, bike, contract_type, current_date)
+
+
 def _event(
     project: Project,
     current_date: date,
