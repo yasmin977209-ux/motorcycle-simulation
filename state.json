@@ -4,9 +4,9 @@
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012",
   "sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Stage 9C ledger re-audit C-1..C-6 PASS from existing, identity-matched Stage 12 accounting ledger and CP-D exact XLSX evidence. The candidate state update is on tmp/stage9c-ledger-reaudit-20261012 and is NOT merged; main retains its prior state until separately authorized merge. Stop here: do not start Stage 10 or another CP in this execution. The seven out-of-inventory raw pytest findings remain visible; no repo-wide all-tests PASS is claimed.",
+  "next": "Stage 9C = PASS based on the completed C-1..C-6 re-audit recorded under PR #38, merged as 74b103cd782c9e75e210a090c94fbcb4b01844c4. The only remaining blocker is the repository-wide pytest diagnostic NON-PASS (Run 38164248220): five WORKFLOW_DEFECT cases in tests/test_stage3_path_integration.py, one K_TEST execution_trace case in tests/test_stage3b.py, and one K_TEST OwnERSHIP-key typo in tests/test_stage3b_rollforward.py. CP-3B-PYTEST-DEFECT-INVESTIGATION is complete; await the user's separate decision/authorization for the CP-3B-PYTEST-DEFECT-FIX scope. Do not start the repair CP or Stage 10 without explicit authorization.",
   "blockers": [
-    "Full-repository raw diagnostic remains non-PASS (Run 38164248220): five tests in tests/test_stage3_path_integration.py fail with missing daily_engine._create_contract (WORKFLOW_DEFECT); tests/test_stage3b.py trace assertion and tests/test_stage3b_rollforward.py key spelling are K_TEST. These seven out-of-inventory findings remain visible; no test was changed to satisfy the candidate and no repo-wide all-tests PASS is claimed."
+    "Repository-wide raw pytest diagnostic remains NON-PASS (Run 38164248220): five WORKFLOW_DEFECT cases in tests/test_stage3_path_integration.py due to missing daily_engine._create_contract; one K_TEST case in tests/test_stage3b.py because execution_trace is not enabled in the old test; one K_TEST case in tests/test_stage3b_rollforward.py due to the expected Gross_Writeoffs_On_OwnERSHIP key typo. CP-3B-PYTEST-DEFECT-INVESTIGATION is complete; repair scope awaits separate user authorization. No pytest-wide PASS is claimed."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "0d1de4ae5f3a09e96c26c4296566ee7b1b9ea5e0",
@@ -360,6 +360,12 @@
     "additional_raw_pytest_failures_resolved": false,
     "stop_after_cp": true
   },
+  "full_stage9c_status": "PASS",
+  "full_stage9c_status_since": "2026-10-12",
+  "full_stage9c_status_based_on": "Stage9C_reaudit_C1_to_C6",
+  "full_stage9c_status_pr": 38,
+  "full_stage9c_status_merge_sha": "74b103cd782c9e75e210a090c94fbcb4b01844c4",
+  "full_stage9c_status_supersedes": "cp_d_20261012.full_stage9c_status",
   "stage9c_ledger_reaudit_20261012": {
     "status": "PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT",
     "scope": "User-approved read-only reassessment of the 9,005-trial Stage 9A cohort using the existing identity-matched Stage 12 daily-accounting ledger; no simulation or trial rerun.",
@@ -448,6 +454,9 @@
       "sha256": "5dcb6ed2f4f0369af93fb732a25a1f72b58de5bc30f5e58e9b042b1559f7e1e9",
       "repository_committed": false
     },
-    "canonicalization_status": "PROPOSED_ON_TEMP_BRANCH_NOT_MERGED; main remains unchanged until separately authorized merge"
+    "canonicalization_status": "MERGED_INTO_MAIN_VIA_PR_38; merge_commit_sha=74b103cd782c9e75e210a090c94fbcb4b01844c4",
+    "pull_request": 38,
+    "merge_commit_sha": "74b103cd782c9e75e210a090c94fbcb4b01844c4",
+    "link": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/38"
   }
 }
