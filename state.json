@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013",
-  "sha": "9b799dece44d873a68d1809a59b4211b0f76f6fc",
+  "sha": "36f865066dd036c3827778830544ba48224a80b6",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-STATISTICAL-DOUBLING-20261013 PASSED on tmp/stage7.1-statistical-doubling-20261013; no Monte Carlo rerun or historical dataset mutation. Next CP: reconcile generic Gate A with exact golden identity and resolve Stage 11 topology / Stage 13 assembler before final delivery.",
   "blockers": [
@@ -424,7 +424,7 @@
       "stats_worksheets": 25,
       "excel_error_cells": 0,
       "formula_cells": 0,
-      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84b1",
+      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1",
       "original_published_workbook_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
       "original_workbook_modified": false
     },
