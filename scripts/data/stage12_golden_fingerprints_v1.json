@@ -198,6 +198,7 @@
   "scenario_count_expected": 25,
   "scenarios": {
     "C030_G000": {
+      "historical_trial_result_fingerprint_sha256": "2cb52a9170f835ac8daae7588f95d3aa086a73cd0200b1aa97c4e618dcbb3b8b",
       "trial_hashes": {
         "1": "1582ebd197dff0c550a7788053785836919dfdb8b68c39feab188aac63627f19",
         "10": "0f6b92614202f8216d2a71777c040234e892b010d8d3b014b8d61755e884a9de",
@@ -752,6 +753,7 @@
       }
     },
     "C030_G030": {
+      "historical_trial_result_fingerprint_sha256": "a5541d72c212e3953c4ed11b1fe03ab9e89ba00f1c0b05348f413cc13822691b",
       "trial_hashes": {
         "1": "50873b7ff51ae3c00cfcc2d6acd6027c021d5b6db0ea5d1ce55a6787dcb466c2",
         "10": "85f2b649fdec444691a2497ca85345cabe55250bea1e3341a65c31ebe905f231",
@@ -1306,6 +1308,7 @@
       }
     },
     "C030_G050": {
+      "historical_trial_result_fingerprint_sha256": "ce59996de32731bde321006f194142854737793871123e741df21191e0391c4b",
       "trial_hashes": {
         "1": "d4311220135d12bfaf8c8d95014d5d674e8752a2faa522faa2e178e556de5bac",
         "10": "e18873d6761470addbff62eec39c815874d55e2649b2ae99226e05ab6ae7f30c",
@@ -1860,6 +1863,7 @@
       }
     },
     "C030_G070": {
+      "historical_trial_result_fingerprint_sha256": "8de72e47111abc1c7e15a1460001bfa3020a2bbf8c8ceaf82deed16abf4df690",
       "trial_hashes": {
         "1": "2a03a2929dcd803e9000a3d7e6c44ca6a481a6005f743782516a26a9042dea99",
         "10": "11ec68284ecc40b1ae743a83e235cb37088ce747a4f9852ca3d3cb9b463cafd7",
@@ -2414,6 +2418,7 @@
       }
     },
     "C030_G100": {
+      "historical_trial_result_fingerprint_sha256": "307bd866bfe0322adec7a283ab9a29e86d8cb299d2dd15f2770922ca4cd11308",
       "trial_hashes": {
         "1": "68d22ab5b1994d5db97e48cb625ecbf779a2d472af6cb2603bd1b60aebd44aeb",
         "10": "ea8231720951ddaa4683636b5e66db762f6640381642e2be2274181da71af451",
@@ -2968,6 +2973,7 @@
       }
     },
     "C050_G000": {
+      "historical_trial_result_fingerprint_sha256": "2e6bda707dc44882fdca6ba10c1249992b6d529d33574872d759c7b883ed2188",
       "trial_hashes": {
         "1": "3a5f60c9d648b4bbaf0784167cf3815d22e3f412bb141f1a9e13db7afea254c5",
         "10": "9e45fd2adebc64636c15f4a93715045555a68feca663b21723b5bf4c7c1be692",
@@ -3522,6 +3528,7 @@
       }
     },
     "C050_G030": {
+      "historical_trial_result_fingerprint_sha256": "fbc857a1318fe87e7eeca4a1879c8424a308b1a53ad02506969d24fb98491196",
       "trial_hashes": {
         "1": "6b4abb93bc2f19b444568c4b116386b08fe5fbf30424727be80b5d1e9d0114c3",
         "10": "8b6aeb15fc231167e48ddc9f7d41e12b56d4cc63076275647d4902238d9c4f58",
@@ -4076,6 +4083,7 @@
       }
     },
     "C050_G050": {
+      "historical_trial_result_fingerprint_sha256": "ede8c949c11f7215534bf34232ca918542e5b2e18152f8723208e5a13c6b95c8",
       "trial_hashes": {
         "1": "0aa9d82877580067407b88d3189557cbdce45e66eaa64bf447fe8ca16a488156",
         "10": "584848ec4ecd8ba86789e2a30763bc46cac236b98ac146daea95edb1f83f5d56",
@@ -4630,6 +4638,7 @@
       }
     },
     "C050_G070": {
+      "historical_trial_result_fingerprint_sha256": "22ecf74930ff07b7318faf53f4929b343cb1c9bad93d3cccb69eeb599ee7539b",
       "trial_hashes": {
         "1": "035e2f2e39dbdb154e916c7f79a6a172f0cfe4ba7835af8b10ada11c4d2af0ca",
         "10": "7f2c4713829e2053444a3c17295f254139eb9a9137d48406c9a151cebfbd91e7",
@@ -5184,6 +5193,7 @@
       }
     },
     "C050_G100": {
+      "historical_trial_result_fingerprint_sha256": "05614a6280863b422103225c385292ac1a722338b70c0c6756c23af3dc878926",
       "trial_hashes": {
         "1": "f9cf8a3dd7af3f03fb298a6cffdc375e90c7fe9576a554b6a9056eaa6af802bb",
         "10": "d77f3b7d4a206c45d350ec69fcd25488adb07d380b8fd27354205f80df8b7a46",
@@ -5738,6 +5748,7 @@
       }
     },
     "C070_G000": {
+      "historical_trial_result_fingerprint_sha256": "f158340602c169c56a158d7151ecde210b3b92bdd9922b7c7b5dff39f1063608",
       "trial_hashes": {
         "1": "03e0ddd425dd7c25dbe10bf0d05b084020d1e2d25fa04e313348c83a399bf2ac",
         "10": "3fd723f48fc24d9c3318a4d3e8e18803b65b4e319089002f0f36fa63569f3833",
@@ -6292,6 +6303,7 @@
       }
     },
     "C070_G030": {
+      "historical_trial_result_fingerprint_sha256": "fb953cebb484f15538c310229c687ebe868430a363679987dd11b8e3f583478b",
       "trial_hashes": {
         "1": "886f3fc5091e4314d9012aba0b27139c7cc37ded14197f655003da4df11f2d3e",
         "10": "8dfe342c9c82d2f9ef17b9e66113a914eaf4e712bb5e38ec18b5bc62973bc6ef",
@@ -6846,6 +6858,7 @@
       }
     },
     "C070_G050": {
+      "historical_trial_result_fingerprint_sha256": "6006c98ad76a5d906a8e2b4eca2faedc7c584213f60b2198782322150b2ffa82",
       "trial_hashes": {
         "1": "d0d96e1ffdb0ddd304a57086025479369ba59b632b3d2c654cbac796e0304702",
         "10": "342fdc8b95f44009a018a25d88061ab5e853ab936f8e6ddaacef5fe46437290f",
@@ -7400,6 +7413,7 @@
       }
     },
     "C070_G070": {
+      "historical_trial_result_fingerprint_sha256": "4d5dc82fced74abee95d5a34a2aeb00aee07ca3de58351f5f9b5c333b803b34c",
       "trial_hashes": {
         "1": "9ec709e786cc6cb5fcd7125d8331d69860a8d182e25877e14ad98f3db3c7174f",
         "10": "00ed3d97db419258a0b8a6ae54892fdb6f06e2c4654d551fda02194a5fa9e4f2",
@@ -7954,6 +7968,7 @@
       }
     },
     "C070_G100": {
+      "historical_trial_result_fingerprint_sha256": "19f69c89013e182cbc6893bf3c0ccd33af14d244542f98a3460aa50ff001242b",
       "trial_hashes": {
         "1": "ca6f96b4236c4bac82377ba06bc9b2068db24035dc5171892e73cd8d09ca0052",
         "10": "04597790bf5d73f3768ab1af7aa268f35dda7aa6590d7a9c4e5c4b033770c81a",
@@ -8508,6 +8523,7 @@
       }
     },
     "C085_G000": {
+      "historical_trial_result_fingerprint_sha256": "fb330c6fd85971140ab27fc878e778affcd957ef44ab64675735fbc3fbc485c5",
       "trial_hashes": {
         "1": "29b4f71db477b177165d85c90d9cdd32979987ff9bd40d6be7eedc2bebcbd5c4",
         "10": "4c79e04fbacb224f6da3abf774f1edd13f03d5ebe69a98760249e8e727d6efa3",
@@ -9062,6 +9078,7 @@
       }
     },
     "C085_G030": {
+      "historical_trial_result_fingerprint_sha256": "dc8a28bec6ca9a0c183bb68bda2aa365dcdd31a45127676813f94fe76edbbce7",
       "trial_hashes": {
         "1": "cd8abd0746932e224a298fdf819e4d2c727ace6c8a87c8fc4495b56043fd6391",
         "10": "7d825431c367e984faf3e0cbe6613e7d975eef644aa5c057c59047af4fce112a",
@@ -9616,6 +9633,7 @@
       }
     },
     "C085_G050": {
+      "historical_trial_result_fingerprint_sha256": "f4d9f3874213f7da3cda6ecf1644a43751f23a5d5d64f39a5a1df7e52de42d8a",
       "trial_hashes": {
         "1": "78ff8d4eeaa958deb97564e54fe0943814d4eecb9534d529702aa8da693d9a40",
         "10": "83eaa7e63ed101be2010f6dd56f42b56d551c9fa5b0225e65eac35a6249cdb0d",
@@ -10170,6 +10188,7 @@
       }
     },
     "C085_G070": {
+      "historical_trial_result_fingerprint_sha256": "62ee2197b613986e7f0062b4d5f08f8f05739dde0624895d35dc4607850ec814",
       "trial_hashes": {
         "1": "c6d52abc0ab6038c883d89190e9e294f0839f951cccba198c7a211578b613123",
         "10": "04cc9c47cf91f11d13c4f45b90684fe25f7a3c4b7d5c058961002ac5d019ba8c",
@@ -10724,6 +10743,7 @@
       }
     },
     "C085_G100": {
+      "historical_trial_result_fingerprint_sha256": "eba464e979c8b15e96bbae8783380732c78fc8404cb39fe30f1ae1e1940425e6",
       "trial_hashes": {
         "1": "5882595318968ef9d16827f0380466496586c36914c52a084c3bac583de2a89a",
         "10": "7d9855f556f093cff211a6fbc4e1e2985f6bf17a432bf9048ffe414b9ffa7219",
@@ -11278,26 +11298,31 @@
       }
     },
     "C100_G000": {
+      "historical_trial_result_fingerprint_sha256": "1b6390fe7326200133e133d68a4b260694bc2f72a9a58b8461da5494e231272c",
       "trial_hashes": {
         "1": "00239450a63cb97a63764e81171ff3d61379b85225c92a64a6c5e60592b25e82"
       }
     },
     "C100_G030": {
+      "historical_trial_result_fingerprint_sha256": "f342dc950b12810108825d842a93b51e6816fe4c2e90bc7fd49d0b51762f0a70",
       "trial_hashes": {
         "1": "2a0105cb1881813db1318a16713d438e91cbb2218b5a35be2ecc127eae35b528"
       }
     },
     "C100_G050": {
+      "historical_trial_result_fingerprint_sha256": "86e095f84d26fc6398af1fbd624d353b6c01009feda9434ab37af788b420b5c3",
       "trial_hashes": {
         "1": "b42c5bd73a8b9fbba381e001ee2a2dd3b75598351c904e8bc506c044fd9d3788"
       }
     },
     "C100_G070": {
+      "historical_trial_result_fingerprint_sha256": "6efa5f1f85f07c24380dfff01d19280938d0068c9b8b57d5ce904905bb945529",
       "trial_hashes": {
         "1": "5ab522c86a310c08d1be50e7c2acc3503d3f62f5e4faae62b0125f404e63d938"
       }
     },
     "C100_G100": {
+      "historical_trial_result_fingerprint_sha256": "95c9d98d895e4a5711f3c06e2f2a56c9a9f3dc1e0936a6ffa5c989c43299f571",
       "trial_hashes": {
         "1": "4e58d9f5f5a11ff8a3f1f9c80e90ac5594660ae99d4f52170ec775bbd5a63417"
       }
