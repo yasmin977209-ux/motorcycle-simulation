@@ -1,0 +1,45 @@
+name: CP Stage 7 durable golden-manifest build
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage7-golden-provider-20261013
+    paths:
+      - ".github/workflows/cp-stage7-golden-manifest-build.yml"
+      - "scripts/build_stage7_golden_manifest.py"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-verified-golden-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact CP branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-stage7-golden-provider-20261013
+          fetch-depth: 0
+      - name: Verify and materialize exact historical golden trials
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python scripts/build_stage7_golden_manifest.py --output scripts/data/stage12_golden_fingerprints_v1.json
+      - name: Commit only the generated, verified golden reference map
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/data/stage12_golden_fingerprints_v1.json
+          if git diff --cached --quiet; then
+            echo "GOLDEN_REFERENCE_MANIFEST_UNCHANGED=PASS"
+            exit 0
+          fi
+          git commit -m "Add verified Stage 12 per-trial golden fingerprint map"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
