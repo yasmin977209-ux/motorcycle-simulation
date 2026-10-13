@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import subprocess
 import urllib.error
 import urllib.request
 import zipfile
@@ -78,9 +80,23 @@ def _artifact_archive(token: str, repo: str, run_id: int, name: str, expected_he
     digest = artifact.get("digest")
     if not isinstance(digest, str) or not digest.startswith("sha256:"):
         raise GoldenReferenceError(f"HISTORICAL_ARTIFACT_DIGEST_MISSING name={name}")
-    archive = _api_request(
-        token, f"https://api.github.com/repos/{repo}/actions/artifacts/{int(artifact['id'])}/zip"
+    env = os.environ.copy()
+    env["GH_TOKEN"] = token
+    download = subprocess.run(
+        ["gh", "api", f"repos/{repo}/actions/artifacts/{int(artifact['id'])}/zip"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        env=env,
+        timeout=120,
     )
+    if download.returncode != 0:
+        raise GoldenReferenceError(
+            f"HISTORICAL_ARTIFACT_DOWNLOAD_FAILED name={name} "
+            f"exit={download.returncode} "
+            f"stderr={download.stderr.decode('utf-8', errors='replace')[-1000:]}"
+        )
+    archive = download.stdout
     actual = sha256_bytes(archive)
     if actual != digest.removeprefix("sha256:"):
         raise GoldenReferenceError(

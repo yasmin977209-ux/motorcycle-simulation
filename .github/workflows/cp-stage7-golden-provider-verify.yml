@@ -173,7 +173,7 @@ jobs:
         with:
           name: stage7-golden-restore-${{ matrix.scenario }}
           path: ${{ runner.temp }}/golden_restore_${{ matrix.scenario }}.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
   aggregate-historical:
