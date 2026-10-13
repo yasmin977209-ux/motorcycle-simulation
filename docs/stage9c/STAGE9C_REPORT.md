@@ -320,3 +320,14 @@ The next allowed action is closure review of the Stage 9C partial status and, on
 
 **التصنيف:** ACCEPTED-BY-USER.
 **الحالة:** CLOSED.
+
+## ملحق لاحق (2026-10-13):
+- إعادة تدقيق C1-C6 (PR #38, commit 74b103cd):
+  نجحت في نطاق 9,005 trial والتحقق من daily ledger.
+- سلامة تصدير Excel: أُصلح write_daily_sheet في
+  CP-EXCEL-DAILY-FIX (commit 72e63cee على فرع
+  tmp/cp-excel-daily-fix-20261013). التحقق مقابل الملف
+  التاريخي الفعلي ما زال PENDING (قيود حجم Artifact).
+- هذا الملحق لا يُرقّي الحكم العام إلى PASS.
+- الحكم التاريخي PARTIAL يبقى في النص الأصلي.
+

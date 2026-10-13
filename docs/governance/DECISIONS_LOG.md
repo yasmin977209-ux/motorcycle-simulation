@@ -177,3 +177,23 @@ The three preserved checkpoint reports each contain 60/60 CI points passed, with
 Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` completed both jobs successfully. The canonical precision gate passed 25/25 scenario packages, 9,005/9,005 unique trial rows, 185 worksheets, zero Excel-error cells, zero formulas, and 500/500 exact numeric comparisons. One target cell required patching; all 500 target cells were verified post-write. The original published workbook SHA-256 remains `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d`; the separate candidate workbook SHA-256 is `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`. No simulation or new trial execution occurred.
 
 **References:** `docs/stage9c/STAGE9C_REPORT.md` §C-6; `docs/stage9a/dataset_manifest.json`; `docs/stage9c/R4_export_numeric_precision.md`; Stage 9C canonical precision gate Run `38165878333`. The 625-trial Stage 13 definition is maintained as a distinct cohort and is not amended here.
+
+## D-2026-10-13-02 — source_identity_exception
+
+**Status:** PENDING — لا يصبح ALLOWED قبل اجتياز replay الحتمي 10/10.  
+**Date:** 2026-10-13  
+**Scope:** استثناء ضيق لهوية المصدر بسبب واجهة توافق إضافية في `daily_engine.py`.
+
+- `_create_contract(project, bike, contract_type, current_date)` هو adapter يستدعي `_new_contract(...)` فقط؛ لا تُحوَّل الاستدعاءات الداخلية القائمة إليه.
+- **Classification:** `additive_compatibility_adapter`، وليس `cosmetic`.
+- الشرط: فرق نصي إضافي فقط (11 سطراً مضافة، صفر محذوف/معدّل)، ثم deterministic replay لـ10 هويات محددة مع `A == B == historical manifest` لكل هوية.
+- `SOURCE_SHA` يبقى `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`؛ لا تحديث له، ولا إدخال نتائج إلى Dataset، ولا تعديل Parquet.
+- الحالة قبل إثبات replay: `PENDING_REPLAY`.
+
+## D-2026-10-13-03 — stage11_scope_exclusion
+
+**Status:** `CLOSED_BY_APPROVED_SCOPE_DECISION` (ليس `COMPLETE`).  
+**Date:** 2026-10-13
+
+الطوبولوجيا التنفيذية لـStage 11 خارج النطاق المعياري. هذا القرار يغلق سؤال النطاق فقط؛ ولا يمحو أو يفسّر اختلاف Stage 10 metadata الخاص بطول رأس الكود المسجّل مقارنةً برأس GitHub Run API. يظل ذلك الاختلاف موثّقاً وغير محلول.
+
