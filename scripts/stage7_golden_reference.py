@@ -212,6 +212,7 @@ def evaluate_gate_a_for_results(
     results: list[Any],
     scenario: str,
     source_sha: str,
+    master_seed: int = MASTER_SEED,
     model_source_root: str | Path | None,
     manifest_path: str | Path,
     loaded_modules: Mapping[str, Any] | None = None,
@@ -230,7 +231,7 @@ def evaluate_gate_a_for_results(
             "reason": "pinned model source root is not supplied",
         }
     try:
-        manifest = load_golden_manifest(manifest_path, source_sha=source_sha, master_seed=MASTER_SEED)
+        manifest = load_golden_manifest(manifest_path, source_sha=source_sha, master_seed=master_seed)
         actual_source_sha = validate_model_source(
             model_source_root, expected_source_sha=source_sha, loaded_modules=loaded_modules
         )

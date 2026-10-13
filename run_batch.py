@@ -5,10 +5,17 @@ import gzip
 import json
 import math
 import os
+import sys
 import tempfile
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+
+WORKSPACE_ROOT = Path(__file__).resolve().parent
+MODEL_SOURCE_ROOT_ENV = os.environ.get("MODEL_SOURCE_ROOT")
+if MODEL_SOURCE_ROOT_ENV:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
+    sys.path.insert(0, str(Path(MODEL_SOURCE_ROOT_ENV).resolve()))
 
 import numpy as np
 import pyarrow as pa
@@ -17,6 +24,8 @@ from scipy.stats import t
 
 import constants
 import monte_carlo
+import daily_engine
+import rng
 from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
@@ -25,6 +34,7 @@ from scripts.stage7_stability import (
     filter_statistical_history,
     next_statistical_checkpoint,
 )
+from scripts.stage7_golden_reference import evaluate_gate_a_for_results
 
 
 TRIALS_PARQUET = "trials_summary.parquet"
@@ -258,9 +268,42 @@ def evaluate_gate_a(
     golden_reference_id: str | None = None,
     expected_source_sha: str | None = None,
     actual_source_sha: str | None = None,
+    results: list[monte_carlo.TrialResult] | None = None,
+    scenario: str | None = None,
+    source_sha: str | None = None,
+    master_seed: int = constants.MASTER_SEED,
+    model_source_root: str | Path | None = None,
+    manifest_path: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Apply Gate A's exact-golden contract; missing evidence fails closed."""
-    return evaluate_stage7_gate_a(
+    """Evaluate Gate A from real row-level evidence; caller-supplied digests alone are not proof."""
+    if (
+        results is None
+        or scenario is None
+        or source_sha is None
+        or manifest_path is None
+    ):
+        return evaluate_stage7_gate_a(
+            previous_n=previous_n,
+            previous_metrics=previous_metrics,
+            current_n=current_n,
+            current_metrics=current_metrics,
+            escalation_multiplier=STATISTICAL_ESCALATION_MULTIPLIER,
+            relative_epsilon=constants.CI_RELATIVE_TOLERANCE,
+            absolute_epsilon=constants.CI_ABSOLUTE_EPSILON,
+        )
+
+    resolved_source_root = model_source_root or MODEL_SOURCE_ROOT_ENV
+    loaded_modules = {
+        "constants": constants,
+        "daily_engine": daily_engine,
+        "rng": rng,
+        "monte_carlo": monte_carlo,
+    }
+    # Legacy digest arguments are intentionally ignored here: the provider recomputes
+    # both maps from actual results and trusted, version-pinned golden rows.
+    del expected_golden_fingerprint_sha256, actual_fingerprint_sha256
+    del golden_reference_id, expected_source_sha, actual_source_sha
+    return evaluate_gate_a_for_results(
         previous_n=previous_n,
         previous_metrics=previous_metrics,
         current_n=current_n,
@@ -268,11 +311,13 @@ def evaluate_gate_a(
         escalation_multiplier=STATISTICAL_ESCALATION_MULTIPLIER,
         relative_epsilon=constants.CI_RELATIVE_TOLERANCE,
         absolute_epsilon=constants.CI_ABSOLUTE_EPSILON,
-        expected_golden_fingerprint_sha256=expected_golden_fingerprint_sha256,
-        actual_fingerprint_sha256=actual_fingerprint_sha256,
-        golden_reference_id=golden_reference_id,
-        expected_source_sha=expected_source_sha,
-        actual_source_sha=actual_source_sha,
+        results=results,
+        scenario=scenario,
+        source_sha=source_sha,
+        master_seed=master_seed,
+        model_source_root=resolved_source_root,
+        manifest_path=manifest_path,
+        loaded_modules=loaded_modules,
     )
 
 def evaluate_gate_b(
@@ -599,6 +644,17 @@ def run_batch(
     if resume_from_checkpoint:
         _validate_resume_dataset(results, checkpoint)
 
+    if (
+        not results
+        and resolved_start == 1
+        and source_sha == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+        and master_seed == 20270101
+    ):
+        raise StateIntegrityError(
+            "GOLDEN_HISTORICAL_RESTORE_REQUIRED: refusing to rerun existing canonical trial IDs; "
+            "restore and validate Stage 7/10 historical artifacts before continuing."
+        )
+
     initial_target = (
         constants.C100_STATISTICAL_START_TRIALS
         if scenario.startswith("C100_")
@@ -671,6 +727,12 @@ def run_batch(
                             previous_n=None,
                             current_metrics=baseline_metrics,
                             current_n=constants.STATISTICAL_CHECK_START_N,
+                            results=baseline_results,
+                            scenario=scenario,
+                            source_sha=source_sha,
+                            master_seed=master_seed,
+                            model_source_root=MODEL_SOURCE_ROOT_ENV,
+                            manifest_path=WORKSPACE_ROOT / "scripts" / "data" / "stage12_golden_fingerprints_v1.json",
                         ),
                         "gate_b": evaluate_gate_b(baseline_metrics),
                         "metrics": baseline_metrics,
@@ -835,6 +897,12 @@ def run_batch(
                 previous_n=previous_n,
                 current_metrics=metrics,
                 current_n=len(results),
+                results=results,
+                scenario=scenario,
+                source_sha=source_sha,
+                master_seed=master_seed,
+                model_source_root=MODEL_SOURCE_ROOT_ENV,
+                manifest_path=WORKSPACE_ROOT / "scripts" / "data" / "stage12_golden_fingerprints_v1.json",
             )
             gate_b = evaluate_gate_b(metrics)
 

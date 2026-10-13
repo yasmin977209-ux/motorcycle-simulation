@@ -357,6 +357,7 @@ jobs:
               validate_trial_sequence,
           )
           from scripts.stage7_stability import (
+              STATISTICAL_ESCALATION_POLICY_ID,
               evaluate_gate_b, filter_statistical_history,
               is_statistical_checkpoint, next_statistical_checkpoint,
           )

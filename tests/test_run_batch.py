@@ -160,7 +160,7 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
     assert gate_a["current_n"] == 600
 
 
-def test_run_batch_gate_a_requires_exact_golden_fingerprint() -> None:
+def test_run_batch_gate_a_rejects_injected_hashes_without_row_level_proof() -> None:
     previous_metrics = {
         "final_net_project_equity": {"mean": 1000.0},
         "partner1_final_entitlement": {"mean": 700.0},
@@ -183,9 +183,9 @@ def test_run_batch_gate_a_requires_exact_golden_fingerprint() -> None:
         expected_source_sha="f" * 40,
         actual_source_sha="f" * 40,
     )
-    assert gate_a["checked"] is True
-    assert gate_a["stable"] is True
-    assert gate_a["status"] == "PASS"
+    assert gate_a["checked"] is False
+    assert gate_a["stable"] is False
+    assert gate_a["status"] == "BLOCKED"
 
 def test_stage8_source_sha_is_literal_in_workflow() -> None:
     text = (REPO_ROOT / ".github" / "workflows" /
