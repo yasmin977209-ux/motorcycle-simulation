@@ -180,7 +180,7 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 
 ## D-2026-10-13-02 — source_identity_exception
 
-**Status:** PENDING — لا يصبح ALLOWED قبل اجتياز replay الحتمي 10/10.  
+**Status:** APPROVED — `ALLOWED_ADDITIVE_COMPATIBILITY_ADAPTER`; deterministic replay matched all 10/10 historical fingerprints in Run `38461464864`.  
 **Date:** 2026-10-13  
 **Scope:** استثناء ضيق لهوية المصدر بسبب واجهة توافق إضافية في `daily_engine.py`.
 
@@ -188,7 +188,18 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 - **Classification:** `additive_compatibility_adapter`، وليس `cosmetic`.
 - الشرط: فرق نصي إضافي فقط (11 سطراً مضافة، صفر محذوف/معدّل)، ثم deterministic replay لـ10 هويات محددة مع `A == B == historical manifest` لكل هوية.
 - `SOURCE_SHA` يبقى `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`؛ لا تحديث له، ولا إدخال نتائج إلى Dataset، ولا تعديل Parquet.
-- الحالة قبل إثبات replay: `PENDING_REPLAY`.
+- الحالة بعد replay المصحح: `ALLOWED_ADDITIVE_COMPATIBILITY_ADAPTER`; لا تغيير في `SOURCE_SHA`.
+
+
+### Evidence-backed application — deterministic replay
+
+- Successful run: [Run 38461464864](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38461464864), tested head `6da81aadbf451131304024d919f6a89be772b717`.
+- Historical per-trial fingerprint algorithm was verified against `scripts/stage10_benchmark.py` blob `d54602982b6422939955ca841a251ecd250b4139`: `SHA-256(json.dumps(dataclasses.asdict(result), ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str))`.
+- Reference manifest: `docs/stage9a/dataset_manifest.json` blob `e796fa2443493b607f1f9c60b58eb63607959c26`, global manifest fingerprint `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, `source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101`.
+- Exact comparison: 10/10 computed A hashes equal B hashes, and all 10 equal the matching historical manifest fingerprints. No mismatch.
+- The prior failed runs `38460203987` and `38460795618` are classified `WORKFLOW_DEFECT`: the verifier used the distinct `monte_carlo.fingerprint_trial_results` float-hex encoding instead of the historical per-trial `result_sha`. No engine behavior change was made.
+- `daily_engine.py` was not modified; its full diff against SOURCE_SHA remains 11 additions, 0 deletions. `SOURCE_SHA` remains `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`. No Dataset or Parquet was modified.
+- The replay gate passes. At time of this entry, the full `pytest -q tests` step on the same tested head is still in progress; the full CP remains pending until that gate concludes.
 
 ## D-2026-10-13-03 — stage11_scope_exclusion
 
