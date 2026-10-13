@@ -13,6 +13,7 @@ on:
       - "scripts/stage7_golden_audit.py"
       - "scripts/data/stage12_golden_fingerprints_v1.json"
       - "tests/test_run_batch.py"
+      - "tests/test_stage7_authoring.py"
       - "tests/test_stage7_golden_reference.py"
 
 permissions:
