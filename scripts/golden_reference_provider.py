@@ -24,6 +24,7 @@ DECISION_ID = "D-2026-10-14-01"
 EXPECTED_CANONICAL_MAP_SHA256 = "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
 EXPECTED_N600_MAP_SHA256 = "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
 EXPECTED_N1200_MAP_SHA256 = "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
+EXPECTED_FULL_MAP_SHA256 = "166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -470,6 +471,8 @@ def _load_approved_reference() -> dict[str, Any]:
         raise RuntimeError("GOLDEN_FULL_HASH_FORMAT_FAIL")
 
     full_map_sha = _ordered_map_sha256(fingerprints)
+    if full_map_sha != EXPECTED_FULL_MAP_SHA256:
+        raise RuntimeError("GOLDEN_FULL_AGGREGATE_SHA_MISMATCH")
     reference_id = f"{DECISION_ID}:GateA:24005:{full_map_sha}"
     return {
         "source_sha": APPROVED_SOURCE_SHA,
@@ -487,6 +490,7 @@ class GoldenReferenceProvider:
 
     def __init__(self) -> None:
         self.source_sha = APPROVED_SOURCE_SHA
+        self.master_seed = MASTER_SEED
         self._fingerprints: dict[str, dict[int, str]] = {}
         self._golden_reference_id = ""
         self._verified = False
@@ -525,6 +529,7 @@ class GoldenReferenceProvider:
     ) -> "GoldenReferenceProvider":
         instance = cls.__new__(cls)
         instance.source_sha = source_sha
+        instance.master_seed = MASTER_SEED
         instance._fingerprints = {
             scenario: {int(trial_id): str(value) for trial_id, value in values.items()}
             for scenario, values in fingerprints.items()
