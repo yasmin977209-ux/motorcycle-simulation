@@ -35,6 +35,8 @@ jobs:
           done
           base64 --decode /tmp/source.b64 > /tmp/source.tar.gz
           echo "c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79  /tmp/source.tar.gz" | sha256sum -c -
+          export SOURCE_CHUNK_COUNT="${#chunks[@]}"
+          export EXPECTED_ARCHIVE_SHA256="c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79"
           python - <<'PY'
           from pathlib import PurePosixPath, Path
           import hashlib
@@ -74,8 +76,9 @@ jobs:
           print(json.dumps({
               "result": "READ_ONLY_RECONCILIATION",
               "source_branch": "stage3b-preserved",
-              "chunk_count": len(chunks),
+              "chunk_count": int(os.environ["SOURCE_CHUNK_COUNT"]),
               "archive_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "expected_archive_sha256": os.environ["EXPECTED_ARCHIVE_SHA256"],
               "archive_file_count": len(listing),
               "comparisons": matches,
           }, ensure_ascii=False, indent=2))
