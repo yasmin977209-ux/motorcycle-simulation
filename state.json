@@ -843,7 +843,7 @@
     }
   },
   "cp_state_source_sync_20261013": {
-    "status": "REPLAY_PASS_10_OF_10; FULL_PYTEST_IN_PROGRESS",
+    "status": "FAIL",
     "branch": "tmp/cp-state-and-source-sync-20261013",
     "base_a_head": "f0314795de3fdc25ba0fe79608124244fc3770aa",
     "main_head_at_audit": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
@@ -854,7 +854,7 @@
       "state_governance": "PASS",
       "source_identity_exception": "PASS",
       "targeted_tests": "PASS",
-      "full_pytest": "IN_PROGRESS"
+      "full_pytest": "FAIL"
     },
     "replay_evidence": {
       "status": "PASS_10_OF_10_A_EQ_B_EQ_HISTORICAL",
