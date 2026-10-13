@@ -32,6 +32,15 @@ def _base_checkpoint() -> dict:
     }
 
 
+def test_run_batch_planned_trial_range_must_be_covered_by_approved_goldens() -> None:
+    assert_planned = run_batch.assert_planned_trial_range_within_golden_coverage
+    assert_planned(trial_start=301, trial_end=550, golden_coverage=550)
+    with pytest.raises(StateIntegrityError, match="GOLDEN_COVERAGE_INSUFFICIENT"):
+        assert_planned(trial_start=551, trial_end=600, golden_coverage=550)
+    with pytest.raises(StateIntegrityError, match="GOLDEN_COVERAGE_RANGE_ARGUMENT_INVALID"):
+        assert_planned(trial_start=0, trial_end=10, golden_coverage=550)
+
+
 def test_run_batch_blocks_fresh_execution_of_canonical_historical_trial_ids(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -182,6 +191,14 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
     assert gate_a["status"] == "BLOCKED"
     assert gate_a["previous_n"] == 300
     assert gate_a["current_n"] == 600
+
+
+def test_run_batch_checks_golden_coverage_before_running_trials() -> None:
+    text = (REPO_ROOT / "run_batch.py").read_text(encoding="utf-8")
+    guard = text.index("assert_planned_trial_range_within_golden_coverage(")
+    trial_call = text.index("monte_carlo.run_trials_sequentially(", guard)
+    assert guard < trial_call
+    assert "GOLDEN_COVERAGE_INSUFFICIENT" in text
 
 
 def test_run_batch_gate_a_rejects_injected_hashes_without_row_level_proof() -> None:

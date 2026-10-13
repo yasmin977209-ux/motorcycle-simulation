@@ -34,7 +34,34 @@ from scripts.stage7_stability import (
     filter_statistical_history,
     next_statistical_checkpoint,
 )
-from scripts.stage7_golden_reference import evaluate_gate_a_for_results
+from scripts.stage7_golden_reference import (
+    GoldenReferenceError,
+    evaluate_gate_a_for_results,
+    load_golden_manifest,
+)
+
+
+CANONICAL_GOLDEN_SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+CANONICAL_GOLDEN_MASTER_SEED = 20270101
+GOLDEN_MANIFEST_PATH = WORKSPACE_ROOT / "scripts" / "data" / "stage12_golden_fingerprints_v1.json"
+
+
+def assert_planned_trial_range_within_golden_coverage(
+    *,
+    trial_start: int,
+    trial_end: int,
+    golden_coverage: int,
+) -> None:
+    """Refuse to execute any trial ID beyond the approved complete golden reference."""
+    if trial_start < 1 or trial_end < trial_start or golden_coverage < 1:
+        raise StateIntegrityError("GOLDEN_COVERAGE_RANGE_ARGUMENT_INVALID")
+    if trial_end > golden_coverage:
+        raise StateIntegrityError(
+            "GOLDEN_COVERAGE_INSUFFICIENT: "
+            f"planned_trial_range={trial_start}..{trial_end}, "
+            f"approved_golden_coverage=1..{golden_coverage}; "
+            "refusing to execute any trial before full checkpoint golden evidence exists"
+        )
 
 
 TRIALS_PARQUET = "trials_summary.parquet"
@@ -647,13 +674,37 @@ def run_batch(
     if (
         not results
         and resolved_start == 1
-        and source_sha == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
-        and master_seed == 20270101
+        and source_sha == CANONICAL_GOLDEN_SOURCE_SHA
+        and master_seed == CANONICAL_GOLDEN_MASTER_SEED
     ):
         raise StateIntegrityError(
             "GOLDEN_HISTORICAL_RESTORE_REQUIRED: refusing to rerun existing canonical trial IDs; "
             "restore and validate Stage 7/10 historical artifacts before continuing."
         )
+
+    golden_coverage = None
+    if (
+        not scenario.startswith("C100_")
+        and source_sha == CANONICAL_GOLDEN_SOURCE_SHA
+        and master_seed == CANONICAL_GOLDEN_MASTER_SEED
+    ):
+        try:
+            golden_manifest = load_golden_manifest(
+                GOLDEN_MANIFEST_PATH,
+                source_sha=source_sha,
+                master_seed=master_seed,
+            )
+            scenario_golden = golden_manifest.get("scenarios", {}).get(scenario)
+            if not isinstance(scenario_golden, dict):
+                raise GoldenReferenceError(f"GOLDEN_SCENARIO_MISSING scenario={scenario}")
+            golden_hashes = scenario_golden.get("trial_hashes")
+            if not isinstance(golden_hashes, dict) or not golden_hashes:
+                raise GoldenReferenceError(f"GOLDEN_SCENARIO_HASHES_MISSING scenario={scenario}")
+            golden_coverage = len(golden_hashes)
+        except GoldenReferenceError as exc:
+            raise StateIntegrityError(
+                f"GOLDEN_MANIFEST_UNAVAILABLE: {exc}; refusing any additional trial execution"
+            ) from exc
 
     initial_target = (
         constants.C100_STATISTICAL_START_TRIALS
@@ -836,6 +887,13 @@ def run_batch(
             else:
                 target = next_statistical_checkpoint(len(results))
             trial_end = min(batch_end, target)
+
+        if golden_coverage is not None:
+            assert_planned_trial_range_within_golden_coverage(
+                trial_start=resolved_start,
+                trial_end=trial_end,
+                golden_coverage=golden_coverage,
+            )
 
         trial_ids = list(range(resolved_start, trial_end + 1))
         new_results, _ = monte_carlo.run_trials_sequentially(

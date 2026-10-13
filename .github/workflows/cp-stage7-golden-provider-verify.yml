@@ -91,6 +91,10 @@ jobs:
           assert "evaluate_gate_a_for_results(" in text
           assert "APPROVED_GOLDEN_COVERAGE_INSUFFICIENT" in text
           assert "GATE_A_GOLDEN_COVERAGE_BLOCKED=" in text
+          run_batch_text = Path("run_batch.py").read_text(encoding="utf-8")
+          assert "assert_planned_trial_range_within_golden_coverage(" in run_batch_text
+          assert run_batch_text.index("assert_planned_trial_range_within_golden_coverage(") < run_batch_text.index("monte_carlo.run_trials_sequentially(")
+          assert "GOLDEN_COVERAGE_INSUFFICIENT" in run_batch_text
           assert "runpy.run_path(script_path,run_name='__main__')" in text
           print("PYTHON_AND_YAML_AND_EMBEDDED_STAGE7_AST=PASS")
           PY
