@@ -10,12 +10,11 @@
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
-    "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "f0314795de3fdc25ba0fe79608124244fc3770aa",
+  "head_sha": "6da81aadbf451131304024d919f6a89be772b717",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -805,24 +804,89 @@
     }
   },
   "source_identity_exception": {
-    "status": "PENDING_REPLAY",
+    "status": "ALLOWED_ADDITIVE_COMPATIBILITY_ADAPTER",
     "file": "daily_engine.py",
     "adapter": "_create_contract",
     "expected_classification": "allowed_additive_compatibility_adapter",
-    "decision_ref_pending": "D-2026-10-13-02"
+    "decision_ref_pending": "D-2026-10-13-02",
+    "replay_evidence": {
+      "status": "PASS_10_OF_10_A_EQ_B_EQ_HISTORICAL",
+      "run_id": 38461464864,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38461464864",
+      "tested_head_sha": "6da81aadbf451131304024d919f6a89be772b717",
+      "ancestor_a_sha": "f0314795de3fdc25ba0fe79608124244fc3770aa",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "manifest_git_blob_sha": "e796fa2443493b607f1f9c60b58eb63607959c26",
+      "manifest_global_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "master_seed": 20270101,
+      "fingerprint_algorithm": "Stage 10 result_sha: SHA-256(JSON(dataclasses.asdict(result), ensure_ascii=False, sort_keys=True, separators=(',', ':'), default=str))",
+      "fingerprint_algorithm_git_blob_sha": "d54602982b6422939955ca841a251ecd250b4139",
+      "expected_cases": 10,
+      "exact_a_eq_b_matches": 10,
+      "exact_historical_matches": 10,
+      "mismatches": 0,
+      "prior_incorrect_verifier_runs": [
+        38460203987,
+        38460795618
+      ],
+      "prior_failure_classification": "WORKFLOW_DEFECT",
+      "prior_failure_cause": "The verifier used monte_carlo.fingerprint_trial_results (float.hex canonicalization), which differs from the historical Stage 10 per-trial result_sha encoding.",
+      "targeted_tests": {
+        "status": "PASS",
+        "step": 8,
+        "note": "The full pytest step remains in progress."
+      },
+      "production_monte_carlo": false,
+      "dataset_modified": false,
+      "parquet_modified": false,
+      "source_sha_changed": false
+    }
   },
   "cp_state_source_sync_20261013": {
-    "status": "PENDING_REPLAY",
+    "status": "REPLAY_PASS_10_OF_10; FULL_PYTEST_IN_PROGRESS",
     "branch": "tmp/cp-state-and-source-sync-20261013",
     "base_a_head": "f0314795de3fdc25ba0fe79608124244fc3770aa",
     "main_head_at_audit": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-    "source_diff_classification": "PENDING_REPLAY",
+    "source_diff_classification": "allowed_additive_compatibility_adapter",
     "replay_gate": "10/10 A == B == historical required",
     "tests": {
-      "state_governance": "pending",
-      "source_identity_exception": "pending",
-      "full_pytest": "pending"
+      "state_governance": "PASS",
+      "source_identity_exception": "PASS",
+      "targeted_tests": "PASS",
+      "full_pytest": "IN_PROGRESS"
+    },
+    "replay_evidence": {
+      "status": "PASS_10_OF_10_A_EQ_B_EQ_HISTORICAL",
+      "run_id": 38461464864,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38461464864",
+      "tested_head_sha": "6da81aadbf451131304024d919f6a89be772b717",
+      "ancestor_a_sha": "f0314795de3fdc25ba0fe79608124244fc3770aa",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "manifest_git_blob_sha": "e796fa2443493b607f1f9c60b58eb63607959c26",
+      "manifest_global_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "master_seed": 20270101,
+      "fingerprint_algorithm": "Stage 10 result_sha: SHA-256(JSON(dataclasses.asdict(result), ensure_ascii=False, sort_keys=True, separators=(',', ':'), default=str))",
+      "fingerprint_algorithm_git_blob_sha": "d54602982b6422939955ca841a251ecd250b4139",
+      "expected_cases": 10,
+      "exact_a_eq_b_matches": 10,
+      "exact_historical_matches": 10,
+      "mismatches": 0,
+      "prior_incorrect_verifier_runs": [
+        38460203987,
+        38460795618
+      ],
+      "prior_failure_classification": "WORKFLOW_DEFECT",
+      "prior_failure_cause": "The verifier used monte_carlo.fingerprint_trial_results (float.hex canonicalization), which differs from the historical Stage 10 per-trial result_sha encoding.",
+      "targeted_tests": {
+        "status": "PASS",
+        "step": 8,
+        "note": "The full pytest step remains in progress."
+      },
+      "production_monte_carlo": false,
+      "dataset_modified": false,
+      "parquet_modified": false,
+      "source_sha_changed": false
     }
   }
 }
