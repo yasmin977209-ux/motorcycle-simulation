@@ -1,0 +1,130 @@
+name: CP-D Extended Replay Validation
+
+on:
+  push:
+    branches:
+      - "tmp/cp-extended-replay-20261014"
+
+permissions:
+  contents: read
+
+jobs:
+  extended-replay:
+    if: contains(github.event.head_commit.message, '[cp-d-replay-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MAIN_HEAD: "647c19826b90d8224ce73ef9b90c306a45e03fb0"
+      SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+      EXPECTED_BENCHMARK_BLOB: "d54602982b6422939955ca841a251ecd250b4139"
+    steps:
+      - name: Checkout the exact CP-D commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project test and replay dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+          mkdir -p cp_d_evidence
+
+      - name: Validate main/source identity and approved adapter-only drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --quiet
+          test "$(git rev-parse origin/main)" = "$MAIN_HEAD"
+          git cat-file -e "$MAIN_HEAD^{commit}"
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          test "$(git rev-parse "$MAIN_HEAD:scripts/stage10_benchmark.py")" = "$EXPECTED_BENCHMARK_BLOB"
+
+          daily_numstat="$(git diff --numstat "$SOURCE_SHA" "$MAIN_HEAD" -- daily_engine.py)"
+          printf '%s\n' "$daily_numstat" | tee cp_d_evidence/daily_engine_numstat.txt
+          test "$daily_numstat" = $'11\t0\tdaily_engine.py'
+
+          for model_file in constants.py dateutils.py rng.py entities.py state_machine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py; do
+            if ! git diff --quiet "$SOURCE_SHA" "$MAIN_HEAD" -- "$model_file"; then
+              echo "UNAPPROVED_MODEL_SOURCE_DRIFT:$model_file"
+              exit 1
+            fi
+          done
+
+          git diff "$SOURCE_SHA" "$MAIN_HEAD" -- daily_engine.py > cp_d_evidence/daily_engine_identity.diff
+          python - <<'PY'
+          from pathlib import Path
+          patch = Path("cp_d_evidence/daily_engine_identity.diff").read_text(encoding="utf-8")
+          assert "def _create_contract(" in patch, "APPROVED_ADAPTER_MISSING"
+          assert "return _new_contract(project, bike, contract_type, current_date)" in patch, "ADAPTER_TARGET_MISMATCH"
+          added = [line for line in patch.splitlines() if line.startswith("+") and not line.startswith("+++")]
+          removed = [line for line in patch.splitlines() if line.startswith("-") and not line.startswith("---")]
+          assert len(added) == 11, f"ADDED_LINE_COUNT_MISMATCH:{len(added)}"
+          assert not removed, f"DELETION_IN_SOURCE_EXCEPTION:{removed}"
+          print("SOURCE_EXCEPTION_CHECK=PASS")
+          PY
+          git diff --check 80e74454fea8b771f69f06ba57c3fad528d8e4d6...HEAD
+
+      - name: Create detached main and pinned-source worktrees
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/cp-d-main" "$MAIN_HEAD"
+          git worktree add --detach "$RUNNER_TEMP/cp-d-source" "$SOURCE_SHA"
+          test "$(git -C "$RUNNER_TEMP/cp-d-main" rev-parse HEAD)" = "$MAIN_HEAD"
+          test "$(git -C "$RUNNER_TEMP/cp-d-source" rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Replay ten approved non-C100 trials plus separate C100 determinism trial
+        id: replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/cp_d_extended_replay.py \
+            --main-root "$RUNNER_TEMP/cp-d-main" \
+            --source-root "$RUNNER_TEMP/cp-d-source" \
+            --output cp_d_evidence/replay.json | tee cp_d_evidence/replay_summary.json
+
+      - name: Inspect exact replay report before running the full suite
+        if: steps.replay.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("cp_d_evidence/replay.json").read_text(encoding="utf-8"))
+          assert report["status"] == "PASS", "REPLAY_REPORT_NOT_PASS"
+          assert report["main_head_sha"] == "647c19826b90d8224ce73ef9b90c306a45e03fb0"
+          assert report["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          assert report["benchmark_blob_sha"] == "d54602982b6422939955ca841a251ecd250b4139"
+          assert report["counts"]["new_non_c100_trials_expected"] == 10
+          assert report["counts"]["new_non_c100_trials_passed"] == 10
+          assert report["counts"]["new_551_600_expected"] == report["counts"]["new_551_600_passed"] == 5
+          assert report["counts"]["new_601_1200_expected"] == report["counts"]["new_601_1200_passed"] == 5
+          assert report["counts"]["c100_determinism_expected"] == report["counts"]["c100_determinism_passed"] == 1
+          assert len(report["replays"]) == 11
+          assert all(row["status"] == "PASS" and row["a_equals_b"] and row["a_equals_historical"] and row["b_equals_historical"] for row in report["replays"])
+          print("REPLAY_ARTIFACT_CONTENT_GATE=PASS")
+          PY
+
+      - name: Run the complete pytest suite
+        if: steps.replay.outcome == 'success'
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          python -m pytest -q tests 2>&1 | tee cp_d_evidence/pytest_full.txt
+          pytest_status=$?
+          printf '%s\n' "$pytest_status" > cp_d_evidence/pytest_exit_code.txt
+          exit "$pytest_status"
+
+      - name: Upload replay and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-d-extended-replay-evidence
+          path: cp_d_evidence/
+          if-no-files-found: warn
+          retention-days: 30
