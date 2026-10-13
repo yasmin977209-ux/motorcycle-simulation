@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
 import run_batch
+from scripts.golden_reference_provider import (
+    APPROVED_SOURCE_SHA,
+    GoldenReferenceProvider,
+    stage10_trial_result_sha256,
+)
 from scripts.stage7_state import StateIntegrityError
 
 
@@ -253,3 +259,103 @@ def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_en
         filter_statistical_history([{"n": 350}, {"n": 350}])
     with pytest.raises(ValueError, match="not ordered"):
         filter_statistical_history([{"n": 400}, {"n": 350}])
+
+
+
+@dataclass(frozen=True)
+class _GateATestTrialResult:
+    trial_id: int
+    payload: str
+
+
+def _gate_a_test_results(count: int = 300) -> list[_GateATestTrialResult]:
+    return [
+        _GateATestTrialResult(trial_id=trial_id, payload=f"trial-{trial_id}")
+        for trial_id in range(1, count + 1)
+    ]
+
+
+def _gate_a_test_provider(
+    trial_results: list[_GateATestTrialResult],
+) -> GoldenReferenceProvider:
+    return GoldenReferenceProvider._from_test_map(
+        {
+            "C070_G100": {
+                result.trial_id: stage10_trial_result_sha256(result)
+                for result in trial_results
+            }
+        }
+    )
+
+
+def test_gate_a_provider_matching_trial_hashes_passes_exactly() -> None:
+    trial_results = _gate_a_test_results()
+    provider = _gate_a_test_provider(trial_results)
+
+    result = run_batch._evaluate_gate_a_with_provider(
+        provider=provider,
+        scenario_id="C070_G100",
+        trial_results=trial_results,
+        source_sha=APPROVED_SOURCE_SHA,
+        master_seed=20270101,
+        previous_metrics=None,
+        previous_n=None,
+        current_metrics={},
+        current_n=300,
+    )
+
+    assert result["status"] == "PASS"
+    assert result["stable"] is True
+    assert result["golden_provider_status"] == "VERIFIED"
+    assert result["golden_trials_compared"] == 300
+    assert result["golden_trial_mismatch_count"] == 0
+    assert result["golden_source_identity_matches"] is True
+
+
+def test_gate_a_provider_missing_coverage_is_blocked() -> None:
+    trial_results = _gate_a_test_results()
+    provider = GoldenReferenceProvider._from_test_map(
+        {
+            "C070_G100": {
+                1: stage10_trial_result_sha256(trial_results[0]),
+            }
+        }
+    )
+
+    result = run_batch._evaluate_gate_a_with_provider(
+        provider=provider,
+        scenario_id="C070_G100",
+        trial_results=trial_results,
+        source_sha=APPROVED_SOURCE_SHA,
+        master_seed=20270101,
+        previous_metrics=None,
+        previous_n=None,
+        current_metrics={},
+        current_n=300,
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["stable"] is False
+    assert result["golden_provider_status"] == "BLOCKED_INCOMPLETE_COVERAGE"
+
+
+def test_gate_a_provider_wrong_source_sha_fails_closed() -> None:
+    trial_results = _gate_a_test_results()
+    provider = _gate_a_test_provider(trial_results)
+
+    result = run_batch._evaluate_gate_a_with_provider(
+        provider=provider,
+        scenario_id="C070_G100",
+        trial_results=trial_results,
+        source_sha="0" * 40,
+        master_seed=20270101,
+        previous_metrics=None,
+        previous_n=None,
+        current_metrics={},
+        current_n=300,
+    )
+
+    assert result["status"] == "FAIL"
+    assert result["stable"] is False
+    assert result["reason"] == "golden and actual source identities differ"
+    assert result["golden_source_identity_matches"] is False
