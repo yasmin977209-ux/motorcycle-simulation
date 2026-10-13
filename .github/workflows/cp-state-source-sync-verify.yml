@@ -46,7 +46,7 @@ jobs:
           read -r added deleted path < <(git diff --numstat "${SOURCE_SHA}" -- daily_engine.py)
           echo "DAILY_ENGINE_NUMSTAT=${added} additions, ${deleted} deletions, ${path}"
           [[ "${added}" == "11" && "${deleted}" == "0" && "${path}" == "daily_engine.py" ]]
-          git grep -n -E '_create_contract|_new_contract' -- daily_engine.py
+          git grep -n -E '_create_contract|_new_contract' -- '*.py'
 
           git worktree add --detach /tmp/source-identity-A "${SOURCE_SHA}"
           cat > /tmp/run_selected_trial_fingerprints.py <<'PY'
