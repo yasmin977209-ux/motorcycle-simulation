@@ -212,8 +212,8 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 
 ## D-2026-10-14-01 — extension_of_gate_a_golden_coverage
 
-**Status:** APPROVED BY PROJECT OWNER  
-**Date:** 2026-10-14  
+**Status:** APPROVED BY PROJECT OWNER
+**Date:** 2026-10-14
 **Scope:** Extend the approved exact per-trial SHA-256 Gate A golden coverage without changing model/source identity or historical datasets.
 
 ### Normative decision
