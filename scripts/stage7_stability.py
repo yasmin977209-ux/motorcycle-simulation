@@ -4,6 +4,9 @@ from typing import Any
 
 import constants
 
+STATISTICAL_ESCALATION_POLICY_ID = "DOUBLING_FROM_300_V1"
+STATISTICAL_ESCALATION_MULTIPLIER = 2
+
 STABILITY_METRICS = (
     "final_net_project_equity",
     "partner1_final_entitlement",
