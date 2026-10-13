@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   verify:
@@ -288,6 +289,45 @@ jobs:
           test -f results_stage5/daily_distribution.parquet
 
 
+
+      - name: Load and validate approved live golden provider
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from scripts.golden_reference_provider import (
+              APPROVED_SOURCE_SHA,
+              EXPECTED_CANONICAL_MAP_SHA256,
+              EXPECTED_FULL_MAP_SHA256,
+              EXPECTED_N1200_MAP_SHA256,
+              EXPECTED_N600_MAP_SHA256,
+              GoldenReferenceProvider,
+              SCENARIOS,
+          )
+
+          provider = GoldenReferenceProvider()
+          assert provider.load_error is None, provider.load_error
+          assert provider.verify_source_identity(APPROVED_SOURCE_SHA)
+          assert len(provider.get_golden_reference_id()) > 0
+          assert provider.get_coverage("C100_G100") == {1}
+          assert provider.get_fingerprint("C100_G100", 1) == "4e58d9f5f5a11ff8a3f1f9c80e90ac5594660ae99d4f52170ec775bbd5a63417"
+          assert len(SCENARIOS) == 25
+          for scenario in SCENARIOS:
+              expected = {1} if scenario.startswith("C100_") else set(range(1, 1201))
+              assert provider.get_coverage(scenario) == expected, scenario
+          assert provider.get_fingerprint("C030_G000", 551) == "61554c2848e5e337bf180fdf3b4ddb4c545ae2b4e41e907323556ce6da007143"
+          assert provider.get_fingerprint("C030_G000", 1200) == "f356b1bc06330a3904d72430212024df538336446be6c5947fbf9038a1a427f9"
+          assert EXPECTED_CANONICAL_MAP_SHA256 == "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+          assert EXPECTED_N600_MAP_SHA256 == "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
+          assert EXPECTED_N1200_MAP_SHA256 == "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
+          assert EXPECTED_FULL_MAP_SHA256 == "166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c"
+          print("LIVE_GOLDEN_PROVIDER=PASS")
+          print(f"GOLDEN_REFERENCE_ID={provider.get_golden_reference_id()}")
+          print("SCENARIOS=25; TRIALS=24005; NON_C100_COVERAGE=1..1200; C100_COVERAGE=1")
+          PY
 
       - name: Run CP-D2 focused tests
         env:
