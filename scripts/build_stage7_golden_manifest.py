@@ -98,6 +98,9 @@ def main() -> int:
         raise RuntimeError(f"UNEXPECTED_GITHUB_REPOSITORY {args.repo!r}")
     if len(ARTIFACTS) != 25:
         raise RuntimeError("SCENARIO_ARTIFACT_MAP_COUNT_INVALID")
+    dataset_identity = json.loads(
+        Path("docs/stage11/dataset_identity.json").read_text(encoding="utf-8")
+    )
     reports = {}
     map_rows = []
     artifacts_manifest = {}
@@ -116,7 +119,20 @@ def main() -> int:
                 raise RuntimeError(f"ARTIFACT_ZIP_MEMBER_MISMATCH scenario={scenario} names={zf.namelist()}")
             report = json.loads(zf.read(expected_name).decode("utf-8"))
         hashes = validate_report(scenario, report)
-        reports[scenario] = {"trial_hashes": hashes}
+        scenario_identity = dataset_identity.get("per_scenario", {}).get(scenario)
+        if not isinstance(scenario_identity, dict):
+            raise RuntimeError(f"STAGE11_SCENARIO_IDENTITY_MISSING scenario={scenario}")
+        historical_fingerprint = (
+            scenario_identity.get("scenario_fingerprint_stage9a")
+            if scenario.startswith("C100_")
+            else scenario_identity.get("combined_dataset_fingerprint_sha256_stage10")
+        )
+        if not isinstance(historical_fingerprint, str) or len(historical_fingerprint) != 64:
+            raise RuntimeError(f"STAGE11_HISTORICAL_FINGERPRINT_MISSING scenario={scenario}")
+        reports[scenario] = {
+            "trial_hashes": hashes,
+            "historical_trial_result_fingerprint_sha256": historical_fingerprint,
+        }
         for trial_id, trial_sha in hashes.items():
             map_rows.append((scenario, int(trial_id), trial_sha))
         artifacts_manifest[scenario] = {
