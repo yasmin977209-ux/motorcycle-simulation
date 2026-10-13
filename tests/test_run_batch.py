@@ -152,10 +152,40 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
         current_n=600,
     )
 
-    assert gate_a["checked"] is True
-    assert gate_a["stable"] is True
+    # Metric deltas alone are not Gate A evidence.
+    assert gate_a["checked"] is False
+    assert gate_a["stable"] is False
+    assert gate_a["status"] == "BLOCKED"
     assert gate_a["previous_n"] == 300
     assert gate_a["current_n"] == 600
+
+
+def test_run_batch_gate_a_requires_exact_golden_fingerprint() -> None:
+    previous_metrics = {
+        "final_net_project_equity": {"mean": 1000.0},
+        "partner1_final_entitlement": {"mean": 700.0},
+        "partner2_final_entitlement": {"mean": 300.0},
+    }
+    current_metrics = {
+        "final_net_project_equity": {"mean": 9000.0},
+        "partner1_final_entitlement": {"mean": 7000.0},
+        "partner2_final_entitlement": {"mean": 3000.0},
+    }
+    golden_sha = "a" * 64
+    gate_a = run_batch.evaluate_gate_a(
+        previous_metrics=previous_metrics,
+        previous_n=300,
+        current_metrics=current_metrics,
+        current_n=600,
+        expected_golden_fingerprint_sha256=golden_sha,
+        actual_fingerprint_sha256=golden_sha,
+        golden_reference_id="test-golden-v1",
+        expected_source_sha="f" * 40,
+        actual_source_sha="f" * 40,
+    )
+    assert gate_a["checked"] is True
+    assert gate_a["stable"] is True
+    assert gate_a["status"] == "PASS"
 
 def test_stage8_source_sha_is_literal_in_workflow() -> None:
     text = (REPO_ROOT / ".github" / "workflows" /

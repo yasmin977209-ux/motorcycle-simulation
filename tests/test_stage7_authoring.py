@@ -185,45 +185,147 @@ def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
     assert "JOB_STARTED_AT:" not in text
     assert "github.run_started_at" not in text
 
-def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
+def _matching_golden_kwargs() -> dict[str, str]:
+    fingerprint = "a" * 64
+    return {
+        "expected_golden_fingerprint_sha256": fingerprint,
+        "actual_fingerprint_sha256": fingerprint,
+        "golden_reference_id": "test-approved-golden-v1",
+        "expected_source_sha": APPROVED_SOURCE_SHA,
+        "actual_source_sha": APPROVED_SOURCE_SHA,
+    }
+
+
+def test_gate_a_missing_golden_is_blocked_even_when_metrics_are_close() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1001, 700.5, 300.2), stable=True)
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+    )
+    gate_b = evaluate_gate_b(current)
+    assert gate_a["checked"] is False
+    assert gate_a["stable"] is False
+    assert gate_a["status"] == "BLOCKED"
+    assert gate_b["stable"] is True
+    assert not (gate_a["stable"] and gate_b["stable"])
+
+
+def test_gate_a_exact_fingerprint_pass_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
     current = _metrics((1001, 700.5, 300.2), stable=False)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **_matching_golden_kwargs(),
+    )
     gate_b = evaluate_gate_b(current)
+    assert gate_a["status"] == "PASS"
     assert gate_a["stable"] is True
     assert gate_b["stable"] is False
     assert not (gate_a["stable"] and gate_b["stable"])
 
-def test_gate_a_fail_gate_b_pass_is_not_stable() -> None:
+
+def test_gate_a_fingerprint_mismatch_gate_b_pass_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1105, 770, 330), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
+    wrong_actual = {
+        **_matching_golden_kwargs(),
+        "actual_fingerprint_sha256": "b" * 64,
+    }
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **wrong_actual,
+    )
     gate_b = evaluate_gate_b(current)
+    assert gate_a["checked"] is True
+    assert gate_a["status"] == "FAIL"
     assert gate_a["stable"] is False
     assert gate_b["stable"] is True
     assert not (gate_a["stable"] and gate_b["stable"])
 
-def test_gate_a_fail_gate_b_fail_is_not_stable() -> None:
+
+def test_gate_a_fingerprint_mismatch_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
     current = _metrics((1105, 770, 330), stable=False)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
+    wrong_actual = {
+        **_matching_golden_kwargs(),
+        "actual_fingerprint_sha256": "b" * 64,
+    }
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **wrong_actual,
+    )
     gate_b = evaluate_gate_b(current)
+    assert gate_a["status"] == "FAIL"
     assert gate_a["stable"] is False
     assert gate_b["stable"] is False
     assert not (gate_a["stable"] and gate_b["stable"])
 
-def test_gate_a_pass_gate_b_pass_requires_three_consecutive_points() -> None:
+
+def test_gate_a_exact_golden_and_gate_b_pass_requires_three_consecutive_points() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     p600 = _metrics((1001, 700.5, 300.2), stable=True)
     p1200 = _metrics((1002, 701.0, 300.4), stable=True)
     p2400 = _metrics((1003, 701.5, 300.6), stable=True)
-    pairs = ((300, previous, 600, p600), (600, p600, 1200, p1200), (1200, p1200, 2400, p2400))
+    pairs = (
+        (300, previous, 600, p600),
+        (600, p600, 1200, p1200),
+        (1200, p1200, 2400, p2400),
+    )
     checks = []
     for previous_n, previous_metrics, current_n, current_metrics in pairs:
-        gate_a = evaluate_gate_a(previous_n=previous_n, previous_metrics=previous_metrics, current_n=current_n, current_metrics=current_metrics, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
+        gate_a = evaluate_gate_a(
+            previous_n=previous_n, previous_metrics=previous_metrics,
+            current_n=current_n, current_metrics=current_metrics,
+            escalation_multiplier=2, relative_epsilon=0.01,
+            absolute_epsilon=1, **_matching_golden_kwargs(),
+        )
         gate_b = evaluate_gate_b(current_metrics)
         checks.append(gate_a["stable"] and gate_b["stable"])
     assert checks == [True, True, True]
+
+
+def test_gate_a_rejects_source_identity_mismatch() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1001, 700.5, 300.2), stable=True)
+    fields = {
+        **_matching_golden_kwargs(),
+        "actual_source_sha": "e" * 40,
+    }
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1, **fields,
+    )
+    assert gate_a["checked"] is True
+    assert gate_a["stable"] is False
+    assert gate_a["status"] == "FAIL"
+    assert gate_a["reason"] == "golden and actual source identities differ"
+
+
+def test_gate_a_rejects_malformed_fingerprint() -> None:
+    previous = _metrics((1000, 700, 300), stable=True)
+    current = _metrics((1001, 700.5, 300.2), stable=True)
+    fields = {
+        **_matching_golden_kwargs(),
+        "actual_fingerprint_sha256": "not-a-sha256",
+    }
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1, **fields,
+    )
+    assert gate_a["checked"] is True
+    assert gate_a["stable"] is False
+    assert gate_a["status"] == "FAIL"
+
 
 def test_c100_n1_without_rerun_is_not_allowed_to_be_stable() -> None:
     text = _workflow_text()
@@ -264,14 +366,27 @@ def test_c100_stability_is_after_independent_equality_proof() -> None:
 def test_gate_a_requires_exact_doubling_checkpoint() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1001, 700.5, 300.2), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=601, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=601,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **_matching_golden_kwargs(),
+    )
     assert gate_a["checked"] is False
+    assert gate_a["status"] == "BLOCKED"
 
-def test_joint_gate_requires_all_three_metrics() -> None:
+
+def test_gate_a_does_not_substitute_metric_deltas_for_golden_equality() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1001, 900, 300.2), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
-    assert gate_a["stable"] is False
+    gate_a = evaluate_gate_a(
+        previous_n=300, previous_metrics=previous, current_n=600,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **_matching_golden_kwargs(),
+    )
+    assert gate_a["status"] == "PASS"
+    assert gate_a["stable"] is True
 
 
 def test_stage7_preflight_does_not_rerun_passed_stages() -> None:

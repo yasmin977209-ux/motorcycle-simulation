@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import constants
+import re
 
 STATISTICAL_ESCALATION_POLICY_ID = "DOUBLING_FROM_300_V1"
 STATISTICAL_ESCALATION_MULTIPLIER = 2
@@ -70,24 +71,8 @@ def filter_statistical_history(
     return kept, discarded
 
 
-def _relative_limit(
-    old_value: float,
-    relative_epsilon: float,
-    absolute_epsilon: float,
-) -> float:
-    return max(absolute_epsilon, relative_epsilon * abs(old_value))
-
-
-def _stable_delta(
-    old_value: float,
-    new_value: float,
-    relative_epsilon: float,
-    absolute_epsilon: float,
-) -> tuple[bool, float, float, float]:
-    delta = abs(new_value - old_value)
-    limit = _relative_limit(old_value, relative_epsilon, absolute_epsilon)
-    relative_delta = delta / abs(old_value) if old_value != 0 else float("inf")
-    return delta < limit, delta, limit, relative_delta
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def evaluate_gate_a(
@@ -99,69 +84,132 @@ def evaluate_gate_a(
     escalation_multiplier: int,
     relative_epsilon: float,
     absolute_epsilon: float,
+    expected_golden_fingerprint_sha256: str | None = None,
+    actual_fingerprint_sha256: str | None = None,
+    golden_reference_id: str | None = None,
+    expected_source_sha: str | None = None,
+    actual_source_sha: str | None = None,
 ) -> dict[str, Any]:
+    """Require exact approved-golden equality; never substitute mean deltas.
+
+    The relative/absolute epsilon parameters remain in the call contract for
+    compatibility with the Stage 7 authoring layer, but Gate A does not use them.
+    Gate B owns confidence-interval tolerances. Runtime callers that do not supply
+    an approved golden identity are explicitly BLOCKED rather than implicitly PASS.
+    """
+    del relative_epsilon, absolute_epsilon, current_metrics
+
     if escalation_multiplier != STATISTICAL_ESCALATION_MULTIPLIER:
         raise ValueError("escalation_multiplier differs from approved policy")
 
+    expected_n = previous_n * escalation_multiplier if previous_n is not None else None
+    base = {
+        "previous_n": previous_n,
+        "current_n": current_n,
+        "expected_current_n": expected_n,
+        "metrics": {},
+    }
+
     if previous_n is None or previous_metrics is None:
         return {
+            **base,
             "checked": False,
             "stable": False,
-            "previous_n": previous_n,
-            "current_n": current_n,
-            "expected_current_n": None,
-            "reason": "no previous stability point",
-            "metrics": {},
+            "status": "BLOCKED",
+            "reason": "no previous stability point to anchor Gate A",
         }
 
     if not is_statistical_checkpoint(previous_n):
         return {
+            **base,
             "checked": False,
             "stable": False,
-            "previous_n": previous_n,
-            "current_n": current_n,
+            "status": "BLOCKED",
             "expected_current_n": next_statistical_checkpoint(previous_n),
             "reason": "previous N is not an approved statistical checkpoint",
-            "metrics": {},
         }
 
-    expected_n = previous_n * escalation_multiplier
     if current_n != expected_n:
         return {
+            **base,
             "checked": False,
             "stable": False,
-            "previous_n": previous_n,
-            "current_n": current_n,
-            "expected_current_n": expected_n,
+            "status": "BLOCKED",
             "reason": "current N is not previous N multiplied by escalation multiplier",
-            "metrics": {},
         }
 
-    metric_payload: dict[str, dict[str, Any]] = {}
-    all_stable = True
-    for name in STABILITY_METRICS:
-        old_mean = float(previous_metrics[name]["mean"])
-        new_mean = float(current_metrics[name]["mean"])
-        stable, delta, limit, relative_delta = _stable_delta(
-            old_mean, new_mean, relative_epsilon, absolute_epsilon
-        )
-        metric_payload[name] = {
-            "previous_mean": old_mean,
-            "current_mean": new_mean,
-            "absolute_change": delta,
-            "relative_change": relative_delta,
-            "limit": limit,
-            "stable": stable,
+    evidence = (
+        expected_golden_fingerprint_sha256,
+        actual_fingerprint_sha256,
+        golden_reference_id,
+        expected_source_sha,
+        actual_source_sha,
+    )
+    if any(not isinstance(value, str) or not value.strip() for value in evidence):
+        return {
+            **base,
+            "checked": False,
+            "stable": False,
+            "status": "BLOCKED",
+            "reason": "approved exact-golden fingerprint and source identity evidence not supplied",
         }
-        all_stable = all_stable and stable
 
+    if not _SHA256_RE.fullmatch(expected_golden_fingerprint_sha256 or ""):
+        return {
+            **base,
+            "checked": True,
+            "stable": False,
+            "status": "FAIL",
+            "reason": "approved golden fingerprint is not a canonical lowercase SHA-256",
+        }
+    if not _SHA256_RE.fullmatch(actual_fingerprint_sha256 or ""):
+        return {
+            **base,
+            "checked": True,
+            "stable": False,
+            "status": "FAIL",
+            "reason": "actual fingerprint is not a canonical lowercase SHA-256",
+        }
+    if not _COMMIT_SHA_RE.fullmatch(expected_source_sha or ""):
+        return {
+            **base,
+            "checked": True,
+            "stable": False,
+            "status": "FAIL",
+            "reason": "golden source SHA is not a canonical lowercase commit SHA",
+        }
+    if not _COMMIT_SHA_RE.fullmatch(actual_source_sha or ""):
+        return {
+            **base,
+            "checked": True,
+            "stable": False,
+            "status": "FAIL",
+            "reason": "actual source SHA is not a canonical lowercase commit SHA",
+        }
+    if expected_source_sha != actual_source_sha:
+        return {
+            **base,
+            "checked": True,
+            "stable": False,
+            "status": "FAIL",
+            "reason": "golden and actual source identities differ",
+            "golden_reference_id": golden_reference_id,
+            "expected_source_sha": expected_source_sha,
+            "actual_source_sha": actual_source_sha,
+        }
+
+    exact_match = expected_golden_fingerprint_sha256 == actual_fingerprint_sha256
     return {
+        **base,
         "checked": True,
-        "stable": all_stable,
-        "previous_n": previous_n,
-        "current_n": current_n,
-        "expected_current_n": expected_n,
-        "metrics": metric_payload,
+        "stable": exact_match,
+        "status": "PASS" if exact_match else "FAIL",
+        "golden_reference_id": golden_reference_id,
+        "golden_fingerprint_sha256": expected_golden_fingerprint_sha256,
+        "actual_fingerprint_sha256": actual_fingerprint_sha256,
+        "expected_source_sha": expected_source_sha,
+        "actual_source_sha": actual_source_sha,
+        "reason": None if exact_match else "actual fingerprint differs from approved golden",
     }
 
 
