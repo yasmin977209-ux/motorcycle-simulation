@@ -48,18 +48,18 @@ def filter_statistical_history(
         raw_n = item.get("n")
         try:
             n = int(raw_n)
-        except (TypeError, ValueError):
-            discarded.append(None)
-            continue
+        except (TypeError, ValueError) as exc:
+            raise ValueError("stability history contains a missing or invalid N") from exc
+
+        if n in seen:
+            raise ValueError(f"duplicate stability-history N={n}")
+        seen.add(n)
 
         if last_seen is not None and n < last_seen:
             raise ValueError("stability history is not ordered by increasing N")
         last_seen = n
 
         if is_statistical_checkpoint(n):
-            if n in seen:
-                raise ValueError(f"duplicate statistical checkpoint N={n}")
-            seen.add(n)
             kept.append(item)
         else:
             discarded.append(n)

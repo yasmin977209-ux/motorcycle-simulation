@@ -211,3 +211,15 @@ def test_statistical_escalation_uses_only_approved_doubling_points() -> None:
     assert [item["n"] for item in accepted] == [300]
     assert discarded == [350, 400, 450, 500, 550]
     assert [item["n"] for item in original] == [300, 350, 400, 450, 500, 550]
+
+
+def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_entries() -> None:
+    import pytest
+    from scripts.stage7_stability import filter_statistical_history
+
+    with pytest.raises(ValueError, match="missing or invalid N"):
+        filter_statistical_history([{"metrics": {}}])
+    with pytest.raises(ValueError, match="duplicate stability-history N"):
+        filter_statistical_history([{"n": 350}, {"n": 350}])
+    with pytest.raises(ValueError, match="not ordered"):
+        filter_statistical_history([{"n": 400}, {"n": 350}])
