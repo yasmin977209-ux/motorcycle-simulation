@@ -1,0 +1,249 @@
+name: CP Stage 7 exact-golden provider and historical resume verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage7-golden-provider-20261013
+    paths:
+      - ".github/workflows/cp-stage7-golden-provider-verify.yml"
+      - ".github/workflows/stage7-full-run.yml"
+      - "run_batch.py"
+      - "scripts/stage7_golden_reference.py"
+      - "scripts/stage7_history_restore.py"
+      - "scripts/stage7_golden_audit.py"
+      - "scripts/data/stage12_golden_fingerprints_v1.json"
+      - "tests/test_run_batch.py"
+      - "tests/test_stage7_golden_reference.py"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  unit-and-static:
+    name: Unit, regression, AST and YAML validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pytest pyyaml
+      - name: Run Gate A and Stage 7 regression paths
+        run: |
+          python -m pytest -q \
+            tests/test_stage7_golden_reference.py \
+            tests/test_run_batch.py \
+            tests/test_stage7_authoring.py \
+            tests/test_stage13_gatea_fingerprint_bridge.py \
+            tests/test_stage3_path_integration.py \
+            tests/test_stage3b_path1.py \
+            tests/test_stage3b_paths.py
+      - name: Parse Python and workflow source including the embedded Stage 7 orchestrator
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          import textwrap
+          import yaml
+
+          for path in (
+              "run_batch.py",
+              "scripts/stage7_golden_reference.py",
+              "scripts/stage7_history_restore.py",
+              "scripts/stage7_golden_audit.py",
+              "scripts/build_stage7_golden_manifest.py",
+              "tests/test_run_batch.py",
+              "tests/test_stage7_golden_reference.py",
+          ):
+              ast.parse(Path(path).read_text(encoding="utf-8"), filename=path)
+          for path in (
+              ".github/workflows/stage7-full-run.yml",
+              ".github/workflows/cp-stage7-golden-provider-verify.yml",
+          ):
+              yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+          text = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
+          start_marker = "cat > /tmp/stage7_orchestrator.py <<'PY'\n"
+          end_marker = "\n          PY\n          python /tmp/stage7_orchestrator.py"
+          start = text.index(start_marker) + len(start_marker)
+          end = text.index(end_marker, start)
+          ast.parse(textwrap.dedent(text[start:end]), filename="stage7-full-run.yml#orchestrator")
+          spec = yaml.safe_load(Path(".github/workflows/cp-stage7-golden-provider-verify.yml").read_text(encoding="utf-8"))
+          trigger = spec.get("on") or spec.get(True) or {}
+          assert trigger["push"]["branches"] == ["tmp/cp-stage7-golden-provider-20261013"]
+          assert "workflow_dispatch" not in trigger
+          assert spec["jobs"]["unit-and-static"]["timeout-minutes"] == 15
+          assert spec["jobs"]["restore-historical"]["timeout-minutes"] == 12
+          assert spec["jobs"]["aggregate-historical"]["timeout-minutes"] == 10
+          assert "GATE_A_PREFLIGHT_BLOCKED=" in text
+          assert "restore_historical_results(" in text
+          assert "MODEL_SOURCE_ROOT" in text
+          assert "evaluate_gate_a_for_results(" in text
+          assert "runpy.run_path(script_path,run_name='__main__')" in text
+          print("PYTHON_AND_YAML_AND_EMBEDDED_STAGE7_AST=PASS")
+          PY
+
+  restore-historical:
+    name: Read-only verified historical restore — ${{ matrix.scenario }}
+    needs: [unit-and-static]
+    if: needs.unit-and-static.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Create exact pinned source worktree
+        env:
+          SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          MODEL_SOURCE_ROOT: ${{ runner.temp }}/stage7-pinned-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$MODEL_SOURCE_ROOT" "$SOURCE_SHA"
+          test "$(git -C "$MODEL_SOURCE_ROOT" rev-parse HEAD)" = "$SOURCE_SHA"
+      - name: Restore historical source rows and verify exact goldens
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          MASTER_SEED: "20270101"
+          MODEL_SOURCE_ROOT: ${{ runner.temp }}/stage7-pinned-source
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          python scripts/stage7_golden_audit.py \
+            --scenario "$SCENARIO" \
+            --model-source-root "$MODEL_SOURCE_ROOT" \
+            --source-sha "$SOURCE_SHA" \
+            --master-seed "$MASTER_SEED" \
+            --manifest scripts/data/stage12_golden_fingerprints_v1.json \
+            --blocks-dir "$RUNNER_TEMP/restore/$SCENARIO/blocks" \
+            --output "$RUNNER_TEMP/golden_restore_$SCENARIO.json"
+      - name: Upload read-only restoration proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-golden-restore-${{ matrix.scenario }}
+          path: ${{ runner.temp }}/golden_restore_${{ matrix.scenario }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-historical:
+    name: Require exact golden restore across all 25 scenarios
+    needs: [unit-and-static, restore-historical]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download scenario restoration proofs
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage7-golden-restore-*
+          path: historical_restore_reports
+          merge-multiple: true
+      - name: Aggregate and require complete exact-match evidence
+        env:
+          RESTORE_JOB_RESULT: ${{ needs.restore-historical.result }}
+          UNIT_JOB_RESULT: ${{ needs.unit-and-static.result }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("historical_restore_reports")
+          reports = []
+          for path in sorted(root.glob("golden_restore_*.json")):
+              reports.append(json.loads(path.read_text(encoding="utf-8")))
+          expected = {
+              f"C{c:03d}_G{g:03d}"
+              for c in (100, 85, 70, 50, 30)
+              for g in (100, 70, 50, 30, 0)
+          }
+          scenarios = [r.get("scenario") for r in reports]
+          assert os.environ["UNIT_JOB_RESULT"] == "success", "UNIT_OR_STATIC_VALIDATION_FAILED"
+          assert os.environ["RESTORE_JOB_RESULT"] == "success", "HISTORICAL_RESTORE_MATRIX_FAILED"
+          assert len(reports) == 25 and set(scenarios) == expected and len(set(scenarios)) == 25
+          assert all(r.get("status") == "PASS" for r in reports)
+          assert all(r.get("simulation_or_trial_executed") is False for r in reports)
+          assert all(r.get("historical_trials_rerun") is False for r in reports)
+          assert all(r.get("historical_dataset_modified") is False for r in reports)
+          assert sum(int(r["restored_trial_count"]) for r in reports) == 11005
+          non_c100 = [r for r in reports if not r["scenario"].startswith("C100_")]
+          c100 = [r for r in reports if r["scenario"].startswith("C100_")]
+          assert len(non_c100) == 20 and len(c100) == 5
+          assert all(r["gate_a_n300"]["status"] == "PASS" for r in non_c100)
+          assert all(r["gate_a_n300"]["status"] == "NOT_APPLICABLE_C100" for r in c100)
+          assert {r["global_golden_trial_map_sha256"] for r in reports} == {
+              "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+          }
+          print(json.dumps({
+              "result": "PASS",
+              "scenarios": len(reports),
+              "historical_trials_restored_and_verified": sum(int(r["restored_trial_count"]) for r in reports),
+              "non_c100_gate_a_n300_pass": len(non_c100),
+              "c100_gate_a_not_applicable": len(c100),
+              "simulation_or_trial_executed": False,
+              "historical_trials_rerun": False,
+              "global_golden_trial_map_sha256": next(iter({r["global_golden_trial_map_sha256"] for r in reports})),
+          }, indent=2))
+          PY
