@@ -141,7 +141,7 @@ def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
     assert "STALE_RUN_STOPPED=" in preflight
 
 
-def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
+def test_stage7_preflight_state_reset_is_limited_to_verified_canonical_coverage() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
     assert "SCENARIOS=(" in preflight
@@ -150,21 +150,28 @@ def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     assert "C070_G100 C070_G070 C070_G050 C070_G030 C070_G000" in preflight
     assert "C050_G100 C050_G070 C050_G050 C050_G030 C050_G000" in preflight
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
+    assert "STAGE7_STATE_UNREADABLE=" in preflight
+    assert "STAGE7_STATE_IDENTITY_MISMATCH=" in preflight
+    assert "STAGE7_STATE_PRESERVED_NONCANONICAL_COMPLETION=" in preflight
+    assert "STAGE7_STATE_RESET_TO_RESTORE_VERIFIED_CANONICAL_ROWS=" in preflight
     assert "STAGE7_STATE_ABSENT=" in preflight
     assert "git/refs/heads/${STATE_BRANCH}" in preflight
     assert '-f "sha=${SOURCE_SHA}"' in preflight
     assert "-F force=true" in preflight
 
 
-def test_stage7_preflight_preserves_state_for_same_run_and_resets_other_runs() -> None:
+def test_stage7_preflight_preserves_same_run_and_noncanonical_history() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
-    assert "STATE_CONTENTS=\"repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}\"" in preflight
+    assert 'STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"' in preflight
     assert "jq -r '.run_id // empty'" in preflight
+    assert "jq -r '.source_sha // empty'" in preflight
+    assert "jq -r '.scenario // empty'" in preflight
+    assert "jq -r '.completed_trials // 0'" in preflight
     assert 'if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then' in preflight
     assert "STAGE7_STATE_RESUME=" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
+    assert "STAGE7_STATE_PRESERVED_NONCANONICAL_COMPLETION=" in preflight
+    assert "STAGE7_STATE_RESET_TO_RESTORE_VERIFIED_CANONICAL_ROWS=" in preflight
 
 
 def test_stage7_restore_artifacts_is_scoped_to_current_workflow_run() -> None:
