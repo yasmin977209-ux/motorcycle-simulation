@@ -862,5 +862,3 @@ def assemble_workbook(data, output_path, mode="canonical"):
         "daily_sheets": audit["daily_sheet_count"], "excel_errors": 0, "formula_cells": 0,
         "stats_precision_serialization": precision,
     }
-
-
