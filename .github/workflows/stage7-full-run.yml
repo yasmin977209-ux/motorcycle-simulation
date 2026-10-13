@@ -293,12 +293,25 @@ jobs:
             exit 0
           fi
 
+      - name: Checkout exact pinned model source worktree
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          MODEL_SOURCE_ROOT: ${{ runner.temp }}/stage7-pinned-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e "$MODEL_SOURCE_ROOT"
+          git worktree add --detach "$MODEL_SOURCE_ROOT" "$SOURCE_SHA"
+          test "$(git -C "$MODEL_SOURCE_ROOT" rev-parse HEAD)" = "$SOURCE_SHA"
+          echo "PINNED_MODEL_SOURCE_CHECKOUT=PASS SHA=$SOURCE_SHA"
+
       - name: Adaptive scenario orchestration
         env:
           PYTHONPATH: .
           GH_TOKEN: ${{ github.token }}
           SCENARIO: ${{ matrix.scenario }}
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          MODEL_SOURCE_ROOT: ${{ runner.temp }}/stage7-pinned-source
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -326,6 +339,10 @@ jobs:
           import time
           JOB_STARTED_AT_EPOCH = time.time()
           from pathlib import Path
+          WORKSPACE_ROOT = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          MODEL_SOURCE_ROOT = Path(os.environ["MODEL_SOURCE_ROOT"]).resolve()
+          sys.path.insert(0, str(WORKSPACE_ROOT))
+          sys.path.insert(0, str(MODEL_SOURCE_ROOT))
           import numpy as np
           import pyarrow.parquet as pq
           from scipy.stats import t
@@ -340,9 +357,14 @@ jobs:
               validate_trial_sequence,
           )
           from scripts.stage7_stability import (
-              evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
+              evaluate_gate_b, filter_statistical_history,
               is_statistical_checkpoint, next_statistical_checkpoint,
           )
+          from scripts.stage7_golden_reference import (
+              evaluate_gate_a_for_results,
+              validate_model_source,
+          )
+          from scripts.stage7_history_restore import restore_historical_results
 
           REPO = os.environ["GITHUB_REPOSITORY"]
           TOKEN = os.environ["GH_TOKEN"]
@@ -359,6 +381,13 @@ jobs:
           RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
           ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
           JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
+          MANIFEST_PATH = WORKSPACE_ROOT / "scripts" / "data" / "stage12_golden_fingerprints_v1.json"
+          MODEL_MODULES = {
+              "constants": constants,
+              "daily_engine": daily_engine,
+              "rng": rng,
+              "monte_carlo": monte_carlo,
+          }
           CP3_SCENARIO = os.environ["CP3_SCENARIO"]
           CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
           RESULTS_DIR = Path("results_stage7") / SCENARIO
@@ -422,10 +451,213 @@ jobs:
           state, blob_sha = store.acquire()
           atexit.register(store.release)
 
+          pre_restore_completed = int(state.get("completed_trials", 0))
+          prior_history = list(state.get("stability_history", []))
+          results = all_results()
+          history = list(prior_history)
+
+          try:
+              actual_model_head = validate_model_source(
+                  MODEL_SOURCE_ROOT,
+                  expected_source_sha=SOURCE_SHA,
+                  loaded_modules=MODEL_MODULES,
+              )
+              if actual_model_head != SOURCE_SHA:
+                  raise RuntimeError(
+                      f"PINNED_MODEL_SOURCE_SHA_MISMATCH expected={SOURCE_SHA} actual={actual_model_head}"
+                  )
+          except Exception as exc:
+              state["final_status"] = "blocked"
+              state["stable_at_n"] = None
+              state["included_in_final_stats"] = False
+              state["reason_if_not_stable"] = (
+                  f"PINNED_MODEL_SOURCE_BLOCKED: {type(exc).__name__}: {exc}"
+              )
+              blob_sha = store.save_state(state, blob_sha)
+              print("PINNED_MODEL_SOURCE_BLOCKED=" + state["reason_if_not_stable"])
+              raise SystemExit(1)
+
+          if not results:
+              canonical_limit = 1 if SCENARIO.startswith("C100_") else 550
+              if pre_restore_completed > canonical_limit:
+                  state["final_status"] = "blocked"
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      "HISTORICAL_RESTORE_BLOCKED: state records completed trial IDs "
+                      f"through {pre_restore_completed}, but immutable golden artifacts cover only "
+                      f"1..{canonical_limit}; refusing to discard or rerun any completed trial."
+                  )
+                  blob_sha = store.save_state(state, blob_sha)
+                  print("HISTORICAL_RESTORE_BLOCKED=" + state["reason_if_not_stable"])
+                  raise SystemExit(1)
+
+              try:
+                  restore_record = restore_historical_results(
+                      repo=REPO,
+                      token=TOKEN,
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      master_seed=MASTER_SEED,
+                      model_source_root=MODEL_SOURCE_ROOT,
+                      loaded_modules=MODEL_MODULES,
+                      manifest_path=MANIFEST_PATH,
+                      blocks_dir=BLOCKS_DIR,
+                  )
+              except Exception as exc:
+                  state["final_status"] = "blocked"
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      f"HISTORICAL_RESTORE_BLOCKED: {type(exc).__name__}: {exc}"
+                  )
+                  blob_sha = store.save_state(state, blob_sha)
+                  write_json(
+                      RESULTS_DIR / "historical_restore.json",
+                      {
+                          "status": "BLOCKED",
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "master_seed": MASTER_SEED,
+                          "simulation_or_trial_executed": False,
+                          "historical_trials_rerun": False,
+                          "reason": state["reason_if_not_stable"],
+                      },
+                  )
+                  print("HISTORICAL_RESTORE_BLOCKED=" + state["reason_if_not_stable"])
+                  raise SystemExit(1)
+
+              results = all_results()
+              completed = len(results)
+              next_trial_id = completed + 1
+              if not results or completed != canonical_limit:
+                  raise RuntimeError(
+                      f"HISTORICAL_RESTORE_ROW_COUNT_MISMATCH expected={canonical_limit} actual={completed}"
+                  )
+
+              history = []
+              if not SCENARIO.startswith("C100_"):
+                  baseline_results = results[:INITIAL_NON_C100]
+                  if len(baseline_results) != INITIAL_NON_C100:
+                      raise RuntimeError("N300_BASELINE_RECONSTRUCTION_ROWS_MISSING")
+                  baseline_metrics = statistics(baseline_results)
+                  baseline_gate_a = evaluate_gate_a_for_results(
+                      previous_n=None,
+                      previous_metrics=None,
+                      current_n=INITIAL_NON_C100,
+                      current_metrics=baseline_metrics,
+                      escalation_multiplier=ESCALATION_MULTIPLIER,
+                      relative_epsilon=RELATIVE_EPSILON,
+                      absolute_epsilon=ABSOLUTE_EPSILON,
+                      results=baseline_results,
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      master_seed=MASTER_SEED,
+                      model_source_root=MODEL_SOURCE_ROOT,
+                      manifest_path=MANIFEST_PATH,
+                      loaded_modules=MODEL_MODULES,
+                  )
+                  baseline_gate_b = evaluate_gate_b(baseline_metrics)
+                  history = [{
+                      "n": INITIAL_NON_C100,
+                      "gate_a": baseline_gate_a,
+                      "gate_b": baseline_gate_b,
+                      "metrics": baseline_metrics,
+                      "reconstructed_from_verified_historical_golden": True,
+                      "historical_trial_ids_reused": list(range(1, INITIAL_NON_C100 + 1)),
+                  }]
+                  if baseline_gate_a.get("status") != "PASS" or baseline_gate_a.get("checked") is not True:
+                      state["final_status"] = (
+                          "failed" if baseline_gate_a.get("status") == "FAIL" else "blocked"
+                      )
+                      state["stable_at_n"] = None
+                      state["included_in_final_stats"] = False
+                      state["completed_trials"] = completed
+                      state["next_trial_id"] = next_trial_id
+                      state["stability_history"] = history
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                      state["reason_if_not_stable"] = (
+                          "Historical N=300 exact-golden Gate A did not PASS: "
+                          + str(baseline_gate_a.get("reason"))
+                      )
+                      blob_sha = store.save_state(state, blob_sha)
+                      write_json(RESULTS_DIR / "historical_restore.json", restore_record)
+                      print("HISTORICAL_N300_GATE_A_" + str(baseline_gate_a.get("status")))
+                      raise SystemExit(1)
+
+              legacy_checkpoint_ns = [
+                  int(item["n"])
+                  for item in prior_history
+                  if isinstance(item, dict) and item.get("n") is not None
+              ]
+              state["policy_migration"] = {
+                  "from_policy_id": (state.get("policy") or {}).get("statistical_policy_id", "LEGACY_UNVERSIONED"),
+                  "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+                  "completed_trials_reused": completed,
+                  "historical_trials_rerun": False,
+                  "canonical_historical_trials_reused": list(range(1, completed + 1)),
+                  "legacy_linear_checkpoint_n_excluded_from_current_policy": legacy_checkpoint_ns,
+                  "n300_gate_a_reconstructed_from_verified_golden_rows": not SCENARIO.startswith("C100_"),
+                  "source_sha": SOURCE_SHA,
+                  "master_seed": MASTER_SEED,
+              }
+              state["completed_trials"] = completed
+              state["next_trial_id"] = next_trial_id
+              state["stability_history"] = history
+              state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+              state["artifact_identity"] = build_artifact_identity(
+                  scenario=SCENARIO,
+                  source_sha=SOURCE_SHA,
+                  trial_id_start=1,
+                  trial_id_end=completed,
+                  fingerprint_sha256=state["final_fingerprint"],
+              )
+              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+              state["policy"] = {
+                  "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+                  "initial_non_c100_trials": INITIAL_NON_C100,
+                  "initial_c100_trials": INITIAL_C100,
+                  "escalation_multiplier": ESCALATION_MULTIPLIER,
+                  "stability_consecutive_checks": REQUIRED_CONSECUTIVE,
+                  "ci_relative_epsilon": RELATIVE_EPSILON,
+                  "ci_absolute_epsilon": ABSOLUTE_EPSILON,
+              }
+              state["next_check_n"] = (
+                  None if SCENARIO.startswith("C100_")
+                  else next_statistical_checkpoint(completed)
+              )
+              state["final_status"] = "running"
+              state["stable_at_n"] = None
+              state["included_in_final_stats"] = False
+              state["reason_if_not_stable"] = (
+                  "Verified historical trial rows restored without rerunning completed trials; "
+                  "legacy +50 checkpoints are excluded from the active doubling policy."
+              )
+              state["historical_restore"] = restore_record
+              blob_sha = store.save_state(state, blob_sha)
+              write_json(RESULTS_DIR / "historical_restore.json", restore_record)
+              print(
+                  "HISTORICAL_ROWS_RESTORED="
+                  + json.dumps({
+                      "scenario": SCENARIO,
+                      "trial_count": completed,
+                      "historical_trials_rerun": False,
+                      "source_sha": SOURCE_SHA,
+                      "golden_global_sha256": restore_record["global_golden_trial_map_sha256"],
+                      "aggregate_fingerprint_sha256": restore_record["historical_trial_result_fingerprint_sha256"],
+                      "next_check_n": state["next_check_n"],
+                  }, sort_keys=True)
+              )
+
           completed = int(state.get("completed_trials", 0))
-          next_trial_id = int(
-              state.get("next_trial_id", completed + 1)
-          )
+          next_trial_id = int(state.get("next_trial_id", completed + 1))
           history = list(state.get("stability_history", []))
           results = all_results()
 
@@ -479,7 +711,7 @@ jobs:
                       baseline_metrics = statistics(baseline_results)
                       history.insert(0, {
                           "n": INITIAL_NON_C100,
-                          "gate_a": evaluate_gate_a(
+                          "gate_a": evaluate_gate_a_for_results(
                               previous_n=None,
                               previous_metrics=None,
                               current_n=INITIAL_NON_C100,
@@ -487,6 +719,13 @@ jobs:
                               escalation_multiplier=ESCALATION_MULTIPLIER,
                               relative_epsilon=RELATIVE_EPSILON,
                               absolute_epsilon=ABSOLUTE_EPSILON,
+                              results=baseline_results,
+                              scenario=SCENARIO,
+                              source_sha=SOURCE_SHA,
+                              master_seed=MASTER_SEED,
+                              model_source_root=MODEL_SOURCE_ROOT,
+                              manifest_path=MANIFEST_PATH,
+                              loaded_modules=MODEL_MODULES,
                           ),
                           "gate_b": evaluate_gate_b(baseline_metrics),
                           "metrics": baseline_metrics,
@@ -654,17 +893,31 @@ jobs:
               trial_end = target_n
 
               if trial_end >= trial_start:
-                  subprocess.run([
-                      sys.executable,
-                      "-m", "scripts.stage7_run_trial_block",
-                      "--scenario", SCENARIO,
-                      "--trial-id-start", str(trial_start),
-                      "--trial-id-end", str(trial_end),
-                      "--source-sha", SOURCE_SHA,
-                      "--run-id", RUN_ID,
-                      "--output-dir", "results_stage7",
-                      "--master-seed", str(MASTER_SEED),
-                  ], check=True)
+                  bootstrap = (
+                      "import runpy,sys; "
+                      "source_root,script_path=sys.argv[1],sys.argv[2]; "
+                      "sys.path.insert(0,source_root); "
+                      "sys.argv=[script_path,*sys.argv[3:]]; "
+                      "runpy.run_path(script_path,run_name='__main__')"
+                  )
+                  subprocess.run(
+                      [
+                          sys.executable,
+                          "-c",
+                          bootstrap,
+                          str(MODEL_SOURCE_ROOT),
+                          str(WORKSPACE_ROOT / "scripts" / "stage7_run_trial_block.py"),
+                          "--scenario", SCENARIO,
+                          "--trial-id-start", str(trial_start),
+                          "--trial-id-end", str(trial_end),
+                          "--source-sha", SOURCE_SHA,
+                          "--run-id", RUN_ID,
+                          "--output-dir", "results_stage7",
+                          "--master-seed", str(MASTER_SEED),
+                      ],
+                      check=True,
+                      cwd=str(WORKSPACE_ROOT),
+                  )
                   completed = trial_end
 
               state["completed_trials"] = completed
@@ -759,7 +1012,7 @@ jobs:
                   current_stats = statistics(results)
                   previous = history[-1] if history else None
 
-                  gate_a = evaluate_gate_a(
+                  gate_a = evaluate_gate_a_for_results(
                       previous_n=previous.get("n") if previous else None,
                       previous_metrics=previous.get("metrics") if previous else None,
                       current_n=len(results),
@@ -767,6 +1020,13 @@ jobs:
                       escalation_multiplier=ESCALATION_MULTIPLIER,
                       relative_epsilon=RELATIVE_EPSILON,
                       absolute_epsilon=ABSOLUTE_EPSILON,
+                      results=results,
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      master_seed=MASTER_SEED,
+                      model_source_root=MODEL_SOURCE_ROOT,
+                      manifest_path=MANIFEST_PATH,
+                      loaded_modules=MODEL_MODULES,
                   )
                   gate_b = evaluate_gate_b(current_stats)
 
