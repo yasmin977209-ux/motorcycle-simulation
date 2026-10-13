@@ -196,6 +196,19 @@ def _matching_golden_kwargs() -> dict[str, str]:
     }
 
 
+def test_gate_a_first_checkpoint_can_pass_only_with_exact_golden() -> None:
+    current = _metrics((1000, 700, 300), stable=True)
+    gate_a = evaluate_gate_a(
+        previous_n=None, previous_metrics=None, current_n=300,
+        current_metrics=current, escalation_multiplier=2,
+        relative_epsilon=0.01, absolute_epsilon=1,
+        **_matching_golden_kwargs(),
+    )
+    assert gate_a["checked"] is True
+    assert gate_a["status"] == "PASS"
+    assert gate_a["stable"] is True
+
+
 def test_gate_a_missing_golden_is_blocked_even_when_metrics_are_close() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1001, 700.5, 300.2), stable=True)
@@ -325,6 +338,15 @@ def test_gate_a_rejects_malformed_fingerprint() -> None:
     assert gate_a["checked"] is True
     assert gate_a["stable"] is False
     assert gate_a["status"] == "FAIL"
+
+
+def test_stage7_fails_closed_on_unverified_resume_and_stable_state() -> None:
+    text = _workflow_text()
+    assert 'if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:' in text
+    assert 'latest_status = latest_gate_a.get("status")' in text
+    assert 'state.get("final_status") == "stable"' in text
+    assert 'item.get("gate_a", {}).get("status") == "PASS"' in text
+    assert 'GATE_A_PREFLIGHT_BLOCKED=' in text
 
 
 def test_c100_n1_without_rerun_is_not_allowed_to_be_stable() -> None:

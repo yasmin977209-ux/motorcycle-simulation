@@ -102,7 +102,7 @@ def evaluate_gate_a(
     if escalation_multiplier != STATISTICAL_ESCALATION_MULTIPLIER:
         raise ValueError("escalation_multiplier differs from approved policy")
 
-    expected_n = previous_n * escalation_multiplier if previous_n is not None else None
+    expected_n = previous_n * escalation_multiplier if previous_n is not None else current_n
     base = {
         "previous_n": previous_n,
         "current_n": current_n,
@@ -110,33 +110,41 @@ def evaluate_gate_a(
         "metrics": {},
     }
 
-    if previous_n is None or previous_metrics is None:
-        return {
-            **base,
-            "checked": False,
-            "stable": False,
-            "status": "BLOCKED",
-            "reason": "no previous stability point to anchor Gate A",
-        }
-
-    if not is_statistical_checkpoint(previous_n):
-        return {
-            **base,
-            "checked": False,
-            "stable": False,
-            "status": "BLOCKED",
-            "expected_current_n": next_statistical_checkpoint(previous_n),
-            "reason": "previous N is not an approved statistical checkpoint",
-        }
-
-    if current_n != expected_n:
-        return {
-            **base,
-            "checked": False,
-            "stable": False,
-            "status": "BLOCKED",
-            "reason": "current N is not previous N multiplied by escalation multiplier",
-        }
+    if previous_n is None:
+        if not is_statistical_checkpoint(current_n):
+            return {
+                **base,
+                "checked": False,
+                "stable": False,
+                "status": "BLOCKED",
+                "reason": "current N is not an approved statistical checkpoint",
+            }
+    else:
+        if previous_metrics is None:
+            return {
+                **base,
+                "checked": False,
+                "stable": False,
+                "status": "BLOCKED",
+                "reason": "previous checkpoint metrics are missing",
+            }
+        if not is_statistical_checkpoint(previous_n):
+            return {
+                **base,
+                "checked": False,
+                "stable": False,
+                "status": "BLOCKED",
+                "expected_current_n": next_statistical_checkpoint(previous_n),
+                "reason": "previous N is not an approved statistical checkpoint",
+            }
+        if current_n != expected_n:
+            return {
+                **base,
+                "checked": False,
+                "stable": False,
+                "status": "BLOCKED",
+                "reason": "current N is not previous N multiplied by escalation multiplier",
+            }
 
     evidence = (
         expected_golden_fingerprint_sha256,
@@ -156,34 +164,22 @@ def evaluate_gate_a(
 
     if not _SHA256_RE.fullmatch(expected_golden_fingerprint_sha256 or ""):
         return {
-            **base,
-            "checked": True,
-            "stable": False,
-            "status": "FAIL",
+            **base, "checked": True, "stable": False, "status": "FAIL",
             "reason": "approved golden fingerprint is not a canonical lowercase SHA-256",
         }
     if not _SHA256_RE.fullmatch(actual_fingerprint_sha256 or ""):
         return {
-            **base,
-            "checked": True,
-            "stable": False,
-            "status": "FAIL",
+            **base, "checked": True, "stable": False, "status": "FAIL",
             "reason": "actual fingerprint is not a canonical lowercase SHA-256",
         }
     if not _COMMIT_SHA_RE.fullmatch(expected_source_sha or ""):
         return {
-            **base,
-            "checked": True,
-            "stable": False,
-            "status": "FAIL",
+            **base, "checked": True, "stable": False, "status": "FAIL",
             "reason": "golden source SHA is not a canonical lowercase commit SHA",
         }
     if not _COMMIT_SHA_RE.fullmatch(actual_source_sha or ""):
         return {
-            **base,
-            "checked": True,
-            "stable": False,
-            "status": "FAIL",
+            **base, "checked": True, "stable": False, "status": "FAIL",
             "reason": "actual source SHA is not a canonical lowercase commit SHA",
         }
     if expected_source_sha != actual_source_sha:

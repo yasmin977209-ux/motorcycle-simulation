@@ -733,10 +733,36 @@ def run_batch(
             else initial_target
         )
 
+    gate_a_preflight_stop = False
+    if (
+        not scenario.startswith("C100_")
+        and len(results) >= constants.STATISTICAL_CHECK_START_N
+    ):
+        prior_history = state.get("stability_history", [])
+        prior_gate_a = (
+            prior_history[-1].get("gate_a", {})
+            if prior_history
+            else {}
+        )
+        prior_gate_a_status = prior_gate_a.get("status")
+        if prior_gate_a_status != "PASS":
+            is_failure = prior_gate_a_status == "FAIL"
+            state["final_status"] = "failed" if is_failure else "blocked"
+            state["stable_at_n"] = None
+            state["included_in_final_stats"] = False
+            state["reason_if_not_stable"] = (
+                f"Gate A {prior_gate_a_status or 'UNVERIFIED'}: "
+                "the latest completed checkpoint lacks an explicit exact-golden PASS; "
+                "refusing to execute additional trials"
+            )
+            state["next_check_n"] = next_statistical_checkpoint(len(results))
+            _atomic_write_json(output_dir / STATE_JSON, state)
+            gate_a_preflight_stop = True
+
     batch_end = resolved_start + trials - 1
     resolved_next_check = state["next_check_n"]
 
-    while resolved_start <= batch_end:
+    while resolved_start <= batch_end and not gate_a_preflight_stop:
         if scenario.startswith("C100_"):
             trial_end = 1
         else:
