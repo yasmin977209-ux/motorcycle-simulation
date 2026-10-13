@@ -18,6 +18,12 @@ from scipy.stats import t
 import constants
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
+from scripts.stage7_stability import (
+    STATISTICAL_ESCALATION_POLICY_ID,
+    STATISTICAL_ESCALATION_MULTIPLIER,
+    filter_statistical_history,
+    next_statistical_checkpoint,
+)
 
 
 TRIALS_PARQUET = "trials_summary.parquet"
@@ -258,7 +264,7 @@ def evaluate_gate_a(
             "reason": "no previous stability point",
         }
 
-    expected_n = previous_n + constants.ITERATION_ESCALATION_STEP
+    expected_n = previous_n * STATISTICAL_ESCALATION_MULTIPLIER
     if current_n != expected_n:
         return {
             "checked": False,
@@ -355,14 +361,10 @@ def _checkpoint_identity_is_valid(
     next_trial_id = int(checkpoint.get("next_trial_id", 0))
     next_check_n = int(checkpoint.get("next_check_n", 0))
 
-    if not scenario.startswith("C100_"):
-        if next_check_n < (
-            completed_trials + constants.ITERATION_ESCALATION_STEP
-        ):
-            raise StateIntegrityError(
-                "checkpoint next_check_n is smaller than "
-                "completed_trials + escalation step"
-            )
+    if not scenario.startswith("C100_") and next_check_n <= completed_trials:
+        raise StateIntegrityError(
+            "checkpoint next_check_n must be greater than completed_trials"
+        )
 
     trial_id_start = int(identity.get("trial_id_start", 0))
     trial_id_end = int(identity.get("trial_id_end", 0))
@@ -650,12 +652,13 @@ def run_batch(
         resume_from_checkpoint=resume_from_checkpoint,
         checkpoint=checkpoint,
     )
+    state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
     state["policy"] = {
+        "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
         "c100_start_trials": constants.C100_STATISTICAL_START_TRIALS,
         "non_c100_start_trials": constants.NON_C100_STATISTICAL_START_TRIALS,
-        "escalation_step": constants.ITERATION_ESCALATION_STEP,
+        "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
-        "check_step_n": constants.STATISTICAL_CHECK_STEP_N,
         "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
         "ci_relative_tolerance": constants.CI_RELATIVE_TOLERANCE,
@@ -663,16 +666,102 @@ def run_batch(
     }
 
     if checkpoint is not None:
-        history = list(checkpoint.get("stability_history", []))
-        previous_metrics, previous_n = _latest_stability_point(history)
-        state["stability_history"] = history
-        state["next_check_n"] = (
-            int(checkpoint.get("next_check_n"))
-            if checkpoint.get("next_check_n") is not None
-            else previous_n + constants.ITERATION_ESCALATION_STEP
-            if previous_n is not None
-            else initial_target
+        original_history = list(checkpoint.get("stability_history", []))
+        saved_policy = checkpoint.get("policy") or {}
+        policy_is_current = (
+            saved_policy.get("statistical_policy_id")
+            == STATISTICAL_ESCALATION_POLICY_ID
         )
+
+        if scenario.startswith("C100_"):
+            history = original_history
+            state["stability_history"] = history
+            previous_metrics, previous_n = _latest_stability_point(history)
+            state["next_check_n"] = int(
+                checkpoint.get("next_check_n", initial_target)
+            )
+        elif not policy_is_current and (results or original_history):
+            if len(results) > 550:
+                raise StateIntegrityError(
+                    "legacy linear-schedule checkpoint exceeds the authorized "
+                    "historical analytical range 1..550; cannot migrate safely"
+                )
+            try:
+                history, discarded_points = filter_statistical_history(
+                    original_history
+                )
+            except ValueError as exc:
+                raise StateIntegrityError(str(exc)) from exc
+
+            reconstructed_n300 = False
+            if len(results) >= constants.STATISTICAL_CHECK_START_N and not any(
+                int(item.get("n", -1)) == constants.STATISTICAL_CHECK_START_N
+                for item in history
+            ):
+                baseline_results = results[:constants.STATISTICAL_CHECK_START_N]
+                baseline_metrics = _metric_summary(baseline_results)
+                history.insert(
+                    0,
+                    {
+                        "n": constants.STATISTICAL_CHECK_START_N,
+                        "gate_a": evaluate_gate_a(
+                            previous_metrics=None,
+                            previous_n=None,
+                            current_metrics=baseline_metrics,
+                            current_n=constants.STATISTICAL_CHECK_START_N,
+                        ),
+                        "gate_b": evaluate_gate_b(baseline_metrics),
+                        "metrics": baseline_metrics,
+                        "reconstructed_from_identity_verified_rows": True,
+                    },
+                )
+                reconstructed_n300 = True
+
+            state["policy_migration"] = {
+                "from_policy_id": saved_policy.get(
+                    "statistical_policy_id", "LEGACY_UNVERSIONED"
+                ),
+                "legacy_escalation_step": saved_policy.get("escalation_step"),
+                "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+                "preserved_checkpoint_n": [int(item["n"]) for item in history],
+                "discarded_noncompliant_checkpoint_n": discarded_points,
+                "n300_reconstructed_from_existing_verified_rows": reconstructed_n300,
+                "completed_trials_reused": len(results),
+                "historical_trials_rerun": False,
+                "source_sha": source_sha,
+                "master_seed": master_seed,
+            }
+            if results:
+                state["final_status"] = "running"
+                state["reason_if_not_stable"] = (
+                    "legacy linear checkpoints excluded; resumed under approved doubling policy"
+                )
+                state["stable_at_n"] = None
+                state["included_in_final_stats"] = False
+
+            state["stability_history"] = history
+            previous_metrics, previous_n = _latest_stability_point(history)
+            state["next_check_n"] = next_statistical_checkpoint(len(results))
+        else:
+            try:
+                history, discarded_points = filter_statistical_history(
+                    original_history
+                )
+            except ValueError as exc:
+                raise StateIntegrityError(str(exc)) from exc
+            if discarded_points:
+                raise StateIntegrityError(
+                    "current-policy checkpoint contains non-doubling history points"
+                )
+            expected_next = next_statistical_checkpoint(len(results))
+            saved_next = checkpoint.get("next_check_n")
+            if saved_next is not None and int(saved_next) != expected_next:
+                raise StateIntegrityError(
+                    "checkpoint next_check_n does not match the approved doubling policy"
+                )
+            state["stability_history"] = history
+            previous_metrics, previous_n = _latest_stability_point(history)
+            state["next_check_n"] = expected_next
     else:
         previous_metrics = None
         previous_n = None
@@ -695,7 +784,7 @@ def run_batch(
             ):
                 target = resolved_next_check
             else:
-                target = len(results) + constants.ITERATION_ESCALATION_STEP
+                target = next_statistical_checkpoint(len(results))
             trial_end = min(batch_end, target)
 
         trial_ids = list(range(resolved_start, trial_end + 1))
@@ -793,9 +882,7 @@ def run_batch(
 
             previous_metrics = metrics
             previous_n = len(results)
-            resolved_next_check = (
-                len(results) + constants.ITERATION_ESCALATION_STEP
-            )
+            resolved_next_check = next_statistical_checkpoint(len(results))
             state["next_check_n"] = resolved_next_check
 
             _atomic_write_json(output_dir / STATE_JSON, state)

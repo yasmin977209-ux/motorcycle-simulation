@@ -93,10 +93,10 @@ def test_stage7_authoring_verify_runs_contract_tests() -> None:
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
     assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
 
-def test_stage7_current_timeout_is_90_minutes() -> None:
+def test_stage7_internal_timeout_leaves_cleanup_margin() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
-    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 90
+    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
+    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 45
 
 
 def test_stage7_workflow_does_not_contain_360_timeout() -> None:
@@ -109,13 +109,13 @@ def test_stage7_workflow_does_not_contain_360_timeout() -> None:
     assert all(
         stale not in line
         for line in timeout_lines
-        for stale in ("45", "360")
+        for stale in ("90", "360")
     )
 
 
 def test_stage7_timeout_change_is_documented() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
+    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
     assert "Operational orchestration cap; model logic has no max_days limit." in text
 
 def test_stage7_workflow_has_concurrency_guard() -> None:
@@ -188,7 +188,7 @@ def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
 def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
     current = _metrics((1001, 700.5, 300.2), stable=False)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
     gate_b = evaluate_gate_b(current)
     assert gate_a["stable"] is True
     assert gate_b["stable"] is False
@@ -197,7 +197,7 @@ def test_gate_a_pass_gate_b_fail_is_not_stable() -> None:
 def test_gate_a_fail_gate_b_pass_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1105, 770, 330), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
     gate_b = evaluate_gate_b(current)
     assert gate_a["stable"] is False
     assert gate_b["stable"] is True
@@ -206,7 +206,7 @@ def test_gate_a_fail_gate_b_pass_is_not_stable() -> None:
 def test_gate_a_fail_gate_b_fail_is_not_stable() -> None:
     previous = _metrics((1000, 700, 300), stable=False)
     current = _metrics((1105, 770, 330), stable=False)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
     gate_b = evaluate_gate_b(current)
     assert gate_a["stable"] is False
     assert gate_b["stable"] is False
@@ -214,13 +214,13 @@ def test_gate_a_fail_gate_b_fail_is_not_stable() -> None:
 
 def test_gate_a_pass_gate_b_pass_requires_three_consecutive_points() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
-    p350 = _metrics((1001, 700.5, 300.2), stable=True)
-    p400 = _metrics((1002, 701.0, 300.4), stable=True)
-    p450 = _metrics((1003, 701.5, 300.6), stable=True)
-    pairs = ((300, previous, 350, p350), (350, p350, 400, p400), (400, p400, 450, p450))
+    p600 = _metrics((1001, 700.5, 300.2), stable=True)
+    p1200 = _metrics((1002, 701.0, 300.4), stable=True)
+    p2400 = _metrics((1003, 701.5, 300.6), stable=True)
+    pairs = ((300, previous, 600, p600), (600, p600, 1200, p1200), (1200, p1200, 2400, p2400))
     checks = []
     for previous_n, previous_metrics, current_n, current_metrics in pairs:
-        gate_a = evaluate_gate_a(previous_n=previous_n, previous_metrics=previous_metrics, current_n=current_n, current_metrics=current_metrics, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+        gate_a = evaluate_gate_a(previous_n=previous_n, previous_metrics=previous_metrics, current_n=current_n, current_metrics=current_metrics, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
         gate_b = evaluate_gate_b(current_metrics)
         checks.append(gate_a["stable"] and gate_b["stable"])
     assert checks == [True, True, True]
@@ -261,16 +261,16 @@ def test_c100_stability_is_after_independent_equality_proof() -> None:
     stable_pos = text.index('state["final_status"] = "stable"')
     assert equality_pos < stable_pos
 
-def test_gate_a_requires_exact_n_plus_escalation_step() -> None:
+def test_gate_a_requires_exact_doubling_checkpoint() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1001, 700.5, 300.2), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=351, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=601, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
     assert gate_a["checked"] is False
 
 def test_joint_gate_requires_all_three_metrics() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     current = _metrics((1001, 900, 300.2), stable=True)
-    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=350, current_metrics=current, escalation_step=50, relative_epsilon=0.01, absolute_epsilon=1)
+    gate_a = evaluate_gate_a(previous_n=300, previous_metrics=previous, current_n=600, current_metrics=current, escalation_multiplier=2, relative_epsilon=0.01, absolute_epsilon=1)
     assert gate_a["stable"] is False
 
 
@@ -520,11 +520,11 @@ def test_stage7_state_module_documents_same_run_id_re_run_policy() -> None:
     assert "Same run_id across GitHub re-runs is one logical lease owner." in text
     assert "run_attempt is retained in the record for auditability only." in text
 
-def test_stage7_operational_timeout_is_90_minutes() -> None:
+def test_stage7_operational_timeout_is_45_minutes() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "90"' in text
+    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
     matrix = _workflow()["jobs"]["matrix-simulation"]
-    assert matrix["timeout-minutes"] == 90
+    assert matrix["timeout-minutes"] == 45
 
 
 def test_stage7_workflow_no_longer_exports_unused_log_events_setting() -> None:
@@ -675,3 +675,14 @@ def test_stage7_new_branch_does_not_inherit_root_state() -> None:
     assert state["next_trial_id"] == 1
     assert state["stability_history"] == []
     assert store.state["stage"] == "7"
+
+def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
+    from scripts.stage7_stability import is_statistical_checkpoint, next_statistical_checkpoint
+
+    assert _workflow()["env"]["ESCALATION_MULTIPLIER"] == "2"
+    assert _workflow()["env"]["INITIAL_NON_C100_TRIALS"] == "300"
+    assert [next_statistical_checkpoint(n) for n in (0, 300, 350, 600, 1200)] == [
+        300, 600, 600, 1200, 2400
+    ]
+    assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
+    assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))

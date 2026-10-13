@@ -104,9 +104,9 @@ def test_run_batch_uses_user_approved_policy_not_reference_defaults() -> None:
     required_constants = (
         "constants.C100_STATISTICAL_START_TRIALS",
         "constants.NON_C100_STATISTICAL_START_TRIALS",
-        "constants.ITERATION_ESCALATION_STEP",
+        "STATISTICAL_ESCALATION_POLICY_ID",
+        "STATISTICAL_ESCALATION_MULTIPLIER",
         "constants.STATISTICAL_CHECK_START_N",
-        "constants.STATISTICAL_CHECK_STEP_N",
         "constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED",
         "constants.CI_CONFIDENCE_LEVEL",
         "constants.CI_RELATIVE_TOLERANCE",
@@ -125,7 +125,7 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
     checkpoint = _base_checkpoint()
     checkpoint["stability_history"] = [
         {
-            "n": 450,
+            "n": 300,
             "metrics": {
                 "final_net_project_equity": {"mean": 1000.0, "stable": True},
                 "partner1_final_entitlement": {"mean": 700.0, "stable": True},
@@ -135,10 +135,10 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
             "gate_b": {"stable": True},
         }
     ]
-    checkpoint["next_check_n"] = 500
+    checkpoint["next_check_n"] = 600
 
     previous_metrics = checkpoint["stability_history"][-1]["metrics"]
-    previous_n = 450
+    previous_n = 300
     current_metrics = {
         "final_net_project_equity": {"mean": 1001.0, "stable": True},
         "partner1_final_entitlement": {"mean": 700.5, "stable": True},
@@ -149,13 +149,13 @@ def test_run_batch_resume_after_stable_rechecks_stability() -> None:
         previous_metrics=previous_metrics,
         previous_n=previous_n,
         current_metrics=current_metrics,
-        current_n=500,
+        current_n=600,
     )
 
     assert gate_a["checked"] is True
     assert gate_a["stable"] is True
-    assert gate_a["previous_n"] == 450
-    assert gate_a["current_n"] == 500
+    assert gate_a["previous_n"] == 300
+    assert gate_a["current_n"] == 600
 
 def test_stage8_source_sha_is_literal_in_workflow() -> None:
     text = (REPO_ROOT / ".github" / "workflows" /
@@ -191,3 +191,35 @@ def test_run_batch_c100_checkpoint_skips_escalation_check() -> None:
         scenario="C100_G100",
         source_sha="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
     )
+
+
+def test_statistical_escalation_uses_only_approved_doubling_points() -> None:
+    from scripts.stage7_stability import (
+        filter_statistical_history,
+        is_statistical_checkpoint,
+        next_statistical_checkpoint,
+    )
+
+    assert [next_statistical_checkpoint(n) for n in (0, 300, 350, 599, 600, 1200)] == [
+        300, 600, 600, 600, 1200, 2400
+    ]
+    assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
+    assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
+
+    original = [{"n": n} for n in (300, 350, 400, 450, 500, 550)]
+    accepted, discarded = filter_statistical_history(original)
+    assert [item["n"] for item in accepted] == [300]
+    assert discarded == [350, 400, 450, 500, 550]
+    assert [item["n"] for item in original] == [300, 350, 400, 450, 500, 550]
+
+
+def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_entries() -> None:
+    import pytest
+    from scripts.stage7_stability import filter_statistical_history
+
+    with pytest.raises(ValueError, match="missing or invalid N"):
+        filter_statistical_history([{"metrics": {}}])
+    with pytest.raises(ValueError, match="duplicate stability-history N"):
+        filter_statistical_history([{"n": 350}, {"n": 350}])
+    with pytest.raises(ValueError, match="not ordered"):
+        filter_statistical_history([{"n": 400}, {"n": 350}])

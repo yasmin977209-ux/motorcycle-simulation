@@ -1,13 +1,21 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012",
-  "sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013",
+  "sha": "36f865066dd036c3827778830544ba48224a80b6",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-3B-PYTEST-DEFECT-FIX is complete and merged via PR #40 (squash commit 07cfb2ec122d6ae5bb60b81680b3b8b5b5047116). No current blockers (blockers = []). The repository is ready for the final comprehensive audit; do not start the final audit until separate explicit user authorization.",
-  "blockers": [],
+  "next": "CP-STATISTICAL-DOUBLING-20261013 PASSED on tmp/stage7.1-statistical-doubling-20261013; no Monte Carlo rerun or historical dataset mutation. Next CP: reconcile generic Gate A with exact golden identity and resolve Stage 11 topology / Stage 13 assembler before final delivery.",
+  "blockers": [
+    "K_CODE: generic Gate A in run_batch.py and scripts/stage7_stability.py still evaluates relative metric deltas; normative Gate A is exact match to the approved reference/golden. Separate Gate A bridge evidence does not by itself repair this generic runner.",
+    "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
+    "UNDEFINED_BUSINESS_RULE: Stage 11 execution topology remains undefined in the current repository; the Stage 10 report explicitly records NOT_DEFINED_IN_CURRENT_REPOSITORY.",
+    "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
+    "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
+    "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
+    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
+  ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "07cfb2ec122d6ae5bb60b81680b3b8b5b5047116",
+  "head_sha": "9b799dece44d873a68d1809a59b4211b0f76f6fc",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -166,7 +174,7 @@
     "superseded_pr": 16,
     "merged_at": "2026-10-11T13:11:48Z"
   },
-  "run_id": 38165878333,
+  "run_id": 38328668591,
   "artifact_manifest": {
     "manifest_version": "gateb-n300-n600-n1200-p50-reassessment-v1",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
@@ -359,10 +367,10 @@
     "stop_after_cp": true
   },
   "full_stage9c_status": "PASS",
-  "repository_status": "ALL_KNOWN_BLOCKERS_CLOSED",
-  "repository_status_since": "2026-10-12",
-  "repository_status_based_on": "CP-3B-PYTEST-DEFECT-FIX merged via PR #40",
-  "repository_status_evidence": "pytest Run 38314258251 = 370 passed, 0 failed",
+  "repository_status": "FINAL_DELIVERY_BLOCKERS_OPEN",
+  "repository_status_since": "2026-10-13",
+  "repository_status_based_on": "CP-STATISTICAL-DOUBLING-20261013 verification passed on exact branch head; remaining blockers are enumerated in state.blockers.",
+  "repository_status_evidence": "Run 38328668591 success; 83 passed, 0 failed in 1.46s; artifact 11781962625 (sha256:7a76211e62f56929a7e74ebc0e7f95b0905ef99d8185f2bb50185ab25f1ae4e7); no simulation or historical trial rerun.",
   "full_stage9c_status_since": "2026-10-12",
   "full_stage9c_status_based_on": "Stage9C_reaudit_C1_to_C6",
   "full_stage9c_status_pr": 38,
@@ -416,7 +424,7 @@
       "stats_worksheets": 25,
       "excel_error_cells": 0,
       "formula_cells": 0,
-      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84b1",
+      "candidate_workbook_sha256": "4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1",
       "original_published_workbook_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
       "original_workbook_modified": false
     },
@@ -571,5 +579,53 @@
     "merge_method": "squash",
     "merge_link": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/40",
     "merged_at": "2026-10-12T22:25:56Z"
+  },
+  "cp_statistical_doubling_20261013": {
+    "status": "PASS",
+    "scope": "Align generic run_batch and Stage 7 orchestration checkpoint schedule with Amendment-01 doubling policy without changing model-source files or production trial outputs.",
+    "branch": "tmp/stage7.1-statistical-doubling-20261013",
+    "base_main_sha": "12b4076c8bdaecedccfec2a3c466e8403789b7ee",
+    "code_head_sha": "9b799dece44d873a68d1809a59b4211b0f76f6fc",
+    "implementation_commits": [
+      "23aa94c97d1e0a733956ad1126c0826840bb9b1f",
+      "c040deef28068901b1bc07f6fa71138d2d51ff35",
+      "a8f06b164d1048ecb0d88d5ff9891c3218565cdb",
+      "a1171d3292d02c5b5a51c9df7439c4e413b5a73c",
+      "9b799dece44d873a68d1809a59b4211b0f76f6fc"
+    ],
+    "policy_id": "DOUBLING_FROM_300_V1",
+    "checkpoint_schedule": "300 -> 600 -> 1200 -> 2400 -> ...",
+    "legacy_checkpoint_handling": "Preserve completed rows; accept only 300/600/1200/... stability points; record discarded intermediate +50 history points; fail closed for malformed/duplicate/out-of-order history; refuse migration above authorized 1..550 range.",
+    "source_identity": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "constants_blob_unchanged": "88b3e7b5a509f8486597ac08dfc5acaf80d4d39b",
+      "model_files_changed_in_cp": [],
+      "historical_trials_rerun": false,
+      "monte_carlo_run_started": false
+    },
+    "timeout_policy": {
+      "internal_minutes": 40,
+      "job_minutes": 45,
+      "measurement_status": "not measured by design in this read-only/targeted verification CP"
+    },
+    "verification": {
+      "run_id": 38328668591,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38328668591",
+      "result": "success",
+      "static_python_parse": "PASS",
+      "workflow_yaml_parse": "PASS",
+      "targeted_pytest": "83 passed, 0 failed",
+      "duration_seconds": 1.46,
+      "artifact_id": 11781962625,
+      "artifact_sha256": "7a76211e62f56929a7e74ebc0e7f95b0905ef99d8185f2bb50185ab25f1ae4e7"
+    },
+    "changed_files": [
+      ".github/workflows/cp-statistical-doubling-verify.yml",
+      ".github/workflows/stage7-full-run.yml",
+      "run_batch.py",
+      "scripts/stage7_stability.py",
+      "tests/test_run_batch.py",
+      "tests/test_stage7_authoring.py"
+    ]
   }
 }
