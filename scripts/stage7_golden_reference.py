@@ -249,6 +249,30 @@ def evaluate_gate_a_for_results(
             "status": "BLOCKED",
             "reason": str(exc),
         }
+    if evidence["current_n_without_historical_goldens"] > 0:
+        return {
+            "previous_n": previous_n,
+            "current_n": current_n,
+            "expected_current_n": previous_n * escalation_multiplier if previous_n is not None else current_n,
+            "metrics": {},
+            "checked": False,
+            "stable": False,
+            "status": "BLOCKED",
+            "reason": (
+                "approved exact-golden coverage is incomplete for the requested checkpoint: "
+                f"N={current_n}, verified_golden_rows={evidence['golden_coverage_count']}, "
+                f"rows_without_approved_golden={evidence['current_n_without_historical_goldens']}; "
+                "no Gate A PASS is permitted until exact goldens cover the full checkpoint"
+            ),
+            "golden_coverage_count": evidence["golden_coverage_count"],
+            "golden_coverage_current_n": evidence["golden_coverage_current_n"],
+            "current_n_without_historical_goldens": evidence["current_n_without_historical_goldens"],
+            "historical_mismatch_count": evidence["historical_mismatch_count"],
+            "historical_mismatches": evidence["historical_mismatches"],
+            "canonical_reference_id": manifest["canonical_reference_id"],
+            "source_tree_head_verified": actual_source_sha == source_sha,
+        }
+
     gate_a = evaluate_stage7_gate_a(
         previous_n=previous_n,
         previous_metrics=previous_metrics,

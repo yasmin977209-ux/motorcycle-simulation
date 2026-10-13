@@ -107,6 +107,46 @@ def test_checkpoint_600_compares_only_550_verified_historical_ids() -> None:
     assert evidence["expected_golden_fingerprint_sha256"] == evidence["actual_fingerprint_sha256"]
 
 
+def test_gate_a_blocks_checkpoint_when_exact_golden_coverage_is_incomplete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.stage7_golden_reference as provider
+
+    rows = [_row(i) for i in range(1, 551)]
+    manifest = _unit_manifest(rows)
+    monkeypatch.setattr(provider, "load_golden_manifest", lambda *args, **kwargs: manifest)
+    monkeypatch.setattr(provider, "validate_model_source", lambda *args, **kwargs: SOURCE_SHA)
+
+    gate = provider.evaluate_gate_a_for_results(
+        previous_n=300,
+        previous_metrics={},
+        current_n=600,
+        current_metrics={},
+        escalation_multiplier=2,
+        relative_epsilon=0.01,
+        absolute_epsilon=1,
+        results=[*_row_results_for_test(rows), *[_row(i) for i in range(551, 601)]],
+        scenario="C030_G000",
+        source_sha=SOURCE_SHA,
+        master_seed=20270101,
+        model_source_root=tmp_path,
+        manifest_path=MANIFEST_PATH,
+        loaded_modules=None,
+    )
+    assert gate["checked"] is False
+    assert gate["stable"] is False
+    assert gate["status"] == "BLOCKED"
+    assert gate["golden_coverage_count"] == 550
+    assert gate["current_n_without_historical_goldens"] == 50
+    assert "full checkpoint" in gate["reason"]
+
+
+def _row_results_for_test(rows: list[dict]):
+    from types import SimpleNamespace
+
+    return [SimpleNamespace(**row) for row in rows]
+
+
 def test_gate_a_cannot_pass_without_a_pinned_source_root() -> None:
     rows = [_row(i) for i in range(1, 301)]
     manifest = _unit_manifest(rows)

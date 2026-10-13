@@ -384,6 +384,7 @@ jobs:
           )
           from scripts.stage7_golden_reference import (
               evaluate_gate_a_for_results,
+              load_golden_manifest,
               validate_model_source,
           )
           from scripts.stage7_history_restore import restore_historical_results
@@ -910,6 +911,102 @@ jobs:
                       "completed_trials": completed,
                   }, sort_keys=True))
                   raise SystemExit(0)
+
+              if not SCENARIO.startswith("C100_"):
+                  try:
+                      golden_manifest = load_golden_manifest(
+                          MANIFEST_PATH,
+                          source_sha=SOURCE_SHA,
+                          master_seed=MASTER_SEED,
+                      )
+                      golden_coverage = len(
+                          golden_manifest["scenarios"][SCENARIO]["trial_hashes"]
+                      )
+                  except Exception as exc:
+                      state["final_status"] = "blocked"
+                      state["stable_at_n"] = None
+                      state["included_in_final_stats"] = False
+                      state["reason_if_not_stable"] = (
+                          f"APPROVED_GOLDEN_COVERAGE_UNAVAILABLE: {type(exc).__name__}: {exc}"
+                      )
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                      blob_sha = store.save_state(state, blob_sha)
+                      write_json(
+                          RESULTS_DIR / "final_fingerprint.json",
+                          {
+                              "scenario": SCENARIO,
+                              "source_sha": SOURCE_SHA,
+                              "run_id": RUN_ID,
+                              "trial_count": completed,
+                              "final_fingerprint": state["final_fingerprint"],
+                              "included_in_final_stats": False,
+                              "gate_a_status": "BLOCKED",
+                              "reason_if_not_stable": state["reason_if_not_stable"],
+                              "artifact_identity": state["artifact_identity"],
+                          },
+                      )
+                      print("GATE_A_GOLDEN_COVERAGE_BLOCKED=" + state["reason_if_not_stable"])
+                      raise SystemExit(1)
+
+                  if target_n > golden_coverage:
+                      reason = (
+                          "APPROVED_GOLDEN_COVERAGE_INSUFFICIENT: "
+                          f"next checkpoint N={target_n}, immutable exact-golden coverage="
+                          f"1..{golden_coverage}; refusing to execute trial IDs "
+                          f"{completed + 1}..{target_n} because Gate A cannot prove the full checkpoint. "
+                          "Supply an approved exact-golden extension before proceeding."
+                      )
+                      state["final_status"] = "blocked"
+                      state["stable_at_n"] = None
+                      state["included_in_final_stats"] = False
+                      state["reason_if_not_stable"] = reason
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                      blob_sha = store.save_state(state, blob_sha)
+                      write_json(
+                          RESULTS_DIR / "statistics.json",
+                          {
+                              "scenario": SCENARIO,
+                              "trial_count": completed,
+                              "final_fingerprint": state["final_fingerprint"],
+                              "artifact_identity": state["artifact_identity"],
+                              "stability_history": history,
+                              "gate_a_status": "BLOCKED",
+                              "approved_golden_coverage": golden_coverage,
+                              "next_checkpoint_n": target_n,
+                          },
+                      )
+                      write_json(
+                          RESULTS_DIR / "final_fingerprint.json",
+                          {
+                              "scenario": SCENARIO,
+                              "source_sha": SOURCE_SHA,
+                              "run_id": RUN_ID,
+                              "trial_count": completed,
+                              "final_fingerprint": state["final_fingerprint"],
+                              "included_in_final_stats": False,
+                              "gate_a_status": "BLOCKED",
+                              "approved_golden_coverage": golden_coverage,
+                              "next_checkpoint_n": target_n,
+                              "reason_if_not_stable": reason,
+                              "artifact_identity": state["artifact_identity"],
+                          },
+                      )
+                      print("GATE_A_GOLDEN_COVERAGE_BLOCKED=" + reason)
+                      raise SystemExit(1)
 
               trial_start = completed + 1
               trial_end = target_n
