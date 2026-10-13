@@ -19,6 +19,8 @@ import constants
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
+    STATISTICAL_ESCALATION_POLICY_ID,
+    STATISTICAL_ESCALATION_MULTIPLIER,
     filter_statistical_history,
     next_statistical_checkpoint,
 )
