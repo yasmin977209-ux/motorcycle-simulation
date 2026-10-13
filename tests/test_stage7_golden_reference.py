@@ -125,7 +125,7 @@ def test_gate_a_blocks_checkpoint_when_exact_golden_coverage_is_incomplete(
         escalation_multiplier=2,
         relative_epsilon=0.01,
         absolute_epsilon=1,
-        results=[*_row_results_for_test(rows), *[_row(i) for i in range(551, 601)]],
+        results=[*rows, *[_row(i) for i in range(551, 601)]],
         scenario="C030_G000",
         source_sha=SOURCE_SHA,
         master_seed=20270101,
@@ -139,12 +139,6 @@ def test_gate_a_blocks_checkpoint_when_exact_golden_coverage_is_incomplete(
     assert gate["golden_coverage_count"] == 550
     assert gate["current_n_without_historical_goldens"] == 50
     assert "full checkpoint" in gate["reason"]
-
-
-def _row_results_for_test(rows: list[dict]):
-    from types import SimpleNamespace
-
-    return [SimpleNamespace(**row) for row in rows]
 
 
 def test_gate_a_cannot_pass_without_a_pinned_source_root() -> None:
