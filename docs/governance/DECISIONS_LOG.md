@@ -208,3 +208,15 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 
 الطوبولوجيا التنفيذية لـStage 11 خارج النطاق المعياري. هذا القرار يغلق سؤال النطاق فقط؛ ولا يمحو أو يفسّر اختلاف Stage 10 metadata الخاص بطول رأس الكود المسجّل مقارنةً برأس GitHub Run API. يظل ذلك الاختلاف موثّقاً وغير محلول.
 
+
+
+## D-2026-10-14-01 — extension_of_gate_a_golden_coverage
+
+**Status:** APPROVED BY PROJECT OWNER  
+**Date:** 2026-10-14  
+**Scope:** Extend the approved exact per-trial SHA-256 Gate A golden coverage without changing model/source identity or historical datasets.
+
+### Normative decision
+
+1. The approved Gate A golden scope is exactly 24,005 trial fingerprints: the canonical existing scope of trial IDs 1..550 for all 20 non-C100 scenarios plus trial ID 1 for each of the five C100 scenarios (11,005 fingerprints); additionally include trial IDs 551..600 for all 20 non-C100 scenarios from Gate B Run 38174743440 (1,000 fingerprints) and trial IDs 601..1200 for all 20 non-C100 scenarios from Gate B Run 38179919488 (12,000 fingerprints). C100 scenarios remain trial ID 1 only.
+NaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaN
