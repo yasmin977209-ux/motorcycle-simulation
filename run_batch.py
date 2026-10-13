@@ -21,6 +21,7 @@ from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
     STATISTICAL_ESCALATION_MULTIPLIER,
+    evaluate_gate_a as evaluate_stage7_gate_a,
     filter_statistical_history,
     next_statistical_checkpoint,
 )
@@ -252,66 +253,27 @@ def evaluate_gate_a(
     previous_n: int | None,
     current_metrics: dict[str, dict[str, Any]],
     current_n: int,
+    expected_golden_fingerprint_sha256: str | None = None,
+    actual_fingerprint_sha256: str | None = None,
+    golden_reference_id: str | None = None,
+    expected_source_sha: str | None = None,
+    actual_source_sha: str | None = None,
 ) -> dict[str, Any]:
-    if previous_metrics is None or previous_n is None:
-        return {
-            "checked": False,
-            "stable": False,
-            "previous_n": previous_n,
-            "current_n": current_n,
-            "expected_current_n": None,
-            "metrics": {},
-            "reason": "no previous stability point",
-        }
-
-    expected_n = previous_n * STATISTICAL_ESCALATION_MULTIPLIER
-    if current_n != expected_n:
-        return {
-            "checked": False,
-            "stable": False,
-            "previous_n": previous_n,
-            "current_n": current_n,
-            "expected_current_n": expected_n,
-            "metrics": {},
-            "reason": "current n is not previous n plus escalation step",
-        }
-
-    metric_payload: dict[str, dict[str, Any]] = {}
-    all_stable = True
-
-    for field_name in STABILITY_FIELDS:
-        old_mean = float(previous_metrics[field_name]["mean"])
-        new_mean = float(current_metrics[field_name]["mean"])
-        absolute_change = abs(new_mean - old_mean)
-        limit = max(
-            constants.CI_ABSOLUTE_EPSILON,
-            constants.CI_RELATIVE_TOLERANCE * abs(old_mean),
-        )
-        relative_change = (
-            absolute_change / abs(old_mean)
-            if old_mean != 0
-            else float("inf")
-        )
-        stable = absolute_change < limit
-        metric_payload[field_name] = {
-            "previous_mean": old_mean,
-            "current_mean": new_mean,
-            "absolute_change": absolute_change,
-            "relative_change": relative_change,
-            "limit": limit,
-            "stable": stable,
-        }
-        all_stable = all_stable and stable
-
-    return {
-        "checked": True,
-        "stable": all_stable,
-        "previous_n": previous_n,
-        "current_n": current_n,
-        "expected_current_n": expected_n,
-        "metrics": metric_payload,
-    }
-
+    """Apply Gate A's exact-golden contract; missing evidence fails closed."""
+    return evaluate_stage7_gate_a(
+        previous_n=previous_n,
+        previous_metrics=previous_metrics,
+        current_n=current_n,
+        current_metrics=current_metrics,
+        escalation_multiplier=STATISTICAL_ESCALATION_MULTIPLIER,
+        relative_epsilon=constants.CI_RELATIVE_TOLERANCE,
+        absolute_epsilon=constants.CI_ABSOLUTE_EPSILON,
+        expected_golden_fingerprint_sha256=expected_golden_fingerprint_sha256,
+        actual_fingerprint_sha256=actual_fingerprint_sha256,
+        golden_reference_id=golden_reference_id,
+        expected_source_sha=expected_source_sha,
+        actual_source_sha=actual_source_sha,
+    )
 
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
@@ -771,10 +733,36 @@ def run_batch(
             else initial_target
         )
 
+    gate_a_preflight_stop = False
+    if (
+        not scenario.startswith("C100_")
+        and len(results) >= constants.STATISTICAL_CHECK_START_N
+    ):
+        prior_history = state.get("stability_history", [])
+        prior_gate_a = (
+            prior_history[-1].get("gate_a", {})
+            if prior_history
+            else {}
+        )
+        prior_gate_a_status = prior_gate_a.get("status")
+        if prior_gate_a_status != "PASS":
+            is_failure = prior_gate_a_status == "FAIL"
+            state["final_status"] = "failed" if is_failure else "blocked"
+            state["stable_at_n"] = None
+            state["included_in_final_stats"] = False
+            state["reason_if_not_stable"] = (
+                f"Gate A {prior_gate_a_status or 'UNVERIFIED'}: "
+                "the latest completed checkpoint lacks an explicit exact-golden PASS; "
+                "refusing to execute additional trials"
+            )
+            state["next_check_n"] = next_statistical_checkpoint(len(results))
+            _atomic_write_json(output_dir / STATE_JSON, state)
+            gate_a_preflight_stop = True
+
     batch_end = resolved_start + trials - 1
     resolved_next_check = state["next_check_n"]
 
-    while resolved_start <= batch_end:
+    while resolved_start <= batch_end and not gate_a_preflight_stop:
         if scenario.startswith("C100_"):
             trial_end = 1
         else:

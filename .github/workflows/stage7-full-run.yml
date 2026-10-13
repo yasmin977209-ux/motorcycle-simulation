@@ -538,13 +538,92 @@ jobs:
               target_n = next_statistical_checkpoint(completed)
               state["next_check_n"] = target_n
 
+          if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:
+              latest_gate_a = (
+                  history[-1].get("gate_a", {})
+                  if history
+                  else {}
+              )
+              latest_status = latest_gate_a.get("status")
+              if latest_status != "PASS":
+                  blocked_or_failed = "failed" if latest_status == "FAIL" else "blocked"
+                  state["final_status"] = blocked_or_failed
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      f"Gate A {latest_status or 'UNVERIFIED'}: latest completed checkpoint "
+                      "lacks an explicit exact-golden PASS; refusing to run additional trials"
+                  )
+                  state["next_check_n"] = next_statistical_checkpoint(completed)
+                  if results:
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                  blob_sha = store.save_state(state, blob_sha)
+                  write_json(
+                      RESULTS_DIR / "statistics.json",
+                      {
+                          "scenario": SCENARIO,
+                          "trial_count": len(results),
+                          "final_fingerprint": state.get("final_fingerprint"),
+                          "artifact_identity": state.get("artifact_identity"),
+                          "stability_history": history,
+                      },
+                  )
+                  write_json(
+                      RESULTS_DIR / "final_fingerprint.json",
+                      {
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "run_id": RUN_ID,
+                          "trial_count": len(results),
+                          "final_fingerprint": state.get("final_fingerprint"),
+                          "included_in_final_stats": False,
+                          "gate_a_status": latest_status or "UNVERIFIED",
+                          "reason_if_not_stable": state["reason_if_not_stable"],
+                          "artifact_identity": state.get("artifact_identity"),
+                      },
+                  )
+                  print(
+                      "GATE_A_PREFLIGHT_BLOCKED="
+                      + str(latest_status or "UNVERIFIED")
+                      + "; refusing additional trials"
+                  )
+                  raise SystemExit(0)
+
           if state.get("final_status") == "stable":
-              print(json.dumps({
+              recent_gate_a_points = history[-REQUIRED_CONSECUTIVE:]
+              previous_stable_state_is_valid = (
+                  len(recent_gate_a_points) == REQUIRED_CONSECUTIVE
+                  and all(
+                      item.get("gate_a", {}).get("status") == "PASS"
+                      and item.get("gate_a", {}).get("checked") is True
+                      and item.get("gate_a", {}).get("stable") is True
+                      and item.get("gate_b", {}).get("stable") is True
+                      for item in recent_gate_a_points
+                  )
+              )
+              if not previous_stable_state_is_valid:
+                  state["final_status"] = None
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      "Prior stable status excluded: latest consecutive checkpoints "
+                      "do not carry three explicit exact-golden Gate A PASS results."
+                  )
+                  blob_sha = store.save_state(state, blob_sha)
+              else:
+                  print(json.dumps({
                   "scenario": SCENARIO,
                   "status": "already_stable",
                   "stable_at_n": state.get("stable_at_n"),
-              }, sort_keys=True))
-              raise SystemExit(0)
+                  }, sort_keys=True))
+                  raise SystemExit(0)
 
           while True:
               if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
@@ -700,16 +779,18 @@ jobs:
                   history.append(check_entry)
                   state["stability_history"] = history
 
-                  checked_points = [
-                      item
-                      for item in history
-                      if item.get("gate_a", {}).get("checked") is True
-                  ]
-                  recent = checked_points[-REQUIRED_CONSECUTIVE:]
+                  recent = history[-REQUIRED_CONSECUTIVE:]
+                  gate_a_status = gate_a.get("status", "BLOCKED")
+                  gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
                   stable_now = (
-                      len(recent) == REQUIRED_CONSECUTIVE
+                      not gate_a_stop
+                      and gate_a_status == "PASS"
+                      and len(recent) == REQUIRED_CONSECUTIVE
                       and all(
-                          item["gate_a"]["stable"] and item["gate_b"]["stable"]
+                          item.get("gate_a", {}).get("status") == "PASS"
+                          and item.get("gate_a", {}).get("checked") is True
+                          and item.get("gate_a", {}).get("stable") is True
+                          and item.get("gate_b", {}).get("stable") is True
                           for item in recent
                       )
                   )
@@ -718,6 +799,15 @@ jobs:
                       state["stable_at_n"] = len(results)
                       state["final_status"] = "stable"
                       state["reason_if_not_stable"] = None
+                  elif gate_a_stop:
+                      state["stable_at_n"] = None
+                      state["final_status"] = (
+                          "blocked" if gate_a_status == "BLOCKED" else "failed"
+                      )
+                      state["reason_if_not_stable"] = (
+                          f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
+                          "execution stopped before the next checkpoint"
+                      )
                   else:
                       state["stable_at_n"] = None
                       state["final_status"] = None
@@ -751,6 +841,28 @@ jobs:
                       "stability_history": history,
                   },
               )
+
+              if state["final_status"] in ("blocked", "failed"):
+                  write_json(
+                      RESULTS_DIR / "final_fingerprint.json",
+                      {
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "run_id": RUN_ID,
+                          "trial_count": len(results),
+                          "final_fingerprint": state["final_fingerprint"],
+                          "included_in_final_stats": False,
+                          "gate_a_status": state["stability_history"][-1]["gate_a"].get("status"),
+                          "reason_if_not_stable": state["reason_if_not_stable"],
+                          "artifact_identity": state["artifact_identity"],
+                      },
+                  )
+                  print(
+                      "GATE_A_EXACT_GOLDEN_BLOCKED_OR_FAILED="
+                      + str(state["stability_history"][-1]["gate_a"].get("status"))
+                      + "; stopping before next trial block"
+                  )
+                  break
 
               if state["final_status"] == "stable":
                   # KNOWN_DESIGN_DIFFERENCE:
