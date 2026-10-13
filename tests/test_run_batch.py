@@ -32,9 +32,10 @@ def _base_checkpoint() -> dict:
     }
 
 
-def test_run_batch_planned_trial_range_must_be_covered_by_approved_goldens() -> None:
+def test_run_batch_planned_trial_range_must_restore_historical_ids_and_have_full_golden_coverage() -> None:
     assert_planned = run_batch.assert_planned_trial_range_within_golden_coverage
-    assert_planned(trial_start=301, trial_end=550, golden_coverage=550)
+    with pytest.raises(StateIntegrityError, match="GOLDEN_HISTORICAL_TRIALS_MUST_BE_RESTORED"):
+        assert_planned(trial_start=301, trial_end=550, golden_coverage=550)
     with pytest.raises(StateIntegrityError, match="GOLDEN_COVERAGE_INSUFFICIENT"):
         assert_planned(trial_start=551, trial_end=600, golden_coverage=550)
     with pytest.raises(StateIntegrityError, match="GOLDEN_COVERAGE_RANGE_ARGUMENT_INVALID"):

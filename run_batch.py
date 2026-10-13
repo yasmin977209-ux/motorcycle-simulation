@@ -52,9 +52,15 @@ def assert_planned_trial_range_within_golden_coverage(
     trial_end: int,
     golden_coverage: int,
 ) -> None:
-    """Refuse to execute any trial ID beyond the approved complete golden reference."""
+    """Require original rows for completed historical IDs and full golden coverage for new IDs."""
     if trial_start < 1 or trial_end < trial_start or golden_coverage < 1:
         raise StateIntegrityError("GOLDEN_COVERAGE_RANGE_ARGUMENT_INVALID")
+    if trial_start <= golden_coverage:
+        raise StateIntegrityError(
+            "GOLDEN_HISTORICAL_TRIALS_MUST_BE_RESTORED: "
+            f"planned_trial_range={trial_start}..{trial_end} intersects canonical historical "
+            f"golden coverage=1..{golden_coverage}; restore original artifact rows and do not rerun."
+        )
     if trial_end > golden_coverage:
         raise StateIntegrityError(
             "GOLDEN_COVERAGE_INSUFFICIENT: "
