@@ -41,6 +41,7 @@ jobs:
           python - <<'PY'
           import ast
           from pathlib import Path
+          import textwrap
           import yaml
 
           for path in (
@@ -50,6 +51,16 @@ jobs:
               Path("tests/test_stage7_authoring.py"),
           ):
               ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+
+          stage7_workflow_text = Path(
+              ".github/workflows/stage7-full-run.yml"
+          ).read_text(encoding="utf-8")
+          script_start_marker = "cat > /tmp/stage7_orchestrator.py <<'PY'\\n"
+          script_end_marker = "\\n          PY\\n          python /tmp/stage7_orchestrator.py"
+          script_start = stage7_workflow_text.index(script_start_marker) + len(script_start_marker)
+          script_end = stage7_workflow_text.index(script_end_marker, script_start)
+          embedded_script = textwrap.dedent(stage7_workflow_text[script_start:script_end])
+          ast.parse(embedded_script, filename=".github/workflows/stage7-full-run.yml#orchestrator")
 
           workflow = yaml.safe_load(
               Path(".github/workflows/cp-gatea-fail-closed-verify.yml")
