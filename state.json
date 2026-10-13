@@ -1,10 +1,10 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014",
   "sha": "e8c3441375641216131ce3ff12f582fd8eb8101b",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
+  "next": "CP-D-EXTENDED-REPLAY-20261014 passed exact replay verification (11/11 A==B==historical) and full pytest (395 passed, 1 skipped) on the temporary branch. Next authorized CP: implement and validate GoldenReferenceProvider for production Gate A using the approved exact golden evidence; SOURCE_SHA and historical datasets remain unchanged. No stage transition implied.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
@@ -918,5 +918,59 @@
     "pytest_skipped": 1,
     "workflow_fix_commit": "e8c3441375641216131ce3ff12f582fd8eb8101b",
     "targeted_tests_passed": 6
+  },
+  "cp_d_extended_replay_20261014": {
+    "status": "PASS_CP_D_EXTENDED_REPLAY_AND_FULL_PYTEST",
+    "decision": "D-2026-10-14-01",
+    "branch": "tmp/cp-extended-replay-20261014",
+    "tested_head_sha": "8ee82d33d28069c99849fbaff94436941b726acc",
+    "main_head_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "source_identity_exception": "allowed_additive_compatibility_adapter",
+    "source_diff_daily_engine": "11 additions, 0 deletions; delegates _create_contract to _new_contract",
+    "benchmark_blob_sha": "d54602982b6422939955ca841a251ecd250b4139",
+    "master_seed": 20270101,
+    "replay_evidence": {
+      "status": "PASS_11_OF_11_A_EQ_B_EQ_HISTORICAL",
+      "expected_trials": 11,
+      "exact_matches": 11,
+      "new_non_c100_expected": 10,
+      "new_551_600_passed": 5,
+      "new_601_1200_passed": 5,
+      "c100_determinism_passed": 1,
+      "n600_run_id": 38174743440,
+      "n600_artifact_id": 11715388165,
+      "n600_ordered_hash_map_sha256": "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f",
+      "n1200_run_id": 38179919488,
+      "n1200_artifact_id": 11717929259,
+      "n1200_ordered_hash_map_sha256": "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3",
+      "worktree_errors": []
+    },
+    "verification_run": {
+      "run_id": 38474120695,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38474120695",
+      "run_head_sha": "8ee82d33d28069c99849fbaff94436941b726acc",
+      "conclusion": "success",
+      "replay_report_artifact_id": 11852299227,
+      "replay_report_archive_sha256": "8c28759aa2a7636628ce2490595ac87e030450aaec719a14910fc6a3d9aa3812",
+      "full_pytest": "395 passed, 1 skipped, 0 failed; 1 DeprecationWarning",
+      "pytest_exit_code": 0,
+      "dataset_modified": false,
+      "parquet_modified": false,
+      "production_monte_carlo": false,
+      "source_sha_changed": false
+    },
+    "prior_attempts": [
+      {
+        "run_id": 38471241213,
+        "classification": "WORKFLOW_DEFECT",
+        "cause": "git diff --check failed on trailing whitespace in newly added decision-log lines"
+      },
+      {
+        "run_id": 38472704858,
+        "classification": "WORKFLOW_DEFECT",
+        "cause": "temporary Stage 5 pytest fixtures absent and PYTHONPATH not set for full pytest step"
+      }
+    ]
   }
 }
