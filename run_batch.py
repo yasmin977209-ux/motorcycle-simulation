@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import math
 import os
@@ -17,6 +18,10 @@ from scipy.stats import t
 
 import constants
 import monte_carlo
+from scripts.golden_reference_provider import (
+    GoldenReferenceProvider,
+    stage10_trial_result_sha256,
+)
 from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
@@ -274,6 +279,138 @@ def evaluate_gate_a(
         expected_source_sha=expected_source_sha,
         actual_source_sha=actual_source_sha,
     )
+
+def _gate_a_trial_map_sha256(
+    scenario_id: str,
+    trial_hashes: dict[int, str],
+) -> str:
+    payload = "".join(
+        f"{scenario_id}|{trial_id}|{trial_hashes[trial_id]}\n"
+        for trial_id in sorted(trial_hashes)
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _evaluate_gate_a_with_provider(
+    *,
+    provider: GoldenReferenceProvider,
+    scenario_id: str,
+    trial_results: list[monte_carlo.TrialResult],
+    source_sha: str,
+    master_seed: int,
+    previous_metrics: dict[str, dict[str, Any]] | None,
+    previous_n: int | None,
+    current_metrics: dict[str, dict[str, Any]],
+    current_n: int,
+) -> dict[str, Any]:
+    """Evaluate Gate A only after exact golden coverage and source identity are available."""
+    common = {
+        "previous_metrics": previous_metrics,
+        "previous_n": previous_n,
+        "current_metrics": current_metrics,
+        "current_n": current_n,
+    }
+    reference_id = provider.get_golden_reference_id()
+    provider_is_valid = bool(reference_id) and provider.verify_source_identity(
+        provider.source_sha
+    )
+    if not provider_is_valid:
+        result = evaluate_gate_a(**common)
+        result["golden_provider_status"] = "BLOCKED_UNVERIFIED_PROVIDER"
+        result["golden_provider_error"] = provider.load_error
+        return result
+
+    source_identity_matches = provider.verify_source_identity(source_sha)
+    provider_master_seed = getattr(provider, "master_seed", None)
+    if master_seed != provider_master_seed:
+        result = evaluate_gate_a(
+            **common,
+            expected_golden_fingerprint_sha256="0" * 64,
+            actual_fingerprint_sha256="1" * 64,
+            golden_reference_id=reference_id,
+            expected_source_sha=provider.source_sha,
+            actual_source_sha=source_sha,
+        )
+        result.update(
+            status="FAIL",
+            checked=True,
+            stable=False,
+            reason=(
+                "actual master seed differs from the approved golden reference"
+            ),
+            expected_master_seed=provider_master_seed,
+            actual_master_seed=master_seed,
+        )
+        return result
+
+    ordered_ids = [int(result.trial_id) for result in trial_results]
+    expected_ids = list(range(1, current_n + 1))
+    coverage = provider.get_coverage(scenario_id)
+    if (
+        ordered_ids != expected_ids
+        or not set(expected_ids).issubset(coverage)
+        or len(ordered_ids) != current_n
+    ):
+        result = evaluate_gate_a(**common)
+        result.update(
+            golden_provider_status="BLOCKED_INCOMPLETE_COVERAGE",
+            golden_coverage_count=len(coverage),
+            golden_trials_expected=current_n,
+            golden_trials_actual=len(ordered_ids),
+        )
+        return result
+
+    actual_hashes: dict[int, str] = {}
+    expected_hashes: dict[int, str] = {}
+    for trial_result in trial_results:
+        trial_id = int(trial_result.trial_id)
+        actual_hashes[trial_id] = stage10_trial_result_sha256(trial_result)
+        expected = provider.get_fingerprint(scenario_id, trial_id)
+        if expected is None:
+            result = evaluate_gate_a(**common)
+            result.update(
+                golden_provider_status="BLOCKED_MISSING_FINGERPRINT",
+                missing_trial_id=trial_id,
+                golden_coverage_count=len(coverage),
+            )
+            return result
+        expected_hashes[trial_id] = expected
+
+    actual_fingerprint = _gate_a_trial_map_sha256(scenario_id, actual_hashes)
+    expected_fingerprint = _gate_a_trial_map_sha256(scenario_id, expected_hashes)
+    mismatches = [
+        trial_id
+        for trial_id in expected_ids
+        if actual_hashes[trial_id] != expected_hashes[trial_id]
+    ]
+    result = evaluate_gate_a(
+        **common,
+        expected_golden_fingerprint_sha256=expected_fingerprint,
+        actual_fingerprint_sha256=actual_fingerprint,
+        golden_reference_id=reference_id,
+        expected_source_sha=provider.source_sha,
+        actual_source_sha=source_sha,
+    )
+    result.update(
+        golden_provider_status="VERIFIED",
+        golden_reference_id=reference_id,
+        golden_coverage_count=len(coverage),
+        golden_trials_compared=len(expected_ids),
+        golden_trial_mismatch_count=len(mismatches),
+        golden_trial_mismatch_ids=mismatches,
+        golden_source_identity_matches=source_identity_matches,
+        expected_golden_fingerprint_sha256=expected_fingerprint,
+        actual_fingerprint_sha256=actual_fingerprint,
+    )
+    if mismatches:
+        result.update(
+            status="FAIL",
+            checked=True,
+            stable=False,
+            reason="one or more actual per-trial hashes differ from approved golden hashes",
+        )
+    return result
+
 
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
@@ -559,6 +696,7 @@ def run_batch(
     if not source_sha:
         raise ValueError("SOURCE_SHA must be supplied by environment")
 
+    golden_provider = GoldenReferenceProvider()
     monte_carlo.parse_scenario_id(scenario)
 
     checkpoint = None
@@ -666,7 +804,12 @@ def run_batch(
                     0,
                     {
                         "n": constants.STATISTICAL_CHECK_START_N,
-                        "gate_a": evaluate_gate_a(
+                        "gate_a": _evaluate_gate_a_with_provider(
+                            provider=golden_provider,
+                            scenario_id=scenario,
+                            trial_results=baseline_results,
+                            source_sha=source_sha,
+                            master_seed=master_seed,
                             previous_metrics=None,
                             previous_n=None,
                             current_metrics=baseline_metrics,
@@ -830,7 +973,12 @@ def run_batch(
             and trial_end == resolved_next_check
         ):
             metrics = _metric_summary(results)
-            gate_a = evaluate_gate_a(
+            gate_a = _evaluate_gate_a_with_provider(
+                provider=golden_provider,
+                scenario_id=scenario,
+                trial_results=results,
+                source_sha=source_sha,
+                master_seed=master_seed,
                 previous_metrics=previous_metrics,
                 previous_n=previous_n,
                 current_metrics=metrics,
