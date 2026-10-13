@@ -32,6 +32,30 @@ def _base_checkpoint() -> dict:
     }
 
 
+def test_run_batch_blocks_fresh_execution_of_canonical_historical_trial_ids(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def unexpected_trial_execution(*args, **kwargs):
+        raise AssertionError("simulation trial execution must not occur before historical restore")
+
+    monkeypatch.setattr(
+        run_batch.monte_carlo,
+        "run_trials_sequentially",
+        unexpected_trial_execution,
+    )
+    with pytest.raises(
+        StateIntegrityError,
+        match="GOLDEN_HISTORICAL_RESTORE_REQUIRED",
+    ):
+        run_batch.run_batch(
+            scenario="C030_G000",
+            trials=300,
+            output_dir=tmp_path / "fresh-canonical-dataset",
+            source_sha=APPROVED_SOURCE_SHA,
+            master_seed=20270101,
+        )
+
+
 def test_run_batch_starts_from_trial_1_by_default() -> None:
     args = run_batch.parse_args(
         [

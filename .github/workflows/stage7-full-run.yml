@@ -98,20 +98,41 @@ jobs:
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
             STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
             if gh api "${STATE_REF}" >/dev/null 2>&1; then
-              state_run_id="$(
+              state_raw="$(
                 gh api "${STATE_CONTENTS}" 2>/dev/null |
                   jq -r '.content // empty' 2>/dev/null |
                   tr -d '\n' |
-                  base64 -d 2>/dev/null |
-                  jq -r '.run_id // empty' 2>/dev/null || true
+                  base64 -d 2>/dev/null || true
               )"
+              if [ -z "${state_raw}" ] || ! printf '%s' "${state_raw}" | jq -e . >/dev/null 2>&1; then
+                echo "STAGE7_STATE_UNREADABLE=${scenario}; refusing to reset a branch whose completed-trial identity cannot be proved" >&2
+                exit 1
+              fi
+              state_run_id="$(printf '%s' "${state_raw}" | jq -r '.run_id // empty')"
+              state_source_sha="$(printf '%s' "${state_raw}" | jq -r '.source_sha // empty')"
+              state_scenario="$(printf '%s' "${state_raw}" | jq -r '.scenario // empty')"
+              state_completed="$(printf '%s' "${state_raw}" | jq -r '.completed_trials // 0')"
+              if [ "${state_source_sha}" != "${SOURCE_SHA}" ] || [ "${state_scenario}" != "${scenario}" ]; then
+                echo "STAGE7_STATE_IDENTITY_MISMATCH=${scenario} source_sha=${state_source_sha} state_scenario=${state_scenario}" >&2
+                exit 1
+              fi
               if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
-                echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
+                echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID} COMPLETED=${state_completed}"
               else
-                gh api --method PATCH \
-                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
-                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
-                echo "STAGE7_STATE_RESET=${scenario}"
+                canonical_limit=550
+                if [[ "${scenario}" == C100_* ]]; then canonical_limit=1; fi
+                if ! [[ "${state_completed}" =~ ^[0-9]+$ ]]; then
+                  echo "STAGE7_STATE_COMPLETED_COUNT_INVALID=${scenario} value=${state_completed}" >&2
+                  exit 1
+                fi
+                if [ "${state_completed}" -gt "${canonical_limit}" ]; then
+                  echo "STAGE7_STATE_PRESERVED_NONCANONICAL_COMPLETION=${scenario} COMPLETED=${state_completed}; requiring exact artifact restoration before any new trials"
+                else
+                  gh api --method PATCH \
+                    "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
+                    -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
+                  echo "STAGE7_STATE_RESET_TO_RESTORE_VERIFIED_CANONICAL_ROWS=${scenario} COMPLETED=${state_completed}"
+                fi
               fi
             else
               echo "STAGE7_STATE_ABSENT=${scenario}"
