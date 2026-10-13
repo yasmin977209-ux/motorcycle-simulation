@@ -17,7 +17,7 @@ def is_statistical_checkpoint(n: int) -> bool:
         return False
     expected = constants.STATISTICAL_CHECK_START_N
     while expected < n:
-        expected *= constants.STATISTICAL_ESCALATION_MULTIPLIER
+        expected *= STATISTICAL_ESCALATION_MULTIPLIER
     return expected == n
 
 
@@ -27,7 +27,7 @@ def next_statistical_checkpoint(completed_trials: int) -> int:
         raise ValueError("completed_trials must be non-negative")
     target = constants.STATISTICAL_CHECK_START_N
     while target <= completed_trials:
-        target *= constants.STATISTICAL_ESCALATION_MULTIPLIER
+        target *= STATISTICAL_ESCALATION_MULTIPLIER
     return target
 
 
@@ -97,7 +97,7 @@ def evaluate_gate_a(
     relative_epsilon: float,
     absolute_epsilon: float,
 ) -> dict[str, Any]:
-    if escalation_multiplier != constants.STATISTICAL_ESCALATION_MULTIPLIER:
+    if escalation_multiplier != STATISTICAL_ESCALATION_MULTIPLIER:
         raise ValueError("escalation_multiplier differs from approved policy")
 
     if previous_n is None or previous_metrics is None:

@@ -104,8 +104,8 @@ def test_run_batch_uses_user_approved_policy_not_reference_defaults() -> None:
     required_constants = (
         "constants.C100_STATISTICAL_START_TRIALS",
         "constants.NON_C100_STATISTICAL_START_TRIALS",
-        "constants.STATISTICAL_ESCALATION_POLICY_ID",
-        "constants.STATISTICAL_ESCALATION_MULTIPLIER",
+        "STATISTICAL_ESCALATION_POLICY_ID",
+        "STATISTICAL_ESCALATION_MULTIPLIER",
         "constants.STATISTICAL_CHECK_START_N",
         "constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED",
         "constants.CI_CONFIDENCE_LEVEL",

@@ -262,7 +262,7 @@ def evaluate_gate_a(
             "reason": "no previous stability point",
         }
 
-    expected_n = previous_n * constants.STATISTICAL_ESCALATION_MULTIPLIER
+    expected_n = previous_n * STATISTICAL_ESCALATION_MULTIPLIER
     if current_n != expected_n:
         return {
             "checked": False,
@@ -650,12 +650,12 @@ def run_batch(
         resume_from_checkpoint=resume_from_checkpoint,
         checkpoint=checkpoint,
     )
-    state["statistical_policy_id"] = constants.STATISTICAL_ESCALATION_POLICY_ID
+    state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
     state["policy"] = {
-        "statistical_policy_id": constants.STATISTICAL_ESCALATION_POLICY_ID,
+        "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
         "c100_start_trials": constants.C100_STATISTICAL_START_TRIALS,
         "non_c100_start_trials": constants.NON_C100_STATISTICAL_START_TRIALS,
-        "escalation_multiplier": constants.STATISTICAL_ESCALATION_MULTIPLIER,
+        "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
         "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
@@ -668,7 +668,7 @@ def run_batch(
         saved_policy = checkpoint.get("policy") or {}
         policy_is_current = (
             saved_policy.get("statistical_policy_id")
-            == constants.STATISTICAL_ESCALATION_POLICY_ID
+            == STATISTICAL_ESCALATION_POLICY_ID
         )
 
         if scenario.startswith("C100_"):
@@ -720,7 +720,7 @@ def run_batch(
                     "statistical_policy_id", "LEGACY_UNVERSIONED"
                 ),
                 "legacy_escalation_step": saved_policy.get("escalation_step"),
-                "to_policy_id": constants.STATISTICAL_ESCALATION_POLICY_ID,
+                "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
                 "preserved_checkpoint_n": [int(item["n"]) for item in history],
                 "discarded_noncompliant_checkpoint_n": discarded_points,
                 "n300_reconstructed_from_existing_verified_rows": reconstructed_n300,
