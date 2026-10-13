@@ -757,7 +757,9 @@ def test_stage7_state_store_accepts_only_stage_7_schema() -> None:
     store._validate_identity(state)
 
 
-def test_stage7_new_branch_does_not_inherit_root_state() -> None:
+def test_stage7_new_branch_does_not_inherit_root_state(tmp_path) -> None:
+    # يستخدم tmp_path لعزل الاختبار عن state.json الحقيقي. المرجع: K_TEST — تلوّث الحالة.
+    test_state_file = tmp_path / "state.json"
     root_state = {
         "stage": "6.5",
         "cp_completed": "CP5",
@@ -775,7 +777,7 @@ def test_stage7_new_branch_does_not_inherit_root_state() -> None:
                 source_sha=APPROVED_SOURCE_SHA,
                 run_id="100",
                 run_attempt="1",
-                local_path=REPO_ROOT / "state.json",
+                local_path=test_state_file,
             )
             self.branch_sha = APPROVED_SOURCE_SHA
             self.state = dict(root_state)
