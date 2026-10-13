@@ -672,5 +672,80 @@
     "historical_data_or_metadata_modified": false,
     "production_monte_carlo_started": false,
     "merge_commit_sha": null
+  },
+  "cp_excel_daily_fix_20261013": {
+    "status": "PASS_FIXTURE_BASED_REGRESSION_ONLY; HISTORICAL_STAGE12_ACCEPTANCE_UNVERIFIED",
+    "scope": "Correct scripts/excel_builder.py write_daily_sheet so daily dictionary records are materialized as ordered cell values; public function signature unchanged.",
+    "branch": "tmp/cp-excel-daily-fix-20261013",
+    "base_main_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+    "code_commit_sha": "72e63cee4ad6eb88d443ef0a7285afb130c63a09",
+    "fixture_workflow_commit_sha": "3c6588935c6a020acd633e76f54a5d296c3ad861",
+    "workflow_removal_commit_sha": "1e671c92471000016941086e1199992d392a6c97",
+    "tested_head_sha": "3c6588935c6a020acd633e76f54a5d296c3ad861",
+    "verification_run_id": 38457485423,
+    "verification_run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38457485423",
+    "verification_result": "success",
+    "targeted_tests": {
+      "path": "tests/test_excel_daily_sheet.py",
+      "passed": 3,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "full_suite": {
+      "command": "python -m pytest -q tests",
+      "passed": 382,
+      "failed": 0,
+      "skipped": 1,
+      "duration_seconds": 315.77,
+      "exit_code": 0
+    },
+    "fixture_generation": {
+      "classification": "TEST_FIXTURE_GENERATION",
+      "primary_fixture": {
+        "scenario_id": "C100_G100",
+        "trial_id": 1,
+        "master_seed": 20270101
+      },
+      "worker_equivalence_fixture": {
+        "scenario_id": "C070_G100",
+        "trial_ids": [
+          1,
+          2,
+          3
+        ],
+        "comparison_modes": [
+          "sequential",
+          "parallel workers=2",
+          "parallel workers=4"
+        ],
+        "exact_all": true
+      },
+      "results_stage5_created_in_runner_only": true,
+      "results_stage5_committed": false,
+      "dataset_insertion": false,
+      "historical_parquet_or_metadata_modified": false,
+      "production_source_sha_changed": false,
+      "source_sha_at_test": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "user_required_note_ar": "تم توليد results_stage5 كـtest fixtures في بيئة التحقق فقط، باستخدام trial حتمي واحد (C100_G100 trial 1). لم تُضف إلى أي dataset، ولم تُعدّل بصمات أي بيانات إنتاجية."
+    },
+    "fixture_workbook": {
+      "path": "/tmp/cp-excel-daily-fixture.xlsx",
+      "sha256": "33fbb1c335d85157fe59aa39eb6477dca495d5f364f00492422fb567d97e4b1f",
+      "sheets_tested": 25,
+      "artifact_id": 11844128044,
+      "artifact_name": "cp-excel-daily-fixture",
+      "artifact_zip_sha256": "5b9b5dcf95e852cd40897c4b2dd4fa242b7883eefcc491e89e6d4adc2b520e2a",
+      "artifact_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38457485423/artifacts/11844128044"
+    },
+    "limitations": [
+      "Stage 12 historical workbook binary was not available for direct byte/content acceptance in this CP; synthetic fixture acceptance is not evidence of historical P50 workbook equivalence.",
+      "The official fixture workflow also executed C070_G100 trial IDs 1–3 across sequential/2-worker/4-worker modes only to produce and assert worker equivalence; those were temporary test fixtures, not a production data retry."
+    ],
+    "temporary_workflow": {
+      "path": ".github/workflows/cp-excel-daily-fix-verify.yml",
+      "removed": true,
+      "removal_commit_sha": "1e671c92471000016941086e1199992d392a6c97"
+    },
+    "next_action": "Stop after CP-A report; do not start CP-B until explicit user authorization."
   }
 }
