@@ -1,0 +1,36 @@
+name: CP-B K_TEST isolation full pytest
+
+on:
+  push:
+    branches:
+      - tmp/cp-state-and-source-sync-20261013
+    paths:
+      - .github/workflows/cp-state-source-sync-verify.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-state-and-source-sync-20261013
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install project requirements
+        run: python -m pip install -r requirements.txt
+      - name: Run targeted isolation and source identity tests
+        run: >-
+          python -m pytest -q
+          tests/test_stage7_authoring.py::test_stage7_new_branch_does_not_inherit_root_state
+          tests/test_state_governance_fields.py
+          tests/test_source_identity_exception.py
+      - name: Run complete pytest suite
+        run: python -m pytest -q tests
