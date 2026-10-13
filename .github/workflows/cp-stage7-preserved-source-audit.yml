@@ -1,0 +1,82 @@
+name: CP Stage 3B preserved-source read-only reconciliation
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage7-golden-provider-20261013
+    paths:
+      - ".github/workflows/cp-stage7-preserved-source-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-preserved-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout current candidate
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-stage7-golden-provider-20261013
+          fetch-depth: 0
+      - name: Reconstruct the exact preserved archive without modifying either source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refs/heads/stage3b-preserved:refs/remotes/origin/stage3b-preserved
+          mapfile -t chunks < <(git ls-tree -r --name-only origin/stage3b-preserved stage7_source | sort)
+          test "${#chunks[@]}" -eq 52
+          test "${chunks[0]}" = "stage7_source/source.b64.00"
+          test "${chunks[51]}" = "stage7_source/source.b64.51"
+          : > /tmp/source.b64
+          for path in "${chunks[@]}"; do
+            git cat-file blob "origin/stage3b-preserved:${path}" >> /tmp/source.b64
+          done
+          base64 --decode /tmp/source.b64 > /tmp/source.tar.gz
+          echo "c7429d1a31037e98201a05ed98b62c9c68118b2fda89064804d2d2cea2dfed79  /tmp/source.tar.gz" | sha256sum -c -
+          python - <<'PY'
+          from pathlib import PurePosixPath, Path
+          import hashlib
+          import json
+          import subprocess
+
+          archive = Path("/tmp/source.tar.gz")
+          listing = subprocess.run(
+              ["tar", "-tzf", str(archive)],
+              check=True, capture_output=True, text=True,
+          ).stdout.splitlines()
+          bad = [p for p in listing if PurePosixPath(p).is_absolute() or ".." in PurePosixPath(p).parts]
+          assert not bad, f"UNSAFE_ARCHIVE_PATHS={bad[:10]}"
+          out = Path("/tmp/stage7-preserved-source")
+          out.mkdir(parents=True, exist_ok=True)
+          subprocess.run(["tar", "-xzf", str(archive), "-C", str(out)], check=True)
+
+          names = (
+              "constants.py", "daily_engine.py", "rng.py", "monte_carlo.py",
+              "run_batch.py", "scripts/stage7_stability.py",
+              ".github/workflows/stage7-full-run.yml",
+          )
+          matches = {}
+          for rel in names:
+              archived = list(out.rglob(Path(rel).name))
+              exact = [p for p in archived if p.as_posix().endswith(rel)]
+              current = Path(rel)
+              matches[rel] = {
+                  "archived_candidates": [
+                      {"path": str(p.relative_to(out)), "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+                      for p in exact
+                  ],
+                  "main_candidate": hashlib.sha256(current.read_bytes()).hexdigest() if current.is_file() else None,
+                  "main_exists": current.is_file(),
+                  "exact_archive_match_count": len(exact),
+              }
+          print(json.dumps({
+              "result": "READ_ONLY_RECONCILIATION",
+              "source_branch": "stage3b-preserved",
+              "chunk_count": len(chunks),
+              "archive_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "archive_file_count": len(listing),
+              "comparisons": matches,
+          }, ensure_ascii=False, indent=2))
+          PY
