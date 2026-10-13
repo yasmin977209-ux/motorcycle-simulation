@@ -1,8 +1,8 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
-  "sha": "0b083fa472d7a11089a15137cfad16d87785689a",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013",
+  "sha": "e8c3441375641216131ce3ff12f582fd8eb8101b",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
   "blockers": [
@@ -843,7 +843,7 @@
     }
   },
   "cp_state_source_sync_20261013": {
-    "status": "FAIL",
+    "status": "PASS",
     "branch": "tmp/cp-state-and-source-sync-20261013",
     "base_a_head": "f0314795de3fdc25ba0fe79608124244fc3770aa",
     "main_head_at_audit": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
@@ -854,7 +854,7 @@
       "state_governance": "PASS",
       "source_identity_exception": "PASS",
       "targeted_tests": "PASS",
-      "full_pytest": "FAIL"
+      "full_pytest": "PASS"
     },
     "replay_evidence": {
       "status": "PASS_10_OF_10_A_EQ_B_EQ_HISTORICAL",
@@ -881,12 +881,42 @@
       "targeted_tests": {
         "status": "PASS",
         "step": 8,
-        "note": "The full pytest step remains in progress."
+        "note": "Targeted tests passed (6 passed); full pytest completed successfully in Run 38464488024: 387 passed, 1 skipped, 0 failed."
       },
       "production_monte_carlo": false,
       "dataset_modified": false,
       "parquet_modified": false,
       "source_sha_changed": false
+    },
+    "verification_run": {
+      "run_id": 38464488024,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38464488024",
+      "head_sha": "e8c3441375641216131ce3ff12f582fd8eb8101b",
+      "conclusion": "success",
+      "stage5_fixtures": "PASS",
+      "hashseed_subprocess_diagnostic": "PASS",
+      "targeted_state_and_source_tests": "6 passed",
+      "full_pytest_summary": "387 passed, 1 skipped, 0 failed; 1 warning; 428.77s",
+      "workflow_fix_commit": "e8c3441375641216131ce3ff12f582fd8eb8101b",
+      "temporary_workflow_removed_with_state_update": true,
+      "production_monte_carlo": false,
+      "dataset_modified": false,
+      "parquet_modified": false,
+      "source_sha_changed": false
     }
+  },
+  "cp_b_status": "PASS",
+  "full_pytest_status": "PASS",
+  "cp_b_evidence": {
+    "replay_run": 38461464864,
+    "replay_result": "10/10 A == B == historical",
+    "pytest_run": 38464488024,
+    "pytest_run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38464488024",
+    "pytest_head_sha": "e8c3441375641216131ce3ff12f582fd8eb8101b",
+    "pytest_passed": 387,
+    "pytest_failed": 0,
+    "pytest_skipped": 1,
+    "workflow_fix_commit": "e8c3441375641216131ce3ff12f582fd8eb8101b",
+    "targeted_tests_passed": 6
   }
 }
