@@ -1,0 +1,22 @@
+name: temporary-cp-d20-stage7-metric-tests
+
+on:
+  push:
+    branches: ["tmp/cp-d20-stage7-metrics-20261014"]
+
+permissions:
+  contents: read
+
+jobs:
+  test-stability-metrics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run §2.5 evaluator and Stage 7 authoring tests
+        run: python -m pytest -q tests/test_stability_2_5_metrics.py tests/test_stage7_authoring.py
