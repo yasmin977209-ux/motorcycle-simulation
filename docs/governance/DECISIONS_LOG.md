@@ -262,3 +262,19 @@ This decision is documentation-only. It does not authorize a production run, dat
 ### Acceptance boundary
 
 The allowed diff is limited to the three named files plus this decision log and contextual `state.json` update. Validation runs only on the temporary CP branch, not by dispatching or modifying the approved workflow.
+
+
+### Evidence-backed §2.5 application — 2026-10-14
+
+- Run [38627040727](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38627040727) passed the §2.5 evaluator unit tests and Stage 7 authoring tests.
+- Read-only metric recomputation used the accepted source identity `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101), the 12,000 cumulative N=600 TrialResult rows (20 non-C100 scenarios × IDs 1..600), and the 12,000 canonical N=1200 additions (IDs 601..1200) verified against the accepted report's per-row result SHA, run attempt, and Run ID.
+- Original C100 `TrialResult` values were read from official Stage 7 Run `37225915321`, trial ID 1 per scenario. Each original Stage 7 per-trial SHA-256 matched the corresponding original Stage 12 Parquet final-row `result_sha256`. No trial was rerun; no Dataset/Parquet was modified.
+- Across the 20 non-C100 scenarios, 19 passed both §2.5 transitions (300→600 and 600→1200). `C030_G030` failed only 300→600: `P90_Final_Cash` relative change 1.571506% (6/7 pass); it passed 600→1200 (7/7, maximum relative change 0.458535%). All 20 pass the latest 600→1200 pair.
+- The five C100 scenarios remain deterministic N=1 under D-2026-10-10-01, not N=300/600/1200 statistical cohorts; for each, profit quantiles are 205,971,000, P90 final cash is 209,671,000, loss probability is 0, termination count is 0, held assets is 0. Checkpoint-transition comparisons are not applicable to C100.
+- The approved Gate B P50 >5% continuation trigger was not exceeded in the 40 existing N=300/600/1200 comparisons. No N=2400 trials were started. This does not establish final Gate A/Gate B acceptance; production Gate A remains BLOCKED because its approved golden provider is not connected to the production caller.
+
+### D-2026-10-14-21 implementation validation — 2026-10-14
+
+- Commit `2859143a2e96546ea024d3a3653fc43df1dcc1a3` applies the scoped +50 cleanup.
+- Run [38629243597](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38629243597) completed successfully. The no-stale-symbol check passed and `python -m pytest -q tests/test_stage1.py tests/test_stability_2_5_metrics.py tests/test_stage7_authoring.py` reported **82 passed in 0.46s**.
+- The run did not modify `run_batch.py`, `main`, trial data, Parquet, or `SOURCE_SHA`. Temporary CP validation workflows are removed from the final branch tree.
