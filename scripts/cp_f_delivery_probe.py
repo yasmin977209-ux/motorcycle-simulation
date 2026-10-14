@@ -4,13 +4,26 @@ if required full daily/representative detail sources are absent.
 This script does not run Monte Carlo, replay trials, or create deliverables.
 """
 from __future__ import annotations
-import hashlib, io, json, os, sys, tarfile, urllib.request, zipfile
+import ast, hashlib, io, json, os, sys, tarfile, urllib.request, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 import numpy as np
 import pyarrow.parquet as pq
-from scripts.stage13_assemble import EXPECTED_SCENARIOS
+def read_expected_scenarios() -> list[str]:
+    source = Path("scripts/stage13_assemble.py").read_text(encoding="utf-8")
+    tree = ast.parse(source, filename="scripts/stage13_assemble.py")
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "EXPECTED_SCENARIOS"
+            for target in node.targets
+        ):
+            values = ast.literal_eval(node.value)
+            if isinstance(values, list) and all(isinstance(value, str) for value in values):
+                return values
+    raise RuntimeError("ASSEMBLER_EXPECTED_SCENARIOS_DEFINITION_MISSING")
+
+EXPECTED_SCENARIOS = read_expected_scenarios()
 
 REPO = "yasmin977209-ux/motorcycle-simulation"
 STAGE9A_RUN = 37671448546
