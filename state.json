@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014",
-  "sha": "4a76ce87cad65182e2025af7476b4fb1fa5daef3",
+  "sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-F replay and cohort integrity passed. Next: independently audit numeric/accounting and daily-distribution content, and reconcile the composite Gate A + Gate B + Reference §2.5 stability decision. Do not assemble/approve the seven final delivery files or create a Release before all gates and the independent content audit pass.",
   "blockers": [
@@ -16,7 +16,7 @@
     "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "4a76ce87cad65182e2025af7476b4fb1fa5daef3",
+  "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -1779,9 +1779,9 @@
       "release_created": false,
       "scenario_evidence": {
         "C030_G000": {
-          "workflow_job_id": 115989678730,
-          "artifact_id": 11914623447,
-          "archive_sha256": "sha256:7c1023eff5b8f00aab9e87a1b557a21d8732c8baad54676423f8254b9efea94b",
+          "workflow_job_id": 116088681121,
+          "artifact_id": 11921302873,
+          "archive_sha256": "sha256:8e6d24a3123898615ee8a3b1d19cd19e223911270a572cbb9d0218a8442313d4",
           "size_bytes": 43885406,
           "manifest_sha256": "d307c3b65155511a5e59862285b2de101b4d05c95fa5bba90ace142581ebe536",
           "extension_trials": 650,
@@ -1792,9 +1792,9 @@
           "representative_roles": 5
         },
         "C030_G030": {
-          "workflow_job_id": 115989678795,
-          "artifact_id": 11914579767,
-          "archive_sha256": "sha256:b842bb4dc9dedba8c281883fb8e0c27bff8db8d66ab639eeee0a8f6fccaf898c",
+          "workflow_job_id": 116088680671,
+          "artifact_id": 11922303249,
+          "archive_sha256": "sha256:fff34ded9a85da5f0340cc98e089bd6d66cc9af2ecd28ce35f93f64293b0660d",
           "size_bytes": 46834223,
           "manifest_sha256": "5e1890e519e6853bb6f72f484517d4d5edb5ddcff88078af6c4a55eb2db2bbd3",
           "extension_trials": 650,
@@ -1805,9 +1805,9 @@
           "representative_roles": 5
         },
         "C030_G050": {
-          "workflow_job_id": 115989679076,
-          "artifact_id": 11915362907,
-          "archive_sha256": "sha256:578062bb546d68ede11b1c9abd42d71c9dae3d78bdaa5e78a342768cc0445fc5",
+          "workflow_job_id": 116088679906,
+          "artifact_id": 11923461936,
+          "archive_sha256": "sha256:cfc62c1be032462ce8c747bc8387c8fbd14e742a37ee646c56febb27b3a7b815",
           "size_bytes": 49101565,
           "manifest_sha256": "717d2379d70b106f28a05af2ffe046ce1aa2097d3a91141e65c42c3c638df17f",
           "extension_trials": 650,
@@ -1818,9 +1818,9 @@
           "representative_roles": 5
         },
         "C030_G070": {
-          "workflow_job_id": 115989678826,
-          "artifact_id": 11916799233,
-          "archive_sha256": "sha256:f8618eaf5d323fa5ef7982986716527dae603bec56dcd5dd03fdb761b6bfe098",
+          "workflow_job_id": 116088680077,
+          "artifact_id": 11921229765,
+          "archive_sha256": "sha256:382b52495502923394929445fdf5c62bad06219a614bf60acf0746307bc3a17c",
           "size_bytes": 51502220,
           "manifest_sha256": "a7ad98e343124fae504ca29506d7aa53f007422dc9cb59fca3168a450404520f",
           "extension_trials": 650,
@@ -1831,9 +1831,9 @@
           "representative_roles": 5
         },
         "C030_G100": {
-          "workflow_job_id": 115989678868,
-          "artifact_id": 11915299366,
-          "archive_sha256": "sha256:d01d56a7918904ce460f6279c31b7727119509c3ca6fe4429d91e0a37009f1de",
+          "workflow_job_id": 116088679655,
+          "artifact_id": 11922169795,
+          "archive_sha256": "sha256:4532fdf7064714bfdeec0a7940787469f5acd19bba0dee13a1a67dcd244314f0",
           "size_bytes": 55704208,
           "manifest_sha256": "79738a76d8f97cdc1cd606a41c9caa5f5abed5147867226e9cb675f0acb033a2",
           "extension_trials": 650,
@@ -1844,9 +1844,9 @@
           "representative_roles": 5
         },
         "C050_G000": {
-          "workflow_job_id": 115989678718,
-          "artifact_id": 11917606105,
-          "archive_sha256": "sha256:a529826f322b3a824cdef522ab1314947e72f91905ae8afb7d6f5e8cf16cff89",
+          "workflow_job_id": 116088679251,
+          "artifact_id": 11924131970,
+          "archive_sha256": "sha256:5f2e74e1b491da4927d9eec492f09db96f8601fb96b0ce54678855067f64877b",
           "size_bytes": 101394300,
           "manifest_sha256": "7fcb1176b9e12c5035fe078d2f34bf4f9a820b03c80a840dbb724503a6e3aa22",
           "extension_trials": 650,
@@ -1857,9 +1857,9 @@
           "representative_roles": 5
         },
         "C050_G030": {
-          "workflow_job_id": 115989678706,
-          "artifact_id": 11917353697,
-          "archive_sha256": "sha256:678c019929ef1725d85a8c6743b65789eec944ef18baaa7e4a517ae166371ae1",
+          "workflow_job_id": 116088679059,
+          "artifact_id": 11923969445,
+          "archive_sha256": "sha256:4e65a0c518a8c6758fa31726df553e8486bf5212802bb8ce26f507c1129cbcc4",
           "size_bytes": 101901777,
           "manifest_sha256": "ed11423b87d342c8a10ad2378d72ee98484302cd058d59cc9313644ff8253905",
           "extension_trials": 650,
@@ -1883,9 +1883,9 @@
           "representative_roles": 5
         },
         "C050_G070": {
-          "workflow_job_id": 115989678753,
-          "artifact_id": 11918541308,
-          "archive_sha256": "sha256:f2d8d06da2b976ee7ac125cc0e960c65044a1365cdca5ca2ec7eed8924f6d874",
+          "workflow_job_id": 116088679060,
+          "artifact_id": 11924939025,
+          "archive_sha256": "sha256:6db511afe6f37e80e31ec9470da792841461a3ca392ec3f160ae2bbb2072472d",
           "size_bytes": 103064109,
           "manifest_sha256": "5d00d47da070b23a6fb8c6319eadc179fb604804677926167f118c4bfd523ae4",
           "extension_trials": 650,
@@ -1896,9 +1896,9 @@
           "representative_roles": 5
         },
         "C050_G100": {
-          "workflow_job_id": 115989678717,
-          "artifact_id": 11918785372,
-          "archive_sha256": "sha256:4cb291bff505b95fa82910ecb0b0f1a4c4fbd03879a9cfac660a04a660a9a78c",
+          "workflow_job_id": 116088678502,
+          "artifact_id": 11924279931,
+          "archive_sha256": "sha256:abda0083d4a71c1aaa20704f5d0af5494feb9b4807df3387a71909076ba79d06",
           "size_bytes": 103500734,
           "manifest_sha256": "840bc5b8282f1cf3268c00da268e7173635089b0a6d84136126d2aae6782b066",
           "extension_trials": 650,
@@ -1909,9 +1909,9 @@
           "representative_roles": 5
         },
         "C070_G000": {
-          "workflow_job_id": 115989678802,
-          "artifact_id": 11917060320,
-          "archive_sha256": "sha256:dc1e9be1aeb328644c3b9465abe026a0ecab0bd70866e8927d6c7e77902984eb",
+          "workflow_job_id": 116088678134,
+          "artifact_id": 11925201854,
+          "archive_sha256": "sha256:b8dd7d37007c2e252e4ded2ea3f0c8f550d4569e0496445f7f67b5c83f8c210d",
           "size_bytes": 81029076,
           "manifest_sha256": "8ccf65a2828309603ce19a00249b06c1b7d21ec00b83e6d46d7f69917f037912",
           "extension_trials": 650,
@@ -1922,9 +1922,9 @@
           "representative_roles": 5
         },
         "C070_G030": {
-          "workflow_job_id": 115989678703,
-          "artifact_id": 11918185045,
-          "archive_sha256": "sha256:c0f20e5869641138afeaea10704d0b187f15c2f363236a6a06a90a704f54d243",
+          "workflow_job_id": 116088678196,
+          "artifact_id": 11924061494,
+          "archive_sha256": "sha256:5ed7b9046b4d98a3541ae8a8b5b4895c47b733b57e9a42a1585808dbf2ee66ec",
           "size_bytes": 80996757,
           "manifest_sha256": "24a00038d15f81e06ed867e6afd69c8b13814cc892ea19d188ff964d889667f3",
           "extension_trials": 650,
@@ -1935,9 +1935,9 @@
           "representative_roles": 5
         },
         "C070_G050": {
-          "workflow_job_id": 115989678783,
-          "artifact_id": 11917305598,
-          "archive_sha256": "sha256:b92570ebe2a358d7d07fb7574703b5054625ebae9d1925372b7ee85d1b1857ff",
+          "workflow_job_id": 116088677972,
+          "artifact_id": 11924163042,
+          "archive_sha256": "sha256:c93147b477a5623be041af55622175f9c21bbe03cae0eceb2001b373f7a95201",
           "size_bytes": 80984860,
           "manifest_sha256": "f93cb110ad7ac402417096386560b872beb06a73d6349ec5da8a986efdda369b",
           "extension_trials": 650,
@@ -1948,9 +1948,9 @@
           "representative_roles": 5
         },
         "C070_G070": {
-          "workflow_job_id": 115989678714,
-          "artifact_id": 11917189638,
-          "archive_sha256": "sha256:79c21d39507cfc09f092c5b13c109475e611c8589bdc8f1e41c39c8406179644",
+          "workflow_job_id": 116088677438,
+          "artifact_id": 11924650548,
+          "archive_sha256": "sha256:84be4a5fe6ca90242125afc0ace22bff2d13926a9829e52bc4133e8fc2638cde",
           "size_bytes": 81044319,
           "manifest_sha256": "f36d6b0e7027f70d56b35f43961791cd88449b58ecc1e01d7c0b8a40bbf7f4f2",
           "extension_trials": 650,
@@ -1961,9 +1961,9 @@
           "representative_roles": 5
         },
         "C070_G100": {
-          "workflow_job_id": 115989678695,
-          "artifact_id": 11916019512,
-          "archive_sha256": "sha256:70f6382a349a4215b18d356c8e832df0adeff37e6ed0a4dbe7fdbd7bb8a4eb48",
+          "workflow_job_id": 116088678103,
+          "artifact_id": 11924053583,
+          "archive_sha256": "sha256:65e4d51ed73202bf4c4d79665530317630102a4bbe9fd6f87c518b965edb1678",
           "size_bytes": 81093556,
           "manifest_sha256": "9d6a7fdc68d1fd4614a1aed8cdb53ad924ac9835ac4ca2a1d233faa34d742c2c",
           "extension_trials": 650,
@@ -1974,9 +1974,9 @@
           "representative_roles": 5
         },
         "C085_G000": {
-          "workflow_job_id": 115989678948,
-          "artifact_id": 11918424113,
-          "archive_sha256": "sha256:2b549f0ae0dce3c355aefb4bec3316dc18de9dd86027a745f37986d6e94523ce",
+          "workflow_job_id": 116088676990,
+          "artifact_id": 11923658997,
+          "archive_sha256": "sha256:3876af5ac3b4a06b3d739b8e5eaa97a041b420e88b235b1a323ee21f22ef5caa",
           "size_bytes": 81937384,
           "manifest_sha256": "621fe9fd5282af7ad2c5d6b8181cdb856f222d5476c8c1e38274428ac612b881",
           "extension_trials": 650,
@@ -1987,9 +1987,9 @@
           "representative_roles": 5
         },
         "C085_G030": {
-          "workflow_job_id": 115989678677,
-          "artifact_id": 11917283244,
-          "archive_sha256": "sha256:b9ee638e7f34b825836bc7e7187692b7d8d8f0ba609e7ec18f0bfb37b65e3eee",
+          "workflow_job_id": 116088677321,
+          "artifact_id": 11924525936,
+          "archive_sha256": "sha256:6f407eb0f8c39171c29b97bcdc51f3dea99da51f252f8362cf49e80ea987b4a1",
           "size_bytes": 81919839,
           "manifest_sha256": "468fef11b05c3e23cc550de3fe5b2e33856db997b0eead98ce2e2986b9e05217",
           "extension_trials": 650,
@@ -2000,9 +2000,9 @@
           "representative_roles": 5
         },
         "C085_G050": {
-          "workflow_job_id": 115989679222,
-          "artifact_id": 11918025625,
-          "archive_sha256": "sha256:65fab745b41991d6997bfcf82050924f0bcb3153ccb5723f34aef210e3a7b02b",
+          "workflow_job_id": 116088677890,
+          "artifact_id": 11923600224,
+          "archive_sha256": "sha256:092c8b7de4c1bbe6f329e90d38f1886ccfd0560b105265f1bb99ebf88d365a73",
           "size_bytes": 82164152,
           "manifest_sha256": "7f16b3a10838d2cf579ce4985e7ddbf452f54a2de86606b69c5b01e943f0a50c",
           "extension_trials": 650,
@@ -2013,9 +2013,9 @@
           "representative_roles": 5
         },
         "C085_G070": {
-          "workflow_job_id": 115989678931,
-          "artifact_id": 11918125315,
-          "archive_sha256": "sha256:a64ee2d610be86dfe7f617429b98f053a0524fb5f2cf9cb894c40e1314a1ba4d",
+          "workflow_job_id": 116088677155,
+          "artifact_id": 11924007535,
+          "archive_sha256": "sha256:36a66addfb9e808225466672a1471390c2375daed001bc30ff707d4c01917877",
           "size_bytes": 81916816,
           "manifest_sha256": "e8703aad89309fc7b8f791e159974dcb6834b8ebe403e673eec410f300af710a",
           "extension_trials": 650,
@@ -2026,9 +2026,9 @@
           "representative_roles": 5
         },
         "C085_G100": {
-          "workflow_job_id": 115989678776,
-          "artifact_id": 11918355045,
-          "archive_sha256": "sha256:8317f8eb6025f0c59ccecb34a03757c1dd9aea7dd20a87bb852b2f66794be022",
+          "workflow_job_id": 116088677468,
+          "artifact_id": 11924301433,
+          "archive_sha256": "sha256:dfcd41a18a9e3625c3f1fbe84cb536ad1fba65dd7974b31a3dee77489ce2fbed",
           "size_bytes": 81943001,
           "manifest_sha256": "c645bbb9156f0bb621a3f1e22a726ddba5d03b3e00a2e36ca7afdf18d8970189",
           "extension_trials": 650,
@@ -2039,9 +2039,9 @@
           "representative_roles": 5
         },
         "C100_G000": {
-          "workflow_job_id": 115989678943,
-          "artifact_id": 11920009146,
-          "archive_sha256": "sha256:51e2fa2cce735a950e082ca8ad7aac306e4ceac49e920353a4de4c841d8de3af",
+          "workflow_job_id": 116088744289,
+          "artifact_id": 11925940692,
+          "archive_sha256": "sha256:5d01ef0e6f99fd3ad310cd349f3c467c71735cfa1a0f5e3b90db5af8f1bac0f6",
           "size_bytes": 117783597,
           "manifest_sha256": "57519384e9fcf7904085bd3d13eadcf4948f880b9fd0e849c78e3043a0bef515",
           "extension_trials": 1199,
@@ -2052,9 +2052,9 @@
           "representative_roles": 5
         },
         "C100_G030": {
-          "workflow_job_id": 115989678722,
-          "artifact_id": 11918353425,
-          "archive_sha256": "sha256:96525e1f8f03c64bd9642c3b58bdeb2436915745c1b71d7f3429dba03782f4d5",
+          "workflow_job_id": 116088732474,
+          "artifact_id": 11925864747,
+          "archive_sha256": "sha256:b3826eb682423053f224155b4d2ebf0d164089dd7015529081f9e9393affdd2b",
           "size_bytes": 117783740,
           "manifest_sha256": "d14f965b0f2f2cbd7937151d1766ab50d23db66db42b127c18fafbfcc0860526",
           "extension_trials": 1199,
@@ -2065,9 +2065,9 @@
           "representative_roles": 5
         },
         "C100_G050": {
-          "workflow_job_id": 115989678813,
-          "artifact_id": 11920790522,
-          "archive_sha256": "sha256:1d6862e960559badf2187c69f8efd0591c0458fad76f38d6d683b3de6e561f35",
+          "workflow_job_id": 116088719131,
+          "artifact_id": 11925734660,
+          "archive_sha256": "sha256:8cee48dee251d1334780ab2cf6bc0d6caab32089e63107d17b0453471aaed541",
           "size_bytes": 117783489,
           "manifest_sha256": "7dffc6f4878704a0a2fe793e8e08cae2a9ab8082ac14ec55a1c7abb1f62a4f48",
           "extension_trials": 1199,
@@ -2078,9 +2078,9 @@
           "representative_roles": 5
         },
         "C100_G070": {
-          "workflow_job_id": 115989679257,
-          "artifact_id": 11917847168,
-          "archive_sha256": "sha256:b052d33af50cdb65785e90776a676f46497764406fdfca1cb8239d2c396aba36",
+          "workflow_job_id": 116088733149,
+          "artifact_id": 11925886821,
+          "archive_sha256": "sha256:84281c35cd7fb348d3d138f4fea980cf15826abc089645914e3a22f3b73e732b",
           "size_bytes": 117783663,
           "manifest_sha256": "f24ad7c6651ac06fbf37865332a6059b9029cb5f967791986df0c7e4f1ed8bca",
           "extension_trials": 1199,
@@ -2091,9 +2091,9 @@
           "representative_roles": 5
         },
         "C100_G100": {
-          "workflow_job_id": 115989678668,
-          "artifact_id": 11916848882,
-          "archive_sha256": "sha256:1f8d56049c04d415a87f66a50d2c536a2916c2b740de7aaeffe407b47ba5d3a5",
+          "workflow_job_id": 116088675701,
+          "artifact_id": 11925209928,
+          "archive_sha256": "sha256:8c7fd846f2febf57ac228383ac2ba5600bdfe917e7d6b6bab5dce3dd162b8c54",
           "size_bytes": 117783728,
           "manifest_sha256": "9fc8a69b10e4c136b4010a0dd45a161d25779bc0a9e77e0230725f74e260ae94",
           "extension_trials": 1199,
