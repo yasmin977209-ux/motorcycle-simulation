@@ -2,19 +2,20 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014",
-  "sha": "4c0f99b90286cc9691e542c02a5b5e4a196f7ede",
+  "sha": "2f7220447774f4a3249ee54682d14fff06b69f00",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-F resumed under D-2026-10-14-09 and D-2026-10-14-10. D-2026-10-14-05 is intentionally not registered; representative roles follow D-2026-10-10-03 and Reference §§14.5–14.6. Independently verify all 75 per-scenario stability checks from identity-verified trial rows, then perform R4 for the delivery-only cohort extension in scripts/stage13_assemble.py. Preserve canonical/historical cohorts. Do not modify main, Dataset/Parquet, or SOURCE_SHA; do not run production Monte Carlo, merge, or create a Release. Stop if any required stability check fails or full-detail data exceed the authorized replay allowance.",
+  "next": "Resolve DAILY_DISTRIBUTION scope: (A) explicitly authorize this single global sheet to retain the validated historical 11,005-trial daily cohort with prominent provenance labeling while scenario stats use the 30,000 delivery cohort and each per-scenario DAILY sheet uses its selected P50; or (B) explicitly amend the replay cap/scope to allow deterministic generation of missing daily histories for IDs 551..1200 in all 20 non-C100 scenarios (13,000 trial histories) so DAILY_DISTRIBUTION can represent the full 30,000 cohort. Until one is approved, no delivery file generation.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
-    "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved."
+    "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
+    "MISSING_DAILY_DISTRIBUTION_INPUTS: Reference §14.7 requires per-day DAILY_DISTRIBUTION quantiles for active trials per scenario. Verified Stage 12 detailed daily data cover the historical 11,005-trial cohort only (20 non-C100 scenarios through trial_id 550 each). Trial-level metrics exist through N=1200, but detailed daily/entity histories are missing for trial IDs 551..1200 across 20 non-C100 scenarios (13,000 trial histories). The current decision scope allows ≤105 selected-role detail replays and C100-only delivery replay; it does not authorize reconstructing all 13,000 histories. Do not produce final files or substitute the historical daily sheet without an explicit scope decision."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "4c0f99b90286cc9691e542c02a5b5e4a196f7ede",
+  "head_sha": "2f7220447774f4a3249ee54682d14fff06b69f00",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -1066,5 +1067,579 @@
   "cp_e_status": "PASS",
   "stage13_assembler_status": "WIRED",
   "sheets_verified": 185,
-  "sensitivity_sheet_status": "IMPLEMENTED"
+  "sensitivity_sheet_status": "IMPLEMENTED",
+  "cp_f_delivery_20261014": {
+    "status": "BLOCKED_AT_DAILY_DISTRIBUTION_COMPLETENESS",
+    "recorded_decisions": [
+      "D-2026-10-14-07",
+      "D-2026-10-14-08",
+      "D-2026-10-14-09",
+      "D-2026-10-14-10"
+    ],
+    "D_2026_10_14_05": "intentionally not registered by explicit project-owner instruction; roles use D-2026-10-10-03 and Reference §§14.5–14.6",
+    "source_identity": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "master_seed": 20270101,
+      "n300_run_id": 38162171123,
+      "n300_report_artifact_id": 11711110209,
+      "n600_run_id": 38174743440,
+      "n600_report_artifact_id": 11715388165,
+      "n600_cumulative_trial_input_artifact_id": 11717039570,
+      "n1200_run_id": 38179919488,
+      "n1200_report_artifact_id": 11717929259,
+      "n600_ordered_trial_hash_map_sha256": "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f",
+      "n1200_ordered_trial_hash_map_sha256": "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3",
+      "source_trial_rows_verified": 24000,
+      "per_trial_result_sha256_verified": true,
+      "source_seed_scenario_trial_id_validated": true
+    },
+    "stability": {
+      "method": "half-width = t.ppf(0.975, n-1) * sample_std(ddof=1) / sqrt(n); pass iff half-width / abs(mean) < 0.01",
+      "required_primary_checks": 75,
+      "primary_passed": 75,
+      "primary_failed": 0,
+      "auxiliary_partner_metric_checks_available": 120,
+      "auxiliary_partner_metric_passed": 120,
+      "auxiliary_partner_metric_failed": 0,
+      "c100_basis": "D-2026-10-14-09 specifies deterministic C100 with identical trial outcomes as CI=0/pass; C100 diagnostic extension has not yet been replayed in CP-F",
+      "max_primary_ratio_by_checkpoint": {
+        "N300": {
+          "scenario": "C030_G030",
+          "ratio": 0.003946586373803281,
+          "percent": 0.3946586373803281
+        },
+        "N600": {
+          "scenario": "C050_G000",
+          "ratio": 0.002726543177641411,
+          "percent": 0.27265431776414106
+        },
+        "N1200": {
+          "scenario": "C050_G000",
+          "ratio": 0.001943255633803634,
+          "percent": 0.19432556338036341
+        }
+      },
+      "per_scenario_primary_metric": [
+        {
+          "scenario": "C100_G100",
+          "n300_ratio": 0,
+          "n300_status": "PASS",
+          "n600_ratio": 0,
+          "n600_status": "PASS",
+          "n1200_ratio": 0,
+          "n1200_status": "PASS",
+          "basis": "D09_C100_deterministic_rule"
+        },
+        {
+          "scenario": "C100_G070",
+          "n300_ratio": 0,
+          "n300_status": "PASS",
+          "n600_ratio": 0,
+          "n600_status": "PASS",
+          "n1200_ratio": 0,
+          "n1200_status": "PASS",
+          "basis": "D09_C100_deterministic_rule"
+        },
+        {
+          "scenario": "C100_G050",
+          "n300_ratio": 0,
+          "n300_status": "PASS",
+          "n600_ratio": 0,
+          "n600_status": "PASS",
+          "n1200_ratio": 0,
+          "n1200_status": "PASS",
+          "basis": "D09_C100_deterministic_rule"
+        },
+        {
+          "scenario": "C100_G030",
+          "n300_ratio": 0,
+          "n300_status": "PASS",
+          "n600_ratio": 0,
+          "n600_status": "PASS",
+          "n1200_ratio": 0,
+          "n1200_status": "PASS",
+          "basis": "D09_C100_deterministic_rule"
+        },
+        {
+          "scenario": "C100_G000",
+          "n300_ratio": 0,
+          "n300_status": "PASS",
+          "n600_ratio": 0,
+          "n600_status": "PASS",
+          "n1200_ratio": 0,
+          "n1200_status": "PASS",
+          "basis": "D09_C100_deterministic_rule"
+        },
+        {
+          "scenario": "C085_G100",
+          "n300_ratio": 0.000048108189217793,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000036066058781884,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000026015651514676,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C085_G070",
+          "n300_ratio": 0.000043377549986554,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000028676482225175,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000023548705948944,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C085_G050",
+          "n300_ratio": 0.000046049456912148,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000029893293592665,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000021809983208975,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C085_G030",
+          "n300_ratio": 0.000047326504480624,
+          "n300_status": "PASS",
+          "n600_ratio": 0.00003540951022787,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000026488419383148,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C085_G000",
+          "n300_ratio": 0.00005420263372265,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000036904746877007,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000024644804222479,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C070_G100",
+          "n300_ratio": 0.00010009284527953664,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000068494331699254,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.00004664174291775,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C070_G070",
+          "n300_ratio": 0.00008440240904316504,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000064157850561161,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000045080746449078,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C070_G050",
+          "n300_ratio": 0.00009167867423183041,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000064502263326357,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000044684755166656,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C070_G030",
+          "n300_ratio": 0.00009946758350410829,
+          "n300_status": "PASS",
+          "n600_ratio": 0.00006879660233793,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000050623585558265,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C070_G000",
+          "n300_ratio": 0.00009127005700254533,
+          "n300_status": "PASS",
+          "n600_ratio": 0.000065596295318944,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.000046691518689469,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C050_G100",
+          "n300_ratio": 0.003325507053745229,
+          "n300_status": "PASS",
+          "n600_ratio": 0.0023326841983586284,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.001655108017568113,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C050_G070",
+          "n300_ratio": 0.003470623831036749,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002450177216617053,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0017355270122004574,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C050_G050",
+          "n300_ratio": 0.0035633677827962167,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002535842789889278,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0017925435242284926,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C050_G030",
+          "n300_ratio": 0.003938313644875912,
+          "n300_status": "PASS",
+          "n600_ratio": 0.00266732932992525,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0018689502600863165,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C050_G000",
+          "n300_ratio": 0.0038713406063751107,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002726543177641411,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.001943255633803634,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C030_G100",
+          "n300_ratio": 0.0035720420397434855,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002535861133126113,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0017183102258813104,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C030_G070",
+          "n300_ratio": 0.003738156189631388,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002526987470316367,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0017831804499916966,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C030_G050",
+          "n300_ratio": 0.003443181589817445,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002451166448693657,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0016726222001629315,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C030_G030",
+          "n300_ratio": 0.003946586373803281,
+          "n300_status": "PASS",
+          "n600_ratio": 0.002597125151789765,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0017705728784526687,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        },
+        {
+          "scenario": "C030_G000",
+          "n300_ratio": 0.003833730766029345,
+          "n300_status": "PASS",
+          "n600_ratio": 0.0026915158430552504,
+          "n600_status": "PASS",
+          "n1200_ratio": 0.0018913931433168095,
+          "n1200_status": "PASS",
+          "basis": "recomputed_from_identity_verified_trial_rows"
+        }
+      ],
+      "auxiliary_metric_maximum_ratio_by_checkpoint": {
+        "N300": {
+          "scenario": "C030_G030",
+          "ratio": 0.00394658637380328
+        },
+        "N600": {
+          "scenario": "C050_G000",
+          "ratio": 0.00272654317764141
+        },
+        "N1200": {
+          "scenario": "C050_G000",
+          "ratio": 0.001943255633803634
+        }
+      },
+      "n300_n600_n1200_metric_arrays": "independently recomputed from authenticated cumulative/accepted per-trial result records; all N=600/N=1200 ordered hash maps match their approved checkpoint map",
+      "local_ci_evidence_sha256": "3467241bd20c55fc619da4023228f1eb3757e35a5c95a2c1981ecaecb633356d"
+    },
+    "representative_trial_selection": {
+      "decision": "D-2026-10-10-03 plus Reference §§14.5–14.6",
+      "source_cohort": "trial_id 1..1200 per scenario",
+      "roles": {
+        "required": [
+          "P50",
+          "P10",
+          "P90",
+          "LossCase",
+          "MaxCase"
+        ],
+        "c100_trial_id": 1,
+        "selected_non_c100_role_slots": 100,
+        "unique_non_c100_selected_trial_replays": 100,
+        "positive_maxcase_values_all_non_c100_scenarios": true
+      },
+      "trial_ids": [
+        {
+          "scenario": "C100_G100",
+          "P50": 1,
+          "P10": 1,
+          "P90": 1,
+          "LossCase": 1,
+          "MaxCase": 1
+        },
+        {
+          "scenario": "C100_G070",
+          "P50": 1,
+          "P10": 1,
+          "P90": 1,
+          "LossCase": 1,
+          "MaxCase": 1
+        },
+        {
+          "scenario": "C100_G050",
+          "P50": 1,
+          "P10": 1,
+          "P90": 1,
+          "LossCase": 1,
+          "MaxCase": 1
+        },
+        {
+          "scenario": "C100_G030",
+          "P50": 1,
+          "P10": 1,
+          "P90": 1,
+          "LossCase": 1,
+          "MaxCase": 1
+        },
+        {
+          "scenario": "C100_G000",
+          "P50": 1,
+          "P10": 1,
+          "P90": 1,
+          "LossCase": 1,
+          "MaxCase": 1
+        },
+        {
+          "scenario": "C085_G100",
+          "P50": 13,
+          "P10": 100,
+          "P90": 1,
+          "LossCase": 163,
+          "MaxCase": 439
+        },
+        {
+          "scenario": "C085_G070",
+          "P50": 30,
+          "P10": 37,
+          "P90": 359,
+          "LossCase": 966,
+          "MaxCase": 464
+        },
+        {
+          "scenario": "C085_G050",
+          "P50": 14,
+          "P10": 20,
+          "P90": 75,
+          "LossCase": 151,
+          "MaxCase": 207
+        },
+        {
+          "scenario": "C085_G030",
+          "P50": 84,
+          "P10": 13,
+          "P90": 30,
+          "LossCase": 136,
+          "MaxCase": 882
+        },
+        {
+          "scenario": "C085_G000",
+          "P50": 394,
+          "P10": 244,
+          "P90": 118,
+          "LossCase": 44,
+          "MaxCase": 408
+        },
+        {
+          "scenario": "C070_G100",
+          "P50": 84,
+          "P10": 917,
+          "P90": 306,
+          "LossCase": 1094,
+          "MaxCase": 644
+        },
+        {
+          "scenario": "C070_G070",
+          "P50": 262,
+          "P10": 479,
+          "P90": 226,
+          "LossCase": 758,
+          "MaxCase": 441
+        },
+        {
+          "scenario": "C070_G050",
+          "P50": 67,
+          "P10": 441,
+          "P90": 125,
+          "LossCase": 863,
+          "MaxCase": 861
+        },
+        {
+          "scenario": "C070_G030",
+          "P50": 251,
+          "P10": 570,
+          "P90": 150,
+          "LossCase": 298,
+          "MaxCase": 675
+        },
+        {
+          "scenario": "C070_G000",
+          "P50": 118,
+          "P10": 1016,
+          "P90": 233,
+          "LossCase": 857,
+          "MaxCase": 740
+        },
+        {
+          "scenario": "C050_G100",
+          "P50": 758,
+          "P10": 848,
+          "P90": 870,
+          "LossCase": 618,
+          "MaxCase": 989
+        },
+        {
+          "scenario": "C050_G070",
+          "P50": 880,
+          "P10": 414,
+          "P90": 22,
+          "LossCase": 381,
+          "MaxCase": 639
+        },
+        {
+          "scenario": "C050_G050",
+          "P50": 358,
+          "P10": 990,
+          "P90": 1181,
+          "LossCase": 168,
+          "MaxCase": 841
+        },
+        {
+          "scenario": "C050_G030",
+          "P50": 256,
+          "P10": 241,
+          "P90": 482,
+          "LossCase": 259,
+          "MaxCase": 1187
+        },
+        {
+          "scenario": "C050_G000",
+          "P50": 175,
+          "P10": 709,
+          "P90": 534,
+          "LossCase": 304,
+          "MaxCase": 60
+        },
+        {
+          "scenario": "C030_G100",
+          "P50": 294,
+          "P10": 1022,
+          "P90": 690,
+          "LossCase": 1096,
+          "MaxCase": 280
+        },
+        {
+          "scenario": "C030_G070",
+          "P50": 13,
+          "P10": 56,
+          "P90": 291,
+          "LossCase": 858,
+          "MaxCase": 134
+        },
+        {
+          "scenario": "C030_G050",
+          "P50": 433,
+          "P10": 500,
+          "P90": 675,
+          "LossCase": 981,
+          "MaxCase": 366
+        },
+        {
+          "scenario": "C030_G030",
+          "P50": 748,
+          "P10": 774,
+          "P90": 1193,
+          "LossCase": 981,
+          "MaxCase": 233
+        },
+        {
+          "scenario": "C030_G000",
+          "P50": 170,
+          "P10": 918,
+          "P90": 1157,
+          "LossCase": 509,
+          "MaxCase": 989
+        }
+      ],
+      "local_ids_evidence_sha256": "bf2c9c1f63b5ba008f555983964fd05d6536a181f04245c47e8d9ad57d62fde2",
+      "detail_replays_completed": 0
+    },
+    "r4_prechange_review": [
+      {
+        "element": "Delivery trial-cohort validation",
+        "current": "scripts/stage13_assemble.py canonical mode hardcodes C100 trial_id=[1], non-C100 trial_id=1..550, total=11,005; sample mode is 625",
+        "reference_or_decision": "D-2026-10-14-09 sets 1,200 per scenario / 30,000 only for delivery cohort; historical canonical/sample cohorts remain distinct",
+        "reference": "D-2026-10-14-09; existing scripts/stage13_assemble.py blob f124a9d3bbf101aaec005486c17fb28d0eec5a8a",
+        "judgment": "K_CODE for missing separate delivery mode; preserve canonical and sample modes unchanged"
+      },
+      {
+        "element": "Five role selection",
+        "current": "selector uses numpy.quantile(method='linear'), nearest observed value, smallest trial_id tie-break, Loss absolute minimum, Max Case highest positive",
+        "reference_or_decision": "D-2026-10-10-03 and user-confirmed role rules",
+        "reference": "Reference §§14.5–14.6; D-2026-10-10-03",
+        "judgment": "SELECTION_RULE_ALIGNED; IDs computed from N=1200 trial-result values; detailed payload replays not run"
+      },
+      {
+        "element": "DAILY_DISTRIBUTION",
+        "current": "Stage12 roll-forward source contains 11,005 trial histories / 22,546,465 daily rows; missing daily/entity histories for trial IDs 551..1200 in 20 non-C100 scenarios",
+        "reference_or_decision": "delivery metrics cohort is 30,000; replay limit ≤105 role trials, plus separate C100 exception",
+        "reference": "Reference §14.7; D-2026-10-14-09/10 and explicit replay cap",
+        "judgment": "MISSING_ARTIFACT / scope decision required; do not assemble final 185-sheet workbook"
+      }
+    ],
+    "delivery_artifacts": {
+      "files_created": 0,
+      "release_created": false,
+      "main_modified": false,
+      "dataset_or_parquet_modified": false,
+      "source_sha_bumped": false,
+      "workflow_removed": false
+    },
+    "next_question": "Resolve DAILY_DISTRIBUTION scope: (A) explicitly authorize this single global sheet to retain the validated historical 11,005-trial daily cohort with prominent provenance labeling while scenario stats use the 30,000 delivery cohort and each per-scenario DAILY sheet uses its selected P50; or (B) explicitly amend the replay cap/scope to allow deterministic generation of missing daily histories for IDs 551..1200 in all 20 non-C100 scenarios (13,000 trial histories) so DAILY_DISTRIBUTION can represent the full 30,000 cohort. Until one is approved, no delivery file generation."
+  }
 }
