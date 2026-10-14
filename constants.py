@@ -239,17 +239,8 @@ C100_STATISTICAL_START_TRIALS: Final[int] = 1
 # [R6-1][User deviation from Ref 2.5/14.2] All non-C100 collection levels start at 300 trials.
 NON_C100_STATISTICAL_START_TRIALS: Final[int] = 300
 
-# [R6-1][User deviation from Ref 2.5/14.2] Escalation is +50, not doubling.
-ITERATION_ESCALATION_STEP: Final[int] = 50
-
-# [R6-1][User decision] First CI checkpoint for non-C100 collections.
+# [D-2026-10-10-01] First statistical checkpoint; subsequent checkpoints double N.
 STATISTICAL_CHECK_START_N: Final[int] = 300
-
-# [R6-1][User decision] CI checkpoints advance in increments of 50.
-STATISTICAL_CHECK_STEP_N: Final[int] = 50
-
-# [R6-1][User decision] Non-C100 cannot stop before completing n=400.
-MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 400
 
 # [R6-1][User decision] Three consecutive checkpoints must satisfy stability gates.
 STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3

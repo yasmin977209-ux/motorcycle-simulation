@@ -487,6 +487,49 @@ This decision is documentation-only. It does not authorize a production run, dat
 
 **Boundary:** No sampling, Gate A/B, engine, dataset, Parquet, `SOURCE_SHA`, or overall acceptance change.
 
+## D-2026-10-14-21 — cleanup of superseded +50 checkpoint constants
+
+**Status:** APPROVED — EXPLICIT PROJECT-OWNER DECISION  
+**Date:** 2026-10-14  
+**Scope:** `constants.py`, `tests/test_stage1.py`, and `.github/workflows/stage1-verification.yml`. `run_batch.py` is explicitly out of scope.
+
+### Decision and classifications
+
+1. D-2026-10-10-01 is the governing execution policy: `DOUBLING_FROM_300_NO_FLOOR`, checkpoints 300 → 600 → 1200 → 2400 → … .
+2. The constants `ITERATION_ESCALATION_STEP=50`, `STATISTICAL_CHECK_STEP_N=50`, and `MINIMUM_STOP_N_FOR_NON_C100=400` are obsolete code definitions inconsistent with that policy (`K_CODE`). Remove only these definitions and their outdated comments. Keep `STATISTICAL_CHECK_START_N=300`, `NON_C100_STATISTICAL_START_TRIALS=300`, the C100 start at 1, and other current governance values.
+3. Assertions in `tests/test_stage1.py` that expect the obsolete names and values are outdated test expectations (`K_TEST`). Replace them with checks using the approved Stage 7 checkpoint API: 300, 600, 1200, and 2400 are checkpoints; 50, 400, and 550 are not; next-checkpoint results are 299→300, 300→600, 600→1200, and 1200→2400.
+4. The legacy checks and printed values in `.github/workflows/stage1-verification.yml` enshrine a superseded policy (`WORKFLOW_DEFECT`). Update its assertions and output to the approved doubling schedule while keeping its existing `push.branches: ["main"]` trigger unchanged.
+5. Do not modify `run_batch.py`, any trial output, Dataset/Parquet, `SOURCE_SHA`, reference files, or completed-run records. This cleanup changes policy declarations/checks only; it does not authorize a new simulation run or sample-size escalation.
+
+### Pre-change R4
+
+| Element | Current | Approved branch/reference | Judgment |
+|---|---|---|---|
+| `constants.py` | Defines +50 steps and minimum N=400 | D-2026-10-10-01: `DOUBLING_FROM_300_NO_FLOOR` | Remove the three obsolete definitions; retain checkpoint start 300 |
+| `tests/test_stage1.py` | Expects +50 and minimum 400 | Approved sequence 300, 600, 1200, 2400 | Replace obsolete assertions (`K_TEST`) with direct schedule API tests |
+| `.github/workflows/stage1-verification.yml` | Asserts and reports +50/400 | Same approved sequence; main-only trigger remains | Update stale checks (`WORKFLOW_DEFECT`) |
+| `run_batch.py` | Current production caller | Explicitly excluded by this decision | No change |
+
+### Acceptance boundary
+
+The allowed diff is limited to the three named files plus this decision log and contextual `state.json` update. Validation runs only on the temporary CP branch, not by dispatching or modifying the approved workflow.
+
+
+### Evidence-backed §2.5 application — 2026-10-14
+
+- Run [38627040727](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38627040727) passed the §2.5 evaluator unit tests and Stage 7 authoring tests.
+- Read-only metric recomputation used the accepted source identity `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101), the 12,000 cumulative N=600 TrialResult rows (20 non-C100 scenarios × IDs 1..600), and the 12,000 canonical N=1200 additions (IDs 601..1200) verified against the accepted report's per-row result SHA, run attempt, and Run ID.
+- Original C100 `TrialResult` values were read from official Stage 7 Run `37225915321`, trial ID 1 per scenario. Each original Stage 7 per-trial SHA-256 matched the corresponding original Stage 12 Parquet final-row `result_sha256`. No trial was rerun; no Dataset/Parquet was modified.
+- Across the 20 non-C100 scenarios, 19 passed both §2.5 transitions (300→600 and 600→1200). `C030_G030` failed only 300→600: `P90_Final_Cash` relative change 1.571506% (6/7 pass); it passed 600→1200 (7/7, maximum relative change 0.458535%). All 20 pass the latest 600→1200 pair.
+- The five C100 scenarios remain deterministic N=1 under D-2026-10-10-01, not N=300/600/1200 statistical cohorts; for each, profit quantiles are 205,971,000, P90 final cash is 209,671,000, loss probability is 0, termination count is 0, held assets is 0. Checkpoint-transition comparisons are not applicable to C100.
+- The approved Gate B P50 >5% continuation trigger was not exceeded in the 40 existing N=300/600/1200 comparisons. No N=2400 trials were started. This does not establish final Gate A/Gate B acceptance; production Gate A remains BLOCKED because its approved golden provider is not connected to the production caller.
+
+### D-2026-10-14-21 implementation validation — 2026-10-14
+
+- Commit `2859143a2e96546ea024d3a3653fc43df1dcc1a3` applies the scoped +50 cleanup.
+- Run [38629243597](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38629243597) completed successfully. The no-stale-symbol check passed and `python -m pytest -q tests/test_stage1.py tests/test_stability_2_5_metrics.py tests/test_stage7_authoring.py` reported **82 passed in 0.46s**.
+- The run did not modify `run_batch.py`, `main`, trial data, Parquet, or `SOURCE_SHA`. Temporary CP validation workflows are removed from the final branch tree.
+
 ## D-2026-10-15-06 — source_sha_drift_resolution
 
 **Status:** APPROVED BY PROJECT OWNER — CANDIDATE-BRANCH RESOLUTION  

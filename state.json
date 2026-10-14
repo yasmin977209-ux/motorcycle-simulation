@@ -1,10 +1,10 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014",
-  "sha": "f47385f0608035e7f5741cb8546a9cd98229f516",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
+  "sha": "52104798cda44e458a329e9831400cc6bf6d7b74",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "D-19 and D-20 integrated on the final temporary candidate. Next apply D-21 checkpoint cleanup, run the full test suite on the merged head, then inspect approved-source inputs and produce candidate artifacts without changing Dataset/Parquet or SOURCE_SHA.",
+  "next": "D19, D20, and D21 changes are integrated on the final temporary candidate. D20 evidence: C030_G030 failed §2.5 at N=300→600 for P90_Final_Cash relative change 1.571506%, while all 20 non-C100 scenarios pass N=600→1200; no N=2400 trial cohort was started. Composite delivery stability remains NOT ESTABLISHED. Next: full pytest on this merged head, verify the canonical input artifacts and identities, then attempt candidate-only artifact production without changing Dataset/Parquet or SOURCE_SHA.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",

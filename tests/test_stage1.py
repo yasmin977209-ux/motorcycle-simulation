@@ -17,6 +17,7 @@ from pathlib import Path
 import constants
 import dateutils
 import rng
+from scripts.stage7_stability import is_statistical_checkpoint, next_statistical_checkpoint
 
 
 # Directly named identifiers appearing as constants in the Chapter 2 tables:
@@ -85,15 +86,12 @@ REFERENCE_CLAIM_WAITING_PERIODS = {
     "FINAL_CLOSURE": 0,
 }
 
-# User-approved execution overrides that supersede Chapter 2.5's older
-# illustrative starting/escalation table.
+# Execution choices explicitly recorded in governance decisions.
+# D-2026-10-10-01 governs checkpoint escalation: doubling from 300, no floor.
 USER_APPROVED_EXECUTION_OVERRIDES = {
     "C100_STATISTICAL_START_TRIALS": 1,
     "NON_C100_STATISTICAL_START_TRIALS": 300,
-    "ITERATION_ESCALATION_STEP": 50,
     "STATISTICAL_CHECK_START_N": 300,
-    "STATISTICAL_CHECK_STEP_N": 50,
-    "MINIMUM_STOP_N_FOR_NON_C100": 400,
     "STABILITY_CONSECUTIVE_CHECKS_REQUIRED": 3,
     "INITIAL_SMOKE_TRIALS_PER_SCENARIO": 1,
     "C100_CI_GATE_ENABLED": False,
@@ -139,6 +137,17 @@ def test_user_approved_execution_overrides_are_exact() -> None:
         0.50: 300,
         0.30: 300,
     }
+
+
+def test_statistical_checkpoints_follow_approved_doubling_policy() -> None:
+    # Decision D-2026-10-10-01: 300, 600, 1200, 2400, ...; no 400-trial floor.
+    assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
+    assert not any(is_statistical_checkpoint(n) for n in (50, 400, 550))
+    assert next_statistical_checkpoint(0) == 300
+    assert next_statistical_checkpoint(299) == 300
+    assert next_statistical_checkpoint(300) == 600
+    assert next_statistical_checkpoint(600) == 1200
+    assert next_statistical_checkpoint(1200) == 2400
 
 
 def test_date_calendar_and_reference_examples() -> None:
