@@ -1,10 +1,10 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014",
-  "sha": "f6bdeb486d8fa305bfaa64a942a99cc0a48e1427",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014",
+  "sha": "f47385f0608035e7f5741cb8546a9cd98229f516",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "D-19 documentary resolution recorded on the final temporary candidate; next apply the approved D-20 §2.5 metric evaluator/tests and D-21 checkpoint cleanup. No production Monte Carlo, dataset/Parquet change, SOURCE_SHA change, merge, or release.",
+  "next": "D-19 and D-20 integrated on the final temporary candidate. Next apply D-21 checkpoint cleanup, run the full test suite on the merged head, then inspect approved-source inputs and produce candidate artifacts without changing Dataset/Parquet or SOURCE_SHA.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",

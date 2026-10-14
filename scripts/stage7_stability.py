@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from typing import Any
+import math
+import numbers
+import re
 
 import constants
-import re
 
 STATISTICAL_ESCALATION_POLICY_ID = "DOUBLING_FROM_300_V1"
 STATISTICAL_ESCALATION_MULTIPLIER = 2
@@ -220,4 +222,98 @@ def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any
         "checked": True,
         "stable": all_stable,
         "metrics": metric_payload,
+    }
+
+
+
+def evaluate_reference_stability(
+    previous_metrics: dict[str, Any] | None,
+    current_metrics: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Evaluate all seven Reference §2.5 indicators between adjacent checkpoints.
+
+    This comparison is separate from Gate A exact-golden and Gate B CI checks.
+    Near-zero prior values use the strict absolute fallback specified in §2.5;
+    all other values use strict relative change below one percent.
+    """
+    indicators = tuple(constants.REFERENCE_STABILITY_INDICATORS)
+    if not isinstance(previous_metrics, dict) or not isinstance(current_metrics, dict):
+        return {
+            "checked": False, "stable": False, "status": "BLOCKED",
+            "reason": "previous/current §2.5 metric maps must be dictionaries",
+            "metrics": {},
+        }
+
+    missing_previous = [name for name in indicators if name not in previous_metrics]
+    missing_current = [name for name in indicators if name not in current_metrics]
+    if missing_previous or missing_current:
+        return {
+            "checked": False, "stable": False, "status": "BLOCKED",
+            "reason": "one or more required §2.5 metric values are missing",
+            "missing_previous": missing_previous,
+            "missing_current": missing_current,
+            "metrics": {},
+        }
+
+    metric_results: dict[str, dict[str, Any]] = {}
+    invalid_values: list[str] = []
+    for name in indicators:
+        old_value = previous_metrics[name]
+        new_value = current_metrics[name]
+        valid_values = (
+            not isinstance(old_value, bool)
+            and not isinstance(new_value, bool)
+            and isinstance(old_value, numbers.Real)
+            and isinstance(new_value, numbers.Real)
+            and math.isfinite(float(old_value))
+            and math.isfinite(float(new_value))
+        )
+        if not valid_values:
+            invalid_values.append(name)
+            metric_results[name] = {
+                "checked": False, "stable": False, "status": "BLOCKED",
+                "reason": "metric values must be finite real numbers, not booleans",
+            }
+            continue
+
+        old = float(old_value)
+        new = float(new_value)
+        absolute_change = abs(new - old)
+        if abs(old) < constants.REFERENCE_EPSILON:
+            stable = absolute_change < constants.ABSOLUTE_EPSILON
+            metric_results[name] = {
+                "checked": True, "stable": stable,
+                "status": "PASS" if stable else "FAIL",
+                "previous": old, "current": new,
+                "absolute_change": absolute_change, "relative_change": None,
+                "comparison": "ABSOLUTE_NEAR_ZERO",
+                "threshold": constants.ABSOLUTE_EPSILON,
+                "inequality": "absolute_change < ABSOLUTE_EPSILON",
+            }
+        else:
+            relative_change = absolute_change / abs(old)
+            stable = relative_change < constants.REFERENCE_STABILITY_RELATIVE_TOLERANCE
+            metric_results[name] = {
+                "checked": True, "stable": stable,
+                "status": "PASS" if stable else "FAIL",
+                "previous": old, "current": new,
+                "absolute_change": absolute_change, "relative_change": relative_change,
+                "comparison": "RELATIVE",
+                "threshold": constants.REFERENCE_STABILITY_RELATIVE_TOLERANCE,
+                "inequality": "relative_change < REFERENCE_STABILITY_RELATIVE_TOLERANCE",
+            }
+
+    if invalid_values:
+        return {
+            "checked": False, "stable": False, "status": "BLOCKED",
+            "reason": "one or more §2.5 metric values are invalid",
+            "invalid_values": invalid_values, "metrics": metric_results,
+        }
+
+    all_stable = all(metric_results[name]["stable"] for name in indicators)
+    return {
+        "checked": True, "stable": all_stable,
+        "status": "PASS" if all_stable else "FAIL",
+        "reason": None if all_stable else "one or more §2.5 indicators exceeded the approved threshold",
+        "metrics": metric_results,
     }

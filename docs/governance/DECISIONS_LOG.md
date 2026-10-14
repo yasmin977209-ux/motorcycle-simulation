@@ -461,6 +461,32 @@ Use the existing Stage 12 / Gate B per-trial metrics wherever their trial-level 
 
 This decision is documentation-only. It does not authorize a production run, dataset/Parquet changes, an engine change, SOURCE_SHA changes, a merge, or a release.
 
+## D-2026-10-14-20 — §2.5 seven-metric evaluator
+
+**Status:** APPROVED — EXPLICIT PROJECT-OWNER DECISION  
+**Date:** 2026-10-14  
+**Scope:** Additive evaluator and unit tests in `scripts/stage7_stability.py`; no `main` edits.
+
+### Decision
+
+1. Required indicators: `P10_Cumulative_Project_Profit`, `P50_Cumulative_Project_Profit`, `P90_Cumulative_Project_Profit`, `P90_Final_Cash`, `Probability_of_Accounting_Loss`, `P90_Termination_Count`, and `P90_Held_Assets`.
+2. `Probability_of_Loss` and `Probability_of_Accounting_Loss` are semantically identical in current calculators: both equal the fraction of trial results where `Cumulative_Project_Profit < 0`. `constants.py` and `scripts/stage6_5_aggregate.py` use `Probability_of_Accounting_Loss` as the canonical name. `scripts/excel_builder.py` exposes the same calculation as `Probability_of_Loss`. `accounting.py` supplies cumulative-profit accounting values and does not compute a probability itself.
+3. If `abs(previous) < REFERENCE_EPSILON`, stable requires `abs(current-previous) < ABSOLUTE_EPSILON`; otherwise stable requires relative change strictly less than 1%. Equality fails.
+4. Missing, non-numeric, boolean, NaN, and infinite values are BLOCKED, never PASS.
+5. This evaluator's PASS/FAIL applies only to §2.5 comparison, not Gate A, Gate B, or overall scenario acceptance.
+
+### R4 before change
+
+| Element | Current | Reference/decision | Judgment |
+|---|---|---|---|
+| `scripts/stage7_stability.py` | Gate A fingerprint and Gate B CI checks only | §2.5 requires seven adjacent-checkpoint comparisons | Add isolated evaluator |
+| `constants.py` | Seven canonical names include `Probability_of_Accounting_Loss` | canonical reference definition | Keep canonical name |
+| `accounting.py` | Computes `cumulative_project_profit`; no probability | probability derives from trial outcomes | No accounting change |
+| `scripts/stage6_5_aggregate.py` | Mean of `cumulative_project_profit < 0` | canonical loss probability | Semantic match |
+| `scripts/excel_builder.py` | Same predicate, presentation label `Probability_of_Loss` | §2.5 label | Semantic match |
+
+**Boundary:** No sampling, Gate A/B, engine, dataset, Parquet, `SOURCE_SHA`, or overall acceptance change.
+
 ## D-2026-10-15-06 — source_sha_drift_resolution
 
 **Status:** APPROVED BY PROJECT OWNER — CANDIDATE-BRANCH RESOLUTION  
