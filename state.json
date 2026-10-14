@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014",
-  "sha": "ebc15a6b4d3c663e467731efa96f85aa934b97d7",
+  "sha": "4a76ce87cad65182e2025af7476b4fb1fa5daef3",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-F replay and cohort integrity passed. Next: independently audit numeric/accounting and daily-distribution content, and reconcile the composite Gate A + Gate B + Reference §2.5 stability decision. Do not assemble/approve the seven final delivery files or create a Release before all gates and the independent content audit pass.",
   "blockers": [
@@ -16,7 +16,7 @@
     "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "ebc15a6b4d3c663e467731efa96f85aa934b97d7",
+  "head_sha": "4a76ce87cad65182e2025af7476b4fb1fa5daef3",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -1741,23 +1741,23 @@
     },
     "next_action": "CP-F replay and cohort integrity passed. Next: independently audit numeric/accounting and daily-distribution content, and reconcile the composite Gate A + Gate B + Reference §2.5 stability decision. Do not assemble/approve the seven final delivery files or create a Release before all gates and the independent content audit pass.",
     "execution_evidence": {
-      "run_id": 38603678969,
-      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38603678969",
+      "run_id": 38619859394,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38619859394",
       "run_conclusion": "success",
-      "tested_head_sha": "ebc15a6b4d3c663e467731efa96f85aa934b97d7",
+      "tested_head_sha": "f7096bcc9f910df54a60d5a4329a7ebbcd2a43ae",
       "branch": "tmp/cp-f-delivery-20261014",
-      "updated_at": "2026-10-14T18:48:39Z",
+      "updated_at": "2026-10-14T21:24:16Z",
       "jobs_expected": 28,
       "jobs_completed": 28,
       "jobs_successful": 28,
       "jobs_failed": 0,
-      "source_readiness_job_id": 115988996232,
-      "focused_tests_job_id": 115989678139,
+      "source_readiness_job_id": 116088676494,
+      "focused_tests_job_id": 116088736452,
       "focused_test_result": "22 passed",
-      "cohort_validation_job_id": 116037966524,
+      "cohort_validation_job_id": 116111840450,
       "cohort_validation_artifact": {
-        "artifact_id": 11919569505,
-        "archive_sha256": "sha256:cc6ad88fc6597a1f1a4cf8bfec3d5ea0940471da4112dbd17f6b00ede671bd3b"
+        "artifact_id": 11929768010,
+        "archive_sha256": "sha256:88f5387796383fc0bb97547e86799038d1d69865cbf7803b2ea07d97700a065d"
       },
       "cohort_manifest_version": "cp-f-replay-cohort-v1",
       "cohort_manifest_status": "PASS",
@@ -1870,9 +1870,9 @@
           "representative_roles": 5
         },
         "C050_G050": {
-          "workflow_job_id": 115989679324,
-          "artifact_id": 11916769982,
-          "archive_sha256": "sha256:2bad4464527a7710fd35149ab739da029734eb3dc7a15b5da67d5b0fd7f4cab4",
+          "workflow_job_id": 116088677724,
+          "artifact_id": 11929093644,
+          "archive_sha256": "sha256:4a729aa41b1f9c2e6853a2898408a70cd972a00b07fd7099bbe371b8af451ab3",
           "size_bytes": 102596235,
           "manifest_sha256": "0885fd719e1e45a5b3cc20a3f806cfd1075066debb26f128049b0fc540dde04e",
           "extension_trials": 650,
