@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014",
-  "sha": "6e1b62da95e08bba57610541bd5b84049a87139a",
+  "sha": "60aad43c3b9f63618e15dd76f0b49b9bb556693f",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "Resolve DAILY_DISTRIBUTION scope: (A) explicitly authorize this single global sheet to retain the validated historical 11,005-trial daily cohort with prominent provenance labeling while scenario stats use the 30,000 delivery cohort and each per-scenario DAILY sheet uses its selected P50; or (B) explicitly amend the replay cap/scope to allow deterministic generation of missing daily histories for IDs 551..1200 in all 20 non-C100 scenarios (13,000 trial histories) so DAILY_DISTRIBUTION can represent the full 30,000 cohort. Until one is approved, no delivery file generation.",
   "blockers": [
@@ -12,10 +12,11 @@
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
-    "PENDING_APPROVED_REPLAY_ARTIFACTS: D-2026-10-14-11 now authorizes delivery-only histories for non-C100 IDs 551..1200, C100 IDs 2..1200, and selected missing representative payloads. The workflow must generate and validate all 25 scenario artifacts before daily distribution can pass."
+    "PENDING_APPROVED_REPLAY_ARTIFACTS: D-2026-10-14-11 now authorizes delivery-only histories for non-C100 IDs 551..1200, C100 IDs 2..1200, and selected missing representative payloads. The workflow must generate and validate all 25 scenario artifacts before daily distribution can pass.",
+    "CP_F_CODE_FIX_PENDING_VERIFICATION: Run 38602185368 exposed K_CODE KeyError in C100 business-result projection and was cancelled before replay evidence completed; new code and parallelism configuration require Actions verification."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "6e1b62da95e08bba57610541bd5b84049a87139a",
+  "head_sha": "60aad43c3b9f63618e15dd76f0b49b9bb556693f",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -1069,7 +1070,7 @@
   "sheets_verified": 185,
   "sensitivity_sheet_status": "IMPLEMENTED",
   "cp_f_delivery_20261014": {
-    "status": "REPLAY_WORKFLOW_IMPLEMENTED_PENDING_RUN",
+    "status": "CODE_FIX_COMMITTED_PENDING_ACTIONS_VERIFICATION",
     "recorded_decisions": [
       "D-2026-10-14-07",
       "D-2026-10-14-08",
@@ -1642,6 +1643,20 @@
         "reference_or_decision": "D-2026-10-14-11/12 plus owner's M3 delegation; temporary workflow only on tmp/cp-f-delivery-20261014.",
         "reference": "Reference §§14.3–14.7; D-2026-10-14-11 and D-2026-10-14-12",
         "judgment": "WORKFLOW_DEFECT: replay invocation/collection gate absent; implement pinned scenario matrix, timeouts, exact identity gates and artifact content validation."
+      },
+      {
+        "element": "C100 business-result projection",
+        "current": "business_result_projection indexed every TrialResult dataclass field; a valid focused comparison with minimal rows raised KeyError: 'scenario_id'",
+        "reference_or_decision": "D-2026-10-14-11 requires C100 business equality after excluding only trial_id; Reference §14.4 requires outcomes invariant to execution order",
+        "reference": "D-2026-10-14-11 §2; Reference §14.4",
+        "judgment": "K_CODE: change projection to preserve every supplied field except trial_id. Keep tests unchanged; actual replay still checks source identity and per-trial rows."
+      },
+      {
+        "element": "Scenario parallelism",
+        "current": "25 scenario jobs; max-parallel=10; fail-fast=false",
+        "reference_or_decision": "The 25 scenarios are independent; RNG uses SHA-256 keys including scenario_id and trial_id, and the Reference explicitly requires identical sequential/parallel outcomes.",
+        "reference": "Reference §§14.3–14.4; D-2026-10-14-11",
+        "judgment": "M3 decision: set max-parallel=25. No shared mutable outputs between jobs; separate scenario artifacts. GitHub runner quota may queue excess jobs but does not alter outcome identity or results."
       }
     ],
     "delivery_artifacts": {
@@ -1658,7 +1673,7 @@
         "D-2026-10-14-11",
         "D-2026-10-14-12"
       ],
-      "status": "IMPLEMENTED_PENDING_RUN",
+      "status": "PENDING_REPLAY_AFTER_K_CODE_FIX",
       "non_c100_primary_daily_history_trial_ids": "551..1200",
       "non_c100_primary_daily_history_count": 13000,
       "c100_primary_daily_history_trial_ids": "2..1200",
@@ -1689,6 +1704,39 @@
       "source_sha_bumped": false,
       "main_modified": false,
       "release_created": false
-    }
+    },
+    "last_failed_run_diagnostic": {
+      "run_id": 38602185368,
+      "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38602185368",
+      "tested_head_sha": "60aad43c3b9f63618e15dd76f0b49b9bb556693f",
+      "run_conclusion": "cancelled",
+      "jobs": {
+        "source-readiness": "success",
+        "focused-tests": "failure",
+        "replay-matrix": "cancelled_by_run_stop",
+        "validate-cohort": "cancelled"
+      },
+      "focused_test_result": "1 failed, 21 passed",
+      "exact_error": "KeyError: 'scenario_id'",
+      "location": "scripts/cp_f_delivery_replay.py:41, business_result_projection",
+      "classification": "K_CODE",
+      "cause": "projection indexed the full TrialResult dataclass field list instead of preserving all keys and excluding only trial_id, as required for the C100 business-equivalence comparison",
+      "artifact_evidence": {
+        "source_readiness_artifact_id": 11914430437,
+        "source_readiness_artifact_sha256": "e5f3a659fa8c5d285d5a2de509335a1eab5913cb12e99d17aad85a4bc7a458c3",
+        "scenario_replay_artifacts_accepted": 0
+      },
+      "disposition": "fixed in code; tests and replay must be rerun on the new head before accepting any output"
+    },
+    "parallel_execution": {
+      "matrix_scenarios": 25,
+      "prior_max_parallel": 10,
+      "new_max_parallel": 25,
+      "fail_fast": false,
+      "accuracy_basis": "Reference §14.4: serial and parallel runs must produce identical outcomes after sorting by trial_id; per-draw SHA-256 seed includes master_seed, scenario_id, trial_id, bike_id, date, event_type.",
+      "isolation": "Each scenario reads immutable historical inputs and writes to its own output/artifact path; no scenario shares mutable state with another.",
+      "limitation": "GitHub concurrency limits may queue jobs; queued execution does not change deterministic results."
+    },
+    "next_action": "Verify focused tests and inspect the full replay evidence from the new Actions run. Accept no replay artifacts until all 25 scenario packages pass content and identity validation."
   }
 }

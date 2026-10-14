@@ -38,7 +38,8 @@ DAILY_FIELDS = [
 ]
 
 def business_result_projection(row: dict[str, Any]) -> dict[str, Any]:
-    return {key: row[key] for key in BUSINESS_RESULT_FIELDS}
+    """Exclude trial identity only; preserve every other recorded business field (D-2026-10-14-11; Reference §14.4)."""
+    return {key: value for key, value in row.items() if key != "trial_id"}
 
 def linear_quantile(values: list[float], quantile: float) -> float:
     return float(np.quantile(np.asarray(values, dtype=np.float64), quantile, method="linear"))
