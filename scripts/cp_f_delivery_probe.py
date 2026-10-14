@@ -1,20 +1,35 @@
 #!/usr/bin/env python3
-"""CP-F fail-closed source readiness audit; it never runs Monte Carlo."""
+"""CP-F verifies the highest reached N=1200 delivery cohort and fails closed
+if required full daily/representative detail sources are absent.
+This script does not run Monte Carlo, replay trials, or create deliverables.
+"""
 from __future__ import annotations
 import hashlib, io, json, os, sys, tarfile, urllib.request, zipfile
-from urllib.error import HTTPError
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+import numpy as np
 import pyarrow.parquet as pq
+from scripts.stage13_assemble import EXPECTED_SCENARIOS
 
 REPO = "yasmin977209-ux/motorcycle-simulation"
-STAGE9A_FINAL_RUN = 37671448546
-STAGE10_RUN = 37709936740
-STAGE12_RUN = 37964656154
-SCENARIO = "C070_G100"
+STAGE9A_RUN = 37671448546
+N1200_RUN = 38179919488
 SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
-GLOBAL_SHA = "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
+SOURCE_COMMIT = "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+MASTER_SEED = 20270101
+SCHEMA_VERSION = "stage12-daily-accounting-v1"
+N1200_GLOBAL_SHA256 = "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
+N600_GLOBAL_SHA256 = "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
+N1200_TRIALS_PER_NON_C100 = 1200
+N600_ARTIFACT_NAME = "gateb-n1200-cumulative-600"
+N1200_REPORT_ARTIFACT_NAME = "gateb-n1200-checkpoint-report"
+C100_SCENARIOS = {s for s in EXPECTED_SCENARIOS if s.startswith("C100_")}
+NON_C100_SCENARIOS = sorted(set(EXPECTED_SCENARIOS) - C100_SCENARIOS)
+
+class _NoFollowRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
 
 def api_json(url: str, token: str) -> dict[str, Any]:
     request = urllib.request.Request(url, headers={
@@ -26,11 +41,8 @@ def api_json(url: str, token: str) -> dict[str, Any]:
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.loads(response.read().decode("utf-8"))
 
-class _NoFollowRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
-
 def get_zip(artifact_id: int, token: str) -> bytes:
+    """Download an artifact without forwarding API credentials to its storage host."""
     url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip"
     request = urllib.request.Request(url, headers={
         "Authorization": f"Bearer {token}",
@@ -38,296 +50,566 @@ def get_zip(artifact_id: int, token: str) -> bytes:
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "motorcycle-simulation-cp-f",
     })
-    # GitHub returns a short-lived signed storage URL. Do not forward the API
-    # Authorization header to that different host.
     opener = urllib.request.build_opener(_NoFollowRedirect())
     try:
         with opener.open(request, timeout=180) as response:
             raw = response.read()
-    except HTTPError as response:
-        if response.code not in (301, 302, 303, 307, 308):
+    except Exception as response:
+        code = getattr(response, "code", None)
+        if code not in (301, 302, 303, 307, 308):
             raise
-        location = response.headers.get("Location")
+        location = getattr(response, "headers", {}).get("Location")
         if not location:
             raise RuntimeError(f"ARTIFACT_REDIRECT_LOCATION_MISSING: {artifact_id}")
-        remote_request = urllib.request.Request(
-            location, headers={"User-Agent": "motorcycle-simulation-cp-f"}
-        )
-        with urllib.request.urlopen(remote_request, timeout=180) as response:
-            raw = response.read()
+        storage_request = urllib.request.Request(location, headers={"User-Agent": "motorcycle-simulation-cp-f"})
+        with urllib.request.urlopen(storage_request, timeout=180) as storage_response:
+            raw = storage_response.read()
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         damaged = archive.testzip()
         if damaged:
-            raise RuntimeError(f"ARTIFACT_ZIP_CORRUPT: {damaged}")
+            raise RuntimeError(f"ARTIFACT_ZIP_CORRUPT: {artifact_id}:{damaged}")
     return raw
-def artifacts(run_id: int, token: str) -> list[dict[str, Any]]:
+
+def artifacts_for_run(run_id: int, token: str) -> list[dict[str, Any]]:
     return api_json(
         f"https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts?per_page=100",
         token,
     ).get("artifacts", [])
 
-def one(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
-    matches = [x for x in items if x.get("name") == name and not x.get("expired")]
+def unique_artifact(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
+    matches = [item for item in items if item.get("name") == name and not item.get("expired")]
     if len(matches) != 1:
         raise RuntimeError(f"ARTIFACT_LOOKUP_NOT_UNIQUE: {name}; count={len(matches)}")
     return matches[0]
 
-def member(raw_zip: bytes, suffix: str) -> bytes:
+def verify_archive_digest(raw: bytes, record: dict[str, Any]) -> str:
+    actual = hashlib.sha256(raw).hexdigest()
+    declared = str(record.get("digest") or "").removeprefix("sha256:")
+    if declared and declared != actual:
+        raise RuntimeError(
+            f"ARTIFACT_ARCHIVE_SHA256_MISMATCH: id={record.get('id')}; expected={declared}; actual={actual}"
+        )
+    return actual
+
+def zip_member(raw_zip: bytes, suffix: str) -> bytes:
     with zipfile.ZipFile(io.BytesIO(raw_zip)) as archive:
-        matches = [n for n in archive.namelist() if n == suffix or n.endswith("/" + suffix)]
+        matches = [name for name in archive.namelist() if name == suffix or name.endswith("/" + suffix)]
         if len(matches) != 1:
             raise RuntimeError(f"ZIP_MEMBER_LOOKUP_NOT_UNIQUE: {suffix}; matches={matches[:5]}")
         return archive.read(matches[0])
 
-def sha(raw: bytes) -> str:
+def sha256_bytes(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
-def read_json(path: str) -> Any:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+def trial_result_sha256(trial_result: dict[str, Any]) -> str:
+    canonical = json.dumps(
+        trial_result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str
+    ).encode("utf-8")
+    return sha256_bytes(canonical)
+
+def global_trial_hash_map(rows_by_scenario: dict[str, dict[int, dict[str, Any]]]) -> str:
+    digest = hashlib.sha256()
+    for scenario in sorted(rows_by_scenario):
+        for trial_id in sorted(rows_by_scenario[scenario]):
+            row = rows_by_scenario[scenario][trial_id]
+            digest.update(f"{scenario}|{trial_id}|{row['result_sha256']}\n".encode("utf-8"))
+    return digest.hexdigest()
+
+def verify_trial_row(row: dict[str, Any], scenario: str, trial_id: int) -> None:
+    if row.get("scenario_id") != scenario or int(row.get("trial_id", -1)) != trial_id:
+        raise RuntimeError(f"TRIAL_KEY_MISMATCH: expected={scenario}/{trial_id}")
+    if row.get("source_sha") != SOURCE_SHA:
+        raise RuntimeError(f"TRIAL_SOURCE_SHA_MISMATCH: {scenario}/{trial_id}")
+    if int(row.get("master_seed", -1)) != MASTER_SEED:
+        raise RuntimeError(f"TRIAL_MASTER_SEED_MISMATCH: {scenario}/{trial_id}")
+    result = row.get("trial_result")
+    if not isinstance(result, dict):
+        raise RuntimeError(f"TRIAL_RESULT_MISSING: {scenario}/{trial_id}")
+    if result.get("scenario_id") != scenario or int(result.get("trial_id", -1)) != trial_id:
+        raise RuntimeError(f"INNER_TRIAL_KEY_MISMATCH: {scenario}/{trial_id}")
+    actual_hash = trial_result_sha256(result)
+    if actual_hash != row.get("result_sha256"):
+        raise RuntimeError(f"TRIAL_RESULT_SHA256_MISMATCH: {scenario}/{trial_id}")
+
+def get_trial_file_records(raw_zip: bytes) -> list[dict[str, Any]]:
+    rows = []
+    with zipfile.ZipFile(io.BytesIO(raw_zip)) as archive:
+        for name in archive.namelist():
+            if name.startswith("trial_") and name.endswith(".json"):
+                rows.append(json.loads(archive.read(name)))
+    return rows
+
+def load_c100_trial(artifact_id: int, scenario: str, token: str) -> tuple[dict[str, Any], str, int]:
+    raw = get_zip(artifact_id, token)
+    scenario_tar = zip_member(raw, f"{scenario}.tar.gz")
+    with tarfile.open(fileobj=io.BytesIO(scenario_tar), mode="r:gz") as tar:
+        members = [m for m in tar.getmembers() if m.name.lstrip("./") == "trial_results.parquet"]
+        if len(members) != 1:
+            raise RuntimeError(f"C100_TRIAL_PARQUET_NOT_UNIQUE: {scenario}")
+        stream = tar.extractfile(members[0])
+        if stream is None:
+            raise RuntimeError(f"C100_TRIAL_PARQUET_UNREADABLE: {scenario}")
+        rows = pq.read_table(io.BytesIO(stream.read())).to_pylist()
+        if len(rows) != 1:
+            raise RuntimeError(f"C100_TRIAL_COUNT_MISMATCH: {scenario}; rows={len(rows)}")
+        trial_result = rows[0]
+    if trial_result.get("scenario_id") != scenario or int(trial_result.get("trial_id", -1)) != 1:
+        raise RuntimeError(f"C100_TRIAL_IDENTITY_MISMATCH: {scenario}")
+    return {
+        "scenario_id": scenario, "trial_id": 1, "source_sha": SOURCE_SHA,
+        "master_seed": MASTER_SEED, "result_sha256": trial_result_sha256(trial_result),
+        "trial_result": trial_result, "origin": "stage9a_official_deterministic_c100",
+        "log_events": True,
+    }, sha256_bytes(raw), len(trial_result)
+
+def select_roles(rows_by_id: dict[int, dict[str, Any]], scenario: str) -> dict[str, int]:
+    rows = [rows_by_id[k]["trial_result"] for k in sorted(rows_by_id)]
+    values = np.asarray([float(row["final_net_project_equity"]) for row in rows], dtype=float)
+    selected = {}
+    for role, q in (("P10", 0.10), ("P50", 0.50), ("P90", 0.90)):
+        target = float(np.quantile(values, q, method="linear"))
+        selected[role] = int(min(
+            rows, key=lambda row: (abs(float(row["final_net_project_equity"]) - target), int(row["trial_id"]))
+        )["trial_id"])
+    selected["LossCase"] = int(min(
+        rows, key=lambda row: (abs(float(row["final_net_project_equity"])), int(row["trial_id"]))
+    )["trial_id"])
+    positive = [row for row in rows if float(row["final_net_project_equity"]) > 0]
+    if not positive:
+        raise RuntimeError(f"UNDEFINED_BUSINESS_RULE: MaxCase has no positive equity in {scenario}")
+    max_equity = max(float(row["final_net_project_equity"]) for row in positive)
+    selected["MaxCase"] = min(
+        int(row["trial_id"]) for row in positive
+        if float(row["final_net_project_equity"]) == max_equity
+    )
+    return selected
 
 def main() -> int:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         raise RuntimeError("GITHUB_TOKEN_MISSING")
-    evidence_dir = Path("cp-f-evidence")
-    evidence_dir.mkdir(parents=True, exist_ok=True)
+    outdir = Path("cp-f-evidence")
+    outdir.mkdir(parents=True, exist_ok=True)
 
-    state = read_json("state.json")
-    roll = read_json("docs/stage12/roll_forward_validation.json")
-    closure = read_json("docs/stage12/closure_settlement_validation.json")
-    global_manifest = read_json("docs/stage11/global_manifest_11005_reconciled.json")
-    assembler = Path("scripts/stage13_assemble.py").read_text(encoding="utf-8")
-    identity = {
-        "state_source_sha": state.get("source_sha"),
-        "stage12_source_sha": roll.get("source_sha"),
-        "master_seed": roll.get("master_seed"),
-        "schema_version": roll.get("schema_version"),
-        "canonical_trials": roll.get("total_trials"),
-        "canonical_daily_rows": roll.get("total_daily_rows"),
-        "global_sha256": global_manifest.get("global_aggregate_sha256"),
-        "global_manifest_status": global_manifest.get("manifest_status"),
-        "stage12_roll_forward_result": roll.get("overall_result"),
-        "stage12_closure_result": closure.get("overall_result"),
+    state = json.loads(Path("state.json").read_text(encoding="utf-8"))
+    roll = json.loads(Path("docs/stage12/roll_forward_validation.json").read_text(encoding="utf-8"))
+    global_manifest = json.loads(Path("docs/stage11/global_manifest_11005_reconciled.json").read_text(encoding="utf-8"))
+    decision_log = Path("docs/governance/DECISIONS_LOG.md").read_text(encoding="utf-8")
+    dstart = decision_log.find("## D-2026-10-10-03")
+    dend = decision_log.find("\n## ", dstart + 4) if dstart >= 0 else -1
+    decision_block = decision_log[dstart:] if dend < 0 else decision_log[dstart:dend]
+    if "**Status:** APPROVED — NORMATIVE" not in decision_block or "P50/P10/P90/LossCase/MaxCase." not in decision_block:
+        raise RuntimeError("REPRESENTATIVE_ROLE_DECISION_NOT_APPROVED")
+
+    # The user explicitly selected the highest reached N=1200 cohort.
+    run_artifacts = artifacts_for_run(N1200_RUN, token)
+    report_art = unique_artifact(run_artifacts, N1200_REPORT_ARTIFACT_NAME)
+    cumulative_art = unique_artifact(run_artifacts, N600_ARTIFACT_NAME)
+    report_zip = get_zip(int(report_art["id"]), token)
+    cumulative_zip = get_zip(int(cumulative_art["id"]), token)
+    report_sha = verify_archive_digest(report_zip, report_art)
+    cumulative_sha = verify_archive_digest(cumulative_zip, cumulative_art)
+    report = json.loads(zip_member(report_zip, "gate_b_n1200_report.json"))
+    cumulative = json.loads(zip_member(cumulative_zip, "cumulative_600.json"))
+
+    n1200_source_checks = {
+        "checkpoint": report.get("checkpoint"),
+        "checkpoint_status": report.get("checkpoint_status"),
+        "overall_gate_b": report.get("overall_gate_b"),
+        "source_sha": report.get("source_sha"),
+        "source_commit_for_new_trials": report.get("source_commit_for_new_trials"),
+        "master_seed": report.get("master_seed"),
+        "scenario_count_non_c100": report.get("scenario_count"),
+        "trial_keys_expected": report.get("trial_keys_expected"),
+        "trial_keys_verified": report.get("trial_keys_verified"),
+        "new_trials_expected": report.get("new_trials_expected"),
+        "new_trials_verified": report.get("new_trials_verified"),
+        "historical_and_prior_inputs_verified": report.get("historical_and_prior_inputs_verified"),
+        "historical_trials_rerun": report.get("historical_trials_rerun"),
+        "historical_dataset_modified": report.get("historical_dataset_modified"),
+        "historical_metadata_modified": report.get("historical_metadata_modified"),
+        "ordered_scenario_trial_hash_map_sha256_n1200": report.get("ordered_scenario_trial_hash_map_sha256_n1200"),
+        "n1200_report_artifact_id": report_art["id"],
+        "n1200_report_zip_sha256": report_sha,
+        "cumulative_600_artifact_id": cumulative_art["id"],
+        "cumulative_600_zip_sha256": cumulative_sha,
     }
-    checks = [
-        identity["state_source_sha"] == SOURCE_SHA,
-        identity["stage12_source_sha"] == SOURCE_SHA,
-        identity["canonical_trials"] == 11005,
-        identity["canonical_daily_rows"] == 22546465,
-        identity["global_sha256"] == GLOBAL_SHA,
-        identity["global_manifest_status"] == "PASS",
-        identity["stage12_roll_forward_result"] == "PASS",
-        identity["stage12_closure_result"] == "PASS",
-    ]
-    if not all(checks):
-        raise RuntimeError(f"CANONICAL_IDENTITY_ASSERTION_FAILED: {identity}")
+    assertions_pass = (
+        report.get("checkpoint") == "N=1200"
+        and report.get("checkpoint_status") == "PASS_AT_N1200_ONLY"
+        and report.get("overall_gate_b") == "NOT_ESTABLISHED_BY_N1200_ALONE"
+        and report.get("source_sha") == SOURCE_SHA
+        and report.get("source_commit_for_new_trials") == SOURCE_COMMIT
+        and report.get("master_seed") == MASTER_SEED
+        and report.get("scenario_count") == 20
+        and report.get("trial_keys_expected") == 24000
+        and report.get("trial_keys_verified") == 24000
+        and report.get("new_trials_expected") == 12000
+        and report.get("new_trials_verified") == 12000
+        and report.get("historical_and_prior_inputs_verified") == 12000
+        and report.get("historical_trials_rerun") is False
+        and report.get("historical_dataset_modified") is False
+        and report.get("historical_metadata_modified") is False
+        and cumulative.get("source_sha") == SOURCE_SHA
+        and cumulative.get("master_seed") == MASTER_SEED
+        and cumulative.get("scenario_count") == 20
+        and cumulative.get("cumulative_sample_size_per_scenario") == 600
+        and cumulative.get("total_records_verified") == 12000
+        and cumulative.get("historical_trial_rerun") is False
+    )
+    if not assertions_pass:
+        raise RuntimeError(f"N1200_SOURCE_IDENTITY_ASSERTION_FAILED: {n1200_source_checks}")
 
-    final_item = one(artifacts(STAGE9A_FINAL_RUN, token), "stage9a-final-output")
-    final_zip = get_zip(int(final_item["id"]), token)
-    s9_manifest = json.loads(member(final_zip, "manifest_final.json"))
-    s9_report = json.loads(member(final_zip, "Stage9A_Report.json"))
-    if s9_manifest.get("source_sha") != SOURCE_SHA or s9_manifest.get("total_trials") != 9005:
-        raise RuntimeError("STAGE9A_SOURCE_OR_COHORT_MISMATCH")
-    scenarios = sorted(global_manifest.get("scenario_counts", {}).keys())
-    rep_manifest = s9_manifest.get("representative_trials", {})
-    if len(scenarios) != 25 or set(rep_manifest) != set(scenarios):
-        raise RuntimeError("STAGE9A_SCENARIO_COVERAGE_MISMATCH")
+    # Verify all 12,000 rows in the cumulative N=600 source and recompute its ordered map.
+    non_c100_rows: dict[str, dict[int, dict[str, Any]]] = {}
+    c600_scenarios = cumulative.get("scenarios", {})
+    if set(c600_scenarios) != set(NON_C100_SCENARIOS):
+        raise RuntimeError("N600_SCENARIO_COVERAGE_MISMATCH")
+    for scenario in NON_C100_SCENARIOS:
+        records = c600_scenarios[scenario]
+        if len(records) != 600:
+            raise RuntimeError(f"N600_SCENARIO_TRIAL_COUNT_MISMATCH: {scenario}; count={len(records)}")
+        by_id = {}
+        for row in records:
+            trial_id = int(row["trial_id"])
+            if trial_id in by_id:
+                raise RuntimeError(f"N600_DUPLICATE_TRIAL_ID: {scenario}/{trial_id}")
+            verify_trial_row(row, scenario, trial_id)
+            by_id[trial_id] = row
+        if sorted(by_id) != list(range(1, 601)):
+            raise RuntimeError(f"N600_TRIAL_COVERAGE_MISMATCH: {scenario}")
+        non_c100_rows[scenario] = by_id
+    n600_map = global_trial_hash_map(non_c100_rows)
+    if n600_map != cumulative.get("ordered_scenario_trial_hash_map_sha256_n600") or n600_map != N600_GLOBAL_SHA256:
+        raise RuntimeError(f"N600_ORDERED_HASH_MAP_MISMATCH: observed={n600_map}")
+
+    # Independently verify the 20 official increment archives for IDs 551..600.
+    n600_artifact_checks = {}
+    for scenario in NON_C100_SCENARIOS:
+        info = cumulative.get("new_trial_artifacts", {}).get(scenario)
+        if not isinstance(info, dict):
+            raise RuntimeError(f"N600_NEW_ARTIFACT_RECORD_MISSING: {scenario}")
+        artifact_id = int(info["artifact_id"])
+        raw = get_zip(artifact_id, token)
+        raw_sha = sha256_bytes(raw)
+        if raw_sha != info.get("archive_sha256"):
+            raise RuntimeError(f"N600_INCREMENT_ARCHIVE_SHA256_MISMATCH: {scenario}")
+        if int(info.get("trials", -1)) != 50:
+            raise RuntimeError(f"N600_INCREMENT_COUNT_MISMATCH: {scenario}")
+        records = get_trial_file_records(raw)
+        if len(records) != 50:
+            raise RuntimeError(f"N600_INCREMENT_ARCHIVE_RECORD_COUNT_MISMATCH: {scenario}")
+        ids = set()
+        for row in records:
+            trial_id = int(row["trial_id"])
+            if trial_id not in range(551, 601):
+                raise RuntimeError(f"N600_INCREMENT_TRIAL_ID_OUT_OF_RANGE: {scenario}/{trial_id}")
+            verify_trial_row(row, scenario, trial_id)
+            if non_c100_rows[scenario][trial_id]["result_sha256"] != row["result_sha256"]:
+                raise RuntimeError(f"N600_INCREMENT_HASH_DISAGREEMENT: {scenario}/{trial_id}")
+            if trial_id in ids:
+                raise RuntimeError(f"N600_INCREMENT_DUPLICATE_TRIAL_ID: {scenario}/{trial_id}")
+            ids.add(trial_id)
+        if ids != set(range(551, 601)):
+            raise RuntimeError(f"N600_INCREMENT_RANGE_INCOMPLETE: {scenario}")
+        n600_artifact_checks[scenario] = {
+            "artifact_id": artifact_id, "archive_sha256": raw_sha,
+            "records": 50, "trial_id_range": "551..600",
+        }
+
+    # Match each N=1200 trial to the accepted report's exact result hash, run ID and attempt.
+    report_scenarios = {row["scenario_id"]: row for row in report.get("scenarios", [])}
+    if set(report_scenarios) != set(NON_C100_SCENARIOS):
+        raise RuntimeError("N1200_REPORT_SCENARIO_COVERAGE_MISMATCH")
+    incr_artifacts = [
+        a for a in run_artifacts
+        if a.get("name", "").startswith("gateb-n1200-new-") and not a.get("expired")
+    ]
+    n1200_artifact_checks = {}
+    for scenario in NON_C100_SCENARIOS:
+        expected = report_scenarios[scenario].get("new_trial_artifacts", {})
+        if set(expected) != {str(n) for n in range(601, 1201)}:
+            raise RuntimeError(f"N1200_EXPECTED_TRIAL_HASH_COVERAGE_MISMATCH: {scenario}")
+        prefix = f"gateb-n1200-new-{scenario}-attempt-"
+        candidates = [a for a in incr_artifacts if a.get("name", "").startswith(prefix)]
+        if not candidates:
+            raise RuntimeError(f"N1200_INCREMENT_ARCHIVE_MISSING: {scenario}")
+        accepted = {}
+        archive_shas = []
+        for artifact in candidates:
+            raw = get_zip(int(artifact["id"]), token)
+            archive_shas.append({
+                "id": artifact["id"], "name": artifact["name"],
+                "archive_sha256": verify_archive_digest(raw, artifact),
+            })
+            for row in get_trial_file_records(raw):
+                trial_id = int(row.get("trial_id", -1))
+                expected_row = expected.get(str(trial_id))
+                if expected_row is None or trial_id not in range(601, 1201):
+                    continue
+                if row.get("result_sha256") != expected_row.get("result_sha256"):
+                    continue
+                if int(row.get("run_id", -1)) != int(expected_row.get("run_id", -2)):
+                    continue
+                if int(row.get("run_attempt", -1)) != int(expected_row.get("run_attempt", -2)):
+                    continue
+                verify_trial_row(row, scenario, trial_id)
+                previous = accepted.get(trial_id)
+                if previous is not None and previous.get("result_sha256") != row.get("result_sha256"):
+                    raise RuntimeError(f"N1200_ACCEPTED_TRIAL_CONFLICT: {scenario}/{trial_id}")
+                accepted[trial_id] = row
+        if set(accepted) != set(range(601, 1201)):
+            missing = sorted(set(range(601, 1201)) - set(accepted))
+            raise RuntimeError(f"N1200_INCREMENT_COVERAGE_MISMATCH: {scenario}; missing={missing[:10]}")
+        non_c100_rows[scenario].update(accepted)
+        if sorted(non_c100_rows[scenario]) != list(range(1, 1201)):
+            raise RuntimeError(f"N1200_CUMULATIVE_TRIAL_COVERAGE_MISMATCH: {scenario}")
+        n1200_artifact_checks[scenario] = {
+            "artifact_count": len(archive_shas), "archives": archive_shas,
+            "accepted_trials": len(accepted), "trial_id_range": "601..1200",
+        }
+    n1200_map = global_trial_hash_map(non_c100_rows)
+    if n1200_map != report.get("ordered_scenario_trial_hash_map_sha256_n1200"):
+        raise RuntimeError(f"N1200_ORDERED_HASH_MAP_MISMATCH: observed={n1200_map}")
+
+    # Obtain the five canonical C100 trial outcomes from official Stage 9A enriched Parquet.
+    stage9a_items = artifacts_for_run(STAGE9A_RUN, token)
+    stage9a_art = unique_artifact(stage9a_items, "stage9a-final-output")
+    stage9a_zip = get_zip(int(stage9a_art["id"]), token)
+    stage9a_manifest = json.loads(zip_member(stage9a_zip, "manifest_final.json"))
+    stage9a_report = json.loads(zip_member(stage9a_zip, "Stage9A_Report.json"))
+    if stage9a_manifest.get("source_sha") != SOURCE_SHA or stage9a_manifest.get("master_seed") != MASTER_SEED:
+        raise RuntimeError("STAGE9A_C100_SOURCE_IDENTITY_MISMATCH")
+    enriched_ids = stage9a_manifest.get("artifact_manifest", {}).get("enriched_artifacts", {})
+    if not C100_SCENARIOS.issubset(set(enriched_ids)):
+        raise RuntimeError("C100_ENRICHED_ARTIFACT_MAP_INCOMPLETE")
+    c100_evidence = {}
+    all_rows: dict[str, dict[int, dict[str, Any]]] = {
+        scenario: dict(non_c100_rows[scenario]) for scenario in NON_C100_SCENARIOS
+    }
+    for scenario in sorted(C100_SCENARIOS):
+        row, archive_sha, field_count = load_c100_trial(int(enriched_ids[scenario]), scenario, token)
+        fingerprints = stage9a_manifest.get("trial_fingerprints", {}).get(scenario, [])
+        if fingerprints and row["result_sha256"] != fingerprints[0]:
+            raise RuntimeError(f"C100_TRIAL_SHA256_MISMATCH: {scenario}")
+        all_rows[scenario] = {1: row}
+        c100_evidence[scenario] = {
+            "artifact_id": int(enriched_ids[scenario]), "archive_sha256": archive_sha,
+            "trial_count": 1, "trial_id": 1, "trial_result_sha256": row["result_sha256"],
+            "trial_result_field_count": field_count,
+        }
+
+    total_rows = sum(len(rows) for rows in all_rows.values())
+    counts = {scenario: len(rows) for scenario, rows in all_rows.items()}
+    if total_rows != 24005:
+        raise RuntimeError(f"DELIVERY_SOURCE_TOTAL_NOT_24005: {total_rows}")
+    if set(counts) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("DELIVERY_SOURCE_SCENARIO_COVERAGE_MISMATCH")
+    if any(counts[s] != 1 for s in C100_SCENARIOS) or any(counts[s] != 1200 for s in NON_C100_SCENARIOS):
+        raise RuntimeError("DELIVERY_SOURCE_PER_SCENARIO_COUNT_MISMATCH")
+    if global_trial_hash_map(non_c100_rows) != N1200_GLOBAL_SHA256:
+        raise RuntimeError("N1200_GLOBAL_HASH_CONSTANT_MISMATCH")
+
+    # Select all five roles from the actual highest reached cohort.
+    representative_trials = stage9a_manifest.get("representative_trials", {})
+    if set(representative_trials) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("STAGE9A_REPRESENTATIVE_ASSIGNMENT_COVERAGE_MISMATCH")
+    role_inventory = {}
+    missing_role_payloads = []
+    stage9a_roles_by_scenario = {}
+    for scenario in sorted(all_rows):
+        selected = select_roles(all_rows[scenario], scenario)
+        old_assignment = representative_trials[scenario]
+        old_detail_ids = {
+            int(old_assignment[key])
+            for key in ("P10", "P50", "P90", "Loss")
+            if key in old_assignment
+        }
+        role_checks = {}
+        for role, trial_id in selected.items():
+            available = trial_id in old_detail_ids
+            role_checks[role] = {"selected_trial_id": trial_id, "full_detail_payload_available": available}
+            if not available:
+                missing_role_payloads.append({
+                    "scenario": scenario, "role": role, "selected_trial_id": trial_id,
+                    "available_stage9a_detail_ids": sorted(old_detail_ids),
+                })
+        role_inventory[scenario] = {
+            "source_trial_count": counts[scenario],
+            "source_trial_id_range": f"1..{counts[scenario]}",
+            "selected_roles": selected,
+            "prior_stage9a_representative_trial_ids": old_assignment,
+            "role_checks": role_checks,
+        }
+        stage9a_roles_by_scenario[scenario] = sorted(
+            k for k in ("P10", "P50", "P90", "Loss", "LossCase", "MaxCase", "Max Case")
+            if k in old_assignment
+        )
+    detail_total = int(stage9a_manifest.get("total_representatives", 0))
     missing_max_scenarios = [
-        sc for sc in scenarios
-        if "MaxCase" not in rep_manifest[sc] and "Max Case" not in rep_manifest[sc]
+        scenario for scenario, roles in stage9a_roles_by_scenario.items()
+        if "MaxCase" not in roles and "Max Case" not in roles
     ]
 
-    enriched_id = int(s9_manifest["artifact_manifest"]["enriched_artifacts"][SCENARIO])
-    enriched_zip = get_zip(enriched_id, token)
-    scenario_tar = member(enriched_zip, f"{SCENARIO}.tar.gz")
-    with tarfile.open(fileobj=io.BytesIO(scenario_tar), mode="r:gz") as tar:
-        names = sorted(x.lstrip("./") for x in tar.getnames())
-        rep_files = [
-            x.removeprefix("representatives/").removesuffix(".json")
-            for x in names if x.startswith("representatives/") and x.endswith(".json")
-        ]
-        parquet_member = next(x for x in tar.getmembers() if x.name.lstrip("./") == "trial_results.parquet")
-        stream = tar.extractfile(parquet_member)
-        if stream is None:
-            raise RuntimeError("STAGE9A_TRIAL_RESULTS_UNREADABLE")
-        s9_parquet = pq.ParquetFile(io.BytesIO(stream.read()))
-        s9_rows = s9_parquet.metadata.num_rows
-        s9_cols = s9_parquet.schema_arrow.names
+    stage12_trials = int(roll.get("total_trials", -1))
+    stage12_daily_rows = int(roll.get("total_daily_rows", -1))
+    missing_daily_trial_count = len(NON_C100_SCENARIOS) * (N1200_TRIALS_PER_NON_C100 - 550)
+    blocker_codes = []
+    if report.get("overall_gate_b") != "PASS":
+        blocker_codes.append("GATEB_NOT_ESTABLISHED_AT_N1200")
+    if stage12_trials != total_rows:
+        blocker_codes.append("MISSING_DAILY_LEDGER_FOR_N1200_COHORT")
+    if missing_daily_trial_count > 0:
+        blocker_codes.append("MISSING_DAILY_AND_ENTITY_DETAIL_FOR_TRIALS_551_1200")
+    if missing_role_payloads or missing_max_scenarios or detail_total != 125:
+        blocker_codes.append("MISSING_FIVE_ROLE_REPRESENTATIVE_PAYLOADS")
 
-    stage10_item = one(artifacts(STAGE10_RUN, token), f"stage10-bench-{SCENARIO}-1")
-    stage10_zip = get_zip(int(stage10_item["id"]), token)
-    with zipfile.ZipFile(io.BytesIO(stage10_zip)) as archive:
-        s10_names = sorted(archive.namelist())
-        block_name = next((x for x in s10_names if x.endswith("block_451_550.parquet")), None)
-        if block_name is None:
-            raise RuntimeError("STAGE10_451_550_BLOCK_MISSING")
-        block_bytes = archive.read(block_name)
-        block = pq.ParquetFile(io.BytesIO(block_bytes))
-        block_rows = block.metadata.num_rows
-        block_cols = block.schema_arrow.names
-        detail_files = [x for x in s10_names if "representatives/" in x or "MaxCase.json" in x or "Max Case.json" in x]
-
-    stage12_item = one(artifacts(STAGE12_RUN, token), f"stage12-daily-{SCENARIO}")
-    stage12_zip = get_zip(int(stage12_item["id"]), token)
-    ledger_bytes = member(stage12_zip, f"{SCENARIO}.parquet")
-    expected_ledger_sha = roll["scenarios"][SCENARIO]["content_sha256"]
-    observed_ledger_sha = sha(ledger_bytes)
-    if expected_ledger_sha != observed_ledger_sha:
-        raise RuntimeError("STAGE12_SAMPLE_PARQUET_SHA256_MISMATCH")
-    ledger = pq.ParquetFile(io.BytesIO(ledger_bytes))
-    ledger_cols = ledger.schema_arrow.names
-    ledger_rows = ledger.metadata.num_rows
-
-    decision_log_text = Path("docs/governance/DECISIONS_LOG.md").read_text(encoding="utf-8")
-    decision_start = decision_log_text.find("## D-2026-10-10-03")
-    if decision_start < 0:
-        raise RuntimeError("APPROVED_REPRESENTATIVE_DECISION_MISSING")
-    decision_end = decision_log_text.find("\n## ", decision_start + 4)
-    decision_block = decision_log_text[decision_start:] if decision_end < 0 else decision_log_text[decision_start:decision_end]
-    decision_approved = "**Status:** APPROVED — NORMATIVE" in decision_block
-    decision_roles_exact = "P50/P10/P90/LossCase/MaxCase." in decision_block
-    roles = ["P50", "P10", "P90", "LossCase", "MaxCase"] if decision_approved and decision_roles_exact else []
-    assembler_requires_max = (
-        '"Max Case"' in assembler
-        and '("P10", "P50", "P90", "Loss", "Max Case")' in assembler
-    )
-    stage9a_missing_max = len(missing_max_scenarios) == 25 and not any(
-        x in rep_files for x in ("MaxCase", "Max Case")
-    )
-    stage10_lacks_detail = not detail_files and block_rows == 100
-    blocked = roles == ["P50", "P10", "P90", "LossCase", "MaxCase"] and assembler_requires_max and stage9a_missing_max and stage10_lacks_detail
-
+    decision_sha = sha256_bytes(decision_block.encode("utf-8"))
     audit = {
-        "audit_version": "cp-f-source-readiness-v1",
+        "audit_version": "cp-f-n1200-source-readiness-v2",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "repository": REPO,
-        "branch": os.environ.get("GITHUB_REF_NAME"),
+        "repository": REPO, "branch": os.environ.get("GITHUB_REF_NAME"),
         "head_sha": os.environ.get("GITHUB_SHA"),
-        "status": "BLOCKED_MISSING_REPRESENTATIVE_PAYLOAD" if blocked else "REQUIRES_REVIEW",
-        "classification": "MISSING_ARTIFACT" if blocked else "PENDING",
-        "delivery_files_created": False,
-        "monte_carlo_rerun": False,
-        "main_modified": False,
-        "release_created": False,
-        "identity_evidence": identity,
-        "source_evidence": {
-            "stage9a_run_id": STAGE9A_FINAL_RUN,
-            "stage9a_final_artifact_id": final_item["id"],
-            "stage9a_final_artifact_name": final_item["name"],
-            "stage9a_zip_sha256": sha(final_zip),
-            "stage9a_trial_count": s9_manifest.get("total_trials"),
-            "stage9a_global_sha256": s9_manifest.get("global_manifest_sha256"),
-            "stage9a_report": s9_report,
-            "stage9a_scenario_count": len(scenarios),
-            "stage9a_missing_max_case_scenarios": missing_max_scenarios,
-            "stage9a_sample_enriched_artifact_id": enriched_id,
-            "stage9a_sample_tarball_sha256": sha(scenario_tar),
-            "stage9a_sample_rep_files": rep_files,
-            "stage9a_sample_trial_rows": s9_rows,
-            "stage9a_sample_trial_columns": s9_cols,
-            "stage10_run_id": STAGE10_RUN,
-            "stage10_sample_artifact_id": stage10_item["id"],
-            "stage10_sample_artifact_name": stage10_item["name"],
-            "stage10_zip_sha256": sha(stage10_zip),
-            "stage10_sample_entries": s10_names,
-            "stage10_extension_rows": block_rows,
-            "stage10_extension_columns": block_cols,
-            "stage10_detail_payload_files": detail_files,
-            "stage12_run_id": STAGE12_RUN,
-            "stage12_sample_artifact_id": stage12_item["id"],
-            "stage12_sample_artifact_name": stage12_item["name"],
-            "stage12_sample_sha256_expected": expected_ledger_sha,
-            "stage12_sample_sha256_observed": observed_ledger_sha,
-            "stage12_sample_parquet_rows": ledger_rows,
-            "stage12_sample_ledger_columns": ledger_cols,
-            "stage12_ledger_lacks_detail_columns": [
-                x for x in ("assets", "contracts", "guarantee_claims", "event_log") if x not in ledger_cols
-            ],
+        "user_directed_delivery_source": "highest reached escalation N=1200; total trial outcomes=24005",
+        "status": "SOURCE_IDENTITY_VERIFIED_BUT_DELIVERY_BLOCKED" if blocker_codes else "READY_FOR_CANDIDATE_ASSEMBLY",
+        "classification": "MISSING_ARTIFACT" if blocker_codes else "PENDING_FINAL_GATES",
+        "monte_carlo_rerun": False, "historical_trials_rerun": False,
+        "main_modified": False, "release_created": False, "delivery_files_created": False,
+        "dataset": {
+            "source_sha": SOURCE_SHA, "source_commit_for_new_trials": SOURCE_COMMIT,
+            "master_seed": MASTER_SEED, "schema_version": SCHEMA_VERSION,
+            "scenario_count": 25, "non_c100_scenarios": 20,
+            "trials_each_non_c100": 1200, "c100_scenarios": 5,
+            "trials_each_c100": 1, "total_trial_outcomes": total_rows,
+            "n1200_ordered_trial_hash_map_sha256": n1200_map,
+            "n600_ordered_trial_hash_map_sha256": n600_map,
         },
-        "decision_evidence": {
-            "decision_id": "D-2026-10-10-03",
-            "decision_cases": roles,
-            "decision_log_block_sha256": sha(decision_block.encode("utf-8")),
-            "decision_status_approved_normative": decision_approved,
-            "decision_log_has_five_roles": decision_roles_exact,
-            "assembler_requires_five_roles_including_max_case": assembler_requires_max,
-            "sample_stage9a_rep_files": rep_files,
-            "sample_stage10_detail_payload_files": detail_files,
-            "scope_note": "Only the named Stage 12 scenario artifact was downloaded and hash-checked in this probe; all 25 Stage 12 Parquet files were not re-verified here.",
+        "n1200_checkpoint": n1200_source_checks,
+        "stage12_historical_daily_cohort": {
+            "run_id": roll.get("source_run_id"), "schema_version": roll.get("schema_version"),
+            "source_sha": roll.get("source_sha"), "master_seed": roll.get("master_seed"),
+            "trial_count": stage12_trials, "daily_rows": stage12_daily_rows,
+            "global_sha256": global_manifest.get("global_aggregate_sha256"),
+            "status": roll.get("overall_result"),
+            "detail_gap_for_n1200": {
+                "non_c100_scenarios": 20, "full_daily_history_available_through_trial_id": 550,
+                "highest_statistical_trial_id": 1200, "missing_trial_histories": missing_daily_trial_count,
+                "n600_n1200_log_events": False,
+            },
+        },
+        "verified_archives": {
+            "n600_trial_archives": n600_artifact_checks,
+            "n1200_trial_archives": n1200_artifact_checks,
+            "c100_trial_archives": c100_evidence,
+            "stage9a_final_output_artifact_id": stage9a_art["id"],
+            "stage9a_final_output_zip_sha256": sha256_bytes(stage9a_zip),
+            "stage9a_historical_trial_count": stage9a_manifest.get("total_trials"),
+            "stage9a_total_representatives": detail_total,
+            "stage9a_roles_per_scenario": stage9a_roles_by_scenario,
+            "stage9a_missing_maxcase_payload_scenarios": missing_max_scenarios,
+        },
+        "representative_roles": {
+            "decision_id": "D-2026-10-10-03", "decision_log_sha256": decision_sha,
+            "five_roles": ["P50", "P10", "P90", "LossCase", "MaxCase"],
+            "selection_by_n1200_source": role_inventory,
+            "selected_role_payloads_missing": missing_role_payloads,
+            "missing_role_payload_count": len(missing_role_payloads),
         },
         "gates": {
-            "G_SOURCE_IDENTITY_METADATA": "PASS" if all(checks) else "FAIL",
-            "G_STAGE12_SAMPLE_ARTIFACT_SHA256": "PASS" if observed_ledger_sha == expected_ledger_sha else "FAIL",
-            "G_STAGE9A_COHORT_EQUALS_11005": "FAIL",
-            "G_REPRESENTATIVE_ROLE_COVERAGE": "FAIL" if blocked else "PENDING",
-            "G_COMPLETE_SEVEN_FILE_SET": "BLOCKED",
+            "G_N600_12000_RECORDS_AND_HASH_MAP": "PASS" if n600_map == N600_GLOBAL_SHA256 else "FAIL",
+            "G_N1200_24000_RECORDS_AND_HASH_MAP": "PASS" if n1200_map == report.get("ordered_scenario_trial_hash_map_sha256_n1200") else "FAIL",
+            "G_PLUS_FIVE_C100_RECORDS": "PASS" if total_rows == 24005 else "FAIL",
+            "G_SOURCE_DAILY_DETAIL_FOR_ALL_24005": "FAIL" if missing_daily_trial_count else "PASS",
+            "G_FIVE_REPRESENTATIVE_DETAIL_PAYLOADS": "FAIL" if (missing_role_payloads or missing_max_scenarios or detail_total != 125) else "PASS",
+            "G_GATE_B_FINAL_STABILITY": "PENDING" if report.get("overall_gate_b") == "NOT_ESTABLISHED_BY_N1200_ALONE" else report.get("overall_gate_b"),
+            "G_ALL_SEVEN_DELIVERY_FILES": "BLOCKED" if blocker_codes else "PENDING",
         },
-        "blocker": (
-            "The approved representative-case decision and current assembler require five detailed roles, including MaxCase. "
-            "The Stage 9A manifest covers 9,005 trials and records no MaxCase payload for all 25 scenarios; the inspected "
-            "enriched tarball has only P10/P50/P90/Loss detail JSON. The inspected Stage 10 extension archive contains the "
-            "451..550 summary Parquet block and metadata, not detailed MaxCase payload JSON. The official Stage 12 accounting "
-            "artifact verifies as a daily ledger, but is not a substitute for missing representative assets/contracts/guarantee "
-            "payloads. Re-labelling the old 9,005 workbook, mixing cohorts, omitting MaxCase, inventing payloads, or rerunning "
-            "completed trials is not permitted."
-        ) if blocked else "The inspected inputs do not establish readiness; review the attached evidence.",
+        "blocker_codes": blocker_codes,
+        "source_evidence": {
+            "stage9a_report": stage9a_report,
+            "cumulative_600_status": cumulative.get("status"),
+            "cumulative_600_total_records_verified": cumulative.get("total_records_verified"),
+            "cumulative_600_trial_rerun": cumulative.get("historical_trial_rerun"),
+            "n1200_checkpoint_status": report.get("checkpoint_status"),
+            "n1200_overall_gate_b": report.get("overall_gate_b"),
+            "n1200_trial_keys_verified": report.get("trial_keys_verified"),
+            "n1200_new_trials_verified": report.get("new_trials_verified"),
+            "n1200_historical_trials_rerun": report.get("historical_trials_rerun"),
+            "n1200_gate_a": report.get("gate_a"),
+        },
     }
-    json_path = Path("cp-f-evidence/CP_F_SOURCE_READINESS.json")
+    json_path = outdir / "CP_F_N1200_SOURCE_READINESS.json"
     json_path.write_text(json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    report = f"""# CP-F Source Readiness Audit
+    report_text = f"""# CP-F — N=1200 Delivery Source Readiness
 
-Status: {audit['status']}
-Classification: {audit['classification']}
-Branch: {audit['branch']}
-Run HEAD: {audit['head_sha']}
+- Status: {audit['status']}
+- Classification: {audit['classification']}
+- Run HEAD: {audit['head_sha']}
+- Source selection: highest reached N=1200; 24,005 total trial outcomes
+- SOURCE_SHA: {SOURCE_SHA}
+- MASTER_SEED: {MASTER_SEED}
+- N=1200 checkpoint run: https://github.com/{REPO}/actions/runs/{N1200_RUN}
+- Stage 9A C100 source run: https://github.com/{REPO}/actions/runs/{STAGE9A_RUN}
 
-## Official identity
-- Source SHA: {SOURCE_SHA}
-- Master seed: {identity['master_seed']}
-- Schema version: {identity['schema_version']}
-- Canonical trials: {identity['canonical_trials']}
-- Daily rows: {identity['canonical_daily_rows']}
-- Global aggregate SHA-256: {GLOBAL_SHA}
+## Source cohort and identity checks
 
-## Source evidence
-- Stage 9A run: {STAGE9A_FINAL_RUN}; output artifact: {final_item['id']}; cohort: {s9_manifest.get('total_trials')}.
-- Stage 9A scenarios missing MaxCase payload in manifest: {len(missing_max_scenarios)} of 25.
-- Stage 9A sample artifact: {enriched_id}; payload roles physically present: {', '.join(rep_files)}.
-- Stage 10 run: {STAGE10_RUN}; sample artifact: {stage10_item['id']}; extension rows: {block_rows}; detailed role JSON files: {len(detail_files)}.
-- Stage 12 run: {STAGE12_RUN}; sample artifact: {stage12_item['id']}; SHA-256 expected: {expected_ledger_sha}; observed: {observed_ledger_sha}; row count: {ledger_rows}.
-- Caveat: only the named Stage 12 scenario artifact was re-hashed during this diagnostic; this is not a new verification of every Stage 12 file.
+| Item | Evidence/result |
+|---|---|
+| Non-C100 scenario count | {len(NON_C100_SCENARIOS)} |
+| N=1200 trial results per non-C100 scenario | {N1200_TRIALS_PER_NON_C100} |
+| C100 scenarios, one deterministic trial each | {len(C100_SCENARIOS)} |
+| Total assembled metric trial outcomes | {total_rows} |
+| Cumulative N=600 ordered hash map | {n600_map} |
+| N=1200 ordered hash map | {n1200_map} |
+| N=1200 checkpoint status | {report.get('checkpoint_status')} |
+| N=1200 overall Gate B | {report.get('overall_gate_b')} |
+| Stage 12 daily cohort | {stage12_trials} trials / {stage12_daily_rows} daily rows |
+
+## Daily detail and representative payload findings
+
+The N=1200 statistical source contains metrics and result fingerprints, not detailed daily/entity histories for the later trials. The official Stage 12 daily source ends at trial ID 550 for each non-C100 scenario; therefore {missing_daily_trial_count} trial histories (IDs 551–1200 across 20 non-C100 scenarios) are missing from the selected delivery cohort.
+
+The five approved representative roles are P50, P10, P90, LossCase, and MaxCase. The archived Stage 9A enrichment has {detail_total} full representative payloads, corresponding to four roles per scenario. The audit selected the five role IDs from all {total_rows} source trial outcomes. It does not invent details for roles whose selected trial has no full payload.
 
 ## Gate results
+
 | Gate | Result |
 |---|---|
-| Source identity metadata | {audit['gates']['G_SOURCE_IDENTITY_METADATA']} |
-| Sample Stage 12 Parquet exact SHA-256 | {audit['gates']['G_STAGE12_SAMPLE_ARTIFACT_SHA256']} |
-| Stage 9A cohort matches canonical 11,005 | FAIL |
-| Required representative role payload coverage | {audit['gates']['G_REPRESENTATIVE_ROLE_COVERAGE']} |
-| Complete seven-file delivery set | BLOCKED |
+| N=600 cumulative 12,000 rows and exact map | {audit['gates']['G_N600_12000_RECORDS_AND_HASH_MAP']} |
+| N=1200 24,000 rows and exact map | {audit['gates']['G_N1200_24000_RECORDS_AND_HASH_MAP']} |
+| Five C100 canonical trial rows | {audit['gates']['G_PLUS_FIVE_C100_RECORDS']} |
+| Full daily detail for all 24,005 outcomes | {audit['gates']['G_SOURCE_DAILY_DETAIL_FOR_ALL_24005']} |
+| Five representative roles have required details | {audit['gates']['G_FIVE_REPRESENTATIVE_DETAIL_PAYLOADS']} |
+| Final Gate B/stability | {audit['gates']['G_GATE_B_FINAL_STABILITY']} |
+| Seven-file delivery set | {audit['gates']['G_ALL_SEVEN_DELIVERY_FILES']} |
 
-## Blocking finding
-{audit['blocker']}
+## Blocking evidence
+
+{chr(10).join('- ' + code for code in blocker_codes)}
+
+- GATEB_NOT_ESTABLISHED_AT_N1200: Run {N1200_RUN} explicitly records NOT_ESTABLISHED_BY_N1200_ALONE.
+- MISSING_DAILY_AND_ENTITY_DETAIL_FOR_TRIALS_551_1200: the selected source has no detailed daily events for IDs 551–1200. The reference requires a full daily distribution and detailed P50 scenario tabs.
+- MISSING_FIVE_ROLE_REPRESENTATIVE_PAYLOADS: the current official detailed representative package records four roles per scenario, while the approved decision requires five, including MaxCase.
 
 ## Disposition
-No final Excel/report/summary/feasibility deliverables were created. No Monte Carlo was run, no engine or source identity was changed, main was not modified, and no Release was created.
+
+BLOCKED: no final Excel, report, summary or feasibility file was produced. No Monte Carlo was run, no completed trial was replayed, no source/data identity was changed, main was not modified, and no Release was created.
 """
-    md_path = Path("cp-f-evidence/CP_F_SOURCE_READINESS.md")
-    md_path.write_text(report, encoding="utf-8")
+    md_path = outdir / "CP_F_N1200_SOURCE_READINESS.md"
+    md_path.write_text(report_text, encoding="utf-8")
     print(json.dumps({
-        "status": audit["status"],
-        "classification": audit["classification"],
-        "stage9a_trials": s9_manifest.get("total_trials"),
-        "canonical_trials": 11005,
-        "scenarios_missing_max_case_payload": len(missing_max_scenarios),
-        "stage9a_sample_roles": rep_files,
-        "stage10_extension_rows": block_rows,
-        "stage10_detail_payloads": detail_files,
-        "stage12_sample_hash_matches": observed_ledger_sha == expected_ledger_sha,
-        "evidence_json": str(json_path),
-        "evidence_markdown": str(md_path),
+        "status": audit["status"], "classification": audit["classification"],
+        "total_trial_outcomes": total_rows, "non_c100_count": len(NON_C100_SCENARIOS),
+        "n600_hash_map_matches": n600_map == N600_GLOBAL_SHA256,
+        "n1200_hash_map_matches": n1200_map == report.get("ordered_scenario_trial_hash_map_sha256_n1200"),
+        "n1200_overall_gate_b": report.get("overall_gate_b"),
+        "missing_daily_trial_histories": missing_daily_trial_count,
+        "stage9a_representative_payload_count": detail_total,
+        "missing_role_payload_count": len(missing_role_payloads),
+        "blocker_codes": blocker_codes,
+        "evidence_json": str(json_path), "evidence_markdown": str(md_path),
     }, ensure_ascii=False, sort_keys=True))
-    return 2 if blocked else 0
+    return 2 if blocker_codes else 0
 
 if __name__ == "__main__":
     try:
