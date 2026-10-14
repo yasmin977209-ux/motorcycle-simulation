@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013",
-  "sha": "e8c3441375641216131ce3ff12f582fd8eb8101b",
+  "sha": "80e74454fea8b771f69f06ba57c3fad528d8e4d6",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
   "blockers": [
@@ -917,6 +917,15 @@
     "pytest_failed": 0,
     "pytest_skipped": 1,
     "workflow_fix_commit": "e8c3441375641216131ce3ff12f582fd8eb8101b",
-    "targeted_tests_passed": 6
+    "targeted_tests_passed": 6,
+    "pytest_failure_diagnosis": {
+      "failed_run_id": 38461464864,
+      "failed_head_sha": "6da81aadbf451131304024d919f6a89be772b717",
+      "classification": "K_TEST",
+      "failed_summary": "3 failed, 384 passed, 1 skipped; the failures were tests/test_state_governance_fields.py::test_head_and_main_audit_snapshot_are_explicit, tests/test_state_governance_fields.py::test_governance_decision_exists_and_gate_a_is_not_duplicated, and tests/test_state_governance_fields.py::test_stage11_is_closed_by_scope_not_marked_complete.",
+      "root_cause": "tests/test_stage7_authoring.py::test_stage7_new_branch_does_not_inherit_root_state used FakeSourceBackedStateStore with local_path=REPO_ROOT / state.json; store.acquire() wrote synthetic test state into the repository-root state.json before the governance tests read it.",
+      "repair_commit": "99195245aba67a3ad1a3a6dd609d0595a2bb65bc",
+      "repair": "The test now uses tmp_path / state.json so its writes are isolated from the repository state."
+    }
   }
 }
