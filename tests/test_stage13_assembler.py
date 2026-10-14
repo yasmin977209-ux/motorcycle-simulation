@@ -165,3 +165,49 @@ def test_canonical_mode_rejects_demo_subset(tmp_path: Path):
     with pytest.raises(RuntimeError):
         assemble_workbook(data, output, mode="canonical")
     assert not output.exists()
+
+def test_sensitivity_sheet_holds_other_dimension_fixed_and_daily_stats_are_values(tmp_path: Path):
+    data = demo_data()
+    output = tmp_path / "sensitivity.xlsx"
+    result = assemble_workbook(data, output, mode="demo")
+    assert result["success"] is True
+    assert result["sheets_count"] == 185
+
+    wb = load_workbook(output, data_only=True)
+    assert wb.sheetnames.count("SENSITIVITY") == 1
+    ws = wb["SENSITIVITY"]
+    assert [cell.value for cell in ws[1]] == [
+        "varied_dimension", "fixed_dimension", "fixed_value_pct",
+        "varied_value_pct", "scenario", "mean_cumulative_project_profit",
+    ]
+    rows = list(ws.iter_rows(min_row=2, values_only=True))
+    assert len(rows) == 50
+    collection_rows = [row for row in rows if row[0] == "collection_probability_pct"]
+    recovery_rows = [row for row in rows if row[0] == "guarantee_recovery_rate_pct"]
+    assert len(collection_rows) == 25
+    assert len(recovery_rows) == 25
+    for row in collection_rows:
+        collection_pct = int(row[4].split("_")[0][1:])
+        recovery_pct = int(row[4].split("_")[1][1:])
+        assert row[1] == "guarantee_recovery_rate_pct"
+        assert row[2] == recovery_pct
+        assert row[3] == collection_pct
+    for row in recovery_rows:
+        collection_pct = int(row[4].split("_")[0][1:])
+        recovery_pct = int(row[4].split("_")[1][1:])
+        assert row[1] == "collection_probability_pct"
+        assert row[2] == collection_pct
+        assert row[3] == recovery_pct
+
+    target = [row for row in rows if row[4] == "C100_G100"]
+    assert len(target) == 2
+    assert all(row[5] == 300 for row in target)
+
+    stats = wb["C100_G100_STATS"]
+    assert stats["A2"].value == "Final_Net_Project_Equity"
+    assert stats["B2"].value == 1055.0
+    daily = wb["C100_G100_DAILY"]
+    assert daily["A2"].value.date() == START_DATE
+    assert daily["B2"].value.date() == END_DATE
+    assert daily["C2"].value == 1050
+    wb.close()

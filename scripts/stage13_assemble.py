@@ -274,6 +274,49 @@ def write_heatmap(wb, summaries):
     style_sheet(ws)
 
 
+def write_sensitivity_sheet(wb, summaries):
+    """Show each model dimension against mean project profit while fixing the other dimension.
+    Reference: §15.3 (SENSITIVITY worksheet).
+    """
+    ws = wb.create_sheet("SENSITIVITY")
+    headers = [
+        "varied_dimension",
+        "fixed_dimension",
+        "fixed_value_pct",
+        "varied_value_pct",
+        "scenario",
+        "mean_cumulative_project_profit",
+    ]
+    rows = []
+    for scenario in EXPECTED_SCENARIOS:
+        collection_pct = int(scenario.split("_")[0][1:])
+        recovery_pct = int(scenario.split("_")[1][1:])
+        mean_profit = summaries[scenario]["mean_profit"]
+        rows.append([
+            "collection_probability_pct",
+            "guarantee_recovery_rate_pct",
+            recovery_pct,
+            collection_pct,
+            scenario,
+            mean_profit,
+        ])
+        rows.append([
+            "guarantee_recovery_rate_pct",
+            "collection_probability_pct",
+            collection_pct,
+            recovery_pct,
+            scenario,
+            mean_profit,
+        ])
+    write_table(
+        ws,
+        headers,
+        rows,
+        number_formats={"mean_cumulative_project_profit": FINANCE_FMT},
+    )
+    style_sheet(ws)
+
+
 def write_validation(wb, validation):
     ws = wb.create_sheet("VALIDATION_SUMMARY")
     source = validation.get("source_sha", "")
@@ -824,7 +867,7 @@ def assemble_workbook(data, output_path, mode="canonical"):
     write_constants(workbook, manifest)
     write_scenario_matrix(workbook, summaries, manifest)
     write_heatmap(workbook, summaries)
-    write_sensitivity(workbook, summaries)
+    write_sensitivity_sheet(workbook, summaries)
     write_validation(workbook, validation)
     write_errors(workbook, errors)
     write_final_closure(workbook, all_rows)

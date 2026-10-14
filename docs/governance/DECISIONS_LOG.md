@@ -220,3 +220,19 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 
 1. The approved Gate A golden scope is exactly 24,005 trial fingerprints: the canonical existing scope of trial IDs 1..550 for all 20 non-C100 scenarios plus trial ID 1 for each of the five C100 scenarios (11,005 fingerprints); additionally include trial IDs 551..600 for all 20 non-C100 scenarios from Gate B Run 38174743440 (1,000 fingerprints) and trial IDs 601..1200 for all 20 non-C100 scenarios from Gate B Run 38179919488 (12,000 fingerprints). C100 scenarios remain trial ID 1 only.
 NaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaN
+
+## D-2026-10-14-02 — Stage 11 scope definition
+
+**Status:** APPROVED — NORMATIVE  
+**Topic:** `stage11_scope_definition`  
+**Date:** 2026-10-14
+
+1. **Stage 11 is documentation-only.**
+2. Its approved outputs are `docs/stage11/dataset_identity.json` and `docs/stage11/global_manifest_11005_reconciled.json`.
+3. No execution topology is required; the Reference does not impose a Stage 11 execution topology.
+4. The official status is `CLOSED_BY_APPROVED_SCOPE_DECISION`, intentionally not `COMPLETE`.
+5. The Stage 11 `UNDEFINED_BUSINESS_RULE` is closed by this approved scope decision.
+6. The Stage 10 metadata drift remains documented and open for audit; this decision neither erases nor reconciles it.
+
+**State evidence:** `state.json.stage11` carries the approved status, rationale, two evidence paths, and `stage10_metadata_drift_remains: true`.  
+**Boundary:** This decision does not change datasets, Parquet files, the production engine, `SOURCE_SHA`, or the status of any other stage.

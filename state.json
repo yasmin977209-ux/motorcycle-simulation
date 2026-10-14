@@ -775,33 +775,12 @@
   "main_head_at_audit": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
   "stage11": {
     "status": "CLOSED_BY_APPROVED_SCOPE_DECISION",
-    "rationale": "الطوبولوجيا التنفيذية خارج النطاق المعياري وفق D-2026-10-13-03. هذه الحالة ليست COMPLETE ولا تمحو اختلاف Stage 10 metadata.",
-    "evidence": {
-      "docs/stage11/R4_manifest_reconciliation.md": {
-        "git_blob_sha": "6c6c087c8ab44cb5459e6f7135252b2f9ff5ebd7"
-      },
-      "docs/stage11/dataset_identity.json": {
-        "git_blob_sha": "72a481d509d39820fba78732724fde4fa9f25134"
-      },
-      "docs/stage11/global_manifest_11005_reconciled.json": {
-        "git_blob_sha": "b8947a60051a244784248875f5e0435b9996d95b"
-      },
-      "docs/stage10/STAGE10_METRICS.json": {
-        "git_blob_sha": "2c6fae4952ba45f50686eb09441e5e98f9e5499e",
-        "run_id": 37709936740,
-        "topology_status": "NOT_DEFINED_IN_CURRENT_REPOSITORY"
-      },
-      "docs/stage10/STAGE10_BENCHMARK.md": {
-        "git_blob_sha": "961b8adb6b53ef104b827902a24e6fdc475f8e10"
-      }
-    },
-    "stage10_metadata_discrepancy": {
-      "status": "REMAINS_OPEN",
-      "evidence_run_id": 37709936740,
-      "recorded_head_summary_length": 39,
-      "live_run_api_head_length": 40,
-      "note": "Scope exclusion does not erase or reconcile the Stage 10 metadata discrepancy."
-    }
+    "rationale": "documentation-only stage per D-2026-10-14-02",
+    "evidence": [
+      "docs/stage11/dataset_identity.json",
+      "docs/stage11/global_manifest_11005_reconciled.json"
+    ],
+    "stage10_metadata_drift_remains": true
   },
   "source_identity_exception": {
     "status": "ALLOWED_ADDITIVE_COMPATIBILITY_ADAPTER",
