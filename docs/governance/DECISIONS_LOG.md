@@ -310,3 +310,37 @@ Use the existing Stage 12 / Gate B per-trial metrics wherever their trial-level 
 
 **Boundary:** These decisions do not modify the reference file, raise `SOURCE_SHA`, modify historical data, change production sampling, or authorize a GitHub Release.
 
+
+## D-2026-10-14-11 — delivery_only_daily_and_representative_replay_scope
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE FOR DELIVERY REPLAY
+**Date:** 2026-10-14
+**Scope:** CP-F delivery-only daily history, DAILY_DISTRIBUTION, and five-role representative payload generation.
+
+### Decision
+1. For each non-C100 scenario, deterministic replay may generate the missing per-trial daily/accounting histories for trial IDs 551..1200 (650 IDs per scenario; 13,000 histories total).
+2. For each C100 scenario, deterministic replay may generate histories for trial IDs 2..1200 (1,199 IDs per scenario; 5,995 histories total) and must prove business-result equivalence to the official trial_id=1 after excluding only trial_id from the comparison.
+3. To generate a missing representative payload, deterministic replay may reconstruct the distinct trial IDs selected by the five approved roles P10, P50, P90, LossCase, and MaxCase even when such an ID is 1..550. A replayed record used solely to obtain missing detail does not add another statistical observation to Gate B.
+4. Every non-C100 replayed trial outcome must match the approved Gate A per-trial SHA-256 fingerprint for the same scenario and trial_id; validate SOURCE_SHA, MASTER_SEED, RNG policy, scenario, schema identity, and trial_id before accepting any output.
+5. Build each scenario's DAILY_DISTRIBUTION from the official immutable Stage 12 histories (C100 trial 1; non-C100 trial IDs 1..550) plus the new delivery-only histories. It must use all active cohort trials on each date and linear P10/P25/P50/P75/P90 for Cash, Net_Equity, Active_Bikes, Owned_Transferred_Bikes, and Pending_Claims, recording active_trial_count.
+6. All replay outputs are isolated workflow artifacts. Do not append to, replace, relabel, or otherwise modify the historical Dataset/Parquet. Do not change the simulation engine, RNG, SOURCE_SHA, or main. These replay outputs are delivery detail, not a new Gate B sample. Do not create a Release.
+7. Any missing trial ID, duplicate key, fingerprint mismatch, C100 business-result mismatch, date gap, invalid daily count, missing role payload, or source identity mismatch fails closed. A replay manifest is evidence only; final delivery remains blocked until all later gates and the independent content audit pass.
+
+**References:** Reference §§14.3–14.7; D-2026-10-10-03; D-2026-10-14-08/09/10.
+
+## D-2026-10-14-12 — adaptive_delivery_cohort_without_a_fixed_30000_cap
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE FOR DELIVERY STABILITY
+**Date:** 2026-10-14
+**Scope:** Statistical delivery cohort size and scenario-level stability only. Historical reference and earlier decision text remain unchanged.
+
+### Decision
+1. The project owner's explicit delegation to select the most accurate per-scenario sample supersedes D-2026-10-14-09 only as to treating exactly 30,000 trials as the terminal delivery scope. Thirty thousand remains the observed N=1200 checkpoint cohort; it is not a fixed maximum.
+2. Apply D-2026-10-10-01's per-scenario checkpoints 300→600→1200→2400→4800→9600→... without a fixed cap, and do not assume every scenario must stop at the same N. Continue only the scenarios whose applicable stability gates require another checkpoint.
+3. A scenario may be declared stable only after exact Gate A source/fingerprint verification, the required Gate B Student-t CI criteria and consecutive-checkpoint rule, and all seven §2.5 stability metrics at the applicable adjacent checkpoint comparison pass. Do not add thresholds to metrics that lack a source-defined threshold.
+4. Before running or accepting any checkpoint above N=1200, the approved Gate A provider must cover the exact source/trial IDs with a separately verified fingerprint map. Candidate hashes may not be accepted as their own golden reference. If source identity or approved golden coverage is absent, that scenario remains blocked; do not infer a PASS.
+5. Do not rerun completed statistical trial IDs. Higher checkpoints add only new trial IDs. A narrowly scoped deterministic identity/detail replay allowed by D-2026-10-14-11 is not counted as another statistical observation.
+6. The final delivery trial count is the sum of the accepted per-scenario cohort sizes, not a hardcoded 30,000. Preserve master_seed, RNG, sampling provenance, schema identity, SOURCE_SHA and trial fingerprints; do not mutate historical Dataset/Parquet.
+7. This decision does not amend the reference file, raise SOURCE_SHA, authorize a production engine change, or approve a Release. A separate Gate A coverage expansion and full acceptance evidence are prerequisites for any N>1200 checkpoint.
+
+**Reference:** D-2026-10-10-01; D-2026-10-12-01; Reference §§2.5, 14.2–14.7.

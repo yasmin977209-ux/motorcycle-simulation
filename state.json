@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014",
-  "sha": "2f7220447774f4a3249ee54682d14fff06b69f00",
+  "sha": "6e1b62da95e08bba57610541bd5b84049a87139a",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "Resolve DAILY_DISTRIBUTION scope: (A) explicitly authorize this single global sheet to retain the validated historical 11,005-trial daily cohort with prominent provenance labeling while scenario stats use the 30,000 delivery cohort and each per-scenario DAILY sheet uses its selected P50; or (B) explicitly amend the replay cap/scope to allow deterministic generation of missing daily histories for IDs 551..1200 in all 20 non-C100 scenarios (13,000 trial histories) so DAILY_DISTRIBUTION can represent the full 30,000 cohort. Until one is approved, no delivery file generation.",
   "blockers": [
@@ -12,10 +12,10 @@
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
-    "MISSING_DAILY_DISTRIBUTION_INPUTS: Reference §14.7 requires per-day DAILY_DISTRIBUTION quantiles for active trials per scenario. Verified Stage 12 detailed daily data cover the historical 11,005-trial cohort only (20 non-C100 scenarios through trial_id 550 each). Trial-level metrics exist through N=1200, but detailed daily/entity histories are missing for trial IDs 551..1200 across 20 non-C100 scenarios (13,000 trial histories). The current decision scope allows ≤105 selected-role detail replays and C100-only delivery replay; it does not authorize reconstructing all 13,000 histories. Do not produce final files or substitute the historical daily sheet without an explicit scope decision."
+    "PENDING_APPROVED_REPLAY_ARTIFACTS: D-2026-10-14-11 now authorizes delivery-only histories for non-C100 IDs 551..1200, C100 IDs 2..1200, and selected missing representative payloads. The workflow must generate and validate all 25 scenario artifacts before daily distribution can pass."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "2f7220447774f4a3249ee54682d14fff06b69f00",
+  "head_sha": "6e1b62da95e08bba57610541bd5b84049a87139a",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -1069,12 +1069,14 @@
   "sheets_verified": 185,
   "sensitivity_sheet_status": "IMPLEMENTED",
   "cp_f_delivery_20261014": {
-    "status": "BLOCKED_AT_DAILY_DISTRIBUTION_COMPLETENESS",
+    "status": "REPLAY_WORKFLOW_IMPLEMENTED_PENDING_RUN",
     "recorded_decisions": [
       "D-2026-10-14-07",
       "D-2026-10-14-08",
       "D-2026-10-14-09",
-      "D-2026-10-14-10"
+      "D-2026-10-14-10",
+      "D-2026-10-14-11",
+      "D-2026-10-14-12"
     ],
     "D_2026_10_14_05": "intentionally not registered by explicit project-owner instruction; roles use D-2026-10-10-03 and Reference §§14.5–14.6",
     "source_identity": {
@@ -1096,7 +1098,7 @@
     "stability": {
       "method": "half-width = t.ppf(0.975, n-1) * sample_std(ddof=1) / sqrt(n); pass iff half-width / abs(mean) < 0.01",
       "required_primary_checks": 75,
-      "primary_passed": 75,
+      "primary_passed": 60,
       "primary_failed": 0,
       "auxiliary_partner_metric_checks_available": 120,
       "auxiliary_partner_metric_passed": 120,
@@ -1122,53 +1124,53 @@
       "per_scenario_primary_metric": [
         {
           "scenario": "C100_G100",
-          "n300_ratio": 0,
-          "n300_status": "PASS",
-          "n600_ratio": 0,
-          "n600_status": "PASS",
-          "n1200_ratio": 0,
-          "n1200_status": "PASS",
-          "basis": "D09_C100_deterministic_rule"
+          "n300_ratio": null,
+          "n300_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n600_ratio": null,
+          "n600_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n1200_ratio": null,
+          "n1200_status": "PENDING_DETERMINISTIC_REPLAY",
+          "basis": "D09_C100_deterministic_rule; equivalence replay pending"
         },
         {
           "scenario": "C100_G070",
-          "n300_ratio": 0,
-          "n300_status": "PASS",
-          "n600_ratio": 0,
-          "n600_status": "PASS",
-          "n1200_ratio": 0,
-          "n1200_status": "PASS",
-          "basis": "D09_C100_deterministic_rule"
+          "n300_ratio": null,
+          "n300_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n600_ratio": null,
+          "n600_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n1200_ratio": null,
+          "n1200_status": "PENDING_DETERMINISTIC_REPLAY",
+          "basis": "D09_C100_deterministic_rule; equivalence replay pending"
         },
         {
           "scenario": "C100_G050",
-          "n300_ratio": 0,
-          "n300_status": "PASS",
-          "n600_ratio": 0,
-          "n600_status": "PASS",
-          "n1200_ratio": 0,
-          "n1200_status": "PASS",
-          "basis": "D09_C100_deterministic_rule"
+          "n300_ratio": null,
+          "n300_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n600_ratio": null,
+          "n600_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n1200_ratio": null,
+          "n1200_status": "PENDING_DETERMINISTIC_REPLAY",
+          "basis": "D09_C100_deterministic_rule; equivalence replay pending"
         },
         {
           "scenario": "C100_G030",
-          "n300_ratio": 0,
-          "n300_status": "PASS",
-          "n600_ratio": 0,
-          "n600_status": "PASS",
-          "n1200_ratio": 0,
-          "n1200_status": "PASS",
-          "basis": "D09_C100_deterministic_rule"
+          "n300_ratio": null,
+          "n300_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n600_ratio": null,
+          "n600_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n1200_ratio": null,
+          "n1200_status": "PENDING_DETERMINISTIC_REPLAY",
+          "basis": "D09_C100_deterministic_rule; equivalence replay pending"
         },
         {
           "scenario": "C100_G000",
-          "n300_ratio": 0,
-          "n300_status": "PASS",
-          "n600_ratio": 0,
-          "n600_status": "PASS",
-          "n1200_ratio": 0,
-          "n1200_status": "PASS",
-          "basis": "D09_C100_deterministic_rule"
+          "n300_ratio": null,
+          "n300_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n600_ratio": null,
+          "n600_status": "PENDING_DETERMINISTIC_REPLAY",
+          "n1200_ratio": null,
+          "n1200_status": "PENDING_DETERMINISTIC_REPLAY",
+          "basis": "D09_C100_deterministic_rule; equivalence replay pending"
         },
         {
           "scenario": "C085_G100",
@@ -1386,7 +1388,10 @@
         }
       },
       "n300_n600_n1200_metric_arrays": "independently recomputed from authenticated cumulative/accepted per-trial result records; all N=600/N=1200 ordered hash maps match their approved checkpoint map",
-      "local_ci_evidence_sha256": "3467241bd20c55fc619da4023228f1eb3757e35a5c95a2c1981ecaecb633356d"
+      "local_ci_evidence_sha256": "3467241bd20c55fc619da4023228f1eb3757e35a5c95a2c1981ecaecb633356d",
+      "primary_pending": 15,
+      "primary_passed_basis": "20 non-C100 scenarios × N=300/600/1200; five C100 scenarios remain pending deterministic equivalence replay under D-2026-10-14-08/11.",
+      "auxiliary_partner_metric_pending": 30
     },
     "representative_trial_selection": {
       "decision": "D-2026-10-10-03 plus Reference §§14.5–14.6",
@@ -1613,23 +1618,30 @@
       {
         "element": "Delivery trial-cohort validation",
         "current": "scripts/stage13_assemble.py canonical mode hardcodes C100 trial_id=[1], non-C100 trial_id=1..550, total=11,005; sample mode is 625",
-        "reference_or_decision": "D-2026-10-14-09 sets 1,200 per scenario / 30,000 only for delivery cohort; historical canonical/sample cohorts remain distinct",
+        "reference_or_decision": "D-2026-10-14-09 defines the N=1200 delivery checkpoint; D-2026-10-14-12 supersedes its fixed terminal cap for delivery stability only.",
         "reference": "D-2026-10-14-09; existing scripts/stage13_assemble.py blob f124a9d3bbf101aaec005486c17fb28d0eec5a8a",
-        "judgment": "K_CODE for missing separate delivery mode; preserve canonical and sample modes unchanged"
+        "judgment": "ADAPTIVE_PER_SCENARIO_COHORT_APPROVED; N>1200 remains blocked until exact approved Gate A coverage exists."
       },
       {
         "element": "Five role selection",
         "current": "selector uses numpy.quantile(method='linear'), nearest observed value, smallest trial_id tie-break, Loss absolute minimum, Max Case highest positive",
         "reference_or_decision": "D-2026-10-10-03 and user-confirmed role rules",
         "reference": "Reference §§14.5–14.6; D-2026-10-10-03",
-        "judgment": "SELECTION_RULE_ALIGNED; IDs computed from N=1200 trial-result values; detailed payload replays not run"
+        "judgment": "SELECTION_RULE_ALIGNED; source-selected IDs are recorded, full payload replay remains pending."
       },
       {
         "element": "DAILY_DISTRIBUTION",
         "current": "Stage12 roll-forward source contains 11,005 trial histories / 22,546,465 daily rows; missing daily/entity histories for trial IDs 551..1200 in 20 non-C100 scenarios",
-        "reference_or_decision": "delivery metrics cohort is 30,000; replay limit ≤105 role trials, plus separate C100 exception",
+        "reference_or_decision": "Reference §14.7; replay/detail scope approved by D-2026-10-14-11.",
         "reference": "Reference §14.7; D-2026-10-14-09/10 and explicit replay cap",
-        "judgment": "MISSING_ARTIFACT / scope decision required; do not assemble final 185-sheet workbook"
+        "judgment": "SCOPE_APPROVED_PENDING_REPLAY_ARTIFACTS; no historical daily cohort substitution."
+      },
+      {
+        "element": "CP-F workflow orchestration",
+        "current": "Readiness-only probe records missing artifacts and exits blocked; no scenario replay jobs, no artifact cohort validator.",
+        "reference_or_decision": "D-2026-10-14-11/12 plus owner's M3 delegation; temporary workflow only on tmp/cp-f-delivery-20261014.",
+        "reference": "Reference §§14.3–14.7; D-2026-10-14-11 and D-2026-10-14-12",
+        "judgment": "WORKFLOW_DEFECT: replay invocation/collection gate absent; implement pinned scenario matrix, timeouts, exact identity gates and artifact content validation."
       }
     ],
     "delivery_artifacts": {
@@ -1640,6 +1652,43 @@
       "source_sha_bumped": false,
       "workflow_removed": false
     },
-    "next_question": "Resolve DAILY_DISTRIBUTION scope: (A) explicitly authorize this single global sheet to retain the validated historical 11,005-trial daily cohort with prominent provenance labeling while scenario stats use the 30,000 delivery cohort and each per-scenario DAILY sheet uses its selected P50; or (B) explicitly amend the replay cap/scope to allow deterministic generation of missing daily histories for IDs 551..1200 in all 20 non-C100 scenarios (13,000 trial histories) so DAILY_DISTRIBUTION can represent the full 30,000 cohort. Until one is approved, no delivery file generation."
+    "next_question": "Run CP-F deterministic replay and validate the 25 scenario artifacts. Do not assemble the workbook until the cohort manifest, Gate B, §2.5 stability, and independent content audit pass.",
+    "replay_scope": {
+      "decision_ids": [
+        "D-2026-10-14-11",
+        "D-2026-10-14-12"
+      ],
+      "status": "IMPLEMENTED_PENDING_RUN",
+      "non_c100_primary_daily_history_trial_ids": "551..1200",
+      "non_c100_primary_daily_history_count": 13000,
+      "c100_primary_daily_history_trial_ids": "2..1200",
+      "c100_primary_daily_history_count": 5995,
+      "role_payloads": [
+        "P10",
+        "P50",
+        "P90",
+        "LossCase",
+        "MaxCase"
+      ],
+      "role_detail_replay_rule": "Replay only unique selected trial IDs whose approved full-detail payload is unavailable; detail-only replay is not another Gate B observation.",
+      "daily_distribution_quantiles": [
+        "P10",
+        "P25",
+        "P50",
+        "P75",
+        "P90"
+      ],
+      "daily_distribution_metrics": [
+        "Cash",
+        "Net_Equity",
+        "Active_Bikes",
+        "Owned_Transferred_Bikes",
+        "Pending_Claims"
+      ],
+      "historical_data_mutation": false,
+      "source_sha_bumped": false,
+      "main_modified": false,
+      "release_created": false
+    }
   }
 }

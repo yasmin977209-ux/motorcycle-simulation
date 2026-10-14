@@ -551,6 +551,53 @@ def main() -> int:
             "n1200_gate_a": report.get("gate_a"),
         },
     }
+
+    # D-2026-10-14-11: export exact per-trial outcomes for isolated replay jobs.
+    trial_results_payload = {
+        "schema_version": "gateb-delivery-trial-results-v1",
+        "source_sha": SOURCE_SHA,
+        "master_seed": MASTER_SEED,
+        "scenarios": {
+            scenario: [
+                {
+                    "scenario_id": scenario,
+                    "trial_id": int(trial_id),
+                    "source_sha": row["source_sha"],
+                    "master_seed": int(row["master_seed"]),
+                    "result_sha256": row["result_sha256"],
+                    "trial_result": row["trial_result"],
+                }
+                for trial_id, row in sorted(rows.items())
+            ]
+            for scenario, rows in sorted(all_rows.items())
+        },
+    }
+    trial_results_path = outdir / "CP_F_N1200_TRIAL_RESULTS.json"
+    trial_results_path.write_text(
+        json.dumps(trial_results_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    allowed_replay_blockers = {
+        "GATEB_NOT_ESTABLISHED_AT_N1200",
+        "MISSING_DAILY_LEDGER_FOR_N1200_COHORT",
+        "MISSING_DAILY_AND_ENTITY_DETAIL_FOR_TRIALS_551_1200",
+        "MISSING_FIVE_ROLE_REPRESENTATIVE_PAYLOADS",
+    }
+    source_maps_valid = (
+        n600_map == N600_GLOBAL_SHA256
+        and n1200_map == report.get("ordered_scenario_trial_hash_map_sha256_n1200")
+        and total_rows == 24005
+        and set(all_rows) == set(EXPECTED_SCENARIOS)
+        and all(len(all_rows[s]) == (1 if s.startswith("C100_") else 1200) for s in EXPECTED_SCENARIOS)
+    )
+    if source_maps_valid and set(blocker_codes).issubset(allowed_replay_blockers):
+        audit["status"] = "READY_FOR_DETERMINISTIC_REPLAY"
+        audit["classification"] = "REPLAY_SCOPE_APPROVED_PENDING_EXECUTION"
+        audit["replay_decision_ids"] = ["D-2026-10-14-11", "D-2026-10-14-12"]
+        audit["source_evidence"]["trial_results_json"] = str(trial_results_path)
+        audit["gates"]["G_SOURCE_DAILY_DETAIL_FOR_ALL_24005"] = "PENDING_APPROVED_REPLAY"
+        audit["gates"]["G_FIVE_REPRESENTATIVE_DETAIL_PAYLOADS"] = "PENDING_APPROVED_REPLAY"
+
     json_path = outdir / "CP_F_N1200_SOURCE_READINESS.json"
     json_path.write_text(json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     report_text = f"""# CP-F — N=1200 Delivery Source Readiness
@@ -606,7 +653,7 @@ The five approved representative roles are P50, P10, P90, LossCase, and MaxCase.
 
 ## Disposition
 
-BLOCKED: no final Excel, report, summary or feasibility file was produced. No Monte Carlo was run, no completed trial was replayed, no source/data identity was changed, main was not modified, and no Release was created.
+READY FOR APPROVED DELIVERY REPLAY (not final delivery PASS): missing daily/entity histories and representative detail may be reconstructed only under D-2026-10-14-11/12. Stored Dataset/Parquet, SOURCE_SHA, and main remain unchanged; this audit does not authorize a Release.
 """
     md_path = outdir / "CP_F_N1200_SOURCE_READINESS.md"
     md_path.write_text(report_text, encoding="utf-8")
@@ -622,7 +669,7 @@ BLOCKED: no final Excel, report, summary or feasibility file was produced. No Mo
         "blocker_codes": blocker_codes,
         "evidence_json": str(json_path), "evidence_markdown": str(md_path),
     }, ensure_ascii=False, sort_keys=True))
-    return 2 if blocker_codes else 0
+    return 0 if audit.get("status") == "READY_FOR_DETERMINISTIC_REPLAY" else (2 if blocker_codes else 0)
 
 if __name__ == "__main__":
     try:

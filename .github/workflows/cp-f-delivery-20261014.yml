@@ -1,12 +1,17 @@
-name: CP-F delivery source readiness audit
+
+name: CP-F delivery replay and daily-distribution validation
 
 on:
   push:
     branches:
-      - tmp/cp-f-delivery-20261014
+      - "tmp/cp-f-delivery-20261014"
     paths:
       - .github/workflows/cp-f-delivery-20261014.yml
       - scripts/cp_f_delivery_probe.py
+      - scripts/cp_f_delivery_replay.py
+      - tests/test_cp_f_delivery_replay.py
+      - docs/governance/DECISIONS_LOG.md
+      - state.json
 
 permissions:
   contents: read
@@ -20,29 +25,38 @@ jobs:
       - name: Checkout exact CP-F branch
         uses: actions/checkout@v4
         with:
-          ref: tmp/cp-f-delivery-20261014
-
+          ref: "tmp/cp-f-delivery-20261014"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install approved project requirements
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-
-      - name: Inspect official source artifacts and fail closed on missing payloads
-        id: audit
-        continue-on-error: true
+      - name: Verify official Gate B inputs and write replay manifest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_SHA: ${{ github.sha }}
         run: python scripts/cp_f_delivery_probe.py
-
-      - name: Upload CP-F source readiness evidence
-        if: always()
+      - name: Assert readiness and per-trial input completeness
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence = Path("cp-f-evidence")
+          audit = json.loads((evidence / "CP_F_N1200_SOURCE_READINESS.json").read_text(encoding="utf-8"))
+          source = json.loads((evidence / "CP_F_N1200_TRIAL_RESULTS.json").read_text(encoding="utf-8"))
+          assert audit["status"] == "READY_FOR_DETERMINISTIC_REPLAY", audit.get("blocker_codes")
+          assert audit["dataset"]["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          assert audit["dataset"]["master_seed"] == 20270101
+          assert set(source["scenarios"]) == set(audit["representative_roles"]["selection_by_n1200_source"])
+          assert all(len(rows) == (1 if scenario.startswith("C100_") else 1200) for scenario, rows in source["scenarios"].items())
+          assert audit["n1200_checkpoint"]["ordered_scenario_trial_hash_map_sha256_n1200"] == "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
+          print("CP_F_SOURCE_READY_FOR_APPROVED_REPLAY=PASS; FINAL_DELIVERY=NOT_ESTABLISHED")
+          PY
+      - name: Upload exact source audit and per-trial inputs
         uses: actions/upload-artifact@v4
         with:
           name: cp-f-source-readiness-evidence
@@ -50,8 +64,132 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Propagate blocked acceptance gate
-        if: steps.audit.outcome == 'failure'
+  replay:
+    needs: source-readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout exact CP-F branch
+        uses: actions/checkout@v4
+        with:
+          ref: "tmp/cp-f-delivery-20261014"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
         run: |
-          echo "CP-F delivery is blocked; see cp-f-source-readiness-evidence."
-          exit 1
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Download identity-checked source audit
+        uses: actions/download-artifact@v4
+        with:
+          name: cp-f-source-readiness-evidence
+          path: cp-f-evidence
+      - name: Download immutable historical daily ledger for this scenario
+        run: |
+          set -euo pipefail
+          gh run download 37964656154 --repo "${GITHUB_REPOSITORY}" --name "stage12-daily-${SCENARIO}" --dir historical-source
+          test -f "historical-source/${SCENARIO}.parquet"
+      - name: Deterministically replay approved missing histories and selected detail
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/cp_f_delivery_replay.py scripts/cp_f_delivery_probe.py
+          python scripts/cp_f_delivery_replay.py --scenario "${SCENARIO}" --historical-parquet "historical-source/${SCENARIO}.parquet" --audit cp-f-evidence/CP_F_N1200_SOURCE_READINESS.json --trial-results cp-f-evidence/CP_F_N1200_TRIAL_RESULTS.json --output-dir "cp-f-replay/${SCENARIO}"
+      - name: Upload scenario replay evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-f-replay-${{ matrix.scenario }}
+          path: cp-f-replay/${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  focused-tests:
+    needs: source-readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact CP-F branch
+        uses: actions/checkout@v4
+        with:
+          ref: "tmp/cp-f-delivery-20261014"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run replay, Gate A provider, and runner regressions
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_cp_f_delivery_replay.py tests/test_golden_reference_provider.py tests/test_run_batch.py
+
+  validate-cohort:
+    needs: [replay, focused-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact CP-F branch
+        uses: actions/checkout@v4
+        with:
+          ref: "tmp/cp-f-delivery-20261014"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
+        run: python -m pip install -r requirements.txt
+      - name: Download all scenario replay artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cp-f-replay-*
+          path: cp-f-replay-cohort
+          merge-multiple: false
+      - name: Validate 25/25 scenarios and all daily/detail files
+        env:
+          PYTHONPATH: .
+        run: python scripts/cp_f_delivery_replay.py --verify-cohort-root cp-f-replay-cohort
+      - name: Upload cohort validation manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-f-replay-cohort-validation
+          path: cp-f-replay-cohort/CP_F_REPLAY_COHORT_VALIDATION.json
+          if-no-files-found: error
+          retention-days: 30
