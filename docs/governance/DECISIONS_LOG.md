@@ -177,3 +177,33 @@ The three preserved checkpoint reports each contain 60/60 CI points passed, with
 Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` completed both jobs successfully. The canonical precision gate passed 25/25 scenario packages, 9,005/9,005 unique trial rows, 185 worksheets, zero Excel-error cells, zero formulas, and 500/500 exact numeric comparisons. One target cell required patching; all 500 target cells were verified post-write. The original published workbook SHA-256 remains `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d`; the separate candidate workbook SHA-256 is `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`. No simulation or new trial execution occurred.
 
 **References:** `docs/stage9c/STAGE9C_REPORT.md` §C-6; `docs/stage9a/dataset_manifest.json`; `docs/stage9c/R4_export_numeric_precision.md`; Stage 9C canonical precision gate Run `38165878333`. The 625-trial Stage 13 definition is maintained as a distinct cohort and is not amended here.
+
+
+## D-2026-10-14-19 — friday_date_semantics_resolution
+
+**Status:** APPROVED — EXPLICIT PROJECT-OWNER DECISION  
+**Date:** 2026-10-14  
+**Scope:** Documentary correction to Reference §5.2 Friday-date examples only.
+
+### Normative decision
+
+1. The controlling rule remains Reference §5.1: a workday is any day that is not Friday.
+2. “Friday” means the actual calendar weekday.
+3. Correct calendar anchors are: 2027-01-01 = Friday; 2027-01-02 = Saturday; 2027-01-08 = Friday; and 2027-01-15 = Friday.
+4. The §5.2 example dates 2027-01-09 and 2027-01-16 are documentary errors, are Saturdays, and must not be used in any calculation. The replacement examples are 2027-01-08 and 2027-01-15, with offsets recalculated from each delivery date.
+5. The implementation in `dateutils.py` is approved as correct; make no code or business-behavior change. The decision has zero effect on simulation outputs.
+6. Append a documentary correction to the local authoritative reference while preserving every historical line. The correction also identifies the same date-label error where these examples are repeated in §5.3; this does not change the normative business rule.
+
+### Pre-change R4
+
+| Element | Current | Approved comparison | Judgment |
+|---|---|---|---|
+| Reference §5.2 examples | Labels 2027-01-09 and 2027-01-16 as Friday | D-19 identifies them as Saturday/documentary error | Append a correction; preserve original text |
+| `dateutils.py` | Uses actual calendar Friday | D-19 affirms code is correct | No code change |
+| This decision log | D-19 absent | User decision dated 2026-10-14 | Record decision on temporary branch |
+| `REFERENCE_AMENDMENTS.md` | Amendments 01–06 | D-19 authorizes documentary addendum | Append Amendment-07 only |
+
+### Acceptance boundary
+
+This decision is documentation-only. It does not authorize a production run, dataset/Parquet changes, an engine change, SOURCE_SHA changes, a merge, or a release.
+
