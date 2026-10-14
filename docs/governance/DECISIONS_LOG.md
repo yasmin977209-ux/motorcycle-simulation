@@ -344,3 +344,88 @@ Use the existing Stage 12 / Gate B per-trial metrics wherever their trial-level 
 7. This decision does not amend the reference file, raise SOURCE_SHA, authorize a production engine change, or approve a Release. A separate Gate A coverage expansion and full acceptance evidence are prerequisites for any N>1200 checkpoint.
 
 **Reference:** D-2026-10-10-01; D-2026-10-12-01; Reference §§2.5, 14.2–14.7.
+
+
+---
+
+## D-2026-10-15-01 — cp_f_workflow_trigger_scope
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE  
+**Date:** 2026-10-15  
+**Scope:** `tmp/cp-f-delivery-20261014` only; workflow trigger/filter behavior.
+
+### Decision
+1. CP-F remains `push`-only and pinned to the exact branch `tmp/cp-f-delivery-20261014`; no wildcard and no `workflow_dispatch`.
+2. The `paths` filter excludes `.github/workflows/cp-f-delivery-20261014.yml`, `docs/governance/DECISIONS_LOG.md`, and `state.json`. Edits to those three paths alone must not start CP-F.
+3. R4 verified that the source probe reads `EXPECTED_SCENARIOS` from `scripts/stage13_assemble.py`, and reads `docs/stage12/roll_forward_validation.json` and `docs/stage11/global_manifest_11005_reconciled.json`; these three proven inputs are therefore included in `paths`.
+4. The final filter also includes the two CP-F scripts, their focused tests, `run_batch.py`, its Gate A provider and imported runtime dependencies, the focused test files, and `requirements.txt`. The exact final list is in workflow blob `306242e1a1ac29e4924bf30ab4c2c564ab9a1da4`.
+5. This changes CI trigger scope only. It does not change simulation logic, SOURCE_SHA, historical Dataset/Parquet, or main.
+
+**Evidence:** commit `151a858754e00b5d387580e415e3f6f28496d71a` followed by R4 correction commit `fededc0e7ca7123f5d94b4a2304907386211f03a`; final workflow blob SHA `306242e1a1ac29e4924bf30ab4c2c564ab9a1da4`. The branch Run inventory remained at 7 runs after both pushes; no new CP-F run was triggered.
+
+---
+
+## D-2026-10-15-02 — cp_f_execution_evidence_sync
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE  
+**Date:** 2026-10-15  
+**Scope:** Synchronize existing CP-F execution evidence to Run `38619859394` without changing the replay result or inventing state-schema fields.
+
+### Decision
+1. The canonical successful replay/cohort-validation run for this evidence update is Run `38619859394`, attempt 2, conclusion `success`, tested source head `f7096bcc9f910df54a60d5a4329a7ebbcd2a43ae`. Its cohort validation artifact is `11929768010`; its `C050_G050` replay artifact is `11929093644`.
+2. Preserve the overall status exactly as `PASS_CP_F_REPLAY_AND_COHORT_VALIDATION_ONLY`. This is not an accounting content-audit pass or final delivery pass.
+3. Do not add attempt/duration keys to `state.json` unless an applicable schema/contract explicitly permits them. Record attempt chronology here instead: attempt 1 was cancelled due to timeout; replay step `89:48`, job `90:28`. Attempt 2 succeeded; replay step `49:26`, job `50:03`.
+4. Update only existing execution-evidence fields supported by the live state structure and verified Run API evidence; preserve historical evidence and do not infer artifact hashes. If a current artifact fingerprint cannot be verified, do not relabel a historical fingerprint as belonging to the current artifact.
+
+**Boundary:** No change to source identity, simulation results, dataset, Parquet files, or main.
+
+---
+
+## D-2026-10-15-03 — section_2_5_status_without_escalation
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE  
+**Date:** 2026-10-15  
+**Scope:** Report the current adjacent-checkpoint §2.5 evidence without initiating a new statistical checkpoint.
+
+### Decision
+1. Do not escalate `C030_G030` from the current evidence.
+2. `D-2026-10-14-14` is not present in the inspected decision log; it is not an approved decision for this repository state. A future escalation requires a new explicit decision.
+3. Preserve the observed per-transition result: 19/20 scenarios PASS both transitions; `C030_G030` FAILs 300→600 at relative change `1.571506%` for `P90_Final_Cash`, then PASSes 600→1200.
+4. Do not label any scenario `SCENARIO_STABLE` until exact Gate A, applicable Gate B/consecutive-checkpoint requirements, and all applicable reference §2.5 metrics are evidenced as passing.
+
+**Boundary:** No checkpoint execution, source/SOURCE_SHA change, or historical dataset mutation is authorized by this decision.
+
+---
+
+## D-2026-10-15-04 — cp_content_full_parquet_audit
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE FOR THE AUDIT ONLY  
+**Date:** 2026-10-15  
+**Scope:** Independent read-only content audit of CP-F Run `38619859394` artifacts and the immutable historical daily inputs they depend on.
+
+### Decision
+1. Use a temporary exact branch `tmp/cp-content-audit-20261015` and a push-only workflow with a 90-minute job timeout. Do not use wildcard branches or `workflow_dispatch`; remove the temporary workflow after the audit completes.
+2. Install `pyarrow`, `pandas`, and `numpy`; retrieve all 25 scenario artifacts from Run `38619859394` and the matching immutable historical daily artifacts required for the full cohort. Validate archive and embedded-file SHA-256 values before consuming payloads.
+3. Decode and audit every Parquet row in scope: the five §10.6 roll-forwards (cash, accounts receivable, gross bike assets, accumulated depreciation, and equity), plus `Net_Bike_Assets = Closing_Gross_Bike_Assets - Closing_Accumulated_Depreciation`.
+4. Check `Total_Assets = Total_Equity` and `Liabilities = 0` exactly for every day and trial. Check all `DAILY_DISTRIBUTION` rows, active-trial counts, and linear P10/P25/P50/P75/P90 quantiles computed from the full active trial cohort for every scenario/date.
+5. Inspect the five representative roles P50, P10, P90, LossCase, and MaxCase as a supplemental audit; this does not substitute for full-population checks.
+6. No 25% sampling and no P50-only audit. If all rows cannot finish within the job timeout, divide the work into explicit, disjoint, fully enumerated partitions; record each partition's source SHA, row/key coverage, file checksums, counts, and result. Partial partitions must remain partial and cannot PASS the unevaluated remainder.
+7. If a required field or the exact contract rule needed for a check is missing, record `UNDEFINED_BUSINESS_RULE` and stop that check without inferring a substitute. Do not modify any source Dataset/Parquet or production code.
+
+**Boundary:** Audit artifacts only; no merge/PR, main modification, SOURCE_SHA change, stage transition, or Release authorization.
+
+---
+
+## D-2026-10-15-05 — gate_a_run_batch_r4
+
+**Status:** APPROVED BY PROJECT OWNER — READ-ONLY COMPARISON  
+**Date:** 2026-10-15  
+**Scope:** Compare `run_batch.py` and provider wiring on `main`, `tmp/cp-f-delivery-20261014`, and `tmp/cp-golden-provider-20261014` against the approved Gate A contract/reference.
+
+### Decision
+1. Produce the R4 comparison table for current content and blob SHAs, including Gate A evaluation, provider import/instantiation, provider coverage/source-identity checks, and the production call sites.
+2. No automatic copy, code edit, PR creation, merge, or change of production Gate A status is authorized.
+3. A provider present and wired on a candidate branch does not establish that `main` has the provider or that approved golden coverage is complete. `main` remains blocked until the exact source/fingerprint and coverage contract is demonstrated.
+
+**Boundary:** Read-only audit. Preserve every branch and historical record.
+
