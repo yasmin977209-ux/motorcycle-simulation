@@ -33,13 +33,17 @@ jobs:
           import constants
           import dateutils
           import rng
+          from scripts.stage7_stability import is_statistical_checkpoint, next_statistical_checkpoint
 
           assert constants.C100_STATISTICAL_START_TRIALS == 1
           assert constants.NON_C100_STATISTICAL_START_TRIALS == 300
-          assert constants.ITERATION_ESCALATION_STEP == 50
           assert constants.STATISTICAL_CHECK_START_N == 300
-          assert constants.STATISTICAL_CHECK_STEP_N == 50
-          assert constants.MINIMUM_STOP_N_FOR_NON_C100 == 400
+          assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
+          assert not any(is_statistical_checkpoint(n) for n in (50, 400, 550))
+          assert next_statistical_checkpoint(299) == 300
+          assert next_statistical_checkpoint(300) == 600
+          assert next_statistical_checkpoint(600) == 1200
+          assert next_statistical_checkpoint(1200) == 2400
           assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 3
           assert constants.INITIAL_SMOKE_TRIALS_PER_SCENARIO == 1
           assert constants.C100_CI_GATE_ENABLED is False
@@ -112,10 +116,9 @@ jobs:
               "constants": {
                   "C100_STATISTICAL_START_TRIALS": constants.C100_STATISTICAL_START_TRIALS,
                   "NON_C100_STATISTICAL_START_TRIALS": constants.NON_C100_STATISTICAL_START_TRIALS,
-                  "ITERATION_ESCALATION_STEP": constants.ITERATION_ESCALATION_STEP,
                   "STATISTICAL_CHECK_START_N": constants.STATISTICAL_CHECK_START_N,
-                  "STATISTICAL_CHECK_STEP_N": constants.STATISTICAL_CHECK_STEP_N,
-                  "MINIMUM_STOP_N_FOR_NON_C100": constants.MINIMUM_STOP_N_FOR_NON_C100,
+                  "approved_checkpoints": [300, 600, 1200, 2400],
+                  "checkpoint_policy": "DOUBLING_FROM_300_NO_FLOOR",
                   "CI_ABSOLUTE_EPSILON": constants.CI_ABSOLUTE_EPSILON,
                   "scenario_count": len(constants.SCENARIO_IDS),
               },
