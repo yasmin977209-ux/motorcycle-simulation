@@ -1,10 +1,10 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014",
-  "sha": "75931ab1b7f722d814f0ed956345a4926f99791d",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014",
+  "sha": "f6bdeb486d8fa305bfaa64a942a99cc0a48e1427",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-F replay and cohort integrity passed. Next: independently audit numeric/accounting and daily-distribution content, and reconcile the composite Gate A + Gate B + Reference §2.5 stability decision. Do not assemble/approve the seven final delivery files or create a Release before all gates and the independent content audit pass.",
+  "next": "D-19 documentary resolution recorded on the final temporary candidate; next apply the approved D-20 §2.5 metric evaluator/tests and D-21 checkpoint cleanup. No production Monte Carlo, dataset/Parquet change, SOURCE_SHA change, merge, or release.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
