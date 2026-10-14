@@ -29,6 +29,9 @@ on:
       - scripts/stage7_stability.py
       - tests/test_golden_reference_provider.py
       - tests/test_run_batch.py
+      - scripts/stage13_assemble.py
+      - docs/stage12/roll_forward_validation.json
+      - docs/stage11/global_manifest_11005_reconciled.json
       - requirements.txt
 
 permissions:
