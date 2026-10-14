@@ -3,7 +3,7 @@ name: Full CP-F Parquet content audit
 on:
   push:
     branches: ["tmp/cp-content-audit-20261015"]
-    paths: ["scripts/cp_content_full_audit.py"]
+    paths: [".github/workflows/cp-content-full-audit-20261015.yml", "scripts/cp_content_full_audit.py"]
 
 permissions:
   contents: read
@@ -12,7 +12,7 @@ permissions:
 jobs:
   preflight:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,10 +38,10 @@ jobs:
   audit-scenario:
     needs: preflight
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     strategy:
-      fail-fast: true
-      max-parallel: 5
+      fail-fast: false
+      max-parallel: 25
       matrix:
         scenario: [C100_G100, C100_G070, C100_G050, C100_G030, C100_G000, C085_G100, C085_G070, C085_G050, C085_G030, C085_G000, C070_G100, C070_G070, C070_G050, C070_G030, C070_G000, C050_G100, C050_G070, C050_G050, C050_G030, C050_G000, C030_G100, C030_G070, C030_G050, C030_G030, C030_G000]
     steps:
@@ -76,7 +76,7 @@ jobs:
     if: always()
     needs: [preflight, audit-scenario]
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         with:
