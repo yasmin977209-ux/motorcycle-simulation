@@ -1,0 +1,56 @@
+name: Final candidate full pytest (temporary)
+
+on:
+  push:
+    branches:
+      - "tmp/cp-final-candidate-20261015"
+
+permissions:
+  contents: read
+
+jobs:
+  full-pytest:
+    name: Full pytest on exact candidate SHA
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact pushed candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Record tested identity and run full pytest
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'tested_head_sha=%s\n' "$GITHUB_SHA" > pytest-identity.txt
+          python - <<'PY' >> pytest-identity.txt
+          import json
+          from pathlib import Path
+          state = json.loads(Path("state.json").read_text(encoding="utf-8"))
+          print(f"source_sha={state['source_sha']}")
+          print(f"master_seed={state.get('artifact_manifest', {}).get('master_seed')}")
+          PY
+          git hash-object state.json >> pytest-identity.txt
+          set +e
+          python -m pytest -q tests 2>&1 | tee pytest.log
+          test_status=${PIPESTATUS[0]}
+          set -e
+          printf 'pytest_exit_code=%s\n' "$test_status" >> pytest-identity.txt
+          exit "$test_status"
+      - name: Upload actual pytest log and identity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-candidate-pytest-evidence
+          path: |
+            pytest.log
+            pytest-identity.txt
+          if-no-files-found: warn
+          retention-days: 30
