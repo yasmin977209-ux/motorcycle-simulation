@@ -6,12 +6,30 @@ on:
     branches:
       - "tmp/cp-f-delivery-20261014"
     paths:
-      - .github/workflows/cp-f-delivery-20261014.yml
       - scripts/cp_f_delivery_probe.py
       - scripts/cp_f_delivery_replay.py
       - tests/test_cp_f_delivery_replay.py
-      - docs/governance/DECISIONS_LOG.md
-      - state.json
+      - run_batch.py
+      - daily_engine.py
+      - monte_carlo.py
+      - constants.py
+      - dateutils.py
+      - rng.py
+      - accounting.py
+      - closure.py
+      - entities.py
+      - collection.py
+      - guarantee.py
+      - partner_equity.py
+      - friday.py
+      - settlement.py
+      - state_machine.py
+      - scripts/golden_reference_provider.py
+      - scripts/stage7_state.py
+      - scripts/stage7_stability.py
+      - tests/test_golden_reference_provider.py
+      - tests/test_run_batch.py
+      - requirements.txt
 
 permissions:
   contents: read
