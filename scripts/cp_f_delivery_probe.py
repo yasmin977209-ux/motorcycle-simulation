@@ -2,6 +2,7 @@
 """CP-F fail-closed source readiness audit; it never runs Monte Carlo."""
 from __future__ import annotations
 import hashlib, io, json, os, sys, tarfile, urllib.request, zipfile
+from urllib.error import HTTPError
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,10 @@ def api_json(url: str, token: str) -> dict[str, Any]:
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.loads(response.read().decode("utf-8"))
 
+class _NoFollowRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
 def get_zip(artifact_id: int, token: str) -> bytes:
     url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip"
     request = urllib.request.Request(url, headers={
@@ -33,14 +38,28 @@ def get_zip(artifact_id: int, token: str) -> bytes:
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "motorcycle-simulation-cp-f",
     })
-    with urllib.request.urlopen(request, timeout=180) as response:
-        raw = response.read()
+    # GitHub returns a short-lived signed storage URL. Do not forward the API
+    # Authorization header to that different host.
+    opener = urllib.request.build_opener(_NoFollowRedirect())
+    try:
+        with opener.open(request, timeout=180) as response:
+            raw = response.read()
+    except HTTPError as response:
+        if response.code not in (301, 302, 303, 307, 308):
+            raise
+        location = response.headers.get("Location")
+        if not location:
+            raise RuntimeError(f"ARTIFACT_REDIRECT_LOCATION_MISSING: {artifact_id}")
+        remote_request = urllib.request.Request(
+            location, headers={"User-Agent": "motorcycle-simulation-cp-f"}
+        )
+        with urllib.request.urlopen(remote_request, timeout=180) as response:
+            raw = response.read()
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         damaged = archive.testzip()
         if damaged:
             raise RuntimeError(f"ARTIFACT_ZIP_CORRUPT: {damaged}")
     return raw
-
 def artifacts(run_id: int, token: str) -> list[dict[str, Any]]:
     return api_json(
         f"https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts?per_page=100",
@@ -159,8 +178,15 @@ def main() -> int:
     ledger_cols = ledger.schema_arrow.names
     ledger_rows = ledger.metadata.num_rows
 
-    decision = state.get("governance_decisions", {}).get("D-2026-10-10-03", {})
-    roles = decision.get("cases", [])
+    decision_log_text = Path("docs/governance/DECISIONS_LOG.md").read_text(encoding="utf-8")
+    decision_start = decision_log_text.find("## D-2026-10-10-03")
+    if decision_start < 0:
+        raise RuntimeError("APPROVED_REPRESENTATIVE_DECISION_MISSING")
+    decision_end = decision_log_text.find("\n## ", decision_start + 4)
+    decision_block = decision_log_text[decision_start:] if decision_end < 0 else decision_log_text[decision_start:decision_end]
+    decision_approved = "**Status:** APPROVED — NORMATIVE" in decision_block
+    decision_roles_exact = "P50/P10/P90/LossCase/MaxCase." in decision_block
+    roles = ["P50", "P10", "P90", "LossCase", "MaxCase"] if decision_approved and decision_roles_exact else []
     assembler_requires_max = (
         '"Max Case"' in assembler
         and '("P10", "P50", "P90", "Loss", "Max Case")' in assembler
@@ -221,6 +247,9 @@ def main() -> int:
         "decision_evidence": {
             "decision_id": "D-2026-10-10-03",
             "decision_cases": roles,
+            "decision_log_block_sha256": sha(decision_block.encode("utf-8")),
+            "decision_status_approved_normative": decision_approved,
+            "decision_log_has_five_roles": decision_roles_exact,
             "assembler_requires_five_roles_including_max_case": assembler_requires_max,
             "sample_stage9a_rep_files": rep_files,
             "sample_stage10_detail_payload_files": detail_files,
