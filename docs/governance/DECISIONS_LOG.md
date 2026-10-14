@@ -429,3 +429,77 @@ Use the existing Stage 12 / Gate B per-trial metrics wherever their trial-level 
 
 **Boundary:** Read-only audit. Preserve every branch and historical record.
 
+
+
+---
+
+## D-2026-10-15-06 — source_sha_drift_resolution
+
+**Status:** APPROVED BY PROJECT OWNER — CANDIDATE-BRANCH RESOLUTION  
+**Date:** 2026-10-15  
+**Scope:** Classify the already-reviewed additive compatibility adapter and resolve its blocker only on the CP-F candidate branch.
+
+### Decision
+1. The live `daily_engine.py` diff against pinned `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` is the `_create_contract` compatibility adapter only: 11 additions and 0 deletions.
+2. The classification is `ALLOWED_ADDITIVE_COMPATIBILITY_ADAPTER`. The exact replay evidence records 10/10 A=B=historical matches, zero mismatches, and no source SHA, Dataset, Parquet, or production Monte Carlo change (Run `38461464864`, tested head `6da81aadbf451131304024d919f6a89be772b717`).
+3. Keep `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`; do not bump it.
+4. Record the pre-existing authorization `D-2026-10-13-02` as the source-identity exception decision reference and remove the `SOURCE_SHA_DRIFT` blocker on CP-F only after the live diff and replay evidence are rechecked.
+5. Do not change `daily_engine.py`, `main`, or historical datasets/Parquet.
+
+### Boundary
+This decision is limited to documenting the adapter exception on temporary branches. It does not establish Gate A or authorize a merge or Release.
+
+---
+
+## D-2026-10-15-07 — gate_a_provider_wiring
+
+**Status:** APPROVED BY PROJECT OWNER — CANDIDATE-BRANCH DOCUMENTATION  
+**Date:** 2026-10-15  
+**Scope:** Record the exact Golden Reference Provider wiring and coverage evidence on CP-F.
+
+### Decision
+1. `scripts/golden_reference_provider.py` is present on CP-F and the provider is wired through `run_batch.py`; no new provider implementation is authorized by this decision.
+2. The recorded coverage is `SCENARIOS=25`, `TRIALS=24005`, non-C100 trial IDs `1..1200`, and C100 trial ID `1`, with full ordered hash-map SHA-256 `166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c`.
+3. The live provider validation evidence is Run `38477840726` on tested head `1013c42466762761e964eedc408996b4613e13e8`; the state record reports provider validation PASS and `19 passed, 0 failed` targeted tests (full pytest: `403 passed, 1 skipped, 0 failed`).
+4. Document `gate_a_provider_status=WIRED` and `gate_a_coverage_trials=24005` on the CP-F candidate only. `WIRED` is a wiring status, not a claim that Gate A is PASS on `main`.
+5. Do not edit `main`, change `SOURCE_SHA`, or alter source data.
+
+### Boundary
+This decision documents provider wiring and the recorded exact-coverage evidence only. Composite stability remains subject to the applicable Reference §2.5 and project gate requirements.
+
+---
+
+## D-2026-10-15-08 — final_integration
+
+**Status:** APPROVED BY PROJECT OWNER — TEMPORARY INTEGRATION BRANCH  
+**Date:** 2026-10-15  
+**Scope:** Integrate the reviewed D19, D20, and D21 commits into a candidate based on `tmp/cp-f-delivery-20261014`.
+
+### Decision
+1. Use CP-F head `42530a2b09ff012877710d260a3629515319c203` as the base.
+2. Resolve the intended D19/D20/D21 commit SHAs from the live branch histories, inspect each commit's changed paths, and cherry-pick by exact SHA only.
+3. Preserve provenance by recording every cherry-picked SHA; do not silently substitute branch heads for implementation commits or omit required implementation/cleanup commits.
+4. If any cherry-pick conflicts or the intended scope cannot be established from live Git evidence, stop without an inferred resolution.
+5. Run the full pytest suite against the resulting candidate head and inspect its actual test log.
+
+### Boundary
+No PR, merge, `main` change, Dataset/Parquet mutation, `SOURCE_SHA` change, or Release is authorized.
+
+---
+
+## D-2026-10-15-09 — seven_files_production
+
+**Status:** APPROVED BY PROJECT OWNER — TEMPORARY CANDIDATE ARTIFACTS ONLY  
+**Date:** 2026-10-15  
+**Scope:** Use the candidate's `scripts/stage13_assemble.py` to produce and verify the seven delivery files.
+
+### Decision
+1. Produce exactly: `النتائج_الكاملة_AR.xlsx`, `Full_Results_EN.xlsx`, `التقرير_الكامل_AR`, `Full_Report_EN`, `الملخص_AR`, `Summary_EN`, and `دراسة_الجدوى_AR`.
+2. Check each workbook has exactly 185 sheets and the expected sheet structure. Inspect file contents and the assembler's output, not merely the process exit code.
+3. Compute and record SHA-256 and byte size for each file, and retain the actual Run ID and Artifact ID for the uploaded artifact set.
+4. Check artifacts against the authoritative output contract and identity metadata. A file generation result cannot override a failed or pending project gate.
+5. Keep outputs as temporary-branch workflow artifacts; do not commit delivery files to `main`, create a PR/merge, or create a Release.
+6. Remove any temporary workflow after collecting and verifying artifacts, and verify the final source head and the actual tested head separately.
+
+### Boundary
+This decision authorizes production and verification of candidate artifacts only. It does not authorize a Release, merge, or claim of project-wide completion.
