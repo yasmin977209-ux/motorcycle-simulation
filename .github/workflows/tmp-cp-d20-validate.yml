@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   test-stability-metrics:
@@ -20,3 +21,59 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Run §2.5 evaluator and Stage 7 authoring tests
         run: python -m pytest -q tests/test_stability_2_5_metrics.py tests/test_stage7_authoring.py
+
+      - name: Download canonical Stage 12 C100 Parquet only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/stage12-c100
+          while read -r scenario artifact_id; do
+            curl --fail --silent --show-error --location \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" \
+              -o "/tmp/${scenario}.zip"
+            mkdir -p "/tmp/stage12-c100/${scenario}"
+            unzip -oq "/tmp/${scenario}.zip" -d "/tmp/stage12-c100/${scenario}"
+          done <<'ARTIFACTS'
+          C100_G000 11633515803
+          C100_G030 11633915162
+          C100_G050 11633475828
+          C100_G070 11633660943
+          C100_G100 11632649937
+          ARTIFACTS
+      - name: Inspect canonical C100 Parquet records
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pyarrow.parquet as pq
+
+          root = Path("/tmp/stage12-c100")
+          output = {}
+          for scenario_dir in sorted(root.iterdir()):
+              paths = list(scenario_dir.rglob("*.parquet"))
+              assert len(paths) == 1, (scenario_dir.name, [str(p) for p in paths])
+              table = pq.read_table(paths[0])
+              first = table.slice(0, 1).to_pylist()[0]
+              last = table.slice(table.num_rows - 1, 1).to_pylist()[0]
+              output[scenario_dir.name] = {
+                  "path": paths[0].name,
+                  "rows": table.num_rows,
+                  "columns": table.column_names,
+                  "schema": str(table.schema),
+                  "first_row": first,
+                  "last_row": last,
+              }
+          target = Path("c100-parquet-inspection.json")
+          target.write_text(json.dumps(output, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+          print(json.dumps({k:{"rows":v["rows"],"columns":v["columns"],"first_row":v["first_row"],"last_row":v["last_row"]} for k,v in output.items()}, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Preserve C100 audit extract
+        uses: actions/upload-artifact@v4
+        with:
+          name: temporary-c100-parquet-inspection
+          path: c100-parquet-inspection.json
+          if-no-files-found: error
