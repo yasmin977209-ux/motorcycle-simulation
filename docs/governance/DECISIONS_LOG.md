@@ -279,3 +279,34 @@ NaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaN
 
 **Boundary:** These decisions do not amend the reference file itself, do not raise SOURCE_SHA, and do not authorize a Release. Remaining delivery gates require separate evidence.
 
+## D-2026-10-14-09 — delivery_scope_30000_with_per_scenario_stability
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE  
+**Date:** 2026-10-14  
+**Scope:** Delivery cohort only. The original reference and historical decisions remain unchanged.
+
+### Decision
+1. The delivery cohort contains exactly 30,000 trial outcomes: 20 non-C100 scenarios × 1,200 = 24,000 and five C100 scenarios × 1,200 = 6,000.
+2. A per-scenario stability condition is mandatory. For each of the 25 scenarios, evaluate the 95% Student-t confidence-interval half-width at N=300, N=600, and N=1200. The ratio must satisfy `ci_half_width_95 / abs(mean) < 0.01`.
+3. The primary metric is `Final_Net_Project_Equity`. Also evaluate `Partner1_Final_Entitlement` and `Partner2_Final_Entitlement` when per-trial values are available and valid.
+4. The required evidence is 25 scenarios × three checkpoints = 75 PASS checks. C100 is deterministic; where all trial outcomes are verified identical, CI is zero and the per-scenario check passes automatically.
+5. Any failed scenario/checkpoint blocks delivery. Do not produce or approve final delivery files unless all required checks pass.
+6. Preserve reference §2.5 and earlier decisions as historical text. This decision defines the higher delivery cohort only and does not amend production sampling or authorize a production Monte Carlo run.
+
+### Evidence policy
+Use the existing Stage 12 / Gate B per-trial metrics wherever their trial-level values are available. Do not infer individual-scenario stability from an aggregate report alone; independently recompute the CI results from the source trial outcomes and verify source identity.
+
+## D-2026-10-14-10 — per_scenario_stability_evidence
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE  
+**Date:** 2026-10-14  
+**Scope:** Evidence inputs required for D-2026-10-14-09; delivery analysis only.
+
+### Decision
+1. The source for per-trial `Final_Net_Project_Equity` values and any available partner-entitlement metrics is Stage 12 / Gate B checkpoint data at N=300, N=600, and N=1200.
+2. If required trial-level values are unavailable, a deterministic replay may be used only to produce the missing totals needed for the confidence-interval calculation.
+3. Such replay is not a production Monte Carlo run and must not alter or append to the original Dataset or historical Parquet.
+4. Preserve `SOURCE_SHA`, master seed, RNG, sampling, and source identity. Record the scope, result fingerprints, and evidence for any replay. Do not rerun completed trials outside the specific approved replay scope.
+
+**Boundary:** These decisions do not modify the reference file, raise `SOURCE_SHA`, modify historical data, change production sampling, or authorize a GitHub Release.
+

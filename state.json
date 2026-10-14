@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014",
-  "sha": "57727de682a3fcfc723a5f88e3dbf641aa29fd3c",
+  "sha": "4c0f99b90286cc9691e542c02a5b5e4a196f7ede",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-F is BLOCKED at R4 pre-change review: user-directed D-2026-10-14-07 and D-2026-10-14-08 are recorded on this branch, but D-2026-10-14-05 (referenced for non-C100 representative selection) is absent from DECISIONS_LOG.md on main and the checked CP branches, and no authoritative full text was found in the branch tree. Do not modify scripts/stage13_assemble.py, select non-C100 roles, replay role detail, or create delivery files until the missing decision is supplied or the project owner explicitly authorizes use of Reference §§14.5–14.6 and D-2026-10-10-03 without D-2026-10-14-05. No Dataset/Parquet, SOURCE_SHA, main, PR/merge, or Release changes.",
+  "next": "CP-F resumed under D-2026-10-14-09 and D-2026-10-14-10. D-2026-10-14-05 is intentionally not registered; representative roles follow D-2026-10-10-03 and Reference §§14.5–14.6. Independently verify all 75 per-scenario stability checks from identity-verified trial rows, then perform R4 for the delivery-only cohort extension in scripts/stage13_assemble.py. Preserve canonical/historical cohorts. Do not modify main, Dataset/Parquet, or SOURCE_SHA; do not run production Monte Carlo, merge, or create a Release. Stop if any required stability check fails or full-detail data exceed the authorized replay allowance.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
@@ -14,7 +14,7 @@
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "6da81aadbf451131304024d919f6a89be772b717",
+  "head_sha": "4c0f99b90286cc9691e542c02a5b5e4a196f7ede",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -181,6 +181,35 @@
       "historical_parquet_mutation": false,
       "production_monte_carlo": false,
       "scope": "delivery assembly only"
+    },
+    "D-2026-10-14-09": {
+      "topic": "delivery_scope_30000_with_per_scenario_stability",
+      "scope": "delivery cohort only",
+      "scenarios": 25,
+      "trials_per_scenario": 1200,
+      "total_trials": 30000,
+      "metrics": [
+        "Final_Net_Project_Equity",
+        "Partner1_Final_Entitlement",
+        "Partner2_Final_Entitlement"
+      ],
+      "checkpoint_sizes": [
+        300,
+        600,
+        1200
+      ],
+      "confidence_interval": "95% Student-t half-width / abs(mean) < 0.01",
+      "required_checks": 75,
+      "c100": "deterministic; identical outcomes yield CI=0",
+      "no_production_monte_carlo": true
+    },
+    "D-2026-10-14-10": {
+      "topic": "per_scenario_stability_evidence",
+      "source": "Stage 12 / Gate B trial-level values at N=300, N=600, N=1200",
+      "missing_values": "deterministic replay only for CI-required totals, within explicit scope",
+      "no_dataset_or_parquet_changes": true,
+      "no_source_sha_bump": true,
+      "no_production_monte_carlo": true
     }
   },
   "preflight_merge": {
