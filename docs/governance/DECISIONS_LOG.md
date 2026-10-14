@@ -223,8 +223,8 @@ NaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaN
 
 ## D-2026-10-14-02 — Stage 11 scope definition
 
-**Status:** APPROVED — NORMATIVE  
-**Topic:** `stage11_scope_definition`  
+**Status:** APPROVED — NORMATIVE
+**Topic:** `stage11_scope_definition`
 **Date:** 2026-10-14
 
 1. **Stage 11 is documentation-only.**
@@ -234,5 +234,5 @@ NaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaNNaN
 5. The Stage 11 `UNDEFINED_BUSINESS_RULE` is closed by this approved scope decision.
 6. The Stage 10 metadata drift remains documented and open for audit; this decision neither erases nor reconciles it.
 
-**State evidence:** `state.json.stage11` carries the approved status, rationale, two evidence paths, and `stage10_metadata_drift_remains: true`.  
+**State evidence:** `state.json.stage11` carries the approved status, rationale, two evidence paths, and `stage10_metadata_drift_remains: true`.
 **Boundary:** This decision does not change datasets, Parquet files, the production engine, `SOURCE_SHA`, or the status of any other stage.

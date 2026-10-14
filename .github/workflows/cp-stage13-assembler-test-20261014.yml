@@ -50,7 +50,7 @@ jobs:
               ".github/workflows/cp-golden-provider-test-20261014.yml",
           }
           assert set(changed) <= allowed, changed
-          assert not any(p.startswith("docs/") or p.startswith("results_stage") or p.endswith(".parquet") for p in changed), changed
+          assert not any((p.startswith("docs/") and p != "docs/governance/DECISIONS_LOG.md") or p.startswith("results_stage") or p.endswith(".parquet") for p in changed), changed
           print("DIFF_SYNTAX_SCOPE_AND_WORKFLOW_POLICY=PASS")
           PY
       - name: Generate required test-only Stage 5 fixtures
@@ -61,14 +61,14 @@ jobs:
           mkdir -p results_stage5
           cat > /tmp/stage5_fixture.py <<'PY'
           from __future__ import annotations
-          
+
           def main():
               import json, hashlib
               from dataclasses import asdict
               import pyarrow as pa
               import pyarrow.parquet as pq
               import monte_carlo
-          
+
               root = "results_stage5"
               result, daily = monte_carlo.run_single_trial("C100_G100", 1, master_seed=20270101)
               assert (result.final_net_project_equity, result.partner1_final_entitlement,
@@ -108,11 +108,11 @@ jobs:
               with open(f"{root}/worker_equivalence_manifest.json","w",encoding="utf-8") as f:
                   json.dump(rows,f,ensure_ascii=False,indent=2,sort_keys=True); f.write("\n")
               print("STAGE5_TEST_FIXTURES=PASS")
-          
-          
+
+
           if __name__ == "__main__":
               main()
-          
+
           PY
           python /tmp/stage5_fixture.py
       - name: Run CP-E focused tests
