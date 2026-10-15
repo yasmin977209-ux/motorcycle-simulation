@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "6d09d0668382cb274036b8de97e0f37e3f6391ce",
+  "sha": "aafe5946a8a51c991471057d71f5643c46087086",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "WORKFLOW_DEFECT in reference workflow Run 38661997576: checkout attempted ref \\6d09d0668382cb274036b8de97e0f37e3f6391ce. Correct the YAML expression only and rerun reference preparation. No target trials ran; Gate A extension and N=2400 remain pending.",
+  "next": "Gate A reference generation for C030_G030 IDs 1201..2400 completed and the artifact was independently checked. Provider integration/live validation remains pending; no N=2400 statistical checkpoint trials have run. Next action is to validate the provider extension in a pinned CI job before the one-time checkpoint.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
@@ -12,7 +12,7 @@
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
     "CP_F_CONTENT_AUDIT_PENDING: Run 38603678969 validated the 25 scenario artifacts' source/trial identity, required extension ID ranges, five representative payloads, and daily-distribution structure. An independent numeric/accounting content audit is still required; do not equate replay manifest PASS with final delivery PASS.",
     "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone.",
-    "GATEA_C030_G030_N2400_PENDING_REFERENCE: approved Gate A coverage currently stops at trial 1200 for C030_G030. Do not run the N=2400 checkpoint until a separately verified pinned-source reference map for IDs 1201..2400 is registered in the provider."
+    "GATEA_C030_G030_N2400_PENDING_PROVIDER_VALIDATION: source-pinned reference Run 38662076725 and artifact 11940485523 verified for IDs 1201..2400; provider extension is not yet tested in CI. Do not run the N=2400 checkpoint until provider provenance and 25,205-map coverage are validated."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
@@ -2108,7 +2108,7 @@
   "gate_a_provider_status": "WIRED",
   "gate_a_coverage_trials": 24005,
   "cp_gatea_c030_n2400_20261015": {
-    "status": "PENDING_PINNED_GOLDEN_REFERENCE",
+    "status": "GOLDEN_REFERENCE_VERIFIED_PROVIDER_EXTENSION_PENDING",
     "decision_id": "D-2026-10-15-10",
     "branch": "tmp/cp-gatea-c030-n2400-20261015",
     "starting_branch_head": "37f59987fc22a3809f3af9933096223807a33ed4",
@@ -2130,11 +2130,11 @@
       "strict_limit_percent": 1,
       "status": "FAIL"
     },
-    "reference_run_id": 38661997576,
-    "reference_workflow_head_sha": "6d09d0668382cb274036b8de97e0f37e3f6391ce",
-    "reference_artifact_id": null,
-    "reference_artifact_sha256": null,
-    "extension_map_sha256": null,
+    "reference_run_id": 38662076725,
+    "reference_workflow_head_sha": "aafe5946a8a51c991471057d71f5643c46087086",
+    "reference_artifact_id": 11940485523,
+    "reference_artifact_sha256": "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
+    "extension_map_sha256": "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
     "extended_full_map_sha256": null,
     "checkpoint_run_id": null,
     "checkpoint_workflow_head_sha": null,
@@ -2145,10 +2145,25 @@
     "main_modified": false,
     "release_created": false,
     "temporary_workflow_removed": false,
-    "reference_run_conclusion": "failure",
+    "reference_run_conclusion": "success",
     "reference_failure_classification": "WORKFLOW_DEFECT",
     "reference_failure_literal": "A branch or tag with the name '\\6d09d0668382cb274036b8de97e0f37e3f6391ce' could not be found",
-    "reference_failure_note": "Temporary workflow ref expression was over-escaped; no Python/model step or trial generation started."
+    "reference_failure_note": "Temporary workflow ref expression was over-escaped; no Python/model step or trial generation started.",
+    "reference_artifact_name": "gatea-golden-c030-g1201-2400-attempt-1",
+    "reference_artifact_bytes": 126176,
+    "reference_artifact_member": "golden_extension.json",
+    "reference_source_commit": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+    "reference_content_verified": true,
+    "reference_row_count": 1200,
+    "reference_unique_ids": "1201..2400",
+    "reference_result_hashes_verified": 1200,
+    "combined_full_map_sha256": null,
+    "provider_extension_status": "PENDING_LIVE_VALIDATION",
+    "prior_workflow_defect": {
+      "run_id": 38661997576,
+      "classification": "WORKFLOW_DEFECT",
+      "note": "Over-escaped checkout ref; checkout failed before Python/tests/trial execution."
+    }
   },
   "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
 }

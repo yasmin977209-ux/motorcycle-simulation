@@ -630,3 +630,12 @@ This decision authorizes production and verification of candidate artifacts only
 6. Stop if Gate A source identity, exact map coverage, artifact provenance, or any required metric is missing or fails. Do not raise `SOURCE_SHA`, mutate Dataset/Parquet, change the model/RNG, alter tests to match code, edit `main`, run another scenario, create a PR/merge, or create a Release. Remove the temporary workflow after collecting and verifying its artifacts.
 
 **Supersession boundary:** This explicit decision supersedes D-2026-10-15-03 only on its no-escalation restriction for the specified `C030_G030` N=2400 checkpoint. It does not change that decision's recorded N=300→600 result or establish overall acceptance.
+
+
+### Implementation evidence — D-2026-10-15-10 (reference preparation only)
+
+- Initial workflow Run [38661997576](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38661997576) failed at checkout with the literal error: `A branch or tag with the name '\\6d09d0668382cb274036b8de97e0f37e3f6391ce' could not be found`. Classification: `WORKFLOW_DEFECT`. The Python/model and trial-generation steps were skipped, so this run executed no trials.
+- Corrected reference-generation Run [38662076725](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38662076725) completed successfully on tested head `aafe5946a8a51c991471057d71f5643c46087086`.
+- Artifact `gatea-golden-c030-g1201-2400-attempt-1`, ID `11940485523`, digest `sha256:049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3`, size 126,176 bytes. The archive was downloaded and its SHA-256 recomputed; the single member `golden_extension.json` contains exactly 1,200 unique contiguous IDs 1201..2400.
+- Every record's canonical JSON result SHA-256 was recomputed and matched its recorded fingerprint. The artifact pins `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`, `master_seed=20270101`, Run ID, attempt, and tested workflow head. Extension map SHA-256: `0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65`.
+- This is independent golden-reference preparation only, not the accepted N=2400 checkpoint. Provider integration and live validation are pending; do not claim N=2400 Gate A/B or §2.5 outcomes from this artifact alone.
