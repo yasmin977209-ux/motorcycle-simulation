@@ -600,3 +600,33 @@ No PR, merge, `main` change, Dataset/Parquet mutation, `SOURCE_SHA` change, or R
 
 ### Boundary
 This decision authorizes production and verification of candidate artifacts only. It does not authorize a Release, merge, or claim of project-wide completion.
+
+
+---
+
+## D-2026-10-15-10 — C030_G030 Gate A extension and N=2400 checkpoint
+
+**Status:** APPROVED BY PROJECT OWNER — NORMATIVE FOR THIS SCENARIO ONLY  
+**Date:** 2026-10-15  
+**Scope:** Extend exact Gate A coverage for `C030_G030`, trial IDs `1201..2400`, then evaluate the N=2400 checkpoint for `C030_G030` only.
+
+### Pre-change R4
+
+| Element | Current | Approved rule / prior decision | Judgment |
+|---|---|---|---|
+| Golden provider coverage | 24,005 fingerprints; `C030_G030` coverage ends at trial 1200 | D-2026-10-14-01 covers only the approved map through 1200; D-2026-10-14-12 requires separately verified Gate A coverage before N>1200 | Add only the explicitly authorized target scenario extension; do not self-certify candidate hashes |
+| Reference source | Existing N=1200 reference uses source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3` | Approved `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101` | Pin the same source identity for reference generation |
+| Trial range | IDs 1..1200 already have accepted evidence | No rerun of completed statistical IDs; new IDs only | Reference preparation touches only IDs 1201..2400; accepted checkpoint data must be generated once after the golden map is pinned |
+| Stability finding | `C030_G030/P90_Final_Cash` failed N=300→600 at 1.5715059335% | D-2026-10-14-20 requires relative change strictly below 1%; D-2026-10-15-03 said no escalation without a new explicit decision | This decision authorizes N=2400 only; preserve the prior FAIL and do not change the threshold |
+| Protected assets | `main`, `SOURCE_SHA`, Dataset/Parquet, reference | Explicit project boundary | Temporary branch and Actions artifacts only; no release |
+
+### Decision
+
+1. Extend D-2026-10-14-01 only for `C030_G030`, trial IDs `1201..2400` (1,200 fingerprints). The other 24 scenario maps retain their existing approved coverage.
+2. First generate a read-only golden-reference artifact using the pinned source commit `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`, expected `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, and `master_seed=20270101`. This is reference generation, not the accepted N=2400 statistical checkpoint.
+3. Accept the extension only after checking the completed Run ID, exact tested workflow head, artifact ID and SHA-256 digest; the source identity; scenario; contiguous unique IDs 1201..2400; each row's result SHA-256; the extension-map digest; and the combined map digest. Candidate results cannot be their own golden reference.
+4. Only after the extension has been pinned into the provider and its coverage verified may the candidate generate trial IDs 1201..2400 once as the N=2400 checkpoint for `C030_G030`. Do not rerun IDs 1..1200 or count golden-reference preparation as a statistical checkpoint.
+5. Evaluate the existing Gate B criteria and all seven D-2026-10-14-20 §2.5 indicators for the N=1200→N=2400 comparison. Keep the strict 1% relative-change rule and existing near-zero rule unchanged. Preserve the historic N=300→600 FAIL; an N=2400 result cannot rewrite that comparison or by itself establish overall scenario stability.
+6. Stop if Gate A source identity, exact map coverage, artifact provenance, or any required metric is missing or fails. Do not raise `SOURCE_SHA`, mutate Dataset/Parquet, change the model/RNG, alter tests to match code, edit `main`, run another scenario, create a PR/merge, or create a Release. Remove the temporary workflow after collecting and verifying its artifacts.
+
+**Supersession boundary:** This explicit decision supersedes D-2026-10-15-03 only on its no-escalation restriction for the specified `C030_G030` N=2400 checkpoint. It does not change that decision's recorded N=300→600 result or establish overall acceptance.

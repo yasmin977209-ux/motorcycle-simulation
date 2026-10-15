@@ -1,0 +1,56 @@
+name: Temporary Gate A golden reference — C030_G030 IDs 1201–2400
+
+on:
+  push:
+    branches:
+      - "tmp/cp-gatea-c030-n2400-20261015"
+    paths:
+      - ".github/workflows/tmp-cp-gatea-c030-n2400-golden.yml"
+      - "scripts/cp_gatea_c030_n2400_reference.py"
+      - "tests/test_cp_gatea_c030_n2400_reference.py"
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-golden-reference:
+    name: Generate source-pinned Gate A reference only
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact CP head
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Fetch and pin the approved model source
+        env:
+          SOURCE_COMMIT: "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_COMMIT"
+          git worktree add --detach "$RUNNER_TEMP/pinned-model-source" "$SOURCE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/pinned-model-source" rev-parse HEAD)" = "$SOURCE_COMMIT"
+          python -m pip install -r "$RUNNER_TEMP/pinned-model-source/requirements.txt"
+      - name: Run Gate A extension contract tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_cp_gatea_c030_n2400_reference.py
+      - name: Generate the pinned-source reference map, not a statistical checkpoint
+        run: |
+          set -euo pipefail
+          python scripts/cp_gatea_c030_n2400_reference.py \
+            --source-root "$RUNNER_TEMP/pinned-model-source" \
+            --output-file results_gatea/golden_extension.json
+      - name: Upload immutable Gate A golden extension evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatea-golden-c030-g1201-2400-attempt-\${{ github.run_attempt }}
+          path: results_gatea/golden_extension.json
+          if-no-files-found: error
+          retention-days: 90

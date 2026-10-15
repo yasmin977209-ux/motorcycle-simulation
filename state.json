@@ -2,16 +2,17 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "a1e7e4a3223218d732fa438ae98edc0ef2408229",
+  "sha": "37f59987fc22a3809f3af9933096223807a33ed4",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Diagnostic CP completed on tmp. D-2026-10-14-20 §2.5 genuinely fails C030_G030 P90_Final_Cash at N=300→600: 13,258,620→13,050,260, relative change 1.5715059335% (> strict 1% limit); source SHA f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b, master_seed 20270101, IDs 1..600 validated by matching source hashes. No source/data/threshold/trial change. Run 38656654259 full pytest log: 416 passed, 5 failed, 1 skipped; four failures were absent results_stage5 fixtures and one hash-seed subprocess failed with the temporary workflow missing approved fixture bootstrap/PYTHONPATH. Classified WORKFLOW_DEFECT; tests and engine unmodified. Temporary workflow removed. Final delivery remains blocked by the actual §2.5 gate failure.",
+  "next": "CP-GATEA-C030-N2400: generate the exact source-pinned Gate A golden map for C030_G030 trial IDs 1201..2400 only. This step is reference generation, not an accepted statistical checkpoint. Do not run N=2400 until the artifact, source/run identity, contiguous coverage, result hashes, and artifact digest have been independently verified and the provider has been extended.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
     "CP_F_CONTENT_AUDIT_PENDING: Run 38603678969 validated the 25 scenario artifacts' source/trial identity, required extension ID ranges, five representative payloads, and daily-distribution structure. An independent numeric/accounting content audit is still required; do not equate replay manifest PASS with final delivery PASS.",
-    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone."
+    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone.",
+    "GATEA_C030_G030_N2400_PENDING_REFERENCE: approved Gate A coverage currently stops at trial 1200 for C030_G030. Do not run the N=2400 checkpoint until a separately verified pinned-source reference map for IDs 1201..2400 is registered in the provider."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
@@ -2105,5 +2106,45 @@
     }
   },
   "gate_a_provider_status": "WIRED",
-  "gate_a_coverage_trials": 24005
+  "gate_a_coverage_trials": 24005,
+  "cp_gatea_c030_n2400_20261015": {
+    "status": "PENDING_PINNED_GOLDEN_REFERENCE",
+    "decision_id": "D-2026-10-15-10",
+    "branch": "tmp/cp-gatea-c030-n2400-20261015",
+    "starting_branch_head": "37f59987fc22a3809f3af9933096223807a33ed4",
+    "target_scenario": "C030_G030",
+    "trial_id_start": 1201,
+    "trial_id_end": 2400,
+    "target_checkpoint_n": 2400,
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101,
+    "pinned_source_commit": "0156c5f4272eb0ca7e32442657d0df9eaf4973d3",
+    "existing_approved_gate_a_count": 24005,
+    "existing_target_coverage": "1..1200",
+    "extension_count_expected": 1200,
+    "extended_provider_count_expected": 25205,
+    "prior_failure_preserved": {
+      "metric": "C030_G030/P90_Final_Cash",
+      "transition": "N300->N600",
+      "relative_change_percent": 1.5715059334983579,
+      "strict_limit_percent": 1,
+      "status": "FAIL"
+    },
+    "reference_run_id": null,
+    "reference_workflow_head_sha": null,
+    "reference_artifact_id": null,
+    "reference_artifact_sha256": null,
+    "extension_map_sha256": null,
+    "extended_full_map_sha256": null,
+    "checkpoint_run_id": null,
+    "checkpoint_workflow_head_sha": null,
+    "checkpoint_status": "NOT_STARTED",
+    "historical_trial_ids_rerun": false,
+    "dataset_or_parquet_modified": false,
+    "source_sha_bumped": false,
+    "main_modified": false,
+    "release_created": false,
+    "temporary_workflow_removed": false
+  },
+  "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
 }
