@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "52104798cda44e458a329e9831400cc6bf6d7b74",
+  "sha": "a1e7e4a3223218d732fa438ae98edc0ef2408229",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "D19, D20, and D21 changes are integrated on the final temporary candidate. D20 evidence: C030_G030 failed §2.5 at N=300→600 for P90_Final_Cash relative change 1.571506%, while all 20 non-C100 scenarios pass N=600→1200; no N=2400 trial cohort was started. Composite delivery stability remains NOT ESTABLISHED. Next: full pytest on this merged head, verify the canonical input artifacts and identities, then attempt candidate-only artifact production without changing Dataset/Parquet or SOURCE_SHA.",
+  "next": "Diagnostic CP completed on tmp. D-2026-10-14-20 §2.5 genuinely fails C030_G030 P90_Final_Cash at N=300→600: 13,258,620→13,050,260, relative change 1.5715059335% (> strict 1% limit); source SHA f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b, master_seed 20270101, IDs 1..600 validated by matching source hashes. No source/data/threshold/trial change. Run 38656654259 full pytest log: 416 passed, 5 failed, 1 skipped; four failures were absent results_stage5 fixtures and one hash-seed subprocess failed with the temporary workflow missing approved fixture bootstrap/PYTHONPATH. Classified WORKFLOW_DEFECT; tests and engine unmodified. Temporary workflow removed. Final delivery remains blocked by the actual §2.5 gate failure.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
@@ -1663,7 +1663,7 @@
       "main_modified": false,
       "dataset_or_parquet_modified": false,
       "source_sha_bumped": false,
-      "workflow_removed": false
+      "workflow_removed": true
     },
     "next_question": "Run CP-F deterministic replay and validate the 25 scenario artifacts. Do not assemble the workbook until the cohort manifest, Gate B, §2.5 stability, and independent content audit pass.",
     "replay_scope": {
@@ -1737,7 +1737,7 @@
       "isolation": "Each scenario reads immutable historical inputs and writes to its own output/artifact path; no scenario shares mutable state with another.",
       "limitation": "GitHub concurrency limits may queue jobs; queued execution does not change deterministic results."
     },
-    "next_action": "CP-F replay and cohort integrity passed. Next: independently audit numeric/accounting and daily-distribution content, and reconcile the composite Gate A + Gate B + Reference §2.5 stability decision. Do not assemble/approve the seven final delivery files or create a Release before all gates and the independent content audit pass.",
+    "next_action": "STOP: D-2026-10-14-20 §2.5 fails for C030_G030/P90_Final_Cash at N=300→600 (1.5715059335% > 1%). Diagnostic verified source/seed/trial identities and reproduced the exact value change without modifying data. Do not alter thresholds or sample sizes, rerun completed trials, or produce/approve final files until an explicit permitted disposition for this failed stability gate exists.",
     "execution_evidence": {
       "run_id": 38619859394,
       "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38619859394",
