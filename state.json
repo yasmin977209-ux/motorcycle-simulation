@@ -1,18 +1,17 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "7e4bb095b48d4303ac278b06d41dff2826ac5dde",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014 + CP-GATEA-C030-G030-PROVIDER-EXTENSION-20261015",
+  "sha": "7d93948cb712f182be51d8aecc3cc2cec0f53175",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Re-run the pinned provider-validation workflow after correcting the invocation path and extension-map newline encoding. Do not run N=2400 until live provider CI passes.",
+  "next": "CP1 PASS: Gate A provider extension and pinned-source import identity are verified. Next authorized action under D-2026-10-15-10 is only the one-time C030_G030 N=2400 checkpoint, with new candidate trial IDs 1201..2400 once; do not rerun IDs 1..1200 and preserve the N=300->N=600 FAIL.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
     "CP_F_CONTENT_AUDIT_PENDING: Run 38603678969 validated the 25 scenario artifacts' source/trial identity, required extension ID ranges, five representative payloads, and daily-distribution structure. An independent numeric/accounting content audit is still required; do not equate replay manifest PASS with final delivery PASS.",
-    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone.",
-    "GATEA_C030_G030_N2400_PENDING_PROVIDER_VALIDATION: provider live validation CI run 38768980614 failed with WORKFLOW_DEFECT (No module named 'scripts'); invocation and digest encoding corrected, retry required. Do not run N=2400 before PASS."
+    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
@@ -2108,7 +2107,7 @@
   "gate_a_provider_status": "WIRED",
   "gate_a_coverage_trials": 24005,
   "cp_gatea_c030_n2400_20261015": {
-    "status": "PROVIDER_EXTENSION_IMPLEMENTED_CI_REPAIR",
+    "status": "PASS_PROVIDER_EXTENSION_AND_SOURCE_IDENTITY",
     "decision_id": "D-2026-10-15-10",
     "branch": "tmp/cp-gatea-c030-n2400-20261015",
     "starting_branch_head": "37f59987fc22a3809f3af9933096223807a33ed4",
@@ -2135,7 +2134,7 @@
     "reference_artifact_id": 11940485523,
     "reference_artifact_sha256": "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
     "extension_map_sha256": "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
-    "extended_full_map_sha256": null,
+    "extended_full_map_sha256": "0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1",
     "checkpoint_run_id": null,
     "checkpoint_workflow_head_sha": null,
     "checkpoint_status": "NOT_STARTED",
@@ -2144,7 +2143,7 @@
     "source_sha_bumped": false,
     "main_modified": false,
     "release_created": false,
-    "temporary_workflow_removed": false,
+    "temporary_workflow_removed": true,
     "reference_run_conclusion": "success",
     "reference_failure_classification": "WORKFLOW_DEFECT",
     "reference_failure_literal": "A branch or tag with the name '\\6d09d0668382cb274036b8de97e0f37e3f6391ce' could not be found",
@@ -2157,19 +2156,19 @@
     "reference_row_count": 1200,
     "reference_unique_ids": "1201..2400",
     "reference_result_hashes_verified": 1200,
-    "combined_full_map_sha256": null,
-    "provider_extension_status": "PENDING_CI_RETRY",
+    "combined_full_map_sha256": "0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1",
+    "provider_extension_status": "PASS_LIVE_VALIDATION",
     "prior_workflow_defect": {
       "run_id": 38661997576,
       "classification": "WORKFLOW_DEFECT",
       "note": "Over-escaped checkout ref; checkout failed before Python/tests/trial execution."
     },
-    "provider_integration_tests_status": "PASS_TARGETED_PYTEST_ONLY",
-    "provider_validation_run_id": null,
-    "provider_validation_workflow_head_sha": null,
-    "provider_validation_artifact_id": null,
-    "provider_validation_artifact_sha256": null,
-    "source_import_origin_status": "PASS_SOURCE_CLOSURE_ON_RUN_38768980614",
+    "provider_integration_tests_status": "PASS",
+    "provider_validation_run_id": 38769171093,
+    "provider_validation_workflow_head_sha": "7d93948cb712f182be51d8aecc3cc2cec0f53175",
+    "provider_validation_artifact_id": 11989613915,
+    "provider_validation_artifact_sha256": "e40825c67bf6322b48633d89e43d00314c996d24143ba68469ae94b5375d92d8",
+    "source_import_origin_status": "PASS",
     "provider_validation_initial_run_id": 38768980614,
     "provider_validation_initial_head_sha": "7e4bb095b48d4303ac278b06d41dff2826ac5dde",
     "provider_validation_initial_conclusion": "failure",
@@ -2177,7 +2176,26 @@
     "provider_validation_initial_failure_classification": "WORKFLOW_DEFECT",
     "provider_validation_initial_pytest_summary": "9 passed in 0.05s",
     "source_import_origin_initial_run_status": "PASS",
-    "provider_validation_initial_failed_step": "Verify live provider extension and exact combined coverage"
+    "provider_validation_initial_failed_step": "Verify live provider extension and exact combined coverage",
+    "provider_validation_artifact_name": "gatea-provider-extension-validation-attempt-1",
+    "provider_validation_artifact_size_bytes": 2152,
+    "provider_validation_report_content_verified": true,
+    "provider_validation_report_file_names": [
+      "provider_extension_validation.json",
+      "source_identity.json"
+    ],
+    "source_import_checked_roots": [
+      "daily_engine",
+      "monte_carlo"
+    ],
+    "source_import_module_count": 14,
+    "source_import_evidence_status": "PASS",
+    "provider_base_trial_count": 24005,
+    "provider_extended_trial_count": 25205,
+    "provider_scenario_count": 25,
+    "target_scenario_verified_coverage": "1..2400",
+    "statistical_checkpoint_executed": false,
+    "preserved_prior_gateb_fail": true
   },
   "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
 }
