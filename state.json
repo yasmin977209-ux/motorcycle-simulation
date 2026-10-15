@@ -1,17 +1,17 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014 + CP-GATEA-C030-G030-PROVIDER-EXTENSION-20261015",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014 + CP-GATEA-C030-G030-PROVIDER-EXTENSION-20261015 + CP-GATEA-C030-G030-N2400-CHECKPOINT-20261015",
   "sha": "e798d08c20d977c4f9c29137379f88d874e954cb",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP1 PASS: Gate A provider extension and pinned-source import identity are verified. The only authorized next action remains the one-time C030_G030 N=2400 checkpoint using new trial IDs 1201..2400 once; do not rerun IDs 1..1200 and preserve the N=300->N=600 FAIL. CHECKPOINT NOT STARTED: creation of the required one-off checkpoint workflow was blocked by tool safety checks; no alternate execution route was used. Do not infer Gate B or §2.5 outcomes; resume only through a permitted pinned Actions execution path.",
+  "next": "CP-GATEA-C030-G030-N2400 checkpoint is complete with PASS_AT_N2400_ONLY (Run 38783578243). Gate A exact-hash comparison, Gate B, and all seven Reference §2.5 metrics passed for N=1200→N=2400. Preserve the historic N=300→N=600 P90_Final_Cash FAIL (1.5715059334983579% vs strict <1%) and do not mark overall scenario stability. D-2026-10-15-10 authorizes this N=2400 checkpoint only; do not generate additional trial IDs, alter SOURCE_SHA/Dataset/Parquet, change main, merge, or release without a separately authorized scope.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
     "CP_F_CONTENT_AUDIT_PENDING: Run 38603678969 validated the 25 scenario artifacts' source/trial identity, required extension ID ranges, five representative payloads, and daily-distribution structure. An independent numeric/accounting content audit is still required; do not equate replay manifest PASS with final delivery PASS.",
-    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone."
+    "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone. The C030_G030 N=1200→N=2400 checkpoint (Run 38783578243) passed Gate A, Gate B, and all seven §2.5 transition metrics, but historic N=300→N=600 P90_Final_Cash remains FAIL; N=2400 alone does not establish overall scenario stability."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
@@ -2107,7 +2107,7 @@
   "gate_a_provider_status": "WIRED",
   "gate_a_coverage_trials": 24005,
   "cp_gatea_c030_n2400_20261015": {
-    "status": "PASS_PROVIDER_EXTENSION_AND_SOURCE_IDENTITY",
+    "status": "PASS_AT_N2400_ONLY",
     "decision_id": "D-2026-10-15-10",
     "branch": "tmp/cp-gatea-c030-n2400-20261015",
     "starting_branch_head": "37f59987fc22a3809f3af9933096223807a33ed4",
@@ -2135,8 +2135,8 @@
     "reference_artifact_sha256": "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
     "extension_map_sha256": "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
     "extended_full_map_sha256": "0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1",
-    "checkpoint_run_id": null,
-    "checkpoint_workflow_head_sha": null,
+    "checkpoint_run_id": 38783578243,
+    "checkpoint_workflow_head_sha": "ab0dfa53efade5951118ebcee50460699090835b",
     "checkpoint_status": "NOT_STARTED",
     "historical_trial_ids_rerun": false,
     "dataset_or_parquet_modified": false,
@@ -2195,7 +2195,176 @@
     "provider_scenario_count": 25,
     "target_scenario_verified_coverage": "1..2400",
     "statistical_checkpoint_executed": false,
-    "preserved_prior_gateb_fail": true
+    "preserved_prior_gateb_fail": true,
+    "checkpoint_run_conclusion": "success",
+    "checkpoint_run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38783578243",
+    "checkpoint_run_attempt": 1,
+    "checkpoint_artifact_id": 11997801781,
+    "checkpoint_artifact_name": "gatea-c030-n2400-checkpoint-attempt-1",
+    "checkpoint_artifact_sha256": "22af149504b242d98e155112e7d098af75a72e0d802f0e7bda742029d207fc76",
+    "checkpoint_artifact_bytes": 480184,
+    "checkpoint_artifact_member_audit": {
+      "actual_trial_results.jsonl": {
+        "bytes": 1253953,
+        "sha256": "4d430f4ad9482bb0ade414ea6ec773aafc5ae47375c30de0399d743cdbf0f255"
+      },
+      "checkpoint_inputs.json": {
+        "bytes": 2711276,
+        "sha256": "44cc5439cf875bc5a9defa5584ce22606cb841c67cfbc84d396bd97df254feca"
+      },
+      "checkpoint_progress.json": {
+        "bytes": 24954,
+        "sha256": "ff8c8c0de1886e0da7a3ab2335b73d92974cbccd77f8322e3f810c64d7d752ab"
+      },
+      "checkpoint_report.json": {
+        "bytes": 9297,
+        "sha256": "6cda4e2505163d98c33390b1ce152520f232fbfd5422d571ee75a8f5fbf97795"
+      },
+      "source_identity.json": {
+        "bytes": 4226,
+        "sha256": "f0877748ee6227ce13fee6080c7c8357dadd06e625bd31f8c394b1306e3d7aab"
+      }
+    },
+    "checkpoint_artifact_content_audit": {
+      "status": "PASS",
+      "independent_checks_passed": 21,
+      "independent_checks_failed": 0,
+      "archive_digest_recomputed": true,
+      "archive_integrity_checked": true,
+      "exact_member_set_verified": true,
+      "actual_trial_records_verified": 1200,
+      "exact_trial_id_coverage": "1201..2400",
+      "progress_attempted_completed_ids_identical": true,
+      "in_progress_trial_id": null,
+      "canonical_result_hashes_recomputed": 1200,
+      "approved_golden_matches": 1200,
+      "combined_target_hash_map_recomputed": true,
+      "target_hash_map_sha256": "1ef2bc78622a5b8b83639290bfcf38ac8438b00f1d2a986c55595789511e60c7",
+      "n1200_embedded_results_reverified": 1200,
+      "approved_golden_extension_records_reverified": 1200,
+      "total_reference_hashes_verified": 2400,
+      "source_identity_modules_verified": 14,
+      "metric_recalculation": "PASS",
+      "gate_b_n1200_and_n2400_independently_recomputed": true,
+      "reference_section_2_5_seven_metrics_independently_recomputed": true,
+      "temporary_workflow_removed_after_audit": true
+    },
+    "checkpoint_results_jsonl_sha256": "4d430f4ad9482bb0ade414ea6ec773aafc5ae47375c30de0399d743cdbf0f255",
+    "checkpoint_generation_seconds": 752.046607886,
+    "checkpoint_trial_count": 1200,
+    "checkpoint_trial_ids": "1201..2400",
+    "checkpoint_historical_trial_ids_rerun": false,
+    "checkpoint_statistical_checkpoint_executed": true,
+    "checkpoint_source_identity_status": "PASS",
+    "checkpoint_source_identity_modules": 14,
+    "checkpoint_actual_target_map_sha256": "1ef2bc78622a5b8b83639290bfcf38ac8438b00f1d2a986c55595789511e60c7",
+    "checkpoint_approved_target_map_sha256": "1ef2bc78622a5b8b83639290bfcf38ac8438b00f1d2a986c55595789511e60c7",
+    "checkpoint_gate_a": {
+      "status": "PASS",
+      "checked": true,
+      "trial_count_compared": 2400,
+      "trial_id_coverage": "1..2400",
+      "mismatch_count": 0,
+      "source_identity_matches": true,
+      "target_map_sha256": "1ef2bc78622a5b8b83639290bfcf38ac8438b00f1d2a986c55595789511e60c7"
+    },
+    "checkpoint_gate_b": {
+      "status": "PASS",
+      "checked": true,
+      "n1200_stable": true,
+      "n2400_stable": true,
+      "n2400_metrics": {
+        "final_net_project_equity": {
+          "mean": 37234339.375,
+          "half_ci_95": 46447.18271333193,
+          "limit": 372343.39375,
+          "stable": true
+        },
+        "partner1_final_entitlement": {
+          "mean": 26064037.5625,
+          "half_ci_95": 32513.027899332348,
+          "limit": 260640.37562500002,
+          "stable": true
+        },
+        "partner2_final_entitlement": {
+          "mean": 11170301.8125,
+          "half_ci_95": 13934.15481399958,
+          "limit": 111703.018125,
+          "stable": true
+        }
+      }
+    },
+    "checkpoint_reference_section_2_5": {
+      "decision_id": "D-2026-10-14-20",
+      "previous_n": 1200,
+      "current_n": 2400,
+      "status": "PASS",
+      "stable": true,
+      "metrics": {
+        "P10_Cumulative_Project_Profit": {
+          "previous": 32149830,
+          "current": 32151190,
+          "absolute_change": 1360,
+          "relative_change": 0.000042301934411472785,
+          "status": "PASS"
+        },
+        "P50_Cumulative_Project_Profit": {
+          "previous": 33454150,
+          "current": 33459825,
+          "absolute_change": 5675,
+          "relative_change": 0.0001696351573721048,
+          "status": "PASS"
+        },
+        "P90_Cumulative_Project_Profit": {
+          "previous": 35056425,
+          "current": 35043870,
+          "absolute_change": 12555,
+          "relative_change": 0.0003581369178403103,
+          "status": "PASS"
+        },
+        "P90_Final_Cash": {
+          "previous": 12990420,
+          "current": 12958429.999999998,
+          "absolute_change": 31990.000000001863,
+          "relative_change": 0.0024625839657225757,
+          "status": "PASS"
+        },
+        "Probability_of_Accounting_Loss": {
+          "previous": 0,
+          "current": 0,
+          "absolute_change": 0,
+          "comparison": "ABSOLUTE_NEAR_ZERO",
+          "status": "PASS"
+        },
+        "P90_Termination_Count": {
+          "previous": 1969,
+          "current": 1970,
+          "absolute_change": 1,
+          "relative_change": 0.0005078720162519045,
+          "status": "PASS"
+        },
+        "P90_Held_Assets": {
+          "previous": 81,
+          "current": 81,
+          "absolute_change": 0,
+          "relative_change": 0,
+          "status": "PASS"
+        }
+      }
+    },
+    "checkpoint_historic_failure_preserved": true,
+    "checkpoint_overall_scenario_stability": "NOT_ESTABLISHED_BY_N2400_ALONE",
+    "checkpoint_overall_hold_reason": "Historic C030_G030 P90_Final_Cash N=300 to N=600 remains FAIL at 1.5715059334983579% versus strict <1%; one N=1200 to N=2400 PASS cannot establish overall scenario stability.",
+    "checkpoint_preflight_defect": {
+      "run_id": 38783302193,
+      "tested_head_sha": "ab1caee469d12a74bac06cab3cb8e5007d120c24",
+      "classification": "K_CODE",
+      "exact_failure_literal": "RuntimeError: GOLDEN_EXTENSION_ARTIFACT_CONTRACT_FAIL",
+      "trial_generation_started": false,
+      "attempted_trial_ids": []
+    },
+    "checkpoint_artifact_verified_at_utc": "2026-10-15T18:33:21.578Z",
+    "checkpoint_parent_head_before_state_update": "ab0dfa53efade5951118ebcee50460699090835b"
   },
-  "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
+  "next_question": "N=2400 checkpoint is verified and temporary workflow removed. Overall scenario stability remains NOT_ESTABLISHED_BY_N2400_ALONE because the historic N=300→N=600 §2.5 FAIL remains. Any further statistical checkpoint requires its own explicitly authorized scope; no main merge, SOURCE_SHA change, Dataset/Parquet mutation, or Release is authorized."
 }
