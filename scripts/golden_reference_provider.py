@@ -43,6 +43,22 @@ N1200_REPORT_ZIP_SHA256 = "17391caa64a7ed0fb7f3819a5df2f3b69bee982fb16060f3c542c
 N1200_UPSTREAM_CANCELLED_RUN_ID = 38178068848
 N1200_UPSTREAM_CANCELLED_RUN_HEAD = "dae9cd6d5ba639ad2265a6d52a1b086a2c9dbe95"
 
+# Approved scenario-specific extension authorized by D-2026-10-15-10.
+APPROVED_SOURCE_COMMIT = "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+EXTENSION_DECISION_ID = "D-2026-10-15-10"
+EXTENSION_SCENARIO = "C030_G030"
+EXTENSION_TRIAL_ID_START = 1201
+EXTENSION_TRIAL_ID_END = 2400
+EXTENSION_TRIAL_COUNT = 1200
+EXTENSION_RUN_ID = 38662076725
+EXTENSION_RUN_HEAD = "aafe5946a8a51c991471057d71f5643c46087086"
+EXTENSION_ARTIFACT_ID = 11940485523
+EXTENSION_ARTIFACT_NAME = "gatea-golden-c030-g1201-2400-attempt-1"
+EXTENSION_ARTIFACT_SHA256 = "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3"
+EXTENSION_ARTIFACT_MEMBER = "golden_extension.json"
+BASE_TRIAL_COUNT = 24005
+EXTENDED_TRIAL_COUNT = 25205
+
 SCENARIOS = tuple(
     f"C{collection:03d}_G{recovery:03d}"
     for collection in (100, 85, 70, 50, 30)
@@ -239,6 +255,132 @@ def _single_json_member(raw_zip: bytes, expected_name: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise RuntimeError(f"GOLDEN_ARTIFACT_JSON_ROOT_INVALID:{expected_name}")
     return data
+
+
+def _load_and_verify_c030_g030_extension(
+    fingerprints: dict[str, dict[int, str]], token: str
+) -> dict[str, Any]:
+    """Verify the decision-pinned extension artifact and merge it into the base map."""
+    _verify_run(EXTENSION_RUN_ID, EXTENSION_RUN_HEAD, "success", token)
+    extension_artifacts = _artifact_index(EXTENSION_RUN_ID, token)
+    extension = _single_json_member(
+        _download_artifact_bytes(
+            run_id=EXTENSION_RUN_ID,
+            artifact_index=extension_artifacts,
+            artifact_name=EXTENSION_ARTIFACT_NAME,
+            artifact_id=EXTENSION_ARTIFACT_ID,
+            expected_sha256=EXTENSION_ARTIFACT_SHA256,
+            token=token,
+        ),
+        EXTENSION_ARTIFACT_MEMBER,
+    )
+
+    base_map_sha = _ordered_map_sha256(fingerprints)
+    if base_map_sha != EXPECTED_FULL_MAP_SHA256:
+        raise RuntimeError("GOLDEN_EXTENSION_BASE_MAP_SHA_MISMATCH")
+    run = _gh_json(f"repos/{REPOSITORY}/actions/runs/{EXTENSION_RUN_ID}", token)
+    expected_top_level = (
+        extension.get("schema_version") == "gate-a-golden-extension-v1",
+        extension.get("status") == "PASS",
+        extension.get("extension_decision_id") == EXTENSION_DECISION_ID,
+        extension.get("base_decision_id") == DECISION_ID,
+        extension.get("scenario_id") == EXTENSION_SCENARIO,
+        extension.get("source_sha") == APPROVED_SOURCE_SHA,
+        extension.get("source_commit") == APPROVED_SOURCE_COMMIT,
+        extension.get("master_seed") == MASTER_SEED,
+        extension.get("trial_id_start") == EXTENSION_TRIAL_ID_START,
+        extension.get("trial_id_end") == EXTENSION_TRIAL_ID_END,
+        extension.get("trial_count") == EXTENSION_TRIAL_COUNT,
+        extension.get("run_id") == EXTENSION_RUN_ID,
+        extension.get("run_attempt") == run.get("run_attempt") == 1,
+        extension.get("workflow_head_sha") == EXTENSION_RUN_HEAD,
+        run.get("head_sha") == EXTENSION_RUN_HEAD,
+        extension.get("origin") == "pinned_approved_source_reference",
+        extension.get("historical_ids_rerun") is False,
+        extension.get("historical_dataset_modified") is False,
+        extension.get("historical_parquet_modified") is False,
+        extension.get("source_sha_bumped") is False,
+        extension.get("production_checkpoint_accepted") is False,
+        extension.get("base_golden_map_sha256") == base_map_sha,
+    )
+    if not all(expected_top_level):
+        raise RuntimeError("GOLDEN_EXTENSION_TOP_LEVEL_IDENTITY_FAIL")
+
+    rows = extension.get("records")
+    if not isinstance(rows, list) or len(rows) != EXTENSION_TRIAL_COUNT:
+        raise RuntimeError("GOLDEN_EXTENSION_RECORD_COUNT_MISMATCH")
+    indexed: dict[int, str] = {}
+    for record in rows:
+        if not isinstance(record, dict):
+            raise RuntimeError("GOLDEN_EXTENSION_RECORD_TYPE_INVALID")
+        try:
+            trial_id = int(record.get("trial_id", -1))
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError("GOLDEN_EXTENSION_TRIAL_ID_INVALID") from exc
+        row = record.get("trial_result")
+        value = _valid_sha256(record.get("result_sha256"), f"{EXTENSION_SCENARIO}/{trial_id}")
+        if not isinstance(row, dict):
+            raise RuntimeError(f"GOLDEN_EXTENSION_TRIAL_RESULT_MISSING:{trial_id}")
+        if (
+            record.get("scenario_id") != EXTENSION_SCENARIO
+            or row.get("scenario_id") != EXTENSION_SCENARIO
+            or int(row.get("trial_id", -1)) != trial_id
+            or record.get("source_sha") != APPROVED_SOURCE_SHA
+            or record.get("source_commit") != APPROVED_SOURCE_COMMIT
+            or int(record.get("master_seed", -1)) != MASTER_SEED
+            or int(record.get("run_id", -1)) != EXTENSION_RUN_ID
+            or int(record.get("run_attempt", -1)) != 1
+            or record.get("origin") != "pinned_source_reference"
+            or stage10_trial_result_sha256(row) != value
+            or trial_id in indexed
+        ):
+            raise RuntimeError(f"GOLDEN_EXTENSION_TRIAL_PROVENANCE_OR_HASH_FAIL:{EXTENSION_SCENARIO}/{trial_id}")
+        indexed[trial_id] = value
+    if sorted(indexed) != list(range(EXTENSION_TRIAL_ID_START, EXTENSION_TRIAL_ID_END + 1)):
+        raise RuntimeError("GOLDEN_EXTENSION_TRIAL_COVERAGE_FAIL")
+    extension_map_payload = "".join(
+        f"{EXTENSION_SCENARIO}|{trial_id}|{indexed[trial_id]}\\n"
+        for trial_id in sorted(indexed)
+    )
+    extension_map_sha = hashlib.sha256(extension_map_payload.encode("utf-8")).hexdigest()
+    if extension_map_sha != extension.get("extension_map_sha256"):
+        raise RuntimeError("GOLDEN_EXTENSION_MAP_SHA_MISMATCH")
+
+    extended = {scenario: dict(values) for scenario, values in fingerprints.items()}
+    target = extended.get(EXTENSION_SCENARIO)
+    if target is None or sorted(target) != list(range(1, EXTENSION_TRIAL_ID_START)):
+        raise RuntimeError("GOLDEN_EXTENSION_BASE_SCENARIO_COVERAGE_FAIL")
+    if set(target).intersection(indexed):
+        raise RuntimeError("GOLDEN_EXTENSION_OVERLAPS_ACCEPTED_TRIAL_IDS")
+    target.update(indexed)
+    if len(extended) != 25 or sum(map(len, extended.values())) != EXTENDED_TRIAL_COUNT:
+        raise RuntimeError("GOLDEN_EXTENSION_EXTENDED_TOTAL_COUNT_MISMATCH")
+    for scenario in SCENARIOS:
+        expected_ids = (
+            [1] if scenario.startswith("C100_")
+            else list(range(1, EXTENSION_TRIAL_ID_END + 1))
+            if scenario == EXTENSION_SCENARIO
+            else list(range(1, 1201))
+        )
+        if sorted(extended.get(scenario, {})) != expected_ids:
+            raise RuntimeError(f"GOLDEN_EXTENSION_FINAL_COVERAGE_FAIL:{scenario}")
+    combined_map_sha = _ordered_map_sha256(extended)
+    if not SHA256_RE.fullmatch(combined_map_sha):
+        raise RuntimeError("GOLDEN_EXTENSION_COMBINED_MAP_SHA_INVALID")
+    return {
+        "fingerprints": extended,
+        "base_trial_count": BASE_TRIAL_COUNT,
+        "trial_count": EXTENDED_TRIAL_COUNT,
+        "scenario_count": 25,
+        "base_source_map_sha256": base_map_sha,
+        "source_map_sha256": combined_map_sha,
+        "extension_decision_id": EXTENSION_DECISION_ID,
+        "extension_run_id": EXTENSION_RUN_ID,
+        "extension_run_head_sha": EXTENSION_RUN_HEAD,
+        "extension_artifact_id": EXTENSION_ARTIFACT_ID,
+        "extension_artifact_sha256": EXTENSION_ARTIFACT_SHA256,
+        "extension_map_sha256": extension_map_sha,
+    }
 
 def _load_approved_reference() -> dict[str, Any]:
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
@@ -473,16 +615,21 @@ def _load_approved_reference() -> dict[str, Any]:
     full_map_sha = _ordered_map_sha256(fingerprints)
     if full_map_sha != EXPECTED_FULL_MAP_SHA256:
         raise RuntimeError("GOLDEN_FULL_AGGREGATE_SHA_MISMATCH")
-    reference_id = f"{DECISION_ID}:GateA:24005:{full_map_sha}"
+    extension_payload = _load_and_verify_c030_g030_extension(fingerprints, token)
+    fingerprints = extension_payload["fingerprints"]
+    extended_map_sha = extension_payload["source_map_sha256"]
+    reference_id = f"{DECISION_ID}:GateA:{EXTENDED_TRIAL_COUNT}:{extended_map_sha}"
     return {
         "source_sha": APPROVED_SOURCE_SHA,
+        "source_commit": APPROVED_SOURCE_COMMIT,
         "master_seed": MASTER_SEED,
         "decision_id": DECISION_ID,
-        "trial_count": 24005,
+        "trial_count": EXTENDED_TRIAL_COUNT,
         "scenario_count": 25,
-        "source_map_sha256": full_map_sha,
+        "source_map_sha256": extended_map_sha,
         "golden_reference_id": reference_id,
         "fingerprints": fingerprints,
+        **{key: value for key, value in extension_payload.items() if key != "fingerprints"},
     }
 
 class GoldenReferenceProvider:
@@ -490,7 +637,19 @@ class GoldenReferenceProvider:
 
     def __init__(self) -> None:
         self.source_sha = APPROVED_SOURCE_SHA
+        self.source_commit = APPROVED_SOURCE_COMMIT
         self.master_seed = MASTER_SEED
+        self.base_trial_count = BASE_TRIAL_COUNT
+        self.trial_count = 0
+        self.scenario_count = 0
+        self.base_source_map_sha256 = EXPECTED_FULL_MAP_SHA256
+        self.source_map_sha256 = ""
+        self.extension_decision_id = EXTENSION_DECISION_ID
+        self.extension_run_id = EXTENSION_RUN_ID
+        self.extension_run_head_sha = EXTENSION_RUN_HEAD
+        self.extension_artifact_id = EXTENSION_ARTIFACT_ID
+        self.extension_artifact_sha256 = EXTENSION_ARTIFACT_SHA256
+        self.extension_map_sha256 = ""
         self._fingerprints: dict[str, dict[int, str]] = {}
         self._golden_reference_id = ""
         self._verified = False
@@ -503,13 +662,36 @@ class GoldenReferenceProvider:
             payload = _load_approved_reference()
             self._fingerprints = payload["fingerprints"]
             self._golden_reference_id = payload["golden_reference_id"]
+            self.source_commit = payload.get("source_commit", "")
+            self.base_trial_count = int(payload.get("base_trial_count", -1))
+            self.trial_count = int(payload.get("trial_count", -1))
+            self.scenario_count = int(payload.get("scenario_count", -1))
+            self.base_source_map_sha256 = payload.get("base_source_map_sha256", "")
+            self.source_map_sha256 = payload.get("source_map_sha256", "")
+            self.extension_decision_id = payload.get("extension_decision_id", "")
+            self.extension_run_id = int(payload.get("extension_run_id", -1))
+            self.extension_run_head_sha = payload.get("extension_run_head_sha", "")
+            self.extension_artifact_id = int(payload.get("extension_artifact_id", -1))
+            self.extension_artifact_sha256 = payload.get("extension_artifact_sha256", "")
+            self.extension_map_sha256 = payload.get("extension_map_sha256", "")
             self._verified = (
                 payload.get("source_sha") == APPROVED_SOURCE_SHA
+                and self.source_commit == APPROVED_SOURCE_COMMIT
                 and payload.get("master_seed") == MASTER_SEED
                 and payload.get("decision_id") == DECISION_ID
-                and payload.get("scenario_count") == 25
-                and payload.get("trial_count") == 24005
-                and sum(map(len, self._fingerprints.values())) == 24005
+                and self.extension_decision_id == EXTENSION_DECISION_ID
+                and self.base_trial_count == BASE_TRIAL_COUNT
+                and self.trial_count == EXTENDED_TRIAL_COUNT
+                and self.scenario_count == 25
+                and self.base_source_map_sha256 == EXPECTED_FULL_MAP_SHA256
+                and SHA256_RE.fullmatch(self.source_map_sha256 or "") is not None
+                and SHA256_RE.fullmatch(self.extension_map_sha256 or "") is not None
+                and self.extension_run_id == EXTENSION_RUN_ID
+                and self.extension_run_head_sha == EXTENSION_RUN_HEAD
+                and self.extension_artifact_id == EXTENSION_ARTIFACT_ID
+                and self.extension_artifact_sha256 == EXTENSION_ARTIFACT_SHA256
+                and sum(map(len, self._fingerprints.values())) == EXTENDED_TRIAL_COUNT
+                and _ordered_map_sha256(self._fingerprints) == self.source_map_sha256
             )
             if not self._verified:
                 raise RuntimeError("GOLDEN_PROVIDER_FINAL_IDENTITY_FAIL")
@@ -529,12 +711,27 @@ class GoldenReferenceProvider:
     ) -> "GoldenReferenceProvider":
         instance = cls.__new__(cls)
         instance.source_sha = source_sha
+        instance.source_commit = APPROVED_SOURCE_COMMIT
         instance.master_seed = MASTER_SEED
+        instance.base_trial_count = BASE_TRIAL_COUNT
+        instance.trial_count = 0
+        instance.scenario_count = 0
+        instance.base_source_map_sha256 = EXPECTED_FULL_MAP_SHA256
+        instance.source_map_sha256 = ""
+        instance.extension_decision_id = EXTENSION_DECISION_ID
+        instance.extension_run_id = EXTENSION_RUN_ID
+        instance.extension_run_head_sha = EXTENSION_RUN_HEAD
+        instance.extension_artifact_id = EXTENSION_ARTIFACT_ID
+        instance.extension_artifact_sha256 = EXTENSION_ARTIFACT_SHA256
+        instance.extension_map_sha256 = ""
         instance._fingerprints = {
             scenario: {int(trial_id): str(value) for trial_id, value in values.items()}
             for scenario, values in fingerprints.items()
         }
         instance._golden_reference_id = golden_reference_id
+        instance.source_map_sha256 = _ordered_map_sha256(instance._fingerprints)
+        instance.trial_count = sum(map(len, instance._fingerprints.values()))
+        instance.scenario_count = len(instance._fingerprints)
         instance._verified = True
         instance.load_error = None
         return instance

@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "aafe5946a8a51c991471057d71f5643c46087086",
+  "sha": "b027d78876da68ea50134285f39ddee764db5508",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "Gate A reference generation for C030_G030 IDs 1201..2400 completed and the artifact was independently checked. Provider integration/live validation remains pending; no N=2400 statistical checkpoint trials have run. Next action is to validate the provider extension in a pinned CI job before the one-time checkpoint.",
+  "next": "Run the pinned provider-validation CI on the exact target branch; verify runtime import origins and the 25,205-entry extension map before any C030_G030 N=2400 statistical checkpoint. No checkpoint run has started.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
@@ -12,7 +12,7 @@
     "STAGE10_METADATA_DISCREPANCY_OPEN: Stage 11 topology is CLOSED_BY_APPROVED_SCOPE_DECISION, not COMPLETE; Stage 10 recorded-head/live-Run mismatch remains unresolved.",
     "CP_F_CONTENT_AUDIT_PENDING: Run 38603678969 validated the 25 scenario artifacts' source/trial identity, required extension ID ranges, five representative payloads, and daily-distribution structure. An independent numeric/accounting content audit is still required; do not equate replay manifest PASS with final delivery PASS.",
     "DELIVERY_STABILITY_NOT_ESTABLISHED: CP-F provides C100 deterministic-equivalence evidence and completes delivery Gate B CI checks, but full scenario stability still requires composite exact Gate A, Gate B, and applicable seven-metric Reference §2.5 evidence. Do not mark scenarios STABLE from this run alone.",
-    "GATEA_C030_G030_N2400_PENDING_PROVIDER_VALIDATION: source-pinned reference Run 38662076725 and artifact 11940485523 verified for IDs 1201..2400; provider extension is not yet tested in CI. Do not run the N=2400 checkpoint until provider provenance and 25,205-map coverage are validated."
+    "GATEA_C030_G030_N2400_PENDING_PROVIDER_VALIDATION: extension/provider wiring is implemented on the delegated branch; runtime source-import identity and the 25,205-map provider remain pending pinned CI. Do not run the N=2400 checkpoint before PASS."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "ac67dc077e381921e9404baf7995d3356b3d661d",
@@ -2108,7 +2108,7 @@
   "gate_a_provider_status": "WIRED",
   "gate_a_coverage_trials": 24005,
   "cp_gatea_c030_n2400_20261015": {
-    "status": "GOLDEN_REFERENCE_VERIFIED_PROVIDER_EXTENSION_PENDING",
+    "status": "PROVIDER_EXTENSION_CODED_PENDING_CI",
     "decision_id": "D-2026-10-15-10",
     "branch": "tmp/cp-gatea-c030-n2400-20261015",
     "starting_branch_head": "37f59987fc22a3809f3af9933096223807a33ed4",
@@ -2158,12 +2158,18 @@
     "reference_unique_ids": "1201..2400",
     "reference_result_hashes_verified": 1200,
     "combined_full_map_sha256": null,
-    "provider_extension_status": "PENDING_LIVE_VALIDATION",
+    "provider_extension_status": "IMPLEMENTED_PENDING_CI",
     "prior_workflow_defect": {
       "run_id": 38661997576,
       "classification": "WORKFLOW_DEFECT",
       "note": "Over-escaped checkout ref; checkout failed before Python/tests/trial execution."
-    }
+    },
+    "provider_integration_tests_status": "PENDING_CI",
+    "provider_validation_run_id": null,
+    "provider_validation_workflow_head_sha": null,
+    "provider_validation_artifact_id": null,
+    "provider_validation_artifact_sha256": null,
+    "source_import_origin_status": "PENDING_CI"
   },
   "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
 }
