@@ -21,7 +21,7 @@ jobs:
       - name: Checkout exact CP head
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,7 +50,7 @@ jobs:
       - name: Upload immutable Gate A golden extension evidence
         uses: actions/upload-artifact@v4
         with:
-          name: gatea-golden-c030-g1201-2400-attempt-\${{ github.run_attempt }}
+          name: gatea-golden-c030-g1201-2400-attempt-${{ github.run_attempt }}
           path: results_gatea/golden_extension.json
           if-no-files-found: error
           retention-days: 90

@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STATE-AND-SOURCE-SYNC-20261013 + CP-D-EXTENDED-REPLAY-20261014 + CP-GOLDEN-REFERENCE-PROVIDER-20261014 + CP-STAGE13-ASSEMBLER-20261014 + CP-F-DELIVERY-REPLAY-20261014 + CP-D19-FRIDAY-RESOLUTION-20261014 + CP-D20-STAGE7-2_5-METRICS-20261014 + CP-D21-PLUS50-CLEANUP-20261014",
-  "sha": "37f59987fc22a3809f3af9933096223807a33ed4",
+  "sha": "6d09d0668382cb274036b8de97e0f37e3f6391ce",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-GATEA-C030-N2400: generate the exact source-pinned Gate A golden map for C030_G030 trial IDs 1201..2400 only. This step is reference generation, not an accepted statistical checkpoint. Do not run N=2400 until the artifact, source/run identity, contiguous coverage, result hashes, and artifact digest have been independently verified and the provider has been extended.",
+  "next": "WORKFLOW_DEFECT in reference workflow Run 38661997576: checkout attempted ref \\6d09d0668382cb274036b8de97e0f37e3f6391ce. Correct the YAML expression only and rerun reference preparation. No target trials ran; Gate A extension and N=2400 remain pending.",
   "blockers": [
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
@@ -2130,8 +2130,8 @@
       "strict_limit_percent": 1,
       "status": "FAIL"
     },
-    "reference_run_id": null,
-    "reference_workflow_head_sha": null,
+    "reference_run_id": 38661997576,
+    "reference_workflow_head_sha": "6d09d0668382cb274036b8de97e0f37e3f6391ce",
     "reference_artifact_id": null,
     "reference_artifact_sha256": null,
     "extension_map_sha256": null,
@@ -2144,7 +2144,11 @@
     "source_sha_bumped": false,
     "main_modified": false,
     "release_created": false,
-    "temporary_workflow_removed": false
+    "temporary_workflow_removed": false,
+    "reference_run_conclusion": "failure",
+    "reference_failure_classification": "WORKFLOW_DEFECT",
+    "reference_failure_literal": "A branch or tag with the name '\\6d09d0668382cb274036b8de97e0f37e3f6391ce' could not be found",
+    "reference_failure_note": "Temporary workflow ref expression was over-escaped; no Python/model step or trial generation started."
   },
   "next_question": "Proceed only after the pinned-source Gate A reference artifact, its exact run/head/artifact identity, 1,200 contiguous result hashes and extension digest are verified; then pin the extension in the provider before accepting IDs 1201..2400 as the N=2400 checkpoint."
 }
