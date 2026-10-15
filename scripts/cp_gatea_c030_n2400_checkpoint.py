@@ -363,10 +363,10 @@ def _load_and_verify_source_inputs(outdir: Path, provider) -> tuple[dict[str, An
     )
     if not (
         extension.get("status") == "PASS"
-        and extension.get("schema") == "gate-a-golden-extension-v1"
+        and extension.get("schema_version") == "gate-a-golden-extension-v1"
         and extension.get("extension_decision_id") == GATE_A_DECISION_ID
         and extension.get("base_decision_id") == "D-2026-10-14-01"
-        and extension.get("scenario") == SCENARIO
+        and extension.get("scenario_id") == SCENARIO
         and extension.get("source_sha") == SOURCE_SHA
         and extension.get("source_commit") == SOURCE_COMMIT
         and extension.get("master_seed") == MASTER_SEED
@@ -374,10 +374,12 @@ def _load_and_verify_source_inputs(outdir: Path, provider) -> tuple[dict[str, An
         and extension.get("trial_id_end") == TRIAL_END
         and extension.get("trial_count") == 1200
         and extension.get("run_id") == EXTENSION_RUN_ID
-        and extension.get("tested_workflow_head_sha") == EXTENSION_RUN_HEAD
+        and extension.get("workflow_head_sha") == EXTENSION_RUN_HEAD
+        and extension.get("origin") == "pinned_approved_source_reference"
+        and extension.get("run_attempt") == 1
         and extension.get("base_golden_map_sha256") == "166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c"
         and extension.get("extension_map_sha256") == EXTENSION_MAP_SHA256
-        and extension.get("historical_trial_ids_rerun") is False
+        and extension.get("historical_ids_rerun") is False
         and extension.get("historical_dataset_modified") is False
         and extension.get("source_sha_bumped") is False
         and extension.get("production_checkpoint_accepted") is False
