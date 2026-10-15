@@ -339,7 +339,7 @@ def _load_and_verify_c030_g030_extension(
     if sorted(indexed) != list(range(EXTENSION_TRIAL_ID_START, EXTENSION_TRIAL_ID_END + 1)):
         raise RuntimeError("GOLDEN_EXTENSION_TRIAL_COVERAGE_FAIL")
     extension_map_payload = "".join(
-        f"{EXTENSION_SCENARIO}|{trial_id}|{indexed[trial_id]}\\n"
+        f"{EXTENSION_SCENARIO}|{trial_id}|{indexed[trial_id]}\n"
         for trial_id in sorted(indexed)
     )
     extension_map_sha = hashlib.sha256(extension_map_payload.encode("utf-8")).hexdigest()

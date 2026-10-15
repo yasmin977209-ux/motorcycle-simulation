@@ -46,7 +46,7 @@ jobs:
       - name: Verify live provider extension and exact combined coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python scripts/verify_golden_provider_extension.py
+        run: PYTHONPATH=. python scripts/verify_golden_provider_extension.py
       - name: Upload inspected CP1 validation evidence
         uses: actions/upload-artifact@v4
         with:
