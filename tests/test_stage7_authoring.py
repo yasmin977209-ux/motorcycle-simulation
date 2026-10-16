@@ -823,3 +823,44 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
     ]
     assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
     assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
+
+def test_stage7_source_identity_verifier_allows_only_narrow_adapter() -> None:
+    text = _workflow_text()
+    assert "verify_source_identity_exception.py --source-sha" in text
+    assert "MODEL_SOURCE_ALLOWLIST_OK" in text
+    assert "git diff --quiet" not in text
+
+def test_stage7_provider_preflight_runs_before_any_scenario_job() -> None:
+    workflow = _workflow()
+    steps = workflow["jobs"]["preflight-gates"]["steps"]
+    names = [step.get("name", "") for step in steps]
+    source_index = names.index("Verify the narrow additive source identity exception")
+    provider_index = names.index(
+        "Validate exact Gate A golden provider before any Stage 7 execution"
+    )
+    stage7_preflight_index = names.index("Stage 7-specific preflight")
+    assert source_index < provider_index < stage7_preflight_index
+    provider_step = steps[provider_index]
+    assert "scripts/verify_stage7_gate_a_provider.py" in provider_step["run"]
+    assert provider_step["env"]["SOURCE_SHA"] == "\${{ env.SOURCE_SHA }}"
+    assert provider_step["env"]["MASTER_SEED"] == "\${{ env.MASTER_SEED }}"
+
+def test_stage7_gate_a_calls_are_bound_to_exact_provider_evidence() -> None:
+    text = _workflow_text()
+    assert "from scripts.golden_reference_provider import GoldenReferenceProvider" in text
+    assert "from scripts.stage7_gate_a_provider import (" in text
+    assert text.count("evaluate_gate_a_with_approved_golden(") == 2
+    assert "evaluate_gate_a(" not in text
+    assert "results=baseline_results" in text
+    assert "results=results" in text
+    assert "build_exact_gate_a_evidence(" in text
+    assert "cached_stable_evidence" in text
+
+def test_stage7_checkpoint_coverage_is_checked_before_trial_block_invocation() -> None:
+    text = _workflow_text()
+    check_index = text.index("checkpoint_provider_check = validate_checkpoint_coverage(")
+    loop_index = text.index("while True:\\n              if elapsed_since_job_start()")
+    assert check_index < loop_index
+    assert "GATE_A_PROVIDER_PREFLIGHT_BLOCKED=" in text
+    assert "target_n=target_n" in text
+
