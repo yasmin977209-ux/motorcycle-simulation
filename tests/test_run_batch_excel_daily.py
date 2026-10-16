@@ -69,7 +69,7 @@ def _daily_rows(trial_id: int, cash: int, equity: int) -> list[dict[str, object]
     ]
 
 
-def test_cli_exposes_excel_dataset_root_without_changing_c100_policy(tmp_path: Path) -> None:
+def test_cli_exposes_excel_dataset_root_with_uniform_c100_policy(tmp_path: Path) -> None:
     args = run_batch.parse_args(
         [
             "--scenario", SCENARIO,
@@ -85,20 +85,22 @@ def test_cli_exposes_excel_dataset_root_without_changing_c100_policy(tmp_path: P
     c100 = run_batch.parse_args(
         [
             "--scenario", "C100_G100",
-            "--trials", "1",
+            "--trials", "300",
             "--output-dir", str(tmp_path / "c100"),
         ]
     )
-    assert c100.trials == constants.C100_STATISTICAL_START_TRIALS == 1
+    assert c100.trials == constants.C100_STATISTICAL_START_TRIALS == 300
+    assert c100.trials == constants.NON_C100_STATISTICAL_START_TRIALS
 
-    with pytest.raises(ValueError, match="C100 policy requires exactly one trial"):
-        run_batch.parse_args(
-            [
-                "--scenario", "C100_G100",
-                "--trials", "2",
-                "--output-dir", str(tmp_path / "invalid-c100"),
-            ]
-        )
+    # C100 now accepts ordinary batch sizes exactly as other scenarios do.
+    c100_partial = run_batch.parse_args(
+        [
+            "--scenario", "C100_G100",
+            "--trials", "2",
+            "--output-dir", str(tmp_path / "c100-partial"),
+        ]
+    )
+    assert c100_partial.trials == 2
 
 
 def test_batch_daily_outputs_round_trip_through_excel_builder_loaders(
