@@ -31,6 +31,7 @@ TRIALS_PARQUET = "trials_summary.parquet"
 TRIALS_JSONL_GZ = "trials_summary.jsonl.gz"
 STATE_JSON = "state.json"
 STATISTICS_JSON = "statistics.json"
+DAILY_SLICES_PARQUET = "daily_slices.parquet"
 
 STABILITY_FIELDS = (
     "final_net_project_equity",
@@ -68,6 +69,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-dir",
         required=True,
+        help="Working directory for batch outputs and resumable state.",
+    )
+    parser.add_argument(
+        "--excel-dataset-root",
+        default=None,
+        help=(
+            "Optional dataset root consumed by scripts/excel_builder.py. "
+            "Writes <root>/<scenario>/trial_results.parquet and "
+            "daily_distribution.parquet, plus raw daily slices and an identity manifest."
+        ),
     )
     parser.add_argument(
         "--master-seed",
@@ -194,6 +205,205 @@ def _load_dataset(output_dir: Path) -> list[monte_carlo.TrialResult]:
         for row in pq.read_table(path).to_pylist()
     ]
     return sorted(results, key=lambda item: item.trial_id)
+
+
+
+def _load_daily_slices(output_dir: Path) -> dict[int, list[dict[str, object]]]:
+    """Load persisted raw daily rows for completed trials without replaying them."""
+    path = output_dir / DAILY_SLICES_PARQUET
+    if not path.exists():
+        return {}
+
+    slices: dict[int, list[dict[str, object]]] = {}
+    for record in pq.read_table(path).to_pylist():
+        record = dict(record)
+        try:
+            trial_id = int(record.pop("trial_id"))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise StateIntegrityError(
+                "daily_slices.parquet contains a missing or invalid trial_id"
+            ) from exc
+        slices.setdefault(trial_id, []).append(record)
+
+    for rows in slices.values():
+        rows.sort(key=lambda row: str(row.get("date", "")))
+    return slices
+
+
+def _validate_daily_slices(
+    results: list[monte_carlo.TrialResult],
+    slices_by_trial: dict[int, list[dict[str, object]]],
+) -> None:
+    expected_ids = {int(result.trial_id) for result in results}
+    if expected_ids != set(slices_by_trial):
+        raise StateIntegrityError(
+            "daily slice trial IDs differ from completed trial dataset; refusing to replay completed trials"
+        )
+
+    required_fields = {
+        "date", "Cash", "Net_Equity", "Active_Bikes",
+        "Owned_Transferred_Bikes", "Pending_Claims", "Final_Close_Date",
+    }
+    from datetime import date
+
+    for trial_id, rows in slices_by_trial.items():
+        if not rows:
+            raise StateIntegrityError(
+                f"daily slices are empty for completed trial_id={trial_id}"
+            )
+        dates: list[str] = []
+        for row in rows:
+            missing = required_fields.difference(row)
+            if missing:
+                raise StateIntegrityError(
+                    f"daily slice is missing Excel fields for trial_id={trial_id}: {sorted(missing)}"
+                )
+            current_trial_id = row.get("trial_id", trial_id)
+            if int(current_trial_id) != trial_id:
+                raise StateIntegrityError(
+                    f"daily slice trial_id mismatch: expected={trial_id}, actual={current_trial_id}"
+                )
+            current_date = row.get("date")
+            if not isinstance(current_date, str):
+                raise StateIntegrityError(
+                    f"daily slice date must be ISO text for trial_id={trial_id}"
+                )
+            try:
+                parsed_date = date.fromisoformat(current_date)
+            except ValueError as exc:
+                raise StateIntegrityError(
+                    f"daily slice date is not ISO format for trial_id={trial_id}: {current_date!r}"
+                ) from exc
+            if parsed_date.isoformat() != current_date:
+                raise StateIntegrityError(
+                    f"daily slice date is not canonical ISO format for trial_id={trial_id}: {current_date!r}"
+                )
+            dates.append(current_date)
+
+        if dates != sorted(dates) or len(dates) != len(set(dates)):
+            raise StateIntegrityError(
+                f"daily slice dates are unordered or duplicated for trial_id={trial_id}"
+            )
+
+
+def _write_daily_slices(
+    slices_by_trial: dict[int, list[dict[str, object]]],
+    output_dir: Path,
+) -> None:
+    records = [
+        {"trial_id": trial_id, **row}
+        for trial_id in sorted(slices_by_trial)
+        for row in sorted(slices_by_trial[trial_id], key=lambda item: str(item["date"]))
+    ]
+    if not records:
+        raise StateIntegrityError("cannot persist an empty daily detail dataset")
+
+    path = output_dir / DAILY_SLICES_PARQUET
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    os.close(fd)
+    temporary_path = Path(temporary_name)
+    try:
+        pq.write_table(pa.Table.from_pylist(records), temporary_path)
+        os.replace(temporary_path, path)
+    except Exception:
+        try:
+            temporary_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _atomic_write_parquet(path: Path, records: list[dict[str, object]]) -> None:
+    if not records:
+        raise StateIntegrityError(f"refusing to write an empty Parquet dataset: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    os.close(fd)
+    temporary_path = Path(temporary_name)
+    try:
+        pq.write_table(pa.Table.from_pylist(records), temporary_path)
+        os.replace(temporary_path, path)
+    except Exception:
+        try:
+            temporary_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _write_excel_daily_datasets(
+    *,
+    dataset_root: Path,
+    scenario: str,
+    results: list[monte_carlo.TrialResult],
+    slices_by_trial: dict[int, list[dict[str, object]]],
+    state: dict[str, Any],
+) -> dict[str, object]:
+    """Write the exact per-scenario trial and daily-distribution inputs read by ExcelBuilder.
+
+    This is a daily-data export, not a claim that representative-case, accounting,
+    assets, partner, guarantee, contracts, or the full Stage 13 workbook is present.
+    """
+    _validate_daily_slices(results, slices_by_trial)
+    distribution = monte_carlo.build_daily_distribution(results, slices_by_trial)
+    if not distribution:
+        raise StateIntegrityError("daily distribution is empty")
+
+    scenario_root = dataset_root / scenario
+    trial_records = [
+        asdict(result) for result in sorted(results, key=lambda item: item.trial_id)
+    ]
+    daily_slice_records = [
+        {"trial_id": trial_id, **row}
+        for trial_id in sorted(slices_by_trial)
+        for row in sorted(slices_by_trial[trial_id], key=lambda item: str(item["date"]))
+    ]
+    trial_path = scenario_root / "trial_results.parquet"
+    distribution_path = scenario_root / "daily_distribution.parquet"
+    raw_daily_path = scenario_root / "daily_trial_slices.parquet"
+    _atomic_write_parquet(trial_path, trial_records)
+    _atomic_write_parquet(distribution_path, distribution)
+    _atomic_write_parquet(raw_daily_path, daily_slice_records)
+
+    history = state.get("stability_history") or []
+    last_gate_a = (
+        (history[-1].get("gate_a") or {}).get("status", "UNRECORDED")
+        if history else "NOT_REACHED"
+    )
+    manifest: dict[str, object] = {
+        "format_version": "1.0",
+        "contract": "scripts/excel_builder.py per-scenario trial and daily-distribution inputs",
+        "scenario": scenario,
+        "source_sha": state.get("source_sha"),
+        "master_seed": state.get("master_seed"),
+        "trial_count": len(trial_records),
+        "trial_id_start": int(trial_records[0]["trial_id"]),
+        "trial_id_end": int(trial_records[-1]["trial_id"]),
+        "daily_slice_rows": len(daily_slice_records),
+        "daily_distribution_rows": len(distribution),
+        "trial_results_fingerprint_sha256": monte_carlo.fingerprint_trial_results(results),
+        "daily_slices_fingerprint_sha256": monte_carlo.fingerprint_per_trial_slices(slices_by_trial),
+        "daily_distribution_fingerprint_sha256": monte_carlo.fingerprint_daily_distribution(distribution),
+        "final_status": state.get("final_status"),
+        "included_in_final_stats": state.get("included_in_final_stats", False),
+        "gate_a_status": last_gate_a,
+        "full_excel_delivery": "NOT_ASSERTED_BY_THIS_EXPORT",
+    }
+    _atomic_write_json(scenario_root / "daily_export_manifest.json", manifest)
+    return {
+        "trial_results_path": str(trial_path),
+        "daily_distribution_path": str(distribution_path),
+        "daily_trial_slices_path": str(raw_daily_path),
+        "manifest_path": str(scenario_root / "daily_export_manifest.json"),
+        "trial_rows": len(trial_records),
+        "daily_slice_rows": len(daily_slice_records),
+        "daily_distribution_rows": len(distribution),
+    }
 
 
 def _validate_trial_sequence(
@@ -553,6 +763,7 @@ def run_batch(
     resume_from_checkpoint: bool = False,
     master_seed: int = constants.MASTER_SEED,
     source_sha: str | None = None,
+    excel_dataset_root: Path | None = None,
 ) -> dict[str, Any]:
     if source_sha is None:
         source_sha = os.environ.get("SOURCE_SHA", "")
@@ -596,8 +807,19 @@ def run_batch(
         else []
     )
 
+    daily_slices_path = output_dir / DAILY_SLICES_PARQUET
     if resume_from_checkpoint:
         _validate_resume_dataset(results, checkpoint)
+        if results and not daily_slices_path.exists():
+            raise StateIntegrityError(
+                "resume requires daily_slices.parquet for the completed dataset; "
+                "refusing to replay completed trial IDs to reconstruct missing daily data"
+            )
+        daily_slices = _load_daily_slices(output_dir)
+        if results:
+            _validate_daily_slices(results, daily_slices)
+    else:
+        daily_slices = {}
 
     initial_target = (
         constants.C100_STATISTICAL_START_TRIALS
@@ -776,16 +998,34 @@ def run_batch(
             trial_end = min(batch_end, target)
 
         trial_ids = list(range(resolved_start, trial_end + 1))
-        new_results, _ = monte_carlo.run_trials_sequentially(
+        new_results, new_daily_rows = monte_carlo.run_trials_sequentially(
             scenario,
             trial_ids,
             master_seed=master_seed,
         )
+        new_result_ids = {int(result.trial_id) for result in new_results}
+        if new_result_ids != {int(trial_id) for trial_id in new_daily_rows}:
+            raise StateIntegrityError(
+                "new daily slice trial IDs differ from newly completed trials"
+            )
+        for trial_id, rows in new_daily_rows.items():
+            canonical_trial_id = int(trial_id)
+            if canonical_trial_id in daily_slices:
+                raise StateIntegrityError(
+                    f"daily slices already exist for completed trial_id={canonical_trial_id}; refusing duplicate/replay"
+                )
+            daily_slices[canonical_trial_id] = sorted(
+                [dict(row) for row in rows],
+                key=lambda row: str(row.get("date", "")),
+            )
+
         results.extend(new_results)
         results.sort(key=lambda item: item.trial_id)
 
         _validate_trial_sequence(results)
+        _validate_daily_slices(results, daily_slices)
         _write_dataset(results, output_dir)
+        _write_daily_slices(daily_slices, output_dir)
         _update_state_identity(
             state,
             scenario=scenario,
@@ -911,6 +1151,14 @@ def run_batch(
         },
     )
     _atomic_write_json(output_dir / STATE_JSON, state)
+    if excel_dataset_root is not None:
+        _write_excel_daily_datasets(
+            dataset_root=Path(excel_dataset_root),
+            scenario=scenario,
+            results=results,
+            slices_by_trial=daily_slices,
+            state=state,
+        )
     return state
 
 
@@ -924,6 +1172,11 @@ def main(argv: list[str] | None = None) -> int:
         resume_from_checkpoint=args.resume_from_checkpoint,
         master_seed=args.master_seed,
         source_sha=os.environ.get("SOURCE_SHA"),
+        excel_dataset_root=(
+            Path(args.excel_dataset_root)
+            if args.excel_dataset_root is not None
+            else None
+        ),
     )
     return 0
 

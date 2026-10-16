@@ -10,6 +10,7 @@ amendments:
   - Amendment-04
   - Amendment-05
   - Amendment-06
+  - Amendment-07
 ---
 
 # REFERENCE_AMENDMENTS — ملحق التعديلات المعيارية المعتمدة
@@ -317,4 +318,44 @@ def build_excel(dataset_path, output_path, mode="canonical"):
 - لا إعادة لأي trial مكتمل.
 - لا PASS تلقائي لـCP-B2 أو Gate A أو Gate B.
 - لا تتغير أي بوابة قبول أخرى.
+
+
+
+## Amendment-07 — CP-RUNTIME: Python 3.11+ and B2-EXTEND daily dataset contract
+
+**Status:** APPROVED — PROJECT OWNER  
+**Date:** 2026-10-17  
+**Scope:** Reference §§19.1–19.4 and the runtime/CLI documentation only. This decision preserves the simulation engine, RNG, master seed, statistical policy, Gate A, C100 policy, historical trial data, and the pinned `SOURCE_SHA`.
+
+### Normative decision
+
+1. The minimum supported interpreter is **Python 3.11+**. Dependency resolution and CI for this repository must use Python 3.11 or later; this amendment does not assert that every later Python minor version has been tested.
+2. `run_batch.py` is the official batch/statistical CLI under the approved **B2-EXTEND** path. It retains the existing flags and behavior (`--scenario`, `--trials`, `--output-dir`, `--start-trial-id`, `--resume-from-checkpoint`, `--master-seed`) and adds optional `--excel-dataset-root`.
+3. The extension persists every newly completed trial's raw daily slices into `<output-dir>/daily_slices.parquet`. A resumed dataset without persisted daily rows must fail closed; completed trial IDs must not be replayed merely to reconstruct missing daily output.
+4. When `--excel-dataset-root ROOT` is supplied, the CLI writes the exact per-scenario paths consumed by `scripts/excel_builder.py`:
+   - `ROOT/<scenario>/trial_results.parquet`
+   - `ROOT/<scenario>/daily_distribution.parquet` using rows with `date`, `quantile_name`, `active_trial_count`, and the five metrics required by §14.7.
+   - `ROOT/<scenario>/daily_trial_slices.parquet` for auditable raw detail rows.
+   - `ROOT/<scenario>/daily_export_manifest.json` with source, seed, range, and content fingerprints plus explicit Gate A/full-delivery scope.
+5. Gate A remains fail-closed. An export is only a data serialization step; it cannot establish Gate A, Gate B, stability, cohort identity, or final delivery approval. The existing exact-golden fingerprint and source-identity requirements remain unchanged.
+6. The C100 policy remains exactly one official trial. The existing independent determinism verification is not counted as a second official trial and does not change the statistical policy.
+7. These per-scenario files are the daily and trial inputs read by the current Excel loader. They do **not** by themselves provide the representative payloads, accounting/asset/partner/guarantee/contracts packages, the canonical Stage 13 assembler, or a complete 185-sheet workbook. Those remain separate acceptance requirements.
+
+### CLI form
+
+```bash
+SOURCE_SHA="<previously approved and identity-verified source SHA>" \
+python run_batch.py --scenario C070_G100 --trials 300 \
+  --output-dir results/C070_G100 --excel-dataset-root results_excel
+```
+
+This is syntax documentation, not authorization to run it against the current production cohort. The known `SOURCE_SHA_DRIFT` and missing approved-golden provider remain blockers. Do not replace `SOURCE_SHA` with a candidate/head SHA, change the master seed/RNG, or continue checkpoint execution without the independently approved identity and Gate A evidence.
+
+### Acceptance evidence and limits
+
+CP-RUNTIME tests the argument contract and uses deterministic synthetic fixtures (not a simulation) to write/read the Parquet datasets through the actual `scripts/excel_builder.py` loaders. A successful round-trip certifies only these dataset files and their identities; it does not certify all 185 sheets or the seven final delivery files.
+
+### Rationale
+
+Make the documented minimum interpreter match the current dependencies and adopt the existing batch runner without throwing away checkpoint integrity or statistical guardrails, while adding only additive daily-dataset persistence needed by the Excel data loader.
 

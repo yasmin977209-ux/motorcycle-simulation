@@ -1,0 +1,116 @@
+name: CP-RUNTIME temporary pinned verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-runtime-20261017
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Assert checkout and branch are pinned
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "tmp/cp-runtime-20261017"
+          git diff --exit-code 647c19826b90d8224ce73ef9b90c306a45e03fb0 "$GITHUB_SHA" -- \
+            constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py \
+            accounting.py collection.py guarantee.py friday.py settlement.py closure.py \
+            partner_equity.py monte_carlo.py
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run focused regression and no-simulation round-trip tests
+        env:
+          PYTHONPATH: .
+          CP_RUNTIME_EVIDENCE_DIR: cp-runtime-evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p cp-runtime-evidence
+          python -m pytest -q tests/test_run_batch.py tests/test_run_batch_excel_daily.py \
+            --junitxml=cp-runtime-evidence/junit.xml 2>&1 | tee cp-runtime-evidence/pytest-output.txt
+      - name: Independently inspect Parquet outputs and hashes
+        env:
+          PYTHONPATH: .
+          TESTED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          from scripts import excel_builder
+
+          root = Path("cp-runtime-evidence")
+          scenario = "C070_G100"
+          dataset = root / "excel-dataset" / scenario
+          files = {
+              "trial_results": dataset / "trial_results.parquet",
+              "daily_distribution": dataset / "daily_distribution.parquet",
+              "daily_trial_slices": dataset / "daily_trial_slices.parquet",
+              "manifest": dataset / "daily_export_manifest.json",
+              "batch_daily_slices": root / "batch-output" / "daily_slices.parquet",
+          }
+          for path in files.values():
+              assert path.is_file() and path.stat().st_size > 0, f"missing/empty: {path}"
+          trials = excel_builder.load_scenario_trials(root / "excel-dataset", scenario)
+          distribution = excel_builder.load_scenario_daily_distribution(root / "excel-dataset", scenario)
+          slices = pq.read_table(files["daily_trial_slices"]).to_pylist()
+          batch_slices = pq.read_table(files["batch_daily_slices"]).to_pylist()
+          manifest = json.loads(files["manifest"].read_text(encoding="utf-8"))
+          assert [r["trial_id"] for r in trials] == [1, 2]
+          assert len(distribution) == 10
+          assert len(slices) == 4 and len(batch_slices) == 4
+          assert all(r["active_trial_count"] == 2 for r in distribution)
+          assert manifest["source_sha"] == "0" * 40, "test-only sentinel must not resemble production provenance"
+          assert manifest["full_excel_delivery"] == "NOT_ASSERTED_BY_THIS_EXPORT"
+          report = {
+              "status": "PASS_DAILY_DATASET_CONTENT_INSPECTED",
+              "tested_sha": __import__("os").environ["TESTED_SHA"],
+              "scenario": scenario,
+              "trial_rows": len(trials),
+              "daily_distribution_rows": len(distribution),
+              "daily_trial_slice_rows": len(slices),
+              "batch_daily_slice_rows": len(batch_slices),
+              "simulator_invocations": 0,
+              "excel_builder_loaders": ["load_scenario_trials", "load_scenario_daily_distribution"],
+              "full_excel_delivery": "NOT_ASSERTED_BY_THIS_EXPORT",
+              "files": {
+                  name: {
+                      "path": str(path),
+                      "bytes": path.stat().st_size,
+                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                  }
+                  for name, path in files.items()
+              },
+          }
+          (root / "independent-inspection.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(report, sort_keys=True))
+          PY
+      - name: Upload inspected test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-runtime-daily-dataset-round-trip
+          path: cp-runtime-evidence/
+          if-no-files-found: error
+          retention-days: 14

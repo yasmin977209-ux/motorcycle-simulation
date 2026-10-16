@@ -157,3 +157,12 @@
 
 - اختبار **16 يناير** كان خطأً تقويمياً، وتم تصحيحه إلى **15 يناير**.
 - الإجراء المعتمد لمنع تكرار الخطأ: أي اختبار جديد لأيام الجمعة يجب أن يستشير `dateutils.py` المُختبَر، ولا يكتب تواريخ الجمعة يدوياً.
+
+
+## Runtime and Excel daily dataset export (CP-RUNTIME)
+
+- Minimum interpreter: Python 3.11+; CI should use Python 3.11 or later.
+- Official batch/statistical CLI: `run_batch.py`. Its current options are `--scenario`, `--trials`, `--output-dir`, optional `--start-trial-id`, `--resume-from-checkpoint`, `--master-seed`, and optional `--excel-dataset-root`.
+- `--excel-dataset-root ROOT` writes `ROOT/<scenario>/trial_results.parquet` and `daily_distribution.parquet`, which are read by `scripts/excel_builder.py`, plus raw `daily_trial_slices.parquet` and a fingerprint/provenance manifest. The batch output directory separately persists `daily_slices.parquet` for safe resume.
+- Resuming completed trials whose raw daily rows are absent fails closed; completed trials are not rerun to reconstruct details.
+- The export does not bypass Gate A and does not certify a stable cohort or a complete 185-sheet workbook. It does not change SOURCE_SHA, RNG, master_seed, or the C100 single-trial policy.
