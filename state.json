@@ -10,8 +10,7 @@
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
     "UNDEFINED_BUSINESS_RULE: Stage 11 execution topology remains undefined in the current repository; the Stage 10 report explicitly records NOT_DEFINED_IN_CURRENT_REPOSITORY.",
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
-    "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
-    "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
+    "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set. Historical Stage9C PARTIAL is preserved; state.json PASS refers only to the later C1-C6 evidence reassessment recorded in stage9c_status_reconciliation_20261017 and is not final-delivery acceptance.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
@@ -149,6 +148,28 @@
       "value": "CANONICAL_STAGE9A_9005_ROWS; 25_SCENARIOS_X_4_METRICS_X_5_STATS=500_EXACT_COMPARISONS; NO_TOLERANCE; STAGE13_625_COHORT_SEPARATE; DO_NOT_UPGRADE_HISTORICAL_STAGE9C_PARTIAL",
       "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
       "date": "2026-10-12"
+    },
+    "D-2026-10-12-01": {
+      "topic": "gate_b_p50_change_gt_5_percent",
+      "decision_status": "APPROVED — DELEGATED PROJECT-OWNER DECISION",
+      "date": "2026-10-12",
+      "scope": "D-2026-10-10-01 formula/denominator omission only; 20 non-C100 scenarios; compare N=300→600 and N=600→1200",
+      "quantile": "numpy.quantile(Final_Net_Project_Equity, 0.50, method='linear')",
+      "formula": "100 * abs(P50_new - P50_previous) / abs(P50_previous)",
+      "threshold_percent": 5,
+      "trigger": "Strictly greater than 5.0% at either adjacent checkpoint requires N=2400 for that scenario; exactly 5.0% does not trigger",
+      "near_zero_rule": "If abs(previous P50) < 1e-6, do not calculate a percentage; absolute change must be <1 currency unit, otherwise continue sampling",
+      "exclusions": "C100 remains on its separate deterministic verification path",
+      "source": "docs/governance/DECISIONS_LOG.md — D-2026-10-12-01",
+      "does_not_change": [
+        "Gate A",
+        "Gate B CI criteria",
+        "overall stability criteria",
+        "trial identity",
+        "RNG",
+        "threshold of §2.5",
+        "final delivery acceptance"
+      ]
     }
   },
   "preflight_merge": {
@@ -672,5 +693,28 @@
     "historical_data_or_metadata_modified": false,
     "production_monte_carlo_started": false,
     "merge_commit_sha": null
+  },
+  "stage9c_status_reconciliation_20261017": {
+    "historical_report_status": "PARTIAL — preserved as the historical Stage9C report verdict",
+    "later_evidence_status": "PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT",
+    "basis": "Merged PR #38 (read-only evidence reassessment using existing identity-matched Stage 12 daily-accounting ledger plus the separate CP-D exact XLSX gate)",
+    "evidence": {
+      "pr_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/pull/38",
+      "merge_commit_sha": "74b103cd782c9e75e210a090c94fbcb4b01844c4",
+      "stage12_run_id": 37964656154,
+      "rollforward_run_id": 37971902520,
+      "closure_validation_run_id": 37972735159,
+      "gate_a_run_id": 38169163565,
+      "cp_d_run_id": 38165878333,
+      "canonical_trials": 9005,
+      "canonical_daily_rows": 18449224,
+      "full_stage12_trials": 11005,
+      "full_stage12_daily_rows": 22546465,
+      "daily_rollforward_violations": 0,
+      "closure_balance_violations": 0,
+      "cp_d_exact_comparisons": 500,
+      "cp_d_mismatches": 0
+    },
+    "interpretation": "state.full_stage9c_status=PASS describes the later C1-C6 reassessment, not a retroactive change to the historical report and not final-delivery acceptance. CP-D alone does not upgrade Stage9C. The seven-file delivery remains independently blocked until all applicable gates, identity, cohort, and content audits pass."
   }
 }
