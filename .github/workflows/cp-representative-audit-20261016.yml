@@ -1,0 +1,81 @@
+name: CP-REPRESENTATIVE-AUDIT pinned read-only source audit
+on:
+  push:
+    branches:
+      - "tmp/cp-representative-audit-20261016"
+    paths:
+      - ".github/workflows/cp-representative-audit-20261016.yml"
+      - "scripts/cp_daily_details_extension.py"
+      - "scripts/audit_representative_details.py"
+      - "tests/test_cp_daily_details_extension.py"
+      - "requirements.txt"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cp-representative-audit-${{ github.run_id }}
+  cancel-in-progress: false
+env:
+  PYTHONPATH: "."
+jobs:
+  representative-audit:
+    name: Focused tests and pinned representative balance audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Assert exact branch and checked-out SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "tmp/cp-representative-audit-20261016"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Download the pinned CP-F representative source artifact
+        id: source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p cp-representative-input
+          gh run download 38619859394 --repo "$GITHUB_REPOSITORY" --name "cp-f-replay-C030_G030" --dir cp-representative-input
+      - name: Run focused representative-audit regression tests
+        id: focused-tests
+        run: python -m pytest -q tests/test_cp_daily_details_extension.py
+      - name: Audit exact saved representative payloads and write evidence
+        id: audit
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/audit_representative_details.py --input-dir cp-representative-input --output-dir cp-representative-audit-output
+      - name: Upload audit evidence even if the audit or focused tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-representative-audit-report
+          path: cp-representative-audit-output/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Fail the job unless focused tests and data audit both passed
+        if: always()
+        env:
+          TEST_OUTCOME: ${{ steps.focused-tests.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$TEST_OUTCOME" = "success"
+          test "$AUDIT_OUTCOME" = "success"

@@ -3,6 +3,7 @@ import pytest
 from scripts.cp_daily_details_extension import (
     N2400_RUN_ID, N2400_TESTED_HEAD_SHA, SOURCE_SHA, MASTER_SEED, TARGET_SCENARIO,
     _validate_n2400_record, stage10_trial_result_sha256, validate_trial_id_coverage,
+    _audit_representative_balance_checks, _combine_representative_audit_statuses,
 )
 class Provider:
     def __init__(self, expected): self.expected=expected
@@ -43,3 +44,89 @@ def test_daily_details_scope_is_delivery_only_and_fixed_to_authorized_ids():
     assert '"statistical_checkpoint_executed": False' in source
     assert '"historical_trial_ids_1_to_1200_replayed": False' in source
     assert '"source_sha_bumped": False' in source
+
+
+def _balance_payload(checks=None, daily=None, final_close_date="2027-01-02"):
+    if daily is None:
+        daily = [{"date": "2027-01-01"}, {"date": "2027-01-02"}]
+    if checks is None:
+        checks = [
+            {"Total_Assets": 100, "Total_Equity": 100, "Balance_Difference": 0},
+            {"Total_Assets": 120, "Total_Equity": 120, "Balance_Difference": 0},
+        ]
+    return {
+        "summary": {"final_close_date": final_close_date},
+        "daily": daily,
+        "accounting": {"daily_balance_checks": checks},
+    }
+
+
+def test_representative_balance_audit_reads_nested_accounting_checks():
+    result = _audit_representative_balance_checks(_balance_payload())
+    assert result["status"] == "PASS"
+    assert result["daily_row_count"] == 2
+    assert result["balance_checks"] == 2
+    assert result["numeric_balance_checks"] == 2
+    assert result["verified_balance_checks"] == 2
+    assert result["failure_count"] == 0
+
+
+@pytest.mark.parametrize("mutator", [
+    lambda p: p.pop("accounting"),
+    lambda p: p["accounting"].update({"daily_balance_checks": []}),
+    lambda p: p["accounting"].update({"daily_balance_checks": [{"Total_Assets": 1}]}),
+    lambda p: p["accounting"].update({"daily_balance_checks": [
+        {"Total_Assets": "100", "Total_Equity": 100, "Balance_Difference": 0},
+        {"Total_Assets": 120, "Total_Equity": 120, "Balance_Difference": 0},
+    ]}),
+    lambda p: p["accounting"].update({"daily_balance_checks": [
+        {"Total_Assets": True, "Total_Equity": 100, "Balance_Difference": 0},
+        {"Total_Assets": 120, "Total_Equity": 120, "Balance_Difference": 0},
+    ]}),
+])
+def test_missing_empty_or_invalid_representative_balance_evidence_is_not_verifiable(mutator):
+    payload = _balance_payload()
+    mutator(payload)
+    result = _audit_representative_balance_checks(payload)
+    assert result["status"] == "NOT_VERIFIABLE"
+    assert result["status"] != "PASS"
+    assert result["reason_codes"]
+
+
+@pytest.mark.parametrize("bad_row", [
+    {"Total_Assets": 101, "Total_Equity": 100, "Balance_Difference": 1},
+    {"Total_Assets": 100, "Total_Equity": 100, "Balance_Difference": 1},
+    {"Total_Assets": 101, "Total_Equity": 100, "Balance_Difference": 0},
+])
+def test_proven_representative_accounting_imbalance_is_fail(bad_row):
+    payload = _balance_payload()
+    payload["accounting"]["daily_balance_checks"][0] = bad_row
+    result = _audit_representative_balance_checks(payload)
+    assert result["status"] == "FAIL"
+    assert result["failure_count"] == 1
+    assert result["failures"][0]["index"] == 0
+
+
+def test_daily_to_balance_check_count_mismatch_is_not_verifiable():
+    payload = _balance_payload(checks=[
+        {"Total_Assets": 100, "Total_Equity": 100, "Balance_Difference": 0},
+    ])
+    result = _audit_representative_balance_checks(payload)
+    assert result["status"] == "NOT_VERIFIABLE"
+    assert "DAILY_BALANCE_CHECK_COUNT_MISMATCH" in result["reason_codes"]
+
+
+def test_daily_gap_or_missing_date_is_not_verifiable():
+    payload = _balance_payload(daily=[
+        {"date": "2027-01-01"}, {"date": "2027-01-03"},
+    ])
+    result = _audit_representative_balance_checks(payload)
+    assert result["status"] == "NOT_VERIFIABLE"
+    assert "DAILY_DATE_SEQUENCE_INVALID" in result["reason_codes"]
+
+
+def test_final_representative_audit_status_is_fail_closed():
+    assert _combine_representative_audit_statuses(["PASS", "PASS"]) == "PASS"
+    assert _combine_representative_audit_statuses(["PASS", "NOT_VERIFIABLE"]) == "NOT_VERIFIABLE"
+    assert _combine_representative_audit_statuses(["NOT_VERIFIABLE", "FAIL"]) == "FAIL"
+    assert _combine_representative_audit_statuses([]) == "NOT_VERIFIABLE"

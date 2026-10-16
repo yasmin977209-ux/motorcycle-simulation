@@ -352,6 +352,132 @@ def _verify_distribution_file(path: Path, scenario: str, closes: dict[int, Any])
     return {"status": "PASS", "rows": len(rows), "dates": len(days), "quantiles_per_date": len(QUANTILES),
             "sha256": _sha256_file(path), "schema_identity_checked": True, "finite_metrics_checked": len(rows) * len(DAILY_METRICS)}
 
+def _combine_representative_audit_statuses(statuses: list[str]) -> str:
+    """Fail closed: a proven failure outranks missing evidence; PASS requires every check."""
+    if any(status == "FAIL" for status in statuses):
+        return "FAIL"
+    if statuses and all(status == "PASS" for status in statuses):
+        return "PASS"
+    return "NOT_VERIFIABLE"
+
+
+def _audit_representative_balance_checks(payload: Any) -> dict[str, Any]:
+    """Verify the accounting balance ledger attached to one representative payload.
+
+    Raw daily rows and accounting.daily_balance_checks are distinct parts of the
+    existing representative schema. Empty/missing/malformed evidence is never PASS.
+    """
+    reasons: set[str] = set()
+    failures: list[dict[str, Any]] = []
+    daily = payload.get("daily") if isinstance(payload, dict) else None
+    accounting = payload.get("accounting") if isinstance(payload, dict) else None
+    checks = accounting.get("daily_balance_checks") if isinstance(accounting, dict) else None
+    summary = payload.get("summary") if isinstance(payload, dict) else None
+
+    daily_count = len(daily) if isinstance(daily, list) else 0
+    check_count = len(checks) if isinstance(checks, list) else 0
+    numeric_checks = 0
+    verified_checks = 0
+    nonzero_balance_difference_rows = 0
+    assets_equity_mismatch_rows = 0
+    difference_formula_mismatch_rows = 0
+
+    if not isinstance(daily, list) or not daily:
+        reasons.add("DAILY_ROWS_MISSING_OR_EMPTY")
+    if not isinstance(accounting, dict):
+        reasons.add("ACCOUNTING_SECTION_MISSING_OR_INVALID")
+    if not isinstance(checks, list) or not checks:
+        reasons.add("DAILY_BALANCE_CHECKS_MISSING_OR_EMPTY")
+    if not isinstance(summary, dict) or not isinstance(summary.get("final_close_date"), str):
+        reasons.add("SUMMARY_FINAL_CLOSE_DATE_MISSING_OR_INVALID")
+
+    expected_close = None
+    if isinstance(summary, dict) and isinstance(summary.get("final_close_date"), str):
+        try:
+            expected_close = date.fromisoformat(summary["final_close_date"])
+        except (TypeError, ValueError):
+            reasons.add("SUMMARY_FINAL_CLOSE_DATE_INVALID")
+
+    if isinstance(daily, list) and daily:
+        parsed_dates: list[date] = []
+        for row in daily:
+            if not isinstance(row, dict) or not isinstance(row.get("date"), str):
+                reasons.add("DAILY_DATE_MISSING_OR_INVALID")
+                continue
+            try:
+                parsed_dates.append(date.fromisoformat(row["date"]))
+            except (TypeError, ValueError):
+                reasons.add("DAILY_DATE_MISSING_OR_INVALID")
+        if len(parsed_dates) == len(daily):
+            if parsed_dates[0] != date(2027, 1, 1):
+                reasons.add("DAILY_START_DATE_MISMATCH")
+            if any((right - left).days != 1 for left, right in zip(parsed_dates, parsed_dates[1:])):
+                reasons.add("DAILY_DATE_SEQUENCE_INVALID")
+            if expected_close is not None and parsed_dates[-1] != expected_close:
+                reasons.add("DAILY_FINAL_DATE_MISMATCH")
+
+    if isinstance(daily, list) and isinstance(checks, list) and len(checks) != len(daily):
+        reasons.add("DAILY_BALANCE_CHECK_COUNT_MISMATCH")
+
+    required = {"Total_Assets", "Total_Equity", "Balance_Difference"}
+    if isinstance(checks, list):
+        for index, row in enumerate(checks):
+            if not isinstance(row, dict):
+                reasons.add("BALANCE_CHECK_ROW_INVALID")
+                continue
+            if required - set(row):
+                reasons.add("BALANCE_CHECK_FIELDS_MISSING")
+                continue
+            values = [row.get("Total_Assets"), row.get("Total_Equity"), row.get("Balance_Difference")]
+            if any(isinstance(value, bool) or not isinstance(value, int) for value in values):
+                reasons.add("BALANCE_CHECK_VALUES_INVALID")
+                continue
+            numeric_checks += 1
+            assets, equity, difference = values
+            row_failures: list[str] = []
+            if assets != equity:
+                assets_equity_mismatch_rows += 1
+                row_failures.append("ASSETS_NOT_EQUAL_EQUITY")
+            if difference != 0:
+                nonzero_balance_difference_rows += 1
+                row_failures.append("BALANCE_DIFFERENCE_NONZERO")
+            if difference != assets - equity:
+                difference_formula_mismatch_rows += 1
+                row_failures.append("BALANCE_DIFFERENCE_FORMULA_MISMATCH")
+            if row_failures:
+                daily_row = daily[index] if isinstance(daily, list) and index < len(daily) else None
+                failures.append({
+                    "index": index,
+                    "date": daily_row.get("date") if isinstance(daily_row, dict) else None,
+                    "failure_codes": sorted(set(row_failures)),
+                    "Total_Assets": assets,
+                    "Total_Equity": equity,
+                    "Balance_Difference": difference,
+                })
+            elif index < daily_count:
+                verified_checks += 1
+
+    if failures:
+        status = "FAIL"
+    elif reasons:
+        status = "NOT_VERIFIABLE"
+    else:
+        status = "PASS"
+    return {
+        "status": status,
+        "daily_row_count": daily_count,
+        "balance_checks": check_count,
+        "numeric_balance_checks": numeric_checks,
+        "verified_balance_checks": verified_checks,
+        "nonzero_balance_difference_rows": nonzero_balance_difference_rows,
+        "assets_equity_mismatch_rows": assets_equity_mismatch_rows,
+        "difference_formula_mismatch_rows": difference_formula_mismatch_rows,
+        "failure_count": len(failures),
+        "failures": failures[:25],
+        "reason_codes": sorted(reasons),
+    }
+
+
 def _audit_prior_representatives(representative_dir: Path, prior_manifest: dict[str, Any],
                                  provider: GoldenReferenceProvider) -> dict[str, Any]:
     required = {"P10.json", "P50.json", "P90.json", "Loss.json", "Max Case.json"}
@@ -363,7 +489,10 @@ def _audit_prior_representatives(representative_dir: Path, prior_manifest: dict[
     evidence = {}
     for filename, role in roles.items():
         path = representative_dir / filename
-        payload = _read_json(path); summary = payload.get("summary")
+        payload = _read_json(path)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"PRIOR_REPRESENTATIVE_PAYLOAD_INVALID:{filename}")
+        summary = payload.get("summary")
         if not isinstance(summary, dict):
             raise RuntimeError(f"PRIOR_REPRESENTATIVE_SUMMARY_MISSING:{filename}")
         tid = int(summary.get("trial_id", -1))
@@ -372,16 +501,18 @@ def _audit_prior_representatives(representative_dir: Path, prior_manifest: dict[
         digest = stage10_trial_result_sha256(summary)
         if digest != hashes.get(str(tid)) or digest != provider.get_fingerprint(TARGET_SCENARIO, tid):
             raise RuntimeError(f"PRIOR_REPRESENTATIVE_GOLDEN_MISMATCH:{filename}/{tid}")
-        daily = payload.get("daily")
-        if not isinstance(daily, list) or not daily:
-            raise RuntimeError(f"PRIOR_REPRESENTATIVE_DAILY_DETAILS_MISSING:{filename}")
-        balances = [int(r["Balance_Difference"]) for r in daily if "Balance_Difference" in r]
-        if balances and any(value != 0 for value in balances):
-            raise RuntimeError(f"PRIOR_REPRESENTATIVE_ACCOUNTING_BALANCE_FAIL:{filename}")
-        evidence[filename] = {"trial_id": tid, "role": role, "bytes": path.stat().st_size,
-                              "sha256": _sha256_file(path), "golden_fingerprint": digest,
-                              "daily_row_count": len(daily), "balance_checks": len(balances)}
-    return {"status": "PASS", "role_count": len(evidence), "files": evidence,
+        balance_audit = _audit_representative_balance_checks(payload)
+        evidence[filename] = {
+            "trial_id": tid, "role": role, "bytes": path.stat().st_size,
+            "sha256": _sha256_file(path), "golden_fingerprint": digest,
+            "daily_row_count": balance_audit["daily_row_count"],
+            "balance_checks": balance_audit["balance_checks"],
+            "balance_audit": balance_audit,
+        }
+    overall_status = _combine_representative_audit_statuses(
+        [item["balance_audit"]["status"] for item in evidence.values()]
+    )
+    return {"status": overall_status, "role_count": len(evidence), "files": evidence,
             "provenance": {"run_id": PRIOR_REPLAY_RUN_ID, "artifact_id": PRIOR_REPLAY_ARTIFACT_ID,
                            "artifact_sha256": PRIOR_REPLAY_ARCHIVE_SHA256}}
 
@@ -512,6 +643,11 @@ def run_c030_daily_extension(*, historical_path: Path, prior_extension_path: Pat
     if int(prior_manifest.get("daily_distribution", {}).get("daily_distribution_rows", -1)) != 8325:
         raise RuntimeError("PRIOR_CP_F_DISTRIBUTION_ROW_COUNT_MISMATCH")
     representative_audit = _audit_prior_representatives(prior_representatives_dir, prior_manifest, provider)
+    representative_evidence = {"replayed": False, **representative_audit}
+    (out / "representative_details_audit.json").write_text(
+        json.dumps(representative_evidence, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    if representative_audit["status"] != "PASS":
+        raise RuntimeError(f"PRIOR_REPRESENTATIVE_ACCOUNTING_AUDIT_{representative_audit['status']}")
 
     extension_path = out / "daily_accounting_extension.parquet"
     schema = _daily_schema(scenario); extension_rows = 0; replay_hashes: dict[int, str] = {}
@@ -548,7 +684,7 @@ def run_c030_daily_extension(*, historical_path: Path, prior_extension_path: Pat
     distribution_written = _daily_distribution(historical_path, prior_extension_path, extension_path,
         [all_results[tid]["trial_result"] for tid in range(1, 2401)], scenario, distribution_path)
     distribution_verified = _verify_distribution_file(distribution_path, scenario, closes)
-    representative_evidence = {"status": "PASS", "replayed": False, **representative_audit}
+    representative_evidence = {"replayed": False, **representative_audit}
     (out / "representative_details_audit.json").write_text(
         json.dumps(representative_evidence, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(source_identity_report_path, evidence_dir / "source_identity_exception_report.json")
@@ -596,7 +732,7 @@ def run_c030_daily_extension(*, historical_path: Path, prior_extension_path: Pat
             "fingerprint_map_sha256": _ordered_map_sha256({scenario: replay_hashes})},
         "daily_distribution": {"file": "daily_distribution.parquet", **distribution_written,
             "post_write_validation": distribution_verified},
-        "representative_details": {"status": "PASS", "replayed": False, "evidence_file": "representative_details_audit.json",
+        "representative_details": {"status": representative_audit["status"], "replayed": False, "evidence_file": "representative_details_audit.json",
             "prior_manifest_sha256": prior_manifest_sha, "files": representative_audit["files"]},
         "historic_failures_preserved": {
             "n300_to_n600": {"status": "FAIL", "metric": "P90_Final_Cash",
