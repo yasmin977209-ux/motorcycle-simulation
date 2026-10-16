@@ -262,7 +262,7 @@ def write_heatmap(wb, summaries):
         row += 1
         write_table(
             ws,
-            ["Collection \ Guarantee"] + [f"G{g:02d}" for g in recoveries],
+            ["Collection \\ Guarantee"] + [f"G{g:02d}" for g in recoveries],
             [
                 [f"C{c:03d}"] + [summaries[f"C{c:03d}_G{g:03d}"][key] for g in recoveries]
                 for c in collections
