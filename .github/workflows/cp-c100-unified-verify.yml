@@ -29,7 +29,7 @@ jobs:
             accounting.py collection.py guarantee.py friday.py settlement.py \
             closure.py partner_equity.py monte_carlo.py \
             .github/workflows/stage7-full-run.yml
-          test "$(grep -c 'C100_STATISTICAL_START_TRIALS: Final\[int\] = 300' constants.py)" = "1"
+          test "$(grep -Fxc 'C100_STATISTICAL_START_TRIALS: Final[int] = 300' constants.py)" = "1"
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
