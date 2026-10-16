@@ -841,8 +841,8 @@ def test_stage7_provider_preflight_runs_before_any_scenario_job() -> None:
     assert source_index < provider_index < stage7_preflight_index
     provider_step = steps[provider_index]
     assert "scripts/verify_stage7_gate_a_provider.py" in provider_step["run"]
-    assert provider_step["env"]["SOURCE_SHA"] == "\${{ env.SOURCE_SHA }}"
-    assert provider_step["env"]["MASTER_SEED"] == "\${{ env.MASTER_SEED }}"
+    assert provider_step["env"]["SOURCE_SHA"] == "${{ env.SOURCE_SHA }}"
+    assert provider_step["env"]["MASTER_SEED"] == "${{ env.MASTER_SEED }}"
 
 def test_stage7_gate_a_calls_are_bound_to_exact_provider_evidence() -> None:
     text = _workflow_text()
