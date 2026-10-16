@@ -177,3 +177,15 @@ The three preserved checkpoint reports each contain 60/60 CI points passed, with
 Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` completed both jobs successfully. The canonical precision gate passed 25/25 scenario packages, 9,005/9,005 unique trial rows, 185 worksheets, zero Excel-error cells, zero formulas, and 500/500 exact numeric comparisons. One target cell required patching; all 500 target cells were verified post-write. The original published workbook SHA-256 remains `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d`; the separate candidate workbook SHA-256 is `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`. No simulation or new trial execution occurred.
 
 **References:** `docs/stage9c/STAGE9C_REPORT.md` §C-6; `docs/stage9a/dataset_manifest.json`; `docs/stage9c/R4_export_numeric_precision.md`; Stage 9C canonical precision gate Run `38165878333`. The 625-trial Stage 13 definition is maintained as a distinct cohort and is not amended here.
+
+### Owner confirmation — D-2026-10-13-02 source identity exception (2026-10-16)
+
+**Authority:** confirmed directly by the repository owner in the project conversation on 2026-10-16. This entry records confirmation of the existing narrow exception; it does not create a broader source waiver.
+
+- **Decision scope:** retain the allowlisted additive compatibility adapter `_create_contract(project, bike, contract_type, current_date)` in `daily_engine.py`, delegating to `_new_contract(...)` only. Do not redirect existing internal call sites or make any behavioral change.
+- **Classification:** `additive_compatibility_adapter`; the reviewed text diff is one inserted adapter block with no deleted/replaced source lines relative to the pinned source blob.
+- **Identity lock:** `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` remains unchanged. This confirmation does not authorize changing RNG, master seed, schema, historical data, Parquet, or trial identities.
+- **Allowlisted verification:** existing deterministic replay Run `38461464864`, tested SHA `6da81aadbf451131304024d919f6a89be772b717`, compared 10 selected trial fingerprints with candidate and historical manifest values: 10/10 exact matches, zero drift; the replay step reported no Dataset/Parquet modification and was not a production Monte Carlo run. This supports only the allowlisted deterministic replay scope.
+- **Separate failure retained:** the same workflow Run's full pytest step failed with `3 failed, 384 passed, 1 skipped`, including missing expected state fields. The successful replay step is not a full-workflow PASS; the pytest failures remain visible and are not waived by this identity exception.
+- **No data promotion:** the exception does not add outputs to the canonical dataset, does not promote candidate results to golden references, and does not change any previously completed trial.
+
