@@ -41,6 +41,14 @@ jobs:
         env:
           PYTHONPATH: .
         run: python scripts/verify_gatea_provider_workflow.py
+      - name: Validate narrow source identity allowlist
+        env:
+          SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+          PYTHONPATH: .
+        run: >-
+          python scripts/verify_source_identity_exception.py
+          --source-sha "$SOURCE_SHA"
+          --output source_identity_exception_report.json
       - name: Validate immutable live provider without trial execution
         env:
           GH_TOKEN: ${{ github.token }}
@@ -54,5 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cp-gatea-provider-bind-report
-          path: gatea_provider_preflight_report.json
+          path: |
+            gatea_provider_preflight_report.json
+            source_identity_exception_report.json
           if-no-files-found: error
