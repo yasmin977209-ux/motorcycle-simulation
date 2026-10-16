@@ -16,7 +16,7 @@ permissions:
 env:
   MASTER_SEED: "20270101"
   INITIAL_NON_C100_TRIALS: "300"
-  INITIAL_C100_TRIALS: "1"
+  INITIAL_C100_TRIALS: "300"
   ESCALATION_MULTIPLIER: "2"
   STABILITY_CONSECUTIVE_CHECKS: "3"
   CI_RELATIVE_EPSILON: "0.01"
@@ -341,7 +341,8 @@ jobs:
           )
           from scripts.stage7_stability import (
               evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
-              is_statistical_checkpoint, next_statistical_checkpoint,
+              hydrate_p50_history, is_statistical_checkpoint,
+              next_statistical_checkpoint, p50_history_ready, p50_requires_n2400,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -401,6 +402,20 @@ jobs:
                   }
               return out
 
+          def p50_values_by_checkpoint(results):
+              values = {}
+              for checkpoint_n in (300, 600, 1200):
+                  if len(results) < checkpoint_n:
+                      continue
+                  sample = np.asarray(
+                      [item.final_net_project_equity for item in results[:checkpoint_n]],
+                      dtype=np.float64,
+                  )
+                  values[checkpoint_n] = float(
+                      np.quantile(sample, 0.50, method="linear")
+                  )
+              return values
+
           def elapsed_since_job_start():
               return time.time() - JOB_STARTED_AT_EPOCH
 
@@ -459,86 +474,102 @@ jobs:
                   "State contains artifact identity but no restored results"
               )
 
-          stored_policy_id = state.get("statistical_policy_id")
-          if SCENARIO.startswith("C100_"):
-              target_n = INITIAL_C100
-              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
-          else:
-              if stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID and (completed or history):
-                  if completed > 550:
-                      raise RuntimeError(
-                          "Legacy linear-schedule state exceeds authorized historical analytical range 1..550; "
-                          "cannot migrate safely under the doubling policy."
-                      )
-                  history, discarded_points = filter_statistical_history(history)
-                  reconstructed_n300 = False
-                  if completed >= INITIAL_NON_C100 and not any(
-                      int(item.get("n", -1)) == INITIAL_NON_C100 for item in history
-                  ):
-                      baseline_results = results[:INITIAL_NON_C100]
-                      baseline_metrics = statistics(baseline_results)
-                      history.insert(0, {
-                          "n": INITIAL_NON_C100,
-                          "gate_a": evaluate_gate_a(
-                              previous_n=None,
-                              previous_metrics=None,
-                              current_n=INITIAL_NON_C100,
-                              current_metrics=baseline_metrics,
-                              escalation_multiplier=ESCALATION_MULTIPLIER,
-                              relative_epsilon=RELATIVE_EPSILON,
-                              absolute_epsilon=ABSOLUTE_EPSILON,
-                          ),
-                          "gate_b": evaluate_gate_b(baseline_metrics),
-                          "metrics": baseline_metrics,
-                          "reconstructed_from_identity_verified_rows": True,
-                      })
-                      reconstructed_n300 = True
-                  state["policy_migration"] = {
-                      "from_policy_id": stored_policy_id or "LEGACY_UNVERSIONED",
-                      "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
-                      "preserved_checkpoint_n": [int(item["n"]) for item in history],
-                      "discarded_noncompliant_checkpoint_n": discarded_points,
-                      "n300_reconstructed_from_existing_verified_rows": reconstructed_n300,
-                      "completed_trials_reused": completed,
-                      "historical_trials_rerun": False,
-                      "source_sha": SOURCE_SHA,
-                      "master_seed": MASTER_SEED,
-                  }
-                  if completed:
-                      state["final_status"] = None
-                      state["stable_at_n"] = None
-                      state["included_in_final_stats"] = False
-                      state["reason_if_not_stable"] = (
-                          "Legacy linear checkpoints excluded; next execution resumes on the approved doubling schedule."
-                      )
-              else:
-                  history, discarded_points = filter_statistical_history(history)
-                  if discarded_points:
-                      raise RuntimeError(
-                          "Current-policy Stage 7 state contains non-doubling checkpoints."
-                      )
-                  if stored_policy_id == STATISTICAL_ESCALATION_POLICY_ID and completed:
-                      expected_next = next_statistical_checkpoint(completed)
-                      if int(state.get("next_check_n", expected_next)) != expected_next:
-                          raise RuntimeError(
-                              "Current-policy state next_check_n differs from the approved doubling schedule."
-                          )
-
-              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
-              state["policy"] = {
-                  "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
-                  "initial_non_c100_trials": INITIAL_NON_C100,
-                  "initial_c100_trials": INITIAL_C100,
-                  "escalation_multiplier": ESCALATION_MULTIPLIER,
-                  "stability_consecutive_checks": REQUIRED_CONSECUTIVE,
-                  "ci_relative_epsilon": RELATIVE_EPSILON,
-                  "ci_absolute_epsilon": ABSOLUTE_EPSILON,
+          if stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID and (completed or history):
+              if completed > 550:
+                  raise RuntimeError(
+                      "Legacy linear-schedule state exceeds authorized historical analytical range 1..550; "
+                      "cannot migrate safely under the doubling policy."
+                  )
+              history, discarded_points = filter_statistical_history(history)
+              reconstructed_n300 = False
+              if completed >= INITIAL_NON_C100 and not any(
+                  int(item.get("n", -1)) == INITIAL_NON_C100 for item in history
+              ):
+                  baseline_results = results[:INITIAL_NON_C100]
+                  baseline_metrics = statistics(baseline_results)
+                  history.insert(0, {
+                      "n": INITIAL_NON_C100,
+                      "gate_a": evaluate_gate_a(
+                          previous_n=None,
+                          previous_metrics=None,
+                          current_n=INITIAL_NON_C100,
+                          current_metrics=baseline_metrics,
+                          escalation_multiplier=ESCALATION_MULTIPLIER,
+                          relative_epsilon=RELATIVE_EPSILON,
+                          absolute_epsilon=ABSOLUTE_EPSILON,
+                      ),
+                      "gate_b": evaluate_gate_b(baseline_metrics),
+                      "metrics": baseline_metrics,
+                      "reconstructed_from_identity_verified_rows": True,
+                  })
+                  reconstructed_n300 = True
+              state["policy_migration"] = {
+                  "from_policy_id": stored_policy_id or "LEGACY_UNVERSIONED",
+                  "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+                  "preserved_checkpoint_n": [int(item["n"]) for item in history],
+                  "discarded_noncompliant_checkpoint_n": discarded_points,
+                  "n300_reconstructed_from_existing_verified_rows": reconstructed_n300,
+                  "completed_trials_reused": completed,
+                  "historical_trials_rerun": False,
+                  "source_sha": SOURCE_SHA,
+                  "master_seed": MASTER_SEED,
               }
-              state["stability_history"] = history
-              target_n = next_statistical_checkpoint(completed)
-              state["next_check_n"] = target_n
+              if completed:
+                  state["final_status"] = None
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      "Legacy linear checkpoints excluded; next execution resumes on the approved doubling schedule."
+                  )
+          else:
+              history, discarded_points = filter_statistical_history(history)
+              if discarded_points:
+                  raise RuntimeError(
+                      "Current-policy Stage 7 state contains non-doubling checkpoints."
+                  )
+              if stored_policy_id == STATISTICAL_ESCALATION_POLICY_ID and completed:
+                  expected_next = next_statistical_checkpoint(completed)
+                  if int(state.get("next_check_n", expected_next)) != expected_next:
+                      raise RuntimeError(
+                          "Current-policy state next_check_n differs from the approved doubling schedule."
+                      )
 
-          if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:
+          state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+          state["policy"] = {
+              "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+              "initial_non_c100_trials": INITIAL_NON_C100,
+              "initial_c100_trials": INITIAL_C100,
+              "escalation_multiplier": ESCALATION_MULTIPLIER,
+              "stability_consecutive_checks": REQUIRED_CONSECUTIVE,
+              "ci_relative_epsilon": RELATIVE_EPSILON,
+              "ci_absolute_epsilon": ABSOLUTE_EPSILON,
+          }
+          state["stability_history"] = history
+          target_n = next_statistical_checkpoint(completed)
+          state["next_check_n"] = target_n
+          history = hydrate_p50_history(history, p50_values_by_checkpoint(results))
+          state["stability_history"] = history
+          if completed >= INITIAL_NON_C100 and not p50_history_ready(history, completed):
+              state["final_status"] = "blocked"
+              state["stable_at_n"] = None
+              state["included_in_final_stats"] = False
+              state["reason_if_not_stable"] = (
+                  "P50 >5% policy evidence is incomplete or invalid; refusing additional trials"
+              )
+              if results:
+                  state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                  state["artifact_identity"] = build_artifact_identity(
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      trial_id_start=1,
+                      trial_id_end=completed,
+                      fingerprint_sha256=state["final_fingerprint"],
+                  )
+              blob_sha = store.save_state(state, blob_sha)
+              print("P50_PREFLIGHT_BLOCKED=missing_or_invalid_checkpoint_evidence")
+              raise SystemExit(0)
+
+          if completed >= INITIAL_NON_C100:
               latest_gate_a = (
                   history[-1].get("gate_a", {})
                   if history
@@ -606,6 +637,10 @@ jobs:
                       and item.get("gate_a", {}).get("stable") is True
                       and item.get("gate_b", {}).get("stable") is True
                       for item in recent_gate_a_points
+                  )
+                  and p50_history_ready(history, completed)
+                  and not (
+                      p50_requires_n2400(history) and completed < 2400
                   )
               )
               if not previous_stable_state_is_valid:
@@ -676,148 +711,87 @@ jobs:
                   next_trial_id=int(state["next_trial_id"]),
               )
 
-              if SCENARIO.startswith("C100_"):
-                  if len(results) != 1:
-                      raise RuntimeError(
-                          f"C100 primary sample must remain n=1, got {len(results)}"
-                      )
+              current_stats = statistics(results)
+              previous = history[-1] if history else None
 
-                  primary = results[0]
-                  verification_project = daily_engine.run_deterministic_trial(
-                      recovery_rate_pct=recovery_rate_pct,
-                      trial_id=2,
-                      scenario_id=SCENARIO,
-                      master_seed=MASTER_SEED,
-                      collection_probability=collection_probability,
-                      log_events=False,
+              gate_a = evaluate_gate_a(
+                  previous_n=previous.get("n") if previous else None,
+                  previous_metrics=previous.get("metrics") if previous else None,
+                  current_n=len(results),
+                  current_metrics=current_stats,
+                  escalation_multiplier=ESCALATION_MULTIPLIER,
+                  relative_epsilon=RELATIVE_EPSILON,
+                  absolute_epsilon=ABSOLUTE_EPSILON,
+              )
+              gate_b = evaluate_gate_b(current_stats)
+              p50_values = p50_values_by_checkpoint(results)
+              check_entry = {
+                  "n": len(results),
+                  "gate_a": gate_a,
+                  "gate_b": gate_b,
+                  "metrics": current_stats,
+                  "p50_final_net_project_equity": p50_values.get(len(results)),
+              }
+              history.append(check_entry)
+              history = hydrate_p50_history(history, p50_values)
+              state["stability_history"] = history
+
+              gate_a_status = gate_a.get("status", "BLOCKED")
+              gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
+              p50_ready = p50_history_ready(history, completed)
+              p50_waiting_for_n2400 = (
+                  p50_requires_n2400(history) and completed < 2400
+              )
+              recent = history[-REQUIRED_CONSECUTIVE:]
+              stable_gates_now = (
+                  gate_a_status == "PASS"
+                  and len(recent) == REQUIRED_CONSECUTIVE
+                  and all(
+                      item.get("gate_a", {}).get("status") == "PASS"
+                      and item.get("gate_a", {}).get("checked") is True
+                      and item.get("gate_a", {}).get("stable") is True
+                      and item.get("gate_b", {}).get("stable") is True
+                      for item in recent
                   )
-                  verification = monte_carlo._trial_result_from_project(
-                      verification_project,
-                      scenario_id=SCENARIO,
-                      collection_probability=collection_probability,
-                      recovery_rate_pct=recovery_rate_pct,
-                      trial_id=2,
+              )
+              stable_now = stable_gates_now and p50_ready and not p50_waiting_for_n2400
+
+              if gate_a_stop:
+                  state["stable_at_n"] = None
+                  state["final_status"] = (
+                      "blocked" if gate_a_status == "BLOCKED" else "failed"
                   )
-
-                  seed_primary = rng.seed_hex(
-                      MASTER_SEED,
-                      SCENARIO,
-                      1,
-                      "BK0001",
-                      constants.INITIAL_FLEET_DELIVERY_DATE,
-                      "PRIMARY_COLLECTION",
+                  state["reason_if_not_stable"] = (
+                      f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
+                      "execution stopped before the next trial block"
                   )
-                  seed_verification = rng.seed_hex(
-                      MASTER_SEED,
-                      SCENARIO,
-                      2,
-                      "BK0001",
-                      constants.INITIAL_FLEET_DELIVERY_DATE,
-                      "PRIMARY_COLLECTION",
+              elif not p50_ready:
+                  state["stable_at_n"] = None
+                  state["final_status"] = "blocked"
+                  state["reason_if_not_stable"] = (
+                      "P50 >5% policy evidence is incomplete or invalid; "
+                      "execution stopped before the next trial block"
                   )
-                  primary_dict = asdict(primary)
-                  verification_dict = asdict(verification)
-
-                  primary_trial_id = primary_dict.pop("trial_id")
-                  verification_trial_id = verification_dict.pop("trial_id")
-
-                  if primary_trial_id == verification_trial_id:
-                      raise AssertionError(
-                          "C100 independence requires distinct trial_id"
-                      )
-
-                  equality = primary_dict == verification_dict
-
-                  c100_proof = {
-                      "scenario": SCENARIO,
-                      "primary_trial_id": 1,
-                      "verification_trial_id": 2,
-                      "primary_seed_hex": seed_primary,
-                      "verification_seed_hex": seed_verification,
-                      "different_trial_id": True,
-                      "different_derived_seed": seed_primary != seed_verification,
-                      "exact_result_equality": equality,
-                      "stable": equality,
-                  }
-                  write_json(
-                      RESULTS_DIR / "c100_independent_verification.json",
-                      c100_proof,
+              elif stable_now:
+                  state["stable_at_n"] = completed
+                  state["final_status"] = "stable"
+                  state["reason_if_not_stable"] = None
+              elif stable_gates_now and p50_waiting_for_n2400:
+                  state["stable_at_n"] = None
+                  state["final_status"] = "PRELIMINARY_STABLE"
+                  state["reason_if_not_stable"] = (
+                      "P50 >5% continuation rule requires checkpoint N=2400"
                   )
-
-                  state["c100_independent_verification"] = c100_proof
-                  if equality:
-                      state["stable_at_n"] = 1
-                      state["final_status"] = "stable"
-                      state["reason_if_not_stable"] = None
-                  else:
-                      state["stable_at_n"] = None
-                      state["final_status"] = None
-                      state["reason_if_not_stable"] = (
-                          "independent C100 trial result mismatch"
-                      )
               else:
-                  current_stats = statistics(results)
-                  previous = history[-1] if history else None
-
-                  gate_a = evaluate_gate_a(
-                      previous_n=previous.get("n") if previous else None,
-                      previous_metrics=previous.get("metrics") if previous else None,
-                      current_n=len(results),
-                      current_metrics=current_stats,
-                      escalation_multiplier=ESCALATION_MULTIPLIER,
-                      relative_epsilon=RELATIVE_EPSILON,
-                      absolute_epsilon=ABSOLUTE_EPSILON,
-                  )
-                  gate_b = evaluate_gate_b(current_stats)
-
-                  check_entry = {
-                      "n": len(results),
-                      "gate_a": gate_a,
-                      "gate_b": gate_b,
-                      "metrics": current_stats,
-                  }
-                  history.append(check_entry)
-                  state["stability_history"] = history
-
-                  recent = history[-REQUIRED_CONSECUTIVE:]
-                  gate_a_status = gate_a.get("status", "BLOCKED")
-                  gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
-                  stable_now = (
-                      not gate_a_stop
-                      and gate_a_status == "PASS"
-                      and len(recent) == REQUIRED_CONSECUTIVE
-                      and all(
-                          item.get("gate_a", {}).get("status") == "PASS"
-                          and item.get("gate_a", {}).get("checked") is True
-                          and item.get("gate_a", {}).get("stable") is True
-                          and item.get("gate_b", {}).get("stable") is True
-                          for item in recent
-                      )
+                  state["stable_at_n"] = None
+                  state["final_status"] = None
+                  state["reason_if_not_stable"] = (
+                      "dual stability gates not yet satisfied"
                   )
 
-                  if stable_now:
-                      state["stable_at_n"] = len(results)
-                      state["final_status"] = "stable"
-                      state["reason_if_not_stable"] = None
-                  elif gate_a_stop:
-                      state["stable_at_n"] = None
-                      state["final_status"] = (
-                          "blocked" if gate_a_status == "BLOCKED" else "failed"
-                      )
-                      state["reason_if_not_stable"] = (
-                          f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
-                          "execution stopped before the next checkpoint"
-                      )
-                  else:
-                      state["stable_at_n"] = None
-                      state["final_status"] = None
-                      state["reason_if_not_stable"] = (
-                          "dual stability gates not yet satisfied"
-                      )
-
-                  target_n = next_statistical_checkpoint(completed)
-                  state["next_check_n"] = target_n
-                  state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+              target_n = next_statistical_checkpoint(completed)
+              state["next_check_n"] = target_n
+              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
 
               state["stability_history"] = history
               state["included_in_final_stats"] = state["final_status"] == "stable"
@@ -858,9 +832,10 @@ jobs:
                       },
                   )
                   print(
-                      "GATE_A_EXACT_GOLDEN_BLOCKED_OR_FAILED="
-                      + str(state["stability_history"][-1]["gate_a"].get("status"))
-                      + "; stopping before next trial block"
+                      "CHECKPOINT_GATE_BLOCKED_OR_FAILED="
+                      + str(state["final_status"])
+                      + "; "
+                      + str(state.get("reason_if_not_stable"))
                   )
                   break
 

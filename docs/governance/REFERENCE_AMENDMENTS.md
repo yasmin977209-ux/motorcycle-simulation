@@ -339,7 +339,7 @@ def build_excel(dataset_path, output_path, mode="canonical"):
    - `ROOT/<scenario>/daily_trial_slices.parquet` for auditable raw detail rows.
    - `ROOT/<scenario>/daily_export_manifest.json` with source, seed, range, and content fingerprints plus explicit Gate A/full-delivery scope.
 5. Gate A remains fail-closed. An export is only a data serialization step; it cannot establish Gate A, Gate B, stability, cohort identity, or final delivery approval. The existing exact-golden fingerprint and source-identity requirements remain unchanged.
-6. **Historical clause superseded by Amendment-08:** the one-official-trial C100 rule recorded here applied when Amendment-07 was adopted. The later owner decision D-2026-10-17-02 replaces that rule with the shared statistical policy for C100; no historical trial is modified or replayed by this wording change.
+6. **Historical clause superseded by Amendment-08:** the one-official-trial C100 rule recorded here applied when Amendment-07 was adopted. D-2026-10-17-02 replaced it in `run_batch.py`; Amendment-09 / D-2026-10-17-03 now extends the same 300/600/1200/... Gate A/Gate B policy to the production Stage 7 workflow and the P50 rule to C100. No historical trial is modified or replayed by these wording changes.
 7. These per-scenario files are the daily and trial inputs read by the current Excel loader. They do **not** by themselves provide the representative payloads, accounting/asset/partner/guarantee/contracts packages, the canonical Stage 13 assembler, or a complete 185-sheet workbook. Those remain separate acceptance requirements.
 
 ### CLI form
@@ -371,7 +371,7 @@ Make the documented minimum interpreter match the current dependencies and adopt
 
 ### Normative decision
 
-1. C100 scenarios now share the non-C100 policy in `run_batch.py`: initial statistical target (N=300); doubling checkpoints (300 ightarrow 600 ightarrow 1200 ightarrow 2400 ightarrow ldots); and the same 95% Student-t CI Gate B across the three approved stability metrics.
+1. C100 scenarios share the non-C100 policy: initial target N=300; doubling checkpoints 300 -> 600 -> 1200 -> 2400 -> ...; and the same 95% Student-t CI Gate B across the three approved stability metrics.
 2. Gate A continues to require explicit approved-golden fingerprint equality and source-identity equality. Missing provider evidence remains `BLOCKED`; a blocked/failed Gate A checkpoint must stop execution before the next trial block, even when more trials were requested in the same CLI invocation.
 3. Final stability continues to require three consecutive checkpoint records with explicit Gate A `PASS` and Gate B stable. This amendment does not relax any existing acceptance criterion.
 4. The former C100-only one-trial shortcut and separate extra determinism trial invocation are removed from `run_batch.py`; the official dataset uses the normal trial-ID sequence and does not execute an extra trial outside that sequence.
@@ -387,3 +387,22 @@ Use deterministic synthetic fixtures with the simulation runner monkeypatched. V
 
 Apply one consistent adaptive statistical lifecycle in the official `run_batch.py` runner without fabricating approved-golden evidence, replaying historical trials, or changing deterministic inputs.
 
+
+
+## Amendment-09 — Production Stage 7 and P50 extension for C100
+
+**Status:** APPROVED — PROJECT OWNER  
+**Date:** 2026-10-17  
+**Decision:** D-2026-10-17-03
+
+### Normative scope
+
+1. This amendment extends Amendment-08 from `run_batch.py` to `.github/workflows/stage7-full-run.yml` and its authoring/regression tests. All scenarios, including C100, use N=300 then doubling 600, 1200, 2400, ... .
+2. C100 uses the same exact-golden/source-identity Gate A, Student-t 95% CI Gate B and three-consecutive-check stability requirement. Remove the one-trial stable shortcut and the extra C100 verification call at trial ID 2.
+3. Supersede only D-2026-10-12-01 item 1's exclusion of C100 from the P50 >5% comparison. Preserve the approved P50 metric, linear quantile, adjacent comparisons 300->600 and 600->1200, strict >5.0% trigger, prior-value denominator, reference epsilon 1e-6, and absolute one-unit fallback. Any triggered comparison leads to `PRELIMINARY_STABLE` after the normal gates pass and requires continuation through the N=2400 checkpoint.
+4. The shared evaluator is used by the batch runner and Stage 7 orchestrator. Missing or malformed P50 evidence must fail closed. Resume may derive P50 from identity-verified existing trial rows only; completed trials must not be replayed.
+5. This amendment does not change the original approved reference file, SOURCE_SHA, master seed, RNG, engine, historical data, or production cohort identity, and does not establish production Gate A/B or final delivery acceptance.
+
+### Evidence and limits
+
+The CP's temporary pinned workflow is test-only and does not dispatch the production workflow. It must inspect the exact tested commit, run deterministic policy tests, inspect the uploaded report artifact and hashes, and then be removed after evidence capture. Successful synthetic tests do not establish production stability while the approved Gate A golden provider or source-identity validation is missing.

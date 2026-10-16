@@ -204,7 +204,7 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 **Scope:** `run_batch.py`, its C100 regression tests, decision documentation and a temporary exact-branch verification workflow.
 
 **Normative decision:**
-1. C100 uses (N=300) as its initial checkpoint, followed by doubling (300 ightarrow 600 ightarrow 1200 ightarrow 2400 ightarrow ldots), matching other scenarios in the official `run_batch.py` statistical CLI.
+1. C100 uses (N=300) as its initial checkpoint, followed by doubling (300 -> 600 -> 1200 -> 2400 -> ...), matching other scenarios in the official `run_batch.py` statistical CLI.
 2. C100 uses the same Student-t 95% CI Gate B metrics, exact approved-golden Gate A requirements, and three consecutive passing checkpoint rule.
 3. The one-trial C100 shortcut and extra out-of-sequence independent verification invocation are removed from `run_batch.py`. Official trial IDs remain a gap-free unique sequence.
 4. When Gate A is `BLOCKED` or `FAIL`, the current run stops before starting any further trial block; a requested larger batch does not override Gate A.
@@ -213,3 +213,25 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 7. The separate `.github/workflows/stage7-full-run.yml` remains outside this CP and still has a C100-specific path; no repository-wide production workflow alignment is claimed. D-2026-10-12-01's P50 >5% exclusion of C100 also remains to be addressed under a separately scoped change.
 
 **Evidence to attach:** CP-C100 tests on branch `tmp/cp-runtime-20261017`; no Monte Carlo invocation.
+
+
+## D-2026-10-17-03 — C100 Stage 7 and P50 policy unification
+
+**Status:** APPROVED — PROJECT OWNER (explicit authorization in CP-C100-STAGE7-UNIFICATION)  
+**Date:** 2026-10-17  
+**Scope:** Official Stage 7 full-run workflow, `run_batch.py`, shared Stage 7 stability policy, C100/Stage 7 tests, and the corresponding decision and reference-amendment records.
+
+**Narrow supersession:**
+- Supersedes only the C100 one-official-trial/determinism-only clauses in D-2026-10-10-01, D-2026-10-17-01, and the Stage 7 branch implementation.
+- Supersedes only item 1 of D-2026-10-12-01 to include C100 in the same P50 >5% comparison. The formula, adjacent checkpoint pairs, strict >5.0% threshold, near-zero reference epsilon of 1e-6, and absolute one-currency-unit fallback remain unchanged.
+- Does not supersede any other requirement in those decisions or the canonical reference itself.
+
+**Normative decision:**
+1. C100 and all other scenarios start at N=300 and use doubling checkpoints 300 -> 600 -> 1200 -> 2400 -> ... .
+2. Gate A remains exact-approved-golden fingerprint and source identity equality, fail-closed. Gate B remains the same Student-t 95% CI rule over the three approved metrics. Final stability still requires three consecutive checkpoints with Gate A PASS and Gate B stable.
+3. At N=300, 600 and 1200, compute P50 as the linear 50th percentile of `Final_Net_Project_Equity` over complete valid trial IDs `1..N`. Compare only N=300->600 and N=600->1200 with `100 * abs(P50_new - P50_previous) / abs(P50_previous)`. If the prior P50 has absolute value below 1e-6, use the absolute one-unit rule: a difference greater than or equal to one currency unit requires continuation.
+4. A strict relative change >5.0% at either authorized transition, or an absolute change >=1 under the near-zero fallback, requires `PRELIMINARY_STABLE` (when the three other checkpoint gate records pass) and continuation to N=2400. Exactly 5.0% does not trigger continuation. At N=2400, stability may be declared only if the unchanged three-consecutive Gate A/Gate B acceptance rule is satisfied.
+5. Every workflow path checks Gate A before starting another trial block. Missing P50 history or a transition that cannot be computed from identity-verified saved results is BLOCKED; the runner must not fabricate it by rerunning completed IDs.
+6. Use deterministic tests and synthetic data. This decision does not authorize production Monte Carlo, a SOURCE_SHA change, seed/RNG changes, historical data mutation, final Excel generation/approval, a PR merge, or a release.
+
+**Acceptance evidence:** CP-C100-STAGE7-UNIFICATION pinned test run and inspected artifact; report separately whether workflow/static checks, synthetic tests, and any existing production gates passed. Production Gate A remains BLOCKED while the approved golden provider is absent and SOURCE_SHA drift remains unresolved.

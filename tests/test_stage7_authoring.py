@@ -342,48 +342,23 @@ def test_gate_a_rejects_malformed_fingerprint() -> None:
 
 def test_stage7_fails_closed_on_unverified_resume_and_stable_state() -> None:
     text = _workflow_text()
-    assert 'if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:' in text
+    assert 'if completed >= INITIAL_NON_C100:' in text
     assert 'latest_status = latest_gate_a.get("status")' in text
     assert 'state.get("final_status") == "stable"' in text
     assert 'item.get("gate_a", {}).get("status") == "PASS"' in text
     assert 'GATE_A_PREFLIGHT_BLOCKED=' in text
+    assert 'P50_PREFLIGHT_BLOCKED=' in text
 
 
-def test_c100_n1_without_rerun_is_not_allowed_to_be_stable() -> None:
+def test_c100_uses_the_shared_adaptive_checkpoint_and_gate_path() -> None:
     text = _workflow_text()
-    assert "C100 primary sample must remain n=1" in text
-    assert '"verification_trial_id": 2' in text
-
-def test_c100_independent_rerun_uses_different_trial_id_and_derived_seed() -> None:
-    text = _workflow_text()
-    assert "trial_id=2" in text
-    assert "different_trial_id" in text
-    assert "different_derived_seed" in text
-    assert "exact_result_equality" in text
-
-def test_c100_mismatch_cannot_be_declared_stable() -> None:
-    text = _workflow_text()
-    assert 'state["final_status"] = None' in text
-    assert "independent C100 trial result mismatch" in text
-
-def test_c100_verification_excludes_trial_id_from_comparison() -> None:
-    text = _workflow_text()
-    assert 'primary_dict = asdict(primary)' in text
-    assert 'verification_dict = asdict(verification)' in text
-    assert 'primary_trial_id = primary_dict.pop("trial_id")' in text
-    assert 'verification_trial_id = verification_dict.pop("trial_id")' in text
-    assert 'if primary_trial_id == verification_trial_id:' in text
-    assert 'raise AssertionError(' in text
-    assert "C100 independence requires distinct trial_id" in text
-    assert 'equality = primary_dict == verification_dict' in text
-    assert 'equality = asdict(primary) == asdict(verification)' not in text
-
-
-def test_c100_stability_is_after_independent_equality_proof() -> None:
-    text = _workflow_text()
-    equality_pos = text.index("equality = primary_dict == verification_dict")
-    stable_pos = text.index('state["final_status"] = "stable"')
-    assert equality_pos < stable_pos
+    assert _workflow()["env"]["INITIAL_C100_TRIALS"] == "300"
+    assert 'C100 primary sample must remain n=1' not in text
+    assert 'if SCENARIO.startswith("C100_"):\n                  if len(results) != 1:' not in text
+    assert 'p50_values_by_checkpoint(results)' in text
+    assert 'p50_history_ready(history, completed)' in text
+    assert 'p50_requires_n2400(history)' in text
+    assert 'state["final_status"] = "PRELIMINARY_STABLE"' in text
 
 def test_gate_a_requires_exact_doubling_checkpoint() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
@@ -818,6 +793,7 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
 
     assert _workflow()["env"]["ESCALATION_MULTIPLIER"] == "2"
     assert _workflow()["env"]["INITIAL_NON_C100_TRIALS"] == "300"
+    assert _workflow()["env"]["INITIAL_C100_TRIALS"] == "300"
     assert [next_statistical_checkpoint(n) for n in (0, 300, 350, 600, 1200)] == [
         300, 600, 600, 1200, 2400
     ]
