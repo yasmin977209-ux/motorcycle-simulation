@@ -1,0 +1,136 @@
+name: CP-C100 unified policy temporary verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-runtime-20261017
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact tested branch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Assert exact commit, branch and protected scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "tmp/cp-runtime-20261017"
+          git diff --exit-code 647c19826b90d8224ce73ef9b90c306a45e03fb0 "$GITHUB_SHA" -- \
+            dateutils.py rng.py entities.py state_machine.py daily_engine.py \
+            accounting.py collection.py guarantee.py friday.py settlement.py \
+            closure.py partner_equity.py monte_carlo.py \
+            .github/workflows/stage7-full-run.yml
+          test "$(grep -c 'C100_STATISTICAL_START_TRIALS: Final\[int\] = 300' constants.py)" = "1"
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Parse modified Python and decision documents
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          import yaml
+          for name in (
+              "constants.py",
+              "run_batch.py",
+              "tests/test_run_batch.py",
+              "tests/test_run_batch_c100_policy.py",
+          ):
+              ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
+          for name in (
+              "docs/governance/REFERENCE_AMENDMENTS.md",
+              "docs/governance/DECISIONS_LOG.md",
+              "README.md",
+          ):
+              assert Path(name).is_file()
+          yaml.safe_load(Path(".github/workflows/cp-c100-unified-verify.yml").read_text(encoding="utf-8"))
+          PY
+      - name: Run targeted no-simulation regression suite
+        env:
+          PYTHONPATH: .
+          CP_C100_EVIDENCE_DIR: cp-c100-evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p cp-c100-evidence
+          python -m pytest -q \
+            tests/test_run_batch.py \
+            tests/test_run_batch_excel_daily.py \
+            tests/test_run_batch_c100_policy.py \
+            --junitxml=cp-c100-evidence/junit.xml 2>&1 | tee cp-c100-evidence/pytest-output.txt
+      - name: Independently inspect tested policy and hashes
+        env:
+          TESTED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, platform
+          from pathlib import Path
+          import constants
+          root = Path("cp-c100-evidence")
+          targets = [
+              "constants.py",
+              "run_batch.py",
+              "tests/test_run_batch.py",
+              "tests/test_run_batch_c100_policy.py",
+              "docs/governance/REFERENCE_AMENDMENTS.md",
+              "docs/governance/DECISIONS_LOG.md",
+              "README.md",
+          ]
+          report = {
+              "status": "PASS_SYNTHETIC_C100_UNIFIED_POLICY_TESTS",
+              "tested_sha": os.environ["TESTED_SHA"],
+              "python_version": platform.python_version(),
+              "monte_carlo_invocations": 0,
+              "source_sha_changed": False,
+              "master_seed_changed": False,
+              "rng_changed": False,
+              "historical_trials_changed": False,
+              "production_stage7_workflow_modified": False,
+              "c100_start_trials": constants.C100_STATISTICAL_START_TRIALS,
+              "non_c100_start_trials": constants.NON_C100_STATISTICAL_START_TRIALS,
+              "c100_ci_gate_enabled": constants.C100_CI_GATE_ENABLED,
+              "scenario_start_map_c100": constants.STATISTICAL_START_TRIALS_BY_COLLECTION[1.0],
+              "content": {
+                  path: {
+                      "bytes": Path(path).stat().st_size,
+                      "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                  }
+                  for path in targets
+              },
+              "limits": [
+                  "Gate A production provider remains missing and fail-closed",
+                  "No production Monte Carlo or historical trial rerun",
+                  "Stage 7 full-run workflow and D-2026-10-12-01 P50 exclusion remain separately scoped gaps",
+                  "No full 185-sheet Excel or final delivery pass asserted"
+              ],
+          }
+          assert report["c100_start_trials"] == report["non_c100_start_trials"] == 300
+          assert report["c100_ci_gate_enabled"] is True
+          (root / "independent-policy-inspection.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Upload inspected verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-c100-unified-policy-evidence
+          path: cp-c100-evidence/
+          if-no-files-found: error
+          retention-days: 14
