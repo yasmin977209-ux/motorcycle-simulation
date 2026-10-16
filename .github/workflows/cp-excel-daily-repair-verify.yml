@@ -1,0 +1,281 @@
+name: CP Excel DAILY repair real P50 verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-excel-daily-repair-20261017
+    paths:
+      - scripts/excel_builder.py
+      - tests/test_excel_daily_sheet.py
+      - .github/workflows/cp-excel-daily-repair-verify.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  daily-real-p50-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+      EXCEL_DAILY_P50_JSON: /tmp/cp-excel-daily-source/P50.json
+      EXCEL_DAILY_SCENARIO_METADATA: /tmp/cp-excel-daily-source/scenario_metadata.json
+      EXCEL_DAILY_SOURCE_IDENTITY: ${{ github.workspace }}/artifacts/daily-acceptance/source_identity.json
+      EXCEL_DAILY_REAL_WORKBOOK: ${{ github.workspace }}/artifacts/daily-acceptance/C030_G030_DAILY_P50_trial_156.xlsx
+      EXCEL_DAILY_ACCEPTANCE_REPORT: ${{ github.workspace }}/artifacts/daily-acceptance/daily_acceptance_report.json
+    steps:
+      - name: Checkout this pinned candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-excel-daily-repair-20261017
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install serializer test dependencies
+        run: python -m pip install --disable-pip-version-check pytest numpy pyarrow openpyxl
+
+      - name: Record runtime and create evidence directory
+        run: |
+          mkdir -p artifacts/daily-acceptance
+          {
+            python --version
+            python -m pip freeze
+          } > artifacts/daily-acceptance/runtime.txt
+
+      - name: Download and verify canonical source artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/cp-excel-daily-source
+          curl --fail --silent --show-error --location --retry 0 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/11497409735/zip" \
+            -o /tmp/source-C030_G030-enriched.zip
+          curl --fail --silent --show-error --location --retry 0 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/11507380986/zip" \
+            -o /tmp/published-workbook-original.zip
+
+          python - <<'PY'
+          import hashlib
+          import io
+          import json
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          source_zip = Path("/tmp/source-C030_G030-enriched.zip")
+          published_zip = Path("/tmp/published-workbook-original.zip")
+          out_dir = Path("artifacts/daily-acceptance")
+          out_dir.mkdir(parents=True, exist_ok=True)
+
+          EXPECTED = {
+              "source_zip_sha256": "9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07",
+              "scenario_tar_sha256": "a2403a9175ef85ec30663fbdb7ecd322c88beaf9672e1b73b30488312cd4aa10",
+              "p50_json_sha256": "e86d0c48cd48028f465dcc10cab92b60f672ef919cefc7d400097fe303ac00de",
+              "scenario_metadata_sha256": "b4ae78a224b4fb296cceac2adbcad81fa3624a053b93b621434f7349551c9a73",
+              "published_zip_sha256": "28c49860bc2fa29e6bd20e0aad467d56673855c1d6c849de79defc9429c61f88",
+              "published_xlsx_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
+              "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+              "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+          }
+
+          def sha256(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          source_zip_bytes = source_zip.read_bytes()
+          if sha256(source_zip_bytes) != EXPECTED["source_zip_sha256"]:
+              raise SystemExit("SOURCE_ARTIFACT_ZIP_SHA256_MISMATCH")
+          with zipfile.ZipFile(io.BytesIO(source_zip_bytes)) as archive:
+              if archive.namelist() != ["C030_G030.tar.gz"]:
+                  raise SystemExit(f"UNEXPECTED_SOURCE_ZIP_MEMBERS={archive.namelist()!r}")
+              tar_bytes = archive.read("C030_G030.tar.gz")
+          if sha256(tar_bytes) != EXPECTED["scenario_tar_sha256"]:
+              raise SystemExit("SCENARIO_TAR_SHA256_MISMATCH")
+
+          with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:gz") as archive:
+              wanted = {
+                  "./representatives/P50.json": None,
+                  "./scenario_metadata.json": None,
+              }
+              for member in archive.getmembers():
+                  if member.name in wanted:
+                      stream = archive.extractfile(member)
+                      if stream is None:
+                          raise SystemExit(f"UNREADABLE_TAR_MEMBER={member.name}")
+                      wanted[member.name] = stream.read()
+          if any(value is None for value in wanted.values()):
+              raise SystemExit("REQUIRED_SOURCE_MEMBERS_MISSING")
+          p50_bytes = wanted["./representatives/P50.json"]
+          metadata_bytes = wanted["./scenario_metadata.json"]
+          if sha256(p50_bytes) != EXPECTED["p50_json_sha256"]:
+              raise SystemExit("P50_JSON_SHA256_MISMATCH")
+          if sha256(metadata_bytes) != EXPECTED["scenario_metadata_sha256"]:
+              raise SystemExit("SCENARIO_METADATA_SHA256_MISMATCH")
+
+          published_bytes = published_zip.read_bytes()
+          if sha256(published_bytes) != EXPECTED["published_zip_sha256"]:
+              raise SystemExit("PUBLISHED_ARTIFACT_ZIP_SHA256_MISMATCH")
+          with zipfile.ZipFile(io.BytesIO(published_bytes)) as archive:
+              manifest_bytes = archive.read("manifest_final.json")
+              workbook_bytes = archive.read("Full_Results_EN.xlsx")
+          if sha256(workbook_bytes) != EXPECTED["published_xlsx_sha256"]:
+              raise SystemExit("PUBLISHED_WORKBOOK_SHA256_MISMATCH")
+          manifest = json.loads(manifest_bytes)
+          if manifest.get("reference_sha256") != EXPECTED["reference_sha256"]:
+              raise SystemExit("REFERENCE_IDENTITY_MISMATCH")
+          for key, value in {
+              "run_id": "37225915321",
+              "source_sha": EXPECTED["source_sha"],
+              "master_seed": 20270101,
+              "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+              "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+              "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
+              "schema_version": "1.0",
+              "global_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+          }.items():
+              if manifest.get(key) != value:
+                  raise SystemExit(f"CANONICAL_MANIFEST_MISMATCH={key}")
+          scenario = manifest["scenarios"]["C030_G030"]
+          if scenario.get("enriched_artifact_id") != 11497409735:
+              raise SystemExit("SOURCE_ARTIFACT_ID_NOT_BOUND_TO_CANONICAL_SCENARIO")
+          if scenario.get("representative_trials", {}).get("P50") != 156:
+              raise SystemExit("CANONICAL_P50_TRIAL_MISMATCH")
+
+          metadata = json.loads(metadata_bytes)
+          payload = json.loads(p50_bytes)
+          if metadata.get("scenario") != "C030_G030" or metadata.get("run_id") != "37225915321":
+              raise SystemExit("SOURCE_SCENARIO_RUN_IDENTITY_MISMATCH")
+          if metadata.get("source_sha") != EXPECTED["source_sha"] or metadata.get("schema_version") != "1.0":
+              raise SystemExit("SOURCE_METADATA_IDENTITY_MISMATCH")
+          if metadata.get("representative_trials", {}).get("P50") != 156:
+              raise SystemExit("SOURCE_METADATA_P50_IDENTITY_MISMATCH")
+          if payload.get("summary", {}).get("scenario_id") != "C030_G030":
+              raise SystemExit("P50_SCENARIO_ID_MISMATCH")
+          if payload.get("summary", {}).get("trial_id") != 156:
+              raise SystemExit("P50_TRIAL_ID_MISMATCH")
+
+          source_dir = Path("/tmp/cp-excel-daily-source")
+          source_dir.joinpath("P50.json").write_bytes(p50_bytes)
+          source_dir.joinpath("scenario_metadata.json").write_bytes(metadata_bytes)
+          identity = {
+              "source_artifact_id": 11497409735,
+              "source_artifact_sha256": EXPECTED["source_zip_sha256"],
+              "source_artifact_bytes": len(source_zip_bytes),
+              "scenario_tar_sha256": EXPECTED["scenario_tar_sha256"],
+              "p50_json_sha256": EXPECTED["p50_json_sha256"],
+              "scenario_metadata_sha256": EXPECTED["scenario_metadata_sha256"],
+              "published_workbook_artifact_id": 11507380986,
+              "published_artifact_zip_sha256": EXPECTED["published_zip_sha256"],
+              "published_workbook_sha256": EXPECTED["published_xlsx_sha256"],
+              "published_workbook_bytes": len(workbook_bytes),
+              "published_manifest_global_sha256": manifest["global_manifest_sha256"],
+              "producer_run_id": manifest["run_id"],
+              "producer_head_sha": manifest["run_head_sha"],
+              "source_sha": manifest["source_sha"],
+              "master_seed": manifest["master_seed"],
+              "rng_policy_id": manifest["rng_policy_id"],
+              "sampling_policy_id": manifest["sampling_policy_id"],
+              "trial_id_policy_id": manifest["trial_id_policy_id"],
+              "schema_version": manifest["schema_version"],
+              "reference_sha256": manifest["reference_sha256"],
+              "scenario": "C030_G030",
+              "representative_type": "P50",
+              "trial_id": 156,
+              "trial_count": metadata["trial_count"],
+              "canonical_enriched_artifact_id": scenario["enriched_artifact_id"],
+              "canonical_p50_trial_id": scenario["representative_trials"]["P50"],
+              "input_dates": {
+                  "first": payload["daily"][0]["date"],
+                  "last": payload["daily"][-1]["date"],
+                  "daily_rows": len(payload["daily"]),
+                  "field_count": len(payload["daily"][0]),
+              },
+              "simulation_rerun": False,
+              "historical_data_modified": False,
+          }
+          (out_dir / "source_identity.json").write_text(
+              json.dumps(identity, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print("SOURCE_ARTIFACT_IDENTITY=PASS")
+          print("CANONICAL_MANIFEST_IDENTITY=PASS")
+          print("REAL_P50_SOURCE=PASS rows=" + str(len(payload["daily"])))
+          PY
+
+      - name: Validate workflow policy and branch pin
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          document = yaml.safe_load(
+              Path(".github/workflows/cp-excel-daily-repair-verify.yml").read_text(encoding="utf-8")
+          )
+          trigger = document.get("on") or document.get(True) or {}
+          assert list(trigger) == ["push"]
+          assert trigger["push"]["branches"] == ["tmp/cp-excel-daily-repair-20261017"]
+          assert "workflow_dispatch" not in trigger
+          assert "pull_request" not in trigger
+          assert document["permissions"] == {"contents": "read", "actions": "read"}
+          assert document["jobs"]["daily-real-p50-acceptance"]["timeout-minutes"] == 20
+          assert document["jobs"]["daily-real-p50-acceptance"]["steps"][0]["with"]["ref"] == "tmp/cp-excel-daily-repair-20261017"
+          print("WORKFLOW_POLICY=PASS")
+          PY
+
+      - name: Run focused DAILY serializer acceptance tests
+        id: pytest
+        shell: bash
+        run: |
+          set +e
+          python -m pytest -q tests/test_excel_daily_sheet.py > artifacts/daily-acceptance/pytest.log 2>&1
+          result=$?
+          cat artifacts/daily-acceptance/pytest.log
+          printf 'exit_code=%s\n' "${result}" > artifacts/daily-acceptance/pytest-status.txt
+          exit 0
+
+      - name: Hash generated evidence
+        if: always()
+        run: |
+          cd artifacts/daily-acceptance
+          find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS.txt
+
+      - name: Upload inspectable XLSX and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-excel-daily-repair-real-p50
+          path: artifacts/daily-acceptance/*
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Enforce test result and XLSX evidence contract
+        if: always()
+        run: |
+          grep -Fx 'exit_code=0' artifacts/daily-acceptance/pytest-status.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("artifacts/daily-acceptance/daily_acceptance_report.json").read_text(encoding="utf-8"))
+          assert report["status"] == "PASS_REAL_P50_DAILY_ROUND_TRIP"
+          assert report["daily_row_count"] == 1568
+          assert report["header_count"] == 20
+          assert report["tested_cell_comparisons"] == 31360
+          assert report["formula_cell_count"] == 0
+          assert report["excel_error_cell_count"] == 0
+          assert report["workbook_bytes"] > 0
+          assert len(report["workbook_sha256"]) == 64
+          print("DAILY_ACCEPTANCE_CONTRACT=PASS")
+          PY
