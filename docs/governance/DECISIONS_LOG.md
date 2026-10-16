@@ -177,3 +177,21 @@ The three preserved checkpoint reports each contain 60/60 CI points passed, with
 Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` completed both jobs successfully. The canonical precision gate passed 25/25 scenario packages, 9,005/9,005 unique trial rows, 185 worksheets, zero Excel-error cells, zero formulas, and 500/500 exact numeric comparisons. One target cell required patching; all 500 target cells were verified post-write. The original published workbook SHA-256 remains `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d`; the separate candidate workbook SHA-256 is `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`. No simulation or new trial execution occurred.
 
 **References:** `docs/stage9c/STAGE9C_REPORT.md` §C-6; `docs/stage9a/dataset_manifest.json`; `docs/stage9c/R4_export_numeric_precision.md`; Stage 9C canonical precision gate Run `38165878333`. The 625-trial Stage 13 definition is maintained as a distinct cohort and is not amended here.
+
+
+## D-2026-10-17-01 — CP-RUNTIME Python minimum and B2-EXTEND CLI
+
+**Status:** APPROVED — PROJECT OWNER  
+**Date:** 2026-10-17  
+**Scope:** Runtime compatibility documentation and additive daily-dataset persistence in `run_batch.py`.
+
+### Normative decision
+
+1. The documented minimum Python version is raised from 3.9+ to **3.11+**. This is a compatibility floor; this decision does not imply every future minor Python version has been tested.
+2. The official batch/statistical CLI is `run_batch.py` under **B2-EXTEND**. Add optional `--excel-dataset-root` without removing existing batch, checkpoint, fingerprint, `SOURCE_SHA`, or Gate A behavior.
+3. Completed trials must persist their daily slices. On resume, if existing completed trials lack those slices, fail closed rather than replaying completed trial IDs.
+4. When the optional Excel dataset root is provided, write per-scenario `trial_results.parquet`, `daily_distribution.parquet`, `daily_trial_slices.parquet`, and `daily_export_manifest.json`; the first two Parquet contracts are read by the current `scripts/excel_builder.py` data loaders.
+5. Keep the C100 official-trial policy at one. Do not change Gate A, `SOURCE_SHA`, master seed, RNG, or historical data under this decision.
+6. Dataset-loader round-trip evidence does not certify representative payloads, the 185-sheet workbook, Stage 13, or final delivery.
+
+**Evidence record:** targeted test Run `38975610135`, tested commit `375831968ac06917d1175bba15d93c293561a2bd`, artifact `12078932437`. The test fixtures were synthetic and the simulation runner was mocked; no Monte Carlo simulation was invoked for this CP.
