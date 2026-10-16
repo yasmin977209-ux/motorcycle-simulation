@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import sys
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,10 @@ SCHEMA_VERSION = "stage12-daily-accounting-v1"
 
 SOURCE_RUN_ID = 38619859394
 SOURCE_ARTIFACT_ID = 11922303249
-SOURCE_ARTIFACT_SHA256 = "fff34ded9a85da5f0340cc98e089bd6d66cc9af2ecd28ce35f93f64293b0660"
+SOURCE_ARTIFACT_SHA256 = "fff34ded9a85da5f0340cc98e089bd6d66cc9af2ecd28ce35f93f64293b0660d"
+SOURCE_ARTIFACT_BYTES = 46834223
+SOURCE_RUN_HEAD_SHA = "f7096bcc9f910df54a60d5a4329a7ebbcd2a43ae"
+SOURCE_RUN_BRANCH = "tmp/cp-f-delivery-20261014"
 SOURCE_MANIFEST_SHA256 = "5e1890e519e6853bb6f72f484517d4d5edb5ddcff88078af6c4a55eb2db2bbd3"
 SOURCE_MANIFEST_BYTES = 65563
 
@@ -81,6 +85,56 @@ def _file_identity(path: Path, expected: dict[str, Any]) -> dict[str, Any]:
         "reason_codes": identity_failures, "bytes": len(raw), "sha256": actual_sha,
         "payload": payload,
     }
+
+
+def _verify_source_artifact_metadata() -> dict[str, Any]:
+    """Verify the immutable GitHub artifact metadata against the CP-F provenance pin."""
+    token = os.environ.get("GH_TOKEN")
+    if not token:
+        return {"status": "NOT_VERIFIABLE", "reason_codes": ["GH_TOKEN_MISSING"], "artifact": None}
+    endpoint = f"repos/yasmin977209-ux/motorcycle-simulation/actions/runs/{SOURCE_RUN_ID}/artifacts?per_page=100"
+    env = os.environ.copy()
+    env["GH_TOKEN"] = token
+    completed = subprocess.run(
+        ["gh", "api", endpoint], env=env, text=True, capture_output=True, check=False
+    )
+    if completed.returncode != 0:
+        return {
+            "status": "NOT_VERIFIABLE",
+            "reason_codes": ["GITHUB_ARTIFACT_METADATA_READ_FAILED"],
+            "error_tail": completed.stderr[-800:],
+            "artifact": None,
+        }
+    try:
+        response = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return {"status": "NOT_VERIFIABLE", "reason_codes": ["GITHUB_ARTIFACT_METADATA_INVALID_JSON"], "artifact": None}
+    items = response.get("artifacts")
+    if not isinstance(items, list) or int(response.get("total_count", -1)) != len(items):
+        return {"status": "NOT_VERIFIABLE", "reason_codes": ["GITHUB_ARTIFACT_LIST_INCOMPLETE"], "artifact": None}
+    matches = [item for item in items if int(item.get("id", -1)) == SOURCE_ARTIFACT_ID]
+    if len(matches) != 1:
+        return {"status": "FAIL", "reason_codes": ["SOURCE_ARTIFACT_ID_MISSING_OR_DUPLICATED"], "artifact": None}
+    item = matches[0]
+    run = item.get("workflow_run") or {}
+    checks = {
+        "id": item.get("id") == SOURCE_ARTIFACT_ID,
+        "name": item.get("name") == "cp-f-replay-C030_G030",
+        "size_in_bytes": item.get("size_in_bytes") == SOURCE_ARTIFACT_BYTES,
+        "digest": item.get("digest") == f"sha256:{SOURCE_ARTIFACT_SHA256}",
+        "expired": item.get("expired") is False,
+        "workflow_run_id": run.get("id") == SOURCE_RUN_ID,
+        "workflow_head_branch": run.get("head_branch") == SOURCE_RUN_BRANCH,
+        "workflow_head_sha": run.get("head_sha") == SOURCE_RUN_HEAD_SHA,
+    }
+    reasons = ["SOURCE_ARTIFACT_METADATA_MISMATCH:" + key for key, ok in checks.items() if not ok]
+    public_meta = {
+        "id": item.get("id"), "name": item.get("name"), "size_in_bytes": item.get("size_in_bytes"),
+        "digest": item.get("digest"), "expired": item.get("expired"),
+        "workflow_run_id": run.get("id"), "workflow_head_branch": run.get("head_branch"),
+        "workflow_head_sha": run.get("head_sha"), "checks": checks,
+    }
+    return {"status": "PASS" if not reasons else "FAIL", "reason_codes": reasons, "artifact": public_meta}
 
 
 def audit(input_dir: Path, output_dir: Path) -> dict[str, Any]:
@@ -182,7 +236,8 @@ def audit(input_dir: Path, output_dir: Path) -> dict[str, Any]:
     manifest_bytes_mismatch = manifest is not None and (
         len(manifest_raw or b"") != SOURCE_MANIFEST_BYTES or _sha256_bytes(manifest_raw or b"") != SOURCE_MANIFEST_SHA256
     )
-    overall = _combine([manifest_state, *file_states])
+    source_artifact_metadata = _verify_source_artifact_metadata()
+    overall = _combine([manifest_state, source_artifact_metadata["status"], *file_states])
     report = {
         "schema_version": "cp-representative-audit-v1",
         "status": overall,
@@ -198,7 +253,9 @@ def audit(input_dir: Path, output_dir: Path) -> dict[str, Any]:
         },
         "source": {
             "run_id": SOURCE_RUN_ID, "artifact_id": SOURCE_ARTIFACT_ID,
-            "recorded_archive_sha256": SOURCE_ARTIFACT_SHA256,
+            "archive_bytes_expected": SOURCE_ARTIFACT_BYTES,
+            "github_reported_archive_sha256": SOURCE_ARTIFACT_SHA256,
+            "artifact_metadata_verification": source_artifact_metadata,
             "scenario_manifest_bytes": len(manifest_raw) if manifest_raw is not None else None,
             "scenario_manifest_sha256": _sha256_bytes(manifest_raw) if manifest_raw is not None else None,
             "identity_status": manifest_state, "identity_reason_codes": manifest_reasons,

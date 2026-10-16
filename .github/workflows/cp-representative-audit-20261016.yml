@@ -57,6 +57,8 @@ jobs:
       - name: Audit exact saved representative payloads and write evidence
         id: audit
         if: always()
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail

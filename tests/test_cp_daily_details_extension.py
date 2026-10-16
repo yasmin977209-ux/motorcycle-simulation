@@ -130,3 +130,11 @@ def test_final_representative_audit_status_is_fail_closed():
     assert _combine_representative_audit_statuses(["PASS", "NOT_VERIFIABLE"]) == "NOT_VERIFIABLE"
     assert _combine_representative_audit_statuses(["NOT_VERIFIABLE", "FAIL"]) == "FAIL"
     assert _combine_representative_audit_statuses([]) == "NOT_VERIFIABLE"
+
+
+def test_source_artifact_digest_pin_is_well_formed_and_matches_verified_github_metadata():
+    from scripts.audit_representative_details import SOURCE_ARTIFACT_SHA256, SOURCE_ARTIFACT_BYTES
+    assert len(SOURCE_ARTIFACT_SHA256) == 64
+    assert all(ch in "0123456789abcdef" for ch in SOURCE_ARTIFACT_SHA256)
+    assert SOURCE_ARTIFACT_SHA256 == "fff34ded9a85da5f0340cc98e089bd6d66cc9af2ecd28ce35f93f64293b0660d"
+    assert SOURCE_ARTIFACT_BYTES == 46834223
