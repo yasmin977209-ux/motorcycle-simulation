@@ -88,13 +88,35 @@ if __name__ == "__main__":
 def _run_hashseed(script_path: Path, hash_seed: int) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = str(hash_seed)
-    completed = subprocess.run(
-        [sys.executable, str(script_path)],
-        env=env,
-        text=True,
-        capture_output=True,
-        check=True,
-    )
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script_path)],
+            env=env,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(
+            "hash-seed subprocess failed: "
+            f"PYTHONHASHSEED={hash_seed}, returncode={exc.returncode}",
+            file=sys.stderr,
+        )
+        print("----- child stdout (begin) -----", file=sys.stderr)
+        print(
+            exc.stdout if exc.stdout is not None else "<stdout unavailable>",
+            file=sys.stderr,
+            end="" if exc.stdout else "\n",
+        )
+        print("\n----- child stdout (end) -----", file=sys.stderr)
+        print("----- child stderr (begin) -----", file=sys.stderr)
+        print(
+            exc.stderr if exc.stderr is not None else "<stderr unavailable>",
+            file=sys.stderr,
+            end="" if exc.stderr else "\n",
+        )
+        print("\n----- child stderr (end) -----", file=sys.stderr)
+        raise
     return json.loads(completed.stdout)
 
 
