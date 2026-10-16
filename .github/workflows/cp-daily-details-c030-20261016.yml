@@ -1,0 +1,167 @@
+name: CP-DAILY delivery-only detail extension C030_G030 1201-2400
+on:
+  push:
+    branches:
+      - "tmp/cp-daily-details-c030-20261016"
+    paths:
+      - ".github/workflows/cp-daily-details-c030-20261016.yml"
+      - "scripts/cp_daily_details_extension.py"
+      - "tests/test_cp_daily_details_extension.py"
+      - "scripts/golden_reference_provider.py"
+      - "scripts/stage7_gate_a_provider.py"
+      - "scripts/verify_source_identity_exception.py"
+      - "scripts/verify_stage7_gate_a_provider.py"
+      - "daily_engine.py"
+      - "monte_carlo.py"
+      - "rng.py"
+      - "accounting.py"
+      - "constants.py"
+      - "closure.py"
+      - "entities.py"
+      - "collection.py"
+      - "guarantee.py"
+      - "partner_equity.py"
+      - "friday.py"
+      - "settlement.py"
+      - "state_machine.py"
+      - "dateutils.py"
+      - "requirements.txt"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cp-daily-details-c030-g1201-2400-${{ github.run_id }}
+  cancel-in-progress: false
+env:
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  MASTER_SEED: "20270101"
+  PYTHONPATH: "."
+jobs:
+  preflight-and-tests:
+    name: Verify pinned identity, golden coverage, and focused tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact tested commit from the approved temporary branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Assert exact branch and checked-out SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "tmp/cp-daily-details-c030-20261016"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse --verify f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b^{commit})" = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Verify exact source identity exception
+        run: |
+          mkdir -p cp-daily-preflight
+          python scripts/verify_source_identity_exception.py --source-sha "$SOURCE_SHA" --output cp-daily-preflight/source_identity_exception_report.json
+      - name: Verify complete approved Gate A golden provider without trial generation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          MASTER_SEED: ${{ env.MASTER_SEED }}
+        run: python scripts/verify_stage7_gate_a_provider.py --output cp-daily-preflight/gatea_provider_preflight_report.json
+      - name: Verify CP-Daily identity and workflow regression tests
+        run: |
+          python -m py_compile scripts/cp_daily_details_extension.py
+          python -m pytest -q tests/test_cp_daily_details_extension.py tests/test_golden_reference_provider.py tests/test_stage7_gate_a_provider.py tests/test_source_identity_exception_allowlist.py
+      - name: Upload preflight evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-daily-preflight-evidence
+          path: cp-daily-preflight/
+          if-no-files-found: error
+          retention-days: 30
+  daily-detail-replay:
+    name: Delivery-only deterministic detail replay for C030_G030 1201-2400
+    needs: preflight-and-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact tested commit from the approved temporary branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Assert exact branch and SHA again
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "tmp/cp-daily-details-c030-20261016"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install approved project requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Download successful preflight evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: cp-daily-preflight-evidence
+          path: cp-daily-preflight
+      - name: Download immutable historical daily ledger, N1200 source evidence, prior details, and N2400 approved trial outputs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 37964656154 --repo "$GITHUB_REPOSITORY" --name "stage12-daily-C030_G030" --dir historical-source
+          gh run download 38619859394 --repo "$GITHUB_REPOSITORY" --name "cp-f-source-readiness-evidence" --dir cp-f-source
+          gh run download 38619859394 --repo "$GITHUB_REPOSITORY" --name "cp-f-replay-C030_G030" --dir cp-f-replay
+          gh run download 38783578243 --repo "$GITHUB_REPOSITORY" --name "gatea-c030-n2400-checkpoint-attempt-1" --dir n2400
+          test -f historical-source/C030_G030.parquet
+          test -f cp-f-source/CP_F_N1200_SOURCE_READINESS.json
+          test -f cp-f-source/CP_F_N1200_TRIAL_RESULTS.json
+          test -f cp-f-replay/scenario_manifest.json
+          test -f cp-f-replay/daily_accounting_extension.parquet
+          test -f cp-f-replay/daily_distribution.parquet
+          test -f n2400/checkpoint_report.json
+          test -f n2400/actual_trial_results.jsonl
+      - name: Generate and independently re-read audit daily accounting detail IDs 1201-2400
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/cp_daily_details_extension.py \
+            --historical-parquet historical-source/C030_G030.parquet \
+            --prior-extension-parquet cp-f-replay/daily_accounting_extension.parquet \
+            --prior-manifest cp-f-replay/scenario_manifest.json \
+            --prior-representatives-dir cp-f-replay/representatives \
+            --n1200-audit cp-f-source/CP_F_N1200_SOURCE_READINESS.json \
+            --n1200-results cp-f-source/CP_F_N1200_TRIAL_RESULTS.json \
+            --n2400-report n2400/checkpoint_report.json \
+            --n2400-results n2400/actual_trial_results.jsonl \
+            --source-identity-report cp-daily-preflight/source_identity_exception_report.json \
+            --provider-preflight-report cp-daily-preflight/gatea_provider_preflight_report.json \
+            --output-dir cp-daily-output
+          test -f cp-daily-output/scenario_manifest.json
+          test -f cp-daily-output/daily_accounting_extension.parquet
+          test -f cp-daily-output/daily_distribution.parquet
+          test -f cp-daily-output/artifact_inventory.json
+          test -f cp-daily-output/SHA256SUMS.txt
+      - name: Upload verified CP-Daily detail deliverable and hash manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-daily-details-C030_G030-1201-2400
+          path: cp-daily-output/
+          if-no-files-found: error
+          retention-days: 90
