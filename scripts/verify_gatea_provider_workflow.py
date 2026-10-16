@@ -24,6 +24,7 @@ def main() -> None:
     steps = job["steps"]
     joined = "\n".join(str(step.get("run", "")) for step in steps)
     assert "scripts/verify_stage7_gate_a_provider.py" in joined
+    assert "scripts/verify_source_identity_exception.py" in joined
     assert "pytest" in joined
     forbidden = (
         "scripts.stage7_run_trial_block",
