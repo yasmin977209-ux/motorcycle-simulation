@@ -133,7 +133,7 @@ def test_user_approved_execution_overrides_are_exact() -> None:
     for name, expected in USER_APPROVED_EXECUTION_OVERRIDES.items():
         assert getattr(constants, name) == expected, name
     assert constants.STATISTICAL_START_TRIALS_BY_COLLECTION == {
-        1.00: 1,
+        1.00: 300,
         0.85: 300,
         0.70: 300,
         0.50: 300,
