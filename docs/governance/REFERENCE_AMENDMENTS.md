@@ -11,6 +11,7 @@ amendments:
   - Amendment-05
   - Amendment-06
   - Amendment-07
+  - Amendment-08
 ---
 
 # REFERENCE_AMENDMENTS — ملحق التعديلات المعيارية المعتمدة
@@ -325,7 +326,7 @@ def build_excel(dataset_path, output_path, mode="canonical"):
 
 **Status:** APPROVED — PROJECT OWNER  
 **Date:** 2026-10-17  
-**Scope:** Reference §§19.1–19.4 and the runtime/CLI documentation only. This decision preserves the simulation engine, RNG, master seed, statistical policy, Gate A, C100 policy, historical trial data, and the pinned `SOURCE_SHA`.
+**Scope:** Reference §§19.1–19.4 and runtime/CLI documentation. Amendment-07 preserves the C100 policy as it stood on 2026-10-17; that C100-specific clause is superseded narrowly by Amendment-08. All other source, seed, RNG, Gate A and historical-data safeguards remain unchanged.
 
 ### Normative decision
 
@@ -338,7 +339,7 @@ def build_excel(dataset_path, output_path, mode="canonical"):
    - `ROOT/<scenario>/daily_trial_slices.parquet` for auditable raw detail rows.
    - `ROOT/<scenario>/daily_export_manifest.json` with source, seed, range, and content fingerprints plus explicit Gate A/full-delivery scope.
 5. Gate A remains fail-closed. An export is only a data serialization step; it cannot establish Gate A, Gate B, stability, cohort identity, or final delivery approval. The existing exact-golden fingerprint and source-identity requirements remain unchanged.
-6. The C100 policy remains exactly one official trial. The existing independent determinism verification is not counted as a second official trial and does not change the statistical policy.
+6. **Historical clause superseded by Amendment-08:** the one-official-trial C100 rule recorded here applied when Amendment-07 was adopted. The later owner decision D-2026-10-17-02 replaces that rule with the shared statistical policy for C100; no historical trial is modified or replayed by this wording change.
 7. These per-scenario files are the daily and trial inputs read by the current Excel loader. They do **not** by themselves provide the representative payloads, accounting/asset/partner/guarantee/contracts packages, the canonical Stage 13 assembler, or a complete 185-sheet workbook. Those remain separate acceptance requirements.
 
 ### CLI form
@@ -358,4 +359,31 @@ CP-RUNTIME tests the argument contract and uses deterministic synthetic fixtures
 ### Rationale
 
 Make the documented minimum interpreter match the current dependencies and adopt the existing batch runner without throwing away checkpoint integrity or statistical guardrails, while adding only additive daily-dataset persistence needed by the Excel data loader.
+
+
+
+## Amendment-08 — Unified statistical policy for C100
+
+**Status:** APPROVED — PROJECT OWNER  
+**Date:** 2026-10-17  
+**Decision:** D-2026-10-17-02  
+**Scope:** The official `run_batch.py` statistical/batch CLI and the policy records it emits. The separate Stage 7 full-run workflow is not changed by this CP and remains an explicitly recorded implementation gap pending its own authorized workflow change.
+
+### Normative decision
+
+1. C100 scenarios now share the non-C100 policy in `run_batch.py`: initial statistical target (N=300); doubling checkpoints (300 ightarrow 600 ightarrow 1200 ightarrow 2400 ightarrow ldots); and the same 95% Student-t CI Gate B across the three approved stability metrics.
+2. Gate A continues to require explicit approved-golden fingerprint equality and source-identity equality. Missing provider evidence remains `BLOCKED`; a blocked/failed Gate A checkpoint must stop execution before the next trial block, even when more trials were requested in the same CLI invocation.
+3. Final stability continues to require three consecutive checkpoint records with explicit Gate A `PASS` and Gate B stable. This amendment does not relax any existing acceptance criterion.
+4. The former C100-only one-trial shortcut and separate extra determinism trial invocation are removed from `run_batch.py`; the official dataset uses the normal trial-ID sequence and does not execute an extra trial outside that sequence.
+5. Existing one-trial C100 checkpoints are legacy policy state. Resume must validate their source, artifact identity and persisted daily slices; it must not replay completed trial IDs. An old checkpoint lacking the required daily slices or failing identity validation stays blocked.
+6. Do not rewrite or relabel historical trial records. Do not change `SOURCE_SHA`, master seed, RNG, source engine, or production cohort. Because the known `SOURCE_SHA_DRIFT` and missing approved-golden provider remain, this policy change does not authorize production Monte Carlo or claim a Gate A/B PASS.
+7. The official Stage 7 full-run workflow still contains a separate C100 one-trial branch and the prior D-2026-10-12-01 P50 rule excluded C100. Those production-workflow and cross-policy alignments are not claimed complete by the `run_batch.py` scoped implementation in this CP.
+
+### Acceptance evidence
+
+Use deterministic synthetic fixtures with the simulation runner monkeypatched. Verify CLI configuration, checkpoint targets `300/600/1200`, gate-B evaluations at those points, no additional C100 verification invocation, and fail-closed stop at (N=300) when approved Gate A evidence is missing. This evidence does not establish production cohort stability.
+
+### Rationale
+
+Apply one consistent adaptive statistical lifecycle in the official `run_batch.py` runner without fabricating approved-golden evidence, replaying historical trials, or changing deterministic inputs.
 

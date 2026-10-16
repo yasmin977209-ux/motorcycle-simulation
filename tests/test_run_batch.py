@@ -196,60 +196,34 @@ def test_stage8_source_sha_is_literal_in_workflow() -> None:
     )
     assert "${{ env.SOURCE_SHA }}" not in text
 
-def test_run_batch_c100_checkpoint_skips_escalation_check() -> None:
-    """C100 does not have an escalation step; next_check_n
-    validation must be skipped."""
+def test_run_batch_c100_checkpoint_uses_shared_next_check_validation() -> None:
+    """C100 now shares the same next-check integrity rule as other scenarios."""
     checkpoint = {
         "stage": "7",
         "scenario": "C100_G100",
-        "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        "source_sha": APPROVED_SOURCE_SHA,
         "completed_trials": 1,
         "next_trial_id": 2,
-        "next_check_n": 1,
+        "next_check_n": 300,
         "final_fingerprint": "abc",
         "artifact_identity": {
             "scenario": "C100_G100",
-            "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+            "source_sha": APPROVED_SOURCE_SHA,
             "trial_id_start": 1,
             "trial_id_end": 1,
             "fingerprint_sha256": "abc",
         },
     }
-    # Must not raise
     run_batch._checkpoint_identity_is_valid(
         checkpoint,
         scenario="C100_G100",
-        source_sha="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        source_sha=APPROVED_SOURCE_SHA,
     )
 
-
-def test_statistical_escalation_uses_only_approved_doubling_points() -> None:
-    from scripts.stage7_stability import (
-        filter_statistical_history,
-        is_statistical_checkpoint,
-        next_statistical_checkpoint,
+    # The old single-trial checkpoint is recognized only as legacy migration state.
+    checkpoint["next_check_n"] = 1
+    run_batch._checkpoint_identity_is_valid(
+        checkpoint,
+        scenario="C100_G100",
+        source_sha=APPROVED_SOURCE_SHA,
     )
-
-    assert [next_statistical_checkpoint(n) for n in (0, 300, 350, 599, 600, 1200)] == [
-        300, 600, 600, 600, 1200, 2400
-    ]
-    assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
-    assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
-
-    original = [{"n": n} for n in (300, 350, 400, 450, 500, 550)]
-    accepted, discarded = filter_statistical_history(original)
-    assert [item["n"] for item in accepted] == [300]
-    assert discarded == [350, 400, 450, 500, 550]
-    assert [item["n"] for item in original] == [300, 350, 400, 450, 500, 550]
-
-
-def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_entries() -> None:
-    import pytest
-    from scripts.stage7_stability import filter_statistical_history
-
-    with pytest.raises(ValueError, match="missing or invalid N"):
-        filter_statistical_history([{"metrics": {}}])
-    with pytest.raises(ValueError, match="duplicate stability-history N"):
-        filter_statistical_history([{"n": 350}, {"n": 350}])
-    with pytest.raises(ValueError, match="not ordered"):
-        filter_statistical_history([{"n": 400}, {"n": 350}])

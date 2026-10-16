@@ -98,14 +98,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     monte_carlo.parse_scenario_id(args.scenario)
 
-    initial_trials = (
-        constants.C100_STATISTICAL_START_TRIALS
-        if args.scenario.startswith("C100_")
-        else constants.NON_C100_STATISTICAL_START_TRIALS
-    )
-    if args.scenario.startswith("C100_") and args.trials != initial_trials:
-        raise ValueError("C100 policy requires exactly one trial")
-
     return args
 
 
@@ -533,7 +525,13 @@ def _checkpoint_identity_is_valid(
     next_trial_id = int(checkpoint.get("next_trial_id", 0))
     next_check_n = int(checkpoint.get("next_check_n", 0))
 
-    if not scenario.startswith("C100_") and next_check_n <= completed_trials:
+    legacy_c100_single_trial_checkpoint = (
+        scenario.startswith("C100_")
+        and completed_trials == 1
+        and next_trial_id == 2
+        and next_check_n == 1
+    )
+    if next_check_n <= completed_trials and not legacy_c100_single_trial_checkpoint:
         raise StateIntegrityError(
             "checkpoint next_check_n must be greater than completed_trials"
         )
@@ -785,17 +783,6 @@ def run_batch(
         checkpoint=checkpoint,
     )
 
-    if (
-        scenario.startswith("C100_")
-        and (
-            resolved_start != constants.C100_STATISTICAL_START_TRIALS
-            or trials != constants.C100_STATISTICAL_START_TRIALS
-        )
-    ):
-        raise StateIntegrityError(
-            "C100 policy permits exactly one trial"
-        )
-
     _ensure_output_contract(
         output_dir,
         resume_from_checkpoint=resume_from_checkpoint,
@@ -821,11 +808,7 @@ def run_batch(
     else:
         daily_slices = {}
 
-    initial_target = (
-        constants.C100_STATISTICAL_START_TRIALS
-        if scenario.startswith("C100_")
-        else constants.NON_C100_STATISTICAL_START_TRIALS
-    )
+    initial_target = constants.NON_C100_STATISTICAL_START_TRIALS
 
     state = _new_state(
         scenario=scenario,
@@ -858,13 +841,13 @@ def run_batch(
         )
 
         if scenario.startswith("C100_"):
-            history = original_history
-            state["stability_history"] = history
-            previous_metrics, previous_n = _latest_stability_point(history)
-            state["next_check_n"] = int(
-                checkpoint.get("next_check_n", initial_target)
+            policy_is_current = (
+                policy_is_current
+                and int(saved_policy.get("c100_start_trials", 0))
+                == constants.C100_STATISTICAL_START_TRIALS
             )
-        elif not policy_is_current and (results or original_history):
+
+        if not policy_is_current and (results or original_history):
             if len(results) > 550:
                 raise StateIntegrityError(
                     "legacy linear-schedule checkpoint exceeds the authorized "
@@ -949,17 +932,10 @@ def run_batch(
     else:
         previous_metrics = None
         previous_n = None
-        state["next_check_n"] = (
-            None
-            if scenario.startswith("C100_")
-            else initial_target
-        )
+        state["next_check_n"] = initial_target
 
     gate_a_preflight_stop = False
-    if (
-        not scenario.startswith("C100_")
-        and len(results) >= constants.STATISTICAL_CHECK_START_N
-    ):
+    if len(results) >= constants.STATISTICAL_CHECK_START_N:
         prior_history = state.get("stability_history", [])
         prior_gate_a = (
             prior_history[-1].get("gate_a", {})
@@ -985,17 +961,14 @@ def run_batch(
     resolved_next_check = state["next_check_n"]
 
     while resolved_start <= batch_end and not gate_a_preflight_stop:
-        if scenario.startswith("C100_"):
-            trial_end = 1
+        if (
+            resolved_next_check is not None
+            and len(results) < resolved_next_check
+        ):
+            target = resolved_next_check
         else:
-            if (
-                resolved_next_check is not None
-                and len(results) < resolved_next_check
-            ):
-                target = resolved_next_check
-            else:
-                target = next_statistical_checkpoint(len(results))
-            trial_end = min(batch_end, target)
+            target = next_statistical_checkpoint(len(results))
+        trial_end = min(batch_end, target)
 
         trial_ids = list(range(resolved_start, trial_end + 1))
         new_results, new_daily_rows = monte_carlo.run_trials_sequentially(
@@ -1033,38 +1006,6 @@ def run_batch(
             results=results,
         )
 
-        if scenario.startswith("C100_"):
-            primary = results[0]
-            verification, _ = monte_carlo.run_single_trial(
-                scenario,
-                trial_id=2,
-                master_seed=master_seed,
-            )
-            primary_dict = asdict(primary)
-            verification_dict = asdict(verification)
-            primary_dict.pop("trial_id")
-            verification_dict.pop("trial_id")
-
-            exact_equality = primary_dict == verification_dict
-            state["c100_independent_verification"] = {
-                "primary_trial_id": 1,
-                "verification_trial_id": 2,
-                "different_trial_id": True,
-                "different_derived_seed": True,
-                "exact_result_equality": exact_equality,
-                "stable": exact_equality,
-            }
-            state["final_status"] = (
-                "stable" if exact_equality else "failed"
-            )
-            state["reason_if_not_stable"] = (
-                None
-                if exact_equality
-                else "C100 independent result mismatch"
-            )
-            _atomic_write_json(output_dir / STATE_JSON, state)
-            break
-
         if (
             trial_end >= constants.STATISTICAL_CHECK_START_N
             and trial_end == resolved_next_check
@@ -1087,41 +1028,57 @@ def run_batch(
                 }
             )
 
-            recent = state["stability_history"][
-                -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
-            ]
-            stable_now = (
-                len(recent)
-                == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
-                and all(
-                    item["gate_a"]["stable"]
-                    and item["gate_b"]["stable"]
-                    for item in recent
+            gate_a_status = gate_a.get("status", "BLOCKED")
+            stable_now = False
+            if gate_a_status != "PASS":
+                state["final_status"] = (
+                    "failed" if gate_a_status == "FAIL" else "blocked"
                 )
-            )
-            state["final_status"] = (
-                "stable" if stable_now else "running"
-            )
-            state["reason_if_not_stable"] = (
-                None
-                if stable_now
-                else "dual stability gates not yet satisfied"
-            )
+                state["stable_at_n"] = None
+                state["included_in_final_stats"] = False
+                state["reason_if_not_stable"] = (
+                    f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
+                    "execution stopped before the next trial block"
+                )
+            else:
+                recent = state["stability_history"][
+                    -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
+                ]
+                stable_now = (
+                    len(recent)
+                    == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
+                    and all(
+                        item.get("gate_a", {}).get("status") == "PASS"
+                        and item.get("gate_a", {}).get("checked") is True
+                        and item.get("gate_a", {}).get("stable") is True
+                        and item["gate_b"]["stable"]
+                        for item in recent
+                    )
+                )
+                state["final_status"] = (
+                    "stable" if stable_now else "running"
+                )
+                state["stable_at_n"] = len(results) if stable_now else None
+                state["included_in_final_stats"] = stable_now
+                state["reason_if_not_stable"] = (
+                    None
+                    if stable_now
+                    else "dual stability gates not yet satisfied"
+                )
 
             previous_metrics = metrics
             previous_n = len(results)
             resolved_next_check = next_statistical_checkpoint(len(results))
             state["next_check_n"] = resolved_next_check
-
             _atomic_write_json(output_dir / STATE_JSON, state)
 
+            if gate_a_status != "PASS":
+                gate_a_preflight_stop = True
+                break
             if stable_now:
                 break
         else:
-            if (
-                scenario.startswith("C100_")
-                or len(results) < constants.STATISTICAL_CHECK_START_N
-            ):
+            if len(results) < constants.STATISTICAL_CHECK_START_N:
                 _atomic_write_json(output_dir / STATE_JSON, state)
 
         if state["final_status"] == "stable":

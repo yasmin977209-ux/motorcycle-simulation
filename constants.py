@@ -233,10 +233,10 @@ REFERENCE_EPSILON: Final[float] = 1e-6
 # [R6-1][Ref 2.5] Original reference Gate-(A) relative tolerance: <1% change.
 REFERENCE_STABILITY_RELATIVE_TOLERANCE: Final[float] = 0.01
 
-# [R6-1][User deviation from Ref 2.5/14.2] C100 starts at one trial; not the original 200.
-C100_STATISTICAL_START_TRIALS: Final[int] = 1
+# [R6-1][Owner decision D-2026-10-17-02] Every scenario, including C100, starts at 300 trials.
+C100_STATISTICAL_START_TRIALS: Final[int] = 300
 
-# [R6-1][User deviation from Ref 2.5/14.2] All non-C100 collection levels start at 300 trials.
+# [R6-1][User decision] All non-C100 collection levels start at 300 trials.
 NON_C100_STATISTICAL_START_TRIALS: Final[int] = 300
 
 # [R6-1][User deviation from Ref 2.5/14.2] Escalation is +50, not doubling.
@@ -257,8 +257,8 @@ STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3
 # [R6-1][User decision] One initial smoke trial per scenario.
 INITIAL_SMOKE_TRIALS_PER_SCENARIO: Final[int] = 1
 
-# [R6-1][User decision] C100 has no confidence-interval gate at n=1.
-C100_CI_GATE_ENABLED: Final[bool] = False
+# [R6-1][Owner decision D-2026-10-17-02] C100 uses the same CI gate as every other scenario.
+C100_CI_GATE_ENABLED: Final[bool] = True
 
 # [R6-1][User decision] One-riyal absolute epsilon for the CI near-zero protection.
 CI_ABSOLUTE_EPSILON: Final[int] = 1

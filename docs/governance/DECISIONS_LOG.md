@@ -195,3 +195,21 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 6. Dataset-loader round-trip evidence does not certify representative payloads, the 185-sheet workbook, Stage 13, or final delivery.
 
 **Evidence record:** targeted test Run `38975610135`, tested commit `375831968ac06917d1175bba15d93c293561a2bd`, artifact `12078932437`. The test fixtures were synthetic and the simulation runner was mocked; no Monte Carlo simulation was invoked for this CP.
+
+
+## D-2026-10-17-02 — Unified C100 statistical policy in the official batch CLI
+
+**Status:** APPROVED — PROJECT OWNER  
+**Date:** 2026-10-17  
+**Scope:** `run_batch.py`, its C100 regression tests, decision documentation and a temporary exact-branch verification workflow.
+
+**Normative decision:**
+1. C100 uses (N=300) as its initial checkpoint, followed by doubling (300 ightarrow 600 ightarrow 1200 ightarrow 2400 ightarrow ldots), matching other scenarios in the official `run_batch.py` statistical CLI.
+2. C100 uses the same Student-t 95% CI Gate B metrics, exact approved-golden Gate A requirements, and three consecutive passing checkpoint rule.
+3. The one-trial C100 shortcut and extra out-of-sequence independent verification invocation are removed from `run_batch.py`. Official trial IDs remain a gap-free unique sequence.
+4. When Gate A is `BLOCKED` or `FAIL`, the current run stops before starting any further trial block; a requested larger batch does not override Gate A.
+5. Existing one-trial C100 checkpoints are legacy state; use only after source/artifact identity validation and availability of persisted daily slices. Never rerun a completed trial to manufacture missing detail rows.
+6. No SOURCE_SHA, master seed, RNG, simulation-engine, or historical data changes are authorized. This decision alone does not authorize a production simulation and does not satisfy Gate A/B.
+7. The separate `.github/workflows/stage7-full-run.yml` remains outside this CP and still has a C100-specific path; no repository-wide production workflow alignment is claimed. D-2026-10-12-01's P50 >5% exclusion of C100 also remains to be addressed under a separately scoped change.
+
+**Evidence to attach:** CP-C100 tests on branch `tmp/cp-runtime-20261017`; no Monte Carlo invocation.
