@@ -2,20 +2,22 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-RUNTIME-20261017",
-  "sha": "d0c028a9e657c36fcdc4ed0a751c14407d43bcd7",
+  "sha": "7e97cc17a201746e3802c08eaf9bd38858c8e393",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "The official run_batch.py path now applies C100's 300/600/1200/... checkpoints, Gate B and three-consecutive-check stability logic; synthetic tests pass and missing approved-golden Gate A evidence stops at N=300. This CP did not modify the separate production stage7-full-run workflow, which still has a C100 one-trial path, and D-2026-10-12-01 still excludes C100 from P50 >5% comparisons. Repository-wide C100 policy alignment remains pending a separately scoped, explicitly authorized production-workflow/policy CP. GATEA_PROVIDER_MISSING and SOURCE_SHA_DRIFT remain blockers; no production Monte Carlo or historical trial change.",
+  "next": "CP-C100-STAGE7-UNIFICATION: the candidate implementation and decision D-2026-10-17-03 are recorded. Targeted test step concluded success on SHA b9abcf0b39748b3d406b199613f38f8007152700, but the full pytest step of Run 38981117293 remained in progress and its JUnit/Artifact had not been uploaded/inspected at CP closure; CP status is PENDING, not overall PASS. The temporary verifier file was removed at commit 7e97cc17a201746e3802c08eaf9bd38858c8e393; the remote job may still be running independently, and no completion result is asserted. Do not run Monte Carlo production or resume trials. Main remains unchanged. Separate stage1-verification.yml has stale C100 policy assertions and needs explicit additional Workflow authorization. Production Gate A provider, SOURCE_SHA drift, Stage 11 topology, Stage 13 assembler and final-delivery blockers remain open.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
     "UNDEFINED_BUSINESS_RULE: Stage 11 execution topology remains undefined in the current repository; the Stage 10 report explicitly records NOT_DEFINED_IN_CURRENT_REPOSITORY.",
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
-    "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
-    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
+    "GOVERNANCE_GAP_ON_MAIN: D-2026-10-12-01 remains absent from main/state.json. This candidate state now records the approved D-2026-10-12-01 rule and its narrow supersession by D-2026-10-17-03; main was not modified.",
+    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
+    "CI_POLICY_SCOPE_GAP: .github/workflows/stage1-verification.yml still asserts C100_STATISTICAL_START_TRIALS == 1 and C100_CI_GATE_ENABLED is False; it was not modified because this CP's explicit Workflow authorization named stage7-full-run.yml only. A separate explicit authorization is required to change this second workflow.",
+    "CP_TEST_EVIDENCE_PENDING: Run 38981117293 on candidate SHA b9abcf0b39748b3d406b199613f38f8007152700 returned success for the targeted test step but remained in progress in full pytest at CP closure; no current-SHA JUnit/Artifact was available to inspect. Do not assert full suite PASS."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "0b083fa472d7a11089a15137cfad16d87785689a",
+  "head_sha": "7e97cc17a201746e3802c08eaf9bd38858c8e393",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -187,6 +189,79 @@
         "simulation_engine_changed": false,
         "historical_trial_data_changed": false,
         "production_monte_carlo_invoked": false
+      }
+    },
+    "D-2026-10-12-01": {
+      "topic": "gate_b_p50_change_gt_5_percent",
+      "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
+      "date": "2026-10-12",
+      "original_scope": "20 non-C100 scenarios; item 1 explicitly excluded C100",
+      "metric": "Final_Net_Project_Equity",
+      "quantile": "numpy.quantile(values, 0.50, method='linear')",
+      "checkpoints": [
+        300,
+        600,
+        1200
+      ],
+      "adjacent_transitions": [
+        "300->600",
+        "600->1200"
+      ],
+      "formula": "100 * abs(P50_new - P50_previous) / abs(P50_previous)",
+      "threshold_percent": 5,
+      "threshold_is_strictly_greater": true,
+      "near_zero_reference_epsilon": 0.000001,
+      "near_zero_absolute_fallback": 1,
+      "continuation_checkpoint": 2400,
+      "supersession": {
+        "decision_id": "D-2026-10-17-03",
+        "scope": "item 1 only: extend P50 comparison to C100; all formula/threshold/near-zero clauses remain unchanged"
+      }
+    },
+    "D-2026-10-17-03": {
+      "topic": "c100_stage7_and_p50_policy_unification",
+      "status": "APPROVED_BY_PROJECT_OWNER",
+      "date": "2026-10-17",
+      "scope": "run_batch.py, .github/workflows/stage7-full-run.yml, shared stage7_stability.py, related tests and governance documents",
+      "supersedes": [
+        {
+          "decision_id": "D-2026-10-10-01",
+          "scope": "C100 one-off-trial/determinism-only clause only"
+        },
+        {
+          "decision_id": "D-2026-10-17-01",
+          "scope": "c100_official_trial_count=1 clause only"
+        },
+        {
+          "decision_id": "D-2026-10-12-01",
+          "scope": "item 1 C100 exclusion from P50 >5% comparison only"
+        }
+      ],
+      "effective_policy": {
+        "c100_and_non_c100_start_trials": 300,
+        "checkpoint_schedule": "300 -> 600 -> 1200 -> 2400 -> ...",
+        "gate_a": "exact approved-golden fingerprint and source identity; fail-closed",
+        "gate_b": "same Student-t 95% CI rule on approved metrics",
+        "final_stability": "three consecutive checkpoints with Gate A PASS and Gate B stable",
+        "p50_metric": "Final_Net_Project_Equity",
+        "p50_quantile": "linear",
+        "p50_transitions": [
+          "300->600",
+          "600->1200"
+        ],
+        "p50_threshold_percent": 5,
+        "p50_strict": true,
+        "near_zero_reference_epsilon": 0.000001,
+        "near_zero_absolute_fallback": 1,
+        "p50_trigger_continues_to_n": 2400
+      },
+      "guardrails": {
+        "source_sha_changed": false,
+        "master_seed_changed": false,
+        "rng_changed": false,
+        "simulation_engine_changed": false,
+        "historical_trial_data_changed": false,
+        "production_cohort_started": false
       }
     }
   },
@@ -937,6 +1012,143 @@
       "bytes": 277142,
       "sha256": "fbb2729056f330e3174b4ca83e6feadbc9cbe81c7f9363ff0c4609ae6c147058",
       "original_reference_sha256_unchanged": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+    }
+  },
+  "cp_c100_stage7_unification_20261017": {
+    "status": "IMPLEMENTED_ON_CANDIDATE; TARGETED_TEST_STEP_SUCCESS; FULL_PYTEST_AND_CURRENT_ARTIFACT_PENDING_AT_CLOSURE",
+    "decision_id": "D-2026-10-17-03",
+    "branch": "tmp/cp-c100-stage7-unification-20261017",
+    "base_main_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+    "base_candidate_sha": "d3e9ef6fc77d434e1ac5b5d90faedd9d0380cea8",
+    "implementation_commits": [
+      "1334fee7c8c7cd25415c8f724c46d1dadfcecc85",
+      "9f8439f5a14bf6b0b4857e8416eb32dafa6c25d6",
+      "bbf77347ae534b557e7bb36d8034326080e1914d",
+      "a91930d3b9e07a2f858f3f5222c0c5f7d2927d2f",
+      "f030109f6a177c542dcae1c621cdbdb6c4165823",
+      "b9abcf0b39748b3d406b199613f38f8007152700"
+    ],
+    "tested_sha": "b9abcf0b39748b3d406b199613f38f8007152700",
+    "current_run": {
+      "id": "38981117293",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38981117293",
+      "status_at_cp_closure": "in_progress",
+      "conclusion": null,
+      "job_id": "117241954357",
+      "targeted_test_step": "success",
+      "targeted_test_count": "NOT_INDEPENDENTLY_INSPECTED; runner redirected test output to its local artifact and the job had not reached upload",
+      "full_pytest_step": "in_progress",
+      "current_test_artifact_id": null,
+      "current_test_artifact_sha256": null,
+      "note": "Do not infer a full-suite PASS from the successful targeted step. The temporary workflow was removed after the active job had already checked out this exact SHA; no current artifact was available for inspection at closure."
+    },
+    "previous_diagnostic_run": {
+      "id": "38980384340",
+      "tested_sha": "a91930d3b9e07a2f858f3f5222c0c5f7d2927d2f",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38980384340",
+      "full_pytest_summary": "6 failed, 384 passed, 1 skipped in 224.04s",
+      "failure_classes": [
+        {
+          "test": "tests/test_stage1.py::test_user_approved_execution_overrides_are_exact",
+          "classification": "K_TEST",
+          "status": "FIXED_ON_CURRENT_CANDIDATE",
+          "evidence": "old C100 start=1/CI-disabled expectation; then its per-collection mapping also expected 1; both updated to 300/CI-enabled"
+        },
+        {
+          "test": "tests/test_acceptance_16_v2.py::test_127_تطابق_التسلسلي_والمتوازي",
+          "classification": "WORKFLOW_DEFECT_OR_MISSING_FIXTURE",
+          "status": "OUT_OF_SCOPE",
+          "literal_error": "FileNotFoundError for results_stage5/worker_equivalence_manifest.json"
+        },
+        {
+          "test": "tests/test_acceptance_16_v2.py::test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط",
+          "classification": "WORKFLOW_DEFECT_OR_MISSING_FIXTURE",
+          "status": "OUT_OF_SCOPE",
+          "literal_error": "FileNotFoundError for results_stage5/trials_summary.parquet"
+        },
+        {
+          "test": "tests/test_acceptance_16_v2.py::test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا",
+          "classification": "WORKFLOW_DEFECT_OR_MISSING_FIXTURE",
+          "status": "OUT_OF_SCOPE",
+          "literal_error": "FileNotFoundError for results_stage5/trials_summary.parquet"
+        },
+        {
+          "test": "tests/test_acceptance_16_v2.py::test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات",
+          "classification": "WORKFLOW_DEFECT_OR_MISSING_FIXTURE",
+          "status": "OUT_OF_SCOPE",
+          "literal_error": "FileNotFoundError for results_stage5/daily_distribution.parquet"
+        },
+        {
+          "test": "tests/test_monte_carlo_round2.py::test_parallel_fingerprints_match_across_python_hash_seeds",
+          "classification": "PENDING_ROOT_CAUSE_NOT_DIAGNOSED",
+          "status": "OUT_OF_SCOPE",
+          "literal_error": "subprocess.CalledProcessError: child process exited with code 1; child stderr was captured by the test and not emitted, so no further cause is asserted"
+        }
+      ],
+      "artifact_id": "12081066931",
+      "artifact_name": "cp-c100-stage7-unification-evidence",
+      "artifact_bytes": 20320,
+      "artifact_sha256": "c3af314c541fdf2dfc5f3a9cd21edf3255bac8349a442744e4a4b2b440d693d9"
+    },
+    "previous_failed_attempts": [
+      {
+        "run_id": "38980313431",
+        "classification": "WORKFLOW_DEFECT",
+        "literal_error": "AssertionError: embedded Stage 7 Python heredoc was not found",
+        "repair_commit": "a91930d3b9e07a2f858f3f5222c0c5f7d2927d2f"
+      },
+      {
+        "run_id": "38981009141",
+        "classification": "K_TEST",
+        "literal_error": "STATISTICAL_START_TRIALS_BY_COLLECTION expected 1.0:1 while constants now return 1.0:300",
+        "repair_commit": "b9abcf0b39748b3d406b199613f38f8007152700"
+      }
+    ],
+    "latest_source_git_blobs": {
+      ".github/workflows/stage7-full-run.yml": "a63ba025320b6840f38b03a97f8df78958ea9983",
+      "run_batch.py": "f9c93916fabcea689c816fdebad8bfa8a1bc0e6e",
+      "scripts/stage7_stability.py": "b7411b6b4a24ceb1d01ce1065bb9fa2755160dcf",
+      "constants.py": "230cc003a9aeb3b738d3b108cd5fc7100b41f679",
+      "tests/test_stage1.py": "69f00b38d1a289d10911e7a73930426e90fbce26",
+      "tests/test_stage7_authoring.py": "687d3dd12ada3610fc42fb5128a18ad4e7c2d1ae",
+      "tests/test_run_batch.py": "a487a122bab7bc831b34c7226b351aedefbe7f89",
+      "tests/test_run_batch_excel_daily.py": "4ff48e09bf4489db7b64c9eb050bd1fb0a265a88",
+      "tests/test_run_batch_c100_policy.py": "0836544f5d09e1c9e9aaa9700b510fa60ff6f945",
+      "tests/test_stage7_stability.py": "a3dc0559a9fc1195d41a6cd3a3ee94dea108aaf7",
+      "docs/governance/DECISIONS_LOG.md": "1ca50ba113eaf21000a14bdd8a6eea5b62b05364",
+      "docs/governance/REFERENCE_AMENDMENTS.md": "24f66379aeba107adcee3ac3f6246c73993c815d",
+      "README.md": "1473c786492ab678c1e3411bd7a639d6f9194f98"
+    },
+    "temporary_workflow_cleanup": {
+      "path": ".github/workflows/cp-c100-stage7-verify.yml",
+      "removed": true,
+      "removal_commit": "7e97cc17a201746e3802c08eaf9bd38858c8e393",
+      "note": "The currently running job is independent of the branch file deletion; no artifact had been uploaded at time of state update."
+    },
+    "remaining_scope_gaps": [
+      "Separate .github/workflows/stage1-verification.yml still asserts C100_STATISTICAL_START_TRIALS == 1 and C100_CI_GATE_ENABLED is False. It was not modified because authorization explicitly named stage7-full-run.yml; ask owner before modifying this second workflow.",
+      "Latest full pytest result remains in progress and the current tested-SHA artifact/JUnit was not available for independent inspection at CP closure.",
+      "Production GATEA_PROVIDER_MISSING remains.",
+      "SOURCE_SHA_DRIFT remains against f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b.",
+      "UNDEFINED_BUSINESS_RULE Stage 11 execution topology remains open.",
+      "scripts/stage13_assemble.py remains absent on main.",
+      "Seven final delivery files not accepted as one audited set; Stage 9C historic report remains PARTIAL.",
+      "G2 timeout risk remains."
+    ],
+    "guardrails": {
+      "main_modified": false,
+      "source_sha_changed": false,
+      "master_seed_changed": false,
+      "rng_changed": false,
+      "engine_changed": false,
+      "historical_trial_data_changed": false,
+      "production_stage7_workflow_dispatched": false,
+      "production_cohort_trials_started": 0,
+      "final_delivery_created": false,
+      "final_delivery_approved": false,
+      "pr_created": false,
+      "release_created": false,
+      "any_branch_deleted": false
     }
   }
 }
