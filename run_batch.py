@@ -23,7 +23,10 @@ from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_MULTIPLIER,
     evaluate_gate_a as evaluate_stage7_gate_a,
     filter_statistical_history,
+    hydrate_p50_history,
     next_statistical_checkpoint,
+    p50_history_ready,
+    p50_requires_n2400,
 )
 
 
@@ -396,6 +399,23 @@ def _write_excel_daily_datasets(
         "daily_slice_rows": len(daily_slice_records),
         "daily_distribution_rows": len(distribution),
     }
+
+
+def _p50_values_by_checkpoint(
+    results: list[monte_carlo.TrialResult],
+) -> dict[int, float]:
+    values: dict[int, float] = {}
+    for checkpoint_n in (300, 600, 1200):
+        if len(results) < checkpoint_n:
+            continue
+        sample = np.asarray(
+            [item.final_net_project_equity for item in results[:checkpoint_n]],
+            dtype=np.float64,
+        )
+        values[checkpoint_n] = float(
+            np.quantile(sample, 0.50, method="linear")
+        )
+    return values
 
 
 def _validate_trial_sequence(
@@ -934,7 +954,38 @@ def run_batch(
         previous_n = None
         state["next_check_n"] = initial_target
 
+    state["stability_history"] = hydrate_p50_history(
+        state.get("stability_history", []),
+        _p50_values_by_checkpoint(results),
+    )
     gate_a_preflight_stop = False
+    if (
+        len(results) >= constants.STATISTICAL_CHECK_START_N
+        and not p50_history_ready(state["stability_history"], len(results))
+    ):
+        state["final_status"] = "blocked"
+        state["stable_at_n"] = None
+        state["included_in_final_stats"] = False
+        state["reason_if_not_stable"] = (
+            "P50 >5% policy evidence is incomplete or invalid; refusing to execute additional trials"
+        )
+        _atomic_write_json(output_dir / STATE_JSON, state)
+        gate_a_preflight_stop = True
+
+    if (
+        len(results) >= constants.STATISTICAL_CHECK_START_N
+        and state.get("final_status") == "stable"
+        and p50_requires_n2400(state["stability_history"])
+        and len(results) < 2400
+    ):
+        state["final_status"] = "PRELIMINARY_STABLE"
+        state["stable_at_n"] = None
+        state["included_in_final_stats"] = False
+        state["reason_if_not_stable"] = (
+            "P50 >5% continuation rule requires checkpoint N=2400"
+        )
+        _atomic_write_json(output_dir / STATE_JSON, state)
+
     if len(results) >= constants.STATISTICAL_CHECK_START_N:
         prior_history = state.get("stability_history", [])
         prior_gate_a = (
@@ -1025,10 +1076,23 @@ def run_batch(
                     "gate_a": gate_a,
                     "gate_b": gate_b,
                     "metrics": metrics,
+                    "p50_final_net_project_equity": _p50_values_by_checkpoint(results).get(len(results)),
                 }
+            )
+            state["stability_history"] = hydrate_p50_history(
+                state["stability_history"],
+                _p50_values_by_checkpoint(results),
             )
 
             gate_a_status = gate_a.get("status", "BLOCKED")
+            p50_ready = p50_history_ready(
+                state["stability_history"], len(results)
+            )
+            p50_waiting_for_n2400 = (
+                p50_requires_n2400(state["stability_history"])
+                and len(results) < 2400
+            )
+            stable_gates_now = False
             stable_now = False
             if gate_a_status != "PASS":
                 state["final_status"] = (
@@ -1040,11 +1104,19 @@ def run_batch(
                     f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
                     "execution stopped before the next trial block"
                 )
+            elif not p50_ready:
+                state["final_status"] = "blocked"
+                state["stable_at_n"] = None
+                state["included_in_final_stats"] = False
+                state["reason_if_not_stable"] = (
+                    "P50 >5% policy evidence is incomplete or invalid; "
+                    "execution stopped before the next trial block"
+                )
             else:
                 recent = state["stability_history"][
                     -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
                 ]
-                stable_now = (
+                stable_gates_now = (
                     len(recent)
                     == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
                     and all(
@@ -1055,14 +1127,19 @@ def run_batch(
                         for item in recent
                     )
                 )
+                stable_now = stable_gates_now and not p50_waiting_for_n2400
                 state["final_status"] = (
-                    "stable" if stable_now else "running"
+                    "stable" if stable_now
+                    else "PRELIMINARY_STABLE" if stable_gates_now and p50_waiting_for_n2400
+                    else "running"
                 )
                 state["stable_at_n"] = len(results) if stable_now else None
                 state["included_in_final_stats"] = stable_now
                 state["reason_if_not_stable"] = (
                     None
                     if stable_now
+                    else "P50 >5% continuation rule requires checkpoint N=2400"
+                    if stable_gates_now and p50_waiting_for_n2400
                     else "dual stability gates not yet satisfied"
                 )
 
@@ -1072,7 +1149,7 @@ def run_batch(
             state["next_check_n"] = resolved_next_check
             _atomic_write_json(output_dir / STATE_JSON, state)
 
-            if gate_a_status != "PASS":
+            if gate_a_status != "PASS" or not p50_ready:
                 gate_a_preflight_stop = True
                 break
             if stable_now:

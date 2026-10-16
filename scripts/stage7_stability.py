@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import math
 import constants
 import re
 
@@ -69,6 +70,179 @@ def filter_statistical_history(
             discarded.append(n)
 
     return kept, discarded
+
+
+
+P50_CHECKPOINTS = (300, 600, 1200)
+P50_CHANGE_THRESHOLD_PERCENT = 5.0
+P50_REFERENCE_EPSILON = 1e-6
+P50_ABSOLUTE_EPSILON = 1.0
+
+
+def evaluate_p50_transition(
+    *,
+    previous_n: int,
+    previous_p50: float | None,
+    current_n: int,
+    current_p50: float | None,
+    reference_epsilon: float = P50_REFERENCE_EPSILON,
+    absolute_epsilon: float = P50_ABSOLUTE_EPSILON,
+) -> dict[str, Any]:
+    """Apply D-2026-10-12-01's adjacent-checkpoint P50 continuation rule."""
+    base: dict[str, Any] = {
+        "metric": "final_net_project_equity",
+        "previous_n": previous_n,
+        "current_n": current_n,
+        "threshold_percent": P50_CHANGE_THRESHOLD_PERCENT,
+        "checked": False,
+        "stable": False,
+        "requires_n2400": False,
+        "change_percent": None,
+        "absolute_change": None,
+    }
+    if (previous_n, current_n) not in ((300, 600), (600, 1200)):
+        return {
+            **base,
+            "status": "NOT_APPLICABLE",
+            "stable": True,
+            "reason": "P50 continuation rule only compares 300->600 and 600->1200",
+        }
+    try:
+        previous_value = float(previous_p50)  # type: ignore[arg-type]
+        current_value = float(current_p50)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return {
+            **base,
+            "status": "BLOCKED",
+            "reason": "required P50 checkpoint value is missing or non-numeric",
+        }
+    if not math.isfinite(previous_value) or not math.isfinite(current_value):
+        return {
+            **base,
+            "status": "BLOCKED",
+            "reason": "required P50 checkpoint value is not finite",
+        }
+
+    absolute_change = abs(current_value - previous_value)
+    if abs(previous_value) < reference_epsilon:
+        requires_continuation = absolute_change >= absolute_epsilon
+        return {
+            **base,
+            "checked": True,
+            "stable": not requires_continuation,
+            "requires_n2400": requires_continuation,
+            "absolute_change": absolute_change,
+            "reason": (
+                "near-zero prior P50 requires continuation when absolute change is >= 1 currency unit"
+                if requires_continuation
+                else "near-zero prior P50 absolute change is below 1 currency unit"
+            ),
+            "status": "CONTINUE_N2400" if requires_continuation else "PASS",
+        }
+
+    change_percent = 100.0 * absolute_change / abs(previous_value)
+    requires_continuation = change_percent > P50_CHANGE_THRESHOLD_PERCENT
+    return {
+        **base,
+        "checked": True,
+        "stable": not requires_continuation,
+        "requires_n2400": requires_continuation,
+        "change_percent": change_percent,
+        "absolute_change": absolute_change,
+        "status": "CONTINUE_N2400" if requires_continuation else "PASS",
+        "reason": (
+            "adjacent-checkpoint P50 change is strictly greater than 5%"
+            if requires_continuation
+            else "adjacent-checkpoint P50 change does not exceed 5%"
+        ),
+    }
+
+
+def hydrate_p50_history(
+    history: list[dict[str, Any]],
+    p50_values: dict[int, float],
+) -> list[dict[str, Any]]:
+    """Attach reproducible P50 and transition evidence to verified checkpoint rows."""
+    points: dict[int, dict[str, Any]] = {}
+    for point in history:
+        n = int(point["n"])
+        if n in points:
+            raise ValueError(f"duplicate stability-history N={n}")
+        points[n] = point
+        if n in p50_values:
+            point["p50_final_net_project_equity"] = float(p50_values[n])
+
+    for n in P50_CHECKPOINTS:
+        point = points.get(n)
+        if point is None:
+            continue
+        current_p50 = point.get("p50_final_net_project_equity")
+        if n == 300:
+            try:
+                valid_baseline = math.isfinite(float(current_p50))
+            except (TypeError, ValueError):
+                valid_baseline = False
+            point["p50_transition"] = {
+                "metric": "final_net_project_equity",
+                "previous_n": None,
+                "current_n": 300,
+                "checked": False,
+                "stable": valid_baseline,
+                "requires_n2400": False,
+                "status": "BASELINE" if valid_baseline else "BLOCKED",
+                "reason": None if valid_baseline else "N=300 P50 baseline is missing or non-finite",
+            }
+        else:
+            previous = points.get(n // 2)
+            previous_p50 = (
+                previous.get("p50_final_net_project_equity")
+                if previous is not None
+                else None
+            )
+            point["p50_transition"] = evaluate_p50_transition(
+                previous_n=n // 2,
+                previous_p50=previous_p50,
+                current_n=n,
+                current_p50=current_p50,
+            )
+    return history
+
+
+def p50_history_ready(history: list[dict[str, Any]], completed_n: int) -> bool:
+    """Fail closed if any required P50 checkpoint/transition evidence is absent."""
+    points = {int(point.get("n", -1)): point for point in history}
+    for n in P50_CHECKPOINTS:
+        if completed_n < n:
+            continue
+        point = points.get(n)
+        if point is None:
+            return False
+        try:
+            value = float(point.get("p50_final_net_project_equity"))
+        except (TypeError, ValueError):
+            return False
+        if not math.isfinite(value):
+            return False
+        transition = point.get("p50_transition") or {}
+        if n == 300:
+            if transition.get("status") != "BASELINE":
+                return False
+        elif (
+            transition.get("checked") is not True
+            or transition.get("status") not in ("PASS", "CONTINUE_N2400")
+        ):
+            return False
+    return True
+
+
+def p50_requires_n2400(history: list[dict[str, Any]]) -> bool:
+    """Whether either approved adjacent P50 comparison requires continuing to N=2400."""
+    return any(
+        bool((point.get("p50_transition") or {}).get("requires_n2400"))
+        for point in history
+        if int(point.get("n", -1)) in (600, 1200)
+    )
+
 
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")

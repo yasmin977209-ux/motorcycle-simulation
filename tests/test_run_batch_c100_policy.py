@@ -12,14 +12,14 @@ SOURCE_SHA_SENTINEL = "c" * 40
 SCENARIO = "C100_G100"
 
 
-def _result(trial_id: int) -> monte_carlo.TrialResult:
+def _result(trial_id: int, equity: float = 1_000) -> monte_carlo.TrialResult:
     return monte_carlo.TrialResult(
         scenario_id=SCENARIO,
         collection_probability=1.0,
         recovery_rate_pct=100,
         trial_id=trial_id,
         final_close_date="2027-01-01",
-        final_net_project_equity=1_000,
+        final_net_project_equity=equity,
         final_cash=500,
         cumulative_project_profit=900,
         operating_net_profit=920,
@@ -50,7 +50,7 @@ def _daily(trial_id: int) -> list[dict[str, object]]:
     }]
 
 
-def _fake_batch_factory(calls: list[list[int]]):
+def _fake_batch_factory(calls: list[list[int]], *, shifted: bool = False):
     def fake_run_trials(
         scenario: str,
         trial_ids: tuple[int, ...] | list[int],
@@ -59,7 +59,11 @@ def _fake_batch_factory(calls: list[list[int]]):
     ) -> tuple[list[monte_carlo.TrialResult], dict[int, list[dict[str, object]]]]:
         ids = [int(value) for value in trial_ids]
         calls.append(ids)
-        return ([_result(value) for value in ids], {value: _daily(value) for value in ids})
+        results = [
+            _result(value, 1_150 if shifted and value > 300 else 1_000)
+            for value in ids
+        ]
+        return (results, {value: _daily(value) for value in ids})
     return fake_run_trials
 
 
@@ -119,6 +123,45 @@ def test_c100_runs_the_same_doubling_checkpoints_with_synthetic_rows_only(
     assert not state.get("c100_independent_verification")
     assert state["source_sha"] == SOURCE_SHA_SENTINEL
     assert state["master_seed"] == constants.MASTER_SEED
+
+
+
+def test_c100_p50_shift_over_five_percent_requires_n2400(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[list[int]] = []
+    monkeypatch.setattr(
+        monte_carlo,
+        "run_trials_sequentially",
+        _fake_batch_factory(calls, shifted=True),
+    )
+
+    def approved_gate_a(**kwargs):
+        return {
+            "status": "PASS",
+            "checked": True,
+            "stable": True,
+            "previous_n": kwargs["previous_n"],
+            "current_n": kwargs["current_n"],
+            "reason": None,
+        }
+
+    monkeypatch.setattr(run_batch, "evaluate_gate_a", approved_gate_a)
+    state = run_batch.run_batch(
+        scenario=SCENARIO,
+        trials=1200,
+        output_dir=tmp_path / "batch-p50-trigger",
+        source_sha=SOURCE_SHA_SENTINEL,
+    )
+
+    assert [point["n"] for point in state["stability_history"]] == [300, 600, 1200]
+    assert state["stability_history"][1]["p50_transition"]["requires_n2400"] is True
+    assert state["stability_history"][2]["p50_transition"]["requires_n2400"] is True
+    assert state["final_status"] == "PRELIMINARY_STABLE"
+    assert state["stable_at_n"] is None
+    assert state["included_in_final_stats"] is False
+    assert state["next_check_n"] == 2400
+    assert [len(group) for group in calls] == [300, 300, 600]
 
 
 def test_c100_stops_at_first_checkpoint_when_gate_a_has_no_approved_golden(
