@@ -88,6 +88,13 @@ if __name__ == "__main__":
 def _run_hashseed(script_path: Path, hash_seed: int) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = str(hash_seed)
+    project_root = str(Path(__file__).resolve().parents[1])
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        project_root
+        if not existing_pythonpath
+        else os.pathsep.join([project_root, existing_pythonpath])
+    )
     try:
         completed = subprocess.run(
             [sys.executable, str(script_path)],
