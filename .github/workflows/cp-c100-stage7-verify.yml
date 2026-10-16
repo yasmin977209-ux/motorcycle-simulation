@@ -1,0 +1,202 @@
+name: CP-C100 Stage7 unified policy temporary verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-c100-stage7-unification-20261017
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact tested branch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact commit, branch and protected simulation identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "tmp/cp-c100-stage7-unification-20261017"
+          git diff --exit-code d3e9ef6fc77d434e1ac5b5d90faedd9d0380cea8 "$GITHUB_SHA" -- \
+            dateutils.py rng.py entities.py state_machine.py daily_engine.py \
+            accounting.py collection.py guarantee.py friday.py settlement.py \
+            closure.py partner_equity.py monte_carlo.py requirements.txt
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate workflow YAML and embedded orchestrator syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import ast
+          import re
+          import textwrap
+          from pathlib import Path
+          import yaml
+
+          workflow_path = Path(".github/workflows/stage7-full-run.yml")
+          text = workflow_path.read_text(encoding="utf-8")
+          parsed = yaml.safe_load(text)
+          assert parsed["env"]["INITIAL_NON_C100_TRIALS"] == "300"
+          assert parsed["env"]["INITIAL_C100_TRIALS"] == "300"
+          assert "C100 primary sample must remain n=1" not in text
+          assert "PRELIMINARY_STABLE" in text
+          assert "p50_history_ready(history, completed)" in text
+          assert "p50_requires_n2400(history)" in text
+          embedded = re.search(
+              r"cat > /tmp/stage7_orchestrator\\.py <<'PY'\\n(.*?)\\n          PY",
+              text,
+              flags=re.DOTALL,
+          )
+          assert embedded, "embedded Stage 7 Python heredoc was not found"
+          ast.parse(textwrap.dedent(embedded.group(1)), filename="stage7_orchestrator.py")
+          for source in (
+              "run_batch.py",
+              "scripts/stage7_stability.py",
+              "tests/test_stage7_authoring.py",
+              "tests/test_run_batch.py",
+              "tests/test_run_batch_excel_daily.py",
+              "tests/test_run_batch_c100_policy.py",
+              "tests/test_stage7_stability.py",
+          ):
+              ast.parse(Path(source).read_text(encoding="utf-8"), filename=source)
+          print("PASS_YAML_AND_EMBEDDED_ORCHESTRATOR_PARSE")
+          PY
+
+      - name: Run targeted C100, Stage 7, batch and P50 policy tests
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p cp-c100-stage7-evidence
+          python -m pytest -q \
+            tests/test_stage7_stability.py \
+            tests/test_run_batch_c100_policy.py \
+            tests/test_stage7_authoring.py \
+            tests/test_run_batch.py \
+            tests/test_run_batch_excel_daily.py \
+            --junitxml=cp-c100-stage7-evidence/targeted-junit.xml \
+            > cp-c100-stage7-evidence/targeted-pytest.txt 2>&1
+          rc=$?
+          echo "$rc" > cp-c100-stage7-evidence/targeted-exit-code.txt
+          cat cp-c100-stage7-evidence/targeted-pytest.txt
+          exit "$rc"
+
+      - name: Run full pytest suite without production workflow dispatch
+        if: success()
+        shell: bash
+        run: |
+          set -uo pipefail
+          python -m pytest -q tests \
+            --junitxml=cp-c100-stage7-evidence/full-junit.xml \
+            > cp-c100-stage7-evidence/full-pytest.txt 2>&1
+          rc=$?
+          echo "$rc" > cp-c100-stage7-evidence/full-exit-code.txt
+          cat cp-c100-stage7-evidence/full-pytest.txt
+          exit "$rc"
+
+      - name: Independently inspect tested source and hashes
+        if: always()
+        env:
+          TESTED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import ast
+          import hashlib
+          import json
+          import os
+          import platform
+          from pathlib import Path
+          import yaml
+
+          paths = [
+              ".github/workflows/stage7-full-run.yml",
+              "run_batch.py",
+              "constants.py",
+              "scripts/stage7_stability.py",
+              "tests/test_stage7_authoring.py",
+              "tests/test_run_batch.py",
+              "tests/test_run_batch_excel_daily.py",
+              "tests/test_run_batch_c100_policy.py",
+              "tests/test_stage7_stability.py",
+              "docs/governance/DECISIONS_LOG.md",
+              "docs/governance/REFERENCE_AMENDMENTS.md",
+              "README.md",
+          ]
+          output = Path("cp-c100-stage7-evidence")
+          output.mkdir(parents=True, exist_ok=True)
+          workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
+          p50_file = Path("scripts/stage7_stability.py").read_text(encoding="utf-8")
+          targeted_code = (Path("cp-c100-stage7-evidence/targeted-exit-code.txt").read_text().strip()
+                           if Path("cp-c100-stage7-evidence/targeted-exit-code.txt").exists()
+                           else "NOT_RUN")
+          full_code = (Path("cp-c100-stage7-evidence/full-exit-code.txt").read_text().strip()
+                       if Path("cp-c100-stage7-evidence/full-exit-code.txt").exists()
+                       else "NOT_RUN")
+          doc = {
+              "tested_sha": os.environ["TESTED_SHA"],
+              "python_version": platform.python_version(),
+              "workflow_env": yaml.safe_load(workflow)["env"],
+              "production_stage7_c100_start": "300",
+              "non_c100_start": "300",
+              "p50_policy_helper_present": "def evaluate_p50_transition(" in p50_file,
+              "p50_strict_threshold_percent": "5.0",
+              "near_zero_reference_epsilon": "1e-6",
+              "near_zero_absolute_epsilon": 1.0,
+              "targeted_pytest_exit_code": targeted_code,
+              "full_pytest_exit_code": full_code,
+              "production_monte_carlo_cohort_invocations": 0,
+              "production_stage7_workflow_dispatched": False,
+              "source_sha_changed": False,
+              "master_seed_changed": False,
+              "rng_changed": False,
+              "simulation_engine_changed": False,
+              "historical_trial_data_changed": False,
+              "content": {
+                  p: {
+                      "bytes": Path(p).stat().st_size,
+                      "sha256": hashlib.sha256(Path(p).read_bytes()).hexdigest(),
+                  }
+                  for p in paths
+              },
+              "limitations": [
+                  "Synthetic unit tests do not establish production Gate A or Gate B acceptance.",
+                  "Production Gate A approved-golden provider remains missing until independently connected and validated.",
+                  "SOURCE_SHA drift remains unresolved; no production cohort extension is authorized.",
+                  "No workbook or final delivery file was produced by this workflow.",
+              ],
+          }
+          assert doc["workflow_env"]["INITIAL_C100_TRIALS"] == "300"
+          assert doc["workflow_env"]["INITIAL_NON_C100_TRIALS"] == "300"
+          assert doc["p50_policy_helper_present"] is True
+          (output / "independent-inspection.json").write_text(
+              json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(doc, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload inspected CP-C100 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-c100-stage7-unification-evidence
+          path: cp-c100-stage7-evidence/
+          if-no-files-found: error
+          retention-days: 14
