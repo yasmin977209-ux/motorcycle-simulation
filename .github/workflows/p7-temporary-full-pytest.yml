@@ -1,0 +1,77 @@
+name: P7 temporary full pytest
+
+on:
+  push:
+    branches: ["tmp/p7-subprocess-pypath-20261016-clean"]
+
+permissions:
+  contents: read
+
+jobs:
+  p7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Build Stage 5 fixtures
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf results_stage5
+          mkdir -p results_stage5
+
+          python - <<'PY'
+          import json
+          from dataclasses import asdict
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+          import monte_carlo
+
+          results_dir = "results_stage5"
+          result, daily = monte_carlo.run_single_trial("C100_G100", 1, master_seed=20270101)
+          pq.write_table(pa.Table.from_pylist([asdict(result)]), f"{results_dir}/trials_summary.parquet")
+          pq.write_table(pa.Table.from_pylist(monte_carlo.build_daily_distribution([result], {1: daily})), f"{results_dir}/daily_distribution.parquet")
+
+          seq_results, seq_slices = monte_carlo.run_trials_sequentially("C070_G100", (1, 2, 3))
+          par_results, par_slices = monte_carlo.run_trials_parallel("C070_G100", (1, 2, 3), 2)
+          by_id = lambda xs: {x.trial_id: x for x in xs}
+          seq, par = by_id(seq_results), by_id(par_results)
+          manifest = []
+          for trial_id in (1, 2, 3):
+              manifest.append({
+                  "scenario_id": "C070_G100",
+                  "trial_id": trial_id,
+                  "exact_1_eq_2": asdict(seq[trial_id]) == asdict(par[trial_id]) and seq_slices[trial_id] == par_slices[trial_id],
+              })
+          assert all(row["exact_1_eq_2"] for row in manifest)
+          with open(f"{results_dir}/worker_equivalence_manifest.json", "w", encoding="utf-8") as h:
+              json.dump(manifest, h, indent=2, sort_keys=True)
+          PY
+
+      - name: Full pytest
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: python -m pytest -q tests
+
+      - name: Upload validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-full-pytest-evidence
+          path: |
+            results_stage5/worker_equivalence_manifest.json
+            results_stage5/trials_summary.parquet
+            results_stage5/daily_distribution.parquet
+          if-no-files-found: error
