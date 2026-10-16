@@ -59,7 +59,7 @@ jobs:
           assert "p50_history_ready(history, completed)" in text
           assert "p50_requires_n2400(history)" in text
           embedded = re.search(
-              r"cat > /tmp/stage7_orchestrator\\.py <<'PY'\\n(.*?)\\n          PY",
+              r"cat > /tmp/stage7_orchestrator\.py <<'PY'\n(.*?)\n          PY",
               text,
               flags=re.DOTALL,
           )
@@ -186,7 +186,7 @@ jobs:
           assert doc["workflow_env"]["INITIAL_NON_C100_TRIALS"] == "300"
           assert doc["p50_policy_helper_present"] is True
           (output / "independent-inspection.json").write_text(
-              json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\\n",
+              json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
               encoding="utf-8",
           )
           print(json.dumps(doc, ensure_ascii=False, sort_keys=True))
