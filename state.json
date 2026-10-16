@@ -672,5 +672,102 @@
     "historical_data_or_metadata_modified": false,
     "production_monte_carlo_started": false,
     "merge_commit_sha": null
+  },
+  "cp_excel_daily_repair_20261017": {
+    "status": "PASS_REAL_P50_DAILY_ROUND_TRIP_ONLY; FINAL_DELIVERY_BLOCKERS_OPEN",
+    "scope": "Repair write_daily_sheet dictionary-row serialization and validate one authentic C030_G030 P50 DAILY worksheet after XLSX save/reopen. This is not full 185-sheet workbook acceptance, not final seven-file delivery acceptance, and not a stage transition.",
+    "base_main_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+    "branch": "tmp/cp-excel-daily-repair-20261017",
+    "code_change_commit_sha": "6419f70cc2620bc3a2bef90a1280e57fbdfcc261",
+    "test_added_commit_sha": "9521d645d956c96278dadcb6b6510c9e3bc8697b",
+    "test_evidence_serialization_fix_commit_sha": "e299b94a975fedde53994f2afe47756d18c1eb56",
+    "tested_head_sha": "e3aa5b16da6fec729ff9e7b9591336d33ffef324",
+    "verification_run_id": 38969329539,
+    "verification_run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38969329539",
+    "verification_result": "success",
+    "jobs_expected": 1,
+    "jobs_passed": 1,
+    "focused_pytest": "3 passed, 0 failed, 1 warning in 1.02s",
+    "workflow_artifact_id": 12075489041,
+    "workflow_artifact_name": "cp-excel-daily-repair-real-p50",
+    "workflow_artifact_bytes": 147993,
+    "workflow_artifact_sha256": "2ee7b21782165d602ada7f704cf2d8cadfd8ccb84d5e77e5e53dc6063f4faf36",
+    "workbook": {
+      "filename": "C030_G030_DAILY_P50_trial_156.xlsx",
+      "bytes": 161976,
+      "sha256": "51a48060197274166ea7588328d966354180d70f4216d57dcda9a09de9f58d22",
+      "worksheet": "C030_G030_DAILY",
+      "used_range": "A1:T1569",
+      "scenario": "C030_G030",
+      "representative": "P50",
+      "trial_id": 156,
+      "source_run_id": 37225915321,
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "source_artifact_id": 11497409735,
+      "source_artifact_sha256": "9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07",
+      "p50_json_sha256": "e86d0c48cd48028f465dcc10cab92b60f672ef919cefc7d400097fe303ac00de",
+      "canonical_published_workbook_artifact_id": 11507380986,
+      "canonical_published_workbook_sha256": "0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d",
+      "canonical_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+      "master_seed": 20270101,
+      "rng_policy_id": "RNG_SHA256_DERIVED_V1",
+      "sampling_policy_id": "SAMPLING_ADAPTIVE_1_300_PLUS50_V1",
+      "trial_id_policy_id": "TRIAL_ID_SEQ_1_TO_N_NO_GAPS_V1",
+      "schema_version": "1.0",
+      "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+      "daily_rows": 1568,
+      "columns": 20,
+      "exact_source_cell_comparisons": 31360,
+      "exact_value_mismatches": 0,
+      "repeated_header_rows": 0,
+      "date_cells_checked": 3136,
+      "integer_typed_values_checked": 26656,
+      "formula_cells": 0,
+      "excel_error_cells": 0
+    },
+    "failure_disposition": [
+      {
+        "run_id": 38968932456,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "ModuleNotFoundError: No module named 'yaml'",
+        "disposition": "Added pyyaml to temporary verification dependencies."
+      },
+      {
+        "run_id": 38969063829,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "TypeError: Object of type date is not JSON serializable",
+        "disposition": "Acceptance evidence serializes first/last row date values using ISO date strings."
+      },
+      {
+        "run_id": 38969245554,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "AssertionError in workflow policy check: GitHub expanded ${{ github.sha }} in the shell script before Python compared the literal expression.",
+        "disposition": "Built the expected literal from split string parts; exact checkout SHA guard remains before testing."
+      }
+    ],
+    "temporary_workflow": {
+      "path": ".github/workflows/cp-excel-daily-repair-verify.yml",
+      "branch_pin": "tmp/cp-excel-daily-repair-20261017",
+      "removed_after_evidence": true,
+      "removal_commit_sha": "e581d82472c6c68f2681f4288617314843f982cf",
+      "branch_deleted": false
+    },
+    "simulation_rerun": false,
+    "historical_data_modified": false,
+    "source_sha_changed": false,
+    "master_seed_changed": false,
+    "rng_changed": false,
+    "main_modified": false,
+    "pr_merged": false,
+    "release_created": false,
+    "final_delivery_approved": false,
+    "remaining_acceptance_gaps": [
+      "Only C030_G030 P50 trial_id=156 DAILY sheet serializer round-trip was validated against authentic enriched source data.",
+      "The entire 185-sheet canonical workbook has not been rebuilt/reopened by this CP.",
+      "The other 24 scenario DAILY sheets were not all round-tripped against their exact canonical P50 source payloads by this CP.",
+      "Seven final delivery files remain incomplete/unverified as a single set.",
+      "Existing main blockers remain: GATEA_PROVIDER_MISSING, SOURCE_SHA_DRIFT, undefined Stage 11 topology, missing scripts/stage13_assemble.py, Stage 9C/report-governance reconciliation, D-2026-10-12-01 state governance gap, and G2 workflow timing risk."
+    ],
+    "stop_after_cp": true
   }
 }
