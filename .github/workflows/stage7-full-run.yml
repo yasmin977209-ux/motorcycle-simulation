@@ -45,6 +45,23 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
+      - name: Verify the narrow additive source identity exception
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+        run: python scripts/verify_source_identity_exception.py --source-sha "${SOURCE_SHA}"
+      - name: Validate exact Gate A golden provider before any Stage 7 execution
+        env:
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          MASTER_SEED: ${{ env.MASTER_SEED }}
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: python scripts/verify_stage7_gate_a_provider.py --output gatea_provider_preflight_report.json
+      - name: Upload verified Gate A provider identity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-golden-provider-preflight-${{ github.run_id }}
+          path: gatea_provider_preflight_report.json
+          if-no-files-found: error
       - name: Stage 7-specific preflight
         env:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
@@ -183,40 +200,9 @@ jobs:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
         run: |
           set -euo pipefail
-          git cat-file -e "${SOURCE_SHA}^{commit}"
-
-          MODEL_FILES=(
-            constants.py
-            dateutils.py
-            rng.py
-            entities.py
-            state_machine.py
-            daily_engine.py
-            accounting.py
-            collection.py
-            guarantee.py
-            friday.py
-            settlement.py
-            closure.py
-            partner_equity.py
-            monte_carlo.py
-          )
-
-          for path in "${MODEL_FILES[@]}"; do
-            if ! git cat-file -e "${SOURCE_SHA}:${path}"; then
-              echo "PINNED_SOURCE_FILE_MISSING=${path}" >&2
-              exit 1
-            fi
-          done
-
-          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
-            echo "MODEL_SOURCE_DRIFT_DETECTED" >&2
-            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
-            exit 1
-          fi
-
+          python scripts/verify_source_identity_exception.py --source-sha "${SOURCE_SHA}"
           echo "SOURCE_SHA=${SOURCE_SHA}"
-          echo "MODEL_SOURCE_BOUNDARY_OK"
+          echo "MODEL_SOURCE_ALLOWLIST_OK"
 
       - name: Restore previous scenario block artifacts when available
         shell: bash
@@ -340,8 +326,14 @@ jobs:
               validate_trial_sequence,
           )
           from scripts.stage7_stability import (
-              evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
+              evaluate_gate_b, filter_statistical_history,
               is_statistical_checkpoint, next_statistical_checkpoint,
+          )
+          from scripts.golden_reference_provider import GoldenReferenceProvider
+          from scripts.stage7_gate_a_provider import (
+              build_exact_gate_a_evidence,
+              evaluate_gate_a_with_approved_golden,
+              validate_checkpoint_coverage,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -352,6 +344,7 @@ jobs:
           RUN_ID = os.environ["RUN_ID"]
           STATE_BRANCH = f"stage7-state/{SCENARIO}"
           MASTER_SEED = int(os.environ["MASTER_SEED"])
+          GOLDEN_PROVIDER = GoldenReferenceProvider()
           INITIAL_NON_C100 = int(os.environ["INITIAL_NON_C100_TRIALS"])
           INITIAL_C100 = int(os.environ["INITIAL_C100_TRIALS"])
           ESCALATION_MULTIPLIER = int(os.environ["ESCALATION_MULTIPLIER"])
@@ -479,10 +472,14 @@ jobs:
                       baseline_metrics = statistics(baseline_results)
                       history.insert(0, {
                           "n": INITIAL_NON_C100,
-                          "gate_a": evaluate_gate_a(
+                          "gate_a": evaluate_gate_a_with_approved_golden(
+                              provider=GOLDEN_PROVIDER,
+                              scenario_id=SCENARIO,
+                              results=baseline_results,
+                              source_sha=SOURCE_SHA,
+                              master_seed=MASTER_SEED,
                               previous_n=None,
                               previous_metrics=None,
-                              current_n=INITIAL_NON_C100,
                               current_metrics=baseline_metrics,
                               escalation_multiplier=ESCALATION_MULTIPLIER,
                               relative_epsilon=RELATIVE_EPSILON,
@@ -608,6 +605,20 @@ jobs:
                       for item in recent_gate_a_points
                   )
               )
+              # Recheck cached stable state against the exact immutable golden map.
+              cached_stable_evidence = build_exact_gate_a_evidence(
+                  GOLDEN_PROVIDER,
+                  scenario_id=SCENARIO,
+                  results=results,
+                  source_sha=SOURCE_SHA,
+                  master_seed=MASTER_SEED,
+              )
+              previous_stable_state_is_valid = (
+                  previous_stable_state_is_valid
+                  and cached_stable_evidence.get("status") == "READY"
+                  and cached_stable_evidence.get("expected_golden_fingerprint_sha256")
+                      == cached_stable_evidence.get("actual_fingerprint_sha256")
+              )
               if not previous_stable_state_is_valid:
                   state["final_status"] = None
                   state["stable_at_n"] = None
@@ -623,6 +634,63 @@ jobs:
                   "status": "already_stable",
                   "stable_at_n": state.get("stable_at_n"),
                   }, sort_keys=True))
+                  raise SystemExit(0)
+
+          # Refuse to execute the next checkpoint unless its exact approved
+          # golden range exists; this check runs before stage7_run_trial_block.
+          if not SCENARIO.startswith("C100_"):
+              checkpoint_provider_check = validate_checkpoint_coverage(
+                  GOLDEN_PROVIDER,
+                  scenario_id=SCENARIO,
+                  target_n=target_n,
+                  source_sha=SOURCE_SHA,
+                  master_seed=MASTER_SEED,
+              )
+              if checkpoint_provider_check.get("status") != "READY":
+                  provider_reason = checkpoint_provider_check.get("reason") or "GOLDEN_PROVIDER_CHECKPOINT_BLOCKED"
+                  state["final_status"] = "blocked"
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      "Gate A golden provider coverage blocked before execution: "
+                      + provider_reason
+                  )
+                  state["next_check_n"] = target_n
+                  if results:
+                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                      state["artifact_identity"] = build_artifact_identity(
+                          scenario=SCENARIO,
+                          source_sha=SOURCE_SHA,
+                          trial_id_start=1,
+                          trial_id_end=completed,
+                          fingerprint_sha256=state["final_fingerprint"],
+                      )
+                  blob_sha = store.save_state(state, blob_sha)
+                  write_json(
+                      RESULTS_DIR / "statistics.json",
+                      {
+                          "scenario": SCENARIO,
+                          "trial_count": len(results),
+                          "final_fingerprint": state.get("final_fingerprint"),
+                          "artifact_identity": state.get("artifact_identity"),
+                          "stability_history": history,
+                      },
+                  )
+                  write_json(
+                      RESULTS_DIR / "final_fingerprint.json",
+                      {
+                          "scenario": SCENARIO,
+                          "source_sha": SOURCE_SHA,
+                          "run_id": RUN_ID,
+                          "trial_count": len(results),
+                          "final_fingerprint": state.get("final_fingerprint"),
+                          "included_in_final_stats": False,
+                          "gate_a_status": "BLOCKED",
+                          "reason_if_not_stable": state["reason_if_not_stable"],
+                          "artifact_identity": state.get("artifact_identity"),
+                      },
+                  )
+                  print("GATE_A_PROVIDER_PREFLIGHT_BLOCKED=" + provider_reason)
                   raise SystemExit(0)
 
           while True:
@@ -759,10 +827,14 @@ jobs:
                   current_stats = statistics(results)
                   previous = history[-1] if history else None
 
-                  gate_a = evaluate_gate_a(
+                  gate_a = evaluate_gate_a_with_approved_golden(
+                      provider=GOLDEN_PROVIDER,
+                      scenario_id=SCENARIO,
+                      results=results,
+                      source_sha=SOURCE_SHA,
+                      master_seed=MASTER_SEED,
                       previous_n=previous.get("n") if previous else None,
                       previous_metrics=previous.get("metrics") if previous else None,
-                      current_n=len(results),
                       current_metrics=current_stats,
                       escalation_multiplier=ESCALATION_MULTIPLIER,
                       relative_epsilon=RELATIVE_EPSILON,
