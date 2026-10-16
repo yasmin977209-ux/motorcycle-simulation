@@ -73,9 +73,8 @@ def test_stage7_workflow_declares_model_source_boundary() -> None:
 
 def test_stage7_workflow_verifies_pinned_commit_and_model_integrity() -> None:
     text = _workflow_text()
-    assert 'git cat-file -e "${SOURCE_SHA}^{commit}"' in text
-    assert "MODEL_SOURCE_DRIFT_DETECTED" in text
-    assert "MODEL_SOURCE_BOUNDARY_OK" in text
+    assert "verify_source_identity_exception.py --source-sha" in text
+    assert "MODEL_SOURCE_ALLOWLIST_OK" in text
 
 def test_stage7_source_sha_is_passed_to_matrix_state_and_orchestrator() -> None:
     steps = _workflow()["jobs"]["matrix-simulation"]["steps"]
@@ -859,7 +858,7 @@ def test_stage7_gate_a_calls_are_bound_to_exact_provider_evidence() -> None:
 def test_stage7_checkpoint_coverage_is_checked_before_trial_block_invocation() -> None:
     text = _workflow_text()
     check_index = text.index("checkpoint_provider_check = validate_checkpoint_coverage(")
-    loop_index = text.index("while True:\\n              if elapsed_since_job_start()")
+    loop_index = text.index("while True:\n              if elapsed_since_job_start()")
     assert check_index < loop_index
     assert "GATE_A_PROVIDER_PREFLIGHT_BLOCKED=" in text
     assert "target_n=target_n" in text
