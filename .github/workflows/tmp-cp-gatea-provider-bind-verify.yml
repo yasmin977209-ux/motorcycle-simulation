@@ -1,0 +1,58 @@
+name: Temporary Gate A provider binding verification (no simulation)
+
+on:
+  push:
+    branches:
+      - tmp/cp-gatea-provider-bind-20261016
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate-provider-binding:
+    name: Validate exact Gate A provider binding (read-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact CP branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-gatea-provider-bind-20261016
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project requirements
+        run: python -m pip install -r requirements.txt
+      - name: Targeted provider and Gate A integration tests
+        env:
+          PYTHONPATH: .
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
+        run: >-
+          python -m pytest -q
+          tests/test_golden_reference_provider.py
+          tests/test_stage7_gate_a_provider.py
+          tests/test_stage7_authoring.py
+          tests/test_source_identity_exception_allowlist.py
+      - name: Validate temporary workflow contract
+        env:
+          PYTHONPATH: .
+        run: python scripts/verify_gatea_provider_workflow.py
+      - name: Validate immutable live provider without trial execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+          MASTER_SEED: "20270101"
+          PYTHONPATH: .
+        run: >-
+          python scripts/verify_stage7_gate_a_provider.py
+          --output gatea_provider_preflight_report.json
+      - name: Upload inspected provider validation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-gatea-provider-bind-report
+          path: gatea_provider_preflight_report.json
+          if-no-files-found: error
