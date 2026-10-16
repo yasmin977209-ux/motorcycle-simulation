@@ -28,8 +28,11 @@ jobs:
       - name: Checkout this pinned candidate branch
         uses: actions/checkout@v4
         with:
-          ref: tmp/cp-excel-daily-repair-20261017
+          ref: ${{ github.sha }}
           fetch-depth: 1
+
+      - name: Assert exact event SHA checkout
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -230,7 +233,8 @@ jobs:
           assert "pull_request" not in trigger
           assert document["permissions"] == {"contents": "read", "actions": "read"}
           assert document["jobs"]["daily-real-p50-acceptance"]["timeout-minutes"] == 20
-          assert document["jobs"]["daily-real-p50-acceptance"]["steps"][0]["with"]["ref"] == "tmp/cp-excel-daily-repair-20261017"
+          assert document["jobs"]["daily-real-p50-acceptance"]["steps"][0]["with"]["ref"] == "${{ github.sha }}"
+          assert any(step.get("name") == "Assert exact event SHA checkout" for step in document["jobs"]["daily-real-p50-acceptance"]["steps"])
           print("WORKFLOW_POLICY=PASS")
           PY
 
