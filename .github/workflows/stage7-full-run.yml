@@ -474,7 +474,17 @@ jobs:
                   "State contains artifact identity but no restored results"
               )
 
-          if stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID and (completed or history):
+          stored_policy_id = state.get("statistical_policy_id")
+          stored_policy = state.get("policy") or {}
+          stored_c100_start = int(stored_policy.get("initial_c100_trials", 1))
+          legacy_c100_policy = (
+              SCENARIO.startswith("C100_")
+              and stored_c100_start != INITIAL_C100
+          )
+          if (
+              (stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID or legacy_c100_policy)
+              and (completed or history)
+          ):
               if completed > 550:
                   raise RuntimeError(
                       "Legacy linear-schedule state exceeds authorized historical analytical range 1..550; "

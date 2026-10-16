@@ -85,10 +85,10 @@ REFERENCE_CLAIM_WAITING_PERIODS = {
     "FINAL_CLOSURE": 0,
 }
 
-# User-approved execution overrides that supersede Chapter 2.5's older
-# illustrative starting/escalation table.
+# User-approved execution overrides: C100 now follows the same initial
+# statistical target as all other scenarios.
 USER_APPROVED_EXECUTION_OVERRIDES = {
-    "C100_STATISTICAL_START_TRIALS": 1,
+    "C100_STATISTICAL_START_TRIALS": 300,
     "NON_C100_STATISTICAL_START_TRIALS": 300,
     "ITERATION_ESCALATION_STEP": 50,
     "STATISTICAL_CHECK_START_N": 300,
@@ -96,7 +96,7 @@ USER_APPROVED_EXECUTION_OVERRIDES = {
     "MINIMUM_STOP_N_FOR_NON_C100": 400,
     "STABILITY_CONSECUTIVE_CHECKS_REQUIRED": 3,
     "INITIAL_SMOKE_TRIALS_PER_SCENARIO": 1,
-    "C100_CI_GATE_ENABLED": False,
+    "C100_CI_GATE_ENABLED": True,
     "CI_ABSOLUTE_EPSILON": 1,
 }
 

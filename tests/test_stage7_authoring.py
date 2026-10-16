@@ -358,6 +358,8 @@ def test_c100_uses_the_shared_adaptive_checkpoint_and_gate_path() -> None:
     assert 'p50_values_by_checkpoint(results)' in text
     assert 'p50_history_ready(history, completed)' in text
     assert 'p50_requires_n2400(history)' in text
+    assert 'legacy_c100_policy = (' in text
+    assert 'stored_c100_start != INITIAL_C100' in text
     assert 'state["final_status"] = "PRELIMINARY_STABLE"' in text
 
 def test_gate_a_requires_exact_doubling_checkpoint() -> None:
