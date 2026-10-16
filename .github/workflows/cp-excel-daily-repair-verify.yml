@@ -233,7 +233,8 @@ jobs:
           assert "pull_request" not in trigger
           assert document["permissions"] == {"contents": "read", "actions": "read"}
           assert document["jobs"]["daily-real-p50-acceptance"]["timeout-minutes"] == 20
-          assert document["jobs"]["daily-real-p50-acceptance"]["steps"][0]["with"]["ref"] == "${{ github.sha }}"
+          expected_checkout_ref = "$" + "{{ github.sha }}"
+          assert document["jobs"]["daily-real-p50-acceptance"]["steps"][0]["with"]["ref"] == expected_checkout_ref
           assert any(step.get("name") == "Assert exact event SHA checkout" for step in document["jobs"]["daily-real-p50-acceptance"]["steps"])
           print("WORKFLOW_POLICY=PASS")
           PY
