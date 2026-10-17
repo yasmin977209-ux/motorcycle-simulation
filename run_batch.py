@@ -24,6 +24,7 @@ from scripts.stage7_stability import (
     evaluate_gate_a as evaluate_stage7_gate_a,
     evaluate_p50_transition,
     evaluate_reference_stability_transition,
+    is_statistical_checkpoint,
     p50_requires_n2400,
     summarize_reference_stability_metrics,
     filter_statistical_history,
@@ -812,14 +813,22 @@ def run_batch(
         state["next_check_n"] = initial_target
 
     gate_a_preflight_stop = False
-    if (
-        not scenario.startswith("C100_")
-        and len(results) >= constants.STATISTICAL_CHECK_START_N
-    ):
+    if len(results) >= constants.STATISTICAL_CHECK_START_N:
         prior_history = state.get("stability_history", [])
+        eligible_prior = [
+            item for item in prior_history
+            if item.get("n") is not None
+            and is_statistical_checkpoint(int(item["n"]))
+            and int(item["n"]) <= len(results)
+        ]
+        latest_eligible = max(
+            eligible_prior,
+            key=lambda item: int(item["n"]),
+            default=None,
+        )
         prior_gate_a = (
-            prior_history[-1].get("gate_a", {})
-            if prior_history
+            latest_eligible.get("gate_a", {})
+            if latest_eligible is not None
             else {}
         )
         prior_gate_a_status = prior_gate_a.get("status")
