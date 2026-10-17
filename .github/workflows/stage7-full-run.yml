@@ -16,9 +16,8 @@ permissions:
 env:
   MASTER_SEED: "20270101"
   INITIAL_NON_C100_TRIALS: "300"
-  INITIAL_C100_TRIALS: "1"
+  INITIAL_C100_TRIALS: "300"
   ESCALATION_MULTIPLIER: "2"
-  STABILITY_CONSECUTIVE_CHECKS: "3"
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
   # Operational orchestration cap; model logic has no max_days limit.
@@ -306,7 +305,6 @@ jobs:
           INITIAL_NON_C100_TRIALS: ${{ env.INITIAL_NON_C100_TRIALS }}
           INITIAL_C100_TRIALS: ${{ env.INITIAL_C100_TRIALS }}
           ESCALATION_MULTIPLIER: ${{ env.ESCALATION_MULTIPLIER }}
-          STABILITY_CONSECUTIVE_CHECKS: ${{ env.STABILITY_CONSECUTIVE_CHECKS }}
           CI_RELATIVE_EPSILON: ${{ env.CI_RELATIVE_EPSILON }}
           CI_ABSOLUTE_EPSILON: ${{ env.CI_ABSOLUTE_EPSILON }}
           JOB_TIMEOUT_MINUTES: ${{ env.JOB_TIMEOUT_MINUTES }}
@@ -340,8 +338,16 @@ jobs:
               validate_trial_sequence,
           )
           from scripts.stage7_stability import (
-              evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
-              is_statistical_checkpoint, next_statistical_checkpoint,
+              STATISTICAL_ESCALATION_POLICY_ID,
+              evaluate_gate_a,
+              evaluate_gate_b,
+              evaluate_p50_transition,
+              evaluate_reference_stability_transition,
+              filter_statistical_history,
+              is_statistical_checkpoint,
+              next_statistical_checkpoint,
+              p50_requires_n2400,
+              summarize_reference_stability_metrics,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -355,7 +361,6 @@ jobs:
           INITIAL_NON_C100 = int(os.environ["INITIAL_NON_C100_TRIALS"])
           INITIAL_C100 = int(os.environ["INITIAL_C100_TRIALS"])
           ESCALATION_MULTIPLIER = int(os.environ["ESCALATION_MULTIPLIER"])
-          REQUIRED_CONSECUTIVE = int(os.environ["STABILITY_CONSECUTIVE_CHECKS"])
           RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
           ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
           JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
