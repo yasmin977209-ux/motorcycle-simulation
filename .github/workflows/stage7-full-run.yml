@@ -465,83 +465,178 @@ jobs:
               )
 
           stored_policy_id = state.get("statistical_policy_id")
-          if SCENARIO.startswith("C100_"):
-              target_n = INITIAL_C100
-              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
-          else:
-              if stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID and (completed or history):
-                  if completed > 550:
-                      raise RuntimeError(
-                          "Legacy linear-schedule state exceeds authorized historical analytical range 1..550; "
-                          "cannot migrate safely under the doubling policy."
-                      )
-                  history, discarded_points = filter_statistical_history(history)
-                  reconstructed_n300 = False
-                  if completed >= INITIAL_NON_C100 and not any(
-                      int(item.get("n", -1)) == INITIAL_NON_C100 for item in history
-                  ):
-                      baseline_results = results[:INITIAL_NON_C100]
-                      baseline_metrics = statistics(baseline_results)
-                      history.insert(0, {
-                          "n": INITIAL_NON_C100,
-                          "gate_a": evaluate_gate_a(
-                              previous_n=None,
-                              previous_metrics=None,
-                              current_n=INITIAL_NON_C100,
-                              current_metrics=baseline_metrics,
-                              escalation_multiplier=ESCALATION_MULTIPLIER,
-                              relative_epsilon=RELATIVE_EPSILON,
-                              absolute_epsilon=ABSOLUTE_EPSILON,
-                          ),
-                          "gate_b": evaluate_gate_b(baseline_metrics),
-                          "metrics": baseline_metrics,
-                          "reconstructed_from_identity_verified_rows": True,
-                      })
-                      reconstructed_n300 = True
-                  state["policy_migration"] = {
-                      "from_policy_id": stored_policy_id or "LEGACY_UNVERSIONED",
-                      "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
-                      "preserved_checkpoint_n": [int(item["n"]) for item in history],
-                      "discarded_noncompliant_checkpoint_n": discarded_points,
-                      "n300_reconstructed_from_existing_verified_rows": reconstructed_n300,
-                      "completed_trials_reused": completed,
-                      "historical_trials_rerun": False,
-                      "source_sha": SOURCE_SHA,
-                      "master_seed": MASTER_SEED,
-                  }
-                  if completed:
-                      state["final_status"] = None
-                      state["stable_at_n"] = None
-                      state["included_in_final_stats"] = False
-                      state["reason_if_not_stable"] = (
-                          "Legacy linear checkpoints excluded; next execution resumes on the approved doubling schedule."
-                      )
-              else:
-                  history, discarded_points = filter_statistical_history(history)
-                  if discarded_points:
-                      raise RuntimeError(
-                          "Current-policy Stage 7 state contains non-doubling checkpoints."
-                      )
-                  if stored_policy_id == STATISTICAL_ESCALATION_POLICY_ID and completed:
-                      expected_next = next_statistical_checkpoint(completed)
-                      if int(state.get("next_check_n", expected_next)) != expected_next:
-                          raise RuntimeError(
-                              "Current-policy state next_check_n differs from the approved doubling schedule."
-                          )
+          # Validate history shape but never delete or rewrite historical transitions.
+          try:
+              _, noncompliant_history_n = filter_statistical_history(history)
+          except ValueError as exc:
+              raise RuntimeError(f"Malformed stability history; fail closed: {exc}") from exc
 
-              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
-              state["policy"] = {
-                  "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
-                  "initial_non_c100_trials": INITIAL_NON_C100,
-                  "initial_c100_trials": INITIAL_C100,
-                  "escalation_multiplier": ESCALATION_MULTIPLIER,
-                  "stability_consecutive_checks": REQUIRED_CONSECUTIVE,
-                  "ci_relative_epsilon": RELATIVE_EPSILON,
-                  "ci_absolute_epsilon": ABSOLUTE_EPSILON,
+          # A previous C100 diagnostic executed trial_id=2 outside the persisted
+          # TrialResult dataset. Do not rerun or synthesize it during migration.
+          old_c100_proof = state.get("c100_independent_verification") or {}
+          if (
+              SCENARIO.startswith("C100_")
+              and completed < 300
+              and int(old_c100_proof.get("verification_trial_id", 0) or 0) == 2
+              and all(result.trial_id != 2 for result in results)
+          ):
+              state["final_status"] = "blocked"
+              state["stable_at_n"] = None
+              state["included_in_final_stats"] = False
+              state["reason_if_not_stable"] = (
+                  "Legacy C100 trial_id=2 has only a proof record and no full TrialResult row; "
+                  "restore that identity-verified row before migration. No rerun or synthesis."
+              )
+              state["policy_migration_blocker"] = "C100_TRIAL2_FULL_ROW_MISSING"
+              blob_sha = store.save_state(state, blob_sha)
+              write_json(RESULTS_DIR / "statistics.json", {
+                  "scenario": SCENARIO,
+                  "trial_count": completed,
+                  "stability_history": history,
+                  "final_status": "blocked",
+                  "reason_if_not_stable": state["reason_if_not_stable"],
+              })
+              print("C100_MIGRATION_BLOCKED=C100_TRIAL2_FULL_ROW_MISSING")
+              raise SystemExit(0)
+
+          if stored_policy_id != STATISTICAL_ESCALATION_POLICY_ID and (completed or history):
+              state["policy_migration"] = {
+                  "from_policy_id": stored_policy_id or "LEGACY_UNVERSIONED",
+                  "to_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+                  "preserved_historical_checkpoint_n": [item.get("n") for item in history],
+                  "noncompliant_historical_checkpoint_n_preserved": noncompliant_history_n,
+                  "completed_trials_reused": completed,
+                  "historical_trials_rerun": False,
+                  "historical_statuses_rewritten": False,
+                  "source_sha": SOURCE_SHA,
+                  "master_seed": MASTER_SEED,
               }
-              state["stability_history"] = history
-              target_n = next_statistical_checkpoint(completed)
-              state["next_check_n"] = target_n
+              if completed:
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      "Re-evaluating the verified dataset under the approved first-passing §2.5 transition policy; "
+                      "all historical status records remain preserved."
+                  )
+
+          # Recompute only missing current-policy evidence from the already-restored,
+          # identity-verified cumulative trial rows. Existing gate/status fields stay intact.
+          for item in history:
+              try:
+                  n = int(item.get("n", -1))
+              except (TypeError, ValueError):
+                  continue
+              if not is_statistical_checkpoint(n) or n > completed:
+                  continue
+              sample = results[:n]
+              if "reference_metrics" not in item:
+                  item["reference_metrics"] = summarize_reference_stability_metrics(sample)
+              if "reference_stability_gate" not in item:
+                  if n == 300:
+                      item["reference_stability_gate"] = evaluate_reference_stability_transition(
+                          previous_n=None,
+                          previous_metrics=None,
+                          current_n=300,
+                          current_metrics=item["reference_metrics"],
+                      )
+                  else:
+                      prior_n = n // ESCALATION_MULTIPLIER
+                      prior_metrics = summarize_reference_stability_metrics(results[:prior_n])
+                      item["reference_stability_gate"] = evaluate_reference_stability_transition(
+                          previous_n=prior_n,
+                          previous_metrics=prior_metrics,
+                          current_n=n,
+                          current_metrics=item["reference_metrics"],
+                      )
+                  item["policy_reassessment_added"] = True
+              if n == 300:
+                  item.setdefault("p50_final_net_project_equity", float(np.quantile(
+                      [result.final_net_project_equity for result in sample],
+                      0.50, method="linear",
+                  )))
+                  item.setdefault("p50_transition", {
+                      "previous_n": None, "current_n": 300,
+                      "checked": False, "stable": True, "requires_n2400": False,
+                      "status": "BASELINE", "reason": "N=300 is mandatory coverage only",
+                  })
+              elif n in (600, 1200) and "p50_transition" not in item:
+                  prior_n = n // ESCALATION_MULTIPLIER
+                  prior_p50 = float(np.quantile(
+                      [result.final_net_project_equity for result in results[:prior_n]],
+                      0.50, method="linear",
+                  ))
+                  p50_value = float(np.quantile(
+                      [result.final_net_project_equity for result in sample],
+                      0.50, method="linear",
+                  ))
+                  item["p50_final_net_project_equity"] = p50_value
+                  item["p50_transition"] = (
+                      {
+                          "previous_n": prior_n, "current_n": n, "checked": False,
+                          "stable": True, "requires_n2400": False,
+                          "status": "NOT_APPLICABLE",
+                          "reason": "D-2026-10-12-01 excludes C100 from P50 continuation",
+                      }
+                      if SCENARIO.startswith("C100_")
+                      else evaluate_p50_transition(
+                          previous_n=prior_n, previous_p50=prior_p50,
+                          current_n=n, current_p50=p50_value,
+                      )
+                  )
+
+          if completed >= 300 and not any(int(item.get("n", -1)) == 300 for item in history):
+              baseline_rows = results[:300]
+              baseline_metrics = statistics(baseline_rows)
+              baseline_reference = summarize_reference_stability_metrics(baseline_rows)
+              baseline = {
+                  "n": 300,
+                  "gate_a": evaluate_gate_a(
+                      previous_n=None, previous_metrics=None,
+                      current_n=300, current_metrics=baseline_metrics,
+                      escalation_multiplier=ESCALATION_MULTIPLIER,
+                      relative_epsilon=RELATIVE_EPSILON,
+                      absolute_epsilon=ABSOLUTE_EPSILON,
+                  ),
+                  "gate_b": evaluate_gate_b(baseline_metrics),
+                  "metrics": baseline_metrics,
+                  "reference_metrics": baseline_reference,
+                  "reference_stability_gate": evaluate_reference_stability_transition(
+                      previous_n=None, previous_metrics=None, current_n=300,
+                      current_metrics=baseline_reference,
+                  ),
+                  "p50_final_net_project_equity": float(np.quantile(
+                      [result.final_net_project_equity for result in baseline_rows],
+                      0.50, method="linear",
+                  )),
+                  "p50_transition": {
+                      "previous_n": None, "current_n": 300,
+                      "checked": False, "stable": True, "requires_n2400": False,
+                      "status": "BASELINE", "reason": "N=300 is mandatory coverage only",
+                  },
+                  "reconstructed_from_identity_verified_rows": True,
+              }
+              insert_at = next(
+                  (index for index, item in enumerate(history) if int(item.get("n", -1)) > 300),
+                  len(history),
+              )
+              history.insert(insert_at, baseline)
+
+          state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+          state["policy"] = {
+              "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+              "initial_non_c100_trials": INITIAL_NON_C100,
+              "initial_c100_trials": INITIAL_C100,
+              "escalation_multiplier": ESCALATION_MULTIPLIER,
+              "stop_rule": "FIRST_PASSING_ELIGIBLE_TRANSITION",
+              "n300_role": "MANDATORY_COVERAGE_ONLY",
+              "first_stability_transition": "300->600",
+              "reference_stability_metrics": list(constants.REFERENCE_STABILITY_INDICATORS),
+              "ci_relative_epsilon": RELATIVE_EPSILON,
+              "ci_absolute_epsilon": ABSOLUTE_EPSILON,
+          }
+          state["stability_history"] = history
+          target_n = next_statistical_checkpoint(completed)
+          state["next_check_n"] = target_n
 
           if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:
               latest_gate_a = (
