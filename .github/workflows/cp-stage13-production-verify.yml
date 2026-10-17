@@ -44,8 +44,8 @@ jobs:
           CANDIDATE_BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          mkdir -p .stage13_integration_evidence/test_sources
-          cat > .stage13_integration_evidence/run_context.json <<EOF
+          mkdir -p stage13_integration_evidence/test_sources
+          cat > stage13_integration_evidence/run_context.json <<EOF
           {
             "workflow": "CP-STAGE13-PRODUCTION-20261017",
             "branch": "${CANDIDATE_BRANCH}",
@@ -65,7 +65,7 @@ jobs:
             "delivery_accepted": false
           }
           EOF
-          git rev-parse HEAD > .stage13_integration_evidence/tested_head_sha.txt
+          git rev-parse HEAD > stage13_integration_evidence/tested_head_sha.txt
           test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
           test "${CANDIDATE_BRANCH}" = "tmp/cp-stage13-production-20261017"
 
@@ -81,8 +81,8 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python --version > .stage13_integration_evidence/python_version.txt
-          python -m pip freeze > .stage13_integration_evidence/pip_freeze.txt
+          python --version > stage13_integration_evidence/python_version.txt
+          python -m pip freeze > stage13_integration_evidence/pip_freeze.txt
 
       - name: Verify code identity and public compatibility import
         shell: bash
@@ -91,7 +91,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m compileall -q             scripts/stage13_assemble.py             scripts/excel_builder.py             scripts/stage9c_rebuild_precision_workbook.py
-          python - <<'PY' | tee .stage13_integration_evidence/compatibility_smoke.log
+          python - <<'PY' | tee stage13_integration_evidence/compatibility_smoke.log
           import hashlib
           import inspect
           import json
@@ -128,7 +128,7 @@ jobs:
                   for path in paths
               },
           }
-          Path(".stage13_integration_evidence/code_identity.json").write_text(
+          Path("stage13_integration_evidence/code_identity.json").write_text(
               json.dumps(result, indent=2, sort_keys=True) + "\n",
               encoding="utf-8",
           )
@@ -143,10 +143,10 @@ jobs:
           git fetch --no-tags origin tmp/cp-stage13-adaptive-assembler-20261017
           test "$(git rev-parse "${TEST_SOURCE_SHA}:tests/test_stage13_assembler.py")" = "${EXPECTED_ASSEMBLER_TEST_BLOB}"
           test "$(git rev-parse "${TEST_SOURCE_SHA}:tests/test_excel_builder_adaptive_mode.py")" = "${EXPECTED_ADAPTER_TEST_BLOB}"
-          git show "${TEST_SOURCE_SHA}:tests/test_stage13_assembler.py"             > .stage13_integration_evidence/test_sources/test_stage13_assembler.py
-          git show "${TEST_SOURCE_SHA}:tests/test_excel_builder_adaptive_mode.py"             > .stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py
-          git rev-parse "${TEST_SOURCE_SHA}" > .stage13_integration_evidence/test_source_commit.txt
-          sha256sum             .stage13_integration_evidence/test_sources/test_stage13_assembler.py             .stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py             tests/test_excel_builder_precision.py             > .stage13_integration_evidence/test_source_sha256.txt
+          git show "${TEST_SOURCE_SHA}:tests/test_stage13_assembler.py"             > stage13_integration_evidence/test_sources/test_stage13_assembler.py
+          git show "${TEST_SOURCE_SHA}:tests/test_excel_builder_adaptive_mode.py"             > stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py
+          git rev-parse "${TEST_SOURCE_SHA}" > stage13_integration_evidence/test_source_commit.txt
+          sha256sum             stage13_integration_evidence/test_sources/test_stage13_assembler.py             stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py             tests/test_excel_builder_precision.py             > stage13_integration_evidence/test_source_sha256.txt
 
       - name: Run reviewed synthetic suite and existing precision regression
         shell: bash
@@ -155,9 +155,9 @@ jobs:
         run: |
           set -uo pipefail
           set +e
-          python -m pytest -q             tests/test_excel_builder_precision.py             .stage13_integration_evidence/test_sources/test_stage13_assembler.py             .stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py             --junitxml=.stage13_integration_evidence/pytest.junit.xml             2>&1 | tee .stage13_integration_evidence/pytest.log
+          python -m pytest -q             tests/test_excel_builder_precision.py             stage13_integration_evidence/test_sources/test_stage13_assembler.py             stage13_integration_evidence/test_sources/test_excel_builder_adaptive_mode.py             --junitxml=stage13_integration_evidence/pytest.junit.xml             2>&1 | tee stage13_integration_evidence/pytest.log
           test_rc=${PIPESTATUS[0]}
-          printf '%s\n' "${test_rc}" > .stage13_integration_evidence/pytest_exit_code.txt
+          printf '%s\n' "${test_rc}" > stage13_integration_evidence/pytest_exit_code.txt
           exit "${test_rc}"
 
       - name: Upload exact integration evidence
@@ -165,6 +165,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stage13-production-integration-evidence-${{ github.run_id }}
-          path: .stage13_integration_evidence/
+          path: stage13_integration_evidence/
           if-no-files-found: error
           retention-days: 30
