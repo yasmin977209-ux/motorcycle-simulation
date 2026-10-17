@@ -471,3 +471,25 @@ def test_missing_final_status_does_not_default_to_stable(tmp_path: Path):
     status_by_scenario = {row[0]: row[2] for row in rows}
     assert status_by_scenario["C100_G100"] == "NOT_ESTABLISHED"
     workbook.close()
+
+
+def test_adaptive_mode_requires_gate_a_digest_to_match_the_computed_cohort_map():
+    data = adaptive_data()
+    data["manifest"]["gate_a_ordered_trial_hash_map_sha256"] = "a" * 64
+    with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_A_MAP_IDENTITY_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_unpinned_gate_evidence_digest():
+    data = adaptive_data()
+    data["manifest"]["scenarios"]["C100_G100"]["gate_a_evidence_sha256"] = "not-a-sha256"
+    with pytest.raises(RuntimeError, match="ADAPTIVE_FINAL_EVIDENCE_SHA_INVALID"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_p50_value_not_linked_to_previous_checkpoint():
+    data = adaptive_data()
+    entry = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"][1]
+    entry["gate_b_p50_previous"] = 999.0
+    with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_VALUE_LINK_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
