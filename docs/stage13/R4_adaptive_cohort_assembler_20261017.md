@@ -42,3 +42,20 @@ Implement a fail-closed Stage 13 assembler mode for a variable-size, per-scenari
 - Implementation/test evidence: PENDING.
 - Production stability and delivery: BLOCKED by separate project gates.
 - No production execution authorized by this R4.
+
+
+## R4 implementation-detail addendum (contract clarification only)
+
+This addendum records evidence-binding details made explicit while implementing the previously approved scope. It does not change reference thresholds, business rules, source identity, or the approved scope.
+
+1. The computed ordered fingerprint map must match both the cohort's declared ordered map SHA-256 and the Gate A report's ordered-map SHA-256. A Gate A PASS for a different trial map is not acceptable.
+2. Gate A, Gate B, and §2.5 evidence each carry a non-empty reference plus a well-formed SHA-256 digest. The final per-scenario references/digests must equal those in the final checkpoint entry.
+3. Each §2.5 metric record includes old/new finite numeric values and a status. The assembler recomputes the status using the unchanged strict <1% relative rule and the <1 currency unit absolute fallback when |old| < 1e-6. The reported status must equal that calculation for each of the seven named metrics.
+4. For each non-C100 scenario, Gate B P50 evidence at N=600 and N=1200 must link exactly to the P50 of the immediately previous and current checkpoint in the recorded history. The approved strict >5% continuation rule and the near-zero absolute fallback are re-evaluated; a triggered scenario cannot stop before N=2400.
+5. For C100 scenarios, the adaptive input must separately reference the approved deterministic-equivalence evidence. That metadata reference does not turn this assembler into an independent Gate A artifact reader, and the assembler does not claim that production gates passed merely because a reference string exists.
+
+## Post-change execution status (not a PASS)
+
+- Adaptive code and synthetic regression tests are candidate-branch changes only.
+- Focused pytest execution is **PENDING/BLOCKED** because the available container cannot resolve GitHub directly, and no currently approved workflow executes tests for this candidate branch. The approval for this CP explicitly excludes workflow modification.
+- No production simulation, trial generation, source/RNG/seed change, historical dataset edit, main edit, or Release was performed.
