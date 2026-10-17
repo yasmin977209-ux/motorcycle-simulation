@@ -282,7 +282,7 @@ def test_gate_a_fingerprint_mismatch_gate_b_fail_is_not_stable() -> None:
     assert not (gate_a["stable"] and gate_b["stable"])
 
 
-def test_gate_a_exact_golden_and_gate_b_pass_requires_three_consecutive_points() -> None:
+def test_gate_a_exact_golden_and_gate_b_are_evaluated_per_transition() -> None:
     previous = _metrics((1000, 700, 300), stable=True)
     p600 = _metrics((1001, 700.5, 300.2), stable=True)
     p1200 = _metrics((1002, 701.0, 300.4), stable=True)
@@ -342,29 +342,45 @@ def test_gate_a_rejects_malformed_fingerprint() -> None:
 
 def test_stage7_fails_closed_on_unverified_resume_and_stable_state() -> None:
     text = _workflow_text()
-    assert 'if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:' in text
+    assert "eligible_prior = [" in text
     assert 'latest_status = latest_gate_a.get("status")' in text
     assert 'state.get("final_status") == "stable"' in text
-    assert 'item.get("gate_a", {}).get("status") == "PASS"' in text
-    assert 'GATE_A_PREFLIGHT_BLOCKED=' in text
+    assert "GATE_A_PREFLIGHT_BLOCKED=" in text
+    assert "refusing all additional trials" in text
+    assert "summarize_reference_stability_metrics" in text
+    assert "reference_stability_gate" in text
 
 
-def test_c100_n1_without_rerun_is_not_allowed_to_be_stable() -> None:
+def test_c100_requires_300_trials_and_no_out_of_band_rerun() -> None:
     text = _workflow_text()
-    assert "C100 primary sample must remain n=1" in text
-    assert '"verification_trial_id": 2' in text
+    workflow = _workflow()
+    assert workflow["env"]["INITIAL_C100_TRIALS"] == "300"
+    assert "N=300 is mandatory coverage only" in text
+    assert '"first_stability_transition": "300->600"' in text
+    assert "persisted_trial_result_rows_1_and_2" in text
+    assert "daily_engine.run_deterministic_trial" not in text
+    assert "diagnostic_trial_rerun" in text
 
-def test_c100_independent_rerun_uses_different_trial_id_and_derived_seed() -> None:
+
+def test_c100_equality_proof_uses_persisted_distinct_trial_ids_and_seeds() -> None:
     text = _workflow_text()
-    assert "trial_id=2" in text
+    assert "primary_trial_id" in text
+    assert "verification_trial_id" in text
+    assert "primary_seed_hex" in text
+    assert "verification_seed_hex" in text
     assert "different_trial_id" in text
     assert "different_derived_seed" in text
     assert "exact_result_equality" in text
+    assert "results[1]" in text
+    assert "trial_id=2" not in text
+
 
 def test_c100_mismatch_cannot_be_declared_stable() -> None:
     text = _workflow_text()
-    assert 'state["final_status"] = None' in text
-    assert "independent C100 trial result mismatch" in text
+    assert 'c100_ok = equality' in text
+    assert "C100 persisted trial-1/trial-2 equality proof failed" in text
+    assert "stable_now = (" in text
+
 
 def test_c100_verification_excludes_trial_id_from_comparison() -> None:
     text = _workflow_text()
@@ -372,17 +388,16 @@ def test_c100_verification_excludes_trial_id_from_comparison() -> None:
     assert 'verification_dict = asdict(verification)' in text
     assert 'primary_trial_id = primary_dict.pop("trial_id")' in text
     assert 'verification_trial_id = verification_dict.pop("trial_id")' in text
-    assert 'if primary_trial_id == verification_trial_id:' in text
-    assert 'raise AssertionError(' in text
-    assert "C100 independence requires distinct trial_id" in text
-    assert 'equality = primary_dict == verification_dict' in text
+    assert 'primary_trial_id != verification_trial_id' in text
+    assert 'equality = (' in text
+    assert "primary_dict == verification_dict" in text
     assert 'equality = asdict(primary) == asdict(verification)' not in text
 
 
-def test_c100_stability_is_after_independent_equality_proof() -> None:
+def test_c100_stability_depends_on_persisted_equality_proof() -> None:
     text = _workflow_text()
-    equality_pos = text.index("equality = primary_dict == verification_dict")
-    stable_pos = text.index('state["final_status"] = "stable"')
+    equality_pos = text.index("primary_dict == verification_dict")
+    stable_pos = text.index("stable_now = (")
     assert equality_pos < stable_pos
 
 def test_gate_a_requires_exact_doubling_checkpoint() -> None:
