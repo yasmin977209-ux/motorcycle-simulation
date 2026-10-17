@@ -1,0 +1,134 @@
+name: CP Gate A C100 golden continuation (missing IDs only; no checkpoint)
+
+on:
+  push:
+    branches:
+      - tmp/cp-gatea-c100-resume-20261017
+    paths:
+      - .github/workflows/cp-gatea-c100-golden-resume.yml
+      - scripts/resume_c100_golden_extension.py
+      - tests/test_c100_golden_extension_resume.py
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+  SOURCE_COMMIT: "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+  MASTER_SEED: "20270101"
+
+jobs:
+  resume-c100-approved-golden:
+    name: Verify the prior artifact and generate only the 947 absent C100 IDs
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact pinned continuation branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-gatea-c100-resume-20261017
+          fetch-depth: 0
+
+      - name: Verify current HEAD and one-time continuation guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cp-gatea-c100-golden-resume.yml/runs?branch=tmp/cp-gatea-c100-resume-20261017&per_page=100" > "$RUNNER_TEMP/continuation_runs.json"
+          python - <<'PY'
+          import json, os, sys
+          path=os.path.join(os.environ["RUNNER_TEMP"],"continuation_runs.json")
+          payload=json.load(open(path,encoding="utf-8")); current=int(os.environ["RUN_ID"])
+          previous=[{"id":x.get("id"),"head_sha":x.get("head_sha"),"status":x.get("status"),"conclusion":x.get("conclusion")}
+                    for x in payload.get("workflow_runs",[]) if int(x.get("id",-1))!=current]
+          if previous:
+              print("PRIOR_CONTINUATION_ATTEMPT_REQUIRES_RECONCILIATION="+json.dumps(previous,sort_keys=True))
+              sys.exit(1)
+          print("ONE_TIME_CONTINUATION_GUARD=PASS")
+          PY
+
+      - name: Verify original cancelled Run and immutable partial artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/38991347472" > "$RUNNER_TEMP/prior_run.json"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/38991347472/artifacts?per_page=100" > "$RUNNER_TEMP/prior_artifacts.json"
+          python - <<'PY'
+          import json, os, sys
+          root=os.environ["RUNNER_TEMP"]
+          run=json.load(open(os.path.join(root,"prior_run.json"),encoding="utf-8"))
+          response=json.load(open(os.path.join(root,"prior_artifacts.json"),encoding="utf-8"))
+          matches=[a for a in response.get("artifacts",[]) if int(a.get("id",-1))==12087982889]
+          ok=(run.get("id")==38991347472 and run.get("head_branch")=="tmp/cp-gatea-c100-golden-20261017"
+            and run.get("head_sha")=="7e0ff045eb909a121f1f8604f927642f2fad26e8"
+            and run.get("status")=="completed" and run.get("conclusion")=="cancelled"
+            and len(matches)==1 and matches[0].get("name")=="gatea-c100-golden-extension"
+            and matches[0].get("expired") is False and matches[0].get("size_in_bytes")==93999
+            and matches[0].get("digest")=="sha256:d6b867529a8998f2230055c637209c67a4e0165b4f1ab68b62aa4cb8b223bfd6"
+            and (matches[0].get("workflow_run") or {}).get("id")==38991347472)
+          if not ok:
+            print("PRIOR_RUN_OR_ARTIFACT_IDENTITY_FAIL="+json.dumps({"run":run,"artifacts":matches},sort_keys=True))
+            sys.exit(1)
+          print("PRIOR_RUN_IDENTITY=PASS"); print("PRIOR_ARTIFACT_IDENTITY=PASS")
+          PY
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12087982889/zip" > "$RUNNER_TEMP/prior-artifact.zip"
+          test "$(wc -c < "$RUNNER_TEMP/prior-artifact.zip")" -eq 93999
+          echo "PRIOR_ARTIFACT_ARCHIVE_SHA256=$(sha256sum "$RUNNER_TEMP/prior-artifact.zip" | cut -d ' ' -f1)"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Run focused deterministic continuation tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile scripts/generate_c100_golden_extension.py scripts/resume_c100_golden_extension.py
+          python -m pytest -q tests/test_c100_golden_extension.py tests/test_c100_golden_extension_resume.py
+
+      - name: Verify immutable approved source closure
+        run: |
+          set -euo pipefail
+          git cat-file -e "${SOURCE_SHA}^{commit}"
+          git cat-file -e "${SOURCE_COMMIT}^{commit}"
+          MODEL_FILES=(constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py)
+          git diff --exit-code "${SOURCE_SHA}" "${SOURCE_COMMIT}" -- "${MODEL_FILES[@]}"
+          git worktree add --detach "$RUNNER_TEMP/pinned-model-source" "${SOURCE_COMMIT}"
+          test "$(git -C "$RUNNER_TEMP/pinned-model-source" rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          echo "MODEL_SOURCE_CLOSURE_EQUAL=14/14"
+
+      - name: Reconstruct prior base map and run only missing IDs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          PYTHONPATH: ${{ runner.temp }}/pinned-model-source:.
+        run: |
+          set -euo pipefail
+          python scripts/resume_c100_golden_extension.py \
+            --prior-artifact-zip "$RUNNER_TEMP/prior-artifact.zip" \
+            --source-root "$RUNNER_TEMP/pinned-model-source" \
+            --output results_gatea_resume/c100_golden_extension.json \
+            --progress results_gatea_resume/c100_golden_extension.resume.progress.jsonl \
+            --base-audit results_gatea_resume/base_map_audit.json
+
+      - name: Upload inspectable output and progress even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatea-c100-golden-continuation
+          path: results_gatea_resume/
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 6
