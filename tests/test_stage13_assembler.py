@@ -412,7 +412,8 @@ def test_adaptive_mode_enforces_gate_b_p50_2400_continuation():
     data = adaptive_data()
     entry = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"][1]
     entry["gate_b_p50_current"] = 1060.0
-    with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_TRIGGER_MISMATCH"):
+    entry["gate_b_p50_continuation_required"] = True
+    with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_REQUIRES_N2400"):
         _validate_mode_and_identity(data, mode="adaptive")
 
 
