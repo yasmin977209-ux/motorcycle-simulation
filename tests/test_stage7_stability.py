@@ -78,6 +78,7 @@ def test_reference_summary_fails_closed_on_empty_or_nonfinite_data() -> None:
 
 
 def test_n300_is_mandatory_coverage_not_a_stability_pass() -> None:
+    # N=300 has no predecessor on the approved schedule; it cannot PASS §2.5.
     result = evaluate_reference_stability_transition(
         previous_n=None,
         previous_metrics=None,
