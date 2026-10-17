@@ -313,7 +313,7 @@ def adaptive_data(stable_counts=None):
             "gate_b_evidence_sha256": hashlib.sha256(f"gate-b-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
             "section_2_5_status": "PASS",
             "section_2_5_evidence_ref": f"synthetic-section-2-5:{scenario}:{stable_at_n}",
-            "section_2_5_evidence_sha256": hashlib.sha256(f"section-2_5-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
+            "section_2_5_evidence_sha256": hashlib.sha256(f"section-2-5-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
             "checkpoint_history": history,
         }
         if scenario.startswith("C100_"):
