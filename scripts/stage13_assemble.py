@@ -895,19 +895,8 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
                         raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_REF_MISSING: {scenario}:{expected_n}:{evidence_key}")
                     if not _valid_sha256(entry.get(digest_key)):
                         raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_SHA_INVALID: {scenario}:{expected_n}:{digest_key}")
-            gates_all_pass = (
-                entry.get("gate_a_status") == "PASS"
-                and entry.get("gate_b_status") == "PASS"
-                and entry.get("section_2_5_status") == "PASS"
-                and all_metrics_pass
-            )
-            is_final = expected_n == stable_at_n
-            if is_final:
-                if not gates_all_pass or entry.get("overall_status") != "SCENARIO_STABLE":
-                    raise RuntimeError(f"ADAPTIVE_FINAL_CHECKPOINT_NOT_STABLE: {scenario}")
-            elif gates_all_pass or entry.get("overall_status") == "SCENARIO_STABLE":
-                raise RuntimeError(f"ADAPTIVE_STOPPED_AFTER_FIRST_PASS_VIOLATION: {scenario}:{expected_n}")
-
+            # Compute the approved Gate B P50 continuation trigger before deciding whether
+            # a passing checkpoint is eligible to stop the per-scenario doubling sequence.
             if not scenario.startswith("C100_") and expected_n in (600, 1200):
                 old_p50 = entry.get("gate_b_p50_previous")
                 new_p50 = entry.get("gate_b_p50_current")
@@ -923,6 +912,22 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
                 if entry.get("gate_b_p50_continuation_required") is not trigger:
                     raise RuntimeError(f"ADAPTIVE_GATE_B_P50_TRIGGER_MISMATCH: {scenario}:{expected_n}")
                 forced_n2400 = forced_n2400 or trigger
+
+            gates_all_pass = (
+                entry.get("gate_a_status") == "PASS"
+                and entry.get("gate_b_status") == "PASS"
+                and entry.get("section_2_5_status") == "PASS"
+                and all_metrics_pass
+            )
+            is_final = expected_n == stable_at_n
+            if is_final:
+                if not gates_all_pass or entry.get("overall_status") != "SCENARIO_STABLE":
+                    raise RuntimeError(f"ADAPTIVE_FINAL_CHECKPOINT_NOT_STABLE: {scenario}")
+            elif (
+                entry.get("overall_status") == "SCENARIO_STABLE"
+                or (gates_all_pass and not forced_n2400)
+            ):
+                raise RuntimeError(f"ADAPTIVE_STOPPED_AFTER_FIRST_PASS_VIOLATION: {scenario}:{expected_n}")
 
         final_entry = history[-1]
         for field in ("gate_a_status", "gate_b_status", "section_2_5_status"):
