@@ -1,0 +1,138 @@
+name: CP Stage 13 adaptive assembler focused synthetic tests (temporary)
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage13-adaptive-assembler-20261017
+    paths:
+      - .github/workflows/cp-stage13-adaptive-tests.yml
+      - docs/stage13/R4_adaptive_cohort_assembler_20261017.md
+      - scripts/stage13_assemble.py
+      - scripts/excel_builder.py
+      - tests/test_stage13_assembler.py
+      - tests/test_excel_builder_adaptive_mode.py
+
+permissions:
+  contents: read
+
+jobs:
+  focused-synthetic-tests:
+    if: contains(github.event.head_commit.message, '[cp-stage13-test-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout the exact approved candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-stage13-adaptive-assembler-20261017
+          fetch-depth: 0
+
+      - name: Verify immutable tested head and create evidence folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/tmp/cp-stage13-adaptive-assembler-20261017"
+          test "$(git branch --show-current)" = "tmp/cp-stage13-adaptive-assembler-20261017"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          mkdir -p stage13_test_evidence
+          printf '%s\n' "${GITHUB_SHA}" > stage13_test_evidence/tested_head_sha.txt
+          printf '%s\n' "${GITHUB_REF}" > stage13_test_evidence/tested_ref.txt
+          printf '%s\n' "${GITHUB_RUN_ID}" > stage13_test_evidence/run_id.txt
+          git diff --check e92539b7c76629fa306428289a211493c75ad033 "${GITHUB_SHA}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Capture test scope and immutable input fingerprints
+        shell: bash
+        run: |
+          set -euo pipefail
+          python --version > stage13_test_evidence/python_version.txt
+          sha256sum \
+            requirements.txt \
+            docs/stage13/R4_adaptive_cohort_assembler_20261017.md \
+            scripts/stage13_assemble.py \
+            scripts/excel_builder.py \
+            tests/test_stage13_assembler.py \
+            tests/test_excel_builder_adaptive_mode.py \
+            .github/workflows/cp-stage13-adaptive-tests.yml \
+            > stage13_test_evidence/input_sha256.txt
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = {
+              "purpose": "focused synthetic Stage 13 adaptive assembler regression tests",
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "ref": os.environ["GITHUB_REF"],
+              "tested_head_sha": os.environ["GITHUB_SHA"],
+              "run_id": int(os.environ["GITHUB_RUN_ID"]),
+              "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+              "master_seed": 20270101,
+              "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+              "test_files": [
+                  "tests/test_stage13_assembler.py",
+                  "tests/test_excel_builder_adaptive_mode.py"
+              ],
+              "execution_scope": "synthetic fixtures only; no production simulation or trial generation",
+              "main_modified": False,
+              "workflow_permissions": {"contents": "read"},
+              "workflow_timeout_minutes": 20
+          }
+          Path("stage13_test_evidence/scope_manifest.json").write_text(
+              json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8"
+          )
+          PY
+
+      - name: Install project test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+          python -m pip freeze > stage13_test_evidence/pip_freeze.txt
+
+      - name: Compile exact adaptive assembler and test inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python -m py_compile \
+            scripts/stage13_assemble.py \
+            scripts/excel_builder.py \
+            tests/test_stage13_assembler.py \
+            tests/test_excel_builder_adaptive_mode.py \
+            > stage13_test_evidence/py_compile.log 2>&1; then
+            echo "PY_COMPILE=PASS" >> stage13_test_evidence/py_compile_status.txt
+          else
+            rc=$?
+            echo "PY_COMPILE=FAIL; exit_code=$rc" >> stage13_test_evidence/py_compile_status.txt
+            cat stage13_test_evidence/py_compile.log
+            exit "$rc"
+          fi
+
+      - name: Run focused synthetic regression suite
+        shell: bash
+        run: |
+          set +e
+          python -m pytest -q \
+            tests/test_stage13_assembler.py \
+            tests/test_excel_builder_adaptive_mode.py \
+            --junitxml=stage13_test_evidence/pytest.xml \
+            2>&1 | tee stage13_test_evidence/pytest.log
+          rc=${PIPESTATUS[0]}
+          echo "PYTEST_EXIT_CODE=$rc" > stage13_test_evidence/pytest_exit_code.txt
+          if [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
+          echo "PYTEST_RESULT=PASS" > stage13_test_evidence/pytest_status.txt
+
+      - name: Upload inspectable test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-adaptive-test-evidence-${{ github.run_id }}
+          path: stage13_test_evidence/
+          if-no-files-found: error
+          retention-days: 14
