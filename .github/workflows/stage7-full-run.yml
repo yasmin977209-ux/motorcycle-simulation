@@ -638,62 +638,103 @@ jobs:
           target_n = next_statistical_checkpoint(completed)
           state["next_check_n"] = target_n
 
-          if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:
-              latest_gate_a = (
-                  history[-1].get("gate_a", {})
-                  if history
-                  else {}
+          eligible_prior = [
+              item for item in history
+              if item.get("n") is not None
+              and is_statistical_checkpoint(int(item["n"]))
+              and int(item["n"]) <= completed
+          ]
+          latest_eligible = max(
+              eligible_prior, key=lambda item: int(item["n"]), default=None
+          )
+          latest_gate_a = (
+              latest_eligible.get("gate_a", {})
+              if latest_eligible is not None
+              else {}
+          )
+          latest_status = latest_gate_a.get("status")
+          if latest_status != "PASS":
+              state["final_status"] = "failed" if latest_status == "FAIL" else "blocked"
+              state["stable_at_n"] = None
+              state["included_in_final_stats"] = False
+              state["reason_if_not_stable"] = (
+                  f"Gate A {latest_status or 'UNVERIFIED'}: no explicit approved exact-Golden "
+                  "fingerprint/source-identity PASS is available; refusing all additional trials."
               )
-              latest_status = latest_gate_a.get("status")
-              if latest_status != "PASS":
-                  blocked_or_failed = "failed" if latest_status == "FAIL" else "blocked"
-                  state["final_status"] = blocked_or_failed
+              state["next_check_n"] = next_statistical_checkpoint(completed)
+              if results:
+                  state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                  state["artifact_identity"] = build_artifact_identity(
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      trial_id_start=1,
+                      trial_id_end=completed,
+                      fingerprint_sha256=state["final_fingerprint"],
+                  )
+              blob_sha = store.save_state(state, blob_sha)
+              write_json(RESULTS_DIR / "statistics.json", {
+                  "scenario": SCENARIO,
+                  "trial_count": len(results),
+                  "final_fingerprint": state.get("final_fingerprint"),
+                  "artifact_identity": state.get("artifact_identity"),
+                  "stability_history": history,
+                  "final_status": state["final_status"],
+                  "reason_if_not_stable": state["reason_if_not_stable"],
+              })
+              write_json(RESULTS_DIR / "final_fingerprint.json", {
+                  "scenario": SCENARIO,
+                  "source_sha": SOURCE_SHA,
+                  "run_id": RUN_ID,
+                  "trial_count": len(results),
+                  "final_fingerprint": state.get("final_fingerprint"),
+                  "included_in_final_stats": False,
+                  "gate_a_status": latest_status or "UNVERIFIED",
+                  "reason_if_not_stable": state["reason_if_not_stable"],
+                  "artifact_identity": state.get("artifact_identity"),
+              })
+              print(
+                  "GATE_A_PREFLIGHT_BLOCKED="
+                  + str(latest_status or "UNVERIFIED")
+                  + "; no additional trials may execute"
+              )
+              raise SystemExit(0)
+
+          if state.get("final_status") == "stable":
+              latest_ref = (latest_eligible or {}).get("reference_stability_gate") or {}
+              latest_gate_b = (latest_eligible or {}).get("gate_b") or {}
+              c100_ok = (
+                  not SCENARIO.startswith("C100_")
+                  or (state.get("c100_independent_verification") or {}).get("stable") is True
+              )
+              gate_b_ok = (
+                  SCENARIO.startswith("C100_") and not constants.C100_CI_GATE_ENABLED
+              ) or latest_gate_b.get("stable") is True
+              p50_pending = p50_requires_n2400(history) and completed < 2400
+              state_ok = (
+                  latest_ref.get("status") == "PASS"
+                  and latest_ref.get("stable") is True
+                  and gate_b_ok
+                  and c100_ok
+                  and not p50_pending
+                  and completed >= 600
+                  and latest_gate_a.get("checked") is True
+                  and latest_gate_a.get("stable") is True
+              )
+              if not state_ok:
+                  state["final_status"] = None
                   state["stable_at_n"] = None
                   state["included_in_final_stats"] = False
                   state["reason_if_not_stable"] = (
-                      f"Gate A {latest_status or 'UNVERIFIED'}: latest completed checkpoint "
-                      "lacks an explicit exact-golden PASS; refusing to run additional trials"
+                      "Prior stable label invalid under the approved first-passing §2.5 transition policy; "
+                      "reassess from the latest eligible checkpoint while retaining historical statuses."
                   )
-                  state["next_check_n"] = next_statistical_checkpoint(completed)
-                  if results:
-                      state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
-                      state["artifact_identity"] = build_artifact_identity(
-                          scenario=SCENARIO,
-                          source_sha=SOURCE_SHA,
-                          trial_id_start=1,
-                          trial_id_end=completed,
-                          fingerprint_sha256=state["final_fingerprint"],
-                      )
                   blob_sha = store.save_state(state, blob_sha)
-                  write_json(
-                      RESULTS_DIR / "statistics.json",
-                      {
-                          "scenario": SCENARIO,
-                          "trial_count": len(results),
-                          "final_fingerprint": state.get("final_fingerprint"),
-                          "artifact_identity": state.get("artifact_identity"),
-                          "stability_history": history,
-                      },
-                  )
-                  write_json(
-                      RESULTS_DIR / "final_fingerprint.json",
-                      {
-                          "scenario": SCENARIO,
-                          "source_sha": SOURCE_SHA,
-                          "run_id": RUN_ID,
-                          "trial_count": len(results),
-                          "final_fingerprint": state.get("final_fingerprint"),
-                          "included_in_final_stats": False,
-                          "gate_a_status": latest_status or "UNVERIFIED",
-                          "reason_if_not_stable": state["reason_if_not_stable"],
-                          "artifact_identity": state.get("artifact_identity"),
-                      },
-                  )
-                  print(
-                      "GATE_A_PREFLIGHT_BLOCKED="
-                      + str(latest_status or "UNVERIFIED")
-                      + "; refusing additional trials"
-                  )
+              else:
+                  print(json.dumps({
+                      "scenario": SCENARIO,
+                      "status": "already_stable",
+                      "stable_at_n": state.get("stable_at_n"),
+                  }, sort_keys=True))
                   raise SystemExit(0)
 
           if state.get("final_status") == "stable":
