@@ -233,31 +233,19 @@ REFERENCE_EPSILON: Final[float] = 1e-6
 # [R6-1][Ref 2.5] Original reference Gate-(A) relative tolerance: <1% change.
 REFERENCE_STABILITY_RELATIVE_TOLERANCE: Final[float] = 0.01
 
-# [R6-1][User deviation from Ref 2.5/14.2] C100 starts at one trial; not the original 200.
-C100_STATISTICAL_START_TRIALS: Final[int] = 1
-
-# [R6-1][User deviation from Ref 2.5/14.2] All non-C100 collection levels start at 300 trials.
+# [D-2026-10-17-04/-06] All 25 scenarios, including C100, require trial IDs 1..300.
+C100_STATISTICAL_START_TRIALS: Final[int] = 300
 NON_C100_STATISTICAL_START_TRIALS: Final[int] = 300
 
-# [R6-1][User deviation from Ref 2.5/14.2] Escalation is +50, not doubling.
-ITERATION_ESCALATION_STEP: Final[int] = 50
-
-# [R6-1][User decision] First CI checkpoint for non-C100 collections.
+# [D-2026-10-10-01; D-2026-10-17-06] Statistical checkpoints double from N=300.
 STATISTICAL_CHECK_START_N: Final[int] = 300
-
-# [R6-1][User decision] CI checkpoints advance in increments of 50.
-STATISTICAL_CHECK_STEP_N: Final[int] = 50
-
-# [R6-1][User decision] Non-C100 cannot stop before completing n=400.
-MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 400
-
-# [R6-1][User decision] Three consecutive checkpoints must satisfy stability gates.
-STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3
+STATISTICAL_ESCALATION_MULTIPLIER: Final[int] = 2
+STABILITY_STOP_ON_FIRST_PASS: Final[bool] = True
 
 # [R6-1][User decision] One initial smoke trial per scenario.
 INITIAL_SMOKE_TRIALS_PER_SCENARIO: Final[int] = 1
 
-# [R6-1][User decision] C100 has no confidence-interval gate at n=1.
+# Gate B's C100 CI applicability is intentionally unchanged by D-2026-10-17-04/-06.
 C100_CI_GATE_ENABLED: Final[bool] = False
 
 # [R6-1][User decision] One-riyal absolute epsilon for the CI near-zero protection.
