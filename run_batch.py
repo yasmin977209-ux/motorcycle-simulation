@@ -960,11 +960,23 @@ def run_batch(
                     0.50,
                     method="linear",
                 ))
-                p50_transition = evaluate_p50_transition(
-                    previous_n=previous_n,
-                    previous_p50=previous_p50,
-                    current_n=current_n,
-                    current_p50=p50_value,
+                p50_transition = (
+                    {
+                        "previous_n": previous_n,
+                        "current_n": current_n,
+                        "checked": False,
+                        "stable": True,
+                        "requires_n2400": False,
+                        "status": "NOT_APPLICABLE",
+                        "reason": "D-2026-10-12-01 excludes C100 from the P50 continuation trigger",
+                    }
+                    if scenario.startswith("C100_")
+                    else evaluate_p50_transition(
+                        previous_n=previous_n,
+                        previous_p50=previous_p50,
+                        current_n=current_n,
+                        current_p50=p50_value,
+                    )
                 )
 
             gate_a = evaluate_gate_a(
