@@ -254,6 +254,8 @@ def adaptive_data(stable_counts=None):
             "overall_status": "COVERAGE_ONLY",
             "section_2_5_status": "COVERAGE_ONLY",
         }]
+        if not scenario.startswith("C100_"):
+            history[0]["p50_final_net_project_equity"] = 1000.0
         n = 600
         while n <= stable_at_n:
             metric_results = {}
@@ -280,10 +282,13 @@ def adaptive_data(stable_counts=None):
                 "overall_status": "SCENARIO_STABLE" if n == stable_at_n else "NOT_STABLE",
                 "gate_a_status": "PASS",
                 "gate_a_evidence_ref": f"synthetic-gate-a:{scenario}:{n}",
+                "gate_a_evidence_sha256": hashlib.sha256(f"gate-a-evidence|{scenario}|{n}".encode()).hexdigest(),
                 "gate_b_status": "PASS",
                 "gate_b_evidence_ref": f"synthetic-gate-b:{scenario}:{n}",
+                "gate_b_evidence_sha256": hashlib.sha256(f"gate-b-evidence|{scenario}|{n}".encode()).hexdigest(),
                 "section_2_5_status": section_status,
                 "section_2_5_evidence_ref": f"synthetic-section-2-5:{scenario}:{n}",
+                "section_2_5_evidence_sha256": hashlib.sha256(f"section-2-5-evidence|{scenario}|{n}".encode()).hexdigest(),
                 "section_2_5_metrics": metric_results,
             }
             if not scenario.startswith("C100_"):
@@ -291,6 +296,7 @@ def adaptive_data(stable_counts=None):
                 new_p50 = old_p50 * 1.01
                 entry["gate_b_p50_previous"] = old_p50
                 entry["gate_b_p50_current"] = new_p50
+                entry["p50_final_net_project_equity"] = new_p50
                 entry["gate_b_p50_continuation_required"] = False
             history.append(entry)
             n *= 2
@@ -301,16 +307,22 @@ def adaptive_data(stable_counts=None):
             "stable_at_n": stable_at_n,
             "gate_a_status": "PASS",
             "gate_a_evidence_ref": f"synthetic-gate-a:{scenario}:{stable_at_n}",
+            "gate_a_evidence_sha256": hashlib.sha256(f"gate-a-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
             "gate_b_status": "PASS",
             "gate_b_evidence_ref": f"synthetic-gate-b:{scenario}:{stable_at_n}",
+            "gate_b_evidence_sha256": hashlib.sha256(f"gate-b-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
             "section_2_5_status": "PASS",
             "section_2_5_evidence_ref": f"synthetic-section-2-5:{scenario}:{stable_at_n}",
+            "section_2_5_evidence_sha256": hashlib.sha256(f"section-2_5-evidence|{scenario}|{stable_at_n}".encode()).hexdigest(),
             "checkpoint_history": history,
         }
         if scenario.startswith("C100_"):
             scenario_evidence[scenario]["c100_deterministic_equivalence_status"] = "PASS"
             scenario_evidence[scenario]["c100_deterministic_evidence_ref"] = (
                 f"synthetic-c100-equivalence:{scenario}"
+            )
+            scenario_evidence[scenario]["c100_deterministic_evidence_sha256"] = (
+                hashlib.sha256(f"c100-equivalence-evidence|{scenario}".encode()).hexdigest()
             )
 
     ordered_rows = [
@@ -334,6 +346,7 @@ def adaptive_data(stable_counts=None):
         "total_trials": total_trials,
         "total_representatives": len(EXPECTED_SCENARIOS) * 5,
         "ordered_trial_hash_map_sha256": ordered_sha,
+        "gate_a_ordered_trial_hash_map_sha256": ordered_sha,
         "scenarios": scenario_evidence,
         "dataset_status": "SYNTHETIC_TEST_ONLY",
     })
@@ -412,6 +425,7 @@ def test_adaptive_mode_enforces_gate_b_p50_2400_continuation():
     data = adaptive_data()
     entry = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"][1]
     entry["gate_b_p50_current"] = 1060.0
+    entry["p50_final_net_project_equity"] = 1060.0
     entry["gate_b_p50_continuation_required"] = True
     with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_REQUIRES_N2400"):
         _validate_mode_and_identity(data, mode="adaptive")
