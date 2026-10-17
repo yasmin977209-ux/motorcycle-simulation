@@ -422,11 +422,19 @@ def test_adaptive_mode_rejects_incomplete_trial_id_range():
 
 
 def test_adaptive_mode_enforces_gate_b_p50_2400_continuation():
-    data = adaptive_data()
-    entry = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"][1]
-    entry["gate_b_p50_current"] = 1060.0
-    entry["p50_final_net_project_equity"] = 1060.0
-    entry["gate_b_p50_continuation_required"] = True
+    data = adaptive_data({"C030_G000": 1200})
+    history = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"]
+    entry_600 = history[1]
+    entry_600["gate_b_p50_current"] = 1060.0
+    entry_600["p50_final_net_project_equity"] = 1060.0
+    entry_600["gate_b_p50_continuation_required"] = True
+
+    entry_1200 = history[2]
+    entry_1200["gate_b_p50_previous"] = 1060.0
+    entry_1200["gate_b_p50_current"] = 1070.6
+    entry_1200["p50_final_net_project_equity"] = 1070.6
+    entry_1200["gate_b_p50_continuation_required"] = False
+
     with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_REQUIRES_N2400"):
         _validate_mode_and_identity(data, mode="adaptive")
 
