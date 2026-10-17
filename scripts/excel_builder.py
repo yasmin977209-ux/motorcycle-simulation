@@ -128,7 +128,16 @@ def build_workbook(dataset_root, output_path, manifest_path, representatives_pat
     manifest = load_json(Path(manifest_path))
     if mode is None:
         count = manifest.get("total_trials")
-        mode = "canonical" if count == 11005 else ("sample" if count == 625 else "demo")
+        if manifest.get("cohort_id") == "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1":
+            mode = "adaptive"
+        elif count == 11005:
+            mode = "canonical"
+        elif count == 625:
+            mode = "sample"
+        else:
+            raise ValueError(
+                "UNRECOGNIZED_COHORT_MODE: specify mode='demo' for fixtures or provide an approved cohort contract"
+            )
     data = load_dataset(dataset_root, mode=mode, manifest_path=manifest_path,
                         representatives_path=representatives_path)
     return assemble_workbook(data, output_path, mode=mode)
@@ -139,7 +148,7 @@ def main():
     parser.add_argument("--dataset-path")
     parser.add_argument("--dataset-root")
     parser.add_argument("--output-path", required=True)
-    parser.add_argument("--mode", choices=("canonical", "sample", "demo"), default="canonical")
+    parser.add_argument("--mode", choices=("canonical", "sample", "demo", "adaptive"), default=None)
     parser.add_argument("--manifest")
     parser.add_argument("--representatives")
     args = parser.parse_args()
@@ -154,7 +163,7 @@ def main():
             mode=args.mode,
         )
     else:
-        result = build_excel(dataset, args.output_path, mode=args.mode)
+        result = build_excel(dataset, args.output_path, mode=args.mode or "canonical")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     raise SystemExit(0 if result.get("success") else 1)
 
