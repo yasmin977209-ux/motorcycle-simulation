@@ -123,21 +123,29 @@ def build_excel(dataset_path, output_path, mode="canonical"):
     return assemble_workbook(data, output_path, mode=mode)
 
 
+def resolve_build_mode(manifest, mode=None):
+    """Resolve a declared cohort explicitly; never demote an unknown cohort to demo."""
+    supported = {"canonical", "sample", "demo", "adaptive"}
+    if mode is not None:
+        if mode not in supported:
+            raise ValueError(f"UNSUPPORTED_EXCEL_MODE: {mode}")
+        return mode
+    if manifest.get("cohort_id") == "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1":
+        return "adaptive"
+    count = manifest.get("total_trials")
+    if count == 11005:
+        return "canonical"
+    if count == 625:
+        return "sample"
+    raise ValueError(
+        "UNRECOGNIZED_COHORT_MODE: specify mode='demo' for fixtures or provide an approved cohort contract"
+    )
+
+
 def build_workbook(dataset_root, output_path, manifest_path, representatives_path, mode=None):
     """Compatibility adapter for old runners; creation of worksheets is delegated."""
     manifest = load_json(Path(manifest_path))
-    if mode is None:
-        count = manifest.get("total_trials")
-        if manifest.get("cohort_id") == "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1":
-            mode = "adaptive"
-        elif count == 11005:
-            mode = "canonical"
-        elif count == 625:
-            mode = "sample"
-        else:
-            raise ValueError(
-                "UNRECOGNIZED_COHORT_MODE: specify mode='demo' for fixtures or provide an approved cohort contract"
-            )
+    mode = resolve_build_mode(manifest, mode)
     data = load_dataset(dataset_root, mode=mode, manifest_path=manifest_path,
                         representatives_path=representatives_path)
     return assemble_workbook(data, output_path, mode=mode)
