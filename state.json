@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
-  "sha": "3ddbe1de20155fb2ec000e5558a21cdf4c46a79a",
+  "sha": "552adc31ae596d6c3628b52460ce28c7ec31aa0d",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "D-2026-10-17-05 records the owner's rule to compare every actual adjacent §2.5 checkpoint transition per scenario, with trial IDs 1..300 mandatory for all 25 scenarios. The pairwise rule does not permit a stability verdict at N=300 by itself; this first-point rule remains PENDING. No production checkpoint until that rule is resolved, the approved Gate A provider is validated, and SOURCE_SHA drift is resolved without silently changing data identity.",
+  "next": "D-2026-10-17-06 resolves the initial-point rule: for every scenario (including C100), N=300 is mandatory coverage only, and the first §2.5 stability decision is the adjacent transition 300→600. Thereafter compare every actual adjacent per-scenario transition and double only after failure, recording stable_at_n at the first passing checkpoint while preserving historical failures. Do not execute production checkpoints yet: GATEA_PROVIDER_MISSING and SOURCE_SHA_DRIFT remain blocking and must be resolved without silently changing dataset identity. No code, test, or workflow changes are authorized by this decision log entry.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
@@ -12,8 +12,7 @@
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
-    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
-    "UNDEFINED_BUSINESS_RULE: The per-scenario pairwise comparison rule is defined for every actual adjacent checkpoint transition, but N=300 has no preceding checkpoint under the new schedule. Under §2.5, N=300 alone cannot pass a transition comparison. Owner must resolve whether N=300 is coverage-only (first possible §2.5 decision on 300→600) or separately define an approved initial-point criterion. Do not claim SCENARIO_STABLE at N=300 or run a new production checkpoint pending resolution."
+    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "0b083fa472d7a11089a15137cfad16d87785689a",
@@ -179,6 +178,29 @@
       "first_n300_stability_verdict": "PENDING/UNDEFINED_BUSINESS_RULE",
       "no_n150_baseline": true,
       "no_production_run_authorized": true
+    },
+    "D-2026-10-17-06": {
+      "topic": "first_section_2_5_stability_checkpoint",
+      "date": "2026-10-17",
+      "status": "APPROVED_BY_PROJECT_OWNER",
+      "approved_by_project_owner_in_chat": true,
+      "scope": "Resolve first-point rule only",
+      "n300_role": "MANDATORY_COVERAGE_ONLY",
+      "first_eligible_stability_transition": "N=300 -> N=600",
+      "minimum_n_before_section_2_5_stability_verdict": 600,
+      "apply_to_all_25_scenarios_including_c100": true,
+      "compare_every_actual_adjacent_transition_per_scenario": true,
+      "seven_metrics_must_pass_together": true,
+      "reference_thresholds_unchanged": true,
+      "adaptive_schedule_after_first_transition": "600->1200->2400->4800->9600...",
+      "stop_at_first_passing_eligible_transition": true,
+      "preserve_historical_failures": true,
+      "rerun_completed_trial_ids": false,
+      "production_run_authorized": false,
+      "resolves_pending_from": [
+        "D-2026-10-17-04",
+        "D-2026-10-17-05"
+      ]
     }
   },
   "preflight_merge": {
@@ -705,7 +727,7 @@
   },
   "stability_policy_20261017": {
     "decision_id": "D-2026-10-17-04",
-    "status": "PARTIALLY_APPROVED_WITH_PENDING_N300_BASELINE",
+    "status": "FIRST_POINT_RULE_RESOLVED_BY_D-2026-10-17-06; PRODUCTION_REMAINS_BLOCKED",
     "approved": {
       "all_25_scenarios_minimum_n": 300,
       "includes_c100": true,
@@ -716,16 +738,17 @@
       "historical_failures_permanent_block": false,
       "rerun_completed_trial_ids": false,
       "fixed_global_cap": false,
-      "source_sha_master_seed_rng_schema_identity_unchanged": true
+      "source_sha_master_seed_rng_schema_identity_unchanged": true,
+      "n300_role": "MANDATORY_COVERAGE_ONLY",
+      "first_eligible_stability_transition": "300->600",
+      "minimum_n_before_section_2_5_verdict": 600
     },
     "pending": {
-      "classification": "PENDING/UNDEFINED_BUSINESS_RULE",
-      "issue": "The current seven-metric §2.5 evaluator compares adjacent checkpoints; no earlier approved doubling checkpoint exists at initial N=300.",
-      "prohibited_assumptions": [
-        "Use N=150 as an unapproved comparison baseline",
-        "Treat Gate B alone as sufficient for SCENARIO_STABLE",
-        "Change §2.5 thresholds or epsilon handling",
-        "Start production checkpoint before resolution"
+      "classification": "RESOLVED_BY_D-2026-10-17-06",
+      "decision": "N=300 is coverage only; the first eligible §2.5 seven-metric comparison is 300->600.",
+      "production_blockers_remain": [
+        "GATEA_PROVIDER_MISSING",
+        "SOURCE_SHA_DRIFT"
       ]
     },
     "evidence": {
@@ -739,7 +762,7 @@
   },
   "stability_transition_rule_20261017": {
     "decision_id": "D-2026-10-17-05",
-    "status": "PARTIALLY_APPROVED_PENDING_FIRST_POINT_RULE",
+    "status": "FIRST_POINT_RULE_RESOLVED; PRODUCTION_BLOCKED_BY_EXISTING_GATES",
     "approved": {
       "all_scenarios_count": 25,
       "initial_trial_id_range": "1..300",
@@ -756,14 +779,20 @@
       "record_stable_at_n": true,
       "preserve_historical_failures": true,
       "historical_failure_is_permanent_blocker": false,
-      "invent_n150_or_other_baseline": false
+      "invent_n150_or_other_baseline": false,
+      "n300_role": "MANDATORY_COVERAGE_ONLY",
+      "first_eligible_stability_transition": "300->600",
+      "minimum_n_before_stability_verdict": 600
     },
     "pending": {
-      "classification": "PENDING/UNDEFINED_BUSINESS_RULE",
-      "issue": "There is no prior scheduled checkpoint before N=300, so the pairwise §2.5 rule cannot yield a stability verdict at N=300 alone.",
-      "unresolved_choice": "Either treat N=300 as mandatory coverage only and first assess §2.5 stability on transition 300→600, or define a separate explicitly approved initial-point criterion.",
-      "prohibit_stable_at_n300_without_rule": true,
-      "no_production_checkpoint_until_resolved": true
+      "classification": "RESOLVED_BY_D-2026-10-17-06",
+      "issue": "N=300 is coverage only; the first eligible §2.5 comparison is 300->600.",
+      "prohibitions": [
+        "No stable_at_n=300 under §2.5",
+        "Do not invent N=150 baseline",
+        "Do not substitute Gate B for §2.5",
+        "No production checkpoint while Gate A provider is missing or SOURCE_SHA drift remains unresolved"
+      ]
     },
     "evidence": {
       "main_head_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
@@ -778,7 +807,9 @@
       "workflow_run": false,
       "model_code_changed": false,
       "tests_changed": false,
-      "workflows_changed": false
+      "workflows_changed": false,
+      "resolution_decision": "D-2026-10-17-06",
+      "resolution_decision_commit": "552adc31ae596d6c3628b52460ce28c7ec31aa0d"
     }
   }
 }
