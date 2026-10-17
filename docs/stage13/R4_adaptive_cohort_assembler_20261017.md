@@ -1,0 +1,44 @@
+# R4 — Stage 13 adaptive per-scenario cohort assembler
+Date: 2026-10-17
+CP: CP-STAGE13-ADAPTIVE-ASSEMBLER-20261017
+Base branch: tmp/cp-stage13-assembler-20261014
+Base commit: e92539b7c76629fa306428289a211493c75ad033
+Base main HEAD recorded by the prior Stage-0 audit: 647c19826b90d8224ce73ef9b90c306a45e03fb0
+Normative reference SHA-256: ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479
+Owner approval: Direct user approval “نعم” on 2026-10-17 for modifying/adding the Stage 13 tests in this narrowly scoped CP; main and workflow files must remain untouched.
+
+## Scope and explicit exclusions
+Implement a fail-closed Stage 13 assembler mode for a variable-size, per-scenario cohort selected by the approved first-passing-checkpoint policy. Add synthetic unit tests, and correct the README sheet-count field. No production Monte Carlo, no trial generation, no historical data/Parquet mutation, no threshold or identity change, no workflow edits, no main change, no merge/PR/Release, and no final-delivery approval.
+
+## R4 — before change
+
+| العنصر | الحالي | المرجع/القرار والفرع | النص الحاكم | الحكم |
+|---|---|---|---|---|
+| Adaptive cohort mode | _validate_mode_and_identity accepts only canonical, sample, demo in tmp/cp-stage13-assembler-20261014, scripts/stage13_assemble.py blob f124a9d3bbf101aaec005486c17fb28d0eec5a8a. | Approved per-scenario checkpoint policy recorded in tmp/cp-stability-policy-impl-20261017/docs/governance/DECISIONS_LOG.md, D-2026-10-17-04/-05/-06, plus direct user approval of this CP. | “The per-scenario checkpoint sequence is N=300, 600, 1200, 2400, 4800, 9600, ...”; “N=300 is coverage only”; stop at the first eligible passing transition and record stable_at_n. | K_CODE — no adaptive cohort contract exists in the assembler. |
+| Fixed-size modes | Current canonical mode requires 11,005 IDs and sample mode 625 IDs (26..50); other counts can be inferred as demo by scripts/excel_builder.py when mode is omitted. | D-2026-10-10-04 architecture decision; D-2026-10-12-02 keeps the 625 sample distinct from the canonical 9,005-row CP-D source; D-2026-10-17-06 establishes per-scenario adaptive N. | Existing fixed cohorts remain distinct; adaptive final scope is the sum of per-scenario accepted stopping counts, not a hard-coded total. | K_CODE — add an explicit adaptive mode and never infer an unrecognized production count as demo. |
+| Stability assertion | write_scenario_matrix defaults a missing final_status to the literal stable. | D-2026-10-17-04/-05/-06 and the owner-approved first-passing policy. | One passing gate does not imply overall stability; status must be based on explicit Gate A, applicable Gate B, and seven-metric §2.5 evidence. | K_CODE — remove the implicit stable default; adaptive input must carry explicit passed-gate and checkpoint evidence. |
+| Cohort identity | General validation checks source SHA, scenario set, key uniqueness, and optional total count; it does not enforce an adaptive per-scenario stop count/history or recompute the ordered fingerprint map. | Normative reference SHA above; SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b, MASTER_SEED=20270101; owner-approved decisions D-2026-10-17-04/-05/-06. | Preserve source, seed, RNG/sampling/schema identity, exact trial IDs, fingerprints, and each checkpoint result; no completed trial may be rerun/relabelled. | K_CODE — adaptive acceptance must fail closed if identity, coverage, history, or fingerprints are missing/mismatched. |
+| Excel README provenance | write_readme is called while the workbook has only one sheet and writes Excel sheets=1 before the other 184 sheets are created. | Reference §15.2: 185 sheets is the sole approved worksheet count; 10 global sheets + 175 scenario sheets. | The delivery must contain all 185 sheets and their correct names/order; provenance fields must not misstate the emitted workbook. | K_CODE — write actual workbook sheet count after all sheets are created, then verify saved value. |
+| Test scope | Existing tests validate fixed canonical/sample modes and a synthetic demo; they do not validate an adaptive cohort manifest. | Current user's explicit “نعم” authorizes only modifications/additions needed for Stage 13 tests within this CP. | Add regression coverage for valid heterogeneous stop counts and all fail-closed cases without running Monte Carlo. | Authorized narrowly. No workflow/test-runner workflow change is authorized. |
+
+## Proposed adaptive contract (new explicit input contract, not a business-rule change)
+- Mode name: adaptive.
+- manifest.cohort_id = "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1".
+- Preserve the existing source identity: source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b, master_seed=20270101, and require explicit non-empty schema_version, rng_identity, sampling_policy, aggregate ordered-map SHA-256, source/run provenance, scenario metadata, and total count.
+- Each of the 25 scenario entries must explicitly declare final_status="SCENARIO_STABLE", stable_at_n, Gate A status, Gate B status, §2.5 status, and an ordered checkpoint history. Every final entry must provide seven-metric transition evidence for the immediately preceding actual checkpoint and current checkpoint; N=300 is COVERAGE_ONLY, never a §2.5 PASS.
+- Accepted stable counts follow 600, 1200, 2400, 4800, 9600, ...; no 300 stop and no skipped doubling checkpoint. Per scenario, input trial IDs must be exactly 1..stable_at_n with unique keys and valid per-result SHA-256. The complete ordered scenario/trial fingerprint map must recompute to the declared aggregate hash.
+- The adaptive contract requires explicit success of Gate A, Gate B, and the seven-metric §2.5 transition. It does not decide whether a real production cohort has passed those gates; it only verifies the submitted evidence structure and identities. Missing, non-finite, contradictory, or unrecognized evidence is rejected.
+- Fixed canonical, sample, and demo modes remain separate; this CP must not reinterpret or merge their cohorts.
+
+## Acceptance/tests for this CP
+1. Validate the source SHA and required cohort identity/provenance fields.
+2. Validate exactly 25 scenario metadata entries, explicit status and stop count per scenario, 300 coverage-only followed by contiguous doubling history to the final count, all seven metric checks, and explicit Gate A/Gate B/§2.5 success.
+3. Reject N=300 as stable, unsupported/non-doubling count, missing statuses/history, a failed final transition, a skipped/altered checkpoint, mismatched trial IDs, duplicates, missing/invalid result hashes, total-count mismatch, or aggregate ordered-map SHA mismatch.
+4. Exercise adaptive workbook assembly with synthetic data only; verify 185 worksheets, heterogeneous stop counts are reflected in scenario summaries, README reports 185, and no Excel errors/formulas appear.
+5. Preserve all existing historic failures and existing canonical/sample behavior. Do not execute simulations or alter workflow files.
+6. Inspect final diff and content after changes. Because this environment's container cannot resolve GitHub directly, if no approved branch-pinned execution path can run the focused pytest suite without modifying a workflow, record that test gate as PENDING/BLOCKED rather than claiming PASS. Do not work around this by changing a workflow.
+
+## Current status before code changes
+- Implementation/test evidence: PENDING.
+- Production stability and delivery: BLOCKED by separate project gates.
+- No production execution authorized by this R4.
