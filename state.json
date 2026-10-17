@@ -2,7 +2,7 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
-  "sha": "0b083fa472d7a11089a15137cfad16d87785689a",
+  "sha": "d5cb5f15a76684ea38c2b714198272a3e9e118b8",
   "sha_semantics": "parent_state_commit_pointer",
   "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
   "blockers": [
@@ -12,7 +12,8 @@
     "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
-    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
+    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
+    "UNDEFINED_BUSINESS_RULE: Initial N=300 stability evaluation is not fully defined: §2.5's seven-metric evaluator compares adjacent checkpoints, but no approved baseline before N=300 exists. Do not execute new statistical checkpoints or declare SCENARIO_STABLE until the first-checkpoint rule is explicitly resolved."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "0b083fa472d7a11089a15137cfad16d87785689a",
@@ -149,6 +150,16 @@
       "value": "CANONICAL_STAGE9A_9005_ROWS; 25_SCENARIOS_X_4_METRICS_X_5_STATS=500_EXACT_COMPARISONS; NO_TOLERANCE; STAGE13_625_COHORT_SEPARATE; DO_NOT_UPGRADE_HISTORICAL_STAGE9C_PARTIAL",
       "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
       "date": "2026-10-12"
+    },
+    "D-2026-10-17-04": {
+      "topic": "first_passing_checkpoint_stopping_policy",
+      "status": "PARTIALLY_APPROVED_PENDING_INITIAL_N300_SEVEN_METRIC_BASELINE",
+      "date": "2026-10-17",
+      "scope": "All 25 scenarios; minimum N=300; per-scenario doubling 300,600,1200,...; stop at first passing checkpoint; retain historical failures without treating them as permanent blockers",
+      "approved_by_project_owner_in_chat": true,
+      "historical_failure_policy": "Retain all historical failed transitions; later passing applicable transitions may support overall stability without deleting/relabeling earlier failures",
+      "pending_rule": "The §2.5 seven-metric comparison needs a defined baseline at the first checkpoint N=300.",
+      "no_production_run_authorized": true
     }
   },
   "preflight_merge": {
@@ -672,5 +683,39 @@
     "historical_data_or_metadata_modified": false,
     "production_monte_carlo_started": false,
     "merge_commit_sha": null
+  },
+  "stability_policy_20261017": {
+    "decision_id": "D-2026-10-17-04",
+    "status": "PARTIALLY_APPROVED_WITH_PENDING_N300_BASELINE",
+    "approved": {
+      "all_25_scenarios_minimum_n": 300,
+      "includes_c100": true,
+      "checkpoint_sequence": "300,600,1200,2400,4800,9600,...",
+      "stop_at_first_passing_checkpoint_per_scenario": true,
+      "persist_stable_at_n": true,
+      "historical_failures_preserved": true,
+      "historical_failures_permanent_block": false,
+      "rerun_completed_trial_ids": false,
+      "fixed_global_cap": false,
+      "source_sha_master_seed_rng_schema_identity_unchanged": true
+    },
+    "pending": {
+      "classification": "PENDING/UNDEFINED_BUSINESS_RULE",
+      "issue": "The current seven-metric §2.5 evaluator compares adjacent checkpoints; no earlier approved doubling checkpoint exists at initial N=300.",
+      "prohibited_assumptions": [
+        "Use N=150 as an unapproved comparison baseline",
+        "Treat Gate B alone as sufficient for SCENARIO_STABLE",
+        "Change §2.5 thresholds or epsilon handling",
+        "Start production checkpoint before resolution"
+      ]
+    },
+    "evidence": {
+      "main_head_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+      "current_candidate_branch": "tmp/cp-c100-stage7-unification-20261017",
+      "candidate_run_id": 38981117293,
+      "candidate_tested_sha": "b9abcf0b39748b3d406b199613f38f8007152700",
+      "candidate_run_conclusion": "failure",
+      "failure_summary": "5 failed, 385 passed, 1 skipped; four acceptance failures due missing results_stage5 fixtures, one hash-seed subprocess failure not yet root-caused"
+    }
   }
 }
