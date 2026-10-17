@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
-  "sha": "552adc31ae596d6c3628b52460ce28c7ec31aa0d",
+  "sha": "b10cc241c401b2fb54eecaadfcbfff6ab0933d13",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "D-2026-10-17-06 resolves the initial-point rule: for every scenario (including C100), N=300 is mandatory coverage only, and the first §2.5 stability decision is the adjacent transition 300→600. Thereafter compare every actual adjacent per-scenario transition and double only after failure, recording stable_at_n at the first passing checkpoint while preserving historical failures. Do not execute production checkpoints yet: GATEA_PROVIDER_MISSING and SOURCE_SHA_DRIFT remain blocking and must be resolved without silently changing dataset identity. No code, test, or workflow changes are authorized by this decision log entry.",
+  "next": "CP-STABILITY-POLICY-IMPL-20261017 passed the focused deterministic verification (Run 38989548728, tested SHA 3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843; 98 passed; artifact 12083839056 inspected). The approved N=300 coverage-only and first 300→600 §2.5 transition policy is implemented in the Stage 7 orchestration layer without changing constants.py, RNG, seed, model source, or historical data. Production runs remain blocked by GATEA_PROVIDER_MISSING and SOURCE_SHA_DRIFT. Next allowed CP: connect/validate the approved golden provider and establish a source-identity-preserving path to address daily_engine.py drift; do not run Monte Carlo until those blockers are resolved.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
@@ -810,6 +810,173 @@
       "workflows_changed": false,
       "resolution_decision": "D-2026-10-17-06",
       "resolution_decision_commit": "552adc31ae596d6c3628b52460ce28c7ec31aa0d"
+    }
+  },
+  "cp_stability_policy_impl_20261017": {
+    "date": "2026-10-17",
+    "status": "PASS_STATIC_AND_FOCUSED_DETERMINISTIC_REGRESSION_ONLY; PRODUCTION_BLOCKED",
+    "scope": "Apply D-2026-10-17-04/-05/-06 to Stage 7 orchestration and run_batch; first stability transition is 300->600; stop at first eligible passing transition per scenario.",
+    "main_base_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+    "implementation_branch": "tmp/cp-stability-policy-impl-20261017",
+    "implementation_branch_base_sha": "e2b7ecb734ea3e9d121edac4ec79201e61404848",
+    "current_head_before_state_commit_sha": "b10cc241c401b2fb54eecaadfcbfff6ab0933d13",
+    "tested_sha": "3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843",
+    "changed_files_vs_main": [
+      ".github/workflows/stage7-full-run.yml",
+      "docs/governance/DECISIONS_LOG.md",
+      "docs/stage7/R4_stability_transition_policy_20261017.md",
+      "run_batch.py",
+      "scripts/stage7_stability.py",
+      "state.json",
+      "tests/test_run_batch.py",
+      "tests/test_stage7_authoring.py",
+      "tests/test_stage7_stability.py"
+    ],
+    "temporary_verification_workflow": {
+      "path": ".github/workflows/cp-stability-policy-verify.yml",
+      "branch_pinned": true,
+      "workflow_dispatch": false,
+      "permissions": "contents:read",
+      "timeout_minutes": 15,
+      "removed_after_evidence_collection": true,
+      "deletion_commit_sha": "a417a9d6a99348617f0c25805db6d4658cd8d82e",
+      "branch_deleted": false
+    },
+    "verification": {
+      "workflow_run_id": 38989548728,
+      "workflow_run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38989548728",
+      "job_id": 117268651135,
+      "conclusion": "success",
+      "focused_test_result": "98 passed in 0.87s",
+      "compileall": "PASS",
+      "stage7_yaml_parse": "PASS",
+      "stage1_yaml_parse": "PASS",
+      "embedded_stage7_ast": "PASS",
+      "verifier_branch_permissions_timeout": "PASS",
+      "full_pytest_run": false,
+      "production_monte_carlo_run": false,
+      "new_trial_ids_materialized": 0,
+      "completed_trial_ids_rerun": 0
+    },
+    "failures_and_classification": [
+      {
+        "run_id": 38989216866,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "AssertionError: embedded Stage 7 Python entrypoint heredoc not found",
+        "root_cause": "The temporary verifier regex incorrectly required the heredoc to be the end of the whole shell step.",
+        "fix": "Replaced regex parsing with explicit heredoc boundaries."
+      },
+      {
+        "run_id": 38989389427,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "AssertionError: embedded Stage 7 Python entrypoint heredoc not found",
+        "root_cause": "The production workflow creates the script with cat > /tmp/stage7_orchestrator.py <<'PY', not python - <<'PY'.",
+        "fix": "Verifier now extracts the exact cat heredoc and AST-parses that embedded Python."
+      },
+      {
+        "run_id": 38989450332,
+        "classification": "WORKFLOW_DEFECT",
+        "exact_error": "AssertionError at verifier line 40",
+        "root_cause": "The verifier compared the production workflow's trigger instead of checking the temporary verifier workflow's own trigger.",
+        "fix": "Parsed each workflow separately and checked the exact temporary branch pin, minimal permissions, no workflow_dispatch, and timeouts."
+      }
+    ],
+    "artifact": {
+      "id": 12083839056,
+      "name": "cp-stability-policy-test-evidence",
+      "run_id": 38989548728,
+      "tested_sha": "3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843",
+      "size_bytes": 3368,
+      "sha256": "ee09ced3dd29afd24a8040622759a967147ea2e5e1c022d87a49b4346b482721",
+      "expires_at": "2026-10-31T01:08:30Z",
+      "archive_contents": [
+        "cp-stability-policy-evidence.json",
+        "policy-test-results.xml"
+      ],
+      "manifest_sha256": "not claimed separately; per-file content hashes are in the manifest and were inspected from the ZIP",
+      "manifest_bytes": 2015,
+      "junit_bytes": 12866,
+      "local_download_sha256_verified": true
+    },
+    "content_hashes_at_tested_sha": {
+      "constants.py": {
+        "sha256": "675df03f651ce64cf06a1d70c185905261fdfd1357a507f00ac6c43125fbd607",
+        "bytes": 16776,
+        "unchanged_from_main": true,
+        "git_blob_sha": "88b3e7b5a509f8486597ac08dfc5acaf80d4d39b"
+      },
+      ".github/workflows/stage1-verification.yml": {
+        "sha256": "388e14a22c2e5dbeef4ef00ea827ae5f7a336eac23739b9b974516c171e7621b",
+        "bytes": 6086,
+        "unchanged_from_main": true,
+        "git_blob_sha": "003cad09294a541a95cc427443413585f93b4975"
+      },
+      "tests/test_stage1.py": {
+        "sha256": "3df8c2eb8c674a0af766ccf65486d8e62bce36874cc67c91d837c5db28084dc3",
+        "bytes": 9553,
+        "unchanged_from_main": true,
+        "git_blob_sha": "c7318e938ca66828107dbdb799c6826edf1a159f"
+      },
+      "run_batch.py": {
+        "sha256": "bc249a7dcec72a4b4304bd042f590f3c414eb7016d301c38391729b8fd03de0b",
+        "bytes": 41570,
+        "git_blob_sha": "494f360dfcd3f7b0161c0be0cda93f299799ac41"
+      },
+      "scripts/stage7_stability.py": {
+        "sha256": "7a7cfe9edca06bd9c80f4616b88b415ae0263817d16b6d7a912441af73adc6a9",
+        "bytes": 17456,
+        "git_blob_sha": "2912f9ec263a6b18e38fd805108714bf863a1d91"
+      },
+      ".github/workflows/stage7-full-run.yml": {
+        "sha256": "536d2c0f38da7a61541f217832d80bee1ef8a5d69ecd5dadb6fc2316114c321f",
+        "bytes": 58689,
+        "git_blob_sha": "2eccdc38a2f3612430393b09c23a3b2dfabfe7f1"
+      },
+      "tests/test_run_batch.py": {
+        "sha256": "ec0ecb191048eb08a6ec130b115a63b7a1bb504aa7d8666c6d230390454249e2",
+        "bytes": 9135,
+        "git_blob_sha": "a6231c795882b15e2a8b13fc8859eb6ae30c3ec4"
+      },
+      "tests/test_stage7_authoring.py": {
+        "sha256": "cdba2310bde372e51614306c2b5b0cb1dc28cf5f1b36ed789661b65d2f258f71",
+        "bytes": 31309,
+        "git_blob_sha": "67d1d3c9dba6d58e827b96d957a6f9ba7639aaa4"
+      },
+      "tests/test_stage7_stability.py": {
+        "sha256": "535bbf1b840629ae5489e5a8362430184f01196f8baa71ebc0d5c3e10e242667",
+        "bytes": 7180,
+        "git_blob_sha": "623817ee6fffd85a069238226aa659bf45d9b63a"
+      }
+    },
+    "r4": {
+      "path": "docs/stage7/R4_stability_transition_policy_20261017.md",
+      "git_blob_sha": "0725073f6d45acf7f87b37a7cc67831c14d62cf9",
+      "bytes": 14474,
+      "sha256": "be204c5bbaf54b04644c8a8fe60f6c64a82a733e50385c64eb2622be6514d73b"
+    },
+    "decision_log": {
+      "git_blob_sha": "faf3f6b6a42a27bd51eb54904c9cc10c95087809",
+      "bytes": 31844,
+      "sha256": "09e673a6f7734d51edfe5db4029d9c649ba10f41a85219aceee3162df57de5bf"
+    },
+    "data_identity": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "main_has_source_sha_drift": true,
+      "source_sha_changed": false,
+      "master_seed": 20270101,
+      "rng_changed": false,
+      "model_source_files_changed": [],
+      "historical_data_or_metadata_changed": false
+    },
+    "gates": {
+      "R4_and_implementation": "PASS_STATIC_AND_FOCUSED_TESTS",
+      "gate_a_provider": "BLOCKED_GOLDEN_PROVIDER_MISSING",
+      "source_identity": "BLOCKED_SOURCE_SHA_DRIFT_IN_daily_engine.py",
+      "overall_scenario_stability": "NOT_RUN_AND_NOT_ESTABLISHED",
+      "stage11_topology": "PENDING_UNDEFINED_BUSINESS_RULE",
+      "stage13_assembler": "BLOCKED_MISSING_ARTIFACT",
+      "seven_final_deliverables": "BLOCKED_NOT_COMPLETE_OR_INDEPENDENTLY_VERIFIED",
+      "release": "NOT_CREATED"
     }
   }
 }
