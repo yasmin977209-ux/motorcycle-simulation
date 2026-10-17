@@ -107,7 +107,7 @@ def test_run_batch_uses_user_approved_policy_not_reference_defaults() -> None:
         "STATISTICAL_ESCALATION_POLICY_ID",
         "STATISTICAL_ESCALATION_MULTIPLIER",
         "constants.STATISTICAL_CHECK_START_N",
-        "constants.STABILITY_STOP_ON_FIRST_PASS",
+        '"stop_rule": "FIRST_PASSING_ELIGIBLE_TRANSITION"',
         "summarize_reference_stability_metrics",
         "evaluate_reference_stability_transition",
         "constants.CI_CONFIDENCE_LEVEL",
