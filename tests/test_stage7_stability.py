@@ -150,7 +150,7 @@ def test_reference_transition_uses_strict_absolute_rule_near_zero() -> None:
         (None, 600, None, _seven()),
         (300, 1200, _seven(), _seven()),
         (300, 600, None, _seven()),
-        (300, 600, _seven(), {**_seven()}),
+        (300, 600, _seven(), {**_seven(), "P90_Held_Assets": float("inf")}),
     ],
 )
 def test_reference_transition_blocks_missing_or_skipped_comparisons(
