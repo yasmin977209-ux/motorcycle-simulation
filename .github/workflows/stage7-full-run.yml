@@ -788,148 +788,213 @@ jobs:
                   next_trial_id=int(state["next_trial_id"]),
               )
 
-              if SCENARIO.startswith("C100_"):
-                  if len(results) != 1:
-                      raise RuntimeError(
-                          f"C100 primary sample must remain n=1, got {len(results)}"
+              current_n = len(results)
+              current_stats = statistics(results)
+              current_reference_metrics = summarize_reference_stability_metrics(results)
+
+              if current_n == 300:
+                  previous_n = None
+                  previous_stats = None
+                  reference_gate = evaluate_reference_stability_transition(
+                      previous_n=None,
+                      previous_metrics=None,
+                      current_n=300,
+                      current_metrics=current_reference_metrics,
+                  )
+                  p50_value = float(np.quantile(
+                      [result.final_net_project_equity for result in results],
+                      0.50,
+                      method="linear",
+                  ))
+                  p50_transition = {
+                      "previous_n": None,
+                      "current_n": 300,
+                      "checked": False,
+                      "stable": True,
+                      "requires_n2400": False,
+                      "change_percent": None,
+                      "absolute_change": None,
+                      "status": "BASELINE",
+                      "reason": "N=300 is mandatory coverage only",
+                  }
+              else:
+                  previous_n = current_n // ESCALATION_MULTIPLIER
+                  previous_rows = results[:previous_n]
+                  previous_stats = statistics(previous_rows)
+                  previous_reference_metrics = summarize_reference_stability_metrics(
+                      previous_rows
+                  )
+                  reference_gate = evaluate_reference_stability_transition(
+                      previous_n=previous_n,
+                      previous_metrics=previous_reference_metrics,
+                      current_n=current_n,
+                      current_metrics=current_reference_metrics,
+                  )
+                  previous_p50 = float(np.quantile(
+                      [result.final_net_project_equity for result in previous_rows],
+                      0.50,
+                      method="linear",
+                  ))
+                  p50_value = float(np.quantile(
+                      [result.final_net_project_equity for result in results],
+                      0.50,
+                      method="linear",
+                  ))
+                  p50_transition = (
+                      {
+                          "previous_n": previous_n,
+                          "current_n": current_n,
+                          "checked": False,
+                          "stable": True,
+                          "requires_n2400": False,
+                          "status": "NOT_APPLICABLE",
+                          "reason": "D-2026-10-12-01 excludes C100 from P50 continuation",
+                      }
+                      if SCENARIO.startswith("C100_")
+                      else evaluate_p50_transition(
+                          previous_n=previous_n,
+                          previous_p50=previous_p50,
+                          current_n=current_n,
+                          current_p50=p50_value,
                       )
+                  )
 
+              gate_a = evaluate_gate_a(
+                  previous_n=previous_n,
+                  previous_metrics=previous_stats,
+                  current_n=current_n,
+                  current_metrics=current_stats,
+                  escalation_multiplier=ESCALATION_MULTIPLIER,
+                  relative_epsilon=RELATIVE_EPSILON,
+                  absolute_epsilon=ABSOLUTE_EPSILON,
+              )
+              computed_gate_b = evaluate_gate_b(current_stats)
+              gate_b = (
+                  computed_gate_b
+                  if not SCENARIO.startswith("C100_") or constants.C100_CI_GATE_ENABLED
+                  else {
+                      "checked": False,
+                      "stable": True,
+                      "status": "NOT_APPLICABLE",
+                      "reason": "C100 CI applicability is unchanged; §2.5 applies separately",
+                      "metrics": computed_gate_b["metrics"],
+                  }
+              )
+
+              c100_ok = True
+              if SCENARIO.startswith("C100_") and current_n >= 2:
                   primary = results[0]
-                  verification_project = daily_engine.run_deterministic_trial(
-                      recovery_rate_pct=recovery_rate_pct,
-                      trial_id=2,
-                      scenario_id=SCENARIO,
-                      master_seed=MASTER_SEED,
-                      collection_probability=collection_probability,
-                      log_events=False,
-                  )
-                  verification = monte_carlo._trial_result_from_project(
-                      verification_project,
-                      scenario_id=SCENARIO,
-                      collection_probability=collection_probability,
-                      recovery_rate_pct=recovery_rate_pct,
-                      trial_id=2,
-                  )
-
-                  seed_primary = rng.seed_hex(
-                      MASTER_SEED,
-                      SCENARIO,
-                      1,
-                      "BK0001",
-                      constants.INITIAL_FLEET_DELIVERY_DATE,
-                      "PRIMARY_COLLECTION",
-                  )
-                  seed_verification = rng.seed_hex(
-                      MASTER_SEED,
-                      SCENARIO,
-                      2,
-                      "BK0001",
-                      constants.INITIAL_FLEET_DELIVERY_DATE,
-                      "PRIMARY_COLLECTION",
-                  )
+                  verification = results[1]
                   primary_dict = asdict(primary)
                   verification_dict = asdict(verification)
-
                   primary_trial_id = primary_dict.pop("trial_id")
                   verification_trial_id = verification_dict.pop("trial_id")
-
-                  if primary_trial_id == verification_trial_id:
-                      raise AssertionError(
-                          "C100 independence requires distinct trial_id"
-                      )
-
-                  equality = primary_dict == verification_dict
-
+                  seed_primary = rng.seed_hex(
+                      MASTER_SEED, SCENARIO, primary_trial_id, "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE, "PRIMARY_COLLECTION",
+                  )
+                  seed_verification = rng.seed_hex(
+                      MASTER_SEED, SCENARIO, verification_trial_id, "BK0001",
+                      constants.INITIAL_FLEET_DELIVERY_DATE, "PRIMARY_COLLECTION",
+                  )
+                  equality = (
+                      primary_trial_id != verification_trial_id
+                      and primary_dict == verification_dict
+                  )
                   c100_proof = {
                       "scenario": SCENARIO,
-                      "primary_trial_id": 1,
-                      "verification_trial_id": 2,
+                      "primary_trial_id": primary_trial_id,
+                      "verification_trial_id": verification_trial_id,
                       "primary_seed_hex": seed_primary,
                       "verification_seed_hex": seed_verification,
-                      "different_trial_id": True,
+                      "different_trial_id": primary_trial_id != verification_trial_id,
                       "different_derived_seed": seed_primary != seed_verification,
                       "exact_result_equality": equality,
                       "stable": equality,
+                      "source": "persisted_trial_result_rows_1_and_2",
+                      "diagnostic_trial_rerun": False,
                   }
-                  write_json(
-                      RESULTS_DIR / "c100_independent_verification.json",
-                      c100_proof,
-                  )
-
                   state["c100_independent_verification"] = c100_proof
-                  if equality:
-                      state["stable_at_n"] = 1
-                      state["final_status"] = "stable"
-                      state["reason_if_not_stable"] = None
-                  else:
-                      state["stable_at_n"] = None
-                      state["final_status"] = None
-                      state["reason_if_not_stable"] = (
-                          "independent C100 trial result mismatch"
-                      )
+                  write_json(RESULTS_DIR / "c100_independent_verification.json", c100_proof)
+                  c100_ok = equality
+
+              check_entry = {
+                  "n": current_n,
+                  "gate_a": gate_a,
+                  "gate_b": gate_b,
+                  "metrics": current_stats,
+                  "reference_metrics": current_reference_metrics,
+                  "reference_stability_gate": reference_gate,
+                  "p50_final_net_project_equity": p50_value,
+                  "p50_transition": p50_transition,
+              }
+              if SCENARIO.startswith("C100_") and current_n >= 2:
+                  check_entry["c100_independent_verification"] = state[
+                      "c100_independent_verification"
+                  ]
+              history.append(check_entry)
+              state["stability_history"] = history
+
+              gate_a_status = gate_a.get("status", "BLOCKED")
+              gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
+              gate_b_required = (
+                  not SCENARIO.startswith("C100_") or constants.C100_CI_GATE_ENABLED
+              )
+              gate_b_ok = (not gate_b_required) or gate_b.get("stable") is True
+              p50_status = p50_transition.get("status")
+              p50_blocked = p50_status == "BLOCKED"
+              p50_pending = p50_requires_n2400(history) and current_n < 2400
+              reference_pass = reference_gate.get("status") == "PASS"
+              stable_now = (
+                  current_n >= 600
+                  and gate_a_status == "PASS"
+                  and gate_a.get("checked") is True
+                  and gate_a.get("stable") is True
+                  and gate_b_ok
+                  and reference_pass
+                  and c100_ok
+                  and not p50_pending
+                  and not p50_blocked
+              )
+
+              if stable_now:
+                  state["stable_at_n"] = current_n
+                  state["final_status"] = "stable"
+                  state["reason_if_not_stable"] = None
+              elif gate_a_stop:
+                  state["stable_at_n"] = None
+                  state["final_status"] = "blocked" if gate_a_status == "BLOCKED" else "failed"
+                  state["reason_if_not_stable"] = (
+                      f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
+                      "execution stopped before the next checkpoint"
+                  )
+              elif p50_blocked:
+                  state["stable_at_n"] = None
+                  state["final_status"] = "blocked"
+                  state["reason_if_not_stable"] = "P50 continuation evidence is missing or invalid"
               else:
-                  current_stats = statistics(results)
-                  previous = history[-1] if history else None
-
-                  gate_a = evaluate_gate_a(
-                      previous_n=previous.get("n") if previous else None,
-                      previous_metrics=previous.get("metrics") if previous else None,
-                      current_n=len(results),
-                      current_metrics=current_stats,
-                      escalation_multiplier=ESCALATION_MULTIPLIER,
-                      relative_epsilon=RELATIVE_EPSILON,
-                      absolute_epsilon=ABSOLUTE_EPSILON,
-                  )
-                  gate_b = evaluate_gate_b(current_stats)
-
-                  check_entry = {
-                      "n": len(results),
-                      "gate_a": gate_a,
-                      "gate_b": gate_b,
-                      "metrics": current_stats,
-                  }
-                  history.append(check_entry)
-                  state["stability_history"] = history
-
-                  recent = history[-REQUIRED_CONSECUTIVE:]
-                  gate_a_status = gate_a.get("status", "BLOCKED")
-                  gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
-                  stable_now = (
-                      not gate_a_stop
-                      and gate_a_status == "PASS"
-                      and len(recent) == REQUIRED_CONSECUTIVE
-                      and all(
-                          item.get("gate_a", {}).get("status") == "PASS"
-                          and item.get("gate_a", {}).get("checked") is True
-                          and item.get("gate_a", {}).get("stable") is True
-                          and item.get("gate_b", {}).get("stable") is True
-                          for item in recent
-                      )
+                  state["stable_at_n"] = None
+                  state["final_status"] = None
+                  reasons = []
+                  if current_n == 300:
+                      reasons.append("N=300 is coverage only; first §2.5 transition is 300->600")
+                  elif not reference_pass:
+                      reasons.append(f"§2.5 transition {reference_gate.get('status')}")
+                  if not gate_b_ok:
+                      reasons.append("Gate B confidence-interval gate not stable")
+                  if not c100_ok:
+                      reasons.append("C100 persisted trial-1/trial-2 equality proof failed")
+                  if p50_pending:
+                      reasons.append("approved P50 rule requires the N=2400 checkpoint")
+                  if not gate_a.get("stable"):
+                      reasons.append("Gate A exact-golden identity condition not passed")
+                  state["reason_if_not_stable"] = "; ".join(reasons) or (
+                      "current eligible transition has not met all applicable gates"
                   )
 
-                  if stable_now:
-                      state["stable_at_n"] = len(results)
-                      state["final_status"] = "stable"
-                      state["reason_if_not_stable"] = None
-                  elif gate_a_stop:
-                      state["stable_at_n"] = None
-                      state["final_status"] = (
-                          "blocked" if gate_a_status == "BLOCKED" else "failed"
-                      )
-                      state["reason_if_not_stable"] = (
-                          f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
-                          "execution stopped before the next checkpoint"
-                      )
-                  else:
-                      state["stable_at_n"] = None
-                      state["final_status"] = None
-                      state["reason_if_not_stable"] = (
-                          "dual stability gates not yet satisfied"
-                      )
-
-                  target_n = next_statistical_checkpoint(completed)
-                  state["next_check_n"] = target_n
-                  state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+              target_n = next_statistical_checkpoint(completed)
+              state["next_check_n"] = target_n
+              state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
 
               state["stability_history"] = history
               state["included_in_final_stats"] = state["final_status"] == "stable"
