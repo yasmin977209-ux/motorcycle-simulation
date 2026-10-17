@@ -22,6 +22,10 @@ from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
     STATISTICAL_ESCALATION_MULTIPLIER,
     evaluate_gate_a as evaluate_stage7_gate_a,
+    evaluate_p50_transition,
+    evaluate_reference_stability_transition,
+    p50_requires_n2400,
+    summarize_reference_stability_metrics,
     filter_statistical_history,
     next_statistical_checkpoint,
 )
@@ -92,9 +96,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         if args.scenario.startswith("C100_")
         else constants.NON_C100_STATISTICAL_START_TRIALS
     )
-    if args.scenario.startswith("C100_") and args.trials != initial_trials:
-        raise ValueError("C100 policy requires exactly one trial")
-
     return args
 
 
@@ -323,7 +324,7 @@ def _checkpoint_identity_is_valid(
     next_trial_id = int(checkpoint.get("next_trial_id", 0))
     next_check_n = int(checkpoint.get("next_check_n", 0))
 
-    if not scenario.startswith("C100_") and next_check_n <= completed_trials:
+    if next_check_n <= completed_trials:
         raise StateIntegrityError(
             "checkpoint next_check_n must be greater than completed_trials"
         )
@@ -574,17 +575,6 @@ def run_batch(
         checkpoint=checkpoint,
     )
 
-    if (
-        scenario.startswith("C100_")
-        and (
-            resolved_start != constants.C100_STATISTICAL_START_TRIALS
-            or trials != constants.C100_STATISTICAL_START_TRIALS
-        )
-    ):
-        raise StateIntegrityError(
-            "C100 policy permits exactly one trial"
-        )
-
     _ensure_output_contract(
         output_dir,
         resume_from_checkpoint=resume_from_checkpoint,
@@ -599,11 +589,7 @@ def run_batch(
     if resume_from_checkpoint:
         _validate_resume_dataset(results, checkpoint)
 
-    initial_target = (
-        constants.C100_STATISTICAL_START_TRIALS
-        if scenario.startswith("C100_")
-        else constants.NON_C100_STATISTICAL_START_TRIALS
-    )
+    initial_target = constants.STATISTICAL_CHECK_START_N
 
     state = _new_state(
         scenario=scenario,
@@ -621,7 +607,10 @@ def run_batch(
         "non_c100_start_trials": constants.NON_C100_STATISTICAL_START_TRIALS,
         "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
-        "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
+        "stop_rule": "FIRST_PASSING_ELIGIBLE_TRANSITION",
+        "reference_stability_metrics": list(constants.REFERENCE_STABILITY_INDICATORS),
+        "n300_role": "MANDATORY_COVERAGE_ONLY",
+        "first_stability_transition": "300->600",
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
         "ci_relative_tolerance": constants.CI_RELATIVE_TOLERANCE,
         "ci_absolute_epsilon": constants.CI_ABSOLUTE_EPSILON,
