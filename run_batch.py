@@ -847,6 +847,32 @@ def run_batch(
             _atomic_write_json(output_dir / STATE_JSON, state)
             gate_a_preflight_stop = True
 
+    # A new or pre-checkpoint dataset must not start a statistical sample when
+    # the exact approved-Golden provider is absent. Fail before generating any IDs.
+    if len(results) < constants.STATISTICAL_CHECK_START_N:
+        eligible_history = [
+            item for item in state.get("stability_history", [])
+            if item.get("n") is not None
+            and is_statistical_checkpoint(int(item["n"]))
+            and int(item["n"]) <= len(results)
+        ]
+        latest_eligible = max(
+            eligible_history,
+            key=lambda item: int(item["n"]),
+            default=None,
+        )
+        if latest_eligible is None or latest_eligible.get("gate_a", {}).get("status") != "PASS":
+            preflight = evaluate_gate_a(
+                previous_metrics=None,
+                previous_n=None,
+                current_metrics={},
+                current_n=constants.STATISTICAL_CHECK_START_N,
+            )
+            raise StateIntegrityError(
+                "Gate A production preflight is blocked before trial execution: "
+                + str(preflight.get("reason") or preflight.get("status"))
+            )
+
     batch_end = resolved_start + trials - 1
     resolved_next_check = state["next_check_n"]
     stop_for_gate = False
