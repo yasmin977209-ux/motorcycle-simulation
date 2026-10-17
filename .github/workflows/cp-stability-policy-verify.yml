@@ -65,11 +65,11 @@ jobs:
           script_lines = script.splitlines()
           start = next(
               (index for index, line in enumerate(script_lines)
-               if line.strip() == "python - <<'PY'"),
+               if line.strip() == "cat > /tmp/stage7_orchestrator.py <<'PY'"),
               None,
           )
           if start is None:
-              raise AssertionError("embedded Stage 7 Python entrypoint heredoc not found")
+              raise AssertionError("embedded Stage 7 orchestrator heredoc not found")
           stop = next(
               (index for index in range(start + 1, len(script_lines))
                if script_lines[index].strip() == "PY"),
