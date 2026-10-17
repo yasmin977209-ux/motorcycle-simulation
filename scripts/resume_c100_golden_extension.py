@@ -46,6 +46,13 @@ def expected_prior_keys():
         out.update((scenario,n) for n in range(2,2+count))
     return out
 
+def validate_prior_coverage(keys, counts):
+    """Validate the exact prior prefix, including scenarios whose approved count is zero."""
+    normalized_counts={scenario: counts.get(scenario,0) for scenario in SCENARIOS}
+    if set(keys)!=expected_prior_keys() or normalized_counts!=PRIOR_COUNTS:
+        raise RuntimeError("PRIOR_PROGRESS_COVERAGE_OR_SCENARIO_COUNTS_MISMATCH")
+    return normalized_counts
+
 def missing_keys(existing):
     existing=set(existing)
     if existing != expected_prior_keys():
@@ -107,8 +114,7 @@ def read_prior_archive(path):
         s,n,_=validate_record(row,PRIOR_RUN_ID,PRIOR_RUN_ATTEMPT)
         if (s,n) in keys: raise RuntimeError(f"PRIOR_DUPLICATE_KEY:{s}:{n}")
         keys.add((s,n)); counts[s]+=1; rows.append(row)
-    if keys!=expected_prior_keys() or dict(counts)!=PRIOR_COUNTS:
-        raise RuntimeError("PRIOR_PROGRESS_COVERAGE_OR_SCENARIO_COUNTS_MISMATCH")
+    validate_prior_coverage(keys,counts)
     audit={"run_id":PRIOR_RUN_ID,"run_attempt":PRIOR_RUN_ATTEMPT,"branch":PRIOR_BRANCH,
            "workflow_head_sha":PRIOR_HEAD,"artifact_id":PRIOR_ARTIFACT_ID,
            "archive_bytes":len(raw),"archive_sha256":sha256(raw),"member":PRIOR_MEMBER,
@@ -151,18 +157,50 @@ def check_model_imports(source_root):
         if probability!=1.0 or recovery!=g: raise RuntimeError(f"SCENARIO_PARAMETERS_MISMATCH:{s}")
     return proof,monte_carlo
 
+def _write_run_status(output_path, updates):
+    status_path=Path(output_path).parent/"continuation_status.json"
+    status_path.parent.mkdir(parents=True,exist_ok=True)
+    try:
+        current=json.loads(status_path.read_text(encoding="utf-8")) if status_path.is_file() else {}
+    except Exception:
+        current={}
+    current.update(updates)
+    status_path.write_text(json.dumps(current,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    return status_path
+
 def run(args):
+    output,progress,audit_path=map(Path,(args.output,args.progress,args.base_audit))
+    output.parent.mkdir(parents=True,exist_ok=True)
+    progress.parent.mkdir(parents=True,exist_ok=True)
+    audit_path.parent.mkdir(parents=True,exist_ok=True)
+    run_context={
+        "workflow_run_id":int(os.environ.get("GITHUB_RUN_ID","0") or 0),
+        "workflow_run_attempt":int(os.environ.get("GITHUB_RUN_ATTEMPT","0") or 0),
+        "workflow_head_sha":os.environ.get("GITHUB_SHA",""),
+        "branch":os.environ.get("GITHUB_REF_NAME",""),
+        "source_sha":SOURCE_SHA,"source_commit":SOURCE_COMMIT,"master_seed":MASTER_SEED,
+    }
+    _write_run_status(output,{"schema_version":"c100-resume-execution-status-v1",
+        "status":"RUNNING","phase":"PRECHECK","generation_started":False,**run_context})
     if os.environ.get("SOURCE_SHA")!=SOURCE_SHA or os.environ.get("MASTER_SEED")!=str(MASTER_SEED):
         raise RuntimeError("SOURCE_SHA_OR_SEED_ENVIRONMENT_MISMATCH")
     rid=int(os.environ.get("GITHUB_RUN_ID","0")); attempt=int(os.environ.get("GITHUB_RUN_ATTEMPT","0"))
     head=os.environ.get("GITHUB_SHA","")
     if rid<1 or attempt!=1 or not GIT_RE.fullmatch(head): raise RuntimeError("CONTINUATION_RUN_PROVENANCE_INVALID")
-    output,progress,audit_path=map(Path,(args.output,args.progress,args.base_audit))
     if output.exists() or progress.exists(): raise RuntimeError("CONTINUATION_OUTPUT_ALREADY_EXISTS_NO_RERUN")
     prior,prior_audit=read_prior_archive(Path(args.prior_artifact_zip))
+    _write_run_status(output,{"phase":"PRIOR_ARTIFACT_VERIFIED","generation_started":False,
+        "prior_record_count":len(prior),"prior_archive_sha256":prior_audit["archive_sha256"],
+        "prior_member_sha256":prior_audit["member_sha256"]})
     # Reconstruct all pinned prior evidence and require the exact 25,205-row baseline before any generation.
     base,base_audit=reconstruct_base()
+    _write_run_status(output,{"phase":"APPROVED_BASE_MAP_VERIFIED","generation_started":False,
+        "base_map_count":base_audit["trial_count"],"base_map_sha256":base_audit["ordered_map_sha256"],
+        "golden_reference_id":base_audit["golden_reference_id"]})
     proof,engine=check_model_imports(Path(args.source_root).resolve())
+    _write_run_status(output,{"phase":"SOURCE_CLOSURE_VERIFIED","generation_started":False,
+        "model_file_count":proof.get("model_file_count"),
+        "all_model_file_blobs_equal":proof.get("all_model_file_blobs_equal")})
     prior_keys={(r["scenario_id"],r["trial_id"]) for r in prior}
     missing=missing_keys(prior_keys)
     output.parent.mkdir(parents=True,exist_ok=True)
@@ -170,6 +208,9 @@ def run(args):
        "source_closure":proof,"missing_count":len(missing),"missing_ranges":{"C100_G070":"253..600","C100_G100":"2..600"},
        "generation_started_only_after_preflight":True},ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
     new=[]
+    _write_run_status(output,{"phase":"GENERATION_STARTED","generation_started":True,
+        "planned_new_record_count":len(missing),
+        "planned_missing_ranges":{"C100_G070":"253..600","C100_G100":"2..600"}})
     with progress.open("x",encoding="utf-8",newline="\n") as stream:
         for s,n in missing:
             if (s,n) in prior_keys: raise RuntimeError(f"REFUSE_COMPLETED_KEY:{s}:{n}")
@@ -219,6 +260,14 @@ def run(args):
     if (len(saved_index)!=2995 or ordered_extension_map_sha256(saved["records"])!=extension_sha
         or saved.get("combined_ordered_map_sha256")!=final_sha or saved.get("combined_map_count")!=FINAL_MAP_COUNT):
         raise RuntimeError("POST_WRITE_AUDIT_FAILED")
+    _write_run_status(output,{"status":"COMPLETE_PENDING_INDEPENDENT_ARTIFACT_AUDIT",
+        "phase":"COMPLETE_PENDING_INDEPENDENT_ARTIFACT_AUDIT","generation_started":True,
+        "prior_records_verified":len(prior),"new_records_generated":len(new),
+        "extension_record_count":len(saved["records"]),"extension_map_sha256":extension_sha,
+        "combined_map_count":final_count,"combined_ordered_map_sha256":final_sha,
+        "output_bytes":output.stat().st_size,"output_sha256":sha256(output.read_bytes()),
+        "progress_bytes":progress.stat().st_size,"completed_ids_rerun":False,
+        "production_checkpoint_accepted":False})
     print(json.dumps({"status":saved["status"],"prior_records_verified":len(prior),"missing_records_generated":len(new),
       "total_extension_records":len(saved["records"]),"base_map_count":BASE_MAP_COUNT,"base_map_sha256":BASE_MAP_SHA256,
       "combined_map_count":final_count,"combined_ordered_map_sha256":final_sha,"extension_map_sha256":extension_sha,
@@ -234,7 +283,25 @@ def main():
     p.add_argument("--progress",default="results_gatea_resume/c100_golden_extension.resume.progress.jsonl")
     p.add_argument("--base-audit",default="results_gatea_resume/base_map_audit.json")
     a=p.parse_args()
-    if not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")): raise RuntimeError("GOLDEN_PROVIDER_TOKEN_MISSING")
-    run(a); return 0
+    try:
+        if not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
+            raise RuntimeError("GOLDEN_PROVIDER_TOKEN_MISSING")
+        run(a)
+        return 0
+    except Exception as exc:
+        status_path=Path(a.output).parent/"continuation_status.json"
+        status_path.parent.mkdir(parents=True,exist_ok=True)
+        try:
+            status=json.loads(status_path.read_text(encoding="utf-8")) if status_path.is_file() else {}
+        except Exception:
+            status={}
+        status.update({"status":"FAIL","error_type":type(exc).__name__,"error":str(exc),
+            "workflow_run_id":int(os.environ.get("GITHUB_RUN_ID","0") or 0),
+            "workflow_run_attempt":int(os.environ.get("GITHUB_RUN_ATTEMPT","0") or 0),
+            "workflow_head_sha":os.environ.get("GITHUB_SHA",""),
+            "branch":os.environ.get("GITHUB_REF_NAME",""),
+            "source_sha":SOURCE_SHA,"source_commit":SOURCE_COMMIT,"master_seed":MASTER_SEED})
+        status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+        raise
 
 if __name__=="__main__": raise SystemExit(main())

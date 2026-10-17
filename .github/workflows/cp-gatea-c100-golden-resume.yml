@@ -30,73 +30,190 @@ jobs:
           ref: tmp/cp-gatea-c100-resume-20261017
           fetch-depth: 0
 
-      - name: Verify current HEAD and one-time continuation guard
+      - name: Initialize diagnostic evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results_gatea_resume
+          cat > results_gatea_resume/run_context.json <<EOF
+          {
+            "branch": "${GITHUB_REF_NAME}",
+            "head_sha": "${GITHUB_SHA}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "run_attempt": "${GITHUB_RUN_ATTEMPT}",
+            "source_sha": "${SOURCE_SHA}",
+            "source_commit": "${SOURCE_COMMIT}",
+            "master_seed": "${MASTER_SEED}",
+            "scope": "C100_GATE_A_GOLDEN_EXTENSION_ONLY",
+            "production_checkpoint_authorized": false
+          }
+          EOF
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path("results_gatea_resume/continuation_status.json").write_text(
+              json.dumps({
+                  "schema_version":"c100-resume-execution-status-v1",
+                  "status":"RUNNING","phase":"WORKFLOW_PREFLIGHT","generation_started":False,
+                  "workflow_run_id":int(os.environ["GITHUB_RUN_ID"]),
+                  "workflow_head_sha":os.environ["GITHUB_SHA"],
+                  "branch":os.environ["GITHUB_REF_NAME"],
+                  "source_sha":os.environ["SOURCE_SHA"],
+                  "source_commit":os.environ["SOURCE_COMMIT"],
+                  "master_seed":int(os.environ["MASTER_SEED"]),
+              },indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+
+      - name: Verify branch history and pre-generation-only retry safety
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.run_id }}
+          CURRENT_HEAD_SHA: ${{ github.sha }}
+        shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse HEAD)" = "$CURRENT_HEAD_SHA"
           gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cp-gatea-c100-golden-resume.yml/runs?branch=tmp/cp-gatea-c100-resume-20261017&per_page=100" > "$RUNNER_TEMP/continuation_runs.json"
-          python - <<'PY' > "$RUNNER_TEMP/guard_decision.txt"
-          import json, os, sys
-          path=os.path.join(os.environ["RUNNER_TEMP"],"continuation_runs.json")
-          payload=json.load(open(path,encoding="utf-8")); current=int(os.environ["RUN_ID"])
-          previous=[x for x in payload.get("workflow_runs",[]) if int(x.get("id",-1))!=current]
-          if not previous:
-              print("FIRST_ATTEMPT")
-              raise SystemExit(0)
-          if len(previous)!=1:
-              print("UNEXPECTED_PRIOR_RUN_COUNT="+str(len(previous)))
-              raise SystemExit(1)
-          prior=previous[0]
-          expected={"id":39002852709,"head_sha":"693a74967cf69b5d428bb85afacaa4552fb510d6",
-                    "status":"completed","conclusion":"failure","head_branch":"tmp/cp-gatea-c100-resume-20261017"}
-          actual={k:prior.get(k) for k in expected}
-          if actual!=expected:
-              print("PRIOR_RUN_NOT_THE_APPROVED_PREGENERATION_FAILURE="+json.dumps(actual,sort_keys=True))
-              raise SystemExit(1)
-          print("RECONCILE_ONE_KNOWN_PREGENERATION_FAILURE")
-          PY
-          GUARD_DECISION="$(cat "$RUNNER_TEMP/guard_decision.txt")"
-          if [ "$GUARD_DECISION" = "RECONCILE_ONE_KNOWN_PREGENERATION_FAILURE" ]; then
-            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709" > "$RUNNER_TEMP/prior_failed_run.json"
-            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709/jobs?per_page=100" > "$RUNNER_TEMP/prior_failed_jobs.json"
-            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709/artifacts?per_page=100" > "$RUNNER_TEMP/prior_failed_artifacts.json"
-            python - <<'PY'
-          import json, os, sys
+          python - <<'PY' > "$RUNNER_TEMP/prior_run_ids.txt"
+          import json, os, subprocess, sys
           root=os.environ["RUNNER_TEMP"]
-          run=json.load(open(os.path.join(root,"prior_failed_run.json"),encoding="utf-8"))
-          jobs=json.load(open(os.path.join(root,"prior_failed_jobs.json"),encoding="utf-8")).get("jobs",[])
-          artifacts=json.load(open(os.path.join(root,"prior_failed_artifacts.json"),encoding="utf-8")).get("artifacts",[])
-          if not (run.get("id")==39002852709 and run.get("head_sha")=="693a74967cf69b5d428bb85afacaa4552fb510d6"
-                  and run.get("head_branch")=="tmp/cp-gatea-c100-resume-20261017"
-                  and run.get("status")=="completed" and run.get("conclusion")=="failure"):
-              raise SystemExit("PRIOR_RUN_IDENTITY_NOT_CONFIRMED")
-          if len(jobs)!=1:
-              raise SystemExit("PRIOR_RUN_JOB_COUNT_NOT_ONE")
-          job=jobs[0]
-          if job.get("status")!="completed" or job.get("conclusion")!="failure":
-              raise SystemExit("PRIOR_RUN_JOB_NOT_PREGENERATION_FAILURE")
-          steps={step.get("name"):step.get("conclusion") for step in job.get("steps",[])}
-          required={
-              "Run focused deterministic continuation tests":"failure",
-              "Verify immutable approved source closure":"skipped",
-              "Reconstruct prior base map and run only missing IDs":"skipped",
+          payload=json.load(open(os.path.join(root,"continuation_runs.json"),encoding="utf-8"))
+          current=int(os.environ["RUN_ID"])
+          previous=[x for x in payload.get("workflow_runs",[]) if int(x.get("id",-1))!=current]
+          legacy={
+              39002852709:("693a74967cf69b5d428bb85afacaa4552fb510d6","failure"),
+              39003715853:("4cac8d024d0c0a0a72007f964258cf00388ce33a","failure"),
           }
-          if any(steps.get(name)!=conclusion for name,conclusion in required.items()):
-              raise SystemExit("PRIOR_RUN_STEP_BOUNDARY_NOT_PROVEN="+json.dumps(steps,sort_keys=True))
-          if artifacts:
-              raise SystemExit("PRIOR_FAILED_RUN_HAS_ARTIFACTS="+json.dumps(artifacts,sort_keys=True))
-          print("PREGENERATION_FAILURE_RECONCILED=PASS")
-          print("PRIOR_GENERATION_STEP=SKIPPED")
-          print("PRIOR_ARTIFACT_COUNT=0")
+          ids={int(x["id"]) for x in previous}
+          if not set(legacy).issubset(ids):
+              raise SystemExit("EXPECTED_LEGACY_PREGENERATION_FAILURE_HISTORY_MISSING")
+          for run in previous:
+              rid=int(run["id"])
+              if run.get("head_branch")!="tmp/cp-gatea-c100-resume-20261017":
+                  raise SystemExit(f"PRIOR_RUN_WRONG_BRANCH:{rid}")
+              if run.get("status")!="completed" or run.get("conclusion")!="failure":
+                  raise SystemExit(f"PRIOR_RUN_NOT_A_COMPLETED_FAILURE:{rid}")
+              if subprocess.run(["git","merge-base","--is-ancestor",run["head_sha"],os.environ["CURRENT_HEAD_SHA"]]).returncode!=0:
+                  raise SystemExit(f"PRIOR_TESTED_SHA_NOT_ANCESTOR:{rid}")
+              if rid in legacy:
+                  if (run.get("head_sha"),run.get("conclusion"))!=legacy[rid]:
+                      raise SystemExit(f"LEGACY_RUN_IDENTITY_MISMATCH:{rid}")
+              elif run.get("created_at","") < "2026-10-17T04:45:19Z":
+                  raise SystemExit(f"UNEXPECTED_OLDER_RUN:{rid}")
+              print(rid)
           PY
-          elif [ "$GUARD_DECISION" != "FIRST_ATTEMPT" ]; then
-            echo "ONE_TIME_CONTINUATION_GUARD=FAIL: $GUARD_DECISION" >&2
-            exit 1
-          fi
-          echo "ONE_TIME_CONTINUATION_GUARD=PASS"
+          while IFS= read -r prior_id; do
+            [ -n "$prior_id" ] || continue
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${prior_id}" > "$RUNNER_TEMP/prior_${prior_id}_run.json"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${prior_id}/jobs?per_page=100" > "$RUNNER_TEMP/prior_${prior_id}_jobs.json"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${prior_id}/artifacts?per_page=100" > "$RUNNER_TEMP/prior_${prior_id}_artifacts.json"
+            set +e
+            gh run view "$prior_id" --log > "$RUNNER_TEMP/prior_${prior_id}.log" 2>&1
+            log_rc=$?
+            set -e
+            test "$log_rc" -eq 0
+            if [ "$prior_id" != "39002852709" ] && [ "$prior_id" != "39003715853" ]; then
+              gh run download "$prior_id" --name gatea-c100-golden-continuation --dir "$RUNNER_TEMP/prior_${prior_id}_artifact"
+            fi
+          done < "$RUNNER_TEMP/prior_run_ids.txt"
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          legacy={
+              39002852709:{
+                  "sha":"693a74967cf69b5d428bb85afacaa4552fb510d6",
+                  "log_marker":"ImportError: cannot import name 'expected_extension_keys'",
+                  "steps":{
+                      "Run focused deterministic continuation tests":"failure",
+                      "Verify immutable approved source closure":"skipped",
+                      "Reconstruct prior base map and run only missing IDs":"skipped",
+                  },
+              },
+              39003715853:{
+                  "sha":"4cac8d024d0c0a0a72007f964258cf00388ce33a",
+                  "log_marker":"RuntimeError: PRIOR_PROGRESS_COVERAGE_OR_SCENARIO_COUNTS_MISMATCH",
+                  "steps":{
+                      "Run focused deterministic continuation tests":"success",
+                      "Verify immutable approved source closure":"success",
+                      "Reconstruct prior base map and run only missing IDs":"failure",
+                  },
+              },
+          }
+          ids=[int(x) for x in (root/"prior_run_ids.txt").read_text().splitlines() if x.strip()]
+          for rid in ids:
+              run=json.load(open(root/f"prior_{rid}_run.json",encoding="utf-8"))
+              jobs=json.load(open(root/f"prior_{rid}_jobs.json",encoding="utf-8")).get("jobs",[])
+              artifacts=json.load(open(root/f"prior_{rid}_artifacts.json",encoding="utf-8")).get("artifacts",[])
+              log=(root/f"prior_{rid}.log").read_text(encoding="utf-8",errors="replace")
+              if len(jobs)!=1:
+                  raise SystemExit(f"PRIOR_JOB_COUNT_NOT_ONE:{rid}")
+              job=jobs[0]
+              steps={x.get("name"):x.get("conclusion") for x in job.get("steps",[])}
+              if rid in legacy:
+                  rule=legacy[rid]
+                  if run.get("head_sha")!=rule["sha"] or run.get("conclusion")!="failure":
+                      raise SystemExit(f"LEGACY_RUN_IDENTITY_FAIL:{rid}")
+                  if artifacts:
+                      raise SystemExit(f"LEGACY_RUN_UNEXPECTED_ARTIFACTS:{rid}")
+                  if job.get("status")!="completed" or job.get("conclusion")!="failure":
+                      raise SystemExit(f"LEGACY_JOB_STATUS_FAIL:{rid}")
+                  if any(steps.get(k)!=v for k,v in rule["steps"].items()):
+                      raise SystemExit(f"LEGACY_STEP_BOUNDARY_FAIL:{rid}:"+json.dumps(steps,sort_keys=True))
+                  if rule["log_marker"] not in log:
+                      raise SystemExit(f"LEGACY_FAILURE_SIGNATURE_MISSING:{rid}")
+                  src=subprocess.check_output(["git","show",f"{rule['sha']}:scripts/resume_c100_golden_extension.py"],text=True)
+                  run_body=src[src.index("def run(args):"):]
+                  generation_open=run_body.find('with progress.open("x"')
+                  if generation_open<0:
+                      raise SystemExit(f"LEGACY_GENERATION_BOUNDARY_UNKNOWN:{rid}")
+                  if rid==39002852709:
+                      tests=subprocess.check_output(["git","show",f"{rule['sha']}:tests/test_c100_golden_extension_resume.py"],text=True)
+                      if "expected_extension_keys" not in tests or "def expected_extension_keys" in src:
+                          raise SystemExit("FIRST_FAILURE_IMPORT_CONTRACT_NOT_REPRODUCED")
+                  else:
+                      count_check=run_body.find("prior,prior_audit=read_prior_archive")
+                      if not (0<=count_check<generation_open):
+                          raise SystemExit("SECOND_FAILURE_NOT_BEFORE_GENERATION")
+                  print(f"LEGACY_PREGENERATION_FAILURE_RECONCILED={rid}")
+                  continue
+              if run.get("conclusion")!="failure" or job.get("conclusion")!="failure":
+                  raise SystemExit(f"PRIOR_RUN_NOT_SAFE_TO_RETRY:{rid}")
+              if not artifacts or len(artifacts)!=1 or artifacts[0].get("name")!="gatea-c100-golden-continuation" or artifacts[0].get("expired") is True:
+                  raise SystemExit(f"PRIOR_DIAGNOSTIC_ARTIFACT_MISSING:{rid}")
+              artifact_root=root/f"prior_{rid}_artifact"
+              status_files=list(artifact_root.rglob("continuation_status.json"))
+              exit_files=list(artifact_root.rglob("process_exit_code.txt"))
+              log_files=list(artifact_root.rglob("continuation.log"))
+              if len(status_files)!=1 or len(exit_files)!=1 or len(log_files)!=1:
+                  raise SystemExit(f"PRIOR_DIAGNOSTIC_FILES_INCOMPLETE:{rid}")
+              status=json.loads(status_files[0].read_text(encoding="utf-8"))
+              if status.get("status")!="FAIL" or status.get("generation_started") is not False:
+                  raise SystemExit(f"PRIOR_GENERATION_MAY_HAVE_STARTED:{rid}")
+              if status.get("phase") not in {"PRECHECK","PRIOR_ARTIFACT_VERIFIED","APPROVED_BASE_MAP_VERIFIED","SOURCE_CLOSURE_VERIFIED"}:
+                  raise SystemExit(f"PRIOR_PHASE_NOT_PREGENERATION:{rid}:{status.get('phase')}")
+              if status.get("workflow_run_id")!=rid or status.get("workflow_head_sha")!=run.get("head_sha") or status.get("branch")!="tmp/cp-gatea-c100-resume-20261017":
+                  raise SystemExit(f"PRIOR_DIAGNOSTIC_IDENTITY_MISMATCH:{rid}")
+              if exit_files[0].read_text().strip()!="1":
+                  raise SystemExit(f"PRIOR_SCRIPT_EXIT_CODE_NOT_FAILURE:{rid}")
+              progress_files=list(artifact_root.rglob("*.resume.progress.jsonl"))
+              if any(p.stat().st_size!=0 for p in progress_files):
+                  raise SystemExit(f"PRIOR_PROGRESS_RECORDS_EXIST_NO_REPLAY:{rid}")
+              if list(artifact_root.rglob("c100_golden_extension.json")):
+                  raise SystemExit(f"PRIOR_FINAL_OUTPUT_EXISTS_NO_RERUN:{rid}")
+              log_text=log_files[0].read_text(encoding="utf-8",errors="replace")
+              if status.get("error") and status["error"] not in log_text:
+                  raise SystemExit(f"PRIOR_DIAGNOSTIC_ERROR_NOT_LINKED_TO_LOG:{rid}")
+              required={
+                  "Run C100 continuation with diagnostic capture":"success",
+                  "Upload inspectable output and progress even on failure":"success",
+                  "Enforce successful continuation completion":"failure",
+              }
+              if any(steps.get(k)!=v for k,v in required.items()):
+                  raise SystemExit(f"PRIOR_WORKFLOW_STEP_BOUNDARY_NOT_PROVEN:{rid}:"+json.dumps(steps,sort_keys=True))
+              print(f"PREGENERATION_FAILURE_RECONCILED_FROM_ARTIFACT={rid}")
+          print("NO_COMPLETED_OR_PARTIAL_TRIAL_CAN_BE_REPLAYED=PASS")
+          PY
 
       - name: Verify original cancelled Run and immutable partial artifact
         env:
@@ -153,7 +270,7 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/pinned-model-source" rev-parse HEAD)" = "${SOURCE_COMMIT}"
           echo "MODEL_SOURCE_CLOSURE_EQUAL=14/14"
 
-      - name: Reconstruct prior base map and run only missing IDs
+      - name: Run C100 continuation with diagnostic capture
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -162,14 +279,22 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           PYTHONPATH: ${{ runner.temp }}/pinned-model-source:.
+        shell: bash
         run: |
-          set -euo pipefail
+          set +e
+          mkdir -p results_gatea_resume
           python scripts/resume_c100_golden_extension.py \
             --prior-artifact-zip "$RUNNER_TEMP/prior-artifact.zip" \
             --source-root "$RUNNER_TEMP/pinned-model-source" \
             --output results_gatea_resume/c100_golden_extension.json \
             --progress results_gatea_resume/c100_golden_extension.resume.progress.jsonl \
-            --base-audit results_gatea_resume/base_map_audit.json
+            --base-audit results_gatea_resume/base_map_audit.json \
+            > results_gatea_resume/continuation.log 2>&1
+          rc=$?
+          cat results_gatea_resume/continuation.log
+          printf '%s\n' "$rc" > results_gatea_resume/process_exit_code.txt
+          echo "CONTINUATION_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          exit 0
 
       - name: Upload inspectable output and progress even on failure
         if: always()
@@ -177,6 +302,23 @@ jobs:
         with:
           name: gatea-c100-golden-continuation
           path: results_gatea_resume/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 90
           compression-level: 6
+
+      - name: Enforce successful continuation completion
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${CONTINUATION_EXIT_CODE:-999}" = "0"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          status=json.loads(Path("results_gatea_resume/continuation_status.json").read_text(encoding="utf-8"))
+          if status.get("status")!="COMPLETE_PENDING_INDEPENDENT_ARTIFACT_AUDIT":
+              raise SystemExit("CONTINUATION_NOT_COMPLETE_OR_AUDIT_PENDING")
+          if status.get("generation_started") is not True or status.get("new_records_generated")!=947:
+              raise SystemExit("CONTINUATION_GENERATION_SCOPE_MISMATCH")
+          print("CONTINUATION_OUTPUT_READY_FOR_INDEPENDENT_AUDIT=PASS")
+          PY

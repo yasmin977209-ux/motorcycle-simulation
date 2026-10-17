@@ -1,7 +1,8 @@
 from __future__ import annotations
+from collections import Counter
 import pytest
 from scripts.generate_c100_golden_extension import MASTER_SEED, SOURCE_COMMIT, SOURCE_SHA, EXTENSION_SCHEMA_VERSION, SCENARIOS, canonical_result_sha256
-from scripts.resume_c100_golden_extension import PRIOR_RUN_ID, expected_extension_keys, expected_prior_keys, missing_keys, validate_record, validate_records
+from scripts.resume_c100_golden_extension import PRIOR_COUNTS, PRIOR_RUN_ID, expected_extension_keys, expected_prior_keys, missing_keys, validate_prior_coverage, validate_record, validate_records
 
 def row(s="C100_G000",n=2,rid=PRIOR_RUN_ID):
     result={"scenario_id":s,"trial_id":n,"value":n*10}
@@ -38,3 +39,17 @@ def test_duplicate_keys_and_unapproved_run_provenance_are_rejected():
     with pytest.raises(RuntimeError,match="DUPLICATE_TRIAL_ID"): validate_records([r,dict(r)],{PRIOR_RUN_ID})
     r=row(rid=777)
     with pytest.raises(RuntimeError,match="TRIAL_RUN_NOT_ALLOWED"): validate_records([r],{PRIOR_RUN_ID})
+
+def test_prior_coverage_treats_absent_zero_record_scenario_as_expected_zero():
+    prior_keys=expected_prior_keys()
+    observed=Counter(s for s,_ in prior_keys)
+    assert "C100_G100" not in observed
+    assert PRIOR_COUNTS["C100_G100"] == 0
+    assert validate_prior_coverage(prior_keys,observed) == PRIOR_COUNTS
+
+def test_prior_coverage_rejects_a_gap_even_when_counts_are_recomputed():
+    prior_keys=expected_prior_keys()
+    prior_keys.remove(("C100_G070",252))
+    observed=Counter(s for s,_ in prior_keys)
+    with pytest.raises(RuntimeError,match="PRIOR_PROGRESS_COVERAGE_OR_SCENARIO_COUNTS_MISMATCH"):
+        validate_prior_coverage(prior_keys,observed)
