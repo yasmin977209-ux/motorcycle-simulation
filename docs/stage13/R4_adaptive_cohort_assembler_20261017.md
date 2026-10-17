@@ -59,3 +59,37 @@ This addendum records evidence-binding details made explicit while implementing 
 - Adaptive code and synthetic regression tests are candidate-branch changes only.
 - Focused pytest execution is **PENDING/BLOCKED** because the available container cannot resolve GitHub directly, and no currently approved workflow executes tests for this candidate branch. The approval for this CP explicitly excludes workflow modification.
 - No production simulation, trial generation, source/RNG/seed change, historical dataset edit, main edit, or Release was performed.
+
+
+## R4 addendum — Gate B P50 continuation-order fix and temporary test workflow
+
+**Recorded:** 2026-10-17  
+**Owner approval:** The user explicitly replied “نعم” to creating a temporary, branch-pinned workflow to execute the focused synthetic Stage 13 test suite. This later approval changes only the prior “no workflow edits” exclusion for the single test workflow described here. It does not authorize merging, editing `main`, running production simulations, generating trials, changing golden/source/seed/RNG/sampling policy, or releasing deliverables.
+
+### Finding before change
+
+Static review of `scripts/stage13_assemble.py` found that the non-final “first passing checkpoint” guard ran before the Gate B P50 continuation rule. When Gate A, Gate B, and the seven §2.5 metrics passed at N=600 but the approved P50 rule required continuing to N=2400, the guard could reject the allowed continuation as `ADAPTIVE_STOPPED_AFTER_FIRST_PASS_VIOLATION` before recording that continuation was mandatory. This is a **K_CODE** finding based on the exact control-flow ordering (pre-change lines 898–925 of blob `72b0a7d7db17be0d270a486f87c070ea4a2776c5`), not a runtime test result.
+
+### Authorized bounded fix
+
+1. Evaluate and validate the P50 trigger for the current eligible checkpoint before applying the early-stop guard.
+2. Preserve the trigger across later checkpoints; while N=2400 is mandated by a prior trigger, an otherwise passing N=600 or N=1200 checkpoint is not an eligible stopping point.
+3. Keep the approved strict >5% relative-change trigger and near-zero absolute fallback unchanged; no threshold or business rule changes.
+4. Add synthetic regression coverage for a P50 trigger at N=600, no trigger at N=1200, and the required N=2400 continuation. Synthetic data only.
+
+### Temporary test workflow contract
+
+- Exact workflow path: `.github/workflows/cp-stage13-adaptive-tests.yml`.
+- Exact branch pin for both trigger and checkout: `tmp/cp-stage13-adaptive-assembler-20261017`; path-filtered push trigger only.
+- Read-only GitHub token permissions (`contents: read`); no `workflow_dispatch`, self-dispatch, production/data credentials, or write permissions.
+- Every job has an explicit timeout; run only Python compilation and focused synthetic pytest tests for the Stage 13 assembler/Excel adaptive path.
+- Upload bounded audit evidence (tested HEAD/file hashes, Python/package versions, pytest log and JUnit XML); inspect run/job results and the actual downloaded artifact before assigning PASS.
+- Do not generate Monte Carlo trials, access production data, or change source SHA, master seed, RNG, sampling policy, historical records, or the normative reference.
+- The workflow is temporary and branch-pinned. After collecting and independently inspecting evidence, remove the workflow file from the candidate branch via a reviewed commit; retain the branch and all test evidence. Do not modify any other workflow.
+
+### Acceptance and fail-closed dispositions
+
+- Focused tests must pass on the exact tested HEAD.
+- Independently inspect the test artifact contents, head identity, checksums and byte size, and verify that only the synthetic test scope ran.
+- If the Run does not complete or its artifact cannot be inspected, record PENDING/BLOCKED; no PASS by absence of a reported failure.
+- This CP does not authorize or imply updating/merging `main`. Any later main update requires separate R4 review of the final tested diff and independent evidence review.
