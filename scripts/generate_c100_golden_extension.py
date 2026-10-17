@@ -209,7 +209,7 @@ def main() -> int:
         "C100_G070": 70,
         "C100_G100": 100,
     }
-    if tuple(s for s in constants.SCENARIO_IDS if s in SCENARIOS) != SCENARIOS:
+    if set(s for s in constants.SCENARIO_IDS if s in SCENARIOS) != set(SCENARIOS):
         raise RuntimeError("C100_SCENARIO_SET_MISMATCH")
     for scenario, recovery in expected_rates.items():
         probability, recovery_rate = monte_carlo.parse_scenario_id(scenario)
