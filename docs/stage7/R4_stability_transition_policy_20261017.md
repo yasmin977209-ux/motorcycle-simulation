@@ -21,7 +21,7 @@
 
 ## In-scope implementation plan
 
-1. Update policy constants to define N=300 for every scenario and make the transition-count policy explicit; retain the doubling scheduler and do not alter RNG/model code.
+1. Define the N=300 all-scenario cohort and first-passing-transition rule in the Stage 7 orchestration layer (`scripts/stage7_stability.py`, `run_batch.py`, and the embedded Stage 7 workflow). **Do not modify `constants.py`**: it is a pinned model-source file included in the SOURCE_SHA boundary. Leave its legacy C100 start constant and sampling map unchanged, and do not raise SOURCE_SHA to absorb orchestration-only policy work.
 2. Add a pure seven-indicator summary and pairwise comparator using NumPy linear quantiles, the approved cumulative-profit loss definition (`cumulative_project_profit < 0`), the reference epsilon branch, exact N-doubling adjacency, and fail-closed handling of missing/non-finite metrics.
 3. In `run_batch.py` and the embedded Stage 7 workflow, record N=300 as coverage-only and compare 300→600 first; afterward evaluate every actual adjacent per-scenario transition. Overall stability can be true only when the current applicable §2.5 transition passes together with required Gate A and applicable Gate B checks. C100's existing separate deterministic-equality proof remains separate; C100 CI behavior is not silently changed by this R4.
 4. Preserve all earlier transition records. Do not require three consecutive passes; a later eligible passing transition is allowed to establish current stability while old failure records remain intact.
@@ -38,4 +38,4 @@
 | Source identity | live source tree matches pinned SHA without silent SOURCE_SHA bump | `main/state.json` documents `daily_engine.py` drift from `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` | **BLOCKED — no production run** |
 | Historical-ID integrity | no duplicate execution, no synthetic row identity, exact source/provenance | C100's previous independent ID-2 result was recorded as equality proof only, not a persisted TrialResult in the main runner state | **HOLD for migrating that old C100 checkpoint; fail closed if full row is unavailable** |
 
-**Explicit non-claims:** This R4 is not a test result or stability result. No production simulations, Monte Carlo, or full pytest have been run as part of preparing it.
+**Explicit non-claims:** This R4 is not a test result or stability result. No production simulations, Monte Carlo, or full pytest have been run as part of preparing it. The approved 300-trial all-scenario execution policy belongs to orchestration; `constants.py`, all model source files, RNG, seed, and historical data remain byte-identical to their pinned identity.
