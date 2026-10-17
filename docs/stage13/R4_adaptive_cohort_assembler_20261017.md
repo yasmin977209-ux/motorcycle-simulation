@@ -54,12 +54,14 @@ This addendum records evidence-binding details made explicit while implementing 
 4. For each non-C100 scenario, Gate B P50 evidence at N=600 and N=1200 must link exactly to the P50 of the immediately previous and current checkpoint in the recorded history. The approved strict >5% continuation rule and the near-zero absolute fallback are re-evaluated; a triggered scenario cannot stop before N=2400.
 5. For C100 scenarios, the adaptive input must separately reference the approved deterministic-equivalence evidence. That metadata reference does not turn this assembler into an independent Gate A artifact reader, and the assembler does not claim that production gates passed merely because a reference string exists.
 
-## Post-change execution status (not a PASS)
+## Post-change execution status (focused synthetic test gate)
 
-- Adaptive code and synthetic regression tests are candidate-branch changes only.
-- Focused pytest execution is **PENDING/BLOCKED** because the available container cannot resolve GitHub directly, and no currently approved workflow executes tests for this candidate branch. The approval for this CP explicitly excludes workflow modification.
-- No production simulation, trial generation, source/RNG/seed change, historical dataset edit, main edit, or Release was performed.
-
+- Adaptive code and synthetic regression tests remain candidate-branch changes only.
+- Focused workflow Run `38995349182` completed successfully on tested HEAD `3fdcdf8d006eff8f4a8fabb9ea2feb5c70c81633`. The actual downloaded evidence ZIP was inspected: `pytest.log` reports `25 passed in 10.98s`; JUnit XML records 25 tests, 0 failures, 0 errors, 0 skipped; `PY_COMPILE=PASS` and `PYTEST_EXIT_CODE=0`.
+- Artifact `12085749809` (`stage13-adaptive-test-evidence-38995349182`) reports 3,787 bytes and `sha256:3a77d5f85385380abebece7811decdf87749dfee77a001b9fac3e26aede71c1c`. The downloaded ZIP is exactly 3,787 bytes and its independently computed SHA-256 matches the GitHub artifact digest. The seven SHA-256 fingerprints in `input_sha256.txt` independently match the corresponding files read from the exact tested branch; the manifest confirms synthetic fixtures only, `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `master_seed=20270101`, and `main_modified=false`.
+- These tests establish only the focused synthetic regression gate for this candidate HEAD. They do not prove a production Gate A provider is connected, that production Gate A/Gate B passed, that overall stability is established, or that final deliverables are accepted.
+- After the evidence was collected and inspected, the owner-approved temporary workflow `.github/workflows/cp-stage13-adaptive-tests.yml` was removed on this candidate branch by commit `99e2f13da1f42019bc7d7e20734e64ac3b63fe46`. The run and artifact are retained.
+- No production simulation, trial generation, source/RNG/seed change, historical dataset edit, main edit, merge, or Release was performed.
 
 ## R4 addendum — Gate B P50 continuation-order fix and temporary test workflow
 
