@@ -885,13 +885,16 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             expected_section_status = "PASS" if all_metrics_pass else "FAIL"
             if entry.get("section_2_5_status") != expected_section_status:
                 raise RuntimeError(f"ADAPTIVE_SECTION_2_5_STATUS_MISMATCH: {scenario}:{expected_n}")
-            for status_key, evidence_key in (
-                ("gate_a_status", "gate_a_evidence_ref"),
-                ("gate_b_status", "gate_b_evidence_ref"),
-                ("section_2_5_status", "section_2_5_evidence_ref"),
+            for status_key, evidence_key, digest_key in (
+                ("gate_a_status", "gate_a_evidence_ref", "gate_a_evidence_sha256"),
+                ("gate_b_status", "gate_b_evidence_ref", "gate_b_evidence_sha256"),
+                ("section_2_5_status", "section_2_5_evidence_ref", "section_2_5_evidence_sha256"),
             ):
-                if entry.get(status_key) in {"PASS", "FAIL"} and not str(entry.get(evidence_key, "")).strip():
-                    raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_REF_MISSING: {scenario}:{expected_n}:{evidence_key}")
+                if entry.get(status_key) in {"PASS", "FAIL"}:
+                    if not str(entry.get(evidence_key, "")).strip():
+                        raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_REF_MISSING: {scenario}:{expected_n}:{evidence_key}")
+                    if not _valid_sha256(entry.get(digest_key)):
+                        raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_SHA_INVALID: {scenario}:{expected_n}:{digest_key}")
             gates_all_pass = (
                 entry.get("gate_a_status") == "PASS"
                 and entry.get("gate_b_status") == "PASS"
@@ -908,8 +911,13 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             if not scenario.startswith("C100_") and expected_n in (600, 1200):
                 old_p50 = entry.get("gate_b_p50_previous")
                 new_p50 = entry.get("gate_b_p50_current")
-                if not _finite_number(old_p50) or not _finite_number(new_p50):
+                previous_p50 = history[index - 1].get("p50_final_net_project_equity")
+                checkpoint_p50 = entry.get("p50_final_net_project_equity")
+                if (not _finite_number(old_p50) or not _finite_number(new_p50)
+                        or not _finite_number(previous_p50) or not _finite_number(checkpoint_p50)):
                     raise RuntimeError(f"ADAPTIVE_GATE_B_P50_EVIDENCE_MISSING: {scenario}:{expected_n}")
+                if float(old_p50) != float(previous_p50) or float(new_p50) != float(checkpoint_p50):
+                    raise RuntimeError(f"ADAPTIVE_GATE_B_P50_VALUE_LINK_MISMATCH: {scenario}:{expected_n}")
                 delta = abs(float(new_p50) - float(old_p50))
                 trigger = (delta >= 1.0) if abs(float(old_p50)) < 1e-6 else (100.0 * delta / abs(float(old_p50)) > 5.0)
                 if entry.get("gate_b_p50_continuation_required") is not trigger:
@@ -920,8 +928,18 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
         for field in ("gate_a_status", "gate_b_status", "section_2_5_status"):
             if metadata.get(field) != final_entry.get(field) or metadata.get(field) != "PASS":
                 raise RuntimeError(f"ADAPTIVE_FINAL_STATUS_FIELD_MISMATCH: {scenario}:{field}")
-        for field in ("gate_a_evidence_ref", "gate_b_evidence_ref", "section_2_5_evidence_ref"):
-            _required_nonempty_string(metadata, field, f"ADAPTIVE_FINAL_EVIDENCE_REF_MISSING:{scenario}:{field}")
+        for ref_field, sha_field in (
+            ("gate_a_evidence_ref", "gate_a_evidence_sha256"),
+            ("gate_b_evidence_ref", "gate_b_evidence_sha256"),
+            ("section_2_5_evidence_ref", "section_2_5_evidence_sha256"),
+        ):
+            _required_nonempty_string(metadata, ref_field, f"ADAPTIVE_FINAL_EVIDENCE_REF_MISSING:{scenario}:{ref_field}")
+            if metadata.get(ref_field) != final_entry.get(ref_field):
+                raise RuntimeError(f"ADAPTIVE_FINAL_EVIDENCE_REF_IDENTITY_MISMATCH: {scenario}:{ref_field}")
+            if not _valid_sha256(metadata.get(sha_field)):
+                raise RuntimeError(f"ADAPTIVE_FINAL_EVIDENCE_SHA_INVALID: {scenario}:{sha_field}")
+            if metadata.get(sha_field) != final_entry.get(sha_field):
+                raise RuntimeError(f"ADAPTIVE_FINAL_EVIDENCE_SHA_IDENTITY_MISMATCH: {scenario}:{sha_field}")
         if scenario.startswith("C100_"):
             if metadata.get("c100_deterministic_equivalence_status") != "PASS":
                 raise RuntimeError(f"ADAPTIVE_C100_DETERMINISM_NOT_PROVEN: {scenario}")
@@ -929,6 +947,8 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
                 metadata, "c100_deterministic_evidence_ref",
                 f"ADAPTIVE_C100_DETERMINISM_EVIDENCE_MISSING:{scenario}"
             )
+            if not _valid_sha256(metadata.get("c100_deterministic_evidence_sha256")):
+                raise RuntimeError(f"ADAPTIVE_C100_DETERMINISM_SHA_INVALID: {scenario}")
         elif forced_n2400 and stable_at_n < 2400:
             raise RuntimeError(f"ADAPTIVE_GATE_B_P50_REQUIRES_N2400: {scenario}")
 
@@ -937,6 +957,8 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
     computed_map_sha = hashlib.sha256("".join(ordered_fingerprints).encode("utf-8")).hexdigest()
     if computed_map_sha != manifest.get("ordered_trial_hash_map_sha256"):
         raise RuntimeError("ADAPTIVE_ORDERED_MAP_SHA_MISMATCH")
+    if manifest.get("gate_a_ordered_trial_hash_map_sha256") != computed_map_sha:
+        raise RuntimeError("ADAPTIVE_GATE_A_MAP_IDENTITY_MISMATCH")
     return expected_total
 
 
