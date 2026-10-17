@@ -63,7 +63,7 @@ This addendum records evidence-binding details made explicit while implementing 
 
 ## R4 addendum — Gate B P50 continuation-order fix and temporary test workflow
 
-**Recorded:** 2026-10-17  
+**Recorded:** 2026-10-17
 **Owner approval:** The user explicitly replied “نعم” to creating a temporary, branch-pinned workflow to execute the focused synthetic Stage 13 test suite. This later approval changes only the prior “no workflow edits” exclusion for the single test workflow described here. It does not authorize merging, editing `main`, running production simulations, generating trials, changing golden/source/seed/RNG/sampling policy, or releasing deliverables.
 
 ### Finding before change
