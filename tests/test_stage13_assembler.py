@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+import hashlib
 
 import pytest
 from openpyxl import load_workbook
 
 from scripts.stage13_assemble import (
-    EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA, assemble_workbook,
-    select_representative_trial_ids,
+    ADAPTIVE_CHECKPOINT_METRICS, EXPECTED_ADAPTIVE_COHORT_ID,
+    EXPECTED_REFERENCE_SHA256, EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA,
+    EXPECTED_ADAPTIVE_SOURCE_COMMIT, _metric_status, _validate_mode_and_identity,
+    assemble_workbook, select_representative_trial_ids,
 )
 
 FOCUS_SCENARIOS = EXPECTED_SCENARIOS[:5]
@@ -211,3 +214,245 @@ def test_sensitivity_sheet_holds_other_dimension_fixed_and_daily_stats_are_value
     assert daily["B2"].value.date() == END_DATE
     assert daily["C2"].value == 1050
     wb.close()
+
+
+def adaptive_data(stable_counts=None):
+    """Build synthetic adaptive-cohort evidence; does not run the simulation engine."""
+    base = demo_data()
+    stable_counts = dict(stable_counts or {})
+    for scenario in EXPECTED_SCENARIOS:
+        stable_counts.setdefault(scenario, 600)
+
+    trials = {}
+    distributions = {}
+    representatives = {}
+    assignments = {}
+    scenario_evidence = {}
+    total_trials = 0
+
+    for offset, scenario in enumerate(EXPECTED_SCENARIOS):
+        stable_at_n = stable_counts[scenario]
+        rows = [trial_row(scenario, trial_id, offset) for trial_id in range(1, stable_at_n + 1)]
+        for row in rows:
+            row["result_sha256"] = hashlib.sha256(
+                f"synthetic|{scenario}|{row['trial_id']}".encode("utf-8")
+            ).hexdigest()
+        trials[scenario] = rows
+        total_trials += len(rows)
+
+        selected = select_representative_trial_ids(rows, scenario)
+        assignments[scenario] = selected
+        by_id = {row["trial_id"]: row for row in rows}
+        representatives[scenario] = {
+            role: rep_payload(by_id[trial_id]) for role, trial_id in selected.items()
+        }
+        distributions[scenario] = [dict(base["daily_distributions_by_scenario"][FOCUS_SCENARIOS[0]][0])]
+
+        history = [{
+            "n": 300,
+            "checkpoint_status": "COVERAGE_ONLY",
+            "overall_status": "COVERAGE_ONLY",
+            "section_2_5_status": "COVERAGE_ONLY",
+        }]
+        n = 600
+        while n <= stable_at_n:
+            metric_results = {}
+            should_fail = scenario == "C030_G030" and n == 600 and stable_at_n > 600
+            for metric in ADAPTIVE_CHECKPOINT_METRICS:
+                old_value = 0.2 if metric == "Probability_of_Accounting_Loss" else 1000.0
+                if should_fail and metric == "P90_Final_Cash":
+                    new_value = old_value * 1.02
+                elif metric == "Probability_of_Accounting_Loss":
+                    new_value = old_value * 1.002
+                else:
+                    new_value = old_value * 1.002
+                metric_results[metric] = {
+                    "old_value": old_value,
+                    "new_value": new_value,
+                    "status": _metric_status(old_value, new_value),
+                }
+            section_status = (
+                "PASS" if all(x["status"] == "PASS" for x in metric_results.values()) else "FAIL"
+            )
+            entry = {
+                "n": n,
+                "previous_n": n // 2,
+                "overall_status": "SCENARIO_STABLE" if n == stable_at_n else "NOT_STABLE",
+                "gate_a_status": "PASS",
+                "gate_a_evidence_ref": f"synthetic-gate-a:{scenario}:{n}",
+                "gate_b_status": "PASS",
+                "gate_b_evidence_ref": f"synthetic-gate-b:{scenario}:{n}",
+                "section_2_5_status": section_status,
+                "section_2_5_evidence_ref": f"synthetic-section-2-5:{scenario}:{n}",
+                "section_2_5_metrics": metric_results,
+            }
+            if not scenario.startswith("C100_"):
+                old_p50 = 1000.0 if n == 600 else 1010.0
+                new_p50 = old_p50 * 1.01
+                entry["gate_b_p50_previous"] = old_p50
+                entry["gate_b_p50_current"] = new_p50
+                entry["gate_b_p50_continuation_required"] = False
+            history.append(entry)
+            n *= 2
+
+        final_entry = history[-1]
+        scenario_evidence[scenario] = {
+            "final_status": "SCENARIO_STABLE",
+            "stable_at_n": stable_at_n,
+            "gate_a_status": "PASS",
+            "gate_a_evidence_ref": f"synthetic-gate-a:{scenario}:{stable_at_n}",
+            "gate_b_status": "PASS",
+            "gate_b_evidence_ref": f"synthetic-gate-b:{scenario}:{stable_at_n}",
+            "section_2_5_status": "PASS",
+            "section_2_5_evidence_ref": f"synthetic-section-2-5:{scenario}:{stable_at_n}",
+            "checkpoint_history": history,
+        }
+        if scenario.startswith("C100_"):
+            scenario_evidence[scenario]["c100_deterministic_equivalence_status"] = "PASS"
+            scenario_evidence[scenario]["c100_deterministic_evidence_ref"] = (
+                f"synthetic-c100-equivalence:{scenario}"
+            )
+
+    ordered_rows = [
+        f"{scenario}|{row['trial_id']}|{row['result_sha256']}\n"
+        for scenario in EXPECTED_SCENARIOS
+        for row in trials[scenario]
+    ]
+    ordered_sha = hashlib.sha256("".join(ordered_rows).encode("utf-8")).hexdigest()
+    manifest = dict(base["manifest"])
+    manifest.update({
+        "cohort_id": EXPECTED_ADAPTIVE_COHORT_ID,
+        "source_sha": EXPECTED_SOURCE_SHA,
+        "source_commit": EXPECTED_ADAPTIVE_SOURCE_COMMIT,
+        "master_seed": 20270101,
+        "reference_sha256": EXPECTED_REFERENCE_SHA256,
+        "schema_version": "stage12-daily-accounting-v1",
+        "rng_identity": "rng.py@e50d0410729aeeb657d4b187c0bc32f9527442d1",
+        "sampling_policy": "per-scenario-doubling-300-600-1200-first-passing",
+        "run_id": 99999999,
+        "run_head_sha": "b" * 40,
+        "total_trials": total_trials,
+        "total_representatives": len(EXPECTED_SCENARIOS) * 5,
+        "ordered_trial_hash_map_sha256": ordered_sha,
+        "scenarios": scenario_evidence,
+        "dataset_status": "SYNTHETIC_TEST_ONLY",
+    })
+    return {
+        "manifest": manifest,
+        "trials_by_scenario": trials,
+        "daily_distributions_by_scenario": distributions,
+        "representatives_by_scenario": representatives,
+        "representative_trial_ids": assignments,
+        "validation": {"status": "SYNTHETIC_TEST_ONLY", "tests": []},
+        "errors": [],
+    }
+
+
+def test_adaptive_metric_thresholds_are_strict_and_near_zero_uses_absolute_unit():
+    assert _metric_status(100.0, 100.999) == "PASS"
+    assert _metric_status(100.0, 101.0) == "FAIL"
+    assert _metric_status(0.0, 0.999) == "PASS"
+    assert _metric_status(0.0, 1.0) == "FAIL"
+    with pytest.raises(RuntimeError, match="ADAPTIVE_METRIC_VALUE_MISSING_OR_NONFINITE"):
+        _metric_status(float("nan"), 0.0)
+
+
+def test_adaptive_validator_accepts_heterogeneous_first_passing_stops():
+    data = adaptive_data({"C030_G030": 1200})
+    rows = _validate_mode_and_identity(data, mode="adaptive")
+    assert len(rows) == 25 * 600 + 600
+    assert data["manifest"]["scenarios"]["C030_G030"]["stable_at_n"] == 1200
+    assert data["manifest"]["scenarios"]["C100_G100"]["checkpoint_history"][0]["overall_status"] == "COVERAGE_ONLY"
+
+
+def test_adaptive_mode_rejects_stable_at_300():
+    data = adaptive_data()
+    data["manifest"]["scenarios"]["C100_G100"]["stable_at_n"] = 300
+    with pytest.raises(RuntimeError, match="ADAPTIVE_STABLE_AT_N_INVALID"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_missing_gate_evidence():
+    data = adaptive_data()
+    del data["manifest"]["scenarios"]["C100_G100"]["gate_b_status"]
+    with pytest.raises(RuntimeError, match="ADAPTIVE_FINAL_STATUS_FIELD_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_checkpoint_gap():
+    data = adaptive_data({"C030_G030": 1200})
+    data["manifest"]["scenarios"]["C030_G030"]["checkpoint_history"].pop(1)
+    with pytest.raises(RuntimeError, match="ADAPTIVE_CHECKPOINT_HISTORY_LENGTH_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_nonfinite_metric_value():
+    data = adaptive_data()
+    final_entry = data["manifest"]["scenarios"]["C100_G100"]["checkpoint_history"][-1]
+    final_entry["section_2_5_metrics"]["P90_Final_Cash"]["new_value"] = float("nan")
+    with pytest.raises(RuntimeError, match="ADAPTIVE_METRIC_VALUE_MISSING_OR_NONFINITE"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_recomputes_aggregate_trial_fingerprint_map():
+    data = adaptive_data()
+    data["manifest"]["ordered_trial_hash_map_sha256"] = "a" * 64
+    with pytest.raises(RuntimeError, match="ADAPTIVE_ORDERED_MAP_SHA_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_incomplete_trial_id_range():
+    data = adaptive_data()
+    data["trials_by_scenario"]["C100_G100"][10]["trial_id"] = 9999
+    with pytest.raises(RuntimeError, match="ADAPTIVE_TRIAL_COVERAGE_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_enforces_gate_b_p50_2400_continuation():
+    data = adaptive_data()
+    entry = data["manifest"]["scenarios"]["C030_G000"]["checkpoint_history"][1]
+    entry["gate_b_p50_current"] = 1060.0
+    with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_TRIGGER_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_assembler_writes_185_sheets_and_truthful_readme(tmp_path: Path):
+    data = adaptive_data({"C030_G030": 1200})
+    output = tmp_path / "adaptive.xlsx"
+    result = assemble_workbook(data, output, mode="adaptive")
+    assert result["success"] is True
+    assert result["trial_count"] == 25 * 600 + 600
+    assert result["sheets_count"] == 185
+    workbook = load_workbook(output, data_only=False)
+    assert len(workbook.sheetnames) == 185
+    readme = {row[0]: row[1] for row in workbook["README"].iter_rows(min_row=2, max_col=2, values_only=True)}
+    assert readme["Excel sheets"] == 185
+    assert readme["Excel error cells"] == 0
+    assert "Stage 13 adaptive cohort" in readme["Workbook build provenance"]
+    scenario_rows = {
+        row[0]: row for row in workbook["SCENARIO_MATRIX"].iter_rows(min_row=2, values_only=True)
+    }
+    assert scenario_rows["C030_G030"][1] == 1200
+    assert scenario_rows["C030_G030"][2] == "SCENARIO_STABLE"
+    assert scenario_rows["C100_G100"][1] == 600
+    assert scenario_rows["C100_G100"][2] == "SCENARIO_STABLE"
+    assert all(
+        cell.data_type not in {"f", "e"}
+        for sheet in workbook.worksheets
+        for row in sheet.iter_rows()
+        for cell in row
+    )
+    workbook.close()
+
+
+def test_missing_final_status_does_not_default_to_stable(tmp_path: Path):
+    data = demo_data()
+    del data["manifest"]["scenarios"]["C100_G100"]["final_status"]
+    output = tmp_path / "status-not-inferred.xlsx"
+    result = assemble_workbook(data, output, mode="demo")
+    assert result["success"] is True
+    workbook = load_workbook(output, data_only=True)
+    rows = list(workbook["SCENARIO_MATRIX"].iter_rows(min_row=2, values_only=True))
+    status_by_scenario = {row[0]: row[2] for row in rows}
+    assert status_by_scenario["C100_G100"] == "NOT_ESTABLISHED"
+    workbook.close()
