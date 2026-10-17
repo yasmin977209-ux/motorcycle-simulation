@@ -67,8 +67,9 @@ jobs:
               raise AssertionError("embedded Stage 7 Python entrypoint heredoc not found")
           ast.parse(match.group(1), filename="stage7-full-run.yml:adaptive-orchestration")
           print("EMBEDDED_STAGE7_AST_PASS")
-          assert workflow["on"]["push"]["branches"] == ["tmp/cp-stability-policy-impl-20261017"]
-          assert "workflow_dispatch" not in workflow["on"]
+          triggers = workflow.get("on", workflow.get(True, {}))
+          assert triggers["push"]["branches"] == ["tmp/cp-stability-policy-impl-20261017"]
+          assert "workflow_dispatch" not in triggers
           assert workflow["permissions"] == {"contents": "read"}
           assert all(job.get("timeout-minutes") for job in jobs.values())
           print("WORKFLOW_BOUNDARY_PASS")
