@@ -206,3 +206,34 @@ The current §2.5 seven-metric evaluator compares values between adjacent checkp
 - Implementation changes to tests or GitHub Actions require an R4 proposal and the separate explicit approval required by project controls.
 
 **References:** D-2026-10-10-01; Reference §§2.5 and 14.2; D-2026-10-12-01; D-2026-10-14-12 as recorded on the candidate; explicit owner instruction dated 2026-10-17.
+
+## D-2026-10-17-05 — compare every actual adjacent stability transition per scenario
+
+**Status:** PARTIALLY APPROVED; the first decision at N=300 remains PENDING  
+**Date:** 2026-10-17  
+**Authority:** Direct project-owner instruction in the conversation dated 2026-10-17.  
+**Scope:** Comparison of §2.5 stability metrics across per-scenario checkpoint transitions. This decision does not amend the normative reference file.
+
+### Approved clauses
+
+1. For each of all 25 scenarios (including C100), trial IDs 1..300 are mandatory baseline coverage before any stability decision or adaptive escalation.
+2. Apply §2.5 to every actual adjacent transition that exists in that scenario's checkpoint history: compare the immediately previous authorized checkpoint against the current checkpoint for the same scenario. Do not compare different scenarios, skip an existing adjacent transition, create a fictitious transition, or require two transitions as a universal count.
+3. A transition passes the §2.5 stability criterion only when all seven required metrics pass together using the reference's unchanged relative threshold (<1%) and unchanged near-zero absolute fallback (REFERENCE_EPSILON=1e-6; absolute difference <1 currency unit).
+4. The adaptive schedule remains per scenario: N=300, 600, 1200, 2400, 4800, 9600, ... . Once an eligible adjacent transition passes, stop that scenario at the first passing checkpoint and record stable_at_n as its current N, with checkpoint and data-identity evidence.
+5. Do not invent N=150 or another unapproved baseline. Keep every historical failure verbatim. A later passing eligible transition may support a later stability conclusion without erasing or relabelling a historical failure.
+
+### Still pending — no §2.5 comparison exists at the first N=300 point
+
+The rule above defines comparisons whenever an actual adjacent checkpoint transition exists; it does not create a predecessor for the first N=300 point. Consequently, N=300 alone cannot yield a §2.5 transition pass under the reference's pairwise formula. The owner's preference to stop at N=300 if already stable is not operationally reconciled with this missing predecessor.
+
+Until the owner resolves this narrow point, do not claim §2.5 stability at N=300, manufacture a comparison baseline, substitute Gate B for the seven-metric test, or run a new production checkpoint. The remaining choice is whether N=300 is coverage-only and the first possible §2.5 stability decision is on the 300→600 transition, or whether the owner defines a separate first-point criterion explicitly consistent with the governing reference.
+
+### Boundaries
+
+- Existing §2.5 numerical thresholds and metric definitions are unchanged.
+- Gate A, Gate B, and §2.5 remain separate gates; passing one does not establish overall stability.
+- The production Gate A provider and SOURCE_SHA drift blockers remain open.
+- No test/workflow edits, simulation, completed-trial rerun, merge, release, or final-delivery approval is made by this governance record.
+
+**References:** Reference §2.5; D-2026-10-17-04; D-2026-10-10-01; direct owner instruction dated 2026-10-17.
+
