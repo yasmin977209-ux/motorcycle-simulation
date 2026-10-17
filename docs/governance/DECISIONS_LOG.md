@@ -177,3 +177,32 @@ The three preserved checkpoint reports each contain 60/60 CI points passed, with
 Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` completed both jobs successfully. The canonical precision gate passed 25/25 scenario packages, 9,005/9,005 unique trial rows, 185 worksheets, zero Excel-error cells, zero formulas, and 500/500 exact numeric comparisons. One target cell required patching; all 500 target cells were verified post-write. The original published workbook SHA-256 remains `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d`; the separate candidate workbook SHA-256 is `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`. No simulation or new trial execution occurred.
 
 **References:** `docs/stage9c/STAGE9C_REPORT.md` §C-6; `docs/stage9a/dataset_manifest.json`; `docs/stage9c/R4_export_numeric_precision.md`; Stage 9C canonical precision gate Run `38165878333`. The 625-trial Stage 13 definition is maintained as a distinct cohort and is not amended here.
+
+
+## D-2026-10-17-04 — first-passing-checkpoint stopping policy (partial ruling)
+
+**Status:** PARTIALLY APPROVED BY PROJECT OWNER; initial N=300 §2.5 evaluation remains PENDING  
+**Date:** 2026-10-17  
+**Authority:** Direct project-owner instruction in the conversation dated 2026-10-17.  
+**Scope:** Per-scenario minimum statistical cohort, doubling schedule, stopping rule, and interpretation of historical stability failures. The reference file itself is not modified.
+
+### Approved normative clauses
+
+1. Every one of the 25 scenarios, including C100 scenarios, must cover trial IDs 1..300 before the first stability decision. This narrowly supersedes D-2026-10-10-01's C100 one-trial startup rule and any later one-trial C100 shortcut for this execution policy. C100's deterministic business-result equivalence remains a separate identity check; no unsupported claim is made that the statistical CI policy for C100 is otherwise resolved by this clause.
+2. The per-scenario checkpoint sequence is N=300, 600, 1200, 2400, 4800, 9600, ... with no fixed global cap. After the initial checkpoint and after each doubling, evaluate that scenario and stop adding trials at its first passing checkpoint. Do not require all scenarios to reach the same N.
+3. Record the accepted stopping count per scenario (stable_at_n / equivalent output field), along with source SHA, master seed, RNG/sampling/schema identity, trial-ID coverage, fingerprints, and every checkpoint result. The final cohort size is the sum of the accepted per-scenario counts, not a hard-coded total.
+4. Do not rerun a completed trial ID. Use identity-verified existing results where authorized and materialize only missing IDs. This decision does not authorize changing SOURCE_SHA, RNG, master seed, historical Parquet, or accepting candidate output as its own golden reference.
+5. Preserve every historical failed transition verbatim in the history. A prior failed transition is not a permanent blocker to overall stability: a later checkpoint may pass the applicable current transition and permit stopping under this policy. The earlier failure remains visible and must never be relabeled PASS or deleted.
+6. The numerical thresholds and near-zero treatment in Reference §2.5 are not changed by this decision. This entry does not amend the reference document.
+
+### Pending first-checkpoint rule — do not infer
+
+The current §2.5 seven-metric evaluator compares values between adjacent checkpoints. N=300 is the first checkpoint under this policy, so there is no preceding approved doubling checkpoint against which to evaluate those seven changes. The owner instruction requires a stability decision at N=300 but does not specify that missing comparison baseline. Record this as PENDING/UNDEFINED_BUSINESS_RULE; do not substitute Gate B alone for overall stability, invent an N=150 checkpoint/baseline, relax the threshold, or initiate a new statistical run until this clause is resolved.
+
+### Explicit non-claims / boundaries
+
+- Gate A exact-golden/source-identity validation, Gate B CI semantics where applicable, and the seven §2.5 metrics remain distinct gates; one PASS does not imply all-gate stability.
+- No production checkpoint, extra Golden coverage, source identity change, test/workflow edit, merge, delivery approval, or Release is authorized by this documentation entry alone.
+- Implementation changes to tests or GitHub Actions require an R4 proposal and the separate explicit approval required by project controls.
+
+**References:** D-2026-10-10-01; Reference §§2.5 and 14.2; D-2026-10-12-01; D-2026-10-14-12 as recorded on the candidate; explicit owner instruction dated 2026-10-17.
