@@ -107,7 +107,9 @@ def test_run_batch_uses_user_approved_policy_not_reference_defaults() -> None:
         "STATISTICAL_ESCALATION_POLICY_ID",
         "STATISTICAL_ESCALATION_MULTIPLIER",
         "constants.STATISTICAL_CHECK_START_N",
-        "constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED",
+        "constants.STABILITY_STOP_ON_FIRST_PASS",
+        "summarize_reference_stability_metrics",
+        "evaluate_reference_stability_transition",
         "constants.CI_CONFIDENCE_LEVEL",
         "constants.CI_RELATIVE_TOLERANCE",
         "constants.CI_ABSOLUTE_EPSILON",
@@ -196,31 +198,45 @@ def test_stage8_source_sha_is_literal_in_workflow() -> None:
     )
     assert "${{ env.SOURCE_SHA }}" not in text
 
-def test_run_batch_c100_checkpoint_skips_escalation_check() -> None:
-    """C100 does not have an escalation step; next_check_n
-    validation must be skipped."""
+def test_run_batch_c100_uses_approved_checkpoint_schedule() -> None:
+    """C100 now shares the same doubling schedule as every other scenario."""
     checkpoint = {
         "stage": "7",
         "scenario": "C100_G100",
-        "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-        "completed_trials": 1,
-        "next_trial_id": 2,
-        "next_check_n": 1,
+        "source_sha": APPROVED_SOURCE_SHA,
+        "completed_trials": 300,
+        "next_trial_id": 301,
+        "next_check_n": 600,
         "final_fingerprint": "abc",
         "artifact_identity": {
             "scenario": "C100_G100",
-            "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+            "source_sha": APPROVED_SOURCE_SHA,
             "trial_id_start": 1,
-            "trial_id_end": 1,
+            "trial_id_end": 300,
             "fingerprint_sha256": "abc",
         },
     }
-    # Must not raise
     run_batch._checkpoint_identity_is_valid(
         checkpoint,
         scenario="C100_G100",
-        source_sha="f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        source_sha=APPROVED_SOURCE_SHA,
     )
+    invalid = {**checkpoint, "next_check_n": 300}
+    with pytest.raises(StateIntegrityError, match="next_check_n"):
+        run_batch._checkpoint_identity_is_valid(
+            invalid,
+            scenario="C100_G100",
+            source_sha=APPROVED_SOURCE_SHA,
+        )
+
+
+def test_run_batch_accepts_the_mandatory_300_trial_c100_cohort() -> None:
+    args = run_batch.parse_args([
+        "--scenario", "C100_G100", "--trials", "300",
+        "--output-dir", "/tmp/stage8-c100-policy-test",
+    ])
+    assert args.trials == 300
+    assert constants.C100_STATISTICAL_START_TRIALS == 300
 
 
 def test_statistical_escalation_uses_only_approved_doubling_points() -> None:
