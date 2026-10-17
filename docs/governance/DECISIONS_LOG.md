@@ -237,3 +237,25 @@ Until the owner resolves this narrow point, do not claim §2.5 stability at N=30
 
 **References:** Reference §2.5; D-2026-10-17-04; D-2026-10-10-01; direct owner instruction dated 2026-10-17.
 
+## D-2026-10-17-06 — resolve the first §2.5 stability checkpoint
+
+**Status:** APPROVED BY PROJECT OWNER  
+**Date:** 2026-10-17  
+**Authority:** Direct owner reply “اعتمد” to the explicit choice between (a) N=300 as mandatory coverage only, with the first §2.5 stability decision on transition 300→600, and (b) a separately defined N=300 initial-point criterion.  
+**Scope:** Resolves only the first-checkpoint question left pending by D-2026-10-17-04 and D-2026-10-17-05. Does not amend the normative reference.
+
+### Approved decision
+
+1. Trial IDs 1..300 remain mandatory for each of the 25 scenarios, including C100. N=300 is **coverage only**; it is not itself a passing §2.5 stability checkpoint and cannot set stable_at_n=300.
+2. The first eligible §2.5 stability comparison is the actual per-scenario transition **N=300 → N=600**. Therefore, no scenario can be declared stable by §2.5 before its N=600 results are available and the seven-metric comparison passes.
+3. Evaluate all seven §2.5 metrics together on every actual adjacent transition in each scenario's own checkpoint history, using the reference's unchanged rule: relative change strictly below 1% when |old_value| >= 1e-6; otherwise absolute difference strictly below 1 currency unit.
+4. After N=600, follow the per-scenario doubling sequence 1200, 2400, 4800, 9600, ... only when the latest applicable transition fails. Stop that scenario at the first passing eligible transition and record stable_at_n as the new/current checkpoint N. A transition is not allowed to skip an existing adjacent checkpoint.
+5. The policy change does not authorize any production execution by itself. Gate A must have a validated approved-golden provider, and source identity/data provenance blockers must be resolved before new production checkpoint execution. Existing completed trial IDs must not be rerun or relabelled; do not silently change SOURCE_SHA, master_seed, RNG, sampling, historical data, or schema.
+6. Preserve the historical failure record unchanged. A historical failure is not by itself a permanent blocker when a later applicable transition passes, but it remains visible and must not be rewritten as PASS.
+
+### Disposition of prior pending clause
+
+This decision resolves the first-point ambiguity only by choosing N=300 coverage-only and N=300→600 as the first eligible §2.5 comparison. It supersedes the pending alternatives recorded under D-2026-10-17-04 and D-2026-10-17-05 only for this narrow question. All other boundaries and project blockers remain.
+
+**References:** Reference §2.5; D-2026-10-17-04; D-2026-10-17-05; direct owner approval dated 2026-10-17.
+
