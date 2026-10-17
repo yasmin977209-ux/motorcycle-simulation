@@ -1020,12 +1020,13 @@
     "main_head_at_stage0": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
     "r4_path": "docs/stage13/R4_adaptive_cohort_assembler_20261017.md",
     "r4_commit": "beb546c0ea44b7022f4effea5dcba1f4fddb3061",
-    "latest_candidate_commit": "18c13d310c98a1a7064ee73342919322746a15de",
+    "latest_candidate_commit": "82ea1cedfcc932ca41453e23830c6e2aa0870342",
     "changed_paths": [
       "docs/stage13/R4_adaptive_cohort_assembler_20261017.md",
       "scripts/stage13_assemble.py",
       "scripts/excel_builder.py",
-      "tests/test_stage13_assembler.py"
+      "tests/test_stage13_assembler.py",
+      "tests/test_excel_builder_adaptive_mode.py"
     ],
     "owner_approval": "explicit approval in chat dated 2026-10-17; code/tests only; no workflow/main edits",
     "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
