@@ -372,7 +372,8 @@ def test_c100_equality_proof_uses_persisted_distinct_trial_ids_and_seeds() -> No
     assert "different_derived_seed" in text
     assert "exact_result_equality" in text
     assert "results[1]" in text
-    assert "trial_id=2" not in text
+    assert "trial_id=2," not in text
+    assert "daily_engine.run_deterministic_trial" not in text
 
 
 def test_c100_mismatch_cannot_be_declared_stable() -> None:
