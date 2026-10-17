@@ -38,17 +38,65 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
           gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cp-gatea-c100-golden-resume.yml/runs?branch=tmp/cp-gatea-c100-resume-20261017&per_page=100" > "$RUNNER_TEMP/continuation_runs.json"
-          python - <<'PY'
+          python - <<'PY' > "$RUNNER_TEMP/guard_decision.txt"
           import json, os, sys
           path=os.path.join(os.environ["RUNNER_TEMP"],"continuation_runs.json")
           payload=json.load(open(path,encoding="utf-8")); current=int(os.environ["RUN_ID"])
-          previous=[{"id":x.get("id"),"head_sha":x.get("head_sha"),"status":x.get("status"),"conclusion":x.get("conclusion")}
-                    for x in payload.get("workflow_runs",[]) if int(x.get("id",-1))!=current]
-          if previous:
-              print("PRIOR_CONTINUATION_ATTEMPT_REQUIRES_RECONCILIATION="+json.dumps(previous,sort_keys=True))
-              sys.exit(1)
-          print("ONE_TIME_CONTINUATION_GUARD=PASS")
+          previous=[x for x in payload.get("workflow_runs",[]) if int(x.get("id",-1))!=current]
+          if not previous:
+              print("FIRST_ATTEMPT")
+              raise SystemExit(0)
+          if len(previous)!=1:
+              print("UNEXPECTED_PRIOR_RUN_COUNT="+str(len(previous)))
+              raise SystemExit(1)
+          prior=previous[0]
+          expected={"id":39002852709,"head_sha":"693a74967cf69b5d428bb85afacaa4552fb510d6",
+                    "status":"completed","conclusion":"failure","head_branch":"tmp/cp-gatea-c100-resume-20261017"}
+          actual={k:prior.get(k) for k in expected}
+          if actual!=expected:
+              print("PRIOR_RUN_NOT_THE_APPROVED_PREGENERATION_FAILURE="+json.dumps(actual,sort_keys=True))
+              raise SystemExit(1)
+          print("RECONCILE_ONE_KNOWN_PREGENERATION_FAILURE")
           PY
+          GUARD_DECISION="$(cat "$RUNNER_TEMP/guard_decision.txt")"
+          if [ "$GUARD_DECISION" = "RECONCILE_ONE_KNOWN_PREGENERATION_FAILURE" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709" > "$RUNNER_TEMP/prior_failed_run.json"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709/jobs?per_page=100" > "$RUNNER_TEMP/prior_failed_jobs.json"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/39002852709/artifacts?per_page=100" > "$RUNNER_TEMP/prior_failed_artifacts.json"
+            python - <<'PY'
+          import json, os, sys
+          root=os.environ["RUNNER_TEMP"]
+          run=json.load(open(os.path.join(root,"prior_failed_run.json"),encoding="utf-8"))
+          jobs=json.load(open(os.path.join(root,"prior_failed_jobs.json"),encoding="utf-8")).get("jobs",[])
+          artifacts=json.load(open(os.path.join(root,"prior_failed_artifacts.json"),encoding="utf-8")).get("artifacts",[])
+          if not (run.get("id")==39002852709 and run.get("head_sha")=="693a74967cf69b5d428bb85afacaa4552fb510d6"
+                  and run.get("head_branch")=="tmp/cp-gatea-c100-resume-20261017"
+                  and run.get("status")=="completed" and run.get("conclusion")=="failure"):
+              raise SystemExit("PRIOR_RUN_IDENTITY_NOT_CONFIRMED")
+          if len(jobs)!=1:
+              raise SystemExit("PRIOR_RUN_JOB_COUNT_NOT_ONE")
+          job=jobs[0]
+          if job.get("status")!="completed" or job.get("conclusion")!="failure":
+              raise SystemExit("PRIOR_RUN_JOB_NOT_PREGENERATION_FAILURE")
+          steps={step.get("name"):step.get("conclusion") for step in job.get("steps",[])}
+          required={
+              "Run focused deterministic continuation tests":"failure",
+              "Verify immutable approved source closure":"skipped",
+              "Reconstruct prior base map and run only missing IDs":"skipped",
+          }
+          if any(steps.get(name)!=conclusion for name,conclusion in required.items()):
+              raise SystemExit("PRIOR_RUN_STEP_BOUNDARY_NOT_PROVEN="+json.dumps(steps,sort_keys=True))
+          if artifacts:
+              raise SystemExit("PRIOR_FAILED_RUN_HAS_ARTIFACTS="+json.dumps(artifacts,sort_keys=True))
+          print("PREGENERATION_FAILURE_RECONCILED=PASS")
+          print("PRIOR_GENERATION_STEP=SKIPPED")
+          print("PRIOR_ARTIFACT_COUNT=0")
+          PY
+          elif [ "$GUARD_DECISION" != "FIRST_ATTEMPT" ]; then
+            echo "ONE_TIME_CONTINUATION_GUARD=FAIL: $GUARD_DECISION" >&2
+            exit 1
+          fi
+          echo "ONE_TIME_CONTINUATION_GUARD=PASS"
 
       - name: Verify original cancelled Run and immutable partial artifact
         env:

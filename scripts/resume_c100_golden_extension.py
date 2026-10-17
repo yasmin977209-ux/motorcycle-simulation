@@ -36,6 +36,10 @@ def sha256(raw: bytes) -> str:
 def expected_keys():
     return {(s,n) for s in SCENARIOS for n in range(2,601)}
 
+def expected_extension_keys():
+    """Compatibility API for the approved exact five-scenario C100 extension scope."""
+    return expected_keys()
+
 def expected_prior_keys():
     out=set()
     for scenario,count in PRIOR_COUNTS.items():
