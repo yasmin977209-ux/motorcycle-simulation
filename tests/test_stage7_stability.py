@@ -78,7 +78,7 @@ def test_reference_summary_fails_closed_on_empty_or_nonfinite_data() -> None:
 
 
 def test_n300_is_mandatory_coverage_not_a_stability_pass() -> None:
-    # First eligible §2.5 transition is 300→600 per D-2026-10-17-06.
+    # First eligible §2.5 transition is 300→600 per the recorded owner approval.
     result = evaluate_reference_stability_transition(
         previous_n=None,
         previous_metrics=None,
