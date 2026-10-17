@@ -103,8 +103,7 @@ def test_run_batch_uses_user_approved_policy_not_reference_defaults() -> None:
     ).read_text(encoding="utf-8")
 
     required_constants = (
-        "constants.C100_STATISTICAL_START_TRIALS",
-        "constants.NON_C100_STATISTICAL_START_TRIALS",
+        "initial_trials = constants.STATISTICAL_CHECK_START_N",
         "STATISTICAL_ESCALATION_POLICY_ID",
         "STATISTICAL_ESCALATION_MULTIPLIER",
         "constants.STATISTICAL_CHECK_START_N",
@@ -237,7 +236,9 @@ def test_run_batch_accepts_the_mandatory_300_trial_c100_cohort() -> None:
         "--output-dir", "/tmp/stage8-c100-policy-test",
     ])
     assert args.trials == 300
-    assert constants.C100_STATISTICAL_START_TRIALS == 300
+    source = (REPO_ROOT / "run_batch.py").read_text(encoding="utf-8")
+    assert "initial_target = constants.STATISTICAL_CHECK_START_N" in source
+    assert "constants.C100_STATISTICAL_START_TRIALS" not in source
 
 
 def test_statistical_escalation_uses_only_approved_doubling_points() -> None:
