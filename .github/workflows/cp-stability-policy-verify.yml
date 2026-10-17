@@ -55,11 +55,11 @@ jobs:
                   yaml.safe_load(handle)
               print(f"YAML_PARSE_PASS={name}")
 
-          workflow = yaml.safe_load(
+          stage7 = yaml.safe_load(
               Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
           )
-          jobs = workflow["jobs"]
-          source = jobs["matrix-simulation"]["steps"]
+          stage7_jobs = stage7["jobs"]
+          source = stage7_jobs["matrix-simulation"]["steps"]
           step = next(item for item in source if item.get("name") == "Adaptive scenario orchestration")
           script = step["run"]
           script_lines = script.splitlines()
@@ -80,11 +80,16 @@ jobs:
           embedded_python = "\n".join(script_lines[start + 1:stop])
           ast.parse(embedded_python, filename="stage7-full-run.yml:adaptive-orchestration")
           print("EMBEDDED_STAGE7_AST_PASS")
-          triggers = workflow.get("on", workflow.get(True, {}))
+
+          verifier = yaml.safe_load(
+              Path(".github/workflows/cp-stability-policy-verify.yml").read_text(encoding="utf-8")
+          )
+          triggers = verifier.get("on", verifier.get(True, {}))
           assert triggers["push"]["branches"] == ["tmp/cp-stability-policy-impl-20261017"]
           assert "workflow_dispatch" not in triggers
-          assert workflow["permissions"] == {"contents": "read"}
-          assert all(job.get("timeout-minutes") for job in jobs.values())
+          assert verifier["permissions"] == {"contents": "read"}
+          assert all(job.get("timeout-minutes") for job in verifier["jobs"].values())
+          assert all(job.get("timeout-minutes") for job in stage7_jobs.values())
           print("WORKFLOW_BOUNDARY_PASS")
           PY
       - name: Run focused deterministic regression suite
