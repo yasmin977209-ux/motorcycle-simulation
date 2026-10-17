@@ -93,11 +93,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     monte_carlo.parse_scenario_id(args.scenario)
 
-    initial_trials = (
-        constants.C100_STATISTICAL_START_TRIALS
-        if args.scenario.startswith("C100_")
-        else constants.NON_C100_STATISTICAL_START_TRIALS
-    )
+    # Execution cohort size is owned by the Stage 7 orchestration policy.
+    # constants.py remains part of the pinned model-source identity and is unchanged.
+    initial_trials = constants.STATISTICAL_CHECK_START_N
     return args
 
 
@@ -605,8 +603,8 @@ def run_batch(
     state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
     state["policy"] = {
         "statistical_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
-        "c100_start_trials": constants.C100_STATISTICAL_START_TRIALS,
-        "non_c100_start_trials": constants.NON_C100_STATISTICAL_START_TRIALS,
+        "c100_start_trials": constants.STATISTICAL_CHECK_START_N,
+        "non_c100_start_trials": constants.STATISTICAL_CHECK_START_N,
         "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
         "stop_rule": "FIRST_PASSING_ELIGIBLE_TRANSITION",
