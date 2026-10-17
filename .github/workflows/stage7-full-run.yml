@@ -737,35 +737,6 @@ jobs:
                   }, sort_keys=True))
                   raise SystemExit(0)
 
-          if state.get("final_status") == "stable":
-              recent_gate_a_points = history[-REQUIRED_CONSECUTIVE:]
-              previous_stable_state_is_valid = (
-                  len(recent_gate_a_points) == REQUIRED_CONSECUTIVE
-                  and all(
-                      item.get("gate_a", {}).get("status") == "PASS"
-                      and item.get("gate_a", {}).get("checked") is True
-                      and item.get("gate_a", {}).get("stable") is True
-                      and item.get("gate_b", {}).get("stable") is True
-                      for item in recent_gate_a_points
-                  )
-              )
-              if not previous_stable_state_is_valid:
-                  state["final_status"] = None
-                  state["stable_at_n"] = None
-                  state["included_in_final_stats"] = False
-                  state["reason_if_not_stable"] = (
-                      "Prior stable status excluded: latest consecutive checkpoints "
-                      "do not carry three explicit exact-golden Gate A PASS results."
-                  )
-                  blob_sha = store.save_state(state, blob_sha)
-              else:
-                  print(json.dumps({
-                  "scenario": SCENARIO,
-                  "status": "already_stable",
-                  "stable_at_n": state.get("stable_at_n"),
-                  }, sort_keys=True))
-                  raise SystemExit(0)
-
           while True:
               if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
                   state["final_status"] = "timeout"
