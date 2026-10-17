@@ -62,7 +62,7 @@ jobs:
           source = jobs["matrix-simulation"]["steps"]
           step = next(item for item in source if item.get("name") == "Adaptive scenario orchestration")
           script = step["run"]
-          match = re.search(r"python\s+-\s+<<'PY'\s*\n(.*?)\n\s*PY\s*$", script, re.S)
+          match = re.search(r"python\s+-\s+<<'PY'\s*\n(.*?)\n\s*PY(?:\n|$)", script, re.S)
           if not match:
               raise AssertionError("embedded Stage 7 Python entrypoint heredoc not found")
           ast.parse(match.group(1), filename="stage7-full-run.yml:adaptive-orchestration")
