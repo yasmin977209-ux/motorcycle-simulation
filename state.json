@@ -2,9 +2,9 @@
   "stage": "12-CLOSED",
   "schema_version": "1.0",
   "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
-  "sha": "d5cb5f15a76684ea38c2b714198272a3e9e118b8",
+  "sha": "3ddbe1de20155fb2ec000e5558a21cdf4c46a79a",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
+  "next": "D-2026-10-17-05 records the owner's rule to compare every actual adjacent §2.5 checkpoint transition per scenario, with trial IDs 1..300 mandatory for all 25 scenarios. The pairwise rule does not permit a stability verdict at N=300 by itself; this first-point rule remains PENDING. No production checkpoint until that rule is resolved, the approved Gate A provider is validated, and SOURCE_SHA drift is resolved without silently changing data identity.",
   "blockers": [
     "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
     "SOURCE_SHA_DRIFT: the current main source tree differs from pinned source commit f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b in daily_engine.py (pre-existing). Do not bump SOURCE_SHA or mix datasets without an identity-preserving decision and validation.",
@@ -13,7 +13,7 @@
     "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
     "GOVERNANCE_GAP: D-2026-10-12-01 is present in DECISIONS_LOG.md and referenced by CP-C, but is absent from state.governance_decisions.",
     "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run.",
-    "UNDEFINED_BUSINESS_RULE: Initial N=300 stability evaluation is not fully defined: §2.5's seven-metric evaluator compares adjacent checkpoints, but no approved baseline before N=300 exists. Do not execute new statistical checkpoints or declare SCENARIO_STABLE until the first-checkpoint rule is explicitly resolved."
+    "UNDEFINED_BUSINESS_RULE: The per-scenario pairwise comparison rule is defined for every actual adjacent checkpoint transition, but N=300 has no preceding checkpoint under the new schedule. Under §2.5, N=300 alone cannot pass a transition comparison. Owner must resolve whether N=300 is coverage-only (first possible §2.5 decision on 300→600) or separately define an approved initial-point criterion. Do not claim SCENARIO_STABLE at N=300 or run a new production checkpoint pending resolution."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "0b083fa472d7a11089a15137cfad16d87785689a",
@@ -159,6 +159,25 @@
       "approved_by_project_owner_in_chat": true,
       "historical_failure_policy": "Retain all historical failed transitions; later passing applicable transitions may support overall stability without deleting/relabeling earlier failures",
       "pending_rule": "The §2.5 seven-metric comparison needs a defined baseline at the first checkpoint N=300.",
+      "no_production_run_authorized": true
+    },
+    "D-2026-10-17-05": {
+      "topic": "per_scenario_adjacent_transition_stability_rule",
+      "date": "2026-10-17",
+      "status": "PARTIALLY_APPROVED_PENDING_FIRST_POINT_RULE",
+      "approved_by_project_owner_in_chat": true,
+      "scope": "§2.5 transition comparison, all 25 scenarios",
+      "initial_trial_ids": "1..300 mandatory for every scenario including C100",
+      "comparison": "each actual adjacent authorized checkpoint pair within the same scenario; all seven §2.5 metrics must pass together",
+      "thresholds_unchanged": true,
+      "no_fixed_two_transition_requirement": true,
+      "historical_failures_preserved": true,
+      "no_permanent_block_from_historical_failure_alone": true,
+      "checkpoint_sequence": "300,600,1200,2400,4800,9600,...",
+      "stop_at_first_passing_transition": true,
+      "persist_stable_at_n": true,
+      "first_n300_stability_verdict": "PENDING/UNDEFINED_BUSINESS_RULE",
+      "no_n150_baseline": true,
       "no_production_run_authorized": true
     }
   },
@@ -716,6 +735,50 @@
       "candidate_tested_sha": "b9abcf0b39748b3d406b199613f38f8007152700",
       "candidate_run_conclusion": "failure",
       "failure_summary": "5 failed, 385 passed, 1 skipped; four acceptance failures due missing results_stage5 fixtures, one hash-seed subprocess failure not yet root-caused"
+    }
+  },
+  "stability_transition_rule_20261017": {
+    "decision_id": "D-2026-10-17-05",
+    "status": "PARTIALLY_APPROVED_PENDING_FIRST_POINT_RULE",
+    "approved": {
+      "all_scenarios_count": 25,
+      "initial_trial_id_range": "1..300",
+      "includes_c100": true,
+      "compare_every_actual_adjacent_transition_within_same_scenario": true,
+      "compare_scenarios_across_each_other": false,
+      "all_seven_section_2_5_metrics_must_pass_together": true,
+      "relative_change_threshold": "strictly <1%",
+      "near_zero_reference_epsilon": 0.000001,
+      "near_zero_absolute_difference_threshold": "strictly <1 currency unit",
+      "fixed_two_transition_count_required": false,
+      "checkpoint_sequence": "300,600,1200,2400,4800,9600,...",
+      "stop_at_first_passing_transition": true,
+      "record_stable_at_n": true,
+      "preserve_historical_failures": true,
+      "historical_failure_is_permanent_blocker": false,
+      "invent_n150_or_other_baseline": false
+    },
+    "pending": {
+      "classification": "PENDING/UNDEFINED_BUSINESS_RULE",
+      "issue": "There is no prior scheduled checkpoint before N=300, so the pairwise §2.5 rule cannot yield a stability verdict at N=300 alone.",
+      "unresolved_choice": "Either treat N=300 as mandatory coverage only and first assess §2.5 stability on transition 300→600, or define a separate explicitly approved initial-point criterion.",
+      "prohibit_stable_at_n300_without_rule": true,
+      "no_production_checkpoint_until_resolved": true
+    },
+    "evidence": {
+      "main_head_sha": "647c19826b90d8224ce73ef9b90c306a45e03fb0",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "previous_policy_branch": "tmp/cp-stability-stop-rule-20261017",
+      "base_commit_sha": "2dc47bbf66610d357209f7bcb88fd7c444eb4a12",
+      "decision_log_commit_sha": "3ddbe1de20155fb2ec000e5558a21cdf4c46a79a",
+      "decision_log_blob_sha": "8e2b05cbd9b08f78d7efc3c8e247ca7601031bc5",
+      "branch": "tmp/cp-stability-transition-rule-20261017",
+      "production_simulation_run": false,
+      "pytest_run": false,
+      "workflow_run": false,
+      "model_code_changed": false,
+      "tests_changed": false,
+      "workflows_changed": false
     }
   }
 }
