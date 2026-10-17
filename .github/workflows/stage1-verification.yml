@@ -34,13 +34,12 @@ jobs:
           import dateutils
           import rng
 
-          assert constants.C100_STATISTICAL_START_TRIALS == 1
+          assert constants.C100_STATISTICAL_START_TRIALS == 300
           assert constants.NON_C100_STATISTICAL_START_TRIALS == 300
-          assert constants.ITERATION_ESCALATION_STEP == 50
           assert constants.STATISTICAL_CHECK_START_N == 300
-          assert constants.STATISTICAL_CHECK_STEP_N == 50
-          assert constants.MINIMUM_STOP_N_FOR_NON_C100 == 400
-          assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 3
+          assert constants.STATISTICAL_ESCALATION_MULTIPLIER == 2
+          assert constants.STABILITY_STOP_ON_FIRST_PASS is True
+          assert len(constants.REFERENCE_STABILITY_INDICATORS) == 7
           assert constants.INITIAL_SMOKE_TRIALS_PER_SCENARIO == 1
           assert constants.C100_CI_GATE_ENABLED is False
           assert constants.CI_ABSOLUTE_EPSILON == 1
@@ -112,10 +111,10 @@ jobs:
               "constants": {
                   "C100_STATISTICAL_START_TRIALS": constants.C100_STATISTICAL_START_TRIALS,
                   "NON_C100_STATISTICAL_START_TRIALS": constants.NON_C100_STATISTICAL_START_TRIALS,
-                  "ITERATION_ESCALATION_STEP": constants.ITERATION_ESCALATION_STEP,
                   "STATISTICAL_CHECK_START_N": constants.STATISTICAL_CHECK_START_N,
-                  "STATISTICAL_CHECK_STEP_N": constants.STATISTICAL_CHECK_STEP_N,
-                  "MINIMUM_STOP_N_FOR_NON_C100": constants.MINIMUM_STOP_N_FOR_NON_C100,
+                  "STATISTICAL_ESCALATION_MULTIPLIER": constants.STATISTICAL_ESCALATION_MULTIPLIER,
+                  "STABILITY_STOP_ON_FIRST_PASS": constants.STABILITY_STOP_ON_FIRST_PASS,
+                  "REFERENCE_STABILITY_INDICATORS": list(constants.REFERENCE_STABILITY_INDICATORS),
                   "CI_ABSOLUTE_EPSILON": constants.CI_ABSOLUTE_EPSILON,
                   "scenario_count": len(constants.SCENARIO_IDS),
               },
