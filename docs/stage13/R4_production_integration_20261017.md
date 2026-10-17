@@ -77,3 +77,21 @@ A passing workflow validates only the code integration and synthetic/precision r
 
 ### Acceptance boundary
 The workflow may prove only code compilation, compatibility imports, and synthetic Stage 13 / existing Stage 9C precision regressions on its exact tested SHA. It must not read or build a production cohort. Gate A provider, source identity drift, Stage 9C PARTIAL, delivery acceptance, and Release remain separate blockers.
+
+
+## R4 repair — preserve Artifact evidence on upload
+
+**Run:** `39044015894`  
+**Tested HEAD:** `ac85b85caed1585c53599b2de63bca396d45006a`  
+**Exact failure text:** `No files were found with the provided path: .stage13_integration_evidence/. No artifacts will be uploaded.`  
+**Proven cause:** GitHub Actions `actions/upload-artifact@v4` logged `include-hidden-files: false` while the evidence directory name began with a dot. The preceding steps completed: the compatibility/import verification passed, and the test step reported `26 passed in 9.90s`. Job conclusion remains failure because Artifact upload failed; no Artifact exists for this Run.
+
+| العنصر | الحالي | المرجع/القرار والفرع | النص الحاكم | الحكم |
+|---|---|---|---|---|
+| Workflow evidence upload | Temporary workflow blob `c8c22f9f35575f8f504051e4c6f46a2edca5f2e0` writes all audit files beneath hidden directory `.stage13_integration_evidence/`; upload step excludes hidden files by default. | Owner-authorized temporary workflow contract in this R4 addendum; tested Run `39044015894`. | Upload a bounded Artifact containing the exact tested SHA, code hashes, test-source identities, JUnit, pytest log and exit code; inspect actual content before acceptance. | `WORKFLOW_DEFECT` — output location is excluded by the uploader. Repair by using a non-hidden evidence directory only; do not change test assertions, product code, data, permissions or workflow scope. |
+
+### Bounded repair and acceptance
+- Rename all evidence output paths in the temporary workflow to visible directory `stage13_integration_evidence/`; retain `if-no-files-found: error`.
+- Keep exact branch pin, least-privilege token, 30-minute job timeout, unchanged source-test blob pins, and no production data/workbook generation.
+- Run the same focused suite on the new exact HEAD; inspect jobs and download/review the Artifact. Do not count the prior failed Run as PASS.
+- After the Artifact is independently inspected, remove only the temporary workflow file. Preserve the candidate branch and uploaded evidence. No changes to main/state/tests/datasets or project gate dispositions.
