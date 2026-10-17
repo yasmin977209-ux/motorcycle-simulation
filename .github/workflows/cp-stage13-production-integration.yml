@@ -1,0 +1,180 @@
+name: Stage 13 production integration focused regression (temporary)
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage13-production-20261017
+    paths:
+      - .github/workflows/cp-stage13-production-integration.yml
+      - scripts/stage13_assemble.py
+      - scripts/excel_builder.py
+      - docs/stage13/R4_production_integration_20261017.md
+
+permissions:
+  contents: read
+
+jobs:
+  stage13-integration:
+    name: Test Stage 13 adapter/assembler integration (synthetic only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TEST_SOURCE_SHA: "3fdcdf8d006eff8f4a8fabb9ea2feb5c70c81633"
+      TEST_STAGE13_BLOB: "eb8e87be963665bf856ef35e92f1a21601f92128"
+      TEST_ADAPTIVE_MODE_BLOB: "1c3b0a37d3643c2fd45270a63df61b8525b36d5f"
+      TEST_PRECISION_BLOB: "a7252e757fc222cc764b8247b68d0e7295efa866"
+    steps:
+      - name: Checkout exact triggering candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-stage13-production-20261017
+          fetch-depth: 0
+
+      - name: Initialize bounded audit evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p integration_evidence
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          cat > integration_evidence/run_context.json <<EOF
+          {
+            "workflow_run_id": "${GITHUB_RUN_ID}",
+            "workflow_run_attempt": "${GITHUB_RUN_ATTEMPT}",
+            "branch": "${GITHUB_REF_NAME}",
+            "tested_head_sha": "${GITHUB_SHA}",
+            "test_source_sha": "${TEST_SOURCE_SHA}",
+            "scope": "STAGE13_ADAPTER_ASSEMBLER_INTEGRATION_SYNTHETIC_AND_PRECISION_REGRESSION_ONLY",
+            "production_data_read": false,
+            "simulation_or_trial_generation": false,
+            "main_modified": false
+          }
+          EOF
+          printf 'HEAD_SHA=%s\n' "$(git rev-parse HEAD)" > integration_evidence/head_identity.txt
+          printf 'REFERENCE_SHA256=%s\n' "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479" >> integration_evidence/head_identity.txt
+          printf 'SOURCE_SHA=%s\n' "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b" >> integration_evidence/head_identity.txt
+          printf 'MASTER_SEED=%s\n' "20270101" >> integration_evidence/head_identity.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install declared project dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt 2>&1 | tee integration_evidence/pip_install.log
+          python --version > integration_evidence/python_version.txt
+          python -m pip freeze > integration_evidence/pip_freeze.txt
+
+      - name: Fetch and fingerprint exact previously tested synthetic tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin tmp/cp-stage13-adaptive-assembler-20261017
+          git cat-file -e "${TEST_SOURCE_SHA}^{commit}"
+          mkdir -p "$RUNNER_TEMP/stage13_tests"
+          git show "${TEST_SOURCE_SHA}:tests/test_stage13_assembler.py" > "$RUNNER_TEMP/stage13_tests/test_stage13_assembler.py"
+          git show "${TEST_SOURCE_SHA}:tests/test_excel_builder_adaptive_mode.py" > "$RUNNER_TEMP/stage13_tests/test_excel_builder_adaptive_mode.py"
+          git show "${TEST_SOURCE_SHA}:tests/test_excel_builder_precision.py" > "$RUNNER_TEMP/stage13_tests/test_excel_builder_precision.py"
+          stage13_blob="$(git hash-object "$RUNNER_TEMP/stage13_tests/test_stage13_assembler.py")"
+          adaptive_blob="$(git hash-object "$RUNNER_TEMP/stage13_tests/test_excel_builder_adaptive_mode.py")"
+          precision_blob="$(git hash-object "$RUNNER_TEMP/stage13_tests/test_excel_builder_precision.py")"
+          test "$stage13_blob" = "$TEST_STAGE13_BLOB"
+          test "$adaptive_blob" = "$TEST_ADAPTIVE_MODE_BLOB"
+          test "$precision_blob" = "$TEST_PRECISION_BLOB"
+          cat > integration_evidence/test_source_identity.json <<EOF
+          {
+            "source_commit": "${TEST_SOURCE_SHA}",
+            "test_files": [
+              {"path":"tests/test_stage13_assembler.py","git_blob_sha":"${stage13_blob}"},
+              {"path":"tests/test_excel_builder_adaptive_mode.py","git_blob_sha":"${adaptive_blob}"},
+              {"path":"tests/test_excel_builder_precision.py","git_blob_sha":"${precision_blob}"}
+            ],
+            "tests_copied_to_repository": false
+          }
+          EOF
+
+      - name: Compile changed integration modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python -m py_compile scripts/stage13_assemble.py scripts/excel_builder.py scripts/stage9c_rebuild_precision_workbook.py > integration_evidence/py_compile.log 2>&1; then
+            echo "PY_COMPILE=PASS" > integration_evidence/py_compile_status.txt
+          else
+            code=$?
+            echo "PY_COMPILE=FAIL exit=$code" > integration_evidence/py_compile_status.txt
+            cat integration_evidence/py_compile.log
+            exit "$code"
+          fi
+
+      - name: Verify adapter and legacy Stage 9C import contract
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python - <<'PY' 2>&1 | tee integration_evidence/import_smoke.log
+          import inspect
+          import scripts.excel_builder as adapter
+          import scripts.stage13_assemble as assembler
+          import scripts.stage9c_rebuild_precision_workbook as stage9c
+          assert adapter.assemble_workbook is assembler.assemble_workbook
+          assert adapter.patch_xlsx_numeric_values is assembler.patch_xlsx_numeric_values
+          assert callable(adapter.save_workbook_preserving_stats_precision)
+          assert "mode" in inspect.signature(adapter.build_excel).parameters
+          assert "mode" in inspect.signature(adapter.build_workbook).parameters
+          assert stage9c.patch_xlsx_numeric_values is assembler.patch_xlsx_numeric_values
+          assert assembler.EXPECTED_REFERENCE_SHA256 == "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+          print("ADAPTER_ASSEMBLER_AND_STAGE9C_IMPORT_CONTRACT=PASS")
+          PY
+
+      - name: Run focused synthetic assembler and strict precision regressions
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python -m pytest -q \
+            "$RUNNER_TEMP/stage13_tests/test_stage13_assembler.py" \
+            "$RUNNER_TEMP/stage13_tests/test_excel_builder_adaptive_mode.py" \
+            "$RUNNER_TEMP/stage13_tests/test_excel_builder_precision.py" \
+            --junitxml=integration_evidence/junit.xml 2>&1 | tee integration_evidence/pytest.log
+          echo "PYTEST_EXIT_CODE=0" > integration_evidence/pytest_status.txt
+
+      - name: Write final evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short > integration_evidence/git_status_short.txt
+          sha256sum scripts/stage13_assemble.py scripts/excel_builder.py scripts/stage9c_rebuild_precision_workbook.py requirements.txt > integration_evidence/source_sha256.txt
+          wc -c scripts/stage13_assemble.py scripts/excel_builder.py scripts/stage9c_rebuild_precision_workbook.py requirements.txt > integration_evidence/source_bytes.txt
+          python - <<'PY'
+          import json, os, platform
+          from pathlib import Path
+          root=Path("integration_evidence")
+          payload={
+            "workflow_run_id": int(os.environ["GITHUB_RUN_ID"]),
+            "tested_head_sha": os.environ["GITHUB_SHA"],
+            "branch": os.environ["GITHUB_REF_NAME"],
+            "python": platform.python_version(),
+            "compile_status": (root/"py_compile_status.txt").read_text().strip() if (root/"py_compile_status.txt").exists() else "PENDING",
+            "import_smoke_log_present": (root/"import_smoke.log").is_file(),
+            "pytest_status": (root/"pytest_status.txt").read_text().strip() if (root/"pytest_status.txt").exists() else "PENDING",
+            "production_data_read": False,
+            "simulation_or_trial_generation": False,
+            "main_modified": False,
+            "artifact_scope": "synthetic tests plus existing strict XLSX precision regression; no workbook cohort assembly"
+          }
+          (root/"result_manifest.json").write_text(json.dumps(payload,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          PY
+
+      - name: Upload bounded integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-production-integration-evidence-${{ github.run_id }}
+          path: integration_evidence/
+          if-no-files-found: error
+          retention-days: 30
