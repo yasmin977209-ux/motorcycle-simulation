@@ -39,3 +39,46 @@
 | Historical-ID integrity | no duplicate execution, no synthetic row identity, exact source/provenance | C100's previous independent ID-2 result was recorded as equality proof only, not a persisted TrialResult in the main runner state | **HOLD for migrating that old C100 checkpoint; fail closed if full row is unavailable** |
 
 **Explicit non-claims:** This R4 is not a test result or stability result. No production simulations, Monte Carlo, or full pytest have been run as part of preparing it. The approved 300-trial all-scenario execution policy belongs to orchestration; `constants.py`, all model source files, RNG, seed, and historical data remain byte-identical to their pinned identity.
+
+## Implementation and verification evidence — CP-STABILITY-POLICY-IMPL-20261017
+
+**Result:** PASS for static + focused deterministic regression on the exact tested SHA only; production stability remains BLOCKED by independent gates.  
+**Main base:** `647c19826b90d8224ce73ef9b90c306a45e03fb0`  
+**Implementation branch:** `tmp/cp-stability-policy-impl-20261017`  
+**Tested SHA:** `3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843`
+
+### Exact test evidence
+
+- GitHub Actions Run `38989548728`: success — https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38989548728
+- Job `117268651135`: success.
+- `98 passed in 0.87s`; no production simulation, Monte Carlo checkpoint, or historical trial replay was run.
+- Static checks: `compileall` PASS; YAML parse for Stage 7 and Stage 1 PASS; embedded Stage 7 orchestrator AST PASS; branch pin, permissions, and timeout boundary checks PASS.
+- Artifact `12083839056`, name `cp-stability-policy-test-evidence`; ZIP size **3,368 bytes**; archive SHA-256 `ee09ced3dd29afd24a8040622759a967147ea2e5e1c022d87a49b4346b482721`; expiration `2026-10-31T01:08:30Z`.
+- Artifact inventory: `cp-stability-policy-evidence.json` (2,015 bytes) and `policy-test-results.xml` (12,866 bytes). The embedded manifest identifies tested SHA `3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843`, outcome `success`, `production_simulation_executed=false`, `source_sha_changed=false`, and `rng_or_seed_changed=false`.
+
+### Content inspection / source identity
+
+The downloaded Artifact ZIP was independently listed and read. Its digest matches GitHub's Artifact metadata. The JUnit XML contains the successful focused-suite result; the manifest's per-file SHA-256 values match the tested source tree recorded by the job.
+
+- `constants.py` remained byte-for-byte identical to `main` (Git blob `88b3e7b5a509f8486597ac08dfc5acaf80d4d39b`); SHA-256 `675df03f651ce64cf06a1d70c185905261fdfd1357a507f00ac6c43125fbd607`, **16,776 bytes**.
+- `.github/workflows/stage1-verification.yml` remained byte-for-byte identical to `main` (Git blob `003cad09294a541a95cc427443413585f93b4975`); `tests/test_stage1.py` remained byte-for-byte identical to `main` (Git blob `c7318e938ca66828107dbdb799c6826edf1a159f`). This preserves the pinned model/constants source boundary and existing calendar/RNG checks.
+- The changed policy lives in the scheduler/orchestration files, not the model engine, constants, RNG or historical datasets.
+- Temporary verifier Workflow `.github/workflows/cp-stability-policy-verify.yml` was pinned to this exact branch, used `contents: read`, had a 15-minute job timeout, no `workflow_dispatch`, and did not run Monte Carlo. It was removed after evidence collection; the branch itself was retained.
+
+### Verification-tool failures encountered and disposition
+
+These early runs failed before pytest and are classified `WORKFLOW_DEFECT`, not code-test failures:
+
+- Run `38989216866`: exact error `AssertionError: embedded Stage 7 Python entrypoint heredoc not found`; verifier regex incorrectly required the heredoc to be the end of the whole shell step.
+- Run `38989389427`: exact error `AssertionError: embedded Stage 7 Python entrypoint heredoc not found`; the production workflow uses `cat > /tmp/stage7_orchestrator.py <<'PY'`, not `python - <<'PY'`.
+- Run `38989450332`: exact Python error `AssertionError` at verifier line 40; the boundary assertion inspected the production workflow's trigger instead of the temporary verifier's own trigger.
+
+Fixes: explicit cat-heredoc boundary extraction and separate parsing of the temporary verifier's own YAML. Run `38989548728` then passed all static checks and focused tests. No test was skipped or represented as PASS in place of a failed test.
+
+### Remaining gates (not closed by this CP)
+
+- **Gate A production provider: BLOCKED** — an approved-golden provider with proven fingerprint coverage and source identity is still not connected.
+- **SOURCE_SHA drift: BLOCKED** — pre-existing difference in `daily_engine.py` versus `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`; this CP did not raise `SOURCE_SHA`.
+- Stage 11 topology, Stage 13 assembler, D-2026-10-12-01 state reconciliation, G2 runtime risk and the complete seven-file delivery audit remain open.
+- The successful run is not a production run, Gate A PASS, `SCENARIO_STABLE`, final-delivery approval or Release.
+
