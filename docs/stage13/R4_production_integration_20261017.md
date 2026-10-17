@@ -57,3 +57,23 @@ The project owner explicitly approved in chat (“نعم”) a temporary, branch
 
 ### Acceptance boundary
 A passing workflow validates only the code integration and synthetic/precision regression scope. It does not establish that a production dataset was supplied or that Gate A, Gate B, §2.5 stability, Stage 9C full-scope accounting, or the seven final delivery contracts passed. Production artifact generation remains blocked by the current project identity/golden-provider/data-scope blockers.
+
+
+## Owner authorization addendum — temporary integration verification workflow
+
+**Recorded:** 2026-10-17  
+**Owner authorization:** Direct user replies “نعم” and “نعم” in response to the explicit request to create one temporary branch-pinned integration verification workflow and remove it after independent inspection of its Run and Artifact. This addendum changes only the no-workflow-change exclusion for that single workflow; it does not authorize changing tests in the repository, production simulations, trial generation, historical datasets, `SOURCE_SHA`, seed/RNG/sampling policy, main/state, merge, delivery approval, or Release.
+
+### Bounded workflow contract
+- Path: `.github/workflows/cp-stage13-production-verify.yml`.
+- Trigger: push only on `tmp/cp-stage13-production-20261017`, restricted to the workflow and the three Stage 13/Stage 9C integration files.
+- Checkout and audit the exact event SHA; no self-dispatch and no `workflow_dispatch`.
+- Minimal token permissions: `contents: read`; job timeout: 30 minutes.
+- Install declared project dependencies; Python compilation and compatibility smoke check only (no cohort loading or workbook generation).
+- Run unchanged reviewed Stage 13 synthetic tests from exact commit `aba7766a7ac7fe3ce94946e1d9024de4852a0afd` (blobs `eb8e87be963665bf856ef35e92f1a21601f92128` and `1c3b0a37d3643c2fd45270a63df61b8525b36d5f`) plus the existing Stage 9C numeric-precision regression test from the current main lineage (blob `a7252e757fc222cc764b8247b68d0e7295efa866`). The reviewed test sources are materialized temporarily during the job and are not committed or modified by this CP.
+- Upload bounded evidence with exact tested HEAD, test source identities, file hashes, Python/dependency versions, compile/import results, pytest logs, JUnit XML, and process exit code.
+- After completion, inspect the actual Artifact contents and hashes before removing the workflow via a bounded cleanup commit. Keep the branch, production files, and Artifact evidence; do not edit main/state or change any gate verdict.
+- If the Run is incomplete or evidence cannot be inspected, record PENDING/BLOCKED; do not retry/poll an in-progress Run or claim PASS from workflow status alone.
+
+### Acceptance boundary
+The workflow may prove only code compilation, compatibility imports, and synthetic Stage 13 / existing Stage 9C precision regressions on its exact tested SHA. It must not read or build a production cohort. Gate A provider, source identity drift, Stage 9C PARTIAL, delivery acceptance, and Release remain separate blockers.
