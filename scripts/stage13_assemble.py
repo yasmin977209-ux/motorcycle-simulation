@@ -902,7 +902,7 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             if is_final:
                 if not gates_all_pass or entry.get("overall_status") != "SCENARIO_STABLE":
                     raise RuntimeError(f"ADAPTIVE_FINAL_CHECKPOINT_NOT_STABLE: {scenario}")
-            elif entry.get("overall_status") == "SCENARIO_STABLE":
+            elif gates_all_pass or entry.get("overall_status") == "SCENARIO_STABLE":
                 raise RuntimeError(f"ADAPTIVE_STOPPED_AFTER_FIRST_PASS_VIOLATION: {scenario}:{expected_n}")
 
             if not scenario.startswith("C100_") and expected_n in (600, 1200):
