@@ -36,3 +36,24 @@ This CP does not create production workbooks, run Monte Carlo, extend a cohort, 
 - Code diff/runtime evidence: PENDING before implementation.
 - Production cohort identity and independent Gate A evidence: BLOCKED.
 - Final deliverables/Release: NOT AUTHORIZED in this CP.
+
+
+## R4 addendum — authorized temporary integration-test workflow
+Recorded: 2026-10-17, before workflow change.
+
+The project owner explicitly approved in chat (“نعم”) a temporary, branch-pinned workflow to run focused integration checks and upload inspectable evidence. This changes only the no-workflow-edits exclusion for the single workflow below. It does not authorize editing tests in the repository, running simulations/trials, production dataset assembly, editing `main` or `state.json`, merging, creating a PR, or releasing deliverables.
+
+### Workflow contract
+- Exact path: `.github/workflows/cp-stage13-production-integration.yml`.
+- Trigger: path-filtered `push` only, exact branch `tmp/cp-stage13-production-20261017`; no `workflow_dispatch`, schedule, self-dispatch, or wildcard branch pin.
+- Checkout the triggering SHA and assert the checked-out commit equals `GITHUB_SHA`.
+- Read-only minimum token permissions; job-level timeout.
+- Python compile and smoke-test the integrated assembler/adapter, including backward-compatible `patch_xlsx_numeric_values` imports required by `scripts/stage9c_rebuild_precision_workbook.py`.
+- Run focused Stage 13 synthetic tests from the exact previously tested component commit `3fdcdf8d006eff8f4a8fabb9ea2feb5c70c81633`, verifying the three test-file blob SHAs before running them from a temporary directory. Run the existing main-branch precision regression test on this integration branch too.
+- No test source files are added or modified in this CP. The candidate tests are fetched read-only from the exact test-evidence commit and import the current integration-branch source via `PYTHONPATH=.`.
+- Upload bounded evidence unconditionally, including tested SHA, source file hashes/bytes, Python/dependency versions, pytest output/JUnit XML, compile result and the exact temporary test-source blob hashes. Missing evidence fails the job.
+- After the Run completes, inspect its exact jobs and downloaded artifact contents, calculate artifact/member SHA-256 and sizes, and verify provenance before classifying the integration test gate.
+- If the Run cannot be inspected, report PENDING/BLOCKED. After evidence inspection, remove this workflow alone from the candidate branch in a cleanup commit, keep the branch and evidence, and do not edit `main`.
+
+### Acceptance boundary
+A passing workflow validates only the code integration and synthetic/precision regression scope. It does not establish that a production dataset was supplied or that Gate A, Gate B, §2.5 stability, Stage 9C full-scope accounting, or the seven final delivery contracts passed. Production artifact generation remains blocked by the current project identity/golden-provider/data-scope blockers.
