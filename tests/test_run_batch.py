@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import constants
 import run_batch
 from scripts.stage7_state import StateIntegrityError
 
