@@ -20,6 +20,20 @@ from openpyxl.utils import get_column_letter
 
 
 EXPECTED_SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+EXPECTED_REFERENCE_SHA256 = "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+EXPECTED_ADAPTIVE_COHORT_ID = "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1"
+EXPECTED_ADAPTIVE_SOURCE_COMMIT = "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
+ADAPTIVE_CHECKPOINT_METRICS = (
+    "P10_Cumulative_Project_Profit",
+    "P50_Cumulative_Project_Profit",
+    "P90_Cumulative_Project_Profit",
+    "P90_Final_Cash",
+    "Probability_of_Accounting_Loss",
+    "P90_Termination_Count",
+    "P90_Held_Assets",
+)
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 EXPECTED_SCENARIOS = [
     "C100_G100", "C100_G070", "C100_G050", "C100_G030", "C100_G000",
     "C085_G100", "C085_G070", "C085_G050", "C085_G030", "C085_G000",
@@ -157,9 +171,16 @@ def numeric_metrics(rows):
 def write_readme(wb, manifest, validation, excel_errors):
     ws = wb.active
     ws.title = "README"
+    if manifest.get("cohort_id") == EXPECTED_ADAPTIVE_COHORT_ID:
+        provenance = (
+            f"Stage 13 adaptive cohort {manifest['cohort_id']}; "
+            f"provenance run {manifest['run_id']}"
+        )
+    else:
+        provenance = f"Stage 9A from official Run {manifest['run_id']}"
     rows = [
         ("Project", "motorcycle-simulation — Motorcycle Rental Simulation — Sana'a"),
-        ("Workbook build provenance", f"Stage 9A from official Run {manifest['run_id']}"),
+        ("Workbook build provenance", provenance),
         ("Scenario count", len(EXPECTED_SCENARIOS)),
         ("Total trials", manifest["total_trials"]),
         ("Total representatives", manifest["total_representatives"]),
@@ -171,8 +192,8 @@ def write_readme(wb, manifest, validation, excel_errors):
         ("Dataset manifest SHA-256", manifest.get("global_manifest_sha256")),
         ("Dataset status", manifest.get("dataset_status", "verified enrichment")),
         ("Validation status", validation.get("status", "not-provided")),
-        ("Excel sheets", len(wb.sheetnames)),
-        ("Excel error count", len(excel_errors)),
+        ("Excel sheets", 0),
+        ("Excel error cells", 0),
     ]
     write_table(ws, ["Item", "Value"], rows)
     style_sheet(ws, "A2")
@@ -235,7 +256,7 @@ def write_scenario_matrix(wb, summaries, manifest):
     for s in EXPECTED_SCENARIOS:
         x = summaries[s]
         rows.append([
-            s, x["trial_count"], manifest["scenarios"][s].get("final_status", "stable"), x["p10_profit"], x["p50_profit"], x["p90_profit"],
+            s, x["trial_count"], manifest["scenarios"][s].get("final_status", "NOT_ESTABLISHED"), x["p10_profit"], x["p50_profit"], x["p90_profit"],
             x["p10_cash"], x["p50_cash"], x["p90_cash"], x["loss_probability"],
             x["p50_termination"], x["p90_termination"], x["mean_held_assets"], ""
         ])
@@ -738,8 +759,189 @@ def _role_value(mapping, role):
     raise RuntimeError(f"MISSING_REPRESENTATIVE_ASSIGNMENT: {role}")
 
 
+def _valid_sha256(value):
+    return isinstance(value, str) and SHA256_RE.fullmatch(value) is not None
+
+
+def _required_nonempty_string(mapping, key, error_code):
+    value = mapping.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError(error_code)
+    return value
+
+
+def _finite_number(value):
+    return isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, bool) and math.isfinite(float(value))
+
+
+def _metric_status(old_value, new_value):
+    if not _finite_number(old_value) or not _finite_number(new_value):
+        raise RuntimeError("ADAPTIVE_METRIC_VALUE_MISSING_OR_NONFINITE")
+    old_number, new_number = float(old_value), float(new_value)
+    difference = abs(new_number - old_number)
+    if abs(old_number) < 1e-6:
+        return "PASS" if difference < 1.0 else "FAIL"
+    return "PASS" if 100.0 * difference / abs(old_number) < 1.0 else "FAIL"
+
+
+def _validate_adaptive_cohort(manifest, rows_by_scenario):
+    if manifest.get("cohort_id") != EXPECTED_ADAPTIVE_COHORT_ID:
+        raise RuntimeError("ADAPTIVE_COHORT_ID_MISMATCH")
+    if manifest.get("source_sha") != EXPECTED_SOURCE_SHA:
+        raise RuntimeError("SOURCE_SHA_MISMATCH")
+    if manifest.get("master_seed") != 20270101:
+        raise RuntimeError("ADAPTIVE_MASTER_SEED_MISMATCH")
+    if manifest.get("reference_sha256") != EXPECTED_REFERENCE_SHA256:
+        raise RuntimeError("ADAPTIVE_REFERENCE_SHA_MISMATCH")
+    if manifest.get("source_commit") != EXPECTED_ADAPTIVE_SOURCE_COMMIT:
+        raise RuntimeError("ADAPTIVE_SOURCE_COMMIT_MISMATCH")
+    for field in ("schema_version", "rng_identity", "sampling_policy"):
+        _required_nonempty_string(manifest, field, f"ADAPTIVE_{field.upper()}_MISSING")
+    run_id = manifest.get("run_id")
+    if not ((isinstance(run_id, int) and not isinstance(run_id, bool) and run_id > 0)
+            or (isinstance(run_id, str) and run_id.isdigit() and int(run_id) > 0)):
+        raise RuntimeError("ADAPTIVE_RUN_ID_INVALID")
+    if not GIT_SHA_RE.fullmatch(str(manifest.get("run_head_sha", ""))):
+        raise RuntimeError("ADAPTIVE_RUN_HEAD_SHA_INVALID")
+    if not _valid_sha256(manifest.get("ordered_trial_hash_map_sha256")):
+        raise RuntimeError("ADAPTIVE_ORDERED_MAP_SHA_INVALID")
+    if manifest.get("total_representatives") != len(EXPECTED_SCENARIOS) * 5:
+        raise RuntimeError("ADAPTIVE_REPRESENTATIVE_COUNT_MISMATCH")
+
+    expected_total = 0
+    ordered_fingerprints = []
+    required_scenario_meta = manifest.get("scenarios")
+    if not isinstance(required_scenario_meta, dict) or set(required_scenario_meta) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("MANIFEST_SCENARIO_IDENTITY_MISMATCH")
+
+    allowed_statuses = {"PASS", "FAIL", "PENDING", "BLOCKED"}
+    for scenario in EXPECTED_SCENARIOS:
+        rows = rows_by_scenario[scenario]
+        metadata = required_scenario_meta[scenario]
+        if not isinstance(metadata, dict):
+            raise RuntimeError(f"ADAPTIVE_SCENARIO_METADATA_INVALID: {scenario}")
+        if metadata.get("final_status") != "SCENARIO_STABLE":
+            raise RuntimeError(f"ADAPTIVE_SCENARIO_NOT_STABLE: {scenario}")
+        stable_at_n = metadata.get("stable_at_n")
+        if isinstance(stable_at_n, bool) or not isinstance(stable_at_n, int) or stable_at_n < 600:
+            raise RuntimeError(f"ADAPTIVE_STABLE_AT_N_INVALID: {scenario}")
+        valid_stops = set()
+        checkpoint_n = 600
+        while checkpoint_n <= stable_at_n:
+            valid_stops.add(checkpoint_n)
+            checkpoint_n *= 2
+        if stable_at_n not in valid_stops:
+            raise RuntimeError(f"ADAPTIVE_NON_DOUBLING_STABLE_AT_N: {scenario}")
+
+        ids = [_trial_id(row) for row in rows]
+        if ids != list(range(1, stable_at_n + 1)):
+            raise RuntimeError(f"ADAPTIVE_TRIAL_COVERAGE_MISMATCH: {scenario}")
+        expected_total += stable_at_n
+        for row in rows:
+            digest = row.get("result_sha256")
+            if not _valid_sha256(digest):
+                raise RuntimeError(f"ADAPTIVE_TRIAL_FINGERPRINT_INVALID: {scenario}:{row.get('trial_id')}")
+            ordered_fingerprints.append(f"{scenario}|{_trial_id(row)}|{digest}\n")
+
+        history = metadata.get("checkpoint_history")
+        expected_ns = [300]
+        checkpoint_n = 600
+        while checkpoint_n <= stable_at_n:
+            expected_ns.append(checkpoint_n)
+            checkpoint_n *= 2
+        if not isinstance(history, list) or len(history) != len(expected_ns):
+            raise RuntimeError(f"ADAPTIVE_CHECKPOINT_HISTORY_LENGTH_MISMATCH: {scenario}")
+        forced_n2400 = False
+        for index, (entry, expected_n) in enumerate(zip(history, expected_ns)):
+            if not isinstance(entry, dict) or entry.get("n") != expected_n:
+                raise RuntimeError(f"ADAPTIVE_CHECKPOINT_HISTORY_GAP: {scenario}:{expected_n}")
+            if index == 0:
+                if entry.get("checkpoint_status") != "COVERAGE_ONLY":
+                    raise RuntimeError(f"ADAPTIVE_N300_NOT_COVERAGE_ONLY: {scenario}")
+                if entry.get("section_2_5_status") not in (None, "COVERAGE_ONLY"):
+                    raise RuntimeError(f"ADAPTIVE_N300_HAS_STABILITY_RESULT: {scenario}")
+                if entry.get("overall_status") == "SCENARIO_STABLE":
+                    raise RuntimeError(f"ADAPTIVE_N300_CANNOT_BE_STABLE: {scenario}")
+                continue
+
+            if entry.get("previous_n") != expected_n // 2:
+                raise RuntimeError(f"ADAPTIVE_CHECKPOINT_PREDECESSOR_MISMATCH: {scenario}:{expected_n}")
+            for status_key in ("gate_a_status", "gate_b_status", "section_2_5_status"):
+                if entry.get(status_key) not in allowed_statuses:
+                    raise RuntimeError(f"ADAPTIVE_CHECKPOINT_STATUS_INVALID: {scenario}:{expected_n}:{status_key}")
+            metrics = entry.get("section_2_5_metrics")
+            if not isinstance(metrics, dict) or set(metrics) != set(ADAPTIVE_CHECKPOINT_METRICS):
+                raise RuntimeError(f"ADAPTIVE_SEVEN_METRIC_EVIDENCE_MISSING: {scenario}:{expected_n}")
+            computed_statuses = {}
+            for metric_name in ADAPTIVE_CHECKPOINT_METRICS:
+                result = metrics.get(metric_name)
+                if not isinstance(result, dict):
+                    raise RuntimeError(f"ADAPTIVE_METRIC_EVIDENCE_INVALID: {scenario}:{expected_n}:{metric_name}")
+                expected_status = _metric_status(result.get("old_value"), result.get("new_value"))
+                if result.get("status") != expected_status:
+                    raise RuntimeError(f"ADAPTIVE_METRIC_STATUS_MISMATCH: {scenario}:{expected_n}:{metric_name}")
+                computed_statuses[metric_name] = expected_status
+            all_metrics_pass = all(value == "PASS" for value in computed_statuses.values())
+            expected_section_status = "PASS" if all_metrics_pass else "FAIL"
+            if entry.get("section_2_5_status") != expected_section_status:
+                raise RuntimeError(f"ADAPTIVE_SECTION_2_5_STATUS_MISMATCH: {scenario}:{expected_n}")
+            for status_key, evidence_key in (
+                ("gate_a_status", "gate_a_evidence_ref"),
+                ("gate_b_status", "gate_b_evidence_ref"),
+                ("section_2_5_status", "section_2_5_evidence_ref"),
+            ):
+                if entry.get(status_key) in {"PASS", "FAIL"} and not str(entry.get(evidence_key, "")).strip():
+                    raise RuntimeError(f"ADAPTIVE_CHECKPOINT_EVIDENCE_REF_MISSING: {scenario}:{expected_n}:{evidence_key}")
+            gates_all_pass = (
+                entry.get("gate_a_status") == "PASS"
+                and entry.get("gate_b_status") == "PASS"
+                and entry.get("section_2_5_status") == "PASS"
+                and all_metrics_pass
+            )
+            is_final = expected_n == stable_at_n
+            if is_final:
+                if not gates_all_pass or entry.get("overall_status") != "SCENARIO_STABLE":
+                    raise RuntimeError(f"ADAPTIVE_FINAL_CHECKPOINT_NOT_STABLE: {scenario}")
+            elif entry.get("overall_status") == "SCENARIO_STABLE":
+                raise RuntimeError(f"ADAPTIVE_STOPPED_AFTER_FIRST_PASS_VIOLATION: {scenario}:{expected_n}")
+
+            if not scenario.startswith("C100_") and expected_n in (600, 1200):
+                old_p50 = entry.get("gate_b_p50_previous")
+                new_p50 = entry.get("gate_b_p50_current")
+                if not _finite_number(old_p50) or not _finite_number(new_p50):
+                    raise RuntimeError(f"ADAPTIVE_GATE_B_P50_EVIDENCE_MISSING: {scenario}:{expected_n}")
+                delta = abs(float(new_p50) - float(old_p50))
+                trigger = (delta >= 1.0) if abs(float(old_p50)) < 1e-6 else (100.0 * delta / abs(float(old_p50)) > 5.0)
+                if entry.get("gate_b_p50_continuation_required") is not trigger:
+                    raise RuntimeError(f"ADAPTIVE_GATE_B_P50_TRIGGER_MISMATCH: {scenario}:{expected_n}")
+                forced_n2400 = forced_n2400 or trigger
+
+        final_entry = history[-1]
+        for field in ("gate_a_status", "gate_b_status", "section_2_5_status"):
+            if metadata.get(field) != final_entry.get(field) or metadata.get(field) != "PASS":
+                raise RuntimeError(f"ADAPTIVE_FINAL_STATUS_FIELD_MISMATCH: {scenario}:{field}")
+        for field in ("gate_a_evidence_ref", "gate_b_evidence_ref", "section_2_5_evidence_ref"):
+            _required_nonempty_string(metadata, field, f"ADAPTIVE_FINAL_EVIDENCE_REF_MISSING:{scenario}:{field}")
+        if scenario.startswith("C100_"):
+            if metadata.get("c100_deterministic_equivalence_status") != "PASS":
+                raise RuntimeError(f"ADAPTIVE_C100_DETERMINISM_NOT_PROVEN: {scenario}")
+            _required_nonempty_string(
+                metadata, "c100_deterministic_evidence_ref",
+                f"ADAPTIVE_C100_DETERMINISM_EVIDENCE_MISSING:{scenario}"
+            )
+        elif forced_n2400 and stable_at_n < 2400:
+            raise RuntimeError(f"ADAPTIVE_GATE_B_P50_REQUIRES_N2400: {scenario}")
+
+    if manifest.get("total_trials") != expected_total:
+        raise RuntimeError("ADAPTIVE_TOTAL_TRIAL_COUNT_MISMATCH")
+    computed_map_sha = hashlib.sha256("".join(ordered_fingerprints).encode("utf-8")).hexdigest()
+    if computed_map_sha != manifest.get("ordered_trial_hash_map_sha256"):
+        raise RuntimeError("ADAPTIVE_ORDERED_MAP_SHA_MISMATCH")
+    return expected_total
+
+
 def _validate_mode_and_identity(data, mode):
-    if mode not in {"canonical", "sample", "demo"}:
+    if mode not in {"canonical", "sample", "demo", "adaptive"}:
         raise ValueError(f"UNSUPPORTED_EXCEL_MODE: {mode}")
     manifest = data["manifest"]
     if manifest.get("source_sha") != EXPECTED_SOURCE_SHA:
@@ -764,7 +966,9 @@ def _validate_mode_and_identity(data, mode):
         raise RuntimeError("MANIFEST_SCENARIO_IDENTITY_MISMATCH")
     if manifest.get("total_trials") is not None and int(manifest["total_trials"]) != len(all_rows):
         raise RuntimeError("MANIFEST_TOTAL_TRIALS_MISMATCH")
-    if mode == "canonical":
+    if mode == "adaptive":
+        _validate_adaptive_cohort(manifest, rows_by_scenario)
+    elif mode == "canonical":
         for scenario in EXPECTED_SCENARIOS:
             required = [1] if scenario.startswith("C100_") else list(range(1, 551))
             if [_trial_id(row) for row in rows_by_scenario[scenario]] != required:
@@ -833,8 +1037,15 @@ def _inspect_saved_workbook(path):
                     formulas.append(f"{worksheet.title}!{cell.coordinate}")
                 elif cell.data_type == "e":
                     errors.append(f"{worksheet.title}!{cell.coordinate}:{cell.value}")
+    readme_sheet_count = None
+    if "README" in workbook.sheetnames:
+        for row in workbook["README"].iter_rows(min_row=2, max_col=2, values_only=True):
+            if row[0] == "Excel sheets":
+                readme_sheet_count = row[1]
+                break
     result = {
         "sheet_count": len(workbook.sheetnames), "sheet_names": list(workbook.sheetnames),
+        "readme_sheet_count": readme_sheet_count,
         "formula_cells": formulas, "error_cells": errors,
         "stats_sheet_count": sum(name.endswith("_STATS") for name in workbook.sheetnames),
         "daily_sheet_count": sum(name.endswith("_DAILY") for name in workbook.sheetnames),
@@ -886,6 +1097,12 @@ def assemble_workbook(data, output_path, mode="canonical"):
         actual = len(workbook.sheetnames)
         workbook.close()
         raise RuntimeError(f"EXCEL_SHEET_STRUCTURE_MISMATCH: {actual}/185 or name/order mismatch")
+    readme = workbook["README"]
+    for readme_row in readme.iter_rows(min_row=2, max_col=2):
+        if readme_row[0].value == "Excel sheets":
+            readme_row[1].value = len(workbook.sheetnames)
+        elif readme_row[0].value == "Excel error cells":
+            readme_row[1].value = 0
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     precision = save_workbook_preserving_stats_precision(workbook, output_path)
@@ -893,6 +1110,10 @@ def assemble_workbook(data, output_path, mode="canonical"):
     audit = _inspect_saved_workbook(output_path)
     if (audit["sheet_count"], audit["stats_sheet_count"], audit["daily_sheet_count"]) != (185, 25, 25):
         raise RuntimeError(f"EXCEL_SHEET_COUNT_FAILURE: {audit}")
+    if audit["readme_sheet_count"] != audit["sheet_count"]:
+        raise RuntimeError(
+            f"EXCEL_README_SHEET_COUNT_MISMATCH: README={audit['readme_sheet_count']} actual={audit['sheet_count']}"
+        )
     if audit["error_cells"]:
         raise RuntimeError(f"EXCEL_ERROR_CELLS: {audit['error_cells'][:20]}")
     if audit["formula_cells"]:
