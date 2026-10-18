@@ -68,7 +68,30 @@ jobs:
           print("ALL_25_OK")
           PY
 
-      - name: "\n check in stage7_run_trial_block"
+      - name: Verify JSON newline serialization
         run: |
-          grep -c '+ "\\n",' scripts/stage7_run_trial_block.py
-          cat -A scripts/stage7_run_trial_block.py | grep -n 'write_text\|"\\n"' | head -20
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          source = Path("scripts/stage7_run_trial_block.py").read_text(encoding="utf-8")
+          tree = ast.parse(source)
+          writes = [
+              node for node in ast.walk(tree)
+              if isinstance(node, ast.Call)
+              and isinstance(node.func, ast.Attribute)
+              and node.func.attr == "write_text"
+              and isinstance(node.func.value, ast.Name)
+              and node.func.value.id == "metadata_path"
+          ]
+          assert len(writes) == 1, f"expected one metadata write, got {len(writes)}"
+          assert writes[0].args, "metadata write has no content argument"
+          expression = writes[0].args[0]
+          assert isinstance(expression, ast.BinOp) and isinstance(expression.op, ast.Add), (
+              "metadata JSON must append a newline character"
+          )
+          assert isinstance(expression.right, ast.Constant) and expression.right.value == "\n", (
+              "metadata JSON must append a real newline, not a literal backslash-n"
+          )
+          print("JSON_NEWLINE_SERIALIZATION_OK")
+          PY
