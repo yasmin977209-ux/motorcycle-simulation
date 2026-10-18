@@ -410,3 +410,36 @@ Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP 
 
 **حدود الإغلاق:** هذا الإدخال لا يدّعي تحقق Artifact جديد، ولا يعلن Gate/استقرار PASS، ولا يعدّل `main` أو `state.json` أو المرجع أو Project Instructions أو الإعدادات. لم تُشغّل اختبارات أو محاكاة أو Trial أو checkpoint أو Release، ولم تُدمج أو تُغلق PR #46 أو يُحذف فرع.
 
+
+
+---
+
+## CP-STAT-CONTRACT — R4 continuation R4-1/R4-2/R4-3 — 2026-10-18 (Asia/Aden)
+
+**Type:** Read-only R4 continuation plus continuity handoff. No code, tests, workflows, simulation, Monte Carlo, trial, checkpoint, Golden expansion, source identity, or production dataset was changed.
+
+### Live baseline verified before this log entry
+
+- Continuity branch HEAD / PR #46 head: `5309e8c9d57ce5073f4341e188e96368754a37c7`.
+- Continuity file blob: `eed38fd95c5cf2c0dc504be1569d6e7122023559`; UTF-8 size 69,576 bytes; computed SHA-256 `536181119b568850b696b5c25006fb520504287a67519e39bd30ce39b8347396`.
+- PR #46 is open Draft, unmerged, based on main `647c19826b90d8224ce73ef9b90c306a45e03fb0`; live main HEAD remains `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- The latest completed, dated continuity point was the 2026-10-18 supplemental closure at lines 382–411, after review of all `CROSS_CHAT_ACCEPTANCE_TEST` occurrences.
+
+### R4 findings
+
+1. **R4-1 — `UNDEFINED_BUSINESS_RULE / PENDING`:** Point-change acceptance is not itself a population-level definition of “true stability.” A proposed testable false-stability event is recorded in the local R4 report as an error of estimate precision at the adaptive stopping time, conditioned on a `SCENARIO_STABLE` declaration. It requires owner-approved precision margins `pi[s,m]` for each metric and time-uniform CS coverage, with `sum_m alpha[s,m] <= alpha_s=0.0025` per scenario. If “false stability” intends another asymptotic/population predicate, the owner must specify it. No margin allocation was invented.
+2. **R4-2 — `K_SPEC / BLOCKED`:** Inspected `main/run_batch.py` uses pointwise Student-t intervals at current N and does not establish time-uniform coverage for adaptive peeking. No accepted deterministic support bound or explicit tail/moment assumptions were proved from the inspected model entry points. The financial-mean CS family remains unselected until support is proved or an owner approves specific assumptions.
+3. **R4-3 — `K_CODE / FAIL` in main; production-data acceptance `PENDING`:** `TrialResult.held_assets` exists and the approved reference §14.8 specifies `numpy.quantile(..., method="linear")` for quantiles, but `main` does not integrate all seven §2.5 metrics into the production stability decision. The local contract defines identity/completeness validation, calculation of `P90_Held_Assets`, and fail-closed binding into the seven-metric evaluator.
+4. Existing Gate B defects remain open: max(absolute, relative) threshold expression, unsafe `bool(...["stable"])`, missing seven-metric production evaluation, and three-point/two-transition logic in main. The inspected candidate branch also carries `FIRST_PASSING_ELIGIBLE_TRANSITION`; it is not evidence of the owner-approved three-transition policy.
+
+### Evidence and artifact boundaries
+
+- Local-only report: `CP-STAT-CONTRACT_R4_متابعة_الفجوات_2026-10-18.md`, 17,598 bytes, SHA-256 `9b973637dcefb30dffb550eb3dfc42c17479cec80f3b5a194ded866ae7bd73a6`. It is not a repository file or production artifact.
+- No run or artifact was created for this R4. Historical Run `38989548728` remains successful on tested SHA `3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843`, different from the currently-read candidate head `ecade81c55eb97c7a155e34cae262d8168d3f906`; its artifact content was not used to close any R4 gap.
+- The latest general Run surfaced was Stage 13 candidate Run `39044148534`, tested SHA `0eb64226c881e41b9b93c43d8526c1ca7bda9c0b`; unrelated to these statistical gaps.
+- Reference SHA-256 verified locally: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`, 271,496 bytes.
+- Live `main/state.json` is still `stage=12-CLOSED`, `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`, and `state.sha_semantics=parent_state_commit_pointer`.
+
+### Status and next permitted action
+
+R4 outcome remains `BLOCKED_FOR_IMPLEMENTATION`. No Gate or stability PASS is claimed. Do not modify tests or workflows, and do not run Monte Carlo, Trial, checkpoint, or Golden expansion. The next allowed step is a specific owner decision defining the meaning of false stability and precision margins, plus either a proof of bounded financial support or approval of explicit tail/moment assumptions; then plan a separate bounded R4/implementation CP for the `P90_Held_Assets` production acceptance path. Keep `main`, source SHA, seed, RNG, thresholds, epsilon, and historical datasets unchanged.
