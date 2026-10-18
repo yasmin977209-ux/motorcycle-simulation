@@ -522,3 +522,48 @@ R4 outcome remains `BLOCKED_FOR_IMPLEMENTATION`. No Gate or stability PASS is cl
 ### Outcome and next authorized step
 
 Overall `BLOCKED_FOR_IMPLEMENTATION`. No Gate or scenario-stability PASS is claimed. Do not modify main/tests/Workflows or run a trial/checkpoint/Monte Carlo/Golden expansion. Next permitted action is owner disposition of (a) false-stability semantics, per-metric precision margins and within-scenario alpha allocation; (b) proof of support or explicit approval of specified tail/moment assumptions; and (c) the production cohort/data-identity contract for `P90_Held_Assets`. Plan a separate bounded CP only after those matters are settled.
+
+
+---
+
+## OWNER POLICY ACCEPTANCE — FALSE STABILITY / PRECISION MARGINS / P90_HELD_ASSETS — 2026-10-18 (Asia/Aden)
+
+**Decision evidence:** The owner replied “يعتمد” to the immediately preceding proposal that specified the semantics, all seven per-indicator precision margins, the within-scenario alpha allocation, and the acceptance contract for `P90_Held_Assets`. This entry records that approval without rewriting the earlier R4 history. It approves those business-policy choices; it does not attest that code implements them or that production data have passed.
+
+### Approved policy
+
+1. **False stability:** A scenario has false stability when it is declared stable at its stopping time while at least one of the seven target estimates has absolute estimation error greater than its approved accuracy margin. The sequential-change rule and the statistical-accuracy rule are separate conjunctive requirements. Equality to the accuracy margin is acceptable for this statistical-error definition; this does not alter the reference's strict sequential comparison rules.
+2. **Approved accuracy margins `pi_m`:**
+   - `P10_Profit`: ±18,500 project currency units (previous proposal expressed this as ريال).
+   - `P50_Profit`: ±18,500 project currency units.
+   - `P90_Profit`: ±18,500 project currency units.
+   - `P90_Final_Cash`: ±18,500 project currency units.
+   - `Probability_of_Accounting_Loss`: ±0.01 absolute probability (one percentage point).
+   - `P90_Termination_Count`: ±1 termination.
+   - `P90_Held_Assets`: ±1 asset.
+   
+   The 18,500 margin is the approved proposed materiality value (0.5% × 3,700,000 capital base), not a statistically inferred value. All margins must be frozen before assessing the production cohort and must not be tuned to observed results. The probability precision margin remains distinct from the existing sequential point-change condition `abs(Delta p) < 0.005`.
+3. **Family-wise error budget:** Keep the existing `alpha_s = 0.0025` for each of the 20 stochastic non-C100 scenarios, with total target `sum_s alpha_s <= 0.05`. Approved proposed within-scenario allocation:
+   - `Probability_of_Accounting_Loss`: 20%, `alpha=0.000500`.
+   - `P10_Profit`: 10%, `alpha=0.000250`.
+   - `P50_Profit`: 10%, `alpha=0.000250`.
+   - `P90_Profit`: 10%, `alpha=0.000250`.
+   - `P90_Final_Cash`: 20%, `alpha=0.000500`.
+   - `P90_Termination_Count`: 15%, `alpha=0.000375`.
+   - `P90_Held_Assets`: 15%, `alpha=0.000375`.
+   
+   This allocation gives `sum_m alpha[s,m] = 0.0025` per scenario. The family-wise guarantee remains conditional on each selected method providing its required all-time coverage under the approved sampling model, and on all scenario/cohort identity checks passing.
+4. **Inference and stopping:** For the seven indicators, require suitable time-uniform confidence sequences/sets valid across all eligible evaluation times and adaptive stopping, not merely pointwise intervals at a chosen N. Declare accuracy only when each applicable confidence set is contained in its approved accuracy band. Use a time-uniform method appropriate to the type of each statistic. No quantile method may silently replace the governing reference method.
+5. **`P90_Held_Assets` acceptance contract approved:** Define the target as the population 90th percentile of one final held-asset count per valid completed trial. Compute using `numpy.quantile(..., method="linear")`, as already specified by reference §14.8. Use accepted trial-level final values, not daily rows; do not round before calculation or accuracy assessment and do not silently trim outliers. Require unique, complete trial IDs over the declared cohort (expected ID range `1..N` if that is the cohort contract), matching scenario/source/master-seed/RNG/sampling/schema/manifest fingerprints, valid nonnegative integer values, no silent missing/duplicate records, and fail-closed behavior on any mismatch. Pass requires both sequential stability and the approved ±1-asset precision condition certified by the applicable time-uniform method. First validate the implementation on a deterministic synthetic fixture with a known result; production acceptance additionally requires an independently inspected production cohort and its identity evidence.
+6. **Support/tail assumptions:** A finite output-support bound is not required solely for a quantile method whose approved time-uniform validity conditions do not require bounded support. This does not approve unproven assumptions, does not validate a method yet to be selected, and does not resolve assumptions needed by the financial-mean inference path.
+
+### Disposition after approval
+
+- **R4-1:** Business-rule ambiguity on the false-stability definition, per-indicator margins, and alpha allocation is resolved by this owner approval. Technical method selection, implementation, and evidence remain pending.
+- **R4-2:** Remains **`K_SPEC / BLOCKED` for the financial-mean inference path** until either (a) a mathematically valid finite-support bound is proved from the model, or (b) the owner separately approves explicit, quantified tail/moment assumptions and a time-uniform method valid under them. No numeric variance/moment bound or exact mean-inference method was selected in the approved proposal, so none is invented here.
+- **R4-3:** The business acceptance contract is approved; current production binding, cohort integrity, implementation, deterministic acceptance test, and production-evidence review remain **pending**. This is not a production `PASS`.
+- Existing project gates, approved reference bytes/hash, source SHA, master seed, RNG, sampling data, historical results, thresholds, and prior failures are unchanged. This decision does not expand scope to tests/workflows or grant permission for Monte Carlo, Trial, checkpoint, Golden expansion, release, main changes, merge, or PR closure.
+
+### Execution status and next step
+
+No code, test, workflow, simulation, or production artifact was changed or run in recording this policy approval. The next permitted technical step is a bounded R4/method-design review of the exact time-uniform procedures and their assumptions, especially for quantiles and for the still-unresolved financial means. Any test/Workflow modification, statistical run, or other separately controlled action must still satisfy the project's applicable explicit-authorization gates.
