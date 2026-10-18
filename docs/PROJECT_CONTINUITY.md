@@ -610,3 +610,50 @@ No code, test, workflow, simulation, or production artifact was changed or run i
 ### Next permitted step
 
 A bounded analytical proof review of model transitions and reward accumulation to determine whether numerical support/variance/moment bounds for Gate B can be established. If no proof exists, prepare a separate owner decision specifying the quantitative moment assumptions and/or alpha scope; do not invent bounds. Separately, design deterministic synthetic acceptance cases for quantile/Bernoulli CS and request the explicit test/change authorization required before implementing them.
+
+
+---
+
+## CP-IUT-DECISION-RECONCILIATION — اعتماد IUT ونطاق ضمان الخطأ العائلي — 2026-10-18 (Asia/Aden)
+
+**Mode/scope:** One bounded M3 governance-documentation CP. The owner explicitly requested reconciliation of the latest IUT decision in this continuity log. This is a policy-recording/continuity change only: no application-code, tests, workflows, source identity, state.json-on-main, or statistical execution changes.
+
+### Live baseline before write
+
+- Continuity branch `tmp/cp-session-continuity-20261017`, HEAD `2367e6d772ff257adf9d55ddfe09972e3cb418a7`; `docs/PROJECT_CONTINUITY.md` blob `9d06cb06561b138f24668e61c903ea6154081e90`.
+- PR #46 open Draft and unmerged; head `2367e6d772ff257adf9d55ddfe09972e3cb418a7`; base main `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Live main HEAD `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`; `stage=12-CLOSED`, `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`, `state.sha_semantics=parent_state_commit_pointer`.
+- The prior owner-approved margin/within-scenario alpha table and the method-review entry are retained below as historical evidence. This addendum records the later and more specific owner approval of the integrated IUT recommendation, not an erasure of prior entries.
+
+### Latest owner-approved policy and supersession boundaries
+
+1. **Family-wise target:** The target is that the probability of one or more false `SCENARIO_STABLE` declarations among the 20 stochastic non-C100 scenarios over the full adaptive inspection horizon is at most 0.05. C100 remains on its separate `DETERMINISM_VERIFIED` path and is not included in this stochastic family-wise probability.
+2. **Scenario alpha:** Retain `alpha_s = 0.0025` for each of the 20 stochastic non-C100 scenarios, so `sum_s alpha_s <= 0.05`.
+3. **Intersection–union (IUT) interpretation:** A scenario is eligible to be declared stable only when every required inferential component and every non-statistical gate required for that declaration passes. Formalize each statistical component as a test of unacceptable accuracy/equivalence (the component null is that its approved precision criterion is violated) against acceptable precision. Each component-level decision must be valid over all eligible looks/adaptive stopping at level `alpha_s`; if a scenario is truly unacceptable, at least one component null is true, and the chance of falsely passing all required components is bounded by the error of that true component. Summing the 20 scenario-level risks gives the target `<= 0.05`, provided the tests/CS procedures and sampling assumptions are valid. This IUT argument does not require a within-scenario Bonferroni split **for the single scenario-level all-components-must-pass decision**.
+4. **Important coverage distinction:** The above IUT guarantee is about a false scenario-level decision. It is not a promise of simultaneous `1-alpha` coverage for every interval/table cell published across all metrics and looks. If a separate deliverable claims joint simultaneous coverage of all reported intervals, it needs its own explicit family and alpha treatment; that claim is not inferred from IUT.
+5. **Supersession of the prior metric alpha split:** The previously recorded seven-way allocation (`0.000500/0.000250/...`) is preserved as historical. For the approved scenario-level IUT false-stability decision, it is superseded by the later IUT policy: each required component is assessed against the scenario-level risk under a valid IUT formulation rather than treating the older metric allocation as a mandatory Bonferroni split. Do not silently reuse both systems or claim simultaneous coverage. The all-time validity of every component procedure remains mandatory.
+6. **Probability-of-loss precision:** The latest owner-approved integrated recommendation requires an independent time-uniform precision condition of half-width strictly less than `0.005`, in addition to retaining the strict sequential point-change condition `abs(Delta p) < 0.005`. This later, specific decision supersedes the earlier proposed `±0.01` accuracy margin for this metric. Neither the sequential-change condition nor any other threshold is loosened.
+7. **Other approved precision margins remain:** `P10_Profit`, `P50_Profit`, `P90_Profit`, and `P90_Final_Cash` retain ±18,500 project-currency units (proposal originally expressed in ريال, 0.5% of the 3,700,000 capital base); `P90_Termination_Count` retains ±1 termination; `P90_Held_Assets` retains ±1 asset. These are fixed pre-cohort policy margins, not data-derived claims.
+8. **Seven §2.5 indicators vs Gate B means:** The seven reference indicators remain a distinct required component set. The three Gate B financial means (`final_net_project_equity`, `partner1_final_entitlement`, `partner2_final_entitlement`) remain a separate Gate B component set, with their normative Gate B acceptance rule unchanged unless a later owner decision states otherwise. If overall `SCENARIO_STABLE` requires both sets, the IUT proof must include every required statistical component; this does not merge their gate semantics or permit omission of any metric.
+9. **No change to existing sequential rules:** Three successful adjacent transitions across four cumulative points remain required. The P50 trigger remains strictly (>5%) on `300→600` or `600→1200`, with continuation to `N=2400` and no counter reset; P50 is not an eighth §2.5 indicator and does not independently require a look after `N=2400`. C100 remains distinct from stochastic stability.
+10. **Nested sample dependence:** Cumulative estimates at N and 2N share trials IDs `1..N`; do not treat them as independent samples when assessing a change. The comparison procedure must preserve the nested design/use the added block `N+1..2N` as appropriate and must not infer accuracy of either cumulative point from a small observed difference alone.
+11. **Near-zero Gate B rule:** Keep the currently normative `REFERENCE_EPSILON=1e-6`, strict branch `abs(mean) < REFERENCE_EPSILON), and `CI_ABSOLUTE_EPSILON=1`; reject the faulty `max(...)` substitute and unsafe truthiness conversion. Any future change to epsilon or to continuity of the threshold function requires a separate explicit normative decision.
+
+### Technical limits and current status
+
+- The IUT design is an approved statistical decision framework, not proof that the current code implements it. It must still be converted to formally specified component hypotheses, a tested all-time-valid CS/e-process for each family, and a fail-closed decision contract.
+- Financial mean inference remains `K_SPEC / BLOCKED`: the inspected engine uses a dynamic stop loop and an open-ended secondary-contract duration; no finite bound on final support or quantified variance/higher-moment bound has been proved from source evidence. This does not establish infinite variance. Do not invent a bound or select an empirical-Bernstein/Catoni method without its numeric assumptions.
+- The current source still has `SOURCE_SHA_DRIFT`; neither IUT nor a deterministic RNG key alone proves exchangeability/IID compatibility across an existing cohort.
+- Gate A remains blocked by `GATEA_PROVIDER_MISSING`; the seven indicators have not been integrated into the production decision path; the current `run_batch.py` path still uses pointwise Student-t mean intervals and the faulty `max(...)` limit; no production `P90_Held_Assets` acceptance has been demonstrated.
+- The IUT decision does not authorize Monte Carlo/Trial/checkpoint/Golden expansion, changes to tests/Workflows, source SHA updates, changes to seed/RNG/historical data, main writes, PR merge/closure, final delivery or Release.
+
+### Next CP order
+
+1. Next: `CP-MEAN-BOUND-REVIEW`, bounded source-only analytical review of model transitions and cumulative reward/asset rules, attempting to prove explicit finite numeric support or a justified numerical variance/moment bound for the three Gate B mean metrics. If no proof follows from the normative model, record `K_SPEC / BLOCKED` and the exact missing premise; do not run trials to estimate the bound.
+2. In a separate CP thereafter: independent P5 diagnostic inventory for pytest/fixtures/subprocess without running pytest; separate P8 CLI/environment inventory and P9 workflow inventory, read-only. These reviews need not wait for resolution of statistical moment assumptions, but no test or workflow modifications are allowed without a fresh R4 and explicit approval.
+3. After those reviews, prioritize `CP-SOURCE` and `CP-GATEA` identity/provider audits. Run/Artifact work remains separately authorized only.
+
+### Change/evidence boundaries
+
+This entry is not a code/test/workflow change and no Run, Job, Artifact, trial, checkpoint, Monte Carlo, Golden expansion, or Release was created. No seed, RNG, source pin, thresholds, historical data, approved reference, or main state was changed. The next step remains one CP at a time; stop and report after each CP.
