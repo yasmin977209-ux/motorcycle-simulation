@@ -37,6 +37,7 @@ def build_durable_block_identity(
     master_seed: int,
     sampling_policy_id: str,
     allow_legacy_metadata: bool = False,
+    legacy_identity_proof: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Build a manifest that cryptographically binds block bytes to identity.
 
@@ -82,12 +83,61 @@ def build_durable_block_identity(
         and metadata["rng_policy_id"] != STAGE7_RNG_POLICY_ID
     ):
         raise StateIntegrityError("block RNG policy mismatch")
-    if not allow_legacy_metadata:
-        for key in ("master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"):
-            if key not in metadata:
-                raise StateIntegrityError(
-                    f"new block metadata missing {key}; legacy migration not allowed"
-                )
+    legacy_metadata_migrated = any(
+        key not in metadata for key in (
+            "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
+        )
+    )
+    legacy_identity_record = None
+    if legacy_metadata_migrated:
+        if not allow_legacy_metadata:
+            raise StateIntegrityError(
+                "legacy block metadata cannot be resumed without explicit migration proof"
+            )
+        if not isinstance(legacy_identity_proof, dict):
+            raise StateIntegrityError(
+                "legacy block migration requires verified previous-run workflow identity"
+            )
+        metadata_run_id = str(metadata.get("run_id") or "")
+        if "verified_runs" in legacy_identity_proof:
+            if (
+                legacy_identity_proof.get("schema_version") != "stage7-legacy-run-identity-v1"
+                or legacy_identity_proof.get("scenario") != scenario
+                or legacy_identity_proof.get("source_sha") != source_sha
+                or int(legacy_identity_proof.get("master_seed", -1)) != master_seed
+            ):
+                raise StateIntegrityError("legacy run identity proof header mismatch")
+            verified_runs = legacy_identity_proof.get("verified_runs")
+            if not isinstance(verified_runs, dict):
+                raise StateIntegrityError("legacy run identity proof has no verified_runs map")
+            legacy_identity_record = verified_runs.get(metadata_run_id)
+        else:
+            legacy_identity_record = legacy_identity_proof
+        if not isinstance(legacy_identity_record, dict):
+            raise StateIntegrityError(
+                f"legacy block run_id {metadata_run_id!r} has no workflow identity proof"
+            )
+        if (
+            str(legacy_identity_record.get("run_id") or metadata_run_id) != metadata_run_id
+            or legacy_identity_record.get("scenario") != scenario
+            or legacy_identity_record.get("source_sha") != source_sha
+            or int(legacy_identity_record.get("master_seed", -1)) != master_seed
+            or legacy_identity_record.get("workflow_source_sha") != source_sha
+            or int(legacy_identity_record.get("workflow_master_seed", -1)) != master_seed
+            or not re.fullmatch(r"[0-9a-f]{40}", str(legacy_identity_record.get("head_sha") or ""))
+            or not re.fullmatch(r"[0-9a-f]{40}", str(legacy_identity_record.get("workflow_blob_sha") or ""))
+        ):
+            raise StateIntegrityError("legacy block source/seed/workflow proof mismatch")
+        legacy_identity_record = {
+            "run_id": metadata_run_id,
+            "scenario": scenario,
+            "source_sha": source_sha,
+            "master_seed": master_seed,
+            "head_sha": str(legacy_identity_record["head_sha"]),
+            "workflow_blob_sha": str(legacy_identity_record["workflow_blob_sha"]),
+            "workflow_source_sha": source_sha,
+            "workflow_master_seed": master_seed,
+        }
     parquet_sha256 = hashlib.sha256(parquet_bytes).hexdigest()
     if metadata.get("parquet_sha256") not in (None, parquet_sha256):
         raise StateIntegrityError("Parquet block bytes do not match metadata SHA-256")
@@ -113,20 +163,13 @@ def build_durable_block_identity(
         "metadata_sha256": hashlib.sha256(metadata_bytes).hexdigest(),
         "per_trial_sha256": per_trial,
         "origin_run_id": metadata.get("run_id"),
-        "legacy_metadata_migrated": any(
-            key not in metadata for key in (
-                "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
-            )
-        ),
+        "legacy_metadata_migrated": legacy_metadata_migrated,
         "legacy_migration_basis": (
-            "existing_checkpoint_fingerprint_and_artifact_identity_verified"
-            if allow_legacy_metadata and any(
-                key not in metadata for key in (
-                    "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
-                )
-            )
+            "checkpoint_fingerprint_and_artifact_identity_plus_historical_workflow_seed_verified"
+            if legacy_metadata_migrated
             else None
         ),
+        "legacy_identity_proof": legacy_identity_record,
     }
 
 
@@ -151,6 +194,7 @@ def validate_durable_block_identity(
         master_seed=master_seed,
         sampling_policy_id=sampling_policy_id,
         allow_legacy_metadata=bool(identity.get("legacy_metadata_migrated")),
+        legacy_identity_proof=identity.get("legacy_identity_proof"),
     )
     if identity != expected:
         raise StateIntegrityError("durable block identity manifest mismatch")
@@ -725,6 +769,7 @@ class StateStore:
         master_seed: int,
         sampling_policy_id: str,
         allow_legacy_metadata: bool = False,
+        legacy_identity_proof: dict[str, object] | None = None,
     ) -> str:
         """Atomically persist verified block files, identity manifests, and state.json."""
         self._validate_identity(state)
@@ -754,6 +799,7 @@ class StateStore:
                 master_seed=master_seed,
                 sampling_policy_id=sampling_policy_id,
                 allow_legacy_metadata=allow_legacy_metadata,
+                legacy_identity_proof=legacy_identity_proof,
             )
             key = f"{int(identity['trial_id_start'])}_{int(identity['trial_id_end'])}"
             if parquet_path.name != f"block_{key}.parquet" or metadata_path.name != f"block_{key}_metadata.json":
