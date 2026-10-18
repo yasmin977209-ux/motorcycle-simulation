@@ -599,14 +599,24 @@ class StateStore:
             raise StateIntegrityError(f"remote Git blob digest mismatch for {relative_path}")
         return raw
 
-    def _commit_files_atomically(self, files: dict[str, bytes], message: str) -> dict[str, str]:
-        """Commit multiple files on the scenario state branch in one Git ref update."""
+    def _commit_files_atomically(
+        self,
+        files: dict[str, bytes],
+        message: str,
+        expected_parent_sha: str | None = None,
+    ) -> dict[str, str]:
+        """Commit files only if the state branch still points at the observed parent."""
         if not files:
             raise ValueError("at least one file is required for an atomic commit")
         ref_payload = self._request("GET", self._branch_ref_path())
         parent_sha = str(ref_payload.get("object", {}).get("sha") or "")
         if not parent_sha:
             raise StateIntegrityError("state branch head SHA missing before block commit")
+        if expected_parent_sha is not None and parent_sha != expected_parent_sha:
+            raise StateConflict(
+                "scenario state branch changed before durable block commit: "
+                f"{parent_sha} != {expected_parent_sha}"
+            )
         parent_commit = self._request("GET", f"git/commits/{parent_sha}")
         base_tree_sha = str(parent_commit.get("tree", {}).get("sha") or "")
         if not base_tree_sha:
@@ -785,6 +795,27 @@ class StateStore:
         if isinstance(lease, dict) and lease.get("owner") not in (None, self.lease_owner):
             raise LeaseConflict(f"scenario {self.scenario} lease owner changed during block commit")
 
+        # Bind this write to the exact state blob returned by acquire/save_state and
+        # to the branch tip observed around the read. A concurrent writer must not
+        # have its newer checkpoint overwritten with this caller's stale state.
+        ref_before = self._request("GET", self._branch_ref_path())
+        parent_before = str(ref_before.get("object", {}).get("sha") or "")
+        if not parent_before:
+            raise StateIntegrityError("state branch head SHA missing before checkpoint verification")
+        state_payload = self._request("GET", self._state_contents_path())
+        current_state_blob_sha = str(state_payload.get("sha") or "")
+        if blob_sha is not None and current_state_blob_sha != blob_sha:
+            raise StateConflict(
+                "state.json changed before durable block commit: "
+                f"{current_state_blob_sha} != {blob_sha}"
+            )
+        ref_after = self._request("GET", self._branch_ref_path())
+        parent_after = str(ref_after.get("object", {}).get("sha") or "")
+        if not parent_after or parent_after != parent_before:
+            raise StateConflict(
+                "scenario state branch moved while verifying checkpoint parent"
+            )
+
         files: dict[str, bytes] = {}
         new_ranges: list[tuple[int, int, str]] = []
         existing_listing = self._block_listing()
@@ -903,6 +934,7 @@ class StateStore:
                 f"stage7: durable block checkpoint {self.scenario} "
                 f"n={state.get('completed_trials')}"
             ),
+            expected_parent_sha=parent_after,
         )
         self._write_local(state)
         return self._verify_remote_equals(state)
