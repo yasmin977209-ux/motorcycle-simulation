@@ -678,14 +678,42 @@ class StateStore:
         return blob_shas
 
     def _block_listing(self) -> list[dict[str, object]]:
-        path = "contents/stage7-blocks?ref=" + urllib.parse.quote(self.state_branch, safe="")
+        """List all durable block blobs through the Git tree API, not the 1,000-entry Contents API."""
         try:
-            payload = self._request("GET", path)
+            ref_payload = self._request("GET", self._branch_ref_path())
         except StateRemoteNotFound:
             return []
-        if not isinstance(payload, list):
-            raise StateIntegrityError("stage7-blocks remote path is not a directory")
-        return [item for item in payload if isinstance(item, dict)]
+        commit_sha = str(ref_payload.get("object", {}).get("sha") or "")
+        if not commit_sha:
+            raise StateIntegrityError("state branch head SHA missing during durable block listing")
+        commit = self._request("GET", f"git/commits/{commit_sha}")
+        tree_sha = str(commit.get("tree", {}).get("sha") or "")
+        if not tree_sha:
+            raise StateIntegrityError("state branch tree SHA missing during durable block listing")
+        tree_payload = self._request("GET", f"git/trees/{tree_sha}?recursive=1")
+        if tree_payload.get("truncated") is True:
+            raise StateIntegrityError(
+                "durable Stage 7 Git tree was truncated; refusing incomplete block inventory"
+            )
+        tree_items = tree_payload.get("tree")
+        if not isinstance(tree_items, list):
+            raise StateIntegrityError("durable Stage 7 Git tree listing is malformed")
+        items: list[dict[str, object]] = []
+        for item in tree_items:
+            if not isinstance(item, dict):
+                raise StateIntegrityError("durable Stage 7 Git tree contains a malformed entry")
+            path = item.get("path")
+            if not isinstance(path, str) or not path.startswith("stage7-blocks/"):
+                continue
+            if item.get("type") != "blob":
+                continue
+            items.append({
+                "name": path.rsplit("/", 1)[-1],
+                "path": path,
+                "type": "file",
+                "sha": item.get("sha"),
+            })
+        return sorted(items, key=lambda item: str(item["path"]))
 
     def restore_trial_blocks(
         self,
