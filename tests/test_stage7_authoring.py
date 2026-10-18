@@ -549,12 +549,13 @@ def test_legacy_block_migration_requires_verified_workflow_seed_and_source() -> 
 
 def test_stage7_workflow_commits_durable_blocks_before_moving_past_each_chunk() -> None:
     text = _workflow_text()
+    state_text = (REPO_ROOT / "scripts" / "stage7_state.py").read_text(encoding="utf-8")
     assert "MAX_TRIALS_PER_BLOCK = 50" in text
     assert "restore_trial_blocks(" in text
     assert "persist_trial_blocks_and_state(" in text
-    assert 'git/trees/{tree_sha}?recursive=1' in text
-    assert "durable Stage 7 Git tree was truncated" in text
     assert "durable_progress_checkpoint" in text
+    assert 'git/trees/{tree_sha}?recursive=1' in state_text
+    assert "durable Stage 7 Git tree was truncated" in state_text
     assert "LEGACY_BLOCK_IDENTITY_UNPROVEN" in text
     assert "STAGE7_STATE_IDENTITY_MISMATCH=" in text
     assert "STAGE7_STATE_WITHOUT_CHECKPOINT=" in text
