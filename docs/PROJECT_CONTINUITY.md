@@ -870,3 +870,42 @@ The preceding execution-first draft at blob `e69348c4b9ced7b0114cd3c3123c030e80e
 Current revision 2: `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md`, branch `tmp/cp-session-continuity-20261017`, commit `8edc632258c772ed9cac83213c0bf42178350e19`, blob `2092ceeebf41af3d0675fca1c57ffc20d8f41307`; full Markdown file 12,432 UTF-8 bytes, SHA-256 `61f95f4e92806ae13417845d013e5460cd28cf94371474fbec5ff03755bc8ae6`; instruction text inside the fence is 7,120 characters and 11,295 UTF-8 bytes, SHA-256 `9faab4ca9f825857b77c734ceee7c35b97070a62ac23ae6da37b20ac2ac05836`. Direct GitHub read-back matched exactly. `SESSION_OUTPUTS.jsonl` now has a `HASH_VERIFIED` record for this revision at blob `3a148749bcb4250aee1256b7fc9a8ff69a73bdd7` after its read-back.
 
 This change remains documentation-only: no tests, Monte Carlo, Workflows, production code, historical data, main, or state.json were changed. PR #46 remains Open / Draft / unmerged, base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`. The current owner action is still to apply the reviewed instructions through the ChatGPT UI; GitHub writes do not change Project Settings. After setup, resume real engineering from the live P0–P3 baseline and work the allowed CPs forward, not just the continuity mechanism.
+
+---
+
+## إغلاق وتسليم نهائي للدردشة الحالية — 2026-10-18 (Europe/London)
+
+**نوع الإغلاق:** نقل حالة إلى دردشة جديدة؛ توثيق فقط. أُضيف هذا الإدخال append-only بعد قراءة الفرع والملفات مباشرةً من GitHub. لا يحل محل المرجع أو قرار نافذ ولا يغيّر أي بوابة.
+
+### الحالة الحية قبل الإضافة
+
+- المستودع: `https://github.com/yasmin977209-ux/motorcycle-simulation`
+- `main` HEAD قبل الكتابة: `647c19826b90d8224ce73ef9b90c306a45e03fb0`؛ لم يُعدّل `main`.
+- `state.json`: blob `2178260bb18efeb81437486f13b6d10cf5e85936`؛ `stage=12-CLOSED`، `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`، `state.sha=0b083fa472d7a11089a15137cfad16d87785689a`، والدلالة `parent_state_commit_pointer` كما يشرح `docs/STATE_SHA_SEMANTICS.md` (pointer إلى commit سابق، وليس مساويًا بالضرورة لـHEAD).
+- فرع الاستمرارية قبل الكتابة: `tmp/cp-session-continuity-20261017` HEAD `e4279d2a75c89be073a8b9eacc090fe812c3449e`.
+- `docs/PROJECT_CONTINUITY.md` قبل الكتابة: blob `5c5c256644335ee91d97e4b3505320f8a7877ff2`، الحجم UTF-8 `145316` بايت، SHA-256 `275f9c1775345f100673b95e6d6dd6bf76f9b52cc7960d59d7fae2737494f109`.
+- PR [#46](https://github.com/yasmin977209-ux/motorcycle-simulation/pull/46): `OPEN`، Draft=`true`، merged=`false`؛ base `main` عند `647c19826b90d8224ce73ef9b90c306a45e03fb0`؛ head `tmp/cp-session-continuity-20261017` عند `e4279d2a75c89be073a8b9eacc090fe812c3449e`. الملفات الفعلية في المقارنة الحية هي: `docs/PROJECT_CONTINUITY.md`, `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md`, `docs/continuity/START_HERE.md`, `docs/continuity/SESSION_OUTPUTS.jsonl`, و`docs/audits/CP-P5_pytest_diagnostic_inventory_2026-10-18.md`.
+
+### نقطة الاستئناف الأحدث بعد فحص جميع إشارات CROSS_CHAT_ACCEPTANCE_TEST
+
+- فُحص السجل كاملًا حتى السطر الأخير، وحُصيت كل مواضع `CROSS_CHAT_ACCEPTANCE_TEST` بدل اختيار أول عنوان مشابه. القسم الصريح الأحدث من هذا الاسم هو `CROSS_CHAT_ACCEPTANCE_TEST — completion and full conversation handoff — 2026-10-18`؛ أما أحدث استئناف تنفيذي مكتمِل لاحقًا في السجل فهو `CP-P5 — persisted pytest diagnostic inventory (2026-10-18, Asia/Aden)`.
+- كان Run التاريخي `38656654259` على الفرع المرشح `tmp/cp-final-candidate-20261015`، tested SHA `a1e7e4a3223218d732fa438ae98edc0ef2408229`، ونتيجته الحرفية `5 failed, 416 passed, 1 skipped, 1 warning`. أربع حالات فشل مرتبطة بغياب `results_stage5` من fixture؛ والخامسة `subprocess.CalledProcessError` من `round2_hashseed_probe.py` دون stdout/stderr للابن في الـArtifact المتاح، لذلك لا يُخترع سبب نهائي ولا تُنسب نتيجة هذا الرأس إلى `main`.
+- سجل `P5` محفوظ في الفرع و`SESSION_OUTPUTS.jsonl` يسجل مخزونه؛ لم يُشغّل pytest خلاله. الخطوة التالية المسجلة المسموحة هي `P8` جرد CLI/البيئة قراءةً فقط، ثم `P9` جرد Workflows قراءةً فقط في CP منفصلة. بعد كل CP تقرير وتوقف؛ لا تغيّر tests أو Workflows دون R4 وموافقة صريحة، لكن لا توقف المسارات الهندسية المستقلة بسبب مانع لا تعتمد عليه.
+- أحدث السياسة الإحصائية النافذة في سجل الاستمرارية تشمل قرار المالك في `CP-IUT-DECISION-RECONCILIATION`: الهدف العائلي ≤0.05 لأحكام الاستقرار الخاطئة بين 20 سيناريو غير C100، `alpha_s=0.0025` لكل سيناريو، تفسير IUT مشروطًا بصلاحية كل مكوّن عند التوقف التكيفي، وهوامش الدقة السبعة وتوزيع `alpha` المعتمد. هذه موافقة سياسة؛ لا تدل على تنفيذ أو PASS.
+- `CP-MEAN-BOUND-REVIEW` انتهى `K_SPEC / BLOCKED`: لم يثبت حد دعم محدود أو حد عددي للتباين/الذيول/العزوم للمقاييس المالية. لا تشغّل بيانات جديدة لاشتقاق هذه الحدود ولا تفترضها.
+- بوابات المشروع لم تتحسن: Gate A ما زال `BLOCKED` بسبب `GATEA_PROVIDER_MISSING`؛ هوية المصدر ما زالت `SOURCE_SHA_DRIFT`؛ دمج مؤشرات §2.5 السبعة وإصلاح Gate B ما زالا غير منفذين في `main`؛ وملفات التسليم السبعة والـRelease ما زالت محجوبة.
+  
+### التعليمات وProject Sources وGitHub settings
+
+- `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md` هي النسخة الحالية المسجلة: commit `8edc632258c772ed9cac83213c0bf42178350e19`، blob `2092ceeebf41af3d0675fca1c57ffc20d8f41307`، ملف Markdown كامل `12432` بايت، وعدد المحارف داخل كتلة التعليمات نفسها `7120`. لا توجد placeholders من نمط `{{...}}` أو `[PLACEHOLDER...]` في المسودة الحية التي قُرئت.
+- المسودة تعطي الأولوية لإنجاز المشروع والاستمرارية كوسيلة مساندة. لكن النص داخل السياج لا يذكر صراحةً اختيار أحدث نقطة استئناف مكتملة وموثقة ومنع تكرار الحدث؛ قاعدتا قراءة السجل واختيار أحدث نقطة موثوق بها موجودتان في `START_HERE.md`. وفق حدود هذه المهمة لم تُعدّل المسودة ولم تُكتب إعدادات ChatGPT. يجب على المالك التأكد يدويًا من أن Project Source الوحيد هو `المرجع النهائي الموحد المعتمد المدمج.md`، ولصق نص التعليمات المعتمد في Project Settings؛ لا توجد وسيلة هنا لإثبات إتمام ذلك في الواجهة.
+- تم طلب إعداد حماية `main` مباشرةً من GitHub ورُفض الطلب بـ403 `Resource not accessible by integration`. استجابة branch metadata تضمنت `protected=false`، لكن تفاصيل قاعدة الحماية لم يمكن قراءتها؛ لا ندعي مراجعة قواعد التفصيل. إعدادات GitHub Actions غير قابلة للقراءة عبر الواجهات المتاحة (رفض موصل القراءة للمسارات المطلوبة)، ولذلك لم تُصنَّف سليمة أو معطوبة ولم تتغير إعداداتها.
+- بصمة المرجع الأصلي المحلي تمت إعادة حسابها: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`، `271496` بايت؛ وهي مطابقة للبصمة المتوقعة. الملف المدمج مختلف البصمة والحجم، ولا حاجة مثبتة لتعديل أي من المرجعين.
+
+### ما لم يتغير وحدود هذا الإغلاق
+
+لم تُعدّل `main` أو `state.json` أو المرجع/الملف المدمج أو مسودة Project Instructions أو Project Settings أو الكود أو الاختبارات أو Workflows أو إعدادات المستودع. لم تُدمج أو تُغلق PR #46، ولم يُنشأ Release؛ ولم يُشغّل pytest أو CLI أو Workflow أو Monte Carlo أو Trial أو Checkpoint. بقيت ملفات تقارير STAT/R4 غير المودعة في GitHub بحالاتها `LOCAL_ONLY`، وبقي حكم التنفيذ `BLOCKED_FOR_IMPLEMENTATION`.
+
+**أول خطوة في الدردشة الجديدة:** اقرأ هذه النسخة الحية من `docs/PROJECT_CONTINUITY.md` و`START_HERE.md` و`SESSION_OUTPUTS.jsonl` من الرأس المثبت حديثًا، وابحث عن marker الاستمرارية في `START_HERE.md` فقط كاختبار قراءة مستقل دون تخمينه أو نسخه من هذه المذكرة. ثم استأنف من `P8` جرد CLI/البيئة (قراءة فقط) وفق آخر حدث CP، يليه `P9` قراءة Workflows. لا تكرر P0–P3 كاملة؛ حدّث فقط الأدلة الحية اللازمة، وواصل بعدها إلى CP هندسية مسموحة، مع R4/الموافقات المحددة للأفعال المحمية. لا تعلن أي PASS لم يُختبر ولا تدع التوثيق يحل محل التنفيذ.
+
+**معرفات ما بعد الكتابة والقراءة الراجعة النهائية:** لا تُضمّن هذه البصمة النهائية داخل هذا الملف حتى لا يصبح لها مرجع ذاتي؛ سيورد تقرير إغلاق الدردشة الجديدة HEAD والـcommit والـblob والحجم وSHA-256 من القراءة الراجعة المباشرة.
