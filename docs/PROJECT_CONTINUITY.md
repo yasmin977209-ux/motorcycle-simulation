@@ -657,3 +657,50 @@ A bounded analytical proof review of model transitions and reward accumulation t
 ### Change/evidence boundaries
 
 This entry is not a code/test/workflow change and no Run, Job, Artifact, trial, checkpoint, Monte Carlo, Golden expansion, or Release was created. No seed, RNG, source pin, thresholds, historical data, approved reference, or main state was changed. The next step remains one CP at a time; stop and report after each CP.
+
+
+## CP-MEAN-BOUND-REVIEW — source-only financial-mean bound analysis (2026-10-18, Asia/Aden)
+
+**Outcome: `K_SPEC / BLOCKED`.** This was a bounded source/spec analysis only. No pytest, CLI execution, simulation, Monte Carlo, Trial, checkpoint, Golden expansion, workflow run, or artifact was created. No code, test, workflow, reference, main state, seed, RNG, source pin, threshold, or historical dataset was changed.
+
+### Live identity and authority checked
+
+- Canonical local reference `المرجع_النهائي_الموحد_المعتمد.md`: SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`, 271,496 bytes; hash recomputed from the supplied file in this session.
+- Repository `main` HEAD: `647c19826b90d8224ce73ef9b90c306a45e03fb0`. `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`; `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` has semantics `parent_state_commit_pointer`, not main HEAD.
+- Continuity branch before this CP: `tmp/cp-session-continuity-20261017` at `b08348f21a90e3042892f47988533e8434c49e3e`; PR #46 remains open Draft and unmerged, with head `b08348f21a90e3042892f47988533e8434c49e3e` and base branch `main`. No action was taken on main or PR state.
+- Current source blobs inspected: `constants.py` `88b3e7b5a509f8486597ac08dfc5acaf80d4d39b`; `daily_engine.py` `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964`; `closure.py` `3307e1759f84badd37686d3c44c78e87092cb1e0`; `accounting.py` `8bbbfacbefa4290dd3efbdee2aee3cc7661a42b4`; `settlement.py` `d38790768934df6d4a5f3c214b161b0f3b073f32`; `partner_equity.py` `887a9401b7e0a6abeec49033d38f80e70cfaf51a`; `collection.py` `54a5d1c3be41d49841bed887c7bab393a2d83dc6`; `friday.py` `bda3b042d5fb0b9503945f59bad3b3799fa9ed05`; `monte_carlo.py` `a8c3603487f92d3e15c3d754ce3faee3580a5f46`; `run_batch.py` `0418ddea818c194a5b582df94778fa5f13a3ecc4`; `DECISIONS_LOG.md` `df4910e6a86bcce84f6b71d6d260913800474f95`; `REFERENCE_AMENDMENTS.md` `b4eab80bf657d72e9e49d14db81d2baf0a462d77`.
+
+### R4 — source/spec review
+
+| Element | Current implementation / source | Controlling authority | Ruling |
+|---|---|---|---|
+| Maximum closure horizon | `run_deterministic_trial` loops while `not project.simulation_stopped`; no maximum-day argument or forced close is present. | Approved reference §§0.19, 13.1–13.7 expressly prohibit a fixed time cap. | No fixed horizon is available as a finite support bound. |
+| Expansion/prep lifecycle | Purchases may begin through `2030-12-31`; an already-purchased `PREP` bike can be funded later only when project cash and partner-1 memo balance each meet the respective thresholds. No borrowing or external cash top-up is implemented in this path. | Reference §§1.3, 2.2, 13.2–13.3; `constants.py`, `daily_engine.py`. | A numerical fleet bound and a proof of bounded funding delay were not established by source evidence. |
+| Dynamic closure | Requires no `PREP`, no active primary contract, no post-maturity settlement, and date after expansion cutoff. Secondary contracts are administratively ended once closure conditions pass; they do not themselves block closure. | Reference §13.2 and `closure.py`. | Closure cannot be bounded merely by the last purchase date or secondary cycle duration. |
+| Deterministic fee/settlement inflows | `FRIDAY_FEE=1,000`; `OIL_SERVICE_COST=2,000` on every second eligible Friday per bike. Over two Friday fee events, 2,000 revenue is offset by one 2,000 oil cost in cash, so the fee alone does not establish positive net cash growth. Settlement rent applies only while `POST_MATURITY_SETTLEMENT`; the engine exits this state when debt is cleared or elapsed settlement days exceed 30. | Reference §13.3's finite-close rationale; constants, `friday.py`, `daily_engine.py`, `settlement.py`. | The prose claim that deterministic Friday fees and settlement rent guarantee cash growth until all prep is funded is not a quantified lower-bound proof; under the inspected cash rules, it is insufficient by itself to certify a uniform bound. This flags a proof gap, not a silent amendment to the normative text. |
+| Final metrics | `Y=Final_Net_Project_Equity=Final_Cash + sum NetBookValue(HELD_AS_ASSET)`; `P1=lfloor0.7Yfloor), `P2=Y-P1). | Reference §13.6; `daily_engine.py`, `monte_carlo.py`, `partner_equity.py`. | No numerical support/tail bound for `Y` was established; thus no separate numeric variance/moment bounds for either derived entitlement were established. This is not a claim that their variances are infinite. |
+| Gate B inference method | Current `run_batch.py` calculates pointwise Student-t intervals from the observed sample standard deviation and uses `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE*abs(mean))`. | D-2026-10-10-01 / Amendment-01 for the historical Gate B rule; latest accepted IUT record requires a valid time-uniform component procedure and preserves the approved near-zero rule. | Existing code is not the approved time-uniform inference implementation; the `max` threshold issue remains `K_CODE / FAIL` from prior review. This CP did not attempt a repair. |
+| Trial identity and cross-trial assumptions | RNG derives per-event bits from SHA-256 keyed by `master_seed/scenario/trial/bike/date/event`. | Reference §14 and recorded IUT reconciliation. | Deterministic key construction alone does not prove exchangeability/IID or a moment bound for the existing cohort. |
+
+### Analytical finding and exact missing premise
+
+The approved specification prohibits a fixed simulation horizon and allows repeatable open-ended secondary contracts. More importantly for closing, the engine may continue funding a `PREP` bike after the expansion cutoff, and `PREP` blocks dynamic closure. No approved numeric maximum on the final financial values, maximum funding delay, maximum fleet size, or tail/variance/higher-moment bound was found or derived in this CP.
+
+The reference §13.3 asserts that deterministic cash inflows guarantee eventual funding, but the inspected arithmetic does not supply a quantitative positive lower bound: Friday fee cash is periodically offset by oil costs, and settlement rent is temporary. The source does not establish that every reachable blocked-`PREP` state must receive enough cash **and** partner-1 balance by a uniformly bounded time, nor does it define how a trial should be classified if no revenue-producing bike/settlement/claim remains while a `PREP` bike still blocks closure. These premises must be proved from the authoritative transition rules or resolved through a scoped owner decision; I did not infer them from historical outputs.
+
+Unbounded theoretical duration/support does not by itself prove infinite variance. A valid Gate B mean procedure still needs either (a) an explicit finite numeric support bound for each metric, or (b) a defensible, numerical tail/variance/higher-moment bound under a clearly specified trial-level probabilistic model, plus a termination/completeness argument and valid cross-trial assumptions. Historical sample variance, successful workflow status, or the deterministic RNG key are not substitutes.
+
+### Gate separation after this CP
+
+| Gate / activity | Status after this CP | Evidence / gap |
+|---|---|---|
+| Financial-mean bound prerequisite (Gate B) | **BLOCKED — `K_SPEC`** | No support bound or numeric variance/tail bound proved; closure/funding premise unresolved. |
+| Gate A | **BLOCKED** | `GATEA_PROVIDER_MISSING` persists in main state. |
+| §2.5 / IUT implementation | **PENDING** | Decision framework is approved; production all-time-valid component procedures and fail-closed integration are not proven. |
+| Overall `SCENARIO_STABLE` | **BLOCKED** | No gate status is upgraded by this source-only review. |
+| CP-D / Stage 9C / pytest | **Unchanged / not run** | No tests were executed; no prior PASS/FAIL was altered. |
+| Seven-file delivery / Release | **BLOCKED** | Existing delivery blockers remain; no output files or release artifacts were generated. |
+
+### Scope and next step
+
+No changes to source, tests, workflow files, data, seed, RNG, source pin, approved reference, or `main/state.json`; no Run, Job, Artifact, trial, checkpoint, Monte Carlo, Golden expansion, or Release. The specific unresolved premise is a demonstrable closure/funding guarantee (or a defined fail-closed treatment for non-terminating trials) and a numeric financial tail/moment bound. The next independent work may proceed as its own CP under the recorded order: read-only P5 diagnostic inventory without running pytest, then separate read-only P8 CLI/environment and P9 workflow inventories. Stop after this CP.
