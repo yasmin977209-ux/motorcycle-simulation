@@ -309,6 +309,215 @@ def test_durable_block_and_state_commit_atomically_and_restore(tmp_path: Path) -
     assert (tmp_path / "restored_results" / "C070_G100" / "blocks" / "block_1_2_metadata.json").read_bytes() == metadata_path.read_bytes()
 
 
+
+def test_durable_block_store_appends_next_chunk_without_rewriting_prefix(tmp_path: Path) -> None:
+    store = InMemoryDurableBlockStore(tmp_path / "state.json")
+    block_dir = tmp_path / "results_stage7" / "C070_G100" / "blocks"
+    block_dir.mkdir(parents=True)
+
+    def make_pair(start_id: int, end_id: int) -> tuple[Path, Path]:
+        parquet_bytes = f"fixture-block-{start_id}-{end_id}".encode("ascii")
+        parquet_path = block_dir / f"block_{start_id}_{end_id}.parquet"
+        parquet_path.write_bytes(parquet_bytes)
+        metadata = {
+            "schema_version": "stage7-block-v1",
+            "scenario": "C070_G100",
+            "source_sha": APPROVED_SOURCE_SHA,
+            "master_seed": 20270101,
+            "rng_policy_id": STAGE7_RNG_POLICY_ID,
+            "sampling_policy_id": "DOUBLING_FROM_300_V1",
+            "trial_id_start": start_id,
+            "trial_id_end": end_id,
+            "trial_count": end_id - start_id + 1,
+            "fingerprint_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+            "parquet_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+            "per_trial_sha256": [
+                hashlib.sha256(f"trial-{trial_id}".encode("ascii")).hexdigest()
+                for trial_id in range(start_id, end_id + 1)
+            ],
+            "run_id": "123",
+        }
+        metadata_path = block_dir / f"block_{start_id}_{end_id}_metadata.json"
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return parquet_path, metadata_path
+
+    state = {
+        "stage": "7",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "completed_trials": 2,
+        "next_trial_id": 3,
+        "stability_history": [],
+        "final_fingerprint": "a" * 64,
+        "artifact_identity": None,
+        "lease": None,
+    }
+    first_pair = make_pair(1, 2)
+    store.persist_trial_blocks_and_state(
+        block_pairs=[first_pair],
+        state=state,
+        blob_sha=None,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    first_blob = _git_blob_sha(store.files["stage7-blocks/block_1_2.parquet"])
+
+    second_pair = make_pair(3, 4)
+    state["completed_trials"] = 4
+    state["next_trial_id"] = 5
+    state["final_fingerprint"] = "d" * 64
+    store.persist_trial_blocks_and_state(
+        block_pairs=[second_pair],
+        state=state,
+        blob_sha=None,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+
+    assert _git_blob_sha(store.files["stage7-blocks/block_1_2.parquet"]) == first_blob
+    assert "stage7-blocks/block_3_4.parquet" in store.files
+    assert json.loads(store.files["state.json"].decode("utf-8"))["completed_trials"] == 4
+    assert store.restore_trial_blocks(
+        output_dir=tmp_path / "restored",
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+        expected_completed_trials=4,
+    ) == 2
+
+
+def test_durable_block_restore_fails_closed_on_missing_identity_sidecar(tmp_path: Path) -> None:
+    store = InMemoryDurableBlockStore(tmp_path / "state.json")
+    block_dir = tmp_path / "results" / "C070_G100" / "blocks"
+    block_dir.mkdir(parents=True)
+    parquet_bytes = b"block"
+    parquet_path = block_dir / "block_1_2.parquet"
+    parquet_path.write_bytes(parquet_bytes)
+    metadata = {
+        "schema_version": "stage7-block-v1",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "rng_policy_id": STAGE7_RNG_POLICY_ID,
+        "sampling_policy_id": "DOUBLING_FROM_300_V1",
+        "trial_id_start": 1,
+        "trial_id_end": 2,
+        "trial_count": 2,
+        "fingerprint_sha256": "a" * 64,
+        "parquet_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "per_trial_sha256": ["b" * 64, "c" * 64],
+        "run_id": "123",
+    }
+    metadata_path = block_dir / "block_1_2_metadata.json"
+    metadata_path.write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    state = {
+        "stage": "7",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "completed_trials": 2,
+        "next_trial_id": 3,
+        "stability_history": [],
+        "final_fingerprint": "a" * 64,
+        "artifact_identity": None,
+        "lease": None,
+    }
+    store.persist_trial_blocks_and_state(
+        block_pairs=[(parquet_path, metadata_path)],
+        state=state,
+        blob_sha=None,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    del store.files["stage7-blocks/block_1_2_identity.json"]
+
+    with pytest.raises(StateIntegrityError, match="triplet sets differ"):
+        store.restore_trial_blocks(
+            output_dir=tmp_path / "restored",
+            master_seed=20270101,
+            sampling_policy_id="DOUBLING_FROM_300_V1",
+            expected_completed_trials=2,
+        )
+
+
+def test_legacy_block_migration_requires_verified_workflow_seed_and_source() -> None:
+    parquet_bytes = b"legacy-block"
+    metadata = {
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "trial_id_start": 1,
+        "trial_id_end": 1,
+        "trial_count": 1,
+        "fingerprint_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "run_id": "legacy-run-1",
+    }
+    metadata_bytes = (
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    kwargs = {
+        "metadata": metadata,
+        "parquet_bytes": parquet_bytes,
+        "metadata_bytes": metadata_bytes,
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "sampling_policy_id": "DOUBLING_FROM_300_V1",
+        "allow_legacy_metadata": True,
+    }
+    with pytest.raises(StateIntegrityError, match="verified previous-run workflow identity"):
+        build_durable_block_identity(**kwargs)
+
+    proof = {
+        "schema_version": "stage7-legacy-run-identity-v1",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "verified_runs": {
+            "legacy-run-1": {
+                "run_id": "legacy-run-1",
+                "scenario": "C070_G100",
+                "source_sha": APPROVED_SOURCE_SHA,
+                "master_seed": 20270101,
+                "head_sha": "d" * 40,
+                "workflow_blob_sha": "e" * 40,
+                "workflow_source_sha": APPROVED_SOURCE_SHA,
+                "workflow_master_seed": 20270101,
+            }
+        },
+    }
+    identity = build_durable_block_identity(
+        **kwargs,
+        legacy_identity_proof=proof,
+    )
+    validate_durable_block_identity(
+        identity=identity,
+        metadata=metadata,
+        parquet_bytes=parquet_bytes,
+        metadata_bytes=metadata_bytes,
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    assert identity["legacy_metadata_migrated"] is True
+    assert identity["legacy_identity_proof"]["run_id"] == "legacy-run-1"
+
+
+def test_stage7_workflow_commits_durable_blocks_before_moving_past_each_chunk() -> None:
+    text = _workflow_text()
+    assert "MAX_TRIALS_PER_BLOCK = 50" in text
+    assert "restore_trial_blocks(" in text
+    assert "persist_trial_blocks_and_state(" in text
+    assert "LEGACY_BLOCK_IDENTITY_UNPROVEN" in text
+    assert "STAGE7_STATE_IDENTITY_MISMATCH=" in text
+    assert "stage7-legacy-run-identity-v1" in text
+    assert "job wall-clock timeout reached" not in text
+
+
 def test_requirements_include_pyyaml() -> None:
     requirements = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
     assert "pyyaml" in requirements.lower()
