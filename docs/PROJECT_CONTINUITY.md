@@ -973,3 +973,13 @@ This change remains documentation-only: no tests, Monte Carlo, Workflows, produc
 لم يُشغّل CLI أو `pytest` أو Workflow أو Trial أو Checkpoint أو Monte Carlo؛ لم يُعدّل أي ملف مصدر أو اختبار أو Workflow أو `state.json` أو `main`؛ لم تتغير هوية المصدر أو seed/RNG أو البيانات. `tested_sha=NOT_RUN`. لم تُرفع أي بوابة إلى PASS بناءً على هذا الجرد. تبقى `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN` والموانع المسجلة كما هي.
 
 **الخطوة التالية:** CP-P9 — جرد Workflows قراءةً فقط في CP منفصلة. لا تعديل أو تشغيل قبل مراجعة الصلاحية/الموافقة الخاصة بذلك النطاق.
+
+
+## CP-P9 — جرد Workflows قراءةً فقط — 2026-10-19 (Europe/London)
+
+**Event ID:** CP-P9-WORKFLOW-INVENTORY-2026-10-19  
+**الحكم:** READ_ONLY_WORKFLOW_INVENTORY_COMPLETE_WITH_BLOCKERS. التقرير التفصيلي حُفظ في docs/audits/CP-P9_workflow_inventory_2026-10-19.md، report blob 727ce471c9139a69728d065f2659b350b8088f2a.  
+**هوية الفحص:** main HEAD 647c19826b90d8224ce73ef9b90c306a45e03fb0؛ state.json blob 2178260bb18efeb81437486f13b6d10cf5e85936؛ source_sha f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b؛ branch continuity=tmp/cp-session-continuity-20261017؛ PR #46 كان OPEN/DRAFT/UNMERGED على base 647c19826b90d8224ce73ef9b90c306a45e03fb0 ورأس bd1f3385e22868cc90c2d253ab3f0a0e91a331a1 قبل هذا الإلحاق.  
+**النطاق:** قراءة ساكنة لكل 24 ملفًا في .github/workflows على main، ومطابقة بصمات blobs مع جرد الدليل الحي. تم إثبات إحالة README غير المطابقة إلى stage7-gates.yml، وسُجلت مخاطر Stage 7 concurrency/timeout، وSOURCE_SHA_DRIFT، وtarget ثابت عالي الأثر في stage10-emergency-cancel.yml، وتفاوت البيئة والصلاحيات الضمنية، ومسارات Gate B التي تولّد Trial إضافية عند تشغيلها.  
+**R4/الحكم:** لم يتغير أي Workflow أو test أو README أو state.json أو مصدر أو بيانات؛ لا تغيير لـmain أو المرجع أو SOURCE_SHA/master_seed/RNG/sampling/cohort/trial IDs. لم تُشغّل Workflow أو CLI أو pytest أو Monte Carlo أو Trial أو Checkpoint، ولم تُنشأ Run/Job/Artifact/Release؛ tested_sha=NOT_RUN. بقيت كل الموانع والبوابات كما هي.  
+**الخطوة التالية:** CP مستقلة تجهز R4 لمخاطر Stage 7 وتعارض التوثيق؛ لا تعديل Workflow أو tests بلا موافقة صريحة محددة.  
