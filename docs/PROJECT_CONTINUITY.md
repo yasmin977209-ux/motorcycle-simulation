@@ -861,3 +861,12 @@ At the most recent PR read before this entry, PR #46 was Open / Draft / not merg
 1. يراجع المالك قائمة Project Sources في واجهة ChatGPT ويستبدل الملفات الخمسة بالملف الموحد المختار كما هو مقرر.
 2. ينسخ المالك فقط النص داخل السياج من `PROJECT_INSTRUCTIONS_DRAFT.md` إلى Project Instructions ويحفظه.
 3. يجرّب محادثة جديدة داخل المشروع؛ بعد نجاح اختبار القراءة الحية للاستمرارية، يعود التنفيذ الفعلي من P0–P3 ثم CPs التقنية المستقلة، لا من تحديثات الاستمرارية وحدها.
+
+
+## Correction — standing execution mandate and instruction count — 2026-10-18
+
+The preceding execution-first draft at blob `e69348c4b9ced7b0114cd3c3123c030e80ef32cd` contained 6,990 characters inside Project Instructions. It is preserved as a historical revision and has been superseded by revision 2, which more explicitly makes the owner's end-to-end implementation goal a continuing mandate: follow-up requests such as «تابع/أكمل/استأنف/نفّذ الخطوة التالية» mean continuing the permitted engineering CP sequence, not returning to continuity-only reports. A request for review-only remains M1. The protected actions listed in the instruction draft still require specific approval.
+
+Current revision 2: `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md`, branch `tmp/cp-session-continuity-20261017`, commit `8edc632258c772ed9cac83213c0bf42178350e19`, blob `2092ceeebf41af3d0675fca1c57ffc20d8f41307`; full Markdown file 12,432 UTF-8 bytes, SHA-256 `61f95f4e92806ae13417845d013e5460cd28cf94371474fbec5ff03755bc8ae6`; instruction text inside the fence is 7,120 characters and 11,295 UTF-8 bytes, SHA-256 `9faab4ca9f825857b77c734ceee7c35b97070a62ac23ae6da37b20ac2ac05836`. Direct GitHub read-back matched exactly. `SESSION_OUTPUTS.jsonl` now has a `HASH_VERIFIED` record for this revision at blob `3a148749bcb4250aee1256b7fc9a8ff69a73bdd7` after its read-back.
+
+This change remains documentation-only: no tests, Monte Carlo, Workflows, production code, historical data, main, or state.json were changed. PR #46 remains Open / Draft / unmerged, base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`. The current owner action is still to apply the reviewed instructions through the ChatGPT UI; GitHub writes do not change Project Settings. After setup, resume real engineering from the live P0–P3 baseline and work the allowed CPs forward, not just the continuity mechanism.
