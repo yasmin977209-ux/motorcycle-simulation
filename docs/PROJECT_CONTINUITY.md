@@ -443,3 +443,41 @@ Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP 
 ### Status and next permitted action
 
 R4 outcome remains `BLOCKED_FOR_IMPLEMENTATION`. No Gate or stability PASS is claimed. Do not modify tests or workflows, and do not run Monte Carlo, Trial, checkpoint, or Golden expansion. The next allowed step is a specific owner decision defining the meaning of false stability and precision margins, plus either a proof of bounded financial support or approval of explicit tail/moment assumptions; then plan a separate bounded R4/implementation CP for the `P90_Held_Assets` production acceptance path. Keep `main`, source SHA, seed, RNG, thresholds, epsilon, and historical datasets unchanged.
+
+
+---
+
+## إغلاق توثيقي ونقطة استئناف حية — 2026-10-18 (Asia/Aden)
+
+**نوع الحدث:** إغلاق استمرارية ومصالحة نهائية للأدلة الحية. توثيق فقط؛ لا تغيير هندسي أو تشغيل جديد.
+
+### 1. اختيار أحدث نقطة استئناف مكتملة
+
+تمت قراءة جميع مواضع العنوان `CROSS_CHAT_ACCEPTANCE_TEST` مباشرةً من سجل الاستمرارية الحي. أُبقيت جميع الأقسام التاريخية دون حذف أو إعادة كتابة. أحدث نقطة استئناف مكتملة ومرتبطة بعمل CP هي `CP-STAT-CONTRACT — R4 continuation R4-1/R4-2/R4-3 — 2026-10-18 (Asia/Aden)` في نهاية السجل؛ تُستأنف المهمة من هذه الفجوات فقط، لا من P0 أو P1 أو P2 من جديد. اختبار القبول السابق موثق بالفعل؛ لم يُنشأ رمز اختبار جديد ولم يُكرر الحدث.
+
+### 2. ما أنجزناه منذ نقطة الاستمرارية السابقة
+
+- راجع المالك/المساعد R4-V2.1، وصحح نطاق D-2026-10-12-01: شرط P50 الصارم `>5%` على 300→600 أو 600→1200 يطلب الوصول إلى 2400 عند تحقق الشرط، لكنه لا يصفر عداد الانتقالات، ولا يصبح مؤشرًا ثامنًا في §2.5، ولا يفرض نقطة بعد 2400. النافذة الأولى للاستقرار ما زالت أربع نقاط وثلاثة انتقالات.
+- اعتمد المالك التوصية الإحصائية: هدف عائلي ≤0.05 لاحتمال إعلان أي واحد من 20 سيناريو عشوائي غير C100 مستقرًا خطأً عبر أفق الفحص التكيفي، وميزانية تصميم أولية `alpha_s=0.0025` لكل سيناريو؛ استدلال صالح عبر الزمن ومناسب لنوع المقياس؛ بقاء `abs(Δp)<0.005` مع شرط دقة مستقل؛ وعدم تغيير عتبة أو epsilon أو seed أو RNG أو البيانات التاريخية أو `SOURCE_SHA` ضمنيًا.
+- فعّل المالك P4 وتفويض M3 الفني المحدود: CP واحدة في كل مرة ثم تقرير توقف. لا تعديل `main`، ولا merge/close/delete، ولا تعديل tests/Workflows دون موافقة صريحة مستقلة، ولا Trial/Checkpoint/Monte Carlo أو Golden expansion دون إذن تشغيل مستقل، ولا اعتماد تسليم/Release.
+- أُعد تقرير محلي `CP-STAT-CONTRACT_R4_عقد_إحصائي_تنفيذي_2026-10-18.md` (42,408 بايت، SHA-256 `fc9c289bdaddea85c4b24e18ef4078ea5a8b7d8bf94ca7e11ebf220210f588f0`) ثم استُكملت قراءة R4-1/R4-2/R4-3 في تقرير متابعة محلي (17,598 بايت، SHA-256 `9b973637dcefb30dffb550eb3dfc42c17479cec80f3b5a194ded866ae7bd73a6`). هذه ملفات محلية وليست ملفات مستودع أو Artifacts إنتاجية.
+- الحكم ما زال: R4-1 `UNDEFINED_BUSINESS_RULE / PENDING` حتى يحدد العقد حدث الاستقرار الزائف وهوامش الدقة `pi[s,m]) بصورة قابلة للاختبار؛ R4-2 `K_SPEC / BLOCKED` لأن حدود الدعم المالي/فرضيات الذيول أو العزوم غير مثبتة؛ R4-3 `K_CODE / FAIL` في main وقبول الإنتاج `PENDING` لأن مقيّم الاستقرار لا يربط كل مؤشرات §2.5 السبعة بما فيها `P90_Held_Assets`.
+- تبقى عيوب Gate B الحية دون إصلاح أو اختبار: `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean)))، والتحويل غير الآمن `bool(...["stable"]))، وغياب إدماج المؤشرات السبعة في القرار الإنتاجي، وثلاث نقاط/انتقالين بدل أربع نقاط/ثلاثة انتقالات.
+- مراجعة إعدادات المشروع: التعليمات الحالية جيدة إجمالًا؛ التوصية تعديل محدود فقط لإضافة اختيار أحدث نقطة استئناف مكتملة ومؤرخة ومنع تكرار الأحداث، مع إصلاح placeholders فقط إذا ثبت أنها ناقصة في واجهة الإعدادات. واجهة إعدادات Project Instructions لم تُقرأ، لذلك لم يُثبت وجود placeholder ناقص ولم تُجرَ أي كتابة عليها.
+- المرجع الأصلي المتاح محليًا تمت إعادة بصمته: 271,496 بايت، SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`، مطابق للبصمة المعتمدة. لا توجد حاجة مثبتة لتعديل المرجع الموحد أو المرجع الحاكم، ولم يُكتب أي منهما إلى المستودع.
+- لا تغييرات شاملة في إعدادات GitHub: PR #46 مفتوح Draft وغير مدمج. طلب تفاصيل حماية `main` رُفض بـ403، وتفاصيل الحماية غير متاحة من نقطة الاتصال المستخدمة؛ كما لم يمكن التحقق من إعدادات Actions عبر الواجهة المتاحة. لا تُعامل الإعدادات غير المقروءة كـPASS أو FAIL. لم تُغيّر أي إعدادات للمستودع.
+- لم يُشغّل في هذه الأعمال `pytest` أو Monte Carlo أو Trial أو checkpoint أو Golden expansion أو Release. لا يوجد Run/Artifact جديد مرتبط بـCP-STAT-CONTRACT.
+
+### 3. إعادة توثيق لقطة GitHub الحية
+
+- سجل الاستمرارية: [docs/PROJECT_CONTINUITY.md على فرع الاستمرارية](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/PROJECT_CONTINUITY.md).
+- لقطة ما قبل هذا الإغلاق مباشرة: فرع الاستمرارية HEAD `5afe915435e5cac17896fd78dcd0fdc56fcda489`؛ blob للسجل `d156c0cf11b5f854074836fded886eaf4dddc49a`. الـSHA-256 الحالي والحجم الفعليان للبايتات التي جُلبت من GitHub سيُذكران في رد إغلاق الجلسة، لأن تضمين البصمة النهائية داخل الملف نفسه سيجعلها تتغير بكتابة جديدة.
+- PR [#46](https://github.com/yasmin977209-ux/motorcycle-simulation/pull/46) مفتوح Draft وغير مدمج؛ head قبل الإغلاق `5afe915435e5cac17896fd78dcd0fdc56fcda489`؛ base `main` عند `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- رأس `main` لم يتغير عند قراءة ما قبل الكتابة: `647c19826b90d8224ce73ef9b90c306a45e03fb0`. `main/state.json` ما زال `stage=12-CLOSED` و`repository_status=FINAL_DELIVERY_BLOCKERS_OPEN)، مع الموانع المسجلة: `GATEA_PROVIDER_MISSING)، و`SOURCE_SHA_DRIFT)، وعدم حسم طوبولوجيا Stage 11، وغياب `scripts/stage13_assemble.py)، وعدم اكتمال قبول مجموعة التسليم السباعية، وفجوة حوكمة، و`G2_RISK). `state.sha` دلالته `parent_state_commit_pointer`.
+- لقطة SHA-256 السابقة الواردة في تقرير مستخدم سابق لم تطابق إعادة الحساب من بايتات الملف الحالي؛ لا تُمسح تلك القيمة التاريخية. هذا الحدث هو المرجع الأحدث للـSHA والحجم، بعد تحقق القراءة الراجعة.
+
+### 4. الخطوة التالية المسموح بها
+
+استئناف `CP-STAT-CONTRACT` من فجوات R4-1/R4-2/R4-3 فقط: (1) صياغة تعريف قابل للاختبار لحدث الاستقرار الزائف/التكافؤ وهوامش الدقة وتوزيع الخطأ داخل `alpha_s)، (2) إثبات حدود الدعم للمتوسطات المالية أو الحصول على اعتماد صريح لفرضيات ذيول/عزوم محددة، (3) تعريف عقد قبول استخراج `P90_Held_Assets` وربطه بقرار الإنتاج. لا تنفيذ أو اختبارات أو Workflows قبل R4 والموافقات المطلوبة؛ ولا تشغيل إحصائي أو Golden expansion دون تفويض منفصل يحدد السيناريوهات ومعرفات التجارب والغرض والتفسير.
+
+**حدود الإغلاق:** لا يحذف هذا الإدخال أي حدث تاريخي، ولا يغير أي قاعدة أو بوابة، ولا يعلن Gate أو استقرارًا PASS، ولا يُعد موافقة لتسليم أو Release.
