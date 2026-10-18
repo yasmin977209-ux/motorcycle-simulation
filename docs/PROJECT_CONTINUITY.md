@@ -721,3 +721,40 @@ No changes to source, tests, workflow files, data, seed, RNG, source pin, approv
 - An initial attempt to write the full long entry in one tool call was blocked by OpenAI tool safety checks before a GitHub commit was returned; the tool gave no diagnostic reason. The full audit report has now been preserved in the branch. This short continuity entry references it and records the failure evidence and next step.
 
 **Next CP:** read-only P8 CLI/environment inventory, then P9 workflow inventory in a separate CP. Stop after this CP.
+
+## CP-CONTINUITY-IMPLEMENTATION-01 — create continuity navigation and output tracking — 2026-10-18 (Asia/Aden)
+
+**Mode:** M3 limited, explicit owner delegation. This CP changes documentation only on the existing continuity PR branch. No implementation work on motorcycle-simulation gates/delivery is authorized.
+
+### Live baseline and R4 before write
+
+- Live main HEAD: `647c19826b90d8224ce73ef9b90c306a45e03fb0`; main remains untouched by this CP.
+- Live continuity branch `tmp/cp-session-continuity-20261017` HEAD before write: `74e0f2cf0fad66d3a79bda70c47d7e6cd18668c0`.
+- PR #46: OPEN / DRAFT, unmerged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; head `tmp/cp-session-continuity-20261017` at `74e0f2cf0fad66d3a79bda70c47d7e6cd18668c0`. Changed files before this CP: `docs/PROJECT_CONTINUITY.md` and `docs/audits/CP-P5_pytest_diagnostic_inventory_2026-10-18.md`.
+- Current ledger blob: `b229ed4d381566e2b19cd8d1a67ff091d30a2b8d`; UTF-8 size read from tool content: 123472 bytes. The current Git tree reports the same tracked file size; this CP appends and preserves all preceding entries.
+- `main/state.json` remains `FINAL_DELIVERY_BLOCKERS_OPEN`; `state.sha` means `parent_state_commit_pointer`, not `main HEAD`. The main blockers remain unchanged and out of scope.
+
+### R4 decisions
+
+| Element | Current | Governing reference/decision and branch | Controlling text/scope | Ruling |
+|---|---|---|---|---|
+| `docs/PROJECT_CONTINUITY.md` | Existing append-only ledger on continuity branch | Owner-authorized CP-CONTINUITY-IMPLEMENTATION-01; current PR #46 | Preserve earlier events/failures; do not write `main` | Append a new CP event; no rewriting of prior sections |
+| `docs/continuity/START_HERE.md` | Absent from current branch tree | Same limited delegation; no equivalent path found in current tree | Index/navigation only; explicitly non-normative; forces live reads | Add a small start index |
+| `docs/continuity/SESSION_OUTPUTS.jsonl` | Absent from current branch tree | Same limited delegation | Separate output identities/statuses; do not imply a save without read-back | Add JSONL records and update their status only after verification |
+| `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md` | No equivalent draft path found | Report 15.14, provided as draft; owner must apply manually in ChatGPT UI | Proposal only; no Project Instructions UI write | Add full copy-ready draft and mark `APPROVAL_PENDING` |
+| CP-HISTORY-RECOVERY-01 local report | Exact local bytes available and supplied SHA-256 matches | Delegation permits archive on candidate branch if original bytes can be transferred | Do not claim exact archival without repository read-back | `LOCAL_ONLY` for now: GitHub write tools accept inline content, but do not expose a local file-ingestion operation for this original report in this session. No substitute/reconstructed report will be mislabeled as the original. |
+| `docs/PROJECT_STATE.md` | Existing historical snapshot dated 2026-10-06 | Repository's live state/evidence separation | Do not treat old snapshot as current state; do not mutate its semantics | Leave unchanged; START_HERE points out its time boundary |
+| `main/state.json`, governing reference, decision log, code/tests/workflows | Current normative/state files on `main` | Explicit exclusions in owner delegation | No main/reference/state/code/test/workflow changes | Leave unchanged |
+
+### Planned and performed document scope
+
+- `docs/continuity/START_HERE.md`: navigation, authority order, required live-start procedure, output-state vocabulary, limitations, and an independent cross-chat marker. Any branch/PR identifiers in it are historical discovery pointers and must be rechecked.
+- `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md`: full copy-ready proposal from the prior investigation report; still requires owner review and manual application in Project Settings.
+- `docs/continuity/SESSION_OUTPUTS.jsonl`: output state register; report remains `LOCAL_ONLY` until exact bytes can be saved and read back. The register excludes its own hash to avoid self-reference.
+- Full original investigation report was not transferred into GitHub because the write connector cannot ingest the local file path/bytes directly. Local file hash matches the expected digest; GitHub archive status is not claimed.
+
+### Scope boundaries
+
+No `main` or `state.json` write; no merge/close/delete action; no test, CLI, Monte Carlo, Trial, checkpoint, Golden expansion, Run, Workflow, delivery generation, or gate disposition change. The cross-chat marker is only a read-discovery token; it has not yet been verified by an independent ChatGPT conversation.
+
+**Initial write status:** document commit/read-back/hash evidence will be recorded as a separate verification event after the first commit, rather than pre-asserting success here.
