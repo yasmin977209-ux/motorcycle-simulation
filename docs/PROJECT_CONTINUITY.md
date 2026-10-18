@@ -223,4 +223,13 @@
 - Next permitted CP: resume the reviewed `CP-STAT-CONTRACT` report from its documented gaps; do not start production implementation until an R4 shows the precise contract and any separate approvals are obtained.
 - `main` and `state.json` are not modified by this acceptance test.
 
+## 8. PR description provenance reconciliation — 2026-10-18
 
+**Event type:** documentation/governance metadata correction; no business-rule decision and no engineering execution.
+
+- PR #46 description was updated via GitHub API to append a dated handoff addendum while preserving the original PR-creation provenance above. This addresses the stale original provenance fields without rewriting the historical facts as if they had been current all along.
+- At the time the PR addendum was written, branch HEAD was `fae37af72545f3cd8b0bd4d90e2f49c48aea8b5b`, file blob was `87d9918d59edbcb6be562e0052698a23b4193eea`, UTF-8 size was 32,260 bytes, and SHA-256 read-back was `b3cf967f409dc9ac1d0a693a5a18d3260ca99bd430162278b6e27f83b99f2db6`. Treat these as a timestamped snapshot of the PR description update, not as permanent current identifiers.
+- Read-back verified the PR body now contains the dated addendum, the cited snapshot identifiers, and the explicit statement that the original provenance block is historical. PR #46 remained Open/Draft/unmerged with base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- `main` HEAD remained `647c19826b90d8224ce73ef9b90c306a45e03fb0`. No file on `main`, source code, tests, workflows, `state.json`, simulation, trial, checkpoint, artifact, or release was changed or created by this metadata reconciliation.
+- This is a current administrative handoff event. For any later use, re-read the live PR/branch/file and never assume the SHA/size above still describe the latest branch head.
+- **Next permitted improvement:** prepare a prioritized evidence-backed remediation plan for the blockers in `main/state.json`, beginning with decision/source identity governance and only then bounded CPs. Do not launch statistical or production runs without the approvals required by project policy.
