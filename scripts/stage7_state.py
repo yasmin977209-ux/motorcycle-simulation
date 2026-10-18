@@ -90,6 +90,12 @@ def build_durable_block_identity(
             "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
         )
     )
+    if not legacy_metadata_migrated:
+        for key in ("parquet_sha256", "per_trial_sha256"):
+            if key not in metadata:
+                raise StateIntegrityError(
+                    f"new block metadata missing {key}; legacy migration not allowed"
+                )
     legacy_identity_record = None
     if legacy_metadata_migrated:
         if not allow_legacy_metadata:
