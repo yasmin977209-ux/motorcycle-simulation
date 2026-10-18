@@ -778,7 +778,40 @@ class StateStore:
             raise LeaseConflict(f"scenario {self.scenario} lease owner changed during block commit")
 
         files: dict[str, bytes] = {}
-        ranges: list[tuple[int, int]] = []
+        new_ranges: list[tuple[int, int, str]] = []
+        existing_listing = self._block_listing()
+        existing = {
+            str(item.get("name")): item
+            for item in existing_listing
+            if item.get("type") == "file"
+        }
+        existing_parquet = {
+            name for name in existing if name.startswith("block_") and name.endswith(".parquet")
+        }
+        existing_metadata = {
+            name for name in existing if name.startswith("block_") and name.endswith("_metadata.json")
+        }
+        existing_identity = {
+            name for name in existing if name.startswith("block_") and name.endswith("_identity.json")
+        }
+        existing_keys = {name[len("block_"):-len(".parquet")] for name in existing_parquet}
+        existing_metadata_keys = {
+            name[len("block_"):-len("_metadata.json")] for name in existing_metadata
+        }
+        existing_identity_keys = {
+            name[len("block_"):-len("_identity.json")] for name in existing_identity
+        }
+        if existing_keys != existing_metadata_keys or existing_keys != existing_identity_keys:
+            raise StateIntegrityError(
+                "existing durable Stage 7 block files are incomplete: triplet sets differ"
+            )
+        all_ranges: dict[str, tuple[int, int]] = {}
+        for key in existing_keys:
+            match = _BLOCK_NAME_RE.fullmatch("block_" + key)
+            if match is None:
+                raise StateIntegrityError(f"invalid existing durable block filename key: {key}")
+            all_ranges[key] = (int(match.group(1)), int(match.group(2)))
+
         for parquet_path, metadata_path in sorted(
             block_pairs, key=lambda pair: pair[0].name
         ):
@@ -804,41 +837,45 @@ class StateStore:
             key = f"{int(identity['trial_id_start'])}_{int(identity['trial_id_end'])}"
             if parquet_path.name != f"block_{key}.parquet" or metadata_path.name != f"block_{key}_metadata.json":
                 raise StateIntegrityError("local block filename does not match its metadata range")
-            ranges.append((int(identity["trial_id_start"]), int(identity["trial_id_end"])))
+            start_id, end_id = int(identity["trial_id_start"]), int(identity["trial_id_end"])
+            if key in all_ranges and all_ranges[key] != (start_id, end_id):
+                raise StateIntegrityError(f"durable block range changed for {key}")
+            all_ranges[key] = (start_id, end_id)
+            new_ranges.append((start_id, end_id, key))
             prefix = f"stage7-blocks/block_{key}"
             files[f"{prefix}.parquet"] = parquet_bytes
             files[f"{prefix}_metadata.json"] = metadata_bytes
             files[f"{prefix}_identity.json"] = (
-                json.dumps(identity, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+                json.dumps(identity, ensure_ascii=False, indent=2, sort_keys=True) + "\\n"
             ).encode("utf-8")
 
-        if ranges:
-            # For both a new checkpoint and a legacy recovery, files must form the
-            # exact prefix represented by the state being committed.
+        if all_ranges:
             expected_start = 1
-            for start, end in sorted(ranges):
-                if start != expected_start or end < start:
-                    raise StateIntegrityError("local block files contain a gap or overlap")
-                expected_start = end + 1
+            for start_id, end_id in sorted(all_ranges.values()):
+                if start_id != expected_start or end_id < start_id:
+                    raise StateIntegrityError("durable Stage 7 blocks contain a gap or overlap")
+                expected_start = end_id + 1
             if expected_start - 1 != int(state.get("completed_trials", -1)):
                 raise StateIntegrityError(
-                    "local block prefix does not match state.completed_trials"
+                    "durable block prefix does not match state.completed_trials"
                 )
             prefix_fingerprint = state.get("final_fingerprint")
             if not isinstance(prefix_fingerprint, str) or not _SHA256_RE.fullmatch(prefix_fingerprint):
                 raise StateIntegrityError("state final_fingerprint is missing before durable commit")
+        elif int(state.get("completed_trials", 0)) != 0:
+            raise StateIntegrityError(
+                "state reports completed trials but no durable or pending block files exist"
+            )
 
         state["scenario"] = self.scenario
         state["source_sha"] = self.source_sha
         state["run_id"] = self.run_id
         state["run_attempt"] = int(self.run_attempt)
         state["lease"] = self._lease_record()
-        state_raw = (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        state_raw = (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode("utf-8")
         files["state.json"] = state_raw
 
         # Refuse overwriting any previously persisted block with different bytes.
-        existing_listing = self._block_listing()
-        existing = {str(item.get("name")): item for item in existing_listing if item.get("type") == "file"}
         for path, raw in list(files.items()):
             if not path.startswith("stage7-blocks/"):
                 continue
