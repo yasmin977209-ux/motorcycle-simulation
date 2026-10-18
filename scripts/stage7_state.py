@@ -854,7 +854,7 @@ class StateStore:
             files[f"{prefix}.parquet"] = parquet_bytes
             files[f"{prefix}_metadata.json"] = metadata_bytes
             files[f"{prefix}_identity.json"] = (
-                json.dumps(identity, ensure_ascii=False, indent=2, sort_keys=True) + "\\n"
+                json.dumps(identity, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
             ).encode("utf-8")
 
         if all_ranges:
@@ -880,7 +880,7 @@ class StateStore:
         state["run_id"] = self.run_id
         state["run_attempt"] = int(self.run_attempt)
         state["lease"] = self._lease_record()
-        state_raw = (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode("utf-8")
+        state_raw = (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
         files["state.json"] = state_raw
 
         # Refuse overwriting any previously persisted block with different bytes.
