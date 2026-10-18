@@ -349,3 +349,32 @@ Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP 
 - لم يُنشأ فرع بديل. لا يُدمج أو يُغلق PR #46 ولا يُحذف الفرع.
 - **الخطوة التالية المسموح بها:** استئناف CP-STAT-CONTRACT من الفجوات الثلاث الموثقة، على أن يحدد R4 أصغر عمل فني وآلية اختبار معيارية واضحة. لا تُنفّذ خوارزمية CS قبل تثبيت افتراضاتها وتعريف اختبار false-stability/التكافؤ، ولا تغيّر tests أو Workflows دون الموافقة الصريحة المطلوبة. لا تشغيل إحصائي أو توسيع Golden دون إذن مستقل محدد السيناريو والمعرفات والغرض.
 - أُضيف هذا الإدخال مرة واحدة في نهاية السجل مع إبقاء الأحداث السابقة. تُحفظ تفاصيل read-back النهائية لهذا الإدخال في تقرير الإغلاق المصاحب خارج الملف لتجنب الادعاء بأن الملف يستطيع احتواء بصمته النهائية دون تغييرها.
+
+
+---
+
+## R4 — GitHub branch protection and Workflow inventory audit — 2026-10-18 (Asia/Aden)
+
+**Scope and mode:** read-only settings/Workflow R4 audit. The owner requested applying branch protection and conducting separate R4 reviews before any Workflow edits. No Workflow, test, simulation, trial, checkpoint, Release, main content, or repository setting was changed in this audit.
+
+### 1. Branch-protection decision and capability boundary
+
+- Live \`main\` HEAD read before this note: \`647c19826b90d8224ce73ef9b90c306a45e03fb0\`.
+- GitHub branch endpoint: https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/branches/main returned \`protected=false\`, \`protection.enabled=false\`, and required-status enforcement \`off\` with empty checks/contexts.
+- Ruleset endpoint https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/rulesets?per_page=100 returned an empty list \`[]\`.
+- Connected GitHub tools expose GET/read operations for branch protection/rulesets but no action to PUT/PATCH branch protection or create a ruleset. The Actions permissions endpoint was rejected by the read connector. Therefore, the requested protection change **was not applied** from this session. Lack of protection remains FAIL; it is not represented as fixed.
+- Recommended settings awaiting application through an authorized GitHub account UI or write-capable integration: require Pull Request before merging; prohibit force-push and branch deletion; enforce protections for administrators where supported; do not require unverified status-check names or an approval count until an independent reviewer and applicable checks are confirmed.
+
+### 2. Separate Workflow R4 findings (no Workflow changed)
+
+1. **Wildcard branch pin — WORKFLOW_DEFECT:** \`.github/workflows/stage4-acceptance-port.yml\`, blob \`120366c01a7b7624d4dd1d8ff81e75a94c337e69\`, has \`branches: [stage4-verify-*]\`. Project Instructions prohibit wildcard branch pins. Before editing, determine the exact temporary branch to pin or obtain a retirement decision.
+2. **Manual dispatch — PENDING disposition / R4 required:** \`.github/workflows/stage1-rebuild.yml\` blob \`ce87d477b3f86d08e5beb0b64e79633432bc905a\`; \`stage3-c030-timing.yml\` blob \`f5abfb3d3ad3e6b35c0836a75b34329ada147d48\`; \`stage3-c100-determinism.yml\` blob \`8e21404696090706ae4e81bc753928e1548a7cbe\`; \`stage3-path-integration.yml\` blob \`c65b4d14b91ea151ff90c1716e552234e769bcc2\`; \`stage3a-verification.yml\` blob \`268f6d1f3bf4fa68f6bca2f1a7c2afe1b15f9dd7\`; and \`stage3b-verification.yml\` blob \`58185266422bfcc6cc72bb541c4c7e3bb7d7c4ae\` include \`workflow_dispatch\`. Project Instructions prohibit it for an approved Workflow. Resolve each file's approval/current-use status before choosing removal, replacement trigger, or retirement; no change is authorized by this audit.
+3. **Unspecified Workflow permissions — PENDING:** \`stage3-c030-timing.yml\`, \`stage3-c100-determinism.yml\`, and \`stage3-path-integration.yml\` have no explicit \`permissions\` declaration, though each declares a 15-minute job timeout. Effective default token permissions and repository Actions settings could not be read through the connected interface. Do not call effective permissions PASS/FAIL; the R4 candidate is explicit least-privilege permissions if read-only use is confirmed.
+4. **Stale emergency-cancel workflow — WORKFLOW_DEFECT candidate for retirement:** \`.github/workflows/stage10-emergency-cancel.yml\`, blob \`e12dc977bcd1d0e168b4bbb355b771a61d88822a\`, grants \`actions: write\` and targets Run \`37711587801\`. Direct Run read showed \`status=completed\`, \`conclusion=cancelled\` (2026-10-08). R4 recommends retiring this one-off trigger or obtaining a new scoped owner decision before reuse; do not delete its branch.
+5. **Stage 7 permissions/state mutation — R4 required, not yet classified as an unauthorized change:** \`.github/workflows/stage7-full-run.yml\`, blob \`4bb3b8df6742f51087b45eed1b9200468f12ac60\`, grants workflow-level \`contents: write\` and \`actions: write\`. Its preflight cancels stale runs and PATCHes \`stage7-state/<scenario>\` refs to the pinned \`SOURCE_SHA\` using \`force=true\` when the state run ID differs. Per-Job permissions and the intended/allowed scope of this state reset need R4; confirm no completed progress can be lost before edits.
+
+### 3. Settings still pending and verification boundaries
+
+- Repository Actions default permissions, environment protections, collaborator permissions, Secret Scanning and Code Scanning remain **PENDING**: the connected read tool rejected their settings/API endpoints as not allowed. No inference of PASS or FAIL is made from those failures.
+- PR #46 remains a documentation-only handoff PR; this audit does not authorize its merge, any Workflow change, a test run, or release.
+- Next permitted action: apply main protection through an authorized GitHub UI/write integration, then reread the live branch endpoint and prove \`protected=true\`; separately obtain explicit approval for each Workflow modification only after its R4 and any unresolved business rule are settled.
