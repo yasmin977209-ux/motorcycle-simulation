@@ -296,3 +296,16 @@ All sizes and SHA-256 values in this table were checked against the local files 
 ### E. Next permitted step
 
 Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP and stop after its own report. Do not implement a selected CS family until assumptions and the null/equivalence definition for false-stability have been made testable. Do not modify tests/Workflows without separate explicit approval. Do not run Monte Carlo, a trial, checkpoint, or Golden expansion without a separate, scenario/ID/purpose-specific authorization. No merge, PR closure, main update, delivery acceptance, or release was authorized by this continuity test.
+
+
+### Verified read-back evidence for CROSS_CHAT_ACCEPTANCE_TEST (first write)
+
+- **Direct read-back:** PASS at the GitHub file URL above; the test token was present exactly once. The token itself is deliberately not copied into this report or the user-facing reply.
+- **First-write commit:** `ca95f34acf96ac35c6c50cfb89f7c263ad3f1255`.
+- **First-write/read-back blob SHA:** `f4aefc3bbb7b9aca87723d569ba7d7bb2a02cfbf`.
+- **First-write/read-back UTF-8 size:** 46,482 bytes.
+- **First-write/read-back SHA-256:** `9f563f762f190dd25c347b3088609186116dcc158b01590069603c281a2ecd43`.
+- **Read-back branch HEAD and PR #46 head:** both `ca95f34acf96ac35c6c50cfb89f7c263ad3f1255` after one follow-up read to resolve a transient stale PR-head response.
+- **PR state:** Open, Draft, unmerged; base `main` unchanged at `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- **main check:** unchanged at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; no `main` or `state.json` write.
+- This proof note is a subsequent documentation-only commit and does not change the engineering scope. The final live head/hash/size after this proof note must be re-read and reported by the recorder.
