@@ -15,6 +15,8 @@ import pyarrow.parquet as pq
 import constants
 import daily_engine
 import monte_carlo
+from scripts.stage7_stability import STATISTICAL_ESCALATION_POLICY_ID
+from scripts.stage7_state import STAGE7_RNG_POLICY_ID
 
 
 def load_trial_range(trial_id_start: int, trial_id_end: int) -> range:
@@ -86,6 +88,7 @@ def write_block_artifact(
     output_dir: str,
     source_sha: str,
     run_id: str | None,
+    master_seed: int,
     elapsed_seconds: float,
     max_rss_kb: int,
     log_events: bool,
@@ -101,8 +104,14 @@ def write_block_artifact(
         parquet_path,
     )
 
+    parquet_sha256 = hashlib.sha256(parquet_path.read_bytes()).hexdigest()
     metadata = {
+        "schema_version": "stage7-block-v1",
         "scenario": scenario_id,
+        "master_seed": master_seed,
+        "rng_policy_id": STAGE7_RNG_POLICY_ID,
+        "sampling_policy_id": STATISTICAL_ESCALATION_POLICY_ID,
+        "parquet_sha256": parquet_sha256,
         "trial_id_start": trial_id_start,
         "trial_id_end": trial_id_end,
         "trial_count": len(results),
@@ -156,6 +165,7 @@ def main() -> None:
         output_dir=args.output_dir,
         source_sha=args.source_sha,
         run_id=args.run_id,
+        master_seed=args.master_seed,
         elapsed_seconds=elapsed_seconds,
         max_rss_kb=max_rss_kb,
         log_events=args.log_events,
