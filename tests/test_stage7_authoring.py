@@ -13,6 +13,7 @@ import yaml
 
 from scripts.stage7_state import (
     LeaseConflict,
+    StateConflict,
     StateIntegrityError,
     StateRemoteNotFound,
     StateStore,
