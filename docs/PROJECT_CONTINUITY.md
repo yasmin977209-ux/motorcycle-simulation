@@ -769,3 +769,8 @@ No `main` or `state.json` write; no merge/close/delete action; no test, CLI, Mon
 - Existing P5 report freshly reread on this branch: blob `8d345610a0c426468071864094c88637caa268ad`; size 9740 bytes; SHA-256 `a0e59303162c3d4e554a2e37569fd4896443605c738222f68815842c48ccc350`; URL https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-P5_pytest_diagnostic_inventory_2026-10-18.md. Its pytest run is candidate-only, with exact scope documented in that report.
 - The local full investigation report remains `LOCAL_ONLY`; local SHA-256 `8d51569144de72d1a334042cbd81d95325794ce60fde6feafd0fa101310ad2f0`, 155,005 bytes. The exact original bytes have not been archived in GitHub; no reconstructed version is represented as the original.
 - No tests or simulation/production execution were started, and no main/state/reference/code/test/workflow/gate data changed. The separate cross-chat marker still needs independent read from a new ChatGPT chat.
+
+### Output-register note correction — CP-CONTINUITY-IMPLEMENTATION-01 — 2026-10-18 (Asia/Aden)
+
+- A metadata note for `docs/continuity/START_HERE.md` initially retained the future-tense reminder to verify read-back after the status had already been updated. This event corrects only that note; it does not change the status, output content, project rules, or prior history.
+- The current register and continuity ledger will be read back again after this commit. The register intentionally does not store its own checksum; that avoids self-referential content. Its final identity is recorded in the CP closeout response.
