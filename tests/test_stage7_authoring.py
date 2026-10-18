@@ -675,7 +675,7 @@ def test_stage7_preflight_checks_all_scenario_state_branches_and_fails_closed() 
     assert "C070_G100 C070_G070 C070_G050 C070_G030 C070_G000" in preflight
     assert "C050_G100 C050_G070 C050_G050 C050_G030 C050_G000" in preflight
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
-    assert "git/refs/heads/${STATE_BRANCH}" in preflight
+    assert "git/ref/heads/${STATE_BRANCH}" in preflight
     assert "STAGE7_STATE_ABSENT=" in preflight
     assert "STAGE7_STATE_WITHOUT_CHECKPOINT=" in preflight
     assert "STAGE7_STATE_IDENTITY_MISMATCH=" in preflight
@@ -725,6 +725,7 @@ def test_stage7_block_runtime_uses_monotonic_elapsed_time_without_internal_timeo
     assert "JOB_STARTED_AT" not in text
     assert "JOB_TIMEOUT_MINUTES" not in text
     assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 360
+
 def _matching_golden_kwargs() -> dict[str, str]:
     fingerprint = "a" * 64
     return {
@@ -1115,6 +1116,7 @@ def test_cp3_cross_reference_compares_only_overlapping_range() -> None:
     assert "monte_carlo.fingerprint_trial_results(cp3_prefix)" in compact
     assert "trial_id<=6000" not in compact
     assert "CP3_AGGREGATE_SHA256" not in compact
+
 def test_same_run_id_different_attempt_is_allowed_by_lease() -> None:
     store = StateStore(
         repo="example/repo",
