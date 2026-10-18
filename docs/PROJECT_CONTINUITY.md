@@ -233,3 +233,66 @@
 - `main` HEAD remained `647c19826b90d8224ce73ef9b90c306a45e03fb0`. No file on `main`, source code, tests, workflows, `state.json`, simulation, trial, checkpoint, artifact, or release was changed or created by this metadata reconciliation.
 - This is a current administrative handoff event. For any later use, re-read the live PR/branch/file and never assume the SHA/size above still describe the latest branch head.
 - **Next permitted improvement:** prepare a prioritized evidence-backed remediation plan for the blockers in `main/state.json`, beginning with decision/source identity governance and only then bounded CPs. Do not launch statistical or production runs without the approvals required by project policy.
+
+
+## CROSS_CHAT_ACCEPTANCE_TEST — completion and full conversation handoff — 2026-10-18
+
+**Test token:** `CCHAT-20261018-MVD3LKYC-HKJ6F9BRSFK-7JT6W8`
+**Purpose:** Complete the owner-requested cross-chat persistence acceptance test and record the substantive history from this conversation for the next session. The token is intentionally not repeated in the user-facing response.
+**Write scope:** `docs/PROJECT_CONTINUITY.md` on `tmp/cp-session-continuity-20261017` only. No write to `main`, `state.json`, code, tests, workflows, or other branches.
+
+### A. Conversation and decisions captured for resumption
+
+1. **Initial handoff context:** the owner reported that prompts P0–P7 had largely been completed in an earlier conversation and a prompt-limit notice appeared. This session must resume from evidence and continuity records, not recreate or replay the previous conversation wholesale.
+2. **R4-V2.1 review and correction:** the owner asked for a bounded consistency review and a quantitative statistical decision memo, not a rewrite of R4 or a re-audit of P0–P2. The P50 conflict was resolved against the literal D-2026-10-12-01 scope: strict >5% on 300→600 or 600→1200 triggers `PRELIMINARY_STABLE` and continuation to N=2400; the newer three-transition/four-point rule already reaches N=2400. P50 remains a separate tracking/continuation rule; it is not one of the seven §2.5 metrics, does not automatically fail a transition, does not reset the counter, and by itself does not require a checkpoint beyond N=2400.
+3. **Quantitative memo STAT-1–STAT-4:** prepared a standalone memo and P50 correction addendum. Arithmetic distinguished 700 metric/scenario/checkpoint cells from adjacent transition counts; `1 - 0.95^700` is essentially 1 under independence, and Bonferroni on 700 cells is `0.05/700 ≈ 0.0000714286`. For probability-loss examples at N=2400 and p={0.05,0.10,0.30,0.50}, traditional 95% half-widths exceed 0.005 in all four examples. Approximate fixed-look N for a ±0.005 margin is about 7,300, 13,830, 32,270, and 38,416 respectively; these are planning approximations, not a sequential-CI guarantee. The memo separately explains point-change, current-estimate precision, and valid inference under adaptive stopping.
+4. **Golden coverage:** the 20 non-C100 scenarios require 48,000 Golden fingerprints through trial_id 2400. The approved non-C100 scope totaled 25,200; C030_G030 is covered through 2400 and the other 19 scenarios only through 1200, leaving 22,800 non-C100 fingerprints uncovered. The separate 3,000 C100 fingerprints are not subtracted from the 48,000 requirement. No Golden extension or new trial was authorized by the statistical policy.
+5. **Owner approval of statistical recommendation:** the owner explicitly approved the integrated recommendation on 2026-10-18. It targets familywise false-stability probability ≤0.05 across the 20 random non-C100 scenarios over the adaptive horizon, with initial design budget alpha_s=0.0025 per scenario; time-uniform inference appropriate to each metric family; the strict probability-loss change rule abs(Δp)<0.005 plus an independent precision requirement; three successful adjacent transitions over four cumulative points; separate P50 handling; C100 deterministic verification separate from SCENARIO_STABLE. No threshold, epsilon, seed, RNG, historical data, or SOURCE_SHA is implicitly changed.
+6. **Owner activated P4 / limited M3:** the owner explicitly authorized technical M3 CPs one at a time, with a stop-and-report after each CP. This does not authorize main edits, merges/closures/deletions, source/seed/RNG/historical-data changes, tests/Workflow modifications without separate explicit approval, Monte Carlo/Trial/checkpoint or Golden expansion without separate run authorization, final delivery acceptance, or Release.
+7. **CP-STAT-CONTRACT:** the first post-P4 task was completed as a local report/draft. Report: `CP-STAT-CONTRACT_R4_عقد_إحصائي_تنفيذي_2026-10-18.md`, 42,408 bytes, SHA-256 `fc9c289bdaddea85c4b24e18ef4078ea5a8b7d8bf94ca7e11ebf220210f588f0`. The contract remains `BLOCKED_FOR_IMPLEMENTATION`. Evidence gaps: no proven bounded-support/tail-or-moment assumption for the financial means; precise sequential equivalence/false-stability test contract still needed; production extraction/acceptance path for P90_Held_Assets not established. No repository file, code, test, workflow, branch, or commit was changed and no pytest, simulation, trial, or checkpoint ran for that CP.
+8. **Known Gate B implementation defects preserved:** `run_batch.py` and the embedded Stage 7 workflow contain `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean))`, which makes the absolute epsilon override the relative threshold away from zero; their Gate B evaluators use `bool(...["stable"])`, under which the nonempty string `"False"` converts to true. The main generic evaluation logic also lacks an integrated production evaluator for the seven §2.5 metrics, and the inspected run_batch stability window uses three checkpoint records—three points/two adjacent transitions—rather than the required four points/three transitions. These are `K_CODE` findings, not fixed or tested here.
+9. **Near-zero rule preserved:** the controlling comparison uses strict `abs(value) < REFERENCE_EPSILON` at `REFERENCE_EPSILON=1e-6`; success comparisons are strict `<`, not `<=`. Applying absolute CI limit 1 below 1e-6 and relative limit 0.01*abs(mean) outside it creates a large discontinuity. No change to epsilon=100 or any threshold was authorized; a continuous alternate rule requires separate owner approval.
+10. **C100 policy:** `DETERMINISM_VERIFIED` is distinct from `SCENARIO_STABLE`; one trial does not establish statistical stability. No additional C100 IDs were authorized by this session.
+11. **Cross-chat acceptance request:** the owner requested a random unique token under a clear `CROSS_CHAT_ACCEPTANCE_TEST` section, a write to the existing continuity branch only, and direct GitHub read-back verification of marker, branch head, PR state, blob SHA, SHA-256 and UTF-8 size. This entry continues that test and provides a non-secret verification trail while intentionally not exposing the token in the conversation reply.
+12. **Handoff request:** the owner asked that all substantive work in this conversation be recorded in the continuity log to resume in a new chat. This ledger is a decision/evidence summary, not a verbatim transcript; follow the project continuity rule not to copy every message and preserve the historical record.
+
+### B. Local deliverables created and verified in this conversation
+
+| File | Bytes | SHA-256 | Repository status |
+|---|---:|---|---|
+| `المرجع_النهائي_الموحد_المعتمد.md` | 271,496 | `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` | Local original bytes matched expected reference SHA; not written to repository. |
+| `R4-V2_تقرير_تصحيحي_نهائي_2026-10-17.md` | 55,307 | `23500ad3dbfb9f1502a0f948dce18ae3dece8008acd6dabef0faccd0792ac69f` | Local report only. |
+| `مراجعة_P0-P3_وتوجيه_R4-V2_تصحيحية_2026-10-17.md` | 48,334 | `20e2905a70a506b9174a5795da3e4335abf0f757b9b343303de4394f7cad5855` | Local report only. |
+| `Manifest_تقرير_R4-V2.1_2026-10-17.md` | 2,388 | `1728a787ec85349798d0d033ce60a740395c487a577acd00659b3966285ca2c0` | Local manifest only. |
+| `مذكرة_القرار_الإحصائي_الكمي_STAT-1-4_2026-10-17.md` | 57,689 | `2f69c60b6b27a8388e5d87d4aea1960d118ddbfa8c3550c40d180c9321ff85a2` | Local memo only. |
+| `ملحق_تصحيح_اتساق_P50_R4-V2.1_2026-10-17.md` | 3,977 | `871ccdbf3784de1d826a6e811c714b1d96130e808af32ed7741ba81378491829` | Local addendum only. |
+| `Manifest_مذكرة_STAT-1-4_2026-10-17.md` | 1,727 | `0882d8343433294ccea82fe04033b96c396e7bb92ca52da68e23a51a9c7a32a1` | Local manifest only. |
+| `التوصية_المتكاملة_للقرارات_الإحصائية_والتنفيذية_2026-10-18.md` | 28,037 | `9ae986551435737098772ccdf78b1f644c32f5578cdcfd1cb79615d13af3f324` | Local memo only. |
+| `قرار_اعتماد_التوصية_الإحصائية_والتنفيذية_2026-10-18.md` | 13,495 | `689d239d69ffa820f6f0c6bcf709c03952dc947c9ac2d5c2bf13d2220f1ee90f` | Local record of owner approval; not added to main decision log. |
+| `CP-STAT-CONTRACT_R4_عقد_إحصائي_تنفيذي_2026-10-18.md` | 42,408 | `fc9c289bdaddea85c4b24e18ef4078ea5a8b7d8bf94ca7e11ebf220210f588f0` | Local contract draft only. |
+| `حزمة_البرومبتات_التنفيذية_والتدقيق_للمحاكاة.md` | 45,218 | `767b48991f0c067ee9881f8ddb31217e7d5589defd65b78363b0cb6332d0d1f4` | Local prompt package. |
+
+All sizes and SHA-256 values in this table were checked against the local files during the current work. A local file hash is not a GitHub blob SHA, not a Run/Artifact digest, and does not make a report a production-accepted artifact.
+
+### C. Live repository baseline at the start of this documentation update
+
+- `main` HEAD: `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- `main/state.json` blob: `2178260bb18efeb81437486f13b6d10cf5e85936`; stage `12-CLOSED`; repository status `FINAL_DELIVERY_BLOCKERS_OPEN`; state SHA `0b083fa472d7a11089a15137cfad16d87785689a`, semantics `parent_state_commit_pointer`.
+- `docs/STATE_SHA_SEMANTICS.md` blob `134363f0f2834f8087760b3148910a1a3d3af38b`; `docs/governance/DECISIONS_LOG.md` blob `df4910e6a86bcce84f6b71d6d260913800474f95`; `docs/governance/REFERENCE_AMENDMENTS.md` blob `b4eab80bf657d72e9e49d14db81d2baf0a462d77`.
+- Continuity branch prior to this write: `tmp/cp-session-continuity-20261017`; branch HEAD / PR #46 head `51d917f53de9c825b44a002ec93115fe73386b90`; previous file blob `1d2ad87d63a0736900ca82798ad061d3b3e15491`.
+- PR #46: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/46 — open, Draft, unmerged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Current `main/state.json` blockers: `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT` from pinned source `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, Stage 11 topology `UNDEFINED_BUSINESS_RULE`, missing `scripts/stage13_assemble.py`, seven-file final delivery not jointly verified/accepted, missing D-2026-10-12-01 in `state.governance_decisions`, and `G2_RISK` for Stage 7 timing. The live decision log does contain D-2026-10-12-01; do not confuse a state bookkeeping gap with absence of the decision itself.
+- Live RNG source identifies the deterministic key `master_seed|scenario_id|trial_id|bike_id|date|event_type`; `constants.py` records `MASTER_SEED=20270101`. This record does not prove all historical outputs match current source; do not change source identity or mix cohorts.
+- Latest Runs surfaced during this session are on candidate branches, including Stage 13 synthetic integration Run `39044148534` on tested SHA `0eb64226c881e41b9b93c43d8526c1ca7bda9c0b`, Artifact `12104968606`; its documented scope is synthetic, not accepted production cohort or delivery. No new Run/Job/Artifact was created for this continuity task.
+
+### D. Read-back acceptance criteria
+
+- After writing, fetch this exact path directly from GitHub again.
+- Verify this unique token occurs exactly once in the just-saved file without exposing it in the user-facing reply.
+- Verify the continuity branch HEAD and PR #46 head equal the new commit SHA; verify PR #46 remains open Draft, unmerged, and based on unchanged main.
+- Compute UTF-8 size and SHA-256 from the exact read-back text, not a local draft; report the commit, blob, SHA-256, size and URL outside this file because a file cannot contain its own final content hash without changing it.
+- If write or read-back verification fails, say literally `GitHub لم يُحدّث`; do not claim PASS.
+
+### E. Next permitted step
+
+Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP and stop after its own report. Do not implement a selected CS family until assumptions and the null/equivalence definition for false-stability have been made testable. Do not modify tests/Workflows without separate explicit approval. Do not run Monte Carlo, a trial, checkpoint, or Golden expansion without a separate, scenario/ID/purpose-specific authorization. No merge, PR closure, main update, delivery acceptance, or release was authorized by this continuity test.
