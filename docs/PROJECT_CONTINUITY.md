@@ -1039,3 +1039,14 @@ In the immediately preceding CP-R4 append, the prose line describing the Stage 7
 **Authorization boundary:** the current user approval covers the R4 shared-concurrency workflow/test patch on a candidate only. A separate R4 scope for durable chunk persistence/resume, progress/error logging, removal/replacement of the 40-minute internal cap, external hosted-runner ceiling, max-parallel=25 and fail-closed summary was prepared but not implemented; see the report. No additional Workflow/test/code changes were made.  
 **Unchanged:** no main write, no change to SOURCE_SHA/master_seed/RNG/sampling/cohort/trial IDs/statistical policy/history/Parquet, no Monte Carlo/Trial/Checkpoint/CLI/Workflow run, no PR creation/merge/close, no Release. Existing gates/blockers remain open.  
 **Next:** request separate, explicit approval for CP-R4-TIMEOUT-PARALLELISM-FAIL-CLOSED before modifying protected Workflow/test files again.
+
+
+## CP-R4-TIMEOUT-PARALLELISM-FAIL-CLOSED — PARTIAL — 2026-10-19
+
+Report: docs/audits/CP-R4-TIMEOUT-PARALLELISM-FAIL-CLOSED_IMPLEMENTATION_2026-10-19.md (blob 743313d16e0a3e94dbffc392deedd0abe2cf4e04; commit 698d4a4c5c19f12083341a7850a70f0379fb1091). Candidate branch tmp/cp-stage7-timeout-parallelism-20261019, head ac8abcb3ae4bba7b5bb33d88026917881d0e704a2, based on main 647c19826b90d8224ce73ef9b90c306a45e03fb0. Candidate compare is ahead by five commits and behind by zero; only .github/workflows/stage7-full-run.yml and tests/test_stage7_authoring.py changed.
+
+Candidate edits read back: removed internal JOB_TIMEOUT_MINUTES=40 cutoff; set external matrix job timeout to 360 minutes; set max-parallel=25 for the unchanged 25-scenario matrix; kept fail-fast=false; changed concurrency group to github.ref with cancel-in-progress=false; added final fail-closed acceptance for all 25 scenarios; revised authoring tests accordingly. Workflow blob f673adca6d4a6db240a1b08ce3cb84ddc7881821; test blob b73f0cce6d543014b1391f86111dc775dd747cae.
+
+Important blocker: durable Parquet block persistence/resume is NOT implemented. Trial blocks are local until the later artifact-upload step; the remote StateStore persists state JSON, not Parquet. The existing sequence validation should fail closed when remote completed_trials cannot be reconciled with restored local results, but this is not a complete durable-resume mechanism. CP status PARTIAL / DO NOT MERGE. Need implement durable block persistence/retrieval with SHA-256 and identity validation, then targeted tests.
+
+Verification: files read back from GitHub; Pytest/YAML parser/Workflow not run because local clone failed DNS resolution to github.com. tested_sha=NOT_RUN; run_id=NONE; artifact_id=NONE. No production workflow, Monte Carlo, Trial, Checkpoint or CLI executed. main/state.json/source_sha/seed/RNG/data/history/statistical policy unchanged. No PR opened/merged/closed; no Release. Existing gates remain open.
