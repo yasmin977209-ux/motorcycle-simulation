@@ -556,7 +556,12 @@ def test_stage7_authoring_verify_runs_contract_tests() -> None:
     assert "tests/test_stage7_authoring.py" in AUTHORING_VERIFY.read_text(encoding="utf-8")
 
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
-    assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
+    text = TRIAL_BLOCK.read_text(encoding="utf-8")
+    assert '"source_sha": source_sha' in text
+    assert '"master_seed": master_seed' in text
+    assert '"rng_policy_id": STAGE7_RNG_POLICY_ID' in text
+    assert '"sampling_policy_id": STATISTICAL_ESCALATION_POLICY_ID' in text
+    assert '"parquet_sha256": parquet_sha256' in text
 
 def test_stage7_has_no_internal_wall_clock_cutoff() -> None:
     text = _workflow_text()
