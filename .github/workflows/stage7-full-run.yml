@@ -6,7 +6,7 @@ on:
       - "tmp/stage7-full-run-20261004"
 
 concurrency:
-  group: stage7-full-run-${{ github.run_id }}
+  group: stage7-full-run-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
