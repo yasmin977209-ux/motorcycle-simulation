@@ -862,6 +862,9 @@ __all__ = [
     "LeaseConflict",
     "StateIntegrityError",
     "StateStore",
+    "STAGE7_RNG_POLICY_ID",
     "build_artifact_identity",
+    "build_durable_block_identity",
+    "validate_durable_block_identity",
     "validate_trial_sequence",
 ]
