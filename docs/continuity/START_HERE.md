@@ -5,7 +5,7 @@
 ## Authority and evidence order
 
 1. Platform permissions and documented, scoped owner authorization.
-2. The approved governing reference supplied in Project Sources (`المرجع_النهائي_الموحد_المعتمد.md`) and approved amendments/decisions within their explicitly scoped authority. The reference-byte SHA-256 documented by the owner is `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`; do not claim to recalculate it unless the original bytes are independently available.
+2. The one static Project Source expected in ChatGPT is the owner's merged file named exactly `المرجع النهائي الموحد المعتمد المدمج.md`. Its embedded normative reference retains the internal title `المرجع_النهائي_الموحد_المعتمد.md`; the expected SHA-256 of those original reference bytes is `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`. Do not confuse the merged-file hash with the original reference hash. The owner must verify the actual Project Sources list and Project Instructions in the ChatGPT UI; GitHub cannot confirm or alter those UI settings. The reference-byte SHA-256 documented by the owner is `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`; do not claim to recalculate it unless the original bytes are independently available.
 3. Live repository evidence: current branch refs/HEADs, commits, `main/state.json`, `docs/STATE_SHA_SEMANTICS.md`, `docs/governance/DECISIONS_LOG.md`, `docs/governance/REFERENCE_AMENDMENTS.md`, PR metadata, Runs/Jobs/tested SHAs/Artifacts, manifests and report contents.
 4. The append-only history and evidence links in `docs/PROJECT_CONTINUITY.md`, read from the currently verified branch associated with the continuity PR. The branch and PR identifiers below are discovery pointers, not immutable truth.
 5. Supporting reports and artifacts with their own origin, scope, status, content hash and byte count.
@@ -58,3 +58,10 @@ At the baseline for this CP, `main` was `647c19826b90d8224ce73ef9b90c306a45e03fb
 The marker below is a non-sensitive test token. A separate ChatGPT conversation should search the live continuity branch for `CROSSCHAT_ACCEPTANCE_MARKER` and report the marker value it actually reads; do not reveal the expected value in the test prompt supplied to that conversation.
 
 <!-- CROSSCHAT_ACCEPTANCE_MARKER: CCAT-CP-CONTINUITY-IMPLEMENTATION-01-20261018-6d3c7f29a1b84e5a -->
+
+
+## Bootstrap and instruction-draft correction — 2026-10-18T22:28:00+03:00
+
+The merged Project Source expected in the ChatGPT project is named exactly `المرجع النهائي الموحد المعتمد المدمج.md`. Names of the embedded source documents are historical/internal names, not necessarily the uploaded Project Source filename. The current proposed Project Instructions are in [PROJECT_INSTRUCTIONS_DRAFT.md](PROJECT_INSTRUCTIONS_DRAFT.md); this is still a manual owner action and is not applied by GitHub.
+
+At every new chat, treat PR #46 and `tmp/cp-session-continuity-20261017` as discovery pointers only. Re-fetch current PR/base/head and verify the branch; then read the continuity ledger and output manifest at that live ref. If it is unavailable or ambiguous, rediscover from live GitHub evidence and stop as BLOCKED if no unique valid target can be proven. The independent marker already present in this file is reserved for a separate-chat acceptance test; do not duplicate it in the prompt or disclose its expected value elsewhere.
