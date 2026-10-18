@@ -1182,9 +1182,24 @@ def test_stage7_final_report_excludes_timeout_partial_counts() -> None:
     assert "STAGE7_FAIL_CLOSED" in text
 
 
-def test_stage7_final_report_uses_actual_uploaded_state_path() -> None:
+def test_stage7_final_report_uses_current_attempt_artifacts_only() -> None:
     text = _workflow_text()
-    assert '**/stage7-final-{scenario}-*/state.json' in text
+    assert 'RUN_ATTEMPT: ${{ github.run_attempt }}' in text
+    assert 'f"stage7-final-{scenario}-{os.environ[\'RUN_ATTEMPT\']}"' in text
+    assert 'f"stage7-final-C070_G100-{os.environ[\'RUN_ATTEMPT\']}"' in text
+    assert '**/stage7-final-{scenario}-*/state.json' not in text
+
+
+def test_stage7_already_stable_resume_rebuilds_verified_terminal_artifacts() -> None:
+    text = _workflow_text()
+    assert "def write_terminal_artifacts(results, state):" in text
+    already_stable = text[
+        text.index('if state.get("final_status") == "stable":'):
+        text.index("while True:", text.index('if state.get("final_status") == "stable":'))
+    ]
+    assert "write_terminal_artifacts(results, state)" in already_stable
+    assert 'RESULTS_DIR / "final_fingerprint.json"' in text
+    assert 'RESULTS_DIR / "statistics.json"' in text
 
 
 def test_stage7_final_report_reports_state_path_and_error_count() -> None:
