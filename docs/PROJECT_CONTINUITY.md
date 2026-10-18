@@ -816,3 +816,12 @@ This is an append-only correction to the verification note in the preceding `CP-
 - Project Instructions draft: commit `26937394101c39bb05fd84f0714373919b64faef`, blob `8da858b800c04d30e62fdceb3efc6f645c1be94f`, UTF-8 bytes 12708, SHA-256 `650b9953f85b6a94851081a5ab0a14fb5d2e0f313966c7810a9640348e0f9acd`; read-back exactly matched the written content.
 - START_HERE: commit `c6dc96c9f607f7e5fb58104abca41601b2cd3159`, blob `0f80b790c7911a23f604e283bf03e398d1787b19`, UTF-8 bytes 8950, SHA-256 `d001687dbca4cd74ab9a23becb98a7ba3d1ed80ecac280a16137bdcc3deeb87a`; read-back exactly matched the written content and the marker-key remained present.
 - Remaining output-manifest and final-ledger read-back identifiers are recorded by the final closeout event below.
+
+
+## CP-CHATGPT-PROJECT-SETUP-20261018 — post-write verification closeout
+
+At 2026-10-18T22:28:00+03:00, the following fresh GitHub read-backs completed on `tmp/cp-session-continuity-20261017`:
+- `docs/continuity/SESSION_OUTPUTS.jsonl`: commit `88a9423680a4e04a535406813a4cb9a8350ecf7b`, blob `5bad51d9a2a57f7906a87d18841f4149267bc555`, 6036 UTF-8 bytes, SHA-256 `591d68de170ce58cc85d009cdc312a8aa452d7170dc2f3b1ff94f440bd3c32c0`; content exactly matched the submitted content. It now records the verified writes for the Project Instructions draft, START_HERE, and the earlier continuity-ledger revision. Existing `LOCAL_ONLY` output status was preserved.
+- Final continuity ledger before this closeout: commit `5fd79cff8a0f23c3f11ce73fc1d71d3b5c62ab1c`, blob `d4eca24b1bd9ae46bdc05e135fb8869f6bb490df`, 136122 UTF-8 bytes, SHA-256 `793db22f3d399f33403254aa1dc979223bff29306f8ae8a565d4abba85d2ebce`.
+
+The current PR description is being corrected to list the five documentation paths actually present in the compare result. No merge or readiness transition is authorized. The next owner actions remain manual Project Sources/Project Instructions verification and independent cross-chat acceptance testing. Engineering blockers remain untouched.
