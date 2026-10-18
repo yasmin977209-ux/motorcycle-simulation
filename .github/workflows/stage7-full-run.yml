@@ -1414,16 +1414,20 @@ jobs:
           c070 = next((row for row in per_scenario if row["scenario"] == "C070_G100"), None)
 
           if c070 is not None:
-              artifact_fingerprints = list(
-                  Path("/tmp/stage7-final-artifacts").glob(
-                      "**/C070_G100/final_fingerprint.json"
-                  )
+              c070_artifact_root = (
+                  Path("/tmp/stage7-final-artifacts")
+                  / f"stage7-final-C070_G100-{os.environ['RUN_ATTEMPT']}"
               )
-              if artifact_fingerprints:
+              artifact_fingerprints = list(
+                  c070_artifact_root.glob("**/C070_G100/final_fingerprint.json")
+              )
+              if len(artifact_fingerprints) == 1:
                   payload = json.loads(
-                      artifact_fingerprints[-1].read_text(encoding="utf-8")
+                      artifact_fingerprints[0].read_text(encoding="utf-8")
                   )
                   cp3_match = payload.get("cp3_reference", {}).get("matched")
+              else:
+                  cp3_match = "unavailable"
 
           summary = {
               "total_scenarios": 25,
