@@ -1231,6 +1231,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         shell: bash
         run: |
           set -euo pipefail
@@ -1313,14 +1314,14 @@ jobs:
                   state_error = "STATE_PARSE_ERROR"
                   state = None
 
-              artifact_state_files = list(
-                  Path("/tmp/stage7-final-artifacts").glob(
-                      f"**/stage7-final-{scenario}-*/state.json"
-                  )
+              artifact_root = (
+                  Path("/tmp/stage7-final-artifacts")
+                  / f"stage7-final-{scenario}-{os.environ['RUN_ATTEMPT']}"
               )
-              if state is None and artifact_state_files:
+              artifact_state_files = list(artifact_root.glob("state.json"))
+              if state is None and len(artifact_state_files) == 1:
                   state = json.loads(
-                      artifact_state_files[-1].read_text(encoding="utf-8")
+                      artifact_state_files[0].read_text(encoding="utf-8")
                   )
 
               if state is None:
@@ -1335,17 +1336,71 @@ jobs:
                       "final_stats_included": False,
                   })
               else:
-                  is_timeout = state.get("final_status") == "timeout"
-                  per_scenario.append({
-                      "scenario": scenario,
-                      "state_path": f"stage7-state/{scenario}/state.json",
-                      "final_trial_count": None if is_timeout else state.get("completed_trials"),
-                      "final_fingerprint": None if is_timeout else state.get("final_fingerprint"),
-                      "stable_at_n": state.get("stable_at_n"),
-                      "final_status": state.get("final_status"),
-                      "reason_if_not_stable": state.get("reason_if_not_stable"),
-                      "final_stats_included": bool(state.get("included_in_final_stats")),
-                  })
+                  fingerprint_paths = list(
+                      artifact_root.glob(f"**/{scenario}/final_fingerprint.json")
+                  )
+                  statistics_paths = list(
+                      artifact_root.glob(f"**/{scenario}/statistics.json")
+                  )
+                  artifact_error = None
+                  if len(fingerprint_paths) != 1 or len(statistics_paths) != 1:
+                      artifact_error = (
+                          "SCENARIO_ARTIFACT_MISSING_OR_DUPLICATE:"
+                          f"fingerprints={len(fingerprint_paths)},statistics={len(statistics_paths)}"
+                      )
+                  else:
+                      try:
+                          fingerprint_payload = json.loads(
+                              fingerprint_paths[0].read_text(encoding="utf-8")
+                          )
+                          statistics_payload = json.loads(
+                              statistics_paths[0].read_text(encoding="utf-8")
+                          )
+                      except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                          artifact_error = f"SCENARIO_ARTIFACT_PARSE_ERROR:{type(exc).__name__}"
+                      else:
+                          expected_count = int(state.get("completed_trials", -1))
+                          expected_fingerprint = state.get("final_fingerprint")
+                          expected_identity = state.get("artifact_identity")
+                          expected_included = bool(state.get("included_in_final_stats"))
+                          if (
+                              state.get("scenario") != scenario
+                              or fingerprint_payload.get("scenario") != scenario
+                              or fingerprint_payload.get("source_sha") != state.get("source_sha")
+                              or fingerprint_payload.get("trial_count") != expected_count
+                              or fingerprint_payload.get("final_fingerprint") != expected_fingerprint
+                              or fingerprint_payload.get("artifact_identity") != expected_identity
+                              or bool(fingerprint_payload.get("included_in_final_stats")) != expected_included
+                              or statistics_payload.get("scenario") != scenario
+                              or statistics_payload.get("trial_count") != expected_count
+                              or statistics_payload.get("final_fingerprint") != expected_fingerprint
+                              or statistics_payload.get("artifact_identity") != expected_identity
+                          ):
+                              artifact_error = "SCENARIO_ARTIFACT_STATE_IDENTITY_OR_FINGERPRINT_MISMATCH"
+
+                  if artifact_error is not None:
+                      per_scenario.append({
+                          "scenario": scenario,
+                          "state_path": f"stage7-state/{scenario}/state.json",
+                          "final_trial_count": None,
+                          "final_fingerprint": None,
+                          "stable_at_n": state.get("stable_at_n"),
+                          "final_status": "error",
+                          "reason_if_not_stable": artifact_error,
+                          "final_stats_included": False,
+                      })
+                  else:
+                      is_timeout = state.get("final_status") == "timeout"
+                      per_scenario.append({
+                          "scenario": scenario,
+                          "state_path": f"stage7-state/{scenario}/state.json",
+                          "final_trial_count": None if is_timeout else state.get("completed_trials"),
+                          "final_fingerprint": None if is_timeout else state.get("final_fingerprint"),
+                          "stable_at_n": state.get("stable_at_n"),
+                          "final_status": state.get("final_status"),
+                          "reason_if_not_stable": state.get("reason_if_not_stable"),
+                          "final_stats_included": bool(state.get("included_in_final_stats")),
+                      })
 
           stable_count = sum(row["final_status"] == "stable" for row in per_scenario)
           timeout_count = sum(row["final_status"] == "timeout" for row in per_scenario)
