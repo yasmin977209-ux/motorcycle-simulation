@@ -93,165 +93,95 @@ jobs:
             git cat-file -e "${SOURCE_SHA}:${path}"
           done
           for scenario in "${SCENARIOS[@]}"; do
-            STATE_BRANCH="stage7-state/${scenario}"
-            STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
-            STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
-            if gh api "${STATE_REF}" >/dev/null 2>&1; then
-              state_run_id="$(
-                gh api "${STATE_CONTENTS}" 2>/dev/null |
-                  jq -r '.content // empty' 2>/dev/null |
-                  tr -d '\n' |
-                  base64 -d 2>/dev/null |
-                  jq -r '.run_id // empty' 2>/dev/null || true
-              )"
-              if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
-                echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
-              else
-                gh api --method PATCH \
-                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
-                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
-                echo "STAGE7_STATE_RESET=${scenario}"
-              fi
-            else
-              echo "STAGE7_STATE_ABSENT=${scenario}"
-            fi
-          done
-          python - <<'PY'
-          import yaml
-          import monte_carlo
-
-          spec = yaml.safe_load(
-              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
-          )
-          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
-          assert len(scenarios) == 25
-          assert len(set(scenarios)) == 25
-          for scenario in scenarios:
-              monte_carlo.parse_scenario_id(scenario)
-          print("STAGE7_PREFLIGHT_OK")
-          PY
-  matrix-simulation:
-    name: simulation-${{ matrix.scenario }}
-    needs: preflight-gates
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 25
-      matrix:
-        scenario:
-          - C100_G100
-          - C100_G070
-          - C100_G050
-          - C100_G030
-          - C100_G000
-          - C085_G100
-          - C085_G070
-          - C085_G050
-          - C085_G030
-          - C085_G000
-          - C070_G100
-          - C070_G070
-          - C070_G050
-          - C070_G030
-          - C070_G000
-          - C050_G100
-          - C050_G070
-          - C050_G050
-          - C050_G030
-          - C050_G000
-          - C030_G100
-          - C030_G070
-          - C030_G050
-          - C030_G030
-          - C030_G000
-    timeout-minutes: 360
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install requirements
-        run: python -m pip install -r requirements.txt
-      - name: Verify pinned model source SHA
-        shell: bash
-        env:
-          SOURCE_SHA: ${{ env.SOURCE_SHA }}
-        run: |
-          set -euo pipefail
-          git cat-file -e "${SOURCE_SHA}^{commit}"
-
-          MODEL_FILES=(
-            constants.py
-            dateutils.py
-            rng.py
-            entities.py
-            state_machine.py
-            daily_engine.py
-            accounting.py
-            collection.py
-            guarantee.py
-            friday.py
-            settlement.py
-            closure.py
-            partner_equity.py
-            monte_carlo.py
-          )
-
-          for path in "${MODEL_FILES[@]}"; do
-            if ! git cat-file -e "${SOURCE_SHA}:${path}"; then
-              echo "PINNED_SOURCE_FILE_MISSING=${path}" >&2
-              exit 1
-            fi
-          done
-
-          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
-            echo "MODEL_SOURCE_DRIFT_DETECTED" >&2
-            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
-            exit 1
+            STATE_BRANCH="stage7-state/${SCENARIO}"
+          STATE_BRANCH_ENCODED="${STATE_BRANCH//\//%2F}"
+          DURABLE_BLOCKS_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/contents/stage7-blocks?ref=${STATE_BRANCH_ENCODED}" 2>/dev/null || true)"
+          if [ -n "${DURABLE_BLOCKS_JSON}" ]; then
+            echo "STAGE7_DURABLE_BLOCKS_PRESENT=SCENARIO:${SCENARIO}; restoration delegated to StateStore"
+            exit 0
           fi
 
-          echo "SOURCE_SHA=${SOURCE_SHA}"
-          echo "MODEL_SOURCE_BOUNDARY_OK"
-
-      - name: Restore previous scenario block artifacts when available
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SCENARIO: ${{ matrix.scenario }}
-        run: |
-          set -euo pipefail
-          mkdir -p "results_stage7/${SCENARIO}/blocks"
-          STATE_BRANCH="stage7-state/${SCENARIO}"
-          STATE_BRANCH_ENCODED="${STATE_BRANCH//\//%2F}"
           PREVIOUS_RUN_ID="$(
             gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH_ENCODED}" 2>/dev/null |
               jq -r '.content // empty' | tr -d '\n' | base64 -d 2>/dev/null |
               jq -r '.run_id // empty' 2>/dev/null || true
           )"
-          if [ -n "${PREVIOUS_RUN_ID}" ]; then
-            ARTIFACT_ID="$(
-              gh api --paginate \
-                "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" \
-                --jq '.artifacts[] | select(.name | startswith("stage7-blocks-" + env.SCENARIO + "-")) | [.id,.created_at] | @tsv' \
-                | sort -k2 | tail -1 | cut -f1
-            )"
-            if [ -n "${ARTIFACT_ID}" ]; then
-              echo "STAGE7_LEGACY_ARTIFACT_RESTORE=RUN_ID:${PREVIOUS_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
-              gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
-              mkdir -p /tmp/previous_stage7_blocks
-              unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
-              find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
-              find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
-            else
-              echo "No legacy block artifact found for saved run ${PREVIOUS_RUN_ID}."
-            fi
-          else
-            echo "No previous Stage 7 state run ID found; durable blocks will be restored by the checkpoint store."
+          if [ -z "${PREVIOUS_RUN_ID}" ]; then
+            echo "No legacy state run ID; there is no artifact migration source."
+            exit 0
           fi
+
+          ARTIFACTS_JSON="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" 2>/dev/null || true)"
+          ARTIFACT_ID=""
+          if [ -n "${ARTIFACTS_JSON}" ]; then
+            ARTIFACT_ID="$(printf '%s\n' "${ARTIFACTS_JSON}" | jq -r '.artifacts[]? | select(.name | startswith("stage7-blocks-" + env.SCENARIO + "-")) | [.id,.created_at] | @tsv' | sort -k2 | tail -1 | cut -f1)"
+          fi
+          if [ -z "${ARTIFACT_ID}" ]; then
+            echo "No legacy block artifact found for saved run ${PREVIOUS_RUN_ID}."
+            exit 0
+          fi
+
+          echo "STAGE7_LEGACY_ARTIFACT_RESTORE=RUN_ID:${PREVIOUS_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
+          mkdir -p /tmp/previous_stage7_blocks
+          unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
+          find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+
+          BLOCK_RUN_IDS="$(find "results_stage7/${SCENARIO}/blocks" -type f -name 'block_*_metadata.json' -print0 | xargs -0 -r jq -r '.run_id // empty' | sort -u)"
+          if [ -z "${BLOCK_RUN_IDS}" ]; then
+            echo "LEGACY_BLOCK_IDENTITY_UNPROVEN: no originating run_id in block metadata" >&2
+            exit 1
+          fi
+          : > /tmp/stage7-legacy-verified-runs.tsv
+          while IFS= read -r block_run_id; do
+            [ -n "${block_run_id}" ] || continue
+            run_payload="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${block_run_id}")"
+            run_head_sha="$(printf '%s\n' "${run_payload}" | jq -r '.head_sha // empty')"
+            if [[ ! "${run_head_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "LEGACY_BLOCK_IDENTITY_UNPROVEN: invalid head SHA for run ${block_run_id}" >&2
+              exit 1
+            fi
+            workflow_payload="$(gh api "repos/${GITHUB_REPOSITORY}/contents/.github/workflows/stage7-full-run.yml?ref=${run_head_sha}")"
+            workflow_blob_sha="$(printf '%s\n' "${workflow_payload}" | jq -r '.sha // empty')"
+            workflow_content="$(printf '%s\n' "${workflow_payload}" | jq -r '.content // empty' | tr -d '\n' | base64 -d)"
+            workflow_master_seed="$(printf '%s\n' "${workflow_content}" | sed -nE 's/^[[:space:]]*MASTER_SEED:[[:space:]]*"([0-9]+)"[[:space:]]*$/\1/p' | head -1)"
+            workflow_source_sha="$(printf '%s\n' "${workflow_content}" | sed -nE 's/^[[:space:]]*SOURCE_SHA:[[:space:]]*"([0-9a-f]{40})"[[:space:]]*$/\1/p' | head -1)"
+            if [[ ! "${workflow_blob_sha}" =~ ^[0-9a-f]{40}$ ]] || [ "${workflow_master_seed}" != "${MASTER_SEED}" ] || [ "${workflow_source_sha}" != "${SOURCE_SHA}" ]; then
+              echo "LEGACY_BLOCK_IDENTITY_UNPROVEN: run ${block_run_id} workflow source/seed does not match current identity" >&2
+              exit 1
+            fi
+            printf '%s\t%s\t%s\t%s\t%s\n' "${block_run_id}" "${run_head_sha}" "${workflow_blob_sha}" "${workflow_master_seed}" "${workflow_source_sha}" >> /tmp/stage7-legacy-verified-runs.tsv
+          done <<< "${BLOCK_RUN_IDS}"
+
+          LEGACY_RUNS_TSV=/tmp/stage7-legacy-verified-runs.tsv python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          verified_runs = {}
+          for line in Path(os.environ["LEGACY_RUNS_TSV"]).read_text(encoding="utf-8").splitlines():
+              run_id, head_sha, workflow_blob_sha, seed, source_sha = line.split("\t")
+              verified_runs[run_id] = {
+                  "run_id": run_id,
+                  "head_sha": head_sha,
+                  "workflow_blob_sha": workflow_blob_sha,
+                  "master_seed": int(seed),
+                  "source_sha": source_sha,
+                  "workflow_master_seed": int(seed),
+                  "workflow_source_sha": source_sha,
+              }
+          proof = {
+              "schema_version": "stage7-legacy-run-identity-v1",
+              "scenario": os.environ["SCENARIO"],
+              "source_sha": os.environ["SOURCE_SHA"],
+              "master_seed": int(os.environ["MASTER_SEED"]),
+              "verified_runs": verified_runs,
+          }
+          target = Path("results_stage7") / os.environ["SCENARIO"] / "blocks" / "legacy_run_identity.json"
+          target.write_text(json.dumps(proof, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(f"LEGACY_RUN_IDENTITIES_VERIFIED={len(verified_runs)}")
+          PY
 
       - name: Prepare CP3 overlap reference
         if: matrix.scenario == 'C070_G100'
