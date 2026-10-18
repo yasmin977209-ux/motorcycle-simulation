@@ -474,7 +474,7 @@ def test_durable_block_restore_fails_closed_on_missing_identity_sidecar(tmp_path
     )
     del store.files["stage7-blocks/block_1_2_identity.json"]
 
-    with pytest.raises(StateIntegrityError, match="triplet sets differ"):
+    with pytest.raises(StateIntegrityError, match="Parquet/metadata/identity sets differ"):
         store.restore_trial_blocks(
             output_dir=tmp_path / "restored",
             master_seed=20270101,
@@ -665,7 +665,8 @@ def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
     assert "STALE_RUN_STOPPED=" in preflight
 
 
-def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
+
+def test_stage7_preflight_checks_all_scenario_state_branches_and_fails_closed() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
     assert "SCENARIOS=(" in preflight
@@ -674,41 +675,56 @@ def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     assert "C070_G100 C070_G070 C070_G050 C070_G030 C070_G000" in preflight
     assert "C050_G100 C050_G070 C050_G050 C050_G030 C050_G000" in preflight
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
-    assert "STAGE7_STATE_ABSENT=" in preflight
     assert "git/refs/heads/${STATE_BRANCH}" in preflight
-    assert '-f "sha=${SOURCE_SHA}"' in preflight
-    assert "-F force=true" in preflight
+    assert "STAGE7_STATE_ABSENT=" in preflight
+    assert "STAGE7_STATE_WITHOUT_CHECKPOINT=" in preflight
+    assert "STAGE7_STATE_IDENTITY_MISMATCH=" in preflight
+    assert "STAGE7_STATE_PRESERVED=" in preflight
+    assert "refusing to reset or reuse checkpoint" in preflight
+    assert "STAGE7_STATE_RESET=" not in preflight
+    assert "--method PATCH" not in preflight
+    assert "-F force=true" not in preflight
 
-
-def test_stage7_preflight_preserves_state_for_same_run_and_resets_other_runs() -> None:
+def test_stage7_preflight_preserves_checkpoint_only_when_scenario_and_source_match() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
-    assert "STATE_CONTENTS=\"repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}\"" in preflight
-    assert "jq -r '.run_id // empty'" in preflight
-    assert 'if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then' in preflight
-    assert "STAGE7_STATE_RESUME=" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
+    assert 'STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"' in preflight
+    assert "jq -r '[.scenario // empty,.source_sha // empty] | @tsv'" in preflight
+    assert "STAGE7_STATE_PRESERVED=" in preflight
+    assert "STAGE7_STATE_IDENTITY_MISMATCH=" in preflight
+    assert "STAGE7_STATE_WITHOUT_CHECKPOINT=" in preflight
+    assert "jq -r '.run_id // empty'" not in preflight
+    assert "STAGE7_STATE_RESUME=" not in preflight
+    assert "STAGE7_STATE_RESET=" not in preflight
 
-
-def test_stage7_restore_artifacts_is_scoped_to_current_workflow_run() -> None:
+def test_stage7_restore_prefers_durable_blocks_and_proves_legacy_artifact_identity() -> None:
     text = _workflow_text()
     start = text.index("      - name: Restore previous scenario block artifacts when available")
     end = text.index("      - name: Adaptive scenario orchestration", start)
     restore = text[start:end]
-    assert "actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" in restore
-    assert "actions/artifacts?per_page=100" not in restore
-    assert "STAGE7_ARTIFACT_RESTORE=RUN_ID:" in restore
-    assert "stage7-blocks-" in restore
+    assert "contents/stage7-blocks?ref=${STATE_BRANCH}" in restore
+    assert "restoration delegated to StateStore" in restore
+    assert 'contents/state.json?ref=${STATE_BRANCH}' in restore
+    assert "PREVIOUS_RUN_ID=" in restore
+    assert "actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" in restore
+    assert "actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" not in restore
+    assert "STAGE7_LEGACY_ARTIFACT_RESTORE=RUN_ID:" in restore
+    assert "LEGACY_BLOCK_IDENTITY_UNPROVEN" in restore
+    assert "LEGACY_RUN_IDENTITIES_VERIFIED=" in restore
+    assert "workflow_source_sha" in restore
+    assert "workflow_master_seed" in restore
 
-def test_stage7_job_started_at_uses_epoch_not_workflow_start() -> None:
+def test_stage7_block_runtime_uses_monotonic_elapsed_time_without_internal_timeout() -> None:
+    runner = (
+        REPO_ROOT / "scripts" / "stage7_run_trial_block.py"
+    ).read_text(encoding="utf-8")
     text = _workflow_text()
-    assert "JOB_STARTED_AT_EPOCH = time.time()" in text
-    assert "return time.time() - JOB_STARTED_AT_EPOCH" in text
-    assert 'os.environ["JOB_STARTED_AT"]' not in text
-    assert "JOB_STARTED_AT:" not in text
-    assert "github.run_started_at" not in text
-
+    assert "started = time.monotonic()" in runner
+    assert "elapsed_seconds = time.monotonic() - started" in runner
+    assert "elapsed_seconds=elapsed_seconds" in runner
+    assert "JOB_STARTED_AT" not in text
+    assert "JOB_TIMEOUT_MINUTES" not in text
+    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 360
 def _matching_golden_kwargs() -> dict[str, str]:
     fingerprint = "a" * 64
     return {
@@ -1083,22 +1099,22 @@ def test_stage7_cp3_pending_is_not_encoded_as_false() -> None:
     assert "cp3_match = None" in report
     assert "cp3_match = False" not in report
 
+
 def test_cp3_cross_reference_compares_only_overlapping_range() -> None:
     text = _workflow_text()
     start = text.index('if SCENARIO == CP3_SCENARIO:')
     end = text.index('write_json(', start)
     cross_reference = text[start:end]
+    compact = "".join(cross_reference.split())
 
-    assert "cp3_overlap = min(" in cross_reference
-    assert "len(results)" in cross_reference
-    assert "len(cp3_results)" in cross_reference
-    assert "1 <= result.trial_id <= cp3_overlap" in cross_reference
-    assert "fingerprint_trial_results(stage7_prefix)" in cross_reference
-    assert "fingerprint_trial_results(cp3_prefix)" in cross_reference
-    assert "trial_id <= 6000" not in cross_reference
-    assert "CP3_AGGREGATE_SHA256" not in cross_reference
-
-
+    assert "cp3_overlap=min(len(results),len(cp3_results))" in compact
+    assert "len(stage7_prefix)!=cp3_overlap" in compact
+    assert "len(cp3_prefix)!=cp3_overlap" in compact
+    assert "1<=result.trial_id<=cp3_overlap" in compact
+    assert "monte_carlo.fingerprint_trial_results(stage7_prefix)" in compact
+    assert "monte_carlo.fingerprint_trial_results(cp3_prefix)" in compact
+    assert "trial_id<=6000" not in compact
+    assert "CP3_AGGREGATE_SHA256" not in compact
 def test_same_run_id_different_attempt_is_allowed_by_lease() -> None:
     store = StateStore(
         repo="example/repo",
