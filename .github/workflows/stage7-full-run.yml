@@ -96,20 +96,32 @@ jobs:
             STATE_BRANCH="stage7-state/${scenario}"
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
             STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}"
-            if gh api "${STATE_REF}" >/dev/null 2>&1; then
-              state_identity="$(
-                gh api "${STATE_CONTENTS}" 2>/dev/null |
-                  jq -r '.content // empty' 2>/dev/null |
-                  tr -d '\n' |
-                  base64 -d 2>/dev/null |
-                  jq -r '[.scenario // empty,.source_sha // empty] | @tsv' 2>/dev/null || true
-              )"
-              read -r saved_scenario saved_source_sha <<< "${state_identity}"
-              if [ "${saved_scenario}" != "${scenario}" ] || [ "${saved_source_sha}" != "${SOURCE_SHA}" ]; then
-                echo "STAGE7_STATE_IDENTITY_MISMATCH=${scenario}; refusing to reset or reuse checkpoint" >&2
-                exit 1
+            if state_branch_sha="$(gh api "${STATE_REF}" --jq '.object.sha' 2>/dev/null)"; then
+              state_payload="$(gh api "${STATE_CONTENTS}" 2>/dev/null || true)"
+              state_identity=""
+              if [ -n "${state_payload}" ]; then
+                state_identity="$(
+                  printf '%s\n' "${state_payload}" |
+                    jq -r '.content // empty' 2>/dev/null |
+                    tr -d '\n' |
+                    base64 -d 2>/dev/null |
+                    jq -r '[.scenario // empty,.source_sha // empty] | @tsv' 2>/dev/null || true
+                )"
               fi
-              echo "STAGE7_STATE_PRESERVED=${scenario} SOURCE_SHA=${saved_source_sha}"
+              if [ -z "${state_identity}" ]; then
+                if [ "${state_branch_sha}" != "${SOURCE_SHA}" ]; then
+                  echo "STAGE7_STATE_WITHOUT_CHECKPOINT=${scenario}; branch head is not the pinned source; refusing reuse or reset" >&2
+                  exit 1
+                fi
+                echo "STAGE7_STATE_BRANCH_HAS_NO_CHECKPOINT=${scenario}; source-only branch preserved"
+              else
+                read -r saved_scenario saved_source_sha <<< "${state_identity}"
+                if [ "${saved_scenario}" != "${scenario}" ] || [ "${saved_source_sha}" != "${SOURCE_SHA}" ]; then
+                  echo "STAGE7_STATE_IDENTITY_MISMATCH=${scenario}; refusing to reset or reuse checkpoint" >&2
+                  exit 1
+                fi
+                echo "STAGE7_STATE_PRESERVED=${scenario} SOURCE_SHA=${saved_source_sha}"
+              fi
             else
               echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
