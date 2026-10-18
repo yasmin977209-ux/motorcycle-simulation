@@ -774,3 +774,16 @@ No `main` or `state.json` write; no merge/close/delete action; no test, CLI, Mon
 
 - A metadata note for `docs/continuity/START_HERE.md` initially retained the future-tense reminder to verify read-back after the status had already been updated. This event corrects only that note; it does not change the status, output content, project rules, or prior history.
 - The current register and continuity ledger will be read back again after this commit. The register intentionally does not store its own checksum; that avoids self-referential content. Its final identity is recorded in the CP closeout response.
+
+
+## Correction event — CP-CONTINUITY-IMPLEMENTATION-01 commit-parent metadata — 2026-10-18 (Asia/Aden)
+
+**Event ID:** `CP-CONTINUITY-IMPLEMENTATION-01-COMMIT-PARENT-CORRECTION-20261018`
+
+This is an append-only correction to the verification note in the preceding `CP-CONTINUITY-IMPLEMENTATION-01` section. That note described commit `a77c20b19514e45ad58f5fa530c9af8e56c24cc2` as having itself as parent. A fresh direct GitHub REST read of `GET /repos/yasmin977209-ux/motorcycle-simulation/commits/a77c20b19514e45ad58f5fa530c9af8e56c24cc2` returned the actual parent `74e0f2cf0fad66d3a79bda70c47d7e6cd18668c0`. The normalized commit-fetch helper omitted parent data; the direct REST payload is the evidence used for this correction.
+
+- Correct commit: [a77c20b19514e45ad58f5fa530c9af8e56c24cc2](https://github.com/yasmin977209-ux/motorcycle-simulation/commit/a77c20b19514e45ad58f5fa530c9af8e56c24cc2).
+- Actual parent: [74e0f2cf0fad66d3a79bda70c47d7e6cd18668c0](https://github.com/yasmin977209-ux/motorcycle-simulation/commit/74e0f2cf0fad66d3a79bda70c47d7e6cd18668c0).
+- The earlier text is preserved as a historical documentation error; no commit graph, prior event, output status, or project rule is changed by this clarification.
+- The full investigation report remains `LOCAL_ONLY`; its original local bytes were not archived in GitHub during this CP. The cross-chat marker still requires a read by a separate ChatGPT conversation. The Project Instructions draft remains `APPROVAL_PENDING` and was not applied in ChatGPT Settings.
+- Scope: documentation correction on the existing continuity branch only. No `main`, state, reference, decision, code, test, workflow, Run, trial, checkpoint, gate, delivery, or PR state was changed or authorized.
