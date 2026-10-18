@@ -378,3 +378,35 @@ Resume from `CP-STAT-CONTRACT` gaps only. The next CP must be planned as one CP 
 - Repository Actions default permissions, environment protections, collaborator permissions, Secret Scanning and Code Scanning remain **PENDING**: the connected read tool rejected their settings/API endpoints as not allowed. No inference of PASS or FAIL is made from those failures.
 - PR #46 remains a documentation-only handoff PR; this audit does not authorize its merge, any Workflow change, a test run, or release.
 - Next permitted action: apply main protection through an authorized GitHub UI/write integration, then reread the live branch endpoint and prove \`protected=true\`; separately obtain explicit approval for each Workflow modification only after its R4 and any unresolved business rule are settled.
+
+## إغلاق توثيقي إضافي ونقطة استئناف — 2026-10-18 (Asia/Aden)
+
+**نوع الحدث:** مقارنة ختامية لسجل الاستمرارية مع تقرير R4 الذي أُرسل في هذه الدردشة؛ توثيق إضافي فقط. لا تغيير هندسي ولا تفويض تشغيل جديد.
+**أحدث نقطة CROSS_CHAT_ACCEPTANCE_TEST:** القسم المكتمل المؤرخ `CROSS_CHAT_ACCEPTANCE_TEST — completion and full conversation handoff — 2026-10-18` (ضمن السجل الحي الذي تمت قراءته). حُفظت الأقسام الأقدم وتبعها تاريخيًا قسم إغلاق الدردشة وقسم تدقيق R4 لإعدادات GitHub/Workflows؛ لا يُعاد استخدام SHA تاريخي باعتباره الحالة الحالية.
+
+### 1. معلومات مؤثرة كانت ناقصة أو غير مفصلة في نقطة الاستئناف السابقة
+
+- استكمل المالك في رسالة ضمن هذه الدردشة تقرير R4 التفصيلي لـ`CP-STAT-CONTRACT`. التقرير يثبت فصلًا بين: (R4-1) تعريف رياضي قابل للاختبار لحدث false-stability/التكافؤ تحت التوقف التكيفي؛ (R4-2) فرضيات الدعم أو الذيول/العزوم اللازمة لاختيار CS للمتوسطات المالية؛ (R4-3) مسار استخراج وقبول `P90_Held_Assets` وربطه بقرار الإنتاج. تبقى البنود الثلاثة `BLOCKED/PENDING` ولم تُحلّ في هذا الإغلاق.
+- التقرير يذكر أن `TrialResult` يتضمن `held_assets` في `main/monte_carlo.py`، لكن ذلك وحده لا يثبت مرور `P90_Held_Assets` في مقيّم الاستقرار الإنتاجي. كما أن طريقة `np.quantile(..., method="linear")` في فرع مرشح لا تكفي وحدها لإثبات أنها الطريقة المعيارية المقبولة لهذا المقياس.
+- التقرير أعاد تثبيت عيوب Gate B الحية، دون إصلاح: `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean)))، والتحويل غير الآمن `bool(...["stable"]))، وعدم إدماج مؤشرات §2.5 السبعة في قرار الإنتاج، واستخدام ثلاث نقاط/انتقالين بدل أربع نقاط/ثلاثة انتقالات.
+- حدود النص الحاكم باقية: قرب الصفر هو `abs(value) < REFERENCE_EPSILON`، حيث `REFERENCE_EPSILON=1e-6)، وحد النجاح `<` لا `<=`. الانقطاع الرياضي عند تطبيق 1 وحدة مطلقة قرب الصفر و`0.01*abs(mean)` خارجه لا يجيز تغيير epsilon أو أي عتبة ضمنيًا.
+- التقرير أفاد بدليل مرشح Run `38989548728` على الفرع `tmp/cp-stability-policy-impl-20261017`، tested SHA `3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843`، Artifact `12083839056`، حجم ZIP 3,368 بايت، وSHA-256 `ee09ced3dd29afd24a8040622759a967147ea2e5e1c022d87a49b4346b482721`، مع XML يبلغ 98 اختبارًا ناجحًا و0 إخفاقات. هذه البيانات محفوظة هنا **بوصفها تفاصيل وردت في التقرير الذي قُدم بهذه الدردشة**؛ لم أعد تنزيل هذا الـArtifact أو أعيد تدقيق محتواه في إغلاق التوثيق الحالي، لذلك لا أرفعها إلى دليل تحقق مستقل حديث.
+- التقرير يذكر أن رأس الفرع المرشح حين فُحص كان `ecade81c55eb97c7a155e34cae262d8168d3f906`، مختلفًا عن tested SHA أعلاه؛ لذلك لا يُنسب نجاح Run إلى رأس الفرع الحالي ولا إلى `main`.
+- لم يُنتج `CP-STAT-CONTRACT` أي كود أو test أو Workflow أو Run جديد. لا يوجد إذن لتجربة/Trial/checkpoint أو توسيع Golden نتيجة اعتماد السياسة وحده.
+
+### 2. قراءة GitHub الحية عند إغلاق هذه الجلسة
+
+- سجل الاستمرارية: [docs/PROJECT_CONTINUITY.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/PROJECT_CONTINUITY.md)؛ blob قبل هذا الإدخال `5c760520d1d50bd203026556fdb1f79f5c1ab3b3`.
+- فرع الاستمرارية قبل هذا الإدخال: `tmp/cp-session-continuity-20261017`، HEAD `52f626fa484f7e2ab30c6446f19da8a98416c295`.
+- PR #46: مفتوح Draft وغير مدمج؛ head كان `52f626fa484f7e2ab30c6446f19da8a98416c295`، وقاعدة `main` هي `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- `main/state.json` لا يزال `stage=12-CLOSED` و`repository_status=FINAL_DELIVERY_BLOCKERS_OPEN` مع العوائق المسجلة، بما فيها `GATEA_PROVIDER_MISSING` و`SOURCE_SHA_DRIFT` وغياب `scripts/stage13_assemble.py` وعدم اكتمال مجموعة التسليم السباعية وخطر `G2_RISK`. `state.sha` دلالته `parent_state_commit_pointer`، فلا يُعامل اختلافه عن HEAD كتناقض تلقائي.
+- حماية `main`: طلب تفاصيل الحماية رُفض بـHTTP 403 (`Resource not accessible by integration`) في فحص هذه الجلسة؛ إعدادات الحماية التفصيلية لذلك غير متحقق منها. إعدادات GitHub Actions لم يمكن التحقق منها بواجهة القراءة المتاحة؛ لا توصف بأنها PASS أو FAIL. لا توجد تغييرات في إعدادات GitHub.
+- المرجع الحاكم المحلي: SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`، 271,496 بايت، مطابق للبصمة المتوقعة. لا حاجة مثبتة لتعديل المرجع أو الملف الموحد، ولم يُكتب أي منهما إلى المستودع.
+- لم تُعدّل Project Instructions. التوصية تظل تعديلًا محدودًا فقط لإضافة اختيار أحدث نقطة استئناف مكتملة ومؤرخة ومنع تكرار الحدث، مع فحص placeholders في الواجهة وإصلاح ما يثبت نقصه فقط؛ واجهة إعدادات المشروع نفسها لم تُقرأ، لذلك لا يُدّعى وجود placeholder ناقص أو إصلاحه.
+
+### 3. الخطوة التالية المسموح بها
+
+استئناف `CP-STAT-CONTRACT` من R4-1/R4-2/R4-3 فقط: صياغة تعريف رياضي قابل للاختبار لحدث الاستقرار الزائف/التكافؤ، وإثبات افتراضات المتوسطات أو طلب قرار محدد بشأنها، وتحديد عقد استخراج الكمّية لـ`P90_Held_Assets`. لا تعديل كود أو اختبارات أو Workflows قبل R4 والموافقات التي تتطلبها القواعد؛ لا تشغيل إحصائي أو Golden expansion دون تفويض تشغيل منفصل محدد السيناريو والمعرفات والغرض.
+
+**حدود الإغلاق:** هذا الإدخال لا يدّعي تحقق Artifact جديد، ولا يعلن Gate/استقرار PASS، ولا يعدّل `main` أو `state.json` أو المرجع أو Project Instructions أو الإعدادات. لم تُشغّل اختبارات أو محاكاة أو Trial أو checkpoint أو Release، ولم تُدمج أو تُغلق PR #46 أو يُحذف فرع.
+
