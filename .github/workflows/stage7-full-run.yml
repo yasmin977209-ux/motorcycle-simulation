@@ -23,7 +23,6 @@ env:
   CI_ABSOLUTE_EPSILON: "1"
   # Operational orchestration cap; model logic has no max_days limit.
   # Internal cap leaves five minutes for state persistence and artifact upload.
-  JOB_TIMEOUT_MINUTES: "40"
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   CP3_RUN_ID: "37203438351"
   CP3_SCENARIO: "C070_G100"
@@ -137,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 25
       matrix:
         scenario:
           - C100_G100
@@ -165,7 +164,7 @@ jobs:
           - C030_G050
           - C030_G030
           - C030_G000
-    timeout-minutes: 45
+    timeout-minutes: 360
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -309,7 +308,6 @@ jobs:
           STABILITY_CONSECUTIVE_CHECKS: ${{ env.STABILITY_CONSECUTIVE_CHECKS }}
           CI_RELATIVE_EPSILON: ${{ env.CI_RELATIVE_EPSILON }}
           CI_ABSOLUTE_EPSILON: ${{ env.CI_ABSOLUTE_EPSILON }}
-          JOB_TIMEOUT_MINUTES: ${{ env.JOB_TIMEOUT_MINUTES }}
           CP3_SCENARIO: ${{ env.CP3_SCENARIO }}
           CP3_AGGREGATE_SHA256: ${{ env.CP3_AGGREGATE_SHA256 }}
         shell: bash
@@ -358,7 +356,6 @@ jobs:
           REQUIRED_CONSECUTIVE = int(os.environ["STABILITY_CONSECUTIVE_CHECKS"])
           RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
           ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
-          JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
           CP3_SCENARIO = os.environ["CP3_SCENARIO"]
           CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
           RESULTS_DIR = Path("results_stage7") / SCENARIO
@@ -626,30 +623,10 @@ jobs:
                   raise SystemExit(0)
 
           while True:
-              if elapsed_since_job_start() >= JOB_TIMEOUT_SECONDS:
-                  state["final_status"] = "timeout"
-                  state["reason_if_not_stable"] = "job wall-clock timeout reached"
-                  state["included_in_final_stats"] = False
-                  results = all_results()
-                  if results:
-                      state["final_fingerprint"] = (
-                          monte_carlo.fingerprint_trial_results(results)
-                      )
-                      state["artifact_identity"] = build_artifact_identity(
-                          scenario=SCENARIO,
-                          source_sha=SOURCE_SHA,
-                          trial_id_start=1,
-                          trial_id_end=completed,
-                          fingerprint_sha256=state["final_fingerprint"],
-                      )
-                  blob_sha = store.save_state(state, blob_sha)
-                  print(json.dumps({
-                      "scenario": SCENARIO,
-                      "status": "timeout",
-                      "completed_trials": completed,
-                  }, sort_keys=True))
-                  raise SystemExit(0)
-
+              # There is intentionally no internal wall-clock cutoff. Each completed
+              # block is validated and its state/fingerprint is saved before the
+              # next statistical checkpoint is evaluated. GitHub's job timeout
+              # remains the external platform ceiling.
               trial_start = completed + 1
               trial_end = target_n
 
@@ -1153,6 +1130,27 @@ jobs:
               encoding="utf-8",
           )
           print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          expected_scenarios = 25
+          all_scenarios_accepted = (
+              len(per_scenario) == expected_scenarios
+              and all(
+                  row.get("final_status") == "stable"
+                  and row.get("final_stats_included") is True
+                  and row.get("final_trial_count") is not None
+                  and row.get("final_fingerprint")
+                  for row in per_scenario
+              )
+              and stable_count == expected_scenarios
+              and timeout_count == 0
+              and error_count == 0
+          )
+          if not all_scenarios_accepted:
+              print(
+                  "STAGE7_FAIL_CLOSED: incomplete or non-accepted scenarios; "
+                  "summary is diagnostic only",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
           PY
       - name: Upload unified Stage 7 summary
         if: always()
