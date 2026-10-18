@@ -525,8 +525,11 @@ def test_stage7_workflow_commits_durable_blocks_before_moving_past_each_chunk() 
     assert "MAX_TRIALS_PER_BLOCK = 50" in text
     assert "restore_trial_blocks(" in text
     assert "persist_trial_blocks_and_state(" in text
+    assert "durable_progress_checkpoint" in text
     assert "LEGACY_BLOCK_IDENTITY_UNPROVEN" in text
     assert "STAGE7_STATE_IDENTITY_MISMATCH=" in text
+    assert "STAGE7_STATE_WITHOUT_CHECKPOINT=" in text
+    assert "STAGE7_STATE_BRANCH_HAS_NO_CHECKPOINT=" in text
     assert "stage7-legacy-run-identity-v1" in text
     assert "job wall-clock timeout reached" not in text
 
