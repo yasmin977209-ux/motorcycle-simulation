@@ -93,30 +93,35 @@ def test_stage7_authoring_verify_runs_contract_tests() -> None:
 def test_stage7_trial_block_records_source_sha_in_metadata() -> None:
     assert '"source_sha": source_sha' in TRIAL_BLOCK.read_text(encoding="utf-8")
 
-def test_stage7_internal_timeout_leaves_cleanup_margin() -> None:
+def test_stage7_has_no_internal_wall_clock_cutoff() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
-    assert _workflow()["jobs"]["matrix-simulation"]["timeout-minutes"] == 45
+    assert "JOB_TIMEOUT_MINUTES" not in text
+    assert "JOB_TIMEOUT_SECONDS" not in text
+    assert "job wall-clock timeout reached" not in text
 
 
-def test_stage7_workflow_does_not_contain_360_timeout() -> None:
-    timeout_lines = [
-        line
-        for line in _workflow_text().splitlines()
-        if "timeout" in line.lower() or "JOB_TIMEOUT_MINUTES" in line
-    ]
-    assert timeout_lines
-    assert all(
-        stale not in line
-        for line in timeout_lines
-        for stale in ("90", "360")
-    )
+def test_stage7_external_timeout_uses_hosted_runner_ceiling() -> None:
+    matrix = _workflow()["jobs"]["matrix-simulation"]
+    assert matrix["timeout-minutes"] == 360
 
 
-def test_stage7_timeout_change_is_documented() -> None:
+def test_stage7_parallelizes_all_25_scenarios_when_runner_capacity_allows() -> None:
+    workflow = _workflow()
+    matrix = workflow["jobs"]["matrix-simulation"]["strategy"]
+    assert matrix["max-parallel"] == 25
+    scenarios = matrix["matrix"]["scenario"]
+    assert len(scenarios) == 25
+    assert len(set(scenarios)) == 25
+    assert matrix["fail-fast"] is False
+
+
+def test_stage7_summary_fails_closed_unless_all_scenarios_are_accepted() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
-    assert "Operational orchestration cap; model logic has no max_days limit." in text
+    assert "STAGE7_FAIL_CLOSED" in text
+    assert 'row.get("final_status") == "stable"' in text
+    assert 'row.get("final_stats_included") is True' in text
+    assert "stable_count == expected_scenarios" in text
+    assert "raise SystemExit(1)" in text
 
 def test_stage7_workflow_has_concurrency_guard() -> None:
     concurrency = _workflow()["concurrency"]
@@ -657,11 +662,12 @@ def test_stage7_state_module_documents_same_run_id_re_run_policy() -> None:
     assert "Same run_id across GitHub re-runs is one logical lease owner." in text
     assert "run_attempt is retained in the record for auditability only." in text
 
-def test_stage7_operational_timeout_is_45_minutes() -> None:
+def test_stage7_operational_limits_are_external_only() -> None:
     text = _workflow_text()
-    assert 'JOB_TIMEOUT_MINUTES: "40"' in text
+    assert "JOB_TIMEOUT_MINUTES" not in text
     matrix = _workflow()["jobs"]["matrix-simulation"]
-    assert matrix["timeout-minutes"] == 45
+    assert matrix["timeout-minutes"] == 360
+    assert matrix["strategy"]["max-parallel"] == 25
 
 
 def test_stage7_workflow_no_longer_exports_unused_log_events_setting() -> None:
@@ -688,6 +694,7 @@ def test_stage7_final_report_excludes_timeout_partial_counts() -> None:
     assert 'is_timeout = state.get("final_status") == "timeout"' in text
     assert '"final_trial_count": None if is_timeout else' in text
     assert '"final_fingerprint": None if is_timeout else' in text
+    assert "STAGE7_FAIL_CLOSED" in text
 
 
 def test_stage7_final_report_uses_actual_uploaded_state_path() -> None:
