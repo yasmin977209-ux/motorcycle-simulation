@@ -1006,3 +1006,13 @@ The P9 concurrency finding is also refined rather than erased: `stage7-full-run.
 ## Correction — CP-R4 continuity event rendered expression literally — 2026-10-19
 
 In the immediately preceding CP-R4 append, the prose line describing the Stage 7 concurrency key was rendered as a sequence of interpolation fragments instead of the exact YAML string. This append-only correction records the intended literal accurately: `concurrency.group: stage7-full-run-${{ github.run_id }}`. The standalone CP-R4 report itself was read back with the literal intact and is the primary detailed evidence. No source, tests, Workflows, README, state.json, main, or data changed in this correction.
+
+
+## CP-README-STAGE7-HISTORY — تصحيح توثيق README على مرشح — 2026-10-19 (Europe/London)
+
+**Event ID:** CP-README-STAGE7-HISTORY-2026-10-19  
+**التقرير:** `docs/audits/CP-README-STAGE7-HISTORY_2026-10-19.md`; report blob `b99a5a76dbeaa8ed2e5e158aa49aa66c23ddca30`.  
+**المرشح:** `tmp/cp-readme-stage7-history-20261019` عند commit `0642e4325e2fdcc941783410b2680a65b7f909a5`، مبني مباشرة من `main` SHA `647c19826b90d8224ce73ef9b90c306a45e03fb0`. مقارنة commits أثبتت أن `README.md` هو المسار الوحيد المتغير. blob بعد التعديل `e997794450352d9d4d3135413fc1120830166c5a` وتطابقت معه القراءة الراجعة.  
+**النطاق:** وُسمت بوابات Stage 7 الأربع بوصفها تاريخية لوجودها في `docs/legacy-workflows/stage7-gates.yml.disabled` لا Workflow نشط؛ فُصلت تعريفات authoring عن full-run؛ ووُصف سجل 163 اختبارًا تاريخيًا؛ وجرى توثيق محفز full-run وخطر G2 دون تغيير إعداداته.  
+**حدود:** لم يُعدل `main` أو `state.json` أو tests/Workflows أو كود المحاكاة أو البيانات. لم يُشغّل اختبار أو Workflow/CLI/Trial/Checkpoint/Monte Carlo. لم يُفتح PR ولم يُدمج تغيير README. `tested_sha=NOT_RUN`.  
+**التالي:** مراجعة مالك لمحتوى README المرشح؛ ويبقى تعديل concurrency في Workflow والاختبار مرتبطًا بموافقة صريحة منفصلة، ويظل timeout 40/45 دون تغيير حتى وجود قياس مخول.
