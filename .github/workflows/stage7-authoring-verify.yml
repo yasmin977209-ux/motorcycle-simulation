@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "tmp/stage7-authoring-20261004"
+      - "tmp/cp-stage7-timeout-parallelism-20261019"
 
 permissions:
   contents: read
@@ -16,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: tmp/stage7-authoring-20261004
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Set up Python
