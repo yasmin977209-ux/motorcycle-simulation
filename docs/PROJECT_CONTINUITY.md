@@ -825,3 +825,10 @@ At 2026-10-18T22:28:00+03:00, the following fresh GitHub read-backs completed on
 - Final continuity ledger before this closeout: commit `5fd79cff8a0f23c3f11ce73fc1d71d3b5c62ab1c`, blob `d4eca24b1bd9ae46bdc05e135fb8869f6bb490df`, 136122 UTF-8 bytes, SHA-256 `793db22f3d399f33403254aa1dc979223bff29306f8ae8a565d4abba85d2ebce`.
 
 The current PR description is being corrected to list the five documentation paths actually present in the compare result. No merge or readiness transition is authorized. The next owner actions remain manual Project Sources/Project Instructions verification and independent cross-chat acceptance testing. Engineering blockers remain untouched.
+
+
+## Status clarification — PR description correction completed — 2026-10-18
+
+The preceding CP closeout used the phrase “the current PR description is being corrected” because that metadata edit was in progress when the ledger revision was written. A subsequent direct read of PR #46 confirmed the edit is complete: the description now lists the five live changed paths and states the correct documentation-only scope. This clarification preserves the historical action sequence; it does not change PR approval or merge status.
+
+At the most recent PR read before this entry, PR #46 was Open / Draft / not merged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; head branch `tmp/cp-session-continuity-20261017`; head `0a811cbbb4fa17ad24d4e86347bda85cca911167`. A read-back of the body confirmed the five-path scope. The owner must still apply Project Instructions manually in ChatGPT and independently run the separate-chat continuity acceptance test. No code, test, workflow, trial, checkpoint, delivery artifact, state.json, or main-branch content was changed.
