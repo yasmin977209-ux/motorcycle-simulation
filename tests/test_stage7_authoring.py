@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 import re
 from pathlib import Path
@@ -14,7 +16,11 @@ from scripts.stage7_state import (
     StateIntegrityError,
     StateRemoteNotFound,
     StateStore,
+    STAGE7_RNG_POLICY_ID,
+    _git_blob_sha,
     build_artifact_identity,
+    build_durable_block_identity,
+    validate_durable_block_identity,
     validate_trial_sequence,
 )
 from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
@@ -51,6 +57,256 @@ def _workflow() -> dict:
 def _metrics(means: tuple[float, float, float], stable: bool = True) -> dict[str, dict[str, float | bool]]:
     keys = ("final_net_project_equity", "partner1_final_entitlement", "partner2_final_entitlement")
     return {key: {"mean": value, "stable": stable} for key, value in zip(keys, means)}
+
+
+def test_durable_block_manifest_binds_bytes_and_identity() -> None:
+    parquet_bytes = b"deterministic-test-block-bytes"
+    metadata = {
+        "schema_version": "stage7-block-v1",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "rng_policy_id": STAGE7_RNG_POLICY_ID,
+        "sampling_policy_id": "DOUBLING_FROM_300_V1",
+        "trial_id_start": 1,
+        "trial_id_end": 2,
+        "trial_count": 2,
+        "fingerprint_sha256": "a" * 64,
+        "parquet_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "per_trial_sha256": ["b" * 64, "c" * 64],
+        "run_id": "123",
+    }
+    metadata_bytes = (
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    identity = build_durable_block_identity(
+        metadata=metadata,
+        parquet_bytes=parquet_bytes,
+        metadata_bytes=metadata_bytes,
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    validate_durable_block_identity(
+        identity=identity,
+        metadata=metadata,
+        parquet_bytes=parquet_bytes,
+        metadata_bytes=metadata_bytes,
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    with pytest.raises(StateIntegrityError, match="manifest mismatch|Parquet block bytes"):
+        validate_durable_block_identity(
+            identity=identity,
+            metadata=metadata,
+            parquet_bytes=parquet_bytes + b"changed",
+            metadata_bytes=metadata_bytes,
+            scenario="C070_G100",
+            source_sha=APPROVED_SOURCE_SHA,
+            master_seed=20270101,
+            sampling_policy_id="DOUBLING_FROM_300_V1",
+        )
+
+
+def test_durable_block_manifest_rejects_source_or_seed_drift() -> None:
+    parquet_bytes = b"block"
+    metadata = {
+        "schema_version": "stage7-block-v1",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "rng_policy_id": STAGE7_RNG_POLICY_ID,
+        "sampling_policy_id": "DOUBLING_FROM_300_V1",
+        "trial_id_start": 1,
+        "trial_id_end": 1,
+        "trial_count": 1,
+        "fingerprint_sha256": "a" * 64,
+        "parquet_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "per_trial_sha256": ["b" * 64],
+        "run_id": "123",
+    }
+    metadata_bytes = (
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    for expected in (
+        {"source_sha": "e" * 40, "master_seed": 20270101},
+        {"source_sha": APPROVED_SOURCE_SHA, "master_seed": 20270102},
+    ):
+        with pytest.raises(StateIntegrityError):
+            build_durable_block_identity(
+                metadata=metadata,
+                parquet_bytes=parquet_bytes,
+                metadata_bytes=metadata_bytes,
+                scenario="C070_G100",
+                source_sha=expected["source_sha"],
+                master_seed=expected["master_seed"],
+                sampling_policy_id="DOUBLING_FROM_300_V1",
+            )
+
+
+def test_git_blob_sha_uses_git_object_header() -> None:
+    assert _git_blob_sha(b"") == "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+
+
+class InMemoryDurableBlockStore(StateStore):
+    def __init__(self, local_path: Path) -> None:
+        super().__init__(
+            repo="example/repo",
+            token="token",
+            scenario="C070_G100",
+            source_sha=APPROVED_SOURCE_SHA,
+            run_id="900",
+            run_attempt="1",
+            local_path=local_path,
+        )
+        self.head = "base-head"
+        self.files: dict[str, bytes] = {}
+        self.blobs: dict[str, bytes] = {}
+        self.trees: dict[str, dict] = {"base-tree": {"tree": []}}
+        self.commits: dict[str, str] = {"base-head": "base-tree"}
+        self.counter = 0
+        initial_state = {
+            "stage": "7",
+            "scenario": "C070_G100",
+            "source_sha": APPROVED_SOURCE_SHA,
+            "completed_trials": 2,
+            "next_trial_id": 3,
+            "stability_history": [],
+            "final_fingerprint": "a" * 64,
+            "artifact_identity": None,
+            "lease": None,
+        }
+        raw = (json.dumps(initial_state, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        self.files["state.json"] = raw
+        self.blobs[_git_blob_sha(raw)] = raw
+
+    def _request(self, method, path, payload=None):
+        if method == "GET" and path == self._branch_ref_path():
+            return {"object": {"sha": self.head}}
+        if method == "GET" and path == f"git/commits/{self.head}":
+            return {"tree": {"sha": self.commits[self.head]}}
+        if method == "GET" and path.startswith("contents/"):
+            route = path.split("?", 1)[0]
+            route = urllib.parse.unquote(route[len("contents/"):])
+            if route == "stage7-blocks":
+                items = [
+                    {
+                        "name": item_path.rsplit("/", 1)[-1],
+                        "path": item_path,
+                        "type": "file",
+                        "sha": _git_blob_sha(raw),
+                    }
+                    for item_path, raw in sorted(self.files.items())
+                    if item_path.startswith("stage7-blocks/")
+                ]
+                if not items:
+                    raise StateRemoteNotFound("no durable blocks")
+                return items
+            if route not in self.files:
+                raise StateRemoteNotFound(f"missing file {route}")
+            raw = self.files[route]
+            return {
+                "type": "file",
+                "sha": _git_blob_sha(raw),
+                "encoding": "base64",
+                "content": base64.b64encode(raw).decode("ascii"),
+            }
+        if method == "GET" and path.startswith("git/blobs/"):
+            sha = path.rsplit("/", 1)[-1]
+            raw = self.blobs[sha]
+            return {
+                "sha": sha,
+                "encoding": "base64",
+                "content": base64.b64encode(raw).decode("ascii"),
+            }
+        if method == "POST" and path == "git/blobs":
+            raw = base64.b64decode(payload["content"])
+            sha = _git_blob_sha(raw)
+            self.blobs[sha] = raw
+            return {"sha": sha}
+        if method == "POST" and path == "git/trees":
+            self.counter += 1
+            sha = f"tree-{self.counter}"
+            self.trees[sha] = payload
+            return {"sha": sha}
+        if method == "POST" and path == "git/commits":
+            self.counter += 1
+            sha = f"commit-{self.counter}"
+            self.commits[sha] = payload["tree"]
+            return {"sha": sha}
+        if method == "PATCH" and path == self._branch_refs_path():
+            self.head = payload["sha"]
+            tree = self.trees[self.commits[self.head]]
+            for entry in tree["tree"]:
+                self.files[entry["path"]] = self.blobs[entry["sha"]]
+            return {"ref": self.state_branch}
+        raise AssertionError(f"unexpected fake GitHub request: {method} {path}")
+
+
+def test_durable_block_and_state_commit_atomically_and_restore(tmp_path: Path) -> None:
+    store = InMemoryDurableBlockStore(tmp_path / "state.json")
+    block_dir = tmp_path / "results_stage7" / "C070_G100" / "blocks"
+    block_dir.mkdir(parents=True)
+    parquet_bytes = b"deterministic-test-block-bytes"
+    parquet_path = block_dir / "block_1_2.parquet"
+    parquet_path.write_bytes(parquet_bytes)
+    metadata = {
+        "schema_version": "stage7-block-v1",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "rng_policy_id": STAGE7_RNG_POLICY_ID,
+        "sampling_policy_id": "DOUBLING_FROM_300_V1",
+        "trial_id_start": 1,
+        "trial_id_end": 2,
+        "trial_count": 2,
+        "fingerprint_sha256": "a" * 64,
+        "parquet_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "per_trial_sha256": ["b" * 64, "c" * 64],
+        "run_id": "123",
+    }
+    metadata_path = block_dir / "block_1_2_metadata.json"
+    metadata_path.write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    state = {
+        "stage": "7",
+        "scenario": "C070_G100",
+        "source_sha": APPROVED_SOURCE_SHA,
+        "completed_trials": 2,
+        "next_trial_id": 3,
+        "stability_history": [],
+        "final_fingerprint": "a" * 64,
+        "artifact_identity": None,
+        "lease": None,
+    }
+    blob_sha = store.persist_trial_blocks_and_state(
+        block_pairs=[(parquet_path, metadata_path)],
+        state=state,
+        blob_sha=None,
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+    )
+    assert store.head.startswith("commit-")
+    assert "stage7-blocks/block_1_2.parquet" in store.files
+    assert "stage7-blocks/block_1_2_metadata.json" in store.files
+    assert "stage7-blocks/block_1_2_identity.json" in store.files
+    assert json.loads(store.files["state.json"].decode("utf-8"))["completed_trials"] == 2
+    assert blob_sha == _git_blob_sha(store.files["state.json"])
+
+    restored = store.restore_trial_blocks(
+        output_dir=tmp_path / "restored_results",
+        master_seed=20270101,
+        sampling_policy_id="DOUBLING_FROM_300_V1",
+        expected_completed_trials=2,
+    )
+    assert restored == 1
+    assert (tmp_path / "restored_results" / "C070_G100" / "blocks" / "block_1_2.parquet").read_bytes() == parquet_bytes
+    assert (tmp_path / "restored_results" / "C070_G100" / "blocks" / "block_1_2_metadata.json").read_bytes() == metadata_path.read_bytes()
 
 
 def test_requirements_include_pyyaml() -> None:
