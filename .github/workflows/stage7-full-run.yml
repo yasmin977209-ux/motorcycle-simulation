@@ -236,7 +236,7 @@ jobs:
             ARTIFACT_ID="$(
               gh api --paginate \
                 "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" \
-                --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"'"'${SCENARIO}'"'"'-")) | [.id,.created_at] | @tsv' \
+                --jq '.artifacts[] | select(.name | startswith("stage7-blocks-" + env.SCENARIO + "-")) | [.id,.created_at] | @tsv' \
                 | sort -k2 | tail -1 | cut -f1
             )"
             if [ -n "${ARTIFACT_ID}" ]; then
@@ -327,6 +327,7 @@ jobs:
           cat > /tmp/stage7_orchestrator.py <<'PY'
           from __future__ import annotations
           import atexit
+          import hashlib
           import json
           import math
           import os
@@ -344,6 +345,7 @@ jobs:
           import daily_engine
           from dataclasses import asdict
           from scripts.stage7_state import (
+              STAGE7_RNG_POLICY_ID,
               StateStore,
               build_artifact_identity,
               validate_trial_sequence,
@@ -375,10 +377,63 @@ jobs:
           BLOCKS_DIR = RESULTS_DIR / "blocks"
           BLOCKS_DIR.mkdir(parents=True, exist_ok=True)
 
+          def _trial_result_sha256(result):
+              raw = json.dumps(
+                  asdict(result), ensure_ascii=False, sort_keys=True,
+                  separators=(",", ":"), default=str,
+              ).encode("utf-8")
+              return hashlib.sha256(raw).hexdigest()
+
           def all_results():
               rows = []
-              for path in sorted(BLOCKS_DIR.glob("block_*.parquet")):
-                  rows.extend(pq.read_table(path).to_pylist())
+              parquet_paths = sorted(BLOCKS_DIR.glob("block_*.parquet"))
+              parquet_keys = {path.stem for path in parquet_paths}
+              metadata_paths = sorted(BLOCKS_DIR.glob("block_*_metadata.json"))
+              metadata_keys = {path.name[:-len("_metadata.json")] for path in metadata_paths}
+              if parquet_keys != metadata_keys:
+                  raise RuntimeError("Stage 7 Parquet/metadata files are incomplete or unmatched")
+              for path in parquet_paths:
+                  metadata_path = path.with_name(f"{path.stem}_metadata.json")
+                  metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                  block_rows = pq.read_table(path).to_pylist()
+                  block_results = sorted(
+                      [monte_carlo.TrialResult(**row) for row in block_rows],
+                      key=lambda item: item.trial_id,
+                  )
+                  if metadata.get("scenario") != SCENARIO:
+                      raise RuntimeError(f"block scenario mismatch: {path.name}")
+                  if metadata.get("source_sha") != SOURCE_SHA:
+                      raise RuntimeError(f"block SOURCE_SHA mismatch: {path.name}")
+                  try:
+                      start = int(metadata["trial_id_start"])
+                      end = int(metadata["trial_id_end"])
+                      count = int(metadata["trial_count"])
+                  except (KeyError, TypeError, ValueError) as exc:
+                      raise RuntimeError(f"block metadata range invalid: {path.name}") from exc
+                  if path.stem != f"block_{start}_{end}" or count != len(block_results) or count != end - start + 1:
+                      raise RuntimeError(f"block filename/range/count mismatch: {path.name}")
+                  if [item.trial_id for item in block_results] != list(range(start, end + 1)):
+                      raise RuntimeError(f"block Trial IDs are missing or out of order: {path.name}")
+                  if metadata.get("master_seed") is not None and int(metadata["master_seed"]) != MASTER_SEED:
+                      raise RuntimeError(f"block master_seed mismatch: {path.name}")
+                  if metadata.get("rng_policy_id") is not None and metadata["rng_policy_id"] != STAGE7_RNG_POLICY_ID:
+                      raise RuntimeError(f"block RNG policy mismatch: {path.name}")
+                  if metadata.get("sampling_policy_id") is not None and metadata["sampling_policy_id"] != STATISTICAL_ESCALATION_POLICY_ID:
+                      raise RuntimeError(f"block sampling policy mismatch: {path.name}")
+                  if metadata.get("schema_version") is not None and metadata["schema_version"] != "stage7-block-v1":
+                      raise RuntimeError(f"unsupported block schema version: {path.name}")
+                  parquet_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+                  if metadata.get("parquet_sha256") not in (None, parquet_sha):
+                      raise RuntimeError(f"block Parquet SHA-256 mismatch: {path.name}")
+                  actual_block_fingerprint = monte_carlo.fingerprint_trial_results(block_results)
+                  if metadata.get("fingerprint_sha256") != actual_block_fingerprint:
+                      raise RuntimeError(f"block fingerprint mismatch: {path.name}")
+                  expected_per_trial = metadata.get("per_trial_sha256")
+                  if expected_per_trial is not None:
+                      actual_per_trial = [_trial_result_sha256(item) for item in block_results]
+                      if expected_per_trial != actual_per_trial:
+                          raise RuntimeError(f"per-trial SHA-256 mismatch: {path.name}")
+                  rows.extend(asdict(item) for item in block_results)
               return sorted(
                   [monte_carlo.TrialResult(**row) for row in rows],
                   key=lambda x: x.trial_id,
