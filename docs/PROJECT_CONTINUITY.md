@@ -832,3 +832,32 @@ The current PR description is being corrected to list the five documentation pat
 The preceding CP closeout used the phrase “the current PR description is being corrected” because that metadata edit was in progress when the ledger revision was written. A subsequent direct read of PR #46 confirmed the edit is complete: the description now lists the five live changed paths and states the correct documentation-only scope. This clarification preserves the historical action sequence; it does not change PR approval or merge status.
 
 At the most recent PR read before this entry, PR #46 was Open / Draft / not merged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; head branch `tmp/cp-session-continuity-20261017`; head `0a811cbbb4fa17ad24d4e86347bda85cca911167`. A read-back of the body confirmed the five-path scope. The owner must still apply Project Instructions manually in ChatGPT and independently run the separate-chat continuity acceptance test. No code, test, workflow, trial, checkpoint, delivery artifact, state.json, or main-branch content was changed.
+
+
+## CP-EXECUTION-FIRST-INSTRUCTIONS-20261018 — إعادة ضبط الأولوية من الاستمرارية إلى إنجاز المشروع
+
+**التاريخ:** 2026-10-18 (Asia/Aden)
+**السبب:** لاحظ المالك بحق أن النسخة السابقة من Project Instructions أعطت الاستمرارية وزنًا مفرطًا ولم تُبرز بما يكفي أن المطلوب هو إنجاز مشروع المحاكاة من الكود والاختبارات والبوابات إلى ملفات التسليم السبعة والتدقيق النهائي.
+
+### مراجعة ملفات المصدر الخمسة المرفقة
+- تحققت بصمات SHA-256 والأحجام من داخل الأرشيف من مطابقتها لملف `SHA256SUMS.txt`.
+- النص الأصلي `المرجع_النهائي_الموحد_المعتمد.md` موجود داخل `المرجع النهائي الموحد المعتمد المدمج.md` كنص متصل مطابق للأصل، وبصمة الأصل `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
+- استُخلص من حزمة البرومبتات مسار التنفيذ P0–P19، بما فيه CP-SOURCE/Gate A، وتشخيص pytest والـfixtures والـsubprocess، وRuntime/CLI/dependencies، وExcel DAILY، وحوكمة Stage 9C/10/11، وتقييم الإحصاء وCP-F، وStage 13، وملفات التسليم السبعة، والتدقيق النهائي، وRelease بإذن منفصل، ثم دراسة فجوات الواقعية بعد إكمال النسخة المطابقة.
+- استُعيدت ملاحظة التقييم المستقل الجوهرية: لا تُجمّد الأعمال التقنية المستقلة بسبب مانع إحصائي؛ افصل المسارات القابلة للتنفيذ عن المسارات التي تعتمد على قرار/بيانات ناقصة.
+
+### التعديل المنفذ
+- استُبدلت `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md` بمسودة تنفيذية موجزة؛ كتلة Project Instructions داخل السياج 6,990 محرفًا، لتكون صالحة للنسخ إلى إعدادات المشروع دون حشو النسخة الطويلة السابقة.
+- التعليمات الجديدة تجعل تنفيذ المحرك والاختبارات والبوابات والتسليم الهدف الأول، وتضع الاستمرارية في القسم الأخير كوسيلة مساندة.
+- تبقي موانع الصلاحيات الأصلية: لا تعديل مرجع أو main أو SOURCE_SHA أو بيانات تاريخية أو RNG/seed أو توسعة إحصائية أو تعديل tests/workflows أو دمج/Release/قبول نهائي دون الإذن الصريح المحدد. هذا ليس تساهلًا في التنفيذ بل فصل بين العمل التقني المفوض والأفعال المحمية.
+- مسودة التعليمات الجديدة لم تُطبّق في واجهة ChatGPT؛ الإجراء ما زال على المالك يدويًا.
+
+### إثبات GitHub
+- الفرع: `tmp/cp-session-continuity-20261017`؛ PR #46 لا يزال Open / Draft / not merged، base `main`.
+- مسودة التعليمات: commit `5c411da529ca79db6973e4c2d9411fc8c9a46597`, blob `e69348c4b9ced7b0114cd3c3123c030e80ef32cd`, 12,193 byte للملف Markdown كاملًا، SHA-256 `33dc80b12f014e274f3adfe1528ce2a797052f42b01649249b21f6cd750427fc`. كتلة التعليمات وحدها 6,990 محرفًا وSHA-256 `00ce4eec36ed095c9e7a7273d9dadab951aa70324824ed804adc7ea8a0ffcd4c`. أعادت قراءة GitHub محتوى الملف نفسه تمامًا.
+- سجل المخرجات: commit `d52753ef0f02c732292682ba8cb2452e94aef074`, blob `1b6a2b43c90ae20725b13603c4d2b894729ebee4`; تمت قراءة الملف بعد الكتابة والتحقق من تطابق المحتوى، وأُضيف سجل للمسودة الجديدة مع بصمتها وحالتها `HASH_VERIFIED`.
+- لم تُشغّل اختبارات أو Workflows أو محاكاة، ولم يتغير `main` أو `state.json` أو الكود أو البيانات أو قرارات الحوكمة. لا يُعلن اكتمال المشروع بناءً على تحديث الوثائق.
+
+### الخطوات المتبقية
+1. يراجع المالك قائمة Project Sources في واجهة ChatGPT ويستبدل الملفات الخمسة بالملف الموحد المختار كما هو مقرر.
+2. ينسخ المالك فقط النص داخل السياج من `PROJECT_INSTRUCTIONS_DRAFT.md` إلى Project Instructions ويحفظه.
+3. يجرّب محادثة جديدة داخل المشروع؛ بعد نجاح اختبار القراءة الحية للاستمرارية، يعود التنفيذ الفعلي من P0–P3 ثم CPs التقنية المستقلة، لا من تحديثات الاستمرارية وحدها.
