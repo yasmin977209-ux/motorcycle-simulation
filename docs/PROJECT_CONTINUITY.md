@@ -787,3 +787,32 @@ This is an append-only correction to the verification note in the preceding `CP-
 - The earlier text is preserved as a historical documentation error; no commit graph, prior event, output status, or project rule is changed by this clarification.
 - The full investigation report remains `LOCAL_ONLY`; its original local bytes were not archived in GitHub during this CP. The cross-chat marker still requires a read by a separate ChatGPT conversation. The Project Instructions draft remains `APPROVAL_PENDING` and was not applied in ChatGPT Settings.
 - Scope: documentation correction on the existing continuity branch only. No `main`, state, reference, decision, code, test, workflow, Run, trial, checkpoint, gate, delivery, or PR state was changed or authorized.
+
+
+## CP-CHATGPT-PROJECT-SETUP-20261018 — source/instructions alignment
+
+**Time:** 2026-10-18T22:28:00+03:00 (Asia/Aden)
+**Scope:** documentation-only continuity update, authorized by the owner in chat. No engineering blocker was changed and no tests, workflows, trials, checkpoints, or simulations were run.
+
+### Live pre-write baseline
+- Repository: `yasmin977209-ux/motorcycle-simulation`; default branch: `main`.
+- `main` HEAD observed before these docs commits: `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- PR #46: Open / Draft / not merged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; head before this CP: `ad15757014a32e4bcb1efa31fa0249dbff33f561`; 27 commits, with five existing documentation files in the compare result.
+- Verified continuity branch exists: `tmp/cp-session-continuity-20261017`.
+
+### Changes made in this CP
+- Replaced `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md` with a reviewed Arabic instruction block that names the actual merged Project Source, makes M1 the default, prevents ambiguity from granting write permission, and requires live rediscovery/read-back of continuity evidence.
+- Corrected `docs/continuity/START_HERE.md` to distinguish the merged Project Source filename from the embedded original reference title, and made branch/PR names discovery pointers rather than immutable assumptions. The existing independent cross-chat marker was preserved, not duplicated.
+- Updated this ledger append-only; the full prior history remains intact.
+
+### Boundaries and unresolved items
+- The owner must still confirm that the one desired Project Source is present in the actual ChatGPT project UI and manually paste the draft into Project Settings. GitHub cannot inspect or change those UI settings.
+- The cross-chat acceptance test has not yet passed merely because its marker exists; a different chat inside the same project must independently read the marker and the continuity files from live GitHub.
+- Investigation report `CP-HISTORY-RECOVERY-01-REPORT` remains `LOCAL_ONLY` according to `SESSION_OUTPUTS.jsonl`; it was not reconstructed or relabeled as saved.
+- PR #46 remains a Draft and must not be merged automatically. Its previous description understated the live five-file scope; the description will be reconciled after the file updates.
+- No modifications to `main`, `state.json`, the governing reference, decisions, source code, tests, workflows, or delivery files were made.
+
+### Read-back records
+- Project Instructions draft: commit `26937394101c39bb05fd84f0714373919b64faef`, blob `8da858b800c04d30e62fdceb3efc6f645c1be94f`, UTF-8 bytes 12708, SHA-256 `650b9953f85b6a94851081a5ab0a14fb5d2e0f313966c7810a9640348e0f9acd`; read-back exactly matched the written content.
+- START_HERE: commit `c6dc96c9f607f7e5fb58104abca41601b2cd3159`, blob `0f80b790c7911a23f604e283bf03e398d1787b19`, UTF-8 bytes 8950, SHA-256 `d001687dbca4cd74ab9a23becb98a7ba3d1ed80ecac280a16137bdcc3deeb87a`; read-back exactly matched the written content and the marker-key remained present.
+- Remaining output-manifest and final-ledger read-back identifiers are recorded by the final closeout event below.
