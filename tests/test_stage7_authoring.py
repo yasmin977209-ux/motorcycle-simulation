@@ -453,6 +453,7 @@ def test_legacy_block_migration_requires_verified_workflow_seed_and_source() -> 
         "trial_id_end": 1,
         "trial_count": 1,
         "fingerprint_sha256": hashlib.sha256(parquet_bytes).hexdigest(),
+        "per_trial_sha256": [hashlib.sha256(b"legacy-trial-1").hexdigest()],
         "run_id": "legacy-run-1",
     }
     metadata_bytes = (
