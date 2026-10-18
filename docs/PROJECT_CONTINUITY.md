@@ -195,3 +195,32 @@
 - وفق `main/state.json` المقروء الآن، ما زالت blockers المسجلة تشمل: `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, `UNDEFINED_BUSINESS_RULE` لطوبولوجيا Stage 11، غياب `scripts/stage13_assemble.py` من main، عدم اكتمال/التحقق من مجموعة التسليم السباعية، فجوة حوكمة بشأن `D-2026-10-12-01` في state، و`G2_RISK` المتعلق بحدود زمن Stage 7. هذه حالات مسجلة في state وليست أحكام قبول جديدة؛ أعد فحصها في كل جلسة.
 - سجل التحقق بعد أول حفظ لهذا الملحق: أدى ذلك الحفظ إلى commit `0c459040576b81fb365f59299134f91efe314d06`؛ وأكدت القراءة اللاحقة في تلك اللحظة أن رأس الفرع هو ذلك الـcommit، وblob الملف `9a2be5998c159514763cb2facfe88484126f76fd`، والحجم 27,182 بايت UTF-8. هذه لقطة تحقق تاريخية للإصدار الأول من الملحق؛ افحص دائمًا رأس الفرع وblob الحاليين بدل افتراض أن هذين المعرفين ما زالا الأحدث.
 - لا توجد مراجعات PR أو تعليقات PR ظاهرة في فحص هذا التاريخ. لم يتم دمج PR أو تشغيل اختبار أو محاكاة في هذا التحديث التوثيقي.
+
+---
+
+## CROSS_CHAT_ACCEPTANCE_TEST
+
+**Recorded at:** 2026-10-18 (Asia/Aden)  
+**Purpose:** Owner-requested documentation-only cross-chat acceptance test.  
+**Test token:** `CCHAT-20261018-B82C99848E8A1AADE3211CFF3EA5B345`  
+**Prior continuity file:** `docs/PROJECT_CONTINUITY.md`, branch `tmp/cp-session-continuity-20261017`, prior branch HEAD `fa89e50a28faeae89527044394c87ec8fe9b838c`, prior blob `6725c34a058e15e58c5ebe4f467b92c054901b1a`, prior UTF-8 size 27,449 bytes.  
+**Associated PR:** [#46](https://github.com/yasmin977209-ux/motorcycle-simulation/pull/46), open, Draft, not merged; base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`.  
+**Main baseline checked:** HEAD `647c19826b90d8224ce73ef9b90c306a45e03fb0`; `state.json` remains `FINAL_DELIVERY_BLOCKERS_OPEN`. This entry does not claim the candidate branch is merged or main state was changed.
+
+### Work and owner decisions since the prior saved continuity point
+
+1. **Statistical recommendation reviewed and explicitly approved by owner in this conversation (2026-10-18):** target a familywise probability no greater than 0.05 of falsely declaring any of the 20 random non-C100 scenarios `SCENARIO_STABLE` over the adaptive inspection horizon; initial per-scenario design budget `alpha_s=0.0025`; use time-uniform inference tailored to each metric family; retain the strict probability-loss point-change threshold `abs(Δp) < 0.005` plus a separate precision requirement; require three consecutive successful transitions across four cumulative checkpoints; keep the P50 >5% continuation rule separate, and keep C100 `DETERMINISM_VERIFIED` separate from statistical stability. No threshold, seed, RNG policy, historical data, or `SOURCE_SHA` was authorized to change implicitly.
+2. **P50 consistency resolution:** the live `D-2026-10-12-01` decision says a strict change >5% in either 300→600 or 600→1200 triggers `PRELIMINARY_STABLE` and continuation to N=2400 for that scenario. Since the approved four-point/three-transition stability window already reaches N=2400, this rule does not reset the counter, is not a §2.5 metric, and alone does not require a checkpoint after N=2400.
+3. **Owner explicitly activated P4 / limited M3 technical delegation:** perform only one CP at a time; may inspect evidence and propose/implement bounded code changes on authorized temporary branches within scope. No main changes, merge/close/delete PR, source/seed/RNG/historical data changes, tests or workflow edits without separate explicit approval, no Monte Carlo/Trial/checkpoint or Golden expansion without a separate run authorization, no final delivery acceptance or Release.
+4. **CP-STAT-CONTRACT completed as a local draft/report only:** [local report link](sandbox:/mnt/data/CP-STAT-CONTRACT_R4_عقد_إحصائي_تنفيذي_2026-10-18.md), 42,408 bytes, SHA-256 `fc9c289bdaddea85c4b24e18ef4078ea5a8b7d8bf94ca7e11ebf220210f588f0` (hash and size verified against the local file; not a repository file). No code, tests, workflows, repository state, branch, or commit was changed for that CP. No pytest, simulation, Trial, or checkpoint was run.
+5. **CP-STAT-CONTRACT/R4 findings remain pending for implementation:** statistical equivalence/false-stability test needs a precise, testable formulation; bounded support or suitable tail/moment assumptions for financial mean CS are not established by the inspected code; production extraction/acceptance contract for `P90_Held_Assets` needs a verified data path. The current Gate B defects remain in main: `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean))` and unsafe `bool(...["stable"])` conversion; no fix or verification is claimed.
+6. **Live blockers preserved, not waived:** `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, undefined Stage 11 topology in current main, missing `scripts/stage13_assemble.py`, incomplete/unreconciled seven-file delivery set and `G2_RISK`. Statistical approval is not Gate A approval, trial execution permission, or release approval.
+
+### Acceptance-test protocol and next permitted step
+
+- This entry is a continuity/documentation test only. It creates no engineering change, no test or workflow run, no Trial/checkpoint, no artifact, and no PR state transition.
+- After this write, the recorder must re-read this exact file from GitHub, verify the marker/token is present, verify the branch head equals the new commit, check the blob SHA and PR #46 is still open Draft and unmerged, and compute the UTF-8 byte size plus standard SHA-256 of the reread content.
+- Next permitted CP: resume the reviewed `CP-STAT-CONTRACT` report from its documented gaps; do not start production implementation until an R4 shows the precise contract and any separate approvals are obtained.
+- `main` and `state.json` are not modified by this acceptance test.
+
+
