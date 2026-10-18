@@ -83,6 +83,8 @@ def build_durable_block_identity(
         and metadata["rng_policy_id"] != STAGE7_RNG_POLICY_ID
     ):
         raise StateIntegrityError("block RNG policy mismatch")
+    if "schema_version" in metadata and metadata["schema_version"] != "stage7-block-v1":
+        raise StateIntegrityError("unsupported block metadata schema version")
     legacy_metadata_migrated = any(
         key not in metadata for key in (
             "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
