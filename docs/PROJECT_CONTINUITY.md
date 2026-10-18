@@ -481,3 +481,44 @@ R4 outcome remains `BLOCKED_FOR_IMPLEMENTATION`. No Gate or stability PASS is cl
 استئناف `CP-STAT-CONTRACT` من فجوات R4-1/R4-2/R4-3 فقط: (1) صياغة تعريف قابل للاختبار لحدث الاستقرار الزائف/التكافؤ وهوامش الدقة وتوزيع الخطأ داخل `alpha_s)، (2) إثبات حدود الدعم للمتوسطات المالية أو الحصول على اعتماد صريح لفرضيات ذيول/عزوم محددة، (3) تعريف عقد قبول استخراج `P90_Held_Assets` وربطه بقرار الإنتاج. لا تنفيذ أو اختبارات أو Workflows قبل R4 والموافقات المطلوبة؛ ولا تشغيل إحصائي أو Golden expansion دون تفويض منفصل يحدد السيناريوهات ومعرفات التجارب والغرض والتفسير.
 
 **حدود الإغلاق:** لا يحذف هذا الإدخال أي حدث تاريخي، ولا يغير أي قاعدة أو بوابة، ولا يعلن Gate أو استقرارًا PASS، ولا يُعد موافقة لتسليم أو Release.
+
+
+---
+
+## CP-STAT-CONTRACT — R4 live resumption addendum R4-1/R4-2/R4-3 — 2026-10-18 (Asia/Aden)
+
+**Scope:** New read-only R4 continuation for the three previously open gaps. Historical entries and failed results are preserved; this does not rewrite R4-V2.1/P0–P3 and does not alter project rules.
+
+### Live state verified before this entry
+
+- Continuity branch/HEAD: `tmp/cp-session-continuity-20261017` / `b28a109e0ddf46c437621ebb30ccd95b9fb95b32`.
+- Continuity blob at the verified source HEAD: `359058f3ec64d171804b00eb06c88a3c548594ed`, 82,642 bytes, SHA-256 `d5bcf481b478129b6448fde3393d69db41e7be74fbee89afbe052d0c241014e0`.
+- PR #46: open Draft, unmerged; head `b28a109e0ddf46c437621ebb30ccd95b9fb95b32`, base `main` at `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Live main HEAD: `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- All eight `CROSS_CHAT_ACCEPTANCE_TEST` occurrences were inspected. The latest completed dated point is the live closure at the tail of the file, instructing continuation from R4-1/R4-2/R4-3 only.
+- Main state remains `stage=12-CLOSED`, `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`, `state.sha_semantics=parent_state_commit_pointer`. No new normative 2026-10-18 decision entry was found in main's decision log/state; the owner's policy acceptance is recorded in continuity and the owner instruction, not as a commit to main.
+
+### R4 results
+
+1. **R4-1 — `UNDEFINED_BUSINESS_RULE / PENDING`:** Proposed a mathematically testable false-stability event: a scenario is declared stable at its adaptive stopping time while at least one of the seven target estimates misses an owner-approved accuracy margin `pi[s,m]`. A time-uniform confidence sequence/set `C[s,m,n]` must satisfy all-time coverage; acceptance requires `C[s,m,tau]` to be wholly inside the open accuracy band around the point estimate. If `sum_m alpha[s,m] <= alpha_s` within each scenario and `sum_s alpha_s <= 0.05`, the union bound gives the required family-wise error control. This is a proposed operational definition, not an adopted business rule. The owner still must confirm this semantics, each margin `pi[s,m]`, and the error-budget allocation. The probability-of-loss point-change condition `abs(Delta p) < 0.005` remains separate; no equality of these two margins is assumed.
+2. **R4-2 — assumption gap `K_SPEC / BLOCKED`; current pointwise inferential path `K_CODE / FAIL` against the time-uniform requirement:** `main/run_batch.py` computes Student-t intervals at each current N, not a proved time-uniform CS. `daily_engine.py` has a `while not project.simulation_stopped` run loop without an explicit maximum day bound in that path, and the secondary contract is documented as open-ended. This does not prove outputs are unbounded, but it means a finite support bound has not been established from an explicit bounded horizon in the inspected source. No tail/moment condition has been proved or owner-approved. Do not select a CS family until the support proof or explicit tail/moment assumptions are approved.
+3. **R4-3 — `K_CODE / FAIL` in main; production acceptance `PENDING`:** `TrialResult.held_assets` and the constant name `P90_Held_Assets` exist, but main's production stability fields/evaluator still cover only three financial mean metrics. Current reference §14.8 explicitly establishes `numpy.quantile(..., method="linear")` as the sole quantile standard. Therefore quantile interpolation method is resolved by the approved reference; the outstanding gap is accepted data identity/completeness and binding this metric into the seven-indicator production decision. The contract requires one record for each ID `1..N`, correct scenario/source/seed/RNG/schema/manifest identity, no mixing or missing/duplicate IDs, fail-closed behavior, linear P90, and an independent comparison against a fixed reference cohort.
+
+### Existing code issues still open
+
+- `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean))` does not implement a separate near-zero branch.
+- `bool(...["stable"])` is unsafe for nonempty non-Boolean strings.
+- The main Gate B path does not bind all seven §2.5 metrics.
+- Three checkpoints/two transitions remain instead of four cumulative points/three successful transitions.
+- Legacy +50 constants coexist with doubling behavior and require a separately scoped reconciliation; this CP does not modify them.
+
+### Evidence/artifact scope
+
+- Local R4 report: `CP-STAT-CONTRACT_R4_استئناف_حي_2026-10-18.md`, 25,138 bytes, SHA-256 `e7af1da3239875c8e36161b936c0d9d20f3e7fed30aa25ced3773437511ed2ab`. Local report only; not a repository file or production artifact.
+- Historical Run `38989548728` was re-read: success on `tmp/cp-stability-policy-impl-20261017`, tested SHA `3aa5b67693b9ecca2a4a51cc7e2bf47f50b10843`. The current candidate branch HEAD separately read from the branch list is `ecade81c55eb97c7a155e34cae262d8168d3f906`, so the tested SHA is not the current candidate head and is not main. Artifact contents were not used to close this R4.
+- No Run or Artifact was created for this R4. No pytest, simulation, Monte Carlo, trial, checkpoint or Golden extension ran. `SOURCE_SHA`, master seed, RNG, thresholds, epsilon and historical data were unchanged.
+- Approved local reference hash was reverified: SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`, 271,496 bytes.
+
+### Outcome and next authorized step
+
+Overall `BLOCKED_FOR_IMPLEMENTATION`. No Gate or scenario-stability PASS is claimed. Do not modify main/tests/Workflows or run a trial/checkpoint/Monte Carlo/Golden expansion. Next permitted action is owner disposition of (a) false-stability semantics, per-metric precision margins and within-scenario alpha allocation; (b) proof of support or explicit approval of specified tail/moment assumptions; and (c) the production cohort/data-identity contract for `P90_Held_Assets`. Plan a separate bounded CP only after those matters are settled.
