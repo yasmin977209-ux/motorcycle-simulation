@@ -1016,3 +1016,12 @@ In the immediately preceding CP-R4 append, the prose line describing the Stage 7
 **النطاق:** وُسمت بوابات Stage 7 الأربع بوصفها تاريخية لوجودها في `docs/legacy-workflows/stage7-gates.yml.disabled` لا Workflow نشط؛ فُصلت تعريفات authoring عن full-run؛ ووُصف سجل 163 اختبارًا تاريخيًا؛ وجرى توثيق محفز full-run وخطر G2 دون تغيير إعداداته.  
 **حدود:** لم يُعدل `main` أو `state.json` أو tests/Workflows أو كود المحاكاة أو البيانات. لم يُشغّل اختبار أو Workflow/CLI/Trial/Checkpoint/Monte Carlo. لم يُفتح PR ولم يُدمج تغيير README. `tested_sha=NOT_RUN`.  
 **التالي:** مراجعة مالك لمحتوى README المرشح؛ ويبقى تعديل concurrency في Workflow والاختبار مرتبطًا بموافقة صريحة منفصلة، ويظل timeout 40/45 دون تغيير حتى وجود قياس مخول.
+
+
+## CP-P5/P7 — revalidation of subprocess PYTHONPATH candidate evidence — 2026-10-19 (Europe/London)
+
+**Event ID:** CP-P5-P7-SUBPROCESS-CANDIDATE-REVALIDATION-2026-10-19  
+**Report:** `docs/audits/CP-P5_P7_subprocess_pypath_revalidation_2026-10-19.md`, blob `665b00d3a630e9786b1472036458816f14b2925c`.  
+**Live evidence:** PR #45 remains OPEN/DRAFT/UNMERGED; current head `23a99404ee000c14e2d24de42ccb053076833dfd`; changed-file set is only `tests/test_monte_carlo_round2.py`, blob `640ca1bedca5dbd04aa6e1177e63ddf0fde7297e`. Run `38950047414` completed success at tested SHA `57dec56428779452979b4f7d22b29e07fceeebae` (Job `117138844807`), with `5 passed in 22.84s` focused and `379 passed, 1 skipped, 1 warning in 426.33s` full pytest. Artifact `12067742973` (`p7-subprocess-verification-evidence`) is listed, 2,613 bytes. The file Blob SHA of the changed test is identical at tested SHA and current PR head; the only commit after the tested SHA deletes the temporary verification workflow with `timeout-minutes: 360`.
+**Disposition:** this is strong candidate-only evidence for the PYTHONPATH/fixture-first fix, not a test of the exact current PR head and not main evidence. Historical P5 failures remain in history. No Run was launched/retried, no file/test/workflow/source/data/Trial was changed, no PR was merged/closed, and no Gate was promoted.
+**Next:** await explicit owner approval for the protected test change in PR #45 before merge/acceptance; never restore the removed 360-minute workflow by implication.
