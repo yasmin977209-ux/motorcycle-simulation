@@ -983,3 +983,21 @@ This change remains documentation-only: no tests, Monte Carlo, Workflows, produc
 **النطاق:** قراءة ساكنة لكل 24 ملفًا في .github/workflows على main، ومطابقة بصمات blobs مع جرد الدليل الحي. تم إثبات إحالة README غير المطابقة إلى stage7-gates.yml، وسُجلت مخاطر Stage 7 concurrency/timeout، وSOURCE_SHA_DRIFT، وtarget ثابت عالي الأثر في stage10-emergency-cancel.yml، وتفاوت البيئة والصلاحيات الضمنية، ومسارات Gate B التي تولّد Trial إضافية عند تشغيلها.  
 **R4/الحكم:** لم يتغير أي Workflow أو test أو README أو state.json أو مصدر أو بيانات؛ لا تغيير لـmain أو المرجع أو SOURCE_SHA/master_seed/RNG/sampling/cohort/trial IDs. لم تُشغّل Workflow أو CLI أو pytest أو Monte Carlo أو Trial أو Checkpoint، ولم تُنشأ Run/Job/Artifact/Release؛ tested_sha=NOT_RUN. بقيت كل الموانع والبوابات كما هي.  
 **الخطوة التالية:** CP مستقلة تجهز R4 لمخاطر Stage 7 وتعارض التوثيق؛ لا تعديل Workflow أو tests بلا موافقة صريحة محددة.  
+
+
+## CP-P9 finding clarification and CP-R4 — Stage 7 concurrency/timeout + README — 2026-10-19 (Europe/London)
+
+**Event ID:** CP-R4-STAGE7-README-R4-2026-10-19  
+**Report:** `docs/audits/CP-R4_stage7_concurrency_readme_2026-10-19.md`, blob `1ee07dc48962c0b10c3de2813d78afcbc2cca1d8`.
+
+### Append-only clarification to CP-P9
+The P9 finding that `.github/workflows/stage7-gates.yml` is absent from the active workflow directory remains correct, but should not be read as “the file exists nowhere”: a legacy copy is present at `docs/legacy-workflows/stage7-gates.yml.disabled`. README’s claim of an active four-gate workflow at the old path is therefore a verified documentation mismatch, not a claim that no historical file exists.
+
+The P9 concurrency finding is also refined rather than erased: `stage7-full-run.yml` has a preflight stale-run cancellation/wait loop. However, `concurrency.group=stage7-full-run-${"{"}${"{"} github.run_id ${"}"}${"}"}` differs per Run and therefore does not provide GitHub-level mutual exclusion. The custom preflight is non-atomic; simultaneous runs may see one another and attempt to cancel each other. No actual race/failure was observed because no Run was executed.
+
+### CP-R4 result
+- R4 completed read-only. The workflow has a candidate concurrency defect/risk; its authoring test asserts the current per-run key rather than testing mutual exclusion. Proposed fix must change the workflow and `tests/test_stage7_authoring.py`; no edit was made because tests/Workflows require separate explicit approval.
+- The timeout values remain internal 40 minutes / job 45 minutes. The model’s `G2_RISK` blocker states that corrected operation has not been measured with an approved production Monte Carlo run. No timeout, source identity, seed/RNG, data, Trial IDs or Golden coverage was changed.
+- README still points to inactive `.github/workflows/stage7-gates.yml`; the disabled archived copy and current Stage 7 workflow files were read directly. README has not yet been edited.
+- This CP did not modify main, state.json, README, tests, Workflows, simulation source or data; no pytest/CLI/Workflow/Trial/Checkpoint/Monte Carlo/Release was run. `tested_sha=NOT_RUN`.
+- Next allowed action: (a) correct README on a candidate branch; (b) wait for separate explicit owner approval before the workflow/test concurrency patch; (c) leave the 40/45 timeout concern pending until a specifically authorized timing measurement can be planned.
