@@ -1001,3 +1001,8 @@ The P9 concurrency finding is also refined rather than erased: `stage7-full-run.
 - README still points to inactive `.github/workflows/stage7-gates.yml`; the disabled archived copy and current Stage 7 workflow files were read directly. README has not yet been edited.
 - This CP did not modify main, state.json, README, tests, Workflows, simulation source or data; no pytest/CLI/Workflow/Trial/Checkpoint/Monte Carlo/Release was run. `tested_sha=NOT_RUN`.
 - Next allowed action: (a) correct README on a candidate branch; (b) wait for separate explicit owner approval before the workflow/test concurrency patch; (c) leave the 40/45 timeout concern pending until a specifically authorized timing measurement can be planned.
+
+
+## Correction — CP-R4 continuity event rendered expression literally — 2026-10-19
+
+In the immediately preceding CP-R4 append, the prose line describing the Stage 7 concurrency key was rendered as a sequence of interpolation fragments instead of the exact YAML string. This append-only correction records the intended literal accurately: `concurrency.group: stage7-full-run-${{ github.run_id }}`. The standalone CP-R4 report itself was read back with the literal intact and is the primary detailed evidence. No source, tests, Workflows, README, state.json, main, or data changed in this correction.
