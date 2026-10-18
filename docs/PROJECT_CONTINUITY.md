@@ -758,3 +758,14 @@ No changes to source, tests, workflow files, data, seed, RNG, source pin, approv
 No `main` or `state.json` write; no merge/close/delete action; no test, CLI, Monte Carlo, Trial, checkpoint, Golden expansion, Run, Workflow, delivery generation, or gate disposition change. The cross-chat marker is only a read-discovery token; it has not yet been verified by an independent ChatGPT conversation.
 
 **Initial write status:** document commit/read-back/hash evidence will be recorded as a separate verification event after the first commit, rather than pre-asserting success here.
+
+### Verification detail — CP-CONTINUITY-IMPLEMENTATION-01 — 2026-10-18 (Asia/Aden)
+
+- First document commit: `a77c20b19514e45ad58f5fa530c9af8e56c24cc2` (parent `a77c20b19514e45ad58f5fa530c9af8e56c24cc2`); all four changed paths were independently read from GitHub. Read-back content exactly matched the intended content, and computed SHA-256/UTF-8 byte counts matched the intended bytes.
+- `docs/continuity/START_HERE.md`: blob `98db58a1b127eee5c1bf680482caf102d4a0a7dd`; size 7,451 bytes; SHA-256 `ce4285257967750b71a5c6b7c6e55a0016d75d18fa27226b3c8c321ea31f25fe`.
+- `docs/continuity/PROJECT_INSTRUCTIONS_DRAFT.md`: blob `327408ba366dc375804f54a6647ad5abedb22fab`; size 11,532 bytes; SHA-256 `838bb5ffe05654d9f6207e0b1975ea8e35f50c7a5b16e8681e417f56e09fa471`; approval pending and not applied in ChatGPT.
+- `docs/continuity/SESSION_OUTPUTS.jsonl` initial version: blob `78ca4a3da4bb372191cd5f089019083be45c287e`; size 1,656 bytes; SHA-256 `19ad9ceb0dc177161161b51e3187319a738532f3beb7ac9a2a656b22e08bca32`. It is now updated with read-back evidence; this initial identity is historical.
+- Initial append to this ledger: blob `82165a6be5d835f04012c72c583918ed1313e11b`; size 128,313 bytes; SHA-256 `4b241876902b469d78efbfc81499fa55ad804eded7e405056f980bb6d3b15846`. This identifies the pre-verification version and is intentionally preserved as historical evidence.
+- Existing P5 report freshly reread on this branch: blob `8d345610a0c426468071864094c88637caa268ad`; size 9740 bytes; SHA-256 `a0e59303162c3d4e554a2e37569fd4896443605c738222f68815842c48ccc350`; URL https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-P5_pytest_diagnostic_inventory_2026-10-18.md. Its pytest run is candidate-only, with exact scope documented in that report.
+- The local full investigation report remains `LOCAL_ONLY`; local SHA-256 `8d51569144de72d1a334042cbd81d95325794ce60fde6feafd0fa101310ad2f0`, 155,005 bytes. The exact original bytes have not been archived in GitHub; no reconstructed version is represented as the original.
+- No tests or simulation/production execution were started, and no main/state/reference/code/test/workflow/gate data changed. The separate cross-chat marker still needs independent read from a new ChatGPT chat.
