@@ -481,12 +481,21 @@ jobs:
                       raise RuntimeError(
                           "Completed Stage 7 state has no restorable block files; refusing to rerun completed Trial IDs."
                       )
+                  proof_path = BLOCKS_DIR / "legacy_run_identity.json"
+                  if not proof_path.is_file():
+                      raise RuntimeError(
+                          "LEGACY_BLOCK_IDENTITY_UNPROVEN: missing verified prior-workflow seed/source proof"
+                      )
+                  legacy_identity_proof = json.loads(
+                      proof_path.read_text(encoding="utf-8")
+                  )
                   print(json.dumps({
                       "event": "legacy_block_migration",
                       "scenario": SCENARIO,
                       "completed_trials": completed,
                       "block_count": len(legacy_pairs),
                       "checkpoint_fingerprint_verified": True,
+                      "legacy_run_identity_proof": True,
                   }, sort_keys=True), flush=True)
                   blob_sha = store.persist_trial_blocks_and_state(
                       block_pairs=legacy_pairs,
@@ -495,6 +504,7 @@ jobs:
                       master_seed=MASTER_SEED,
                       sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
                       allow_legacy_metadata=True,
+                      legacy_identity_proof=legacy_identity_proof,
                   )
                   restored_durable_block_count = store.restore_trial_blocks(
                       output_dir=Path("results_stage7"),
