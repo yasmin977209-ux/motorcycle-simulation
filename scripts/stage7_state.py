@@ -23,7 +23,7 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _git_blob_sha(raw: bytes) -> str:
-    header = f"blob {len(raw)}\\0".encode("ascii")
+    header = f"blob {len(raw)}\0".encode("ascii")
     return hashlib.sha1(header + raw).hexdigest()
 
 
@@ -117,6 +117,15 @@ def build_durable_block_identity(
             key not in metadata for key in (
                 "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
             )
+        ),
+        "legacy_migration_basis": (
+            "existing_checkpoint_fingerprint_and_artifact_identity_verified"
+            if allow_legacy_metadata and any(
+                key not in metadata for key in (
+                    "master_seed", "sampling_policy_id", "rng_policy_id", "schema_version"
+                )
+            )
+            else None
         ),
     }
 
@@ -773,7 +782,6 @@ class StateStore:
             if not isinstance(prefix_fingerprint, str) or not _SHA256_RE.fullmatch(prefix_fingerprint):
                 raise StateIntegrityError("state final_fingerprint is missing before durable commit")
 
-        state = dict(state)
         state["scenario"] = self.scenario
         state["source_sha"] = self.source_sha
         state["run_id"] = self.run_id
@@ -785,14 +793,18 @@ class StateStore:
         # Refuse overwriting any previously persisted block with different bytes.
         existing_listing = self._block_listing()
         existing = {str(item.get("name")): item for item in existing_listing if item.get("type") == "file"}
-        for path, raw in files.items():
+        for path, raw in list(files.items()):
             if not path.startswith("stage7-blocks/"):
                 continue
             name = path.rsplit("/", 1)[-1]
             if name in existing:
-                remote_raw = self._read_remote_blob(path, str(existing[name].get("sha") or ""))
-                if remote_raw != raw:
+                expected_blob_sha = _git_blob_sha(raw)
+                actual_blob_sha = str(existing[name].get("sha") or "")
+                if actual_blob_sha != expected_blob_sha:
                     raise StateIntegrityError(f"refusing to overwrite durable block {name}")
+                # Existing immutable block bytes are already committed; do not upload
+                # them again when a newer block and state checkpoint are committed.
+                files.pop(path)
 
         blob_shas = self._commit_files_atomically(
             files,
