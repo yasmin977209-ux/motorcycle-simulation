@@ -250,7 +250,7 @@ jobs:
           ARTIFACT_ID="$(
             gh api --paginate \
               "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" \
-              --jq '.artifacts[]? | select(.name | startswith("stage7-blocks-" + env.SCENARIO + "-")) | [.id,.created_at] | @tsv' \
+              --jq ".artifacts[]? | select(.name | startswith(\\"stage7-blocks-${SCENARIO}-\\")) | [.id,.created_at] | @tsv" \
               | sort -k2 | tail -1 | cut -f1
           )"
           if [ -z "${ARTIFACT_ID}" ]; then
