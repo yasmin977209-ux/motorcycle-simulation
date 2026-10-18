@@ -225,21 +225,32 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
-          ARTIFACT_ID="$(
-            gh api --paginate \
-              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
-              --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
-              | sort -k2 | tail -1 | cut -f1
+          STATE_BRANCH="stage7-state/${SCENARIO}"
+          STATE_BRANCH_ENCODED="${STATE_BRANCH//\//%2F}"
+          PREVIOUS_RUN_ID="$(
+            gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH_ENCODED}" 2>/dev/null |
+              jq -r '.content // empty' | tr -d '\n' | base64 -d 2>/dev/null |
+              jq -r '.run_id // empty' 2>/dev/null || true
           )"
-          if [ -n "${ARTIFACT_ID}" ]; then
-            echo "STAGE7_ARTIFACT_RESTORE=RUN_ID:${GITHUB_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
-            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
-            mkdir -p /tmp/previous_stage7_blocks
-            unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
-            find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
-            find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+          if [ -n "${PREVIOUS_RUN_ID}" ]; then
+            ARTIFACT_ID="$(
+              gh api --paginate \
+                "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" \
+                --jq '.artifacts[] | select(.name | startswith("stage7-blocks-'"'"'${SCENARIO}'"'"'-")) | [.id,.created_at] | @tsv' \
+                | sort -k2 | tail -1 | cut -f1
+            )"
+            if [ -n "${ARTIFACT_ID}" ]; then
+              echo "STAGE7_LEGACY_ARTIFACT_RESTORE=RUN_ID:${PREVIOUS_RUN_ID} ARTIFACT_ID:${ARTIFACT_ID} SCENARIO:${SCENARIO}"
+              gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/previous_stage7_blocks.zip
+              mkdir -p /tmp/previous_stage7_blocks
+              unzip -q /tmp/previous_stage7_blocks.zip -d /tmp/previous_stage7_blocks
+              find /tmp/previous_stage7_blocks -type f -name 'block_*.parquet' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+              find /tmp/previous_stage7_blocks -type f -name 'block_*_metadata.json' -exec cp {} "results_stage7/${SCENARIO}/blocks/" \;
+            else
+              echo "No legacy block artifact found for saved run ${PREVIOUS_RUN_ID}."
+            fi
           else
-            echo "No previous Stage 7 block artifact found for this workflow run."
+            echo "No previous Stage 7 state run ID found; durable blocks will be restored by the checkpoint store."
           fi
 
       - name: Prepare CP3 overlap reference
@@ -337,7 +348,9 @@ jobs:
               build_artifact_identity,
               validate_trial_sequence,
           )
+          MAX_TRIALS_PER_BLOCK = 50
           from scripts.stage7_stability import (
+              STATISTICAL_ESCALATION_POLICY_ID,
               evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
               is_statistical_checkpoint, next_statistical_checkpoint,
           )
@@ -418,6 +431,30 @@ jobs:
           )
           state, blob_sha = store.acquire()
           atexit.register(store.release)
+          restored_durable_block_count = store.restore_trial_blocks(
+              output_dir=Path("results_stage7"),
+              master_seed=MASTER_SEED,
+              sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
+              expected_completed_trials=int(state.get("completed_trials", 0)),
+          )
+          print(json.dumps({
+              "event": "durable_block_restore",
+              "scenario": SCENARIO,
+              "blocks_restored": restored_durable_block_count,
+              "expected_completed_trials": int(state.get("completed_trials", 0)),
+          }, sort_keys=True), flush=True)
+
+          def local_block_pairs():
+              parquet_paths = sorted(BLOCKS_DIR.glob("block_*.parquet"))
+              parquet_keys = {path.stem for path in parquet_paths}
+              metadata_paths = sorted(BLOCKS_DIR.glob("block_*_metadata.json"))
+              metadata_keys = {path.name[:-len("_metadata.json")] for path in metadata_paths}
+              if parquet_keys != metadata_keys:
+                  raise RuntimeError("local Stage 7 block Parquet/metadata set differs")
+              return [
+                  (path, BLOCKS_DIR / f"{path.stem}_metadata.json")
+                  for path in parquet_paths
+              ]
 
           completed = int(state.get("completed_trials", 0))
           next_trial_id = int(
@@ -451,6 +488,35 @@ jobs:
                   )
               if state.get("artifact_identity") != expected_identity:
                   raise RuntimeError("State/artifact identity mismatch")
+              if restored_durable_block_count == 0:
+                  # Legacy state/artifact recovery: migrate only after the entire
+                  # local prefix matches the persisted state fingerprint and identity.
+                  legacy_pairs = local_block_pairs()
+                  if not legacy_pairs:
+                      raise RuntimeError(
+                          "Completed Stage 7 state has no restorable block files; refusing to rerun completed Trial IDs."
+                      )
+                  print(json.dumps({
+                      "event": "legacy_block_migration",
+                      "scenario": SCENARIO,
+                      "completed_trials": completed,
+                      "block_count": len(legacy_pairs),
+                      "checkpoint_fingerprint_verified": True,
+                  }, sort_keys=True), flush=True)
+                  blob_sha = store.persist_trial_blocks_and_state(
+                      block_pairs=legacy_pairs,
+                      state=state,
+                      blob_sha=blob_sha,
+                      master_seed=MASTER_SEED,
+                      sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
+                      allow_legacy_metadata=True,
+                  )
+                  restored_durable_block_count = store.restore_trial_blocks(
+                      output_dir=Path("results_stage7"),
+                      master_seed=MASTER_SEED,
+                      sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
+                      expected_completed_trials=completed,
+                  )
           elif state.get("artifact_identity") is not None:
               raise RuntimeError(
                   "State contains artifact identity but no restored results"
@@ -628,8 +694,9 @@ jobs:
               # next statistical checkpoint is evaluated. GitHub's job timeout
               # remains the external platform ceiling.
               trial_start = completed + 1
-              trial_end = target_n
+              trial_end = min(target_n, completed + MAX_TRIALS_PER_BLOCK)
 
+              pending_trial_block = None
               if trial_end >= trial_start:
                   subprocess.run([
                       sys.executable,
@@ -643,6 +710,12 @@ jobs:
                       "--master-seed", str(MASTER_SEED),
                   ], check=True)
                   completed = trial_end
+                  pending_trial_block = (
+                      BLOCKS_DIR / f"block_{trial_start}_{trial_end}.parquet",
+                      BLOCKS_DIR / f"block_{trial_start}_{trial_end}_metadata.json",
+                  )
+                  if not all(path.is_file() for path in pending_trial_block):
+                      raise RuntimeError("completed Trial block did not write both Parquet and metadata")
 
               state["completed_trials"] = completed
               state["next_trial_id"] = completed + 1
@@ -652,6 +725,58 @@ jobs:
                   completed_trials=completed,
                   next_trial_id=int(state["next_trial_id"]),
               )
+
+              if not SCENARIO.startswith("C100_") and completed < target_n:
+                  state["completed_trials"] = completed
+                  state["next_trial_id"] = completed + 1
+                  state["next_check_n"] = target_n
+                  state["statistical_policy_id"] = STATISTICAL_ESCALATION_POLICY_ID
+                  state["stability_history"] = history
+                  state["final_status"] = None
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      f"durable progress saved at N={completed}; "
+                      f"awaiting statistical checkpoint N={target_n}"
+                  )
+                  state["final_fingerprint"] = monte_carlo.fingerprint_trial_results(results)
+                  state["artifact_identity"] = build_artifact_identity(
+                      scenario=SCENARIO,
+                      source_sha=SOURCE_SHA,
+                      trial_id_start=1,
+                      trial_id_end=completed,
+                      fingerprint_sha256=state["final_fingerprint"],
+                  )
+                  blob_sha = store.persist_trial_blocks_and_state(
+                      block_pairs=local_block_pairs(),
+                      state=state,
+                      blob_sha=blob_sha,
+                      master_seed=MASTER_SEED,
+                      sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
+                  )
+                  pending_trial_block = None
+                  write_json(
+                      RESULTS_DIR / "statistics.json",
+                      {
+                          "scenario": SCENARIO,
+                          "trial_count": len(results),
+                          "final_fingerprint": state["final_fingerprint"],
+                          "artifact_identity": state["artifact_identity"],
+                          "stability_history": history,
+                          "pending_statistical_checkpoint": target_n,
+                      },
+                  )
+                  print(json.dumps({
+                      "event": "durable_progress_checkpoint",
+                      "scenario": SCENARIO,
+                      "trial_id_start": trial_start,
+                      "trial_id_end": completed,
+                      "completed_trials": completed,
+                      "next_trial_id": completed + 1,
+                      "next_statistical_checkpoint": target_n,
+                      "fingerprint_sha256": state["final_fingerprint"],
+                  }, sort_keys=True), flush=True)
+                  continue
 
               if SCENARIO.startswith("C100_"):
                   if len(results) != 1:
@@ -806,7 +931,14 @@ jobs:
                   trial_id_end=completed,
                   fingerprint_sha256=state["final_fingerprint"],
               )
-              blob_sha = store.save_state(state, blob_sha)
+              blob_sha = store.persist_trial_blocks_and_state(
+                  block_pairs=local_block_pairs(),
+                  state=state,
+                  blob_sha=blob_sha,
+                  master_seed=MASTER_SEED,
+                  sampling_policy_id=STATISTICAL_ESCALATION_POLICY_ID,
+              )
+              pending_trial_block = None
 
               write_json(
                   RESULTS_DIR / "statistics.json",
