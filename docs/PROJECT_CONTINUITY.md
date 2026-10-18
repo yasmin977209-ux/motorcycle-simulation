@@ -567,3 +567,46 @@ Overall `BLOCKED_FOR_IMPLEMENTATION`. No Gate or scenario-stability PASS is clai
 ### Execution status and next step
 
 No code, test, workflow, simulation, or production artifact was changed or run in recording this policy approval. The next permitted technical step is a bounded R4/method-design review of the exact time-uniform procedures and their assumptions, especially for quantiles and for the still-unresolved financial means. Any test/Workflow modification, statistical run, or other separately controlled action must still satisfy the project's applicable explicit-authorization gates.
+
+
+---
+
+## CP-STAT-METHOD-REVIEW — اختيار طرق الثقة المتتابعة — 2026-10-18 (Asia/Aden)
+
+**Mode/scope:** M2, one bounded technical review. Read-only analysis; no production execution or code/test/workflow changes. Previous project history and owner acceptance preserved.
+
+### Live evidence verified at CP start
+
+- Continuity branch `tmp/cp-session-continuity-20261017`, HEAD `692e4181eacf18a58911fa868534968f2d6c72d5`; source log blob `b796246e9b702ae811279c8afecf3792164f854a`.
+- PR #46 remains open Draft, unmerged; head `692e4181eacf18a58911fa868534968f2d6c72d5`, base main `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Live main HEAD `647c19826b90d8224ce73ef9b90c306a45e03fb0`; `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`, `stage=12-CLOSED`, `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`, `state.sha_semantics=parent_state_commit_pointer`.
+- State blockers include `GATEA_PROVIDER_MISSING` and `SOURCE_SHA_DRIFT` (pinned `source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` differs from current `daily_engine.py`), plus remaining Stage 11/13/final-delivery/governance/G2 risk blockers.
+- Current code evidence: `run_batch.py` blob `0418ddea818c194a5b582df94778fa5f13a3ecc4`; `daily_engine.py` blob `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964`; `monte_carlo.py` blob `a8c3603487f92d3e15c3d754ce3faee3580a5f46`; `constants.py` blob `88b3e7b5a509f8486597ac08dfc5acaf80d4d39b`; `scripts/stage7_stability.py` blob `468b96b7b592a1ddd55cd4440962775632ab55a1`; decisions log blob `df4910e6a86bcce84f6b71d6d260913800474f95`; amendments blob `b4eab80bf657d72e9e49d14db81d2baf0a462d77`.
+- Approved reference was rehashed locally: SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`, 271,496 bytes.
+
+### Technical decision from method review
+
+1. **Official quantile indicators:** Select as the candidate family a fixed-quantile, distribution-free, time-uniform confidence sequence based on order statistics (Howard–Ramdas fixed-quantile method; the beta-binomial mixture variant is the primary candidate). Use the approved `alpha_m` allocations and the same target quantile at all eligible looks. It has time-uniform coverage for IID observations from an arbitrary distribution on an ordered space; bounded support and finite moments are not prerequisites. This theoretical suitability is conditional on a single compatible scenario/cohort identity and IID sampling.
+2. **Estimator versus confidence bounds:** Preserve the reference's only report-estimator rule `numpy.quantile(..., method="linear")`. Define the population target explicitly as the inverse-CDF quantile `Q(p)=inf{x:F(x)>=p}`. Compute the confidence sequence from its order-statistic method (do not claim the NumPy point estimate itself is a confidence interval), and accept precision only if the complete confidence set lies inside the approved band around the published linear estimate. Ties/discrete mass for `Held_Assets` and `Termination_Count` must be addressed in deterministic acceptance fixtures.
+3. **Probability of loss:** Select a time-uniform Bernoulli mean confidence sequence via a beta-binomial mixture/e-process for `L_i = 1(Cumulative_Project_Profit < 0)`; per-scenario alpha `0.000500`, precision margin `±0.01`. Keep the separately approved sequential-change condition `abs(Delta p) < 0.005` unchanged.
+4. **Gate B financial means:** Current `run_batch.py::_metric_summary` uses pointwise 95% Student-t half-widths at each N and computes `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE*abs(mean))`. This is not proved time-uniform under adaptive stopping, and the `max` formula is not the approved conditional near-zero branch from D-2026-10-10-01 / Amendment-01. Classification remains `K_CODE / FAIL` against the adaptive-stopping requirement; this CP did not change it.
+5. **Mean-CS candidate, but blocked:** Prefer a Catoni-style time-uniform mean CS only if the model yields a defensible **known numerical upper variance bound** for each Gate B metric; alternatively, a specified higher-moment method requires a defensible known bound on the relevant moment. The current engine path runs `while not project.simulation_stopped`, with no explicit day cap, and `SECONDARY_CONTRACT_DURATION=None` is specified as open-ended. Thus no finite-support bound or numerical variance/moment bound was established from inspected evidence. This does **not** prove infinite variance; it means a bound has not been proved. R4-2 remains `K_SPEC / BLOCKED`.
+6. **Alpha scope:** The owner's accepted per-scenario alpha budget of `0.0025` is fully allocated to the seven §2.5 indicators. No additional alpha was silently assigned to the three Gate B mean metrics. If Gate B mean coverage must fall within the same 0.05 familywise claim, an explicit owner decision to reallocate alpha is required.
+7. **Data-identity block:** The fixed-CS theory requires IID trials from the same scenario/source/design. Given active `SOURCE_SHA_DRIFT`, do not mix outputs or assert method applicability to a production cohort until source/manifest/RNG/sampling/schema identity and per-`trial_id` completeness are verified.
+
+### R4/gate disposition
+
+- R4-1 business definitions/margins/alpha are owner-approved; method selection for official quantiles and Bernoulli probability is specified as a candidate, but not implemented or tested.
+- R4-2 `K_SPEC / BLOCKED` for the financial means pending mathematical proof of finite support or a separate quantified support/tail/moment bound decision.
+- R4-3 contract approved; `P90_Held_Assets` still lacks production integration/data verification and an acceptance test. `scripts/stage7_stability.py` still binds only three financial mean fields.
+- Gate A remains blocked by `GATEA_PROVIDER_MISSING`. No scenario is declared stable; no Gate receives PASS from this theoretical review.
+
+### Report/artifact identity
+
+- Local report (not a repository/production artifact): `CP-STAT-METHOD-REVIEW_2026-10-18.md`, size 15,398 bytes, SHA-256 `4b32a0608f5dff84c0563f7b7109e04e311e8b3f856db557cc7b61aab57e636c`.
+- External methodological sources reviewed: Howard & Ramdas, https://arxiv.org/abs/1906.09712; Howard et al., https://arxiv.org/abs/1810.08240; Wang & Ramdas, https://arxiv.org/abs/2202.01250.
+- No run, artifact, test, Monte Carlo, trial, checkpoint, Golden extension, source change, threshold/seed/RNG change, or main write occurred.
+
+### Next permitted step
+
+A bounded analytical proof review of model transitions and reward accumulation to determine whether numerical support/variance/moment bounds for Gate B can be established. If no proof exists, prepare a separate owner decision specifying the quantitative moment assumptions and/or alpha scope; do not invent bounds. Separately, design deterministic synthetic acceptance cases for quantile/Bernoulli CS and request the explicit test/change authorization required before implementing them.
