@@ -100,7 +100,7 @@ jobs:
               state_identity="$(
                 gh api "${STATE_CONTENTS}" 2>/dev/null |
                   jq -r '.content // empty' 2>/dev/null |
-                  tr -d '\\n' |
+                  tr -d '\n' |
                   base64 -d 2>/dev/null |
                   jq -r '[.scenario // empty,.source_sha // empty] | @tsv' 2>/dev/null || true
               )"
