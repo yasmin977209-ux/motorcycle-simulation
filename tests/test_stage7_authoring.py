@@ -169,6 +169,7 @@ class InMemoryDurableBlockStore(StateStore):
         self.trees: dict[str, dict] = {"base-tree": {"tree": []}}
         self.commits: dict[str, str] = {"base-head": "base-tree"}
         self.counter = 0
+        self.tree_truncated = False
         initial_state = {
             "stage": "7",
             "scenario": "C070_G100",
@@ -189,6 +190,18 @@ class InMemoryDurableBlockStore(StateStore):
             return {"object": {"sha": self.head}}
         if method == "GET" and path == f"git/commits/{self.head}":
             return {"tree": {"sha": self.commits[self.head]}}
+        if method == "GET" and path.startswith("git/trees/"):
+            return {
+                "truncated": self.tree_truncated,
+                "tree": [
+                    {
+                        "path": item_path,
+                        "type": "blob",
+                        "sha": _git_blob_sha(raw),
+                    }
+                    for item_path, raw in sorted(self.files.items())
+                ],
+            }
         if method == "GET" and path.startswith("contents/"):
             route = path.split("?", 1)[0]
             route = urllib.parse.unquote(route[len("contents/"):])
@@ -245,6 +258,20 @@ class InMemoryDurableBlockStore(StateStore):
                 self.files[entry["path"]] = self.blobs[entry["sha"]]
             return {"ref": self.state_branch}
         raise AssertionError(f"unexpected fake GitHub request: {method} {path}")
+
+
+def test_durable_block_listing_uses_recursive_git_tree_beyond_contents_limit(tmp_path: Path) -> None:
+    store = InMemoryDurableBlockStore(tmp_path / "state.json")
+    for index in range(1105):
+        store.files[f"stage7-blocks/unrelated_{index:04d}.bin"] = f"payload-{index}".encode("ascii")
+
+    listing = store._block_listing()
+    assert len(listing) == 1105
+    assert all(item["path"].startswith("stage7-blocks/") for item in listing)
+
+    store.tree_truncated = True
+    with pytest.raises(StateIntegrityError, match="Git tree was truncated"):
+        store._block_listing()
 
 
 def test_durable_block_and_state_commit_atomically_and_restore(tmp_path: Path) -> None:
@@ -525,6 +552,8 @@ def test_stage7_workflow_commits_durable_blocks_before_moving_past_each_chunk() 
     assert "MAX_TRIALS_PER_BLOCK = 50" in text
     assert "restore_trial_blocks(" in text
     assert "persist_trial_blocks_and_state(" in text
+    assert 'git/trees/{tree_sha}?recursive=1' in text
+    assert "durable Stage 7 Git tree was truncated" in text
     assert "durable_progress_checkpoint" in text
     assert "LEGACY_BLOCK_IDENTITY_UNPROVEN" in text
     assert "STAGE7_STATE_IDENTITY_MISMATCH=" in text
