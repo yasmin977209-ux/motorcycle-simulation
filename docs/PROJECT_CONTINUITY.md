@@ -928,3 +928,48 @@ This change remains documentation-only: no tests, Monte Carlo, Workflows, produc
 
 اقرأ في الدردشة التالية الرأس الحي لهذا الفرع وPR #46 وmain من جديد، ثم اقرأ docs/PROJECT_CONTINUITY.md وdocs/continuity/START_HERE.md وdocs/continuity/SESSION_OUTPUTS.jsonl. ابدأ بـP8 جرد CLI والبيئة قراءة فقط، ثم P9 جرد Workflows قراءة فقط في CP منفصلة، وتوقف بعد كل تقرير. لا تعد إلى P0–P3 من البداية، ولا تعتبر أي إعدادات غير مقروءة سليمة أو معطوبة، ولا تنفذ تعديلًا محميًا دون R4 والموافقة المطلوبة.
 
+
+
+## CP-P8 — إعادة تثبيت جرد CLI والبيئة قراءةً فقط — 2026-10-19
+
+**الحكم:** `READ_ONLY_REVALIDATION_COMPLETE`؛ مصدر وعقد CLI متحققان بالقراءة، أما إعادة إنتاج البيئة حرفيًا فما زالت `PENDING`. هذا الحدث يربط تقرير P8 الموجود بالفعل بالحالة الحية؛ لا يعيد إنشاء التقرير السابق ولا يكرر P0–P3.
+
+### الهوية والقراءة الحية
+- المستودع: `yasmin977209-ux/motorcycle-simulation`.
+- `main` HEAD: `647c19826b90d8224ce73ef9b90c306a45e03fb0`؛ لم يتغير أثناء هذا الفحص.
+- `main/state.json` blob: `2178260bb18efeb81437486f13b6d10cf5e85936`; `stage=12-CLOSED`; `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`; `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` مع `state.sha_semantics=parent_state_commit_pointer`.
+- فرع الاستمرارية قبل هذا الإلحاق: `tmp/cp-session-continuity-20261017` عند `73c2c800e8f7f191ebcda6c618236cf6e6018dd1`.
+- PR #46: Open / Draft / unmerged؛ base `main` عند `647c19826b90d8224ce73ef9b90c306a45e03fb0`؛ head `73c2c800e8f7f191ebcda6c618236cf6e6018dd1`، وقد طابق ref الحي.
+- تقرير P8 السابق المقروء مباشرةً موجود في `tmp/cp-p8-cli-environment-20261018` عند HEAD `b7471211443c855fb6d243c037fc9dfd9978ec7e`، الملف `docs/audits/CP-P8_CLI_environment_inventory_2026-10-18.md`, blob `e8705a209facc15e32323dec9e38dcb9c8da54bd`. أُعيد التحقق من استمرار هوية الملفات على `main` بدل إعادة تشغيل CLI.
+
+### مطابقة ملفات المصدر الحالية بتقرير P8
+| العنصر | Blob الحالي على main | الحكم |
+|---|---|---|
+| `run_batch.py` | `0418ddea818c194a5b582df94778fa5f13a3ecc4` | يطابق جرد P8 |
+| `requirements.txt` | `81131ac1437fc652ceff21831570ce19de314b78` | يطابق جرد P8 |
+| `daily_engine.py` | `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964` | يطابق جرد P8 |
+| `scripts/excel_builder.py` | `50115a2fea5812727e0e5a8bfbb07e1f853f026b` | يطابق جرد P8 |
+| `README.md` | `08d666bff504609fc26acb4523c25812c61fac6e` | يطابق جرد P8 |
+| `docs/STATE_SHA_SEMANTICS.md` | `134363f0f2834f8087760b3148910a1a3d3af38b` | دلالة مؤشر commit سابق مستمرة |
+
+### جرد عقد CLI/البيئة
+- `run_batch.py` يقبل `--scenario` و`--trials` و`--output-dir` و`--start-trial-id` و`--resume-from-checkpoint` و`--master-seed`. يتطلب `SOURCE_SHA` في مسار التشغيل، واستئناف checkpoint يتطلب `GITHUB_REPOSITORY` و`GH_TOKEN`. استدعاء CLI قد ينفذ Trials ويكتب ملفات/حالة، لذلك لم يُنفّذ حتى `--help`.
+- CLI الخاص بـ`scripts/excel_builder.py` يتطلب `--dataset-root` و`--output-path` و`--manifest` و`--representatives`; لم يُشغّل.
+- `requirements.txt`: `pytest>=9,<10`; `numpy>=2.3,<3`; `pyarrow` غير مثبت الإصدار؛ `python-dateutil>=2.9,<3`; `scipy>=1.17,<2`; `pyyaml` غير مثبت الإصدار؛ `openpyxl>=3.1,<4`.
+- شجرة `main` المقروءة تشمل 204 ملفات. من ملفات إعداد البيئة الجذرية المرئية، `requirements.txt` هو الموجود؛ لم توجد ملفات قفل/تعريف بيئة مثل `pyproject.toml` أو `setup.cfg` أو `.python-version` ضمن الجرد السابق المتطابق. لذلك تثبيت مجموعة بيئة قابلة لإعادة الإنتاج حرفيًا غير مثبت.
+- فروق المصدر: `daily_engine.py` على `main` blob `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964` يختلف عن نسخة commit المصدر المثبّت `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`، blob `6c4496c3e9a9b41668c3d93063ad31d96df5f878`. يبقى `SOURCE_SHA_DRIFT` مانع هوية؛ لا تغيير للبصمة أو خلط للبيانات.
+- `scripts/stage13_assemble.py` ما زال مفقودًا على `main`. إشارة README إلى `.github/workflows/stage7-gates.yml` غير المطابق لقائمة ملفات workflow الحالية تُترك إلى CP-P9، ولا تُصلح في P8.
+
+### R4 / حدود القبول
+| العنصر | الحالي | المرجع/الدليل | الحكم |
+|---|---|---|---|
+| عقد CLI | blobs المذكورة أعلاه على main | `build_parser` و`run_batch` مقروءان دون تنفيذ | `VERIFIED_SOURCE_ONLY` |
+| قابلية إعادة إنتاج البيئة | تبعيات بنطاقات وغياب ملف قفل | `requirements.txt` وجرد ملفات الجذر | `PENDING` |
+| هوية المصدر | اختلاف `daily_engine.py` عن commit `SOURCE_SHA` | blobs المصدر أعلاه و`state.json` | `BLOCKED / SOURCE_SHA_DRIFT` |
+| Stage 13 | مجمّع غير موجود على main | حالة المشروع الحية | `BLOCKED / MISSING_ARTIFACT` |
+| README/Workflows | رابط workflow غير موجود في الجرد الحي | README وقائمة الملفات | `DEFERRED_TO_CP-P9` |
+
+### ما لم يحدث والبوابات
+لم يُشغّل CLI أو `pytest` أو Workflow أو Trial أو Checkpoint أو Monte Carlo؛ لم يُعدّل أي ملف مصدر أو اختبار أو Workflow أو `state.json` أو `main`؛ لم تتغير هوية المصدر أو seed/RNG أو البيانات. `tested_sha=NOT_RUN`. لم تُرفع أي بوابة إلى PASS بناءً على هذا الجرد. تبقى `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN` والموانع المسجلة كما هي.
+
+**الخطوة التالية:** CP-P9 — جرد Workflows قراءةً فقط في CP منفصلة. لا تعديل أو تشغيل قبل مراجعة الصلاحية/الموافقة الخاصة بذلك النطاق.
