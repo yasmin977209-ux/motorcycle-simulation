@@ -124,11 +124,14 @@ def test_stage7_summary_fails_closed_unless_all_scenarios_are_accepted() -> None
     assert "raise SystemExit(1)" in text
 
 def test_stage7_workflow_has_concurrency_guard() -> None:
+    text = _workflow_text()
     concurrency = _workflow()["concurrency"]
     assert concurrency == {
-        "group": "stage7-full-run-${{ github.run_id }}",
+        "group": "stage7-full-run-${{ github.ref }}",
         "cancel-in-progress": False,
     }
+    concurrency_text = text[text.index("concurrency:"):text.index("permissions:")]
+    assert "${{ github.run_id }}" not in concurrency_text
 
 
 def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
