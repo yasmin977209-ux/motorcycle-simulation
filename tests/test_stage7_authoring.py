@@ -356,7 +356,7 @@ def test_durable_block_store_appends_next_chunk_without_rewriting_prefix(tmp_pat
         "lease": None,
     }
     first_pair = make_pair(1, 2)
-    store.persist_trial_blocks_and_state(
+    first_state_blob = store.persist_trial_blocks_and_state(
         block_pairs=[first_pair],
         state=state,
         blob_sha=None,
@@ -369,10 +369,21 @@ def test_durable_block_store_appends_next_chunk_without_rewriting_prefix(tmp_pat
     state["completed_trials"] = 4
     state["next_trial_id"] = 5
     state["final_fingerprint"] = "d" * 64
+    branch_before_conflict = store.head
+    with pytest.raises(StateConflict, match="state.json changed before durable block commit"):
+        store.persist_trial_blocks_and_state(
+            block_pairs=[second_pair],
+            state=state,
+            blob_sha="stale-state-blob",
+            master_seed=20270101,
+            sampling_policy_id="DOUBLING_FROM_300_V1",
+        )
+    assert store.head == branch_before_conflict
+
     store.persist_trial_blocks_and_state(
         block_pairs=[second_pair],
         state=state,
-        blob_sha=None,
+        blob_sha=first_state_blob,
         master_seed=20270101,
         sampling_policy_id="DOUBLING_FROM_300_V1",
     )
