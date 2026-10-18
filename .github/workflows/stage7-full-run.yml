@@ -21,8 +21,8 @@ env:
   STABILITY_CONSECUTIVE_CHECKS: "3"
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
-  # Operational orchestration cap; model logic has no max_days limit.
-  # Internal cap leaves five minutes for state persistence and artifact upload.
+  # Trial execution has no internal wall-clock cutoff; each 50-trial chunk is durable.
+  # GitHub-hosted runner limits remain the external ceiling.
   SOURCE_SHA: "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
   CP3_RUN_ID: "37203438351"
   CP3_SCENARIO: "C070_G100"
@@ -95,7 +95,7 @@ jobs:
           for scenario in "${SCENARIOS[@]}"; do
             STATE_BRANCH="stage7-state/${scenario}"
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
-            STATE_BRANCH_ENCODED="${STATE_BRANCH//\\//%2F}"
+            STATE_BRANCH_ENCODED="${STATE_BRANCH//\//%2F}"
             STATE_CONTENTS="repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH_ENCODED}"
             if gh api "${STATE_REF}" >/dev/null 2>&1; then
               state_identity="$(
@@ -399,8 +399,6 @@ jobs:
           import os
           import subprocess
           import sys
-          import time
-          JOB_STARTED_AT_EPOCH = time.time()
           from pathlib import Path
           import numpy as np
           import pyarrow.parquet as pq
@@ -437,7 +435,6 @@ jobs:
           REQUIRED_CONSECUTIVE = int(os.environ["STABILITY_CONSECUTIVE_CHECKS"])
           RELATIVE_EPSILON = float(os.environ["CI_RELATIVE_EPSILON"])
           ABSOLUTE_EPSILON = float(os.environ["CI_ABSOLUTE_EPSILON"])
-          JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
           CP3_SCENARIO = os.environ["CP3_SCENARIO"]
           CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
           RESULTS_DIR = Path("results_stage7") / SCENARIO
@@ -532,9 +529,6 @@ jobs:
                       "stable": half_ci < limit,
                   }
               return out
-
-          def elapsed_since_job_start():
-              return time.time() - JOB_STARTED_AT_EPOCH
 
           def write_json(path, value):
               path.write_text(
