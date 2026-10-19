@@ -1331,3 +1331,20 @@ No candidate code/test/workflow or data changed. No trial ID, source SHA, seed/R
 
 No production Stage 7 workflow/CLI/Monte Carlo/Trial/Checkpoint, source/seed/RNG/sampling/cohort/data change, main/state/reference change, merge, PR closure or Release occurred in this CP. Main-write incident remains separate: two accidental documentation additions from omitted branch arguments are on main; main rollback still awaits explicit owner scope approval. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`.
 
+
+
+## CP-STAGE13-CANONICAL-DATASET-FINGERPRINT-BINDING — 2026-10-19
+
+**Report:** [docs/audits/CP-STAGE13-CANONICAL-DATASET-FINGERPRINT-BINDING_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-STAGE13-CANONICAL-DATASET-FINGERPRINT-BINDING_2026-10-19.md), blob `78d484f33308bc96f37c11273c0843e7e33eec1a`, read back and inspected.
+
+**R4 / candidate:** Pre-edit R4 `docs/stage13/R4_canonical_dataset_fingerprint_binding_20261019.md`, blob `a9aff6985109fa66ca0bfd0ec72445dfcceeed57`, was recorded before candidate changes. Current candidate HEAD `adfc04dd5a2b633c64515a0b4e4f7ae7b5ca1156`; assembler blob `4cb4632fe787c92ee87190769bbbf05b65b61416`; test blob `976ebc8365db7f2380f15317c677990e34a1269c`. Main HEAD `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`; candidate compare is `diverged`, 22 ahead / 2 behind. The branch has not been rebased or merged.
+
+**Finding:** Canonical-mode structural checks (source label, scenario keys, Trial ID ranges, and total 11,005 rows) did not bind result values to the recorded Stage 11 fingerprints. Classification `K_CODE`; no claim that historical rows are corrupted.
+
+**Candidate-only implementation:** loads `docs/stage11/dataset_identity.json` and requires the exact Git blob `72a481d509d39820fba78732724fde4fa9f25134`; validates its 25-scenario / 11,005 trial provenance and recorded Stage 7/9A/10 run/seed/range identifiers; compares each C100 row to its `scenario_fingerprint_stage9a`, and each non-C100 1..550 cohort to `combined_dataset_fingerprint_sha256_stage10`, with the existing float.hex canonical JSON and single-newline SHA-256 algorithm. The Stage 9A global hash `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6` is retained only as provenance for its 9,005-row baseline; it is not treated as the 11,005-trial hash. Static read-back found and corrected a Run-ID string-vs-integer comparison before this report was written.
+
+**Regression source evidence:** current `tests/test_stage13_assembler.py` contains 30 uniquely named test definitions. Synthetic cases pin identity blob rejection, exact float/newline canonicalization, matching per-scenario values, mutation rejection while scenario/Trial IDs are preserved, and canonical-mode integration. These are source/read-back findings, **not test execution**. No pytest, workbook generation, CLI, production Workflow, Monte Carlo, Trial or Checkpoint was run. Exact-head execution remains `PENDING/BLOCKED` because the branch's authorization records conflict on reuse of the temporary test Workflow; no Workflow was changed or triggered.
+
+**Unchanged protected state:** `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`, stage `12-CLOSED`, `FINAL_DELIVERY_BLOCKERS_OPEN`, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`; no model source, reference, seed/RNG, sampling/cohort/Trial ID, historical data, main/state, workflow, production output, merge, PR closure or Release change. The separate main documentation-write incident recorded at ledger lines 1300+ remains unresolved and needs its own explicit owner decision; this CP did not touch main.
+
+**Next step:** continue static review of Stage 13's C100-specific adaptive cohort contract and representative payload dependency; resolve test execution authority independently before claiming runtime validation or inspecting a generated workbook.
