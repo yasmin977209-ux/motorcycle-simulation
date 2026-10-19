@@ -217,6 +217,34 @@ def test_canonical_per_scenario_fingerprints_reject_mutated_financial_value():
         _validate_canonical_dataset_fingerprints(rows_by_scenario, identity)
 
 
+def test_canonical_mode_integrates_pinned_identity_and_fails_on_value_drift(monkeypatch):
+    import scripts.stage13_assemble as assembler_module
+
+    rows_by_scenario, identity = synthetic_canonical_fingerprint_data()
+    monkeypatch.setattr(
+        assembler_module,
+        "_load_canonical_dataset_identity",
+        lambda: identity,
+    )
+    data = {
+        "manifest": {
+            "source_sha": EXPECTED_SOURCE_SHA,
+            "master_seed": 20270101,
+            "total_trials": 11005,
+            "scenarios": {scenario: {} for scenario in EXPECTED_SCENARIOS},
+        },
+        "trials_by_scenario": rows_by_scenario,
+    }
+
+    _validate_mode_and_identity(data, mode="canonical")
+    data["trials_by_scenario"]["C085_G100"][0]["final_cash"] += 1
+    with pytest.raises(
+        RuntimeError,
+        match="CANONICAL_SCENARIO_FINGERPRINT_MISMATCH: C085_G100",
+    ):
+        _validate_mode_and_identity(data, mode="canonical")
+
+
 def test_assemble_185_sheets_and_five_representative_roles(tmp_path: Path):
     data = demo_data()
     output = tmp_path / "demo.xlsx"
