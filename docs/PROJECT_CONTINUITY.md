@@ -1321,3 +1321,13 @@ Additional authoritative input evidence: main `docs/stage9a/DEVIATIONS.md` blob 
 
 No candidate code/test/workflow or data changed. No trial ID, source SHA, seed/RNG, sampling/cohort, historical rows, main state, or reference changed as part of this CP. The separate unintended main documentation commits are logged below/above and require owner-authorized rollback. Main head at the latest live read is `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`, exactly two commits ahead of `647c19826b90d8224ce73ef9b90c306a45e03fb0`; compare lists only the two added documentation paths. Main `state.json` stays blob `2178260bb18efeb81437486f13b6d10cf5e85936`.
 
+## CP-R4-STAGE7-LEGACY-DETECTION-TREE-INVENTORY — exact-head failure and test repair — 2026-10-19
+
+**R4 report:** [CP-R4-STAGE7-LEGACY-DETECTION-TREE-INVENTORY_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-R4-STAGE7-LEGACY-DETECTION-TREE-INVENTORY_2026-10-19.md), latest blob `e96854b988a1b1d0b9fb8eefc8e130a791429ee1`, report commit `21ead80f87693a0c8227be5fe18082fd4277982f`.
+
+**Exact failure / minimal fix:** Run `39187134699`, tested SHA `2a127d78422236471ff233f2bf30e99437106570`, Job `117851821706`, failed with exactly `1 failed, 78 passed in 0.62s`. AST and YAML checks passed. Literal assertion error at `tests/test_stage7_authoring.py:705` was an obsolete `contents/stage7-blocks?ref=${STATE_BRANCH}` requirement. R4 classified this as `K_TEST`, then edited only that assertion on the candidate to require `store._block_listing()` and forbid the old Contents listing; legacy run/provenance/seed/source proof assertions remain. Latest candidate HEAD `12a30e69c1fd406683ba97cc824c9d27b9fce918`; tests blob `4afba1c7c66a60560bbe148cd503c38a67b9c4dd` (79 test functions); Stage 7 production Workflow blob `b686004505f57e123708ce2d0aacce38b3d5033e`; state module blob `5615178a40200dec90247b6ddae63cd93c07126f`.
+
+**Next push run:** authoring-only Run `39188323789` is recorded against exact HEAD `12a30e69c1fd406683ba97cc824c9d27b9fce918`; it was `in_progress` at the only inspection. By M4, do not poll this running Run; no conclusion or artifact is yet known. Keep status `AUTHORING_VERIFICATION_IN_PROGRESS / NOT_READY_TO_MERGE`, not PASS.
+
+No production Stage 7 workflow/CLI/Monte Carlo/Trial/Checkpoint, source/seed/RNG/sampling/cohort/data change, main/state/reference change, merge, PR closure or Release occurred in this CP. Main-write incident remains separate: two accidental documentation additions from omitted branch arguments are on main; main rollback still awaits explicit owner scope approval. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`.
+
