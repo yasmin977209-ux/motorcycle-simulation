@@ -49,3 +49,21 @@ No production Workflow was executed, and the candidate `stage7-full-run.yml` tri
 
 **Next allowed action:** retrieve the push-triggered authoring verifier run for exact HEAD `2a127d78422236471ff233f2bf30e99437106570` from a GitHub Actions view that lists push events; inspect every step before calling the updated candidate test PASS. Continue independent non-production review meanwhile; do not merge or trigger simulation.
 
+## R4 — repair stale authoring assertion after durable-tree refactor — 2026-10-19
+
+### Exact failing evidence
+- Workflow Run: [39187134699](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39187134699)
+- Event `push`; branch `tmp/cp-stage7-timeout-parallelism-20261019`; exact tested SHA `2a127d78422236471ff233f2bf30e99437106570`.
+- Job `verify` ID `117851821706`, conclusion `failure`; AST parse and YAML lint succeeded before the test step.
+- Exact result: `1 failed, 78 passed in 0.62s`.
+- Literal failing assertion: `assert "contents/stage7-blocks?ref=${STATE_BRANCH}" in restore` at `tests/test_stage7_authoring.py:705`.
+- The step was intentionally refactored to `store._block_listing()`; therefore the test was asserting an obsolete implementation detail, not a required behavior. The earlier new contract test already checks the shared inventory and refuses the Contents API listing.
+
+### R4 before edit
+
+| Element | Current | Governing decision / branch | Exact evidence | Ruling |
+|---|---|---|---|---|
+| `test_stage7_restore_prefers_durable_blocks_and_proves_legacy_artifact_identity` | It requires the old `contents/stage7-blocks?ref=...` token even though the candidate now calls `store._block_listing()`. | Owner-authorized candidate-only CP-R4 durable persistence/restore/fail-closed scope; branch `tmp/cp-stage7-timeout-parallelism-20261019`. The newly accepted implementation uses the recursive Git Trees API and raises on `truncated=true`. | Run 39187134699, tested SHA `2a127d78422236471ff233f2bf30e99437106570`, exact AssertionError/result above. | `K_TEST`: stale source-text assertion. Change only the assertion to require `store._block_listing()` and forbid the old Contents inventory; preserve all following checks of run provenance, artifact source, seed/source workflow identity, and fail-closed legacy proof. |
+| Acceptance | Current tree/truncation guard is tested separately, but whole focused suite fails on this stale assertion. | Same CP-R4 scope. | Exact candidate-head authoring Workflow must complete all steps. | `PENDING_VERIFICATION` until a new push-run confirms the corrected candidate SHA. |
+
+No business logic, model source, Workflow, seed/RNG, sampling/cohort/trial IDs, historical data, main, state, reference, or production output changes are needed for this test-only repair. No production workflow may be triggered.
