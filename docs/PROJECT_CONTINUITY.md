@@ -1223,3 +1223,19 @@ Verification: files read back from GitHub; Pytest/YAML parser/Workflow not run b
 The raw repository diagnostic Run `38164248220` remains historical `11 failed, 338 passed, 1 skipped, 1 warning`; it is distinct from the bounded Stage 9C inventory. Remaining project blockers are unchanged: production Gate A provider missing, SOURCE_SHA drift, undefined Stage 11 topology, Stage 13 assembler absent from main, D-2026-10-12-01 missing from the state decision map, Stage 7 timeout risk, and seven final delivery files not reconciled/verified as one package.
 
 **Next permitted action:** create a new R4-bounded candidate-only appendendum to the historical Stage 9C and unified closure reports, explicitly linking the later C1–C6 re-audit and preserving the historical scope/reasons. Do not modify main or state, perform Stage 10, merge/close a PR, or create a Release as part of this read-only reconciliation.
+
+
+## CP-STAGE9C-REPORT-STATUS-RECONCILIATION — candidate-only appendenda — 2026-10-19
+
+**R4 before edits:** [R4-STAGE9C-REPORT-STATUS-RECONCILIATION_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-stage9c-status-report-reconcile-20261019/docs/audits/R4-STAGE9C-REPORT-STATUS-RECONCILIATION_2026-10-19.md), blob `04f1b6f448eaa46d4989870589b764d1691c16d7`. It records original report blobs `81fb79720988cfe261fa6d8d29371e616f9f9850` and `f2e3733b9ff48d00e5b512523a2ba98d20a3af33), and explicitly requires append-only changes preserving the historical verdicts.
+
+**Candidate branch:** `tmp/cp-stage9c-status-report-reconcile-20261019`, base/main `647c19826b90d8224ce73ef9b90c306a45e03fb0), HEAD `6c6b024f98d078bee37b35c4c6d0ddedd5221e97`, ahead 3 / behind 0. Exactly three changed paths:
+- `docs/audits/R4-STAGE9C-REPORT-STATUS-RECONCILIATION_2026-10-19.md`, blob `04f1b6f448eaa46d4989870589b764d1691c16d7`.
+- `docs/stage9c/STAGE9C_REPORT.md`, updated blob `5644107020bb16344fd6212b007cb68cc0f9584d`; its 31-line append preserves all 323 original historical lines.
+- `docs/CP-MEGA-CLOSURE-9ABC_FINAL_REPORT_AR.md`, updated blob `47b6e9b10a02619132f3c820c28ae938c12168d5`; its 30-line append preserves all 239 original historical lines.
+
+**Addenda read-back:** Stage 9C report has a dated C-1..C-6 evidence addendum distinguishing the original PARTIAL package-scope decision from the later merged C-1..C-6 PASS. The unified closure report keeps its historic `CP-MEGA-CLOSURE-9ABC-PARTIAL` / no-Stage-10 verdict and appends the updated Stage 9C substatus, while documenting that overall project delivery remains blocked. The appendenda link the exact Gate A bridge, CP-12-C, CP-12-D and CP-D Runs and their tested SHAs, preserve the raw diagnostic `38164248220 = 11 failed, 338 passed, 1 skipped, 1 warning`, the missing standalone re-audit file, and the limitation that Stage 12 schema cannot establish per-bike settlement-duration history.
+
+**Boundaries:** only the temporary candidate branch changed. No main/state/report main path, reference, source, workflow, test, Parquet/data/trial, workbook, RNG/seed, cohort, threshold, Stage 10 run, merge, PR closure, or Release action occurred. Main `state.json` blob remains `2178260bb18efeb81437486f13b6d10cf5e85936` and main status remains `FINAL_DELIVERY_BLOCKERS_OPEN`.
+
+**Next permitted action:** independent read-only check of the two appended documents against the exact diff and all 3 candidate commits, then update the output manifest. No merge is authorized or performed.
