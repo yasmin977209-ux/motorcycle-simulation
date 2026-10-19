@@ -448,6 +448,39 @@ def test_adaptive_mode_rejects_trial_result_schema_drift():
         _validate_mode_and_identity(data, mode="adaptive")
 
 
+@pytest.mark.parametrize(
+    ("field", "wrong_value"),
+    [
+        ("collection_probability", 0.70),
+        ("recovery_rate_pct", 70),
+    ],
+)
+def test_adaptive_mode_rejects_scenario_parameter_mismatch_with_recomputed_hashes(
+    field, wrong_value
+):
+    data = adaptive_data()
+    row = data["trials_by_scenario"]["C085_G100"][0]
+    row[field] = wrong_value
+    row["result_sha256"] = trial_result_sha256(row)
+
+    # Make the row digest, ordered hash map, and Gate A map claim consistent
+    # with the altered row. Validation must still reject the scenario binding.
+    ordered_rows = [
+        f"{scenario}|{trial['trial_id']}|{trial['result_sha256']}\\n"
+        for scenario in EXPECTED_SCENARIOS
+        for trial in data["trials_by_scenario"][scenario]
+    ]
+    ordered_sha = hashlib.sha256("".join(ordered_rows).encode("utf-8")).hexdigest()
+    data["manifest"]["ordered_trial_hash_map_sha256"] = ordered_sha
+    data["manifest"]["gate_a_ordered_trial_hash_map_sha256"] = ordered_sha
+
+    with pytest.raises(
+        RuntimeError,
+        match="ADAPTIVE_TRIAL_SCENARIO_PARAMETER_MISMATCH",
+    ):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
 def test_adaptive_mode_rejects_incomplete_trial_id_range():
     data = adaptive_data()
     data["trials_by_scenario"]["C100_G100"][10]["trial_id"] = 9999
