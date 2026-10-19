@@ -51,3 +51,12 @@ The actual file `C030_G030_DAILY_P50_trial_156.xlsx` was opened via the spreadsh
 **Overall project status: `PARTIAL / NOT_READY_TO_MERGE_OR_DELIVER`.** Current `main` still has the dict-to-row defect (builder blob `50115a2fea5812727e0e5a8bfbb07e1f853f026b`); this reviewed fix is only on a temporary branch and was not merged. The test Run checked SHA `e3aa5b16da6fec729ff9e7b9591336d33ffef324`, not current candidate HEAD `ff02990ccc706ca7d0c68416b8a91f9aa475a5f2`, although the code and test blobs match. The real-data acceptance covers one scenario/one representative, not all 25 P50 sheets or the final 185-sheet workbook; it does not resolve Stage 9C’s explicit full-daily-ledger gap.
 
 No code, test, workflow, reference, main branch, main `state.json`, model source, RNG, sampling policy, trial data, Parquet, workbook source, or production output was modified in this review. No merge or Release was made.
+
+
+## Addendum — correct workbook SHA-256 transcription (2026-10-19)
+
+Post-write read-back review found a one-character transcription typo in the earlier “Actual XLSX SHA-256” field above. The authoritative SHA-256 verified by the live file bytes, archive checksum list, and embedded acceptance report is:
+
+`51a48060197274166ea7588328d966354180d70f4216d57dcda9a09de9f58d22`
+
+The ZIP digest remains `2ee7b21782165d602ada7f704cf2d8cadfd8ccb84d5e77e5e53dc6063f4faf36`, and internal `SHA256SUMS.txt` confirms the same workbook digest and `161,976` byte size. This was a report transcription issue only; no workbook/code/data bytes changed.
