@@ -60,7 +60,7 @@ def daily_rows(trial):
     equity = int(trial["final_net_project_equity"])
     return [
         {
-            "date": START_DATE, "Final_Close_Date": END_DATE, "Cash": int(trial["final_cash"]) - 100,
+            "date": START_DATE, "trial_id": int(trial["trial_id"]), "Final_Close_Date": END_DATE, "Cash": int(trial["final_cash"]) - 100,
             "Net_Equity": equity - 100, "Active_Bikes": 4, "Owned_Transferred_Bikes": 1,
             "Pending_Claims": 0, "Partner1_Reinvestment_Balance": 30, "Partner2_Reinvestment_Balance": 20,
             "Operating_Revenue": 250, "Operating_Expenses": 10, "Operating_Net_Profit": 240,
@@ -69,7 +69,7 @@ def daily_rows(trial):
             "Gross_Bike_Assets": 1000, "Accumulated_Depreciation": 100,
         },
         {
-            "date": END_DATE, "Final_Close_Date": END_DATE, "Cash": int(trial["final_cash"]),
+            "date": END_DATE, "trial_id": int(trial["trial_id"]), "Final_Close_Date": END_DATE, "Cash": int(trial["final_cash"]),
             "Net_Equity": equity, "Active_Bikes": 0, "Owned_Transferred_Bikes": 1,
             "Pending_Claims": 0, "Partner1_Reinvestment_Balance": 0, "Partner2_Reinvestment_Balance": 0,
             "Operating_Revenue": 0, "Operating_Expenses": 0, "Operating_Net_Profit": 0,
