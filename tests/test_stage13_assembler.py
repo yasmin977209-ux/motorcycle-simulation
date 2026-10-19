@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 import hashlib
+import json
 
+import monte_carlo
 import pytest
 from openpyxl import load_workbook
 
@@ -19,10 +22,27 @@ START_DATE = date(2027, 1, 1)
 END_DATE = date(2027, 1, 2)
 
 
+def trial_result_sha256(row):
+    trial_result = monte_carlo.TrialResult(
+        **{key: value for key, value in row.items() if key != "result_sha256"}
+    )
+    raw = json.dumps(
+        asdict(trial_result),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def trial_row(scenario, trial_id, offset):
     equity = 1000 + offset * 100 + trial_id * 10
     return {
-        "scenario_id": scenario, "trial_id": trial_id, "final_close_date": "2027-01-02",
+        "scenario_id": scenario,
+        "collection_probability": int(scenario[1:4]) / 100,
+        "recovery_rate_pct": int(scenario[6:9]),
+        "trial_id": trial_id, "final_close_date": "2027-01-02",
         "final_net_project_equity": equity, "final_cash": equity + 100,
         "cumulative_project_profit": trial_id * 100 - 250,
         "operating_net_profit": trial_id * 10, "termination_count": trial_id % 4,
@@ -234,9 +254,7 @@ def adaptive_data(stable_counts=None):
         stable_at_n = stable_counts[scenario]
         rows = [trial_row(scenario, trial_id, offset) for trial_id in range(1, stable_at_n + 1)]
         for row in rows:
-            row["result_sha256"] = hashlib.sha256(
-                f"synthetic|{scenario}|{row['trial_id']}".encode("utf-8")
-            ).hexdigest()
+            row["result_sha256"] = trial_result_sha256(row)
         trials[scenario] = rows
         total_trials += len(rows)
 
@@ -411,6 +429,22 @@ def test_adaptive_mode_recomputes_aggregate_trial_fingerprint_map():
     data = adaptive_data()
     data["manifest"]["ordered_trial_hash_map_sha256"] = "a" * 64
     with pytest.raises(RuntimeError, match="ADAPTIVE_ORDERED_MAP_SHA_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_trial_result_value_with_detached_sha256():
+    data = adaptive_data()
+    row = data["trials_by_scenario"]["C030_G030"][0]
+    row["final_net_project_equity"] += 1
+    with pytest.raises(RuntimeError, match="ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH"):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
+def test_adaptive_mode_rejects_trial_result_schema_drift():
+    data = adaptive_data()
+    row = data["trials_by_scenario"]["C030_G030"][0]
+    del row["collection_probability"]
+    with pytest.raises(RuntimeError, match="ADAPTIVE_TRIAL_RESULT_SCHEMA_MISMATCH"):
         _validate_mode_and_identity(data, mode="adaptive")
 
 
