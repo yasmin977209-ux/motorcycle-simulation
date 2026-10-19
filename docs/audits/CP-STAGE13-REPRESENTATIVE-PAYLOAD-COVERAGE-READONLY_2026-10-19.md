@@ -26,3 +26,12 @@ Next permitted step is an existing-input inventory: obtain/read the exact canoni
 ## Note on repository write boundary
 
 An earlier attempt to save this audit omitted the target branch argument and unexpectedly created this file on `main` in commit `b70cc0b7517b4f5f8a559b035bea166059b269ea`. The before/after compare returned exactly one added path (this audit file); `main/state.json` blob is unchanged. This was an unintended write. No additional action on `main` will be taken absent the separately required owner authorization to remove/revert that single documentation file.
+
+## Addendum — source-package role count confirmed in main deviation record
+
+A subsequent read of main `docs/stage9a/DEVIATIONS.md` (blob `ac8fb3e2dc65816bb2329aab19d4fe3c88d885d6`), line 25, states literally: “The enriched scenario artifact contains `trial_results.parquet`, `daily_distribution.parquet`, four representative JSON payloads, and fingerprints; it does not contain an individual daily accounting ledger for all trials.” This moves the fifth-role finding from merely a count-based possibility to a **documented source-contract gap**: the approved Max Case role was added after the artifact package contract that contains four representative payloads.
+
+Candidate `load_dataset` iterates `P10`, `P50`, `P90`, `Loss`, and `Max Case`; missing payloads for a populated non-demo scenario are fatal, and representative validation also requires a nonempty daily record. The current source package description expressly supplies only four representative payloads. The candidate therefore cannot claim complete canonical five-role input coverage from the documented enriched package contract as-is. This is a source/input-contract mismatch, not proof that a particular artifact byte stream has been opened in this session; no zip containing the 25 current enriched packages was available for member-level enumeration.
+
+**Updated disposition:** `INPUT_CONTRACT_MISMATCH_DOCUMENTED / MAX_CASE_PAYLOAD_MISSING_FROM_SPECIFIED_FOUR-ROLE-PACKAGE_CONTRACT / CANDIDATE_CANONICAL_BUILD_NOT_VERIFIED`. The approved fifth role must be produced from an identity-matched, already-authorized source of the selected trial's summary and full daily accounting, or a separately approved data-contract decision. No representative trial IDs are changed, no missing daily rows are synthesized, and no historical trials are rerun here. The Stage 13 candidate's exact-branch workflow authorization conflict remains in force.
+
