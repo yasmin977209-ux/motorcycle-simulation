@@ -1297,3 +1297,19 @@ Authorization conflict remains for exact-branch test workflows. Earlier Run 3899
 
 Next: continue independent non-protected work. Do not accept this candidate or modify C100 cohort/history semantics until scope authorization and the Gate B interpretation are resolved.
 
+## MAIN-WRITE INCIDENT — unintended one-file audit + continuity-file addition — 2026-10-19
+
+**Severity:** protected-branch boundary violation by assistant tool invocation; explicit owner decision is required before correction. No claim that this was authorized.
+
+**Exact before/after evidence:**
+- Main before: `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Main after: `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5` (two commits ahead, zero behind).
+- GitHub compare says exactly two added paths: `docs/audits/CP-STAGE13-REPRESENTATIVE-PAYLOAD-COVERAGE-READONLY_2026-10-19.md` (24 lines, commit `b70cc0b7517b4f5f8a559b035bea166059b269ea`, blob `88f4849bdc16ecf4875311b8586e0b679bda2dd2`) and `docs/PROJECT_CONTINUITY.md` (1,311 additions, commit `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`, blob `08c9024b8a7de439cfd206c5225b97c712123eaa`).
+- Cause: two GitHub API write calls omitted the `branch` argument; these APIs defaulted to `main`. I then verified the after-state instead of assuming that the writes landed on the intended continuity branch.
+- Main `state.json` remains blob `2178260bb18efeb81437486f13b6d10cf5e85936`; still stage `12-CLOSED`, `FINAL_DELIVERY_BLOCKERS_OPEN`, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`. The two-file compare identifies no model, test, Workflow, data/Parquet, reference or state file modification.
+- Intended copies are also saved/read back on the continuity branch where expected; the C100 audit was read back at blob `fc2e878a30e019726618db4dc18efabf92f59e79`, and the representative payload audit at `9b29279b5211db504ef66b040f0bf3f6bb3caf21`.
+
+**Disposition:** I will not perform any further write on `main` (including deletion or rollback) without a separate, explicit owner approval for the exact correction scope. This leaves the accidental documentation changes present until that authorization is given. No merge, PR closure, Release, production workflow, CLI, Monte Carlo, Trial, or Checkpoint was run.
+
+**Request required:** authorize either (a) removing the two added files from main while retaining them on the continuity branch, or (b) leaving main unchanged from this point and handling the incident only as a documented governance exception. Until an owner decision, no main edit is permitted.
+
