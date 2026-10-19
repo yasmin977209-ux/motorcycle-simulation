@@ -170,17 +170,6 @@ def test_canonical_identity_loader_requires_the_reviewed_stage11_blob():
     )
 
 
-def test_canonical_identity_loader_requires_the_reviewed_stage11_blob():
-    identity = _load_canonical_dataset_identity()
-    assert identity["baseline_commit"] == "17f4e8d0ddc1908e2c34bf927ef1d1b7a1c4bf30"
-    assert identity["total_canonical_trials"] == 11005
-    assert identity["scenarios_count"] == 25
-    assert set(identity["per_scenario"]) == set(EXPECTED_SCENARIOS)
-    assert identity["sources"]["stage9a"]["global_manifest_sha256_9005"] == (
-        "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
-    )
-
-
 def test_canonical_identity_loader_rejects_modified_identity_blob(tmp_path: Path):
     original = (
         Path(__file__).resolve().parents[1]
