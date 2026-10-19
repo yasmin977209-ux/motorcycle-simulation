@@ -274,6 +274,21 @@ def test_durable_block_listing_uses_recursive_git_tree_beyond_contents_limit(tmp
         store._block_listing()
 
 
+def test_durable_restore_rejects_empty_inventory_when_checkpoint_is_positive(tmp_path: Path) -> None:
+    store = InMemoryDurableBlockStore(tmp_path / "state.json")
+
+    with pytest.raises(
+        StateIntegrityError,
+        match=r"durable block/state checkpoint mismatch: blocks=0, state=2",
+    ):
+        store.restore_trial_blocks(
+            output_dir=tmp_path / "restored",
+            master_seed=20270101,
+            sampling_policy_id="DOUBLING_FROM_300_V1",
+            expected_completed_trials=2,
+        )
+
+
 def test_durable_block_and_state_commit_atomically_and_restore(tmp_path: Path) -> None:
     store = InMemoryDurableBlockStore(tmp_path / "state.json")
     block_dir = tmp_path / "results_stage7" / "C070_G100" / "blocks"

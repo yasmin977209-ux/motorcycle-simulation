@@ -726,6 +726,11 @@ class StateStore:
         """Restore atomically persisted trial-block triplets and verify every identity."""
         listing = self._block_listing()
         if not listing:
+            if expected_completed_trials != 0:
+                raise StateIntegrityError(
+                    "durable block/state checkpoint mismatch: "
+                    f"blocks=0, state={expected_completed_trials}"
+                )
             return 0
         by_name = {str(item.get("name")): item for item in listing if item.get("type") == "file"}
         parquet_names = {name for name in by_name if name.startswith("block_") and name.endswith(".parquet")}
