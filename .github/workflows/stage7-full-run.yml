@@ -238,6 +238,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "results_stage7/${SCENARIO}/blocks"
+          STATE_BRANCH="stage7-state/${SCENARIO}"
 
           # Use the same complete, truncation-aware Git-tree inventory as the
           # actual durable restore path. Do not turn API failures into an empty
@@ -267,7 +268,7 @@ jobs:
           fi
 
           PREVIOUS_RUN_ID="$(
-            gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=stage7-state/${SCENARIO}" 2>/dev/null |
+            gh api "repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}" 2>/dev/null |
               jq -r '.content // empty' | tr -d '\n' | base64 -d 2>/dev/null |
               jq -r '.run_id // empty' 2>/dev/null || true
           )"
@@ -279,7 +280,7 @@ jobs:
           ARTIFACT_ID="$(
             gh api --paginate \
               "repos/${GITHUB_REPOSITORY}/actions/runs/${PREVIOUS_RUN_ID}/artifacts?per_page=100" \
-              --jq '.artifacts[]? | select(.name | startswith("stage7-blocks-'"'${SCENARIO}'"'-")) | [.id,.created_at] | @tsv' \
+              --jq '.artifacts[]? | select(.name | startswith("stage7-blocks-'"${SCENARIO}"'-")) | [.id,.created_at] | @tsv' \
               | sort -k2 | tail -1 | cut -f1
           )"
           if [ -z "${ARTIFACT_ID}" ]; then
