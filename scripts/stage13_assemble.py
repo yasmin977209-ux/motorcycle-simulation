@@ -831,15 +831,15 @@ def _load_canonical_dataset_identity(
         and identity.get("total_canonical_trials") == EXPECTED_CANONICAL_TRIAL_COUNT
         and identity.get("scenarios_count") == len(EXPECTED_SCENARIOS)
         and isinstance(stage7, dict)
-        and stage7.get("run_id") == 37225915321
+        and str(stage7.get("run_id")) == "37225915321"
         and stage7.get("source_sha") == EXPECTED_SOURCE_SHA
         and stage7.get("trial_range") == [1, 450]
         and isinstance(stage9a, dict)
-        and stage9a.get("run_id") == 37671448546
+        and str(stage9a.get("run_id")) == "37671448546"
         and stage9a.get("global_manifest_sha256_9005")
         == EXPECTED_CANONICAL_STAGE9A_GLOBAL_SHA256
         and isinstance(stage10, dict)
-        and stage10.get("run_id") == 37709936740
+        and str(stage10.get("run_id")) == "37709936740"
         and stage10.get("source_sha", EXPECTED_SOURCE_SHA) == EXPECTED_SOURCE_SHA
         and stage10.get("trial_range") == [451, 550]
         and isinstance(validation, dict)
