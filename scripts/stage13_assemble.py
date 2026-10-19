@@ -879,6 +879,8 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
         if ids != list(range(1, stable_at_n + 1)):
             raise RuntimeError(f"ADAPTIVE_TRIAL_COVERAGE_MISMATCH: {scenario}")
         expected_total += stable_at_n
+        expected_collection_probability = int(scenario[1:4]) / 100.0
+        expected_recovery_rate_pct = int(scenario[6:9])
         for row in rows:
             digest = row.get("result_sha256")
             if not _valid_sha256(digest):
@@ -887,6 +889,34 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             if digest != computed_digest:
                 raise RuntimeError(
                     f"ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH: {scenario}:{row.get('trial_id')}"
+                )
+
+            # A valid digest binds values together, but does not by itself prove
+            # that the values belong to the scenario named by the cohort key.
+            actual_collection_probability = row["collection_probability"]
+            actual_recovery_rate_pct = row["recovery_rate_pct"]
+            try:
+                collection_probability_matches = (
+                    not isinstance(actual_collection_probability, bool)
+                    and isinstance(
+                        actual_collection_probability,
+                        (int, float, np.integer, np.floating),
+                    )
+                    and math.isfinite(float(actual_collection_probability))
+                    and float(actual_collection_probability)
+                    == expected_collection_probability
+                )
+            except (OverflowError, TypeError, ValueError):
+                collection_probability_matches = False
+            recovery_rate_matches = (
+                not isinstance(actual_recovery_rate_pct, bool)
+                and isinstance(actual_recovery_rate_pct, (int, np.integer))
+                and int(actual_recovery_rate_pct) == expected_recovery_rate_pct
+            )
+            if not collection_probability_matches or not recovery_rate_matches:
+                raise RuntimeError(
+                    "ADAPTIVE_TRIAL_SCENARIO_PARAMETER_MISMATCH: "
+                    f"{scenario}:{_trial_id(row)}"
                 )
             ordered_fingerprints.append(f"{scenario}|{_trial_id(row)}|{digest}\n")
 
