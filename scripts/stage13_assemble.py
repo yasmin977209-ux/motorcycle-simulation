@@ -946,6 +946,11 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             for status_key in ("gate_a_status", "gate_b_status", "section_2_5_status"):
                 if entry.get(status_key) not in allowed_statuses:
                     raise RuntimeError(f"ADAPTIVE_CHECKPOINT_STATUS_INVALID: {scenario}:{expected_n}:{status_key}")
+            if entry.get("gate_a_status") != "PASS":
+                raise RuntimeError(
+                    "ADAPTIVE_GATE_A_CHECKPOINT_NOT_PASS: "
+                    f"{scenario}:{expected_n}:{entry.get('gate_a_status')}"
+                )
             metrics = entry.get("section_2_5_metrics")
             if not isinstance(metrics, dict) or set(metrics) != set(ADAPTIVE_CHECKPOINT_METRICS):
                 raise RuntimeError(f"ADAPTIVE_SEVEN_METRIC_EVIDENCE_MISSING: {scenario}:{expected_n}")
