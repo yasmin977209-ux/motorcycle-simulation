@@ -28,3 +28,18 @@
 Correct synthetic rows must pass; changed values with stale hashes, missing fields, or extra fields must fail closed. The code/test read-back alone is not runtime verification. Do not claim PASS until the exact amended candidate SHA is tested through an explicitly permitted path. The prior Run `38995349182` remains evidence only for its earlier exact SHA.
 
 **Pre-change status: R4 recorded; candidate implementation not yet modified.**
+
+
+## Append-only implementation and test-boundary addendum — 2026-10-19
+
+After recording the R4 above, the same narrow code/test correction was ported by file content (not by merging the broad adaptive branch) onto this clean-main compatibility candidate:
+
+- Assembler implementation commit: `8f0836bf80b82746f7c181d075204c4acea3a17c`; new blob `1548d4393cd79922abfd570f1c9a90454d7e40fe`.
+- Test commit: `76b6876049b5f9866511ebc96760693432f33182`; new blob `68c64ea6a63c12b0cbc8602db44cdfa15d23c094`.
+- The assembler and test blobs now match the independently read-back versions on `tmp/cp-stage13-adaptive-assembler-20261017`. The compatibility orchestrator remains at blob `8dec3578a8221a6b12fb0915103cb09664f20a96`; its public adapter/API file was not changed by this correction.
+
+The imported test file includes regressions for a changed outcome with a stale digest and missing TrialResult field. This is only a source/test edit and read-back.
+
+**Runtime execution remains PENDING/BLOCKED.** The two authorization records in this same branch disagree: `OWNER_SCOPE_AUTHORIZATION_20261017.md` describes a temporary workflow approval for this branch, while the controlling R4 text says that prior approval was pinned elsewhere and is not reused here. Because the records conflict, this CP did not edit/create/trigger a workflow. No pytest run or workbook build was performed on this amended branch. The earlier Run `38995349182` remains evidence for its older SHA only.
+
+**Candidate identity after the two code/test commits:** branch `tmp/cp-stage13-excel-compat-20261017`; latest code/test readback is pending final branch-head confirmation. Base/main remains `647c19826b90d8224ce73ef9b90c306a45e03fb0). Keep the candidate `PARTIAL / NOT_READY_TO_MERGE` until the authorization conflict is resolved and the exact amended SHA passes focused tests and physical workbook audit.
