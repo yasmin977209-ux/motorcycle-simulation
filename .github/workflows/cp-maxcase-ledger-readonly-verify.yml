@@ -289,7 +289,7 @@ jobs:
               selected_daily=None; scenario_rows=0; closed_trials=0
               current=None; first_day=None; last_day=None; day_count=0; current_hash=None
               def close_trial():
-                nonlocal current,first_day,last_day,day_count,current_hash,closed_trials,selected_daily
+                global current,first_day,last_day,day_count,current_hash,closed_trials,selected_daily
                 if current is None: return
                 if first_day!=date(2027,1,1): raise RuntimeError(f"STAGE12_FIRST_DATE_MISMATCH scenario={scenario} trial_id={current} date={first_day}")
                 if day_count!=(last_day-first_day).days+1: raise RuntimeError(f"STAGE12_DAILY_GAP_OR_DUPLICATE scenario={scenario} trial_id={current} rows={day_count} span={(last_day-first_day).days+1}")
