@@ -1470,3 +1470,11 @@ Append-only closeout revalidation report: [SESSION-CLOSEOUT-REVALIDATION_2026-10
 - Report: `docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md`, commit `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; the report is pending read-back verification at the time of this ledger append.
 - Live Releases endpoint returned an empty list. P17 read-back report blob `412014b4ec58b52b3e62edcd69c433554bb1abd6` concluded `NOT_ACCEPTED`; the owner's conditional Release permission is therefore not activated.
 - P18 disposition: `BLOCKED`; no Release/tag/publication/merge action was taken.
+
+
+## P18 write-scope incident — correction appended 2026-10-20
+
+- **Correction to the preceding P18 entry:** the create-file call omitted its branch parameter, so `docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md` was inadvertently created on `main`, contrary to the project's no-main-write boundary. The resulting commit is `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; live `main` now resolves to that commit, and the file was re-read from `main` with blob `78427954df76ae7eb66cde284e2cb6351a4e8236`.
+- The report sentence claiming that no `main` change occurred in this P18 disposition is inaccurate due to this documentation write. This incident is preserved; no rollback, deletion, or further write to `main` was attempted because that would be another protected action.
+- The release decision itself remains `BLOCKED`: Releases endpoint was empty, P17 verdict is `NOT_ACCEPTED`, and no Release/tag/publication was created.
+- **Required owner action:** explicitly decide whether to leave this documentation-only main commit in place or authorize a specific corrective action. Until then, avoid further writes to `main`; continue only on temporary/continuity branches.
