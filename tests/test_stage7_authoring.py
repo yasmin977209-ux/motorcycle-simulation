@@ -702,7 +702,8 @@ def test_stage7_restore_prefers_durable_blocks_and_proves_legacy_artifact_identi
     start = text.index("      - name: Restore previous scenario block artifacts when available")
     end = text.index("      - name: Adaptive scenario orchestration", start)
     restore = text[start:end]
-    assert "contents/stage7-blocks?ref=${STATE_BRANCH}" in restore
+    assert "store._block_listing()" in restore
+    assert "contents/stage7-blocks?ref=${STATE_BRANCH}" not in restore
     assert "restoration delegated to StateStore" in restore
     assert 'contents/state.json?ref=${STATE_BRANCH}' in restore
     assert "PREVIOUS_RUN_ID=" in restore
