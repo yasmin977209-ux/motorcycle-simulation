@@ -1363,3 +1363,14 @@ No production Stage 7 workflow/CLI/Monte Carlo/Trial/Checkpoint, source/seed/RNG
 
 **Protected-branch incident remains open:** main is `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`, exactly two documentation additions ahead of `647c19826b90d8224ce73ef9b90c306a45e03fb0`; `state.json` remains blob `2178260bb18efeb81437486f13b6d10cf5e85936`. No more main writes, including rollback, until separate explicit owner approval.
 
+
+
+## CP-STAGE13-REAL-ARTIFACT-REPRESENTATIVE-PAYLOAD-INSPECTION — 2026-10-19
+
+**Report:** [docs/audits/CP-STAGE13-REAL-ARTIFACT-REPRESENTATIVE-PAYLOAD-INSPECTION_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-STAGE13-REAL-ARTIFACT-REPRESENTATIVE-PAYLOAD-INSPECTION_2026-10-19.md), read-back blob `0982723b6f7fc6d66a815091bcbf78b9d7ad4718`, 4,674 characters.
+
+**Artifact inspected:** Stage 9A enriched artifact ID `11497409735`; ZIP 4,781,258 bytes / SHA-256 `9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07`; inner scenario TAR 6,827,620 bytes / SHA-256 `a2403a9175ef85ec30663fbdb7ecd322c88beaf9672e1b73b30488312cd4aa10`. The physical `C030_G030` TAR contains P10 trial 235, P50 trial 156, P90 trial 67 and Loss trial 359, each with daily rows; it contains no MaxCase payload. All four representative JSON hashes and row counts are recorded in the report. Parquet members were byte-hashed and listed, but not parsed because this inspection environment lacks a Parquet reader.
+
+**R4 disposition:** confirms the four-role source-package contract for this actual archive, while normative D-2026-10-10-03 requires five roles including MaxCase. Candidate Stage13 requires all five, so canonical input is blocked rather than silently accepting a missing fifth role. Classification `MISSING_EVIDENCE / SOURCE_CONTRACT_MISMATCH`. A separate independent inventory entry records that all 25 source TARs were also inspected with the same four-role result; this single-artifact report is corroborating evidence, not the whole-cohort inventory.
+
+**Boundaries:** no Trial/Monte Carlo/CLI/Checkpoint, Workflow, test, workbook, or data write. No main/state/reference/source/RNG/sampling/cohort/Trial change, merge, PR closure or Release. Main state remains `12-CLOSED / FINAL_DELIVERY_BLOCKERS_OPEN`; Stage13 is partial and unaccepted.
