@@ -1382,3 +1382,23 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
     ]
     assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
     assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
+
+def test_stage7_legacy_restore_detection_uses_complete_durable_tree_inventory() -> None:
+    workflow = _workflow_text()
+    start = workflow.index(
+        "      - name: Restore previous scenario block artifacts when available"
+    )
+    end = workflow.index(
+        "      - name: Prepare CP3 overlap reference",
+        start,
+    )
+    legacy_restore = workflow[start:end]
+    state_module = Path(
+        REPO_ROOT / "scripts" / "stage7_state.py"
+    ).read_text(encoding="utf-8")
+
+    assert "store._block_listing()" in legacy_restore
+    assert "contents/stage7-blocks?ref=" not in legacy_restore
+    assert "git/trees/{tree_sha}?recursive=1" in state_module
+    assert 'if tree_payload.get("truncated") is True' in state_module
+
