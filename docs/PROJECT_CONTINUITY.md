@@ -1172,3 +1172,20 @@ Verification: files read back from GitHub; Pytest/YAML parser/Workflow not run b
 **Disposition:** `PASS_AUTHORING_VERIFY_ON_EXACT_CANDIDATE_SHA; CP_R4_PARTIAL; NOT_READY_TO_MERGE_OR_DELIVER`.
 
 **Next permitted action:** continue the independent CP-Governance / Stage 9C–11–13 review without touching protected state. Keep the CP3 acceptance question pending approval; retain the existing SOURCE_SHA and Gate A production blockers.
+
+
+## CP-STAGE13-TRIAL-FINGERPRINT-BINDING — 2026-10-19
+
+**Audit report:** [CP-STAGE13-TRIAL-FINGERPRINT-BINDING_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-STAGE13-TRIAL-FINGERPRINT-BINDING_2026-10-19.md); fetched back as blob `e902d4514a923219c3c541e95acb970dec08b0d3`.
+
+**R4 before edit:** `docs/stage13/R4_trial_fingerprint_binding_20261019.md) was first created and read back on `tmp/cp-stage13-adaptive-assembler-20261017` before code/test edits. The source-backed hash contracts were inspected in main `scripts/stage7_run_trial_block.py` blob `33527f198bafadcb7ac8d06b2a72e142deb268ac` and `scripts/stage12_gateb_n600_audit.py` blob `dd9b4c738e065f4f62139efe131df75c37f41dac`: the digest is SHA-256 of canonical JSON representing the TrialResult values.
+
+**Finding:** the Stage 13 adaptive candidate only validated the shape of each `result_sha256) value and hashed those supplied strings into the aggregate map. It did not recompute each digest from that row's TrialResult fields. That was a candidate-only `K_CODE) fingerprint-binding gap, not evidence of production data tampering.
+
+**Candidate-only change:** branch `tmp/cp-stage13-adaptive-assembler-20261017`, base/main `647c19826b90d8224ce73ef9b90c306a45e03fb0`. Implementation commit `ba78fa59c9d30f433f2ed8e80739d9d010a7ea1d`, assembler blob `1548d4393cd79922abfd570f1c9a90454d7e40fe). Test commit `702d6dc3becbdce0b284656209403abe68d1a3e4`, test blob `68c64ea6a63c12b0cbc8602db44cdfa15d23c094). After appending the candidate report, current HEAD is `8f690adbbd7ec533a50028dab8c5d78ba0c370bb). The code now requires the 18 exact TrialResult fields plus `result_sha256), recomputes the digest with the established serializer, and fails closed on schema or digest mismatch before aggregate-map use. The synthetic fixture uses `monte_carlo.TrialResult` and the same serialization; two regression tests cover stale digest after outcome mutation and missing field.
+
+**Verification boundary:** GitHub read-back confirms the changed source/test blobs and key fail-closed markers. No runtime test was run on the amended HEAD. The temporary adaptive test workflow used for historical Run `38995349182` was removed after its authorized execution; this CP did not recreate/modify a workflow. Exact-head tests are `PENDING/BLOCKED), not PASS. The broad candidate branch is 67 commits ahead / 0 behind main and has 21 changed paths; do not merge the branch as a whole.
+
+**Protected state unchanged:** main `647c19826b90d8224ce73ef9b90c306a45e03fb0), main `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`, stage `12-CLOSED), `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`, `source_sha=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`. Stage 9C remains historically `PARTIAL); Gate A provider and source drift remain blockers; `scripts/stage13_assemble.py` is still absent from main. PR #46 remains open/Draft/unmerged. No production workflow, simulation, trial, checkpoint, historical data, main, merge or Release action occurred.
+
+**Next permitted action:** continue an independent static review of the clean-main Stage 13 compatibility candidate and its existing R4/authorization records; resolve the documented conflict about whether a new exact-branch synthetic test workflow is authorized before attempting any new workflow change. No project delivery or merge acceptance is implied.
