@@ -32,6 +32,26 @@ ADAPTIVE_CHECKPOINT_METRICS = (
     "P90_Termination_Count",
     "P90_Held_Assets",
 )
+ADAPTIVE_TRIAL_RESULT_FIELDS = (
+    "scenario_id",
+    "collection_probability",
+    "recovery_rate_pct",
+    "trial_id",
+    "final_close_date",
+    "final_net_project_equity",
+    "final_cash",
+    "cumulative_project_profit",
+    "operating_net_profit",
+    "termination_count",
+    "secondary_cycle_count",
+    "owned_bikes",
+    "held_assets",
+    "total_operating_revenue",
+    "bad_debt",
+    "guarantee_recovered",
+    "partner1_final_entitlement",
+    "partner2_final_entitlement",
+)
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 EXPECTED_SCENARIOS = [
@@ -763,6 +783,28 @@ def _valid_sha256(value):
     return isinstance(value, str) and SHA256_RE.fullmatch(value) is not None
 
 
+def _adaptive_trial_result_sha256(row):
+    """Hash the exact source-defined TrialResult payload, excluding its sidecar digest."""
+    expected_fields = set(ADAPTIVE_TRIAL_RESULT_FIELDS) | {"result_sha256"}
+    if not isinstance(row, dict) or set(row) != expected_fields:
+        actual_fields = set(row) if isinstance(row, dict) else set()
+        missing = sorted(expected_fields - actual_fields)
+        extra = sorted(actual_fields - expected_fields)
+        raise RuntimeError(
+            "ADAPTIVE_TRIAL_RESULT_SCHEMA_MISMATCH: "
+            f"missing={missing}; extra={extra}"
+        )
+    trial_result = {field: row[field] for field in ADAPTIVE_TRIAL_RESULT_FIELDS}
+    raw = json.dumps(
+        trial_result,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def _required_nonempty_string(mapping, key, error_code):
     value = mapping.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -841,6 +883,11 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             digest = row.get("result_sha256")
             if not _valid_sha256(digest):
                 raise RuntimeError(f"ADAPTIVE_TRIAL_FINGERPRINT_INVALID: {scenario}:{row.get('trial_id')}")
+            computed_digest = _adaptive_trial_result_sha256(row)
+            if digest != computed_digest:
+                raise RuntimeError(
+                    f"ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH: {scenario}:{row.get('trial_id')}"
+                )
             ordered_fingerprints.append(f"{scenario}|{_trial_id(row)}|{digest}\n")
 
         history = metadata.get("checkpoint_history")
