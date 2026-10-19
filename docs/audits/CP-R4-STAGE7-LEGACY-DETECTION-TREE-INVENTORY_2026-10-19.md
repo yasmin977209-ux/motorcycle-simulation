@@ -67,3 +67,17 @@ No production Workflow was executed, and the candidate `stage7-full-run.yml` tri
 | Acceptance | Current tree/truncation guard is tested separately, but whole focused suite fails on this stale assertion. | Same CP-R4 scope. | Exact candidate-head authoring Workflow must complete all steps. | `PENDING_VERIFICATION` until a new push-run confirms the corrected candidate SHA. |
 
 No business logic, model source, Workflow, seed/RNG, sampling/cohort/trial IDs, historical data, main, state, reference, or production output changes are needed for this test-only repair. No production workflow may be triggered.
+
+## Exact-SHA revalidation and test-only repair — latest 2026-10-19
+
+The earlier run-status statement above has been superseded by the newly available GitHub Actions run inventory:
+- Run `39187134699`, branch `tmp/cp-stage7-timeout-parallelism-20261019`, exact tested SHA `2a127d78422236471ff233f2bf30e99437106570`, event `push`.
+- Job `verify` ID `117851821706`, outcome `failure`. AST parsing and YAML lint passed; test output was exactly `1 failed, 78 passed in 0.62s`.
+- Literal failure was the obsolete assertion at `tests/test_stage7_authoring.py:705`: `assert "contents/stage7-blocks?ref=${STATE_BRANCH}" in restore`. The candidate intentionally replaced that inventory with `store._block_listing()`; hence the classification is `K_TEST`, not a runtime failure in the new tree inventory.
+
+R4 for this correction was recorded above before editing tests. On candidate-only branch, changed only `test_stage7_restore_prefers_durable_blocks_and_proves_legacy_artifact_identity` to require `store._block_listing()` and assert the legacy Contents listing is absent, retaining its existing assertions for the historical artifact/run identity proof, source/seed Workflow proof and fail-closed migration. Candidate tests blob is now `4afba1c7c66a60560bbe148cd503c38a67b9c4dd`, with 79 test functions; candidate HEAD is `12a30e69c1fd406683ba97cc824c9d27b9fce918`. The Stage 7 full-run Workflow blob remains `b686004505f57e123708ce2d0aacce38b3d5033e`; state module blob remains `5615178a40200dec90247b6ddae63cd93c07126f`.
+
+A new authoring-only push run is visible: `39188323789`, exact head `12a30e69c1fd406683ba97cc824c9d27b9fce918`, status `in_progress` at the one permitted inspection. Per M4, this running Run is not polled further in this session; no conclusion is available yet. Do not label it PASS or infer its final result. No artifact has been inspected or produced for this Run.
+
+No Stage 7 production workflow, CLI, Monte Carlo, Trial, Checkpoint, source/seed/RNG/sampling/cohort/history data change, main/state/reference edit, merge, PR closure or Release occurred within this CP. Candidate remains `PARTIAL / AUTHORING_VERIFICATION_IN_PROGRESS / NOT_READY_TO_MERGE` until a completed exact-head result is available.
+
