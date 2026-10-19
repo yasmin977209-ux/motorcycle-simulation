@@ -194,10 +194,34 @@ def representative_rows(rep_path: Path, scenario: str):
     rep = load_json(rep_path)["scenarios"][scenario]
     result = {}
     for label, trial_id in rep.items():
-        if label not in {"P10", "P50", "P90", "Loss"}:
-            continue
-        result[label] = int(trial_id)
+        if label in {"P10", "P50", "P90", "MaxCase", "LossCase"}:
+            result[label] = int(trial_id)
+        elif label == "Loss":
+            # Preserve the legacy source filename/key while exposing the governing role name.
+            result["LossCase"] = int(trial_id)
     return result
+
+
+REPRESENTATIVE_PAYLOADS = (
+    ("P10", "P10"),
+    ("P50", "P50"),
+    ("P90", "P90"),
+    ("LossCase", "Loss"),
+    ("MaxCase", "MaxCase"),
+)
+
+
+def representative_daily_value(label: str, daily: dict, field: str):
+    value = daily.get(field)
+    if value is not None:
+        return value
+    if label == "MaxCase" and field in {
+        "Partner1_Reinvestment_Balance",
+        "Partner2_Reinvestment_Balance",
+        "Cumulative_Project_Profit",
+    }:
+        return "PENDING_DATA_SOURCE"
+    return None
 
 
 def write_readme(wb, manifest, validation, excel_errors):
@@ -415,8 +439,8 @@ def write_representatives(wb, manifest, rep_path):
     rows = []
     rep_all = load_json(rep_path)["scenarios"]
     for s in EXPECTED_SCENARIOS:
-        for label in ("P10","P50","P90","Loss"):
-            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, label)
+        for label, payload_label in REPRESENTATIVE_PAYLOADS:
+            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, payload_label)
             summary = payload["summary"]
             rows.append([
                 s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
@@ -431,9 +455,10 @@ def write_representatives(wb, manifest, rep_path):
                     s,label,"DAILY",summary["trial_id"],daily.get("date"),daily.get("Final_Close_Date"),
                     daily.get("Cash"),daily.get("Net_Equity"),daily.get("Active_Bikes"),
                     daily.get("Owned_Transferred_Bikes"),daily.get("Pending_Claims"),
-                    daily.get("Partner1_Reinvestment_Balance"),
-                    daily.get("Partner2_Reinvestment_Balance"),
-                    None,None,None,None,None,None,None,None,None,None
+                    representative_daily_value(label, daily, "Partner1_Reinvestment_Balance"),
+                    representative_daily_value(label, daily, "Partner2_Reinvestment_Balance"),
+                    None,None,representative_daily_value(label, daily, "Cumulative_Project_Profit"),
+                    None,None,None,None,None,None,None
                 ])
     write_table(
         ws,
