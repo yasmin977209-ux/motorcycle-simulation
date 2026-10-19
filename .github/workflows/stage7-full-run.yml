@@ -245,22 +245,22 @@ jobs:
           # directory result: that could incorrectly enter legacy-artifact migration.
           DURABLE_BLOCKS_COUNT="$(
             python - <<'PY'
-            import os
-            from pathlib import Path
+          import os
+          from pathlib import Path
 
-            from scripts.stage7_state import StateStore
+          from scripts.stage7_state import StateStore
 
-            store = StateStore(
-                repo=os.environ["GITHUB_REPOSITORY"],
-                token=os.environ["GH_TOKEN"],
-                scenario=os.environ["SCENARIO"],
-                source_sha=os.environ["SOURCE_SHA"],
-                run_id=os.environ["GITHUB_RUN_ID"],
-                run_attempt=os.environ["GITHUB_RUN_ATTEMPT"],
-                local_path=Path("state.json"),
-            )
-            print(len(store._block_listing()))
-            PY
+          store = StateStore(
+              repo=os.environ["GITHUB_REPOSITORY"],
+              token=os.environ["GH_TOKEN"],
+              scenario=os.environ["SCENARIO"],
+              source_sha=os.environ["SOURCE_SHA"],
+              run_id=os.environ["GITHUB_RUN_ID"],
+              run_attempt=os.environ["GITHUB_RUN_ATTEMPT"],
+              local_path=Path("state.json"),
+          )
+          print(len(store._block_listing()))
+          PY
           )"
           if [ "${DURABLE_BLOCKS_COUNT}" -gt 0 ]; then
             echo "STAGE7_DURABLE_BLOCKS_PRESENT=SCENARIO:${SCENARIO}; restoration delegated to StateStore"
