@@ -1239,3 +1239,20 @@ The raw repository diagnostic Run `38164248220` remains historical `11 failed, 3
 **Boundaries:** only the temporary candidate branch changed. No main/state/report main path, reference, source, workflow, test, Parquet/data/trial, workbook, RNG/seed, cohort, threshold, Stage 10 run, merge, PR closure, or Release action occurred. Main `state.json` blob remains `2178260bb18efeb81437486f13b6d10cf5e85936` and main status remains `FINAL_DELIVERY_BLOCKERS_OPEN`.
 
 **Next permitted action:** independent read-only check of the two appended documents against the exact diff and all 3 candidate commits, then update the output manifest. No merge is authorized or performed.
+
+
+## CP-SOURCE-SHA-DRIFT-ROOT-CAUSE-READONLY — 2026-10-19
+
+**Audit report:** [CP-SOURCE-SHA-DRIFT-ROOT-CAUSE-READONLY_2026-10-19.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-session-continuity-20261017/docs/audits/CP-SOURCE-SHA-DRIFT-ROOT-CAUSE-READONLY_2026-10-19.md), read-back blob `980b385a49bfe3ea2723c70b09ea40b648b8970d`, 6,334 characters.
+
+**R4/root cause:** pinned `daily_engine.py` blob at source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` is `6c4496c3e9a9b41668c3d93063ad31d96df5f878` (1,162 lines). Main blob is `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964` (1,173 lines). An exact LCS diff found 11 additions, 0 deletions: only the compatibility adapter `_create_contract(...)` delegating to `_new_contract(...)`, inserted at lines 137–145. Existing lines are unchanged. History attributes this addition to merged CP-3B commit `07cfb2ec122d6ae5bb60b81680b3b8b5b5047116`, PR #40; PR #41 later reconciled state only. This identifies the cause, but the new alias changes source byte identity.
+
+**Existing test evidence:** CP-3B Run `38314258251`, tested head `3e01bf1f8a8155cff81f25f933d2d4b210336870`, conclusion `success`; exact log `370 passed, 1 skipped, 1 warning in 427.38s`, exit code 0. On that tested head, `daily_engine.py` blob `0d17d1923fbf95ba7f3e4b6ae695bfbf80f85964` is exactly equal to the current main blob, and the integration-test blob also matches main. This is full pytest evidence for those files, not a canonical trial rerun or proof of all numerical outputs remaining identical under the new byte identity.
+
+**Strict gate remains:** main Stage 7 workflow blob `4bb3b8df6742f51087b45eed1b9200468f12ac60` still runs `git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"`, with a fail-closed `MODEL_SOURCE_DRIFT_DETECTED` exit. Main `SOURCE_SHA` remains `f3af...`. So the current production Stage 7 preflight will reject byte drift unless an explicit source-identity decision resolves it. No preflight was run here and no bypass/pin edit is proposed as an automatic action.
+
+**Classification/status:** `SOURCE_SHA_DRIFT / INPUT_IDENTITY_DECISION_REQUIRED`. Root cause established; the gate remains blocked. Need separate owner choice on the source identity policy: either retain existing pin and approve a narrowly scoped treatment for a compatibility-only alias, or approve a new source identity with explicit golden/historical-data compatibility constraints. Neither path can be inferred from the merge or from green pytest alone.
+
+**No change:** no changes to source, workflow, test, main, state, golden data, Parquet, Trial IDs, RNG/seed, sampling, Stage 10, PR state, or Release; no production simulation/trial/checkpoint/CLI was run. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`, stage `12-CLOSED`, `FINAL_DELIVERY_BLOCKERS_OPEN`.
+
+**Next permitted action:** continue independent work that does not depend on changing source identity; keep production Stage 7 fail-closed until a separate explicit owner decision.
