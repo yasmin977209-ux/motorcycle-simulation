@@ -1256,3 +1256,14 @@ The raw repository diagnostic Run `38164248220` remains historical `11 failed, 3
 **No change:** no changes to source, workflow, test, main, state, golden data, Parquet, Trial IDs, RNG/seed, sampling, Stage 10, PR state, or Release; no production simulation/trial/checkpoint/CLI was run. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`, stage `12-CLOSED`, `FINAL_DELIVERY_BLOCKERS_OPEN`.
 
 **Next permitted action:** continue independent work that does not depend on changing source identity; keep production Stage 7 fail-closed until a separate explicit owner decision.
+
+## CP-R4-STAGE7-LEGACY-DETECTION-TREE-INVENTORY — 2026-10-19
+
+R4 report: docs/audits/CP-R4-STAGE7-LEGACY-DETECTION-TREE-INVENTORY_2026-10-19.md (blob 9605238a52a3e9169ca63777a7e13428b7184c26; report commit 471312847544b0b967d2a9ddb7a55324ca2bf872).
+
+Candidate-only change on tmp/cp-stage7-timeout-parallelism-20261019: HEAD 2a127d78422236471ff233f2bf30e99437106570; main base 647c19826b90d8224ce73ef9b90c306a45e03fb0; compare 48 ahead / 0 behind, five files. Workflow blob b686004505f57e123708ce2d0aacce38b3d5033e now uses StateStore._block_listing() rather than the limited Contents API to decide whether durable blocks exist. This avoids swallowing an inventory error as count zero before legacy-artifact fallback. State module blob 5615178a40200dec90247b6ddae63cd93c07126f retains recursive Git-tree enumeration and fails closed on truncation. Test blob c0aff73f0ff05058e44975ffac86382612d3adfd adds a contract test for this behavior; test inventory has 79 test functions.
+
+Read-back caught and corrected a heredoc-indentation issue in the first candidate patch. Latest source review confirms the old migration commands after PREVIOUS_RUN_ID and the source outside that step are unchanged. No Run ID/tested SHA for the final candidate was available: push-run listing returned empty through the connected wrapper and status checks were empty, while GitHub Actions pages returned Cache miss. This is not proof that no run occurred. Status remains READ_BACK_PARTIAL / AUTHORING_RUN_UNVERIFIED; earlier Run 39178436432 only tested SHA 09e66f203915609e3e5a199a11be6a1be890b1d6.
+
+Main remains 647c19826b90d8224ce73ef9b90c306a45e03fb0, main state blob 2178260bb18efeb81437486f13b6d10cf5e85936, 12-CLOSED / FINAL_DELIVERY_BLOCKERS_OPEN. No production workflow, CLI, Monte Carlo, Trial, Checkpoint, main change, merge, PR close, or Release. Continue independent review; do not mark candidate PASS or merge it until exact-head authoring verification is retrieved.
+
