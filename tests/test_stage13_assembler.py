@@ -466,7 +466,7 @@ def test_adaptive_mode_rejects_scenario_parameter_mismatch_with_recomputed_hashe
     # Make the row digest, ordered hash map, and Gate A map claim consistent
     # with the altered row. Validation must still reject the scenario binding.
     ordered_rows = [
-        f"{scenario}|{trial['trial_id']}|{trial['result_sha256']}\\n"
+        f"{scenario}|{trial['trial_id']}|{trial['result_sha256']}\n"
         for scenario in EXPECTED_SCENARIOS
         for trial in data["trials_by_scenario"][scenario]
     ]
