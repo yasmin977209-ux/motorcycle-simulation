@@ -1452,3 +1452,14 @@ Append-only closeout revalidation report: [SESSION-CLOSEOUT-REVALIDATION_2026-10
 - **MaxCase code CP**: `scripts/excel_builder.py` changed only on `tmp/cp-maxcase-loader-20261020`; base `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`; code commit `6886ecdfe78e46cb22c3879efb58eeee9cd310f6`, blob after read-back `34dbcd8fc484eb30568b6a8ec7c2ec207ffa6aa1`. Five output roles are represented (P10/P50/P90/LossCase/MaxCase); legacy `Loss` payload naming is preserved; missing MaxCase daily partner balances and daily cumulative project profit are labelled `PENDING_DATA_SOURCE` rather than fabricated. Diff was reviewed. **Runtime/syntax/regression tests were not run**; Stage 12 → MaxCase payload materialization and full end-to-end workbook acceptance remain unverified.
 - **P16/P17/P18 disposition**: P16 preconditions fail because Gate A production is blocked, source identity drift remains, historical Stage 9C is PARTIAL, and no accepted seven-file set exists. No delivery files were generated. P17 cannot recommend delivery without those same-source artifacts; independent audit must report `NOT_ACCEPTED`/blocking criteria. P18 Release is blocked because P17 has not permitted delivery; no Release created.
 - Protected boundaries: no main write, no state.json/reference/SOURCE_SHA/seed/RNG/cohort/trial/Parquet changes, no tests/workflows modified, no production runs, no merge/PR closure, no Release.
+
+
+## P17 — independent delivery precondition audit — 2026-10-20
+
+- Read-only audit report: `docs/audits/P17-INDEPENDENT-DELIVERY-AUDIT-2026-10-20.md`, commit `b6c26af383c9d6418746d4d77f836340a6bc0646`; report content must be read back before this entry is considered verified.
+- Rechecked `main` HEAD `7c41ac64c4b599f4e1d6a50be055f82cdd87a7b5`, state blob `2178260bb18efeb81437486f13b6d10cf5e85936`, Stage 9C report blob `81fb79720988cfe261fa6d8d29371e616f9f9850`, and Stage 10 metrics blob `2c6fae4952ba45f50686eb09441e5e98f9e5499e`.
+- Audit verdict: `NOT_ACCEPTED`. Gate A production is still BLOCKED, source drift remains, historical Stage 9C remains PARTIAL, final cohort/source identity is not reconciled, and no seven-file package was generated/reopened/audited. The Stage 11 scope decision is `PASS_SCOPED`, not implementation COMPLETE.
+- P16: BLOCKED by the explicit preconditions; no final delivery files were generated.
+- P17: audit completed with blocking verdict `NOT_ACCEPTED`; no repairs were made during the audit.
+- P18: BLOCKED because P17 does not permit delivery; no Release created. The user's conditional permission is not activated.
+- No production simulation/trial/checkpoint, tests, workflows, main/state/reference/data change, merge, PR closure, or Release occurred.
