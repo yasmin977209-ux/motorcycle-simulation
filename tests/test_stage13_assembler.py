@@ -410,6 +410,22 @@ def test_adaptive_mode_rejects_missing_gate_evidence():
         _validate_mode_and_identity(data, mode="adaptive")
 
 
+@pytest.mark.parametrize("gate_a_status", ["BLOCKED", "FAIL", "PENDING"])
+def test_adaptive_mode_rejects_nonpass_historical_gate_a_before_later_pass(
+    gate_a_status,
+):
+    data = adaptive_data({"C085_G100": 1200})
+    history = data["manifest"]["scenarios"]["C085_G100"]["checkpoint_history"]
+    history[1]["gate_a_status"] = gate_a_status
+    # The later N=1200 checkpoint still claims PASS and SCENARIO_STABLE.
+    # A previous non-PASS Gate A must terminally block this assembled cohort.
+    with pytest.raises(
+        RuntimeError,
+        match="ADAPTIVE_GATE_A_CHECKPOINT_NOT_PASS: C085_G100:600:",
+    ):
+        _validate_mode_and_identity(data, mode="adaptive")
+
+
 def test_adaptive_mode_rejects_checkpoint_gap():
     data = adaptive_data({"C030_G030": 1200})
     data["manifest"]["scenarios"]["C030_G030"]["checkpoint_history"].pop(1)
