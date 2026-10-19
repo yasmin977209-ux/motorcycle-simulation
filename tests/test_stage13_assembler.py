@@ -170,9 +170,45 @@ def test_canonical_identity_loader_requires_the_reviewed_stage11_blob():
     )
 
 
+def test_canonical_identity_loader_requires_the_reviewed_stage11_blob():
+    identity = _load_canonical_dataset_identity()
+    assert identity["baseline_commit"] == "17f4e8d0ddc1908e2c34bf927ef1d1b7a1c4bf30"
+    assert identity["total_canonical_trials"] == 11005
+    assert identity["scenarios_count"] == 25
+    assert set(identity["per_scenario"]) == set(EXPECTED_SCENARIOS)
+    assert identity["sources"]["stage9a"]["global_manifest_sha256_9005"] == (
+        "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
+    )
+
+
+def test_canonical_identity_loader_rejects_modified_identity_blob(tmp_path: Path):
+    original = (
+        Path(__file__).resolve().parents[1]
+        / "docs"
+        / "stage11"
+        / "dataset_identity.json"
+    ).read_bytes()
+    altered = tmp_path / "dataset_identity.json"
+    altered.write_bytes(original + b" ")
+
+    with pytest.raises(
+        RuntimeError,
+        match="CANONICAL_DATASET_IDENTITY_BLOB_MISMATCH",
+    ):
+        _load_canonical_dataset_identity(altered)
+
+
 def test_canonical_fingerprint_uses_the_existing_stage7_stage10_float_encoding():
     assert _canonical_scenario_fingerprint([{"trial_id": 1, "value": 1.5}]) == (
         "823067f9ffc1d4067bc35a6da17521881a62fca027f80090f922cd9d9f835425"
+    )
+    # Multi-row fixture independently pins both the float.hex() encoding and
+    # the single literal newline separator between canonical trial rows.
+    assert _canonical_scenario_fingerprint([
+        {"trial_id": 2, "value": 2.0},
+        {"trial_id": 1, "value": 1.5},
+    ]) == (
+        "777a0cd93f188002deb11adda93e1ceb2d297235ea4548c1faeeefeabf2836f8"
     )
 
 
