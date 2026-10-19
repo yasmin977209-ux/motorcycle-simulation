@@ -13,7 +13,9 @@ from openpyxl import load_workbook
 from scripts.stage13_assemble import (
     ADAPTIVE_CHECKPOINT_METRICS, EXPECTED_ADAPTIVE_COHORT_ID,
     EXPECTED_REFERENCE_SHA256, EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA,
-    EXPECTED_ADAPTIVE_SOURCE_COMMIT, _metric_status, _validate_mode_and_identity,
+    EXPECTED_ADAPTIVE_SOURCE_COMMIT, _canonical_scenario_fingerprint,
+    _load_canonical_dataset_identity, _metric_status,
+    _validate_canonical_dataset_fingerprints, _validate_mode_and_identity,
     assemble_workbook, select_representative_trial_ids,
 )
 
@@ -135,6 +137,59 @@ def demo_data():
         "representatives_by_scenario": representatives, "representative_trial_ids": assignments,
         "validation": {"status": "DEMO_ONLY", "tests": []}, "errors": [],
     }
+
+
+def synthetic_canonical_fingerprint_data():
+    rows_by_scenario = {}
+    per_scenario_identity = {}
+    for offset, scenario in enumerate(EXPECTED_SCENARIOS):
+        max_trial_id = 1 if scenario.startswith("C100_") else 550
+        rows = [
+            trial_row(scenario, trial_id, offset)
+            for trial_id in range(1, max_trial_id + 1)
+        ]
+        rows_by_scenario[scenario] = rows
+        fingerprint = _canonical_scenario_fingerprint(rows)
+        per_scenario_identity[scenario] = {
+            "scenario_fingerprint_stage9a": fingerprint,
+            "combined_dataset_fingerprint_sha256_stage10": (
+                None if scenario.startswith("C100_") else fingerprint
+            ),
+        }
+    return rows_by_scenario, {"per_scenario": per_scenario_identity}
+
+
+def test_canonical_identity_loader_requires_the_reviewed_stage11_blob():
+    identity = _load_canonical_dataset_identity()
+    assert identity["baseline_commit"] == "17f4e8d0ddc1908e2c34bf927ef1d1b7a1c4bf30"
+    assert identity["total_canonical_trials"] == 11005
+    assert identity["scenarios_count"] == 25
+    assert set(identity["per_scenario"]) == set(EXPECTED_SCENARIOS)
+    assert identity["sources"]["stage9a"]["global_manifest_sha256_9005"] == (
+        "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
+    )
+
+
+def test_canonical_fingerprint_uses_the_existing_stage7_stage10_float_encoding():
+    assert _canonical_scenario_fingerprint([{"trial_id": 1, "value": 1.5}]) == (
+        "823067f9ffc1d4067bc35a6da17521881a62fca027f80090f922cd9d9f835425"
+    )
+
+
+def test_canonical_per_scenario_fingerprints_accept_matching_rows():
+    rows_by_scenario, identity = synthetic_canonical_fingerprint_data()
+    _validate_canonical_dataset_fingerprints(rows_by_scenario, identity)
+
+
+def test_canonical_per_scenario_fingerprints_reject_mutated_financial_value():
+    rows_by_scenario, identity = synthetic_canonical_fingerprint_data()
+    # Preserve scenario/Trial ID and the identity manifest; only result data changes.
+    rows_by_scenario["C085_G100"][0]["final_cash"] += 1
+    with pytest.raises(
+        RuntimeError,
+        match="CANONICAL_SCENARIO_FINGERPRINT_MISMATCH: C085_G100",
+    ):
+        _validate_canonical_dataset_fingerprints(rows_by_scenario, identity)
 
 
 def test_assemble_185_sheets_and_five_representative_roles(tmp_path: Path):
