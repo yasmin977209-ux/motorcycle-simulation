@@ -34,3 +34,19 @@
 - No production execution or protected-state changes are authorized by this R4.
 
 **Pre-change status: R4 RECORDED; implementation not yet changed.**
+
+
+## Append-only implementation/read-back addendum — 2026-10-19
+
+The bounded candidate change has now been written after the pre-change R4 above:
+
+- Implementation commit: `ba78fa59c9d30f433f2ed8e80739d9d010a7ea1d`; updated assembler blob `1548d4393cd79922abfd570f1c9a90454d7e40fe`.
+- Regression-test commit: `702d6dc3becbdce0b284656209403abe68d1a3e4`; updated test blob `68c64ea6a63c12b0cbc8602db44cdfa15d23c094`.
+- Candidate HEAD after both commits: `702d6dc3becbdce0b284656209403abe68d1a3e4`; base `main` remains `647c19826b90d8224ce73ef9b90c306a45e03fb0`.
+- Static GitHub read-back confirmed the exact schema guard, digest recomputation and mismatch fail-closed condition, plus both new regression tests. The fixture now obtains its digest from the project `monte_carlo.TrialResult` dataclass using the same canonical JSON serialization as the source-backed Stage 7/Stage 12 hash implementation.
+
+The new validator requires exactly the 18 source-defined TrialResult fields plus a separate `result_sha256` sidecar, recomputes the digest from the 18 fields, and rejects the row before using its hash in the cohort map if the values are not bound to that digest. The new tests cover an altered outcome with stale digest and trial-result schema drift.
+
+**Execution boundary:** no Pytest run has been performed on HEAD `702d6dc3becbdce0b284656209403abe68d1a3e4`. The previously approved temporary Stage 13 test workflow is absent; this CP did not create or modify any workflow. Accordingly, tests remain `PENDING/BLOCKED`, not PASS. The older successful Run `38995349182` remains bound only to its earlier tested SHA and does not cover these changes.
+
+**Protected state:** main remains at `647c19826b90d8224ce73ef9b90c306a45e03fb0`; main `state.json` blob remains `2178260bb18efeb81437486f13b6d10cf5e85936` with `12-CLOSED / FINAL_DELIVERY_BLOCKERS_OPEN`. `scripts/stage13_assemble.py` is still absent from main. No production workflow, simulation, trial, checkpoint, historical dataset, source, seed/RNG, main, merge, PR closure or Release action was performed.
