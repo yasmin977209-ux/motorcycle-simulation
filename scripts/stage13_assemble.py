@@ -9,7 +9,7 @@ import re
 import tempfile
 import zipfile
 import xml.etree.ElementTree as ET
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -1287,6 +1287,7 @@ def _validate_representatives(data, mode):
                 raise RuntimeError(f"SCENARIO_TRIALS_MISSING: {scenario}")
             continue
         selected = select_representative_trial_ids(rows, scenario)
+        rows_by_id = {_trial_id(row): row for row in rows}
         assigned = assignments.get(scenario, {})
         payloads = reps_by_scenario.get(scenario, {})
         for role in ("P10", "P50", "P90", "Loss", "Max Case"):
@@ -1302,11 +1303,65 @@ def _validate_representatives(data, mode):
                 payload = payloads.get("MaxCase")
             if payload is None:
                 raise RuntimeError(f"MISSING_REPRESENTATIVE_PAYLOAD: {scenario}/{role}")
+
             summary = payload.get("summary", {})
-            if "trial_id" not in summary or _trial_id(summary) != expected_id:
+            expected_row = rows_by_id.get(expected_id)
+            if expected_row is None:
+                raise RuntimeError(f"REPRESENTATIVE_SOURCE_TRIAL_MISSING: {scenario}/{role}:{expected_id}")
+            if not isinstance(summary, dict) or "trial_id" not in summary or _trial_id(summary) != expected_id:
                 raise RuntimeError(f"REPRESENTATIVE_PAYLOAD_TRIAL_MISMATCH: {scenario}/{role}")
-            if not payload.get("daily"):
+            if set(summary) != set(expected_row):
+                raise RuntimeError(f"REPRESENTATIVE_SUMMARY_SCHEMA_MISMATCH: {scenario}/{role}")
+            for field, expected_value in expected_row.items():
+                actual_value = summary.get(field)
+                if isinstance(actual_value, bool) or isinstance(expected_value, bool):
+                    equal = type(actual_value) is type(expected_value) and actual_value == expected_value
+                else:
+                    equal = actual_value == expected_value
+                if not equal:
+                    raise RuntimeError(
+                        f"REPRESENTATIVE_SUMMARY_TRIAL_RESULT_MISMATCH: {scenario}/{role}:{field}"
+                    )
+
+            daily_rows = payload.get("daily")
+            if not isinstance(daily_rows, list) or not daily_rows:
                 raise RuntimeError(f"REPRESENTATIVE_DAILY_MISSING: {scenario}/{role}")
+            for daily_row in daily_rows:
+                if not isinstance(daily_row, dict) or daily_row.get("trial_id") != expected_id:
+                    raise RuntimeError(f"REPRESENTATIVE_DAILY_TRIAL_MISMATCH: {scenario}/{role}")
+            if mode != "demo":
+                dates = []
+                for daily_row in daily_rows:
+                    raw_date = daily_row.get("date")
+                    if not isinstance(raw_date, str):
+                        raise RuntimeError(f"REPRESENTATIVE_DAILY_DATE_INVALID: {scenario}/{role}")
+                    try:
+                        dates.append(date.fromisoformat(raw_date))
+                    except ValueError as exc:
+                        raise RuntimeError(
+                            f"REPRESENTATIVE_DAILY_DATE_INVALID: {scenario}/{role}"
+                        ) from exc
+                if any(current_date != previous_date + timedelta(days=1)
+                       for previous_date, current_date in zip(dates, dates[1:])):
+                    raise RuntimeError(f"REPRESENTATIVE_DAILY_DATE_SEQUENCE_INVALID: {scenario}/{role}")
+
+                terminal_pairs = (
+                    ("final_cash", "Cash"),
+                    ("final_net_project_equity", "Net_Equity"),
+                    ("cumulative_project_profit", "Cumulative_Project_Profit"),
+                    ("operating_net_profit", "Operating_Net_Profit"),
+                )
+                final_row = daily_rows[-1]
+                for summary_field, daily_field in terminal_pairs:
+                    if final_row.get(daily_field) != summary.get(summary_field):
+                        raise RuntimeError(
+                            f"REPRESENTATIVE_DAILY_TERMINAL_MISMATCH: {scenario}/{role}:{daily_field}"
+                        )
+                final_close_date = summary.get("final_close_date")
+                if final_close_date is not None and final_row.get("date") != final_close_date:
+                    raise RuntimeError(
+                        f"REPRESENTATIVE_DAILY_TERMINAL_MISMATCH: {scenario}/{role}:date"
+                    )
     return True
 
 
