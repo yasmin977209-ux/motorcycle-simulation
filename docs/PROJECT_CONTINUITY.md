@@ -1282,3 +1282,18 @@ Main remains 647c19826b90d8224ce73ef9b90c306a45e03fb0, main state blob 2178260bb
 **Protected-state unchanged:** main HEAD `647c19826b90d8224ce73ef9b90c306a45e03fb0`; `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`, stage `12-CLOSED`, `FINAL_DELIVERY_BLOCKERS_OPEN`, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, `sha_semantics=parent_state_commit_pointer`. Existing Gate A provider gap, SOURCE_SHA drift, Stage 11 topology rule, Stage 13 adoption gap on main, and final delivery reconciliation remain. No source/seed/RNG, policy/cohort/trial, historical data, main, state, workflow, production trial, merge, PR closure or Release change.
 
 **Next permitted action:** continue candidate-only static review where independent, or obtain a clean explicit owner decision resolving the test-workflow authority conflict; then test the exact current candidate SHA and inspect the physical synthetic workbook/artifacts. Do not merge or claim delivery acceptance.
+
+## CP-STAGE13-C100-POLICY-CONFLICT-READONLY — 2026-10-19
+
+R4 report: docs/audits/CP-STAGE13-C100-POLICY-CONFLICT-READONLY_2026-10-19.md, read-back blob fc2e878a30e019726618db4dc18efabf92f59e79; report commit e7c2a3fa9a7f6207e6c70e2dc2f591bb69647e11.
+
+Live candidate tmp/cp-stage13-excel-compat-20261017 HEAD 4fa2c633162b0134a48cfc2ccbf2b6b948108ae0, base/main 647c19826b90d8224ce73ef9b90c306a45e03fb0, 14 ahead / 0 behind, ten changed paths. Assembler blob 7561f73340ac45b0f4ab71b677c33b771eac008b and tests blob f707dc9af12f01ca705b225f4a34df570f85210d.
+
+Finding: the candidate adaptive validator requires stable_at_n>=600, IDs 1..N, and a checkpoint history starting at N=300 for every scenario, including C100. Main normative D-2026-10-10-01 says C100=1 for deterministic verification, no CI, with different trial IDs/seeds; main Stage 7 uses INITIAL_C100_TRIALS=1 and an independent verification trial_id=2. This is a candidate K_CODE/K_SPEC conflict. Fixing it changes cohort validation/trial identity semantics protected by the project scope; no code/test change was made and separate explicit scoped authorization is required.
+
+Secondary review: candidate accepts Gate B PENDING/BLOCKED as allowed intermediate status without evidence ref/SHA, and a later final PASS might still pass the overall history check. D-2026-10-10-01 and D-2026-10-11-01/-02 do not fully specify how such missing intermediate status should be treated, so this is recorded as UNDEFINED_BUSINESS_RULE/PENDING_APPROVAL; no gate logic changed.
+
+Authorization conflict remains for exact-branch test workflows. Earlier Run 38995349182 is only evidence for old SHA 3fdcdf8d006eff8f4a8fabb9ea2feb5c70c81633, not current candidate head. No current-head pytest/workbook build is verified. No main/state/reference/source/seed/RNG/sampling/cohort/trial/data change, production run, merge, PR closure, or Release. Main remains 12-CLOSED / FINAL_DELIVERY_BLOCKERS_OPEN.
+
+Next: continue independent non-protected work. Do not accept this candidate or modify C100 cohort/history semantics until scope authorization and the Gate B interpretation are resolved.
+
