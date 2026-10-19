@@ -1463,3 +1463,10 @@ Append-only closeout revalidation report: [SESSION-CLOSEOUT-REVALIDATION_2026-10
 - P17: audit completed with blocking verdict `NOT_ACCEPTED`; no repairs were made during the audit.
 - P18: BLOCKED because P17 does not permit delivery; no Release created. The user's conditional permission is not activated.
 - No production simulation/trial/checkpoint, tests, workflows, main/state/reference/data change, merge, PR closure, or Release occurred.
+
+
+## P18 — Release gate disposition — 2026-10-20
+
+- Report: `docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md`, commit `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; the report is pending read-back verification at the time of this ledger append.
+- Live Releases endpoint returned an empty list. P17 read-back report blob `412014b4ec58b52b3e62edcd69c433554bb1abd6` concluded `NOT_ACCEPTED`; the owner's conditional Release permission is therefore not activated.
+- P18 disposition: `BLOCKED`; no Release/tag/publication/merge action was taken.
