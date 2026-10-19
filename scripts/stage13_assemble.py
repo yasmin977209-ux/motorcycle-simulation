@@ -755,7 +755,7 @@ def _trial_id(row):
 
 
 def _git_blob_sha(raw: bytes) -> str:
-    header = f"blob {len(raw)}\\0".encode("ascii")
+    header = f"blob {len(raw)}\0".encode("ascii")
     return hashlib.sha1(header + raw).hexdigest()
 
 
@@ -775,7 +775,7 @@ def _canonicalize_fingerprint_value(value: Any) -> Any:
 
 def _canonical_scenario_fingerprint(rows: list[dict[str, Any]]) -> str:
     ordered = sorted(rows, key=_trial_id)
-    payload = "\\n".join(
+    payload = "\n".join(
         json.dumps(
             _canonicalize_fingerprint_value(row),
             ensure_ascii=False,
