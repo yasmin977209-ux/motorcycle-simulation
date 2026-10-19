@@ -21,6 +21,11 @@ from openpyxl.utils import get_column_letter
 
 EXPECTED_SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
 EXPECTED_REFERENCE_SHA256 = "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+EXPECTED_CANONICAL_IDENTITY_GIT_BLOB_SHA = "72a481d509d39820fba78732724fde4fa9f25134"
+EXPECTED_CANONICAL_IDENTITY_BASELINE_COMMIT = "17f4e8d0ddc1908e2c34bf927ef1d1b7a1c4bf30"
+EXPECTED_CANONICAL_STAGE9A_GLOBAL_SHA256 = "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
+EXPECTED_CANONICAL_TRIAL_COUNT = 11005
+EXPECTED_MASTER_SEED = 20270101
 EXPECTED_ADAPTIVE_COHORT_ID = "STAGE13_ADAPTIVE_STABLE_PER_SCENARIO_V1"
 EXPECTED_ADAPTIVE_SOURCE_COMMIT = "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
 ADAPTIVE_CHECKPOINT_METRICS = (
@@ -748,6 +753,176 @@ def _trial_id(row):
     return int(row["trial_id"])
 
 
+
+def _git_blob_sha(raw: bytes) -> str:
+    header = f"blob {len(raw)}\\0".encode("ascii")
+    return hashlib.sha1(header + raw).hexdigest()
+
+
+def _canonicalize_fingerprint_value(value: Any) -> Any:
+    """Match the existing Stage 7/10/12 canonical fingerprint implementation."""
+    if isinstance(value, float):
+        return value.hex()
+    if isinstance(value, dict):
+        return {
+            str(key): _canonicalize_fingerprint_value(value[key])
+            for key in sorted(value, key=str)
+        }
+    if isinstance(value, (list, tuple)):
+        return [_canonicalize_fingerprint_value(item) for item in value]
+    return value
+
+
+def _canonical_scenario_fingerprint(rows: list[dict[str, Any]]) -> str:
+    ordered = sorted(rows, key=_trial_id)
+    payload = "\\n".join(
+        json.dumps(
+            _canonicalize_fingerprint_value(row),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        for row in ordered
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _load_canonical_dataset_identity(
+    identity_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """Load only the pinned Stage 11 identity record for canonical mode."""
+    path = (
+        Path(identity_path)
+        if identity_path is not None
+        else Path(__file__).resolve().parents[1]
+        / "docs"
+        / "stage11"
+        / "dataset_identity.json"
+    )
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise RuntimeError(
+            f"CANONICAL_DATASET_IDENTITY_FILE_MISSING: {path}"
+        ) from exc
+
+    actual_blob_sha = _git_blob_sha(raw)
+    if actual_blob_sha != EXPECTED_CANONICAL_IDENTITY_GIT_BLOB_SHA:
+        raise RuntimeError(
+            "CANONICAL_DATASET_IDENTITY_BLOB_MISMATCH: "
+            f"expected={EXPECTED_CANONICAL_IDENTITY_GIT_BLOB_SHA}; "
+            f"actual={actual_blob_sha}"
+        )
+    try:
+        identity = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("CANONICAL_DATASET_IDENTITY_JSON_INVALID") from exc
+    if not isinstance(identity, dict):
+        raise RuntimeError("CANONICAL_DATASET_IDENTITY_ROOT_INVALID")
+
+    sources = identity.get("sources")
+    validation = identity.get("validation")
+    stage7 = sources.get("stage7") if isinstance(sources, dict) else None
+    stage9a = sources.get("stage9a") if isinstance(sources, dict) else None
+    stage10 = sources.get("stage10") if isinstance(sources, dict) else None
+    sum_check = validation.get("sum_N_check") if isinstance(validation, dict) else None
+    header_valid = (
+        identity.get("baseline_commit") == EXPECTED_CANONICAL_IDENTITY_BASELINE_COMMIT
+        and identity.get("total_canonical_trials") == EXPECTED_CANONICAL_TRIAL_COUNT
+        and identity.get("scenarios_count") == len(EXPECTED_SCENARIOS)
+        and isinstance(stage7, dict)
+        and stage7.get("run_id") == 37225915321
+        and stage7.get("source_sha") == EXPECTED_SOURCE_SHA
+        and stage7.get("trial_range") == [1, 450]
+        and isinstance(stage9a, dict)
+        and stage9a.get("run_id") == 37671448546
+        and stage9a.get("global_manifest_sha256_9005")
+        == EXPECTED_CANONICAL_STAGE9A_GLOBAL_SHA256
+        and isinstance(stage10, dict)
+        and stage10.get("run_id") == 37709936740
+        and stage10.get("source_sha", EXPECTED_SOURCE_SHA) == EXPECTED_SOURCE_SHA
+        and stage10.get("trial_range") == [451, 550]
+        and isinstance(validation, dict)
+        and validation.get("all_25_present") is True
+        and validation.get("no_gaps_in_trial_ids") is True
+        and validation.get("no_duplicate_trial_ids") is True
+        and validation.get("source_sha_matches") is True
+        and validation.get("master_seed") == EXPECTED_MASTER_SEED
+        and isinstance(sum_check, dict)
+        and sum_check.get("expected") == EXPECTED_CANONICAL_TRIAL_COUNT
+        and sum_check.get("computed") == EXPECTED_CANONICAL_TRIAL_COUNT
+        and sum_check.get("match") is True
+    )
+    if not header_valid:
+        raise RuntimeError("CANONICAL_DATASET_IDENTITY_HEADER_MISMATCH")
+
+    per_scenario = identity.get("per_scenario")
+    if not isinstance(per_scenario, dict) or set(per_scenario) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("CANONICAL_DATASET_IDENTITY_SCENARIO_COVERAGE_MISMATCH")
+
+    for scenario in EXPECTED_SCENARIOS:
+        item = per_scenario.get(scenario)
+        if not isinstance(item, dict):
+            raise RuntimeError(f"CANONICAL_DATASET_IDENTITY_SCENARIO_INVALID: {scenario}")
+        if scenario.startswith("C100_"):
+            valid_item = (
+                item.get("N") == 1
+                and item.get("stage9a_trial_count") == 1
+                and item.get("stage10_additions") == 0
+                and item.get("is_deterministic") is True
+                and item.get("stability_status") == "NOT_APPLICABLE_C100"
+                and _valid_sha256(item.get("scenario_fingerprint_stage9a"))
+                and item.get("combined_dataset_fingerprint_sha256_stage10") is None
+            )
+        else:
+            valid_item = (
+                item.get("N") == 550
+                and item.get("stage9a_trial_count") == 450
+                and item.get("stage10_additions") == 100
+                and _valid_sha256(item.get("scenario_fingerprint_stage9a"))
+                and _valid_sha256(item.get("combined_dataset_fingerprint_sha256_stage10"))
+            )
+        if not valid_item:
+            raise RuntimeError(f"CANONICAL_DATASET_IDENTITY_SCENARIO_INVALID: {scenario}")
+    return identity
+
+
+def _validate_canonical_dataset_fingerprints(
+    rows_by_scenario: dict[str, list[dict[str, Any]]],
+    identity: dict[str, Any],
+) -> None:
+    """Bind each canonical TrialResult cohort to its Stage 11 golden fingerprint."""
+    if set(rows_by_scenario) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("CANONICAL_FINGERPRINT_SCENARIO_COVERAGE_MISMATCH")
+    per_scenario = identity.get("per_scenario")
+    if not isinstance(per_scenario, dict) or set(per_scenario) != set(EXPECTED_SCENARIOS):
+        raise RuntimeError("CANONICAL_FINGERPRINT_IDENTITY_COVERAGE_MISMATCH")
+
+    for scenario in EXPECTED_SCENARIOS:
+        rows = rows_by_scenario[scenario]
+        expected_ids = [1] if scenario.startswith("C100_") else list(range(1, 551))
+        actual_ids = [_trial_id(row) for row in rows]
+        if actual_ids != expected_ids:
+            raise RuntimeError(f"CANONICAL_TRIAL_COVERAGE_MISMATCH: {scenario}")
+        item = per_scenario[scenario]
+        if not isinstance(item, dict):
+            raise RuntimeError(f"CANONICAL_FINGERPRINT_IDENTITY_SCENARIO_INVALID: {scenario}")
+        field = (
+            "scenario_fingerprint_stage9a"
+            if scenario.startswith("C100_")
+            else "combined_dataset_fingerprint_sha256_stage10"
+        )
+        expected = item.get(field)
+        if not _valid_sha256(expected):
+            raise RuntimeError(f"CANONICAL_SCENARIO_FINGERPRINT_MISSING: {scenario}:{field}")
+        actual = _canonical_scenario_fingerprint(rows)
+        if actual != expected:
+            raise RuntimeError(
+                "CANONICAL_SCENARIO_FINGERPRINT_MISMATCH: "
+                f"{scenario} expected={expected} actual={actual}"
+            )
+
+
 def select_representative_trial_ids(rows, scenario):
     """Apply Reference §§14.5–14.6 and normative decision D-2026-10-10-03."""
     if not rows:
@@ -1082,8 +1257,14 @@ def _validate_mode_and_identity(data, mode):
             required = [1] if scenario.startswith("C100_") else list(range(1, 551))
             if [_trial_id(row) for row in rows_by_scenario[scenario]] != required:
                 raise RuntimeError(f"CANONICAL_TRIAL_COVERAGE_MISMATCH: {scenario}")
-        if len(all_rows) != 11005:
+        if len(all_rows) != EXPECTED_CANONICAL_TRIAL_COUNT:
             raise RuntimeError("CANONICAL_TRIAL_COUNT_MISMATCH")
+        trusted_identity = _load_canonical_dataset_identity()
+        if manifest.get("master_seed") != EXPECTED_MASTER_SEED:
+            raise RuntimeError("CANONICAL_MASTER_SEED_MISMATCH")
+        if manifest.get("source_sha") != EXPECTED_SOURCE_SHA:
+            raise RuntimeError("SOURCE_SHA_MISMATCH")
+        _validate_canonical_dataset_fingerprints(rows_by_scenario, trusted_identity)
     elif mode == "sample":
         for scenario in EXPECTED_SCENARIOS:
             if [_trial_id(row) for row in rows_by_scenario[scenario]] != list(range(26, 51)):
