@@ -35,4 +35,17 @@
 | Python heredoc داخل خطوة كشف الدفعات الدائمة | قراءة YAML المصدر تظهر أن `python - <<'PY'` ومتن الكتلة وعلامة الإغلاق بها مسافات بادئة أكثر من خط الأساس لمحتوى `run: |`. بعد إزالة YAML indentation، تبقى المسافات الزائدة داخل shell script؛ وقد لا تُطابق علامة إغلاق heredoc كما يتطلبها Bash، كما يتلقى Python تعبيرات المستوى الأعلى بمسافة بادئة غير صالحة. | نفس التفويض المحدد لـCP-R4، على candidate فقط، مع R4 وتحقق exact-SHA قبل اعتبار الإصلاح صالحًا. | `K_CODE` — عيب بنيوي في تعديل المرشح نفسه مثبت بالقراءة، لا بنتيجة تشغيل. لا ندعي حدوث خطأ runtime لأن لا سجل تنفيذ متاح للـSHA الحالي. |
 | أقل إصلاح | إزالة المسافات البادئة الزائدة من سطر `python - <<'PY'` ومن متن Python وعلامة `PY` حتى تبدأ علامة الإغلاق في أول العمود بعد معالجة YAML؛ ثم إعادة قراءة المقطع الكامل للتحقق من الإزاحة. | لا تغيير للمنطق أو البيانات. | نفّذ قبل تشغيل authoring verifier جديد. |
 
+## Read-back disposition after the R4 edits — 2026-10-19
+
+**Candidate now read back:** `tmp/cp-stage7-timeout-parallelism-20261019` at `2a127d78422236471ff233f2bf30e99437106570`; compare with `main` is ahead 48 / behind 0; the five changed paths remain the two Stage 7 Workflows, block runner, state module and authoring tests.
+
+- `.github/workflows/stage7-full-run.yml` blob `b686004505f57e123708ce2d0aacce38b3d5033e`.
+- `tests/test_stage7_authoring.py` blob `c0aff73f0ff05058e44975ffac86382612d3adfd`; 79 test functions. New static test `test_stage7_legacy_restore_detection_uses_complete_durable_tree_inventory` requires the legacy-detection step to call `store._block_listing()`, forbids the old `contents/stage7-blocks?ref=` listing, and checks the recursive Git-tree and `truncated` guards.
+- `scripts/stage7_state.py` remains blob `5615178a40200dec90247b6ddae63cd93c07126f`; its recursive inventory rejects GitHub's `truncated=true`. Read-back confirms the legacy-detection step now invokes that same inventory, its Python heredoc delimiter and body align with the YAML `run: |` baseline after YAML indentation is removed, and all of the original shell commands after `PREVIOUS_RUN_ID` are byte-for-byte unchanged. Source outside the replaced detection preamble and after the step is unchanged from prior candidate SHA `09e66f203915609e3e5a199a11be6a1be890b1d6`.
+
+**Verification limit:** after the candidate push at `2a127d78422236471ff233f2bf30e99437106570`, the connected workflow-run lookup returned zero runs and combined status returned an empty list; its documented wrapper filters PR-triggered runs, while direct Actions/checks pages returned Cache miss. This is **not** evidence that no run occurred. No verified run ID, artifact ID or tested SHA exists yet for this latest change. Thus `PASS` is not claimed: `tested_sha=null`, `run_id=NONE_VERIFIED`, `artifact_id=NONE_VERIFIED`, status `READ_BACK_PARTIAL / AUTHORING_RUN_UNVERIFIED`.
+
+No production Workflow was executed, and the candidate `stage7-full-run.yml` trigger still targets only `tmp/stage7-full-run-20261004`, not this candidate branch. No CLI, Monte Carlo, Trial, Checkpoint, seed/RNG, source pin, cohort/policy, historic data, `main`, or main `state.json` was modified. No PR was merged/closed and no Release was created.
+
+**Next allowed action:** retrieve the push-triggered authoring verifier run for exact HEAD `2a127d78422236471ff233f2bf30e99437106570` from a GitHub Actions view that lists push events; inspect every step before calling the updated candidate test PASS. Continue independent non-production review meanwhile; do not merge or trigger simulation.
 
