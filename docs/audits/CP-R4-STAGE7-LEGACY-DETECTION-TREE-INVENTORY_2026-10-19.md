@@ -26,3 +26,13 @@
 4. لا تشغيل لـ`stage7-full-run.yml` ولا Monte Carlo/CLI/Trial/Checkpoint، ولا تعديل `main` أو `state.json` أو SOURCE_SHA أو master_seed/RNG أو سياسة sampling/cohort/Trial IDs أو البيانات التاريخية/Parquet؛ لا دمج/إغلاق PR أو Release.
 5. يظل المشروع `PARTIAL / NOT_READY_TO_MERGE` حتى اجتياز البوابات كاملةً.
 
+## R4 addendum — Bash heredoc indentation found during candidate read-back, before correction
+
+**Observed current candidate:** `7f9c32ba0442ebaca8bd47e37e0076f324864002`; Workflow blob `144227494ffc699e08c54d5b61f7a84c70b0c0e8`. This change has not been proven by runtime execution.
+
+| العنصر | الوضع الحالي | المرجع/القرار | الحكم |
+|---|---|---|---|
+| Python heredoc داخل خطوة كشف الدفعات الدائمة | قراءة YAML المصدر تظهر أن `python - <<'PY'` ومتن الكتلة وعلامة الإغلاق بها مسافات بادئة أكثر من خط الأساس لمحتوى `run: |`. بعد إزالة YAML indentation، تبقى المسافات الزائدة داخل shell script؛ وقد لا تُطابق علامة إغلاق heredoc كما يتطلبها Bash، كما يتلقى Python تعبيرات المستوى الأعلى بمسافة بادئة غير صالحة. | نفس التفويض المحدد لـCP-R4، على candidate فقط، مع R4 وتحقق exact-SHA قبل اعتبار الإصلاح صالحًا. | `K_CODE` — عيب بنيوي في تعديل المرشح نفسه مثبت بالقراءة، لا بنتيجة تشغيل. لا ندعي حدوث خطأ runtime لأن لا سجل تنفيذ متاح للـSHA الحالي. |
+| أقل إصلاح | إزالة المسافات البادئة الزائدة من سطر `python - <<'PY'` ومن متن Python وعلامة `PY` حتى تبدأ علامة الإغلاق في أول العمود بعد معالجة YAML؛ ثم إعادة قراءة المقطع الكامل للتحقق من الإزاحة. | لا تغيير للمنطق أو البيانات. | نفّذ قبل تشغيل authoring verifier جديد. |
+
+
