@@ -1374,3 +1374,8 @@ No production Stage 7 workflow/CLI/Monte Carlo/Trial/Checkpoint, source/seed/RNG
 **R4 disposition:** confirms the four-role source-package contract for this actual archive, while normative D-2026-10-10-03 requires five roles including MaxCase. Candidate Stage13 requires all five, so canonical input is blocked rather than silently accepting a missing fifth role. Classification `MISSING_EVIDENCE / SOURCE_CONTRACT_MISMATCH`. A separate independent inventory entry records that all 25 source TARs were also inspected with the same four-role result; this single-artifact report is corroborating evidence, not the whole-cohort inventory.
 
 **Boundaries:** no Trial/Monte Carlo/CLI/Checkpoint, Workflow, test, workbook, or data write. No main/state/reference/source/RNG/sampling/cohort/Trial change, merge, PR closure or Release. Main state remains `12-CLOSED / FINAL_DELIVERY_BLOCKERS_OPEN`; Stage13 is partial and unaccepted.
+
+
+## CP-STAGE13-REAL-ARTIFACT-REPRESENTATIVE-PAYLOAD-INSPECTION — 2026-10-19
+
+Physical inspection report saved and read back: `docs/audits/CP-STAGE13-REAL-ARTIFACT-REPRESENTATIVE-PAYLOAD-INSPECTION_2026-10-19.md` (blob `0982723b6f7fc6d66a815091bcbf78b9d7ad4718`). GitHub Artifact `11497409735` ZIP and its `C030_G030` inner TAR matched the recorded source SHA-256 values. The source package contains four representative payloads and no MaxCase payload; normative D-2026-10-10-03 requires five, so Stage13 canonical input remains blocked. The separate all-25 archive inspection entry confirms the same contract mismatch. No tests, workbook, workflow, trials, or data were changed or executed.
