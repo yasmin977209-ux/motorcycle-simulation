@@ -1308,7 +1308,11 @@ def _validate_representatives(data, mode):
             expected_row = rows_by_id.get(expected_id)
             if expected_row is None:
                 raise RuntimeError(f"REPRESENTATIVE_SOURCE_TRIAL_MISSING: {scenario}/{role}:{expected_id}")
-            if not isinstance(summary, dict) or "trial_id" not in summary or _trial_id(summary) != expected_id:
+            if (
+                not isinstance(summary, dict)
+                or type(summary.get("trial_id")) is not int
+                or summary.get("trial_id") != expected_id
+            ):
                 raise RuntimeError(f"REPRESENTATIVE_PAYLOAD_TRIAL_MISMATCH: {scenario}/{role}")
             if set(summary) != set(expected_row):
                 raise RuntimeError(f"REPRESENTATIVE_SUMMARY_SCHEMA_MISMATCH: {scenario}/{role}")
@@ -1327,7 +1331,11 @@ def _validate_representatives(data, mode):
             if not isinstance(daily_rows, list) or not daily_rows:
                 raise RuntimeError(f"REPRESENTATIVE_DAILY_MISSING: {scenario}/{role}")
             for daily_row in daily_rows:
-                if not isinstance(daily_row, dict) or daily_row.get("trial_id") != expected_id:
+                if (
+                    not isinstance(daily_row, dict)
+                    or type(daily_row.get("trial_id")) is not int
+                    or daily_row.get("trial_id") != expected_id
+                ):
                     raise RuntimeError(f"REPRESENTATIVE_DAILY_TRIAL_MISMATCH: {scenario}/{role}")
             if mode != "demo":
                 dates = []
