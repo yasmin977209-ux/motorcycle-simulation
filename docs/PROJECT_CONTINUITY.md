@@ -1676,3 +1676,16 @@ This append is considered persisted only after the GitHub API reports the result
 - Live Action runs and commit check-runs for the DAILY candidate SHA remain absent; CI = `MISSING_EVIDENCE`. No workflow, test, production source, `main`, `state.json`, reference, cohort, trial, or historical data was changed or run in this CP.
 - PR #47 remains OPEN/DRAFT/UNMERGED. Delivery remains `NOT_ACCEPTED`, Release `BLOCKED / NOT_AUTHORIZED`.
 
+## CP-P16-PROVISIONAL-ASSEMBLY-2026-10-21
+
+**Status:** `PARTIAL / PACKAGE_BUILD_BLOCKED`. This is a candidate-only code CP, not a delivery acceptance.
+
+- Live `main` HEAD at CP start and recheck: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. No write to `main`.
+- A clean branch was created from that exact HEAD: `tmp/cp-p16-provisional-20261021`; candidate HEAD after read-back: `e06d574efc665b0e3b17ac8518374fd2037a9763`.
+- R4: `docs/audits/P16_PROVISIONAL_ASSEMBLY_R4_2026-10-21.md`, commit `863aa78c7e8dc96985efe1657a6f20df8a42c0bc`, blob `978d49c6d8155913439c734325db6557fb979a85`.
+- Candidate builder blob `a3e295ba2e7f2cf9d930518a2573e397c2db4e13` transfers the Stage 13 orchestration and the path-3 DAILY mapping-to-values fix; candidate assembler blob `e026370b240cbefa43289a1ea6f6d6b936fb7671` keeps the 185-sheet post-write gate and adds an explicit pending-MaxCase warning/count for unassigned MaxCase rows. The representative sheet code leaves pending value fields blank and marks cells `PENDING_DATA_SOURCE`; first-cell comment is the owner-provided exact comment. README code carries `STATISTICAL_POLICY_LEVEL = FIXED_LOOK_WITH_CS_PENDING` and the required MaxCase line. These are source read-back/static checks only; no test of the final candidate was run.
+- Role contract result from the single authorized pass: `PARTIAL`; only `MaxCase` remains `PENDING_DATA_SOURCE`. Do not reopen this contract investigation in this CP.
+- Seven deliverables were **not generated**. Workbook worksheet count, actual pending rows, Run ID and Artifact IDs are `NOT_MEASURED / NOT_CREATED`, not zero. No actual XLSX SHA-256 or byte sizes exist for this CP.
+- Blockers remain `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, historical Stage 9C `PARTIAL`, and source/cohort reconciliation. The current GitHub connector has no workflow-dispatch action available in this session, and local repository checkout failed because DNS resolution for github.com failed. Per governing project instructions, no canonical final package is produced while blocking gates and source/cohort are unresolved.
+- No code tests/workflows were changed or run; no SOURCE_SHA, seed/RNG, sampling, cohort, trial IDs, historical data or Parquet changed. `C050_G000/log_events` remains separate `PENDING_APPROVAL`; Gate A remains `BLOCKED`; delivery remains `NOT_ACCEPTED`; Release `BLOCKED / NOT_AUTHORIZED`.
+- Evidence register: `docs/continuity/SESSION_OUTPUTS.jsonl`, entry `P16-PROVISIONAL-ASSEMBLY-2026-10-21`; append-only read-back verified before this continuity update.
