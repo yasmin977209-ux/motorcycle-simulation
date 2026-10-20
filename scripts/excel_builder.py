@@ -439,7 +439,11 @@ def write_representatives(
         role_payloads = representatives_by_scenario[scenario]
         scenario_assignments = assignments[scenario]
         for role in REQUIRED_REPRESENTATIVE_ROLES:
-            if role == "MaxCase" and scenario_assignments.get(role) is None and role not in role_payloads:
+            if role == "MaxCase" and scenario_assignments.get(role) is None:
+                if role in role_payloads:
+                    raise ValueError(
+                        f"STAGE13_MAXCASE_PAYLOAD_WITHOUT_ASSIGNED_TRIAL: {scenario}"
+                    )
                 rows.append([scenario, "MaxCase", "PENDING_DATA_SOURCE"] + [None] * (len(headers) - 3))
                 pending_row_numbers.append(len(rows) + 1)  # header occupies row 1
                 continue
@@ -746,7 +750,7 @@ def build_workbook(
     manifest_path: str,
     representatives_path: str,
     *,
-    role_to_payload_labels: dict[str, str] | None = None,
+    role_to_payload_labels: dict[str, str | None] | None = None,
 ) -> dict:
     """Load evidence as orchestrator; Stage 13 owns ordered assembly and post-write audit."""
     stage13 = _stage13_module()
