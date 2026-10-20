@@ -106,6 +106,27 @@ def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -
     return rows, block_evidence, trial_hashes
 
 
+def inventory_identity_mismatches(
+    manifest: dict[str, Any], inventory: dict[str, Any]
+) -> list[dict[str, Any]]:
+    artifact_map = manifest.get("artifact_manifest", {}).get("enriched_artifacts", {})
+    run_map = manifest.get("artifact_manifest", {}).get("enrichment_run_ids", {})
+    mismatches: list[dict[str, Any]] = []
+    for item in inventory.get("artifacts", []):
+        scenario = item.get("scenario")
+        manifest_artifact_id = artifact_map.get(scenario)
+        manifest_run_id = run_map.get(scenario)
+        if manifest_artifact_id != item.get("artifact_id") or manifest_run_id != item.get("run_id"):
+            mismatches.append({
+                "scenario": scenario,
+                "manifest_artifact_id": manifest_artifact_id,
+                "inventory_artifact_id": item.get("artifact_id"),
+                "manifest_run_id": manifest_run_id,
+                "inventory_run_id": item.get("run_id"),
+            })
+    return mismatches
+
+
 def select_maxcase(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
     positive = [
         row for row in rows
@@ -128,6 +149,8 @@ def run_audit() -> dict[str, Any]:
     existing = {item["scenario"]: item for item in payload_inventory["artifacts"]}
     if set(existing) != set(SCENARIOS):
         raise RuntimeError("REPRESENTATIVE_INVENTORY_SCENARIO_SET_MISMATCH")
+    inventory_mismatches = inventory_identity_mismatches(manifest, payload_inventory)
+    inventory_mismatch_scenarios = {item["scenario"] for item in inventory_mismatches}
     if manifest.get("source_sha") != SOURCE_SHA or manifest.get("master_seed") != MASTER_SEED:
         raise RuntimeError("STAGE9A_MANIFEST_IDENTITY_MISMATCH")
 
@@ -196,6 +219,12 @@ def run_audit() -> dict[str, Any]:
                 None,
             ),
         },
+        "representative_inventory_provenance": {
+            "status": "CONFLICTED" if inventory_mismatches else "PASS_SCOPED",
+            "mismatch_count": len(inventory_mismatches),
+            "mismatches": inventory_mismatches,
+            "reuse_allowed_only_for_identity_matched_scenarios": True,
+        },
         "daily_contract": {
             "contract_version": accounting_contract.get("contract_version"),
             "schema_version": accounting_contract.get("daily_ledger_schema", {}).get("schema_version"),
@@ -251,7 +280,8 @@ def run_audit() -> dict[str, Any]:
             selected = select_maxcase(rows)
             roles = existing[scenario]["roles"]
             role_matches: list[str] = []
-            if selected is not None:
+            inventory_identity_matches = scenario not in inventory_mismatch_scenarios
+            if selected is not None and inventory_identity_matches:
                 role_matches = [
                     role for role, value in roles.items()
                     if int(value["trial_id"]) == int(selected["trial_id"])
@@ -294,8 +324,9 @@ def run_audit() -> dict[str, Any]:
                 "existing_role_trial_ids": {
                     role: int(value["trial_id"]) for role, value in roles.items()
                 },
+                "representative_inventory_identity_matches_manifest": inventory_identity_matches,
                 "matched_existing_roles": role_matches,
-                "existing_payload_reusable_exactly": payload_reuse,
+                "existing_payload_reusable_exactly": payload_reuse and inventory_identity_matches,
                 "new_daily_payload_required": selected is not None and not payload_reuse,
                 "partner_memo_fields_available_in_stage12_contract": (
                     stage12_contract_has["Partner1_Reinvestment_Balance"]
@@ -316,6 +347,8 @@ def run_audit() -> dict[str, Any]:
         "undefined_business_rule_scenarios": [x["scenario"] for x in undefined],
         "maxcase_payload_can_reuse_existing_role": len(payload_reuse),
         "maxcase_payload_needs_new_daily_payload": len(payload_missing),
+        "representative_inventory_provenance_mismatch_count": len(inventory_mismatches),
+        "representative_inventory_provenance_mismatch_scenarios": sorted(inventory_mismatch_scenarios),
         "new_payload_scenarios_missing_partner_memo_source": [
             x["scenario"] for x in payload_missing
             if not x["partner_memo_fields_available_in_stage12_contract"]
@@ -333,7 +366,7 @@ def run_audit() -> dict[str, Any]:
         report["integrity_status"] = "FAIL"
     if undefined:
         report["payload_status"] = "UNDEFINED_BUSINESS_RULE"
-    elif payload_missing:
+    elif payload_missing or inventory_mismatches:
         report["payload_status"] = "MISSING_EVIDENCE"
     else:
         report["payload_status"] = "EXISTING_PAYLOADS_REUSABLE"
