@@ -37,7 +37,7 @@
 ## 4. Resolved vs. remaining fields
 
 - `Cumulative_Project_Profit` is **not** an unresolved business decision: the original reference §§10.9–10.10 explicitly equates it to `Final_Retained_Earnings` at the same time. The pinned source calculation also sets `retained_earnings = cumulative_project_profit`. Use only when trial/date/source identity is bound; financial amounts remain exact integers.
-- The two partner reinvestment balances are absent from the Stage 12 Parquet schema and from V3's representative daily payloads. Their source remains `MISSING_EVIDENCE / PENDING_DATA_SOURCE`; do not derive them from cash, equity, retained earnings, or any unrelated balance field.
+- The two partner reinvestment balances are absent from the Stage 12 Parquet schema and from the missing fifth V3 MaxCase payload. The four existing V3 representative payloads P10/P50/P90/Loss do contain these fields in their daily arrays; they cannot substitute for a MaxCase daily record. Their source for MaxCase remains `MISSING_EVIDENCE / PENDING_DATA_SOURCE`; do not derive them from cash, equity, retained earnings, or any unrelated balance field.
 - Hence the only missing daily-accounting fields identified for the provisional MaxCase row are `Partner1_Reinvestment_Balance` and `Partner2_Reinvestment_Balance`. The selection ID and final equity are known from V3; the full role contract and production acceptance remain incomplete.
 
 ## 5. Boundaries and next action
