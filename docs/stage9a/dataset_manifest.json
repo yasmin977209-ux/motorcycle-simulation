@@ -6,7 +6,7 @@
       "C030_G050": 11498069095,
       "C030_G070": 11498204610,
       "C030_G100": 11498980727,
-      "C050_G000": 11503191706,
+      "C050_G000": 11503510055,
       "C050_G030": 11499677773,
       "C050_G050": 11502991608,
       "C050_G070": 11503357996,
@@ -316,7 +316,7 @@
       "name": "COLLECTION_PROBABILITIES",
       "python_type": "tuple",
       "value": [
-        1.0,
+        1,
         0.85,
         0.7,
         0.5,
@@ -542,7 +542,7 @@
     {
       "name": "REFERENCE_EPSILON",
       "python_type": "float",
-      "value": 1e-06
+      "value": 0.000001
     },
     {
       "name": "REFERENCE_STABILITY_INDICATORS",
