@@ -10,7 +10,7 @@ import monte_carlo
 import pytest
 from openpyxl import load_workbook
 
-from scripts.stage13_maxcase_source_audit import select_maxcase
+from scripts.stage13_maxcase_source_audit import inventory_identity_mismatches, select_maxcase
 from scripts.stage13_assemble import (
     ADAPTIVE_CHECKPOINT_METRICS, EXPECTED_ADAPTIVE_COHORT_ID,
     EXPECTED_REFERENCE_SHA256, EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA,
@@ -719,4 +719,43 @@ def test_source_audit_maxcase_fails_closed_without_positive_integer_equity():
         {"trial_id": 3, "final_net_project_equity": 10.5},
     ]
     assert select_maxcase(rows) is None
+
+def test_source_audit_rejects_representative_inventory_artifact_id_drift():
+    manifest = {
+        "artifact_manifest": {
+            "enriched_artifacts": {"C050_G000": 11503191706},
+            "enrichment_run_ids": {"C050_G000": 37662891608},
+        }
+    }
+    inventory = {
+        "artifacts": [{
+            "scenario": "C050_G000",
+            "artifact_id": 11503510055,
+            "run_id": 37662891608,
+        }]
+    }
+    assert inventory_identity_mismatches(manifest, inventory) == [{
+        "scenario": "C050_G000",
+        "manifest_artifact_id": 11503191706,
+        "inventory_artifact_id": 11503510055,
+        "manifest_run_id": 37662891608,
+        "inventory_run_id": 37662891608,
+    }]
+
+
+def test_source_audit_accepts_exact_representative_inventory_identity():
+    manifest = {
+        "artifact_manifest": {
+            "enriched_artifacts": {"C050_G000": 11503191706},
+            "enrichment_run_ids": {"C050_G000": 37662891608},
+        }
+    }
+    inventory = {
+        "artifacts": [{
+            "scenario": "C050_G000",
+            "artifact_id": 11503191706,
+            "run_id": 37662891608,
+        }]
+    }
+    assert inventory_identity_mismatches(manifest, inventory) == []
 
