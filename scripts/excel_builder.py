@@ -238,6 +238,7 @@ def write_readme(wb, manifest, validation, excel_errors):
         ("Workbook status", "PROVISIONAL — NOT ACCEPTED"),
         ("Release status", "BLOCKED / NOT_AUTHORIZED"),
         ("C050_G000 Artifact override", "V3 Artifact 11503510055 / Run 37662891608 (provisional)"),
+        ("Language", "English — technical schema headers and sheet identifiers preserved"),
     ]
     write_table(ws, ["Item", "Value"], rows)
     style_sheet(ws, "A2")
