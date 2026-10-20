@@ -45,6 +45,15 @@ PERCENT_FMT = "0.0%"
 DATE_FMT = "yyyy-mm-dd"
 
 
+def _stage13_module():
+    try:
+        from scripts import stage13_assemble
+    except ModuleNotFoundError:
+        import stage13_assemble
+        return stage13_assemble
+    return stage13_assemble
+
+
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -410,7 +419,7 @@ def write_representatives(
     role_to_payload_labels,
 ):
     """Write all five approved roles after explicit identity validation."""
-    from scripts.stage13_assemble import REQUIRED_REPRESENTATIVE_ROLES
+    REQUIRED_REPRESENTATIVE_ROLES = _stage13_module().REQUIRED_REPRESENTATIVE_ROLES
 
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
     headers = [
@@ -711,13 +720,12 @@ def build_workbook(
     role_to_payload_labels: dict[str, str] | None = None,
 ) -> dict:
     """Load evidence as orchestrator; Stage 13 owns ordered assembly and post-write audit."""
-    from scripts.stage13_assemble import (
-        REQUIRED_REPRESENTATIVE_ROLES,
-        assemble_workbook,
-        validate_representative_assignments,
-        validate_representative_payload,
-        validate_role_payload_mapping,
-    )
+    stage13 = _stage13_module()
+    REQUIRED_REPRESENTATIVE_ROLES = stage13.REQUIRED_REPRESENTATIVE_ROLES
+    assemble_workbook = stage13.assemble_workbook
+    validate_representative_assignments = stage13.validate_representative_assignments
+    validate_representative_payload = stage13.validate_representative_payload
+    validate_role_payload_mapping = stage13.validate_role_payload_mapping
 
     root = Path(dataset_root)
     manifest = load_json(Path(manifest_path))
@@ -771,7 +779,7 @@ def build_workbook(
         "dataset_root": str(root),
     }
     return assemble_workbook(
-        builder=__import__(__name__, fromlist=["*"]),
+        builder=__import__("sys").modules[__name__],
         data=data,
         output_path=output_path,
         role_to_payload_labels=role_map,
