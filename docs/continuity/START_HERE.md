@@ -65,3 +65,8 @@ The marker below is a non-sensitive test token. A separate ChatGPT conversation 
 The merged Project Source expected in the ChatGPT project is named exactly `المرجع النهائي الموحد المعتمد المدمج.md`. Names of the embedded source documents are historical/internal names, not necessarily the uploaded Project Source filename. The current proposed Project Instructions are in [PROJECT_INSTRUCTIONS_DRAFT.md](PROJECT_INSTRUCTIONS_DRAFT.md); this is still a manual owner action and is not applied by GitHub.
 
 At every new chat, treat PR #46 and `tmp/cp-session-continuity-20261017` as discovery pointers only. Re-fetch current PR/base/head and verify the branch; then read the continuity ledger and output manifest at that live ref. If it is unavailable or ambiguous, rediscover from live GitHub evidence and stop as BLOCKED if no unique valid target can be proven. The independent marker already present in this file is reserved for a separate-chat acceptance test; do not duplicate it in the prompt or disclose its expected value elsewhere.
+
+
+## Latest handoff snapshot — 2026-10-20
+
+For a new chat, first re-verify this branch and PR #46 live, then read `docs/continuity/HANDOFF_2026-10-20_CHAT_MIGRATION.md`, the latest appended section in `docs/PROJECT_CONTINUITY.md` headed `CP-CHAT-MIGRATION-HANDOFF-2026-10-20`, and the last record in `docs/continuity/SESSION_OUTPUTS.jsonl`. The handoff is a detailed snapshot of the user's supplied prior conversation and the latest live checks, not a replacement for live verification. Current delivery status remains `NOT_ACCEPTED`; Release remains blocked. Do not copy, reveal, or duplicate any independent cross-chat acceptance marker reserved in this document.
