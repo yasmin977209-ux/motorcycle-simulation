@@ -135,6 +135,16 @@ def run_audit() -> dict[str, Any]:
     stage10_run = gatea.validate_run(STAGE10_RUN, STAGE10_HEAD, None)
     stage7_artifacts, _ = gatea.artifact_index(STAGE7_RUN)
     stage10_artifacts, _ = gatea.artifact_index(STAGE10_RUN)
+    stage10_jobs_response = gatea.gh_json(
+        f"repos/{REPO}/actions/runs/{STAGE10_RUN}/jobs?per_page=100"
+    )
+    stage10_jobs = stage10_jobs_response.get("jobs", [])
+    if int(stage10_jobs_response.get("total_count", -1)) != len(stage10_jobs):
+        raise RuntimeError("STAGE10_JOB_LIST_INCOMPLETE")
+    successful_stage10_benchmark_jobs = sum(
+        1 for job in stage10_jobs
+        if str(job.get("name", "")).startswith("bench-") and job.get("conclusion") == "success"
+    )
 
     contract_text = json.dumps(accounting_contract, ensure_ascii=False, sort_keys=True)
     workbook_daily_fields = [
@@ -177,7 +187,15 @@ def run_audit() -> dict[str, Any]:
             ).strip(),
             "stage9a_global_manifest_sha256": manifest.get("global_manifest_sha256"),
         },
-        "runs": {"stage7": stage7_run, "stage10": stage10_run},
+        "runs": {
+            "stage7": stage7_run,
+            "stage10": stage10_run,
+            "stage10_successful_benchmark_job_count": successful_stage10_benchmark_jobs,
+            "stage10_aggregate_job_conclusion": next(
+                (job.get("conclusion") for job in stage10_jobs if job.get("name") == "aggregate-stage10"),
+                None,
+            ),
+        },
         "daily_contract": {
             "contract_version": accounting_contract.get("contract_version"),
             "schema_version": accounting_contract.get("daily_ledger_schema", {}).get("schema_version"),
@@ -204,6 +222,22 @@ def run_audit() -> dict[str, Any]:
                 else f"stage10-bench-{scenario}-1"
             )
             artifact = gatea.find_artifact(index, artifact_name, run_id)
+            stage10_scenario_job = None
+            if not is_c100:
+                matching_jobs = [
+                    job for job in stage10_jobs
+                    if job.get("name") == f"bench-{scenario}-1"
+                ]
+                if len(matching_jobs) != 1 or matching_jobs[0].get("conclusion") != "success":
+                    raise RuntimeError(
+                        f"STAGE10_SCENARIO_JOB_NOT_SUCCESS: {scenario}: "
+                        f"{[(job.get('name'), job.get('conclusion')) for job in matching_jobs]}"
+                    )
+                stage10_scenario_job = {
+                    "job_id": int(matching_jobs[0]["id"]),
+                    "name": matching_jobs[0]["name"],
+                    "conclusion": matching_jobs[0]["conclusion"],
+                }
             expected_head = STAGE7_HEAD if is_c100 else STAGE10_HEAD
             artifact_run = artifact.get("workflow_run") or {}
             if artifact_run and (
@@ -230,6 +264,7 @@ def run_audit() -> dict[str, Any]:
                 payload_reuse = bool(role_matches)
             report["scenarios"].append({
                 "scenario": scenario,
+                "stage10_scenario_job": stage10_scenario_job,
                 "source_artifact": {
                     "run_id": run_id,
                     "run_head_sha": expected_head,
