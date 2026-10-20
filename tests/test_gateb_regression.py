@@ -94,3 +94,21 @@ def test_non_adjacent_or_non_doubling_points_fail_closed() -> None:
 def test_stability_constants_express_three_transitions_and_four_points() -> None:
     assert constants.STABILITY_CONSECUTIVE_TRANSITIONS_REQUIRED == 3
     assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 4
+
+
+def test_failed_point_keeps_window_blocked_until_three_new_transitions_pass() -> None:
+    from scripts.stage7_stability import has_required_stability_window
+
+    history = [
+        _stable_checkpoint(300),
+        _stable_checkpoint(600, gate_b=False),
+        _stable_checkpoint(1200),
+        _stable_checkpoint(2400),
+    ]
+    assert has_required_stability_window(history) is False
+
+    history.append(_stable_checkpoint(4800))
+    assert has_required_stability_window(history) is False
+
+    history.append(_stable_checkpoint(9600))
+    assert has_required_stability_window(history) is True
