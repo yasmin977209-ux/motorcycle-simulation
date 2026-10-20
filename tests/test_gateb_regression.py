@@ -56,3 +56,41 @@ def test_gate_b_accepts_explicit_boolean_evidence() -> None:
 def test_gate_b_rejects_truthy_string_false() -> None:
     with pytest.raises(TypeError, match="stable must be a bool"):
         run_batch.evaluate_gate_b(_gate_b_metrics("False"))
+
+
+def _stable_checkpoint(n: int, *, gate_a: bool = True, gate_b: bool = True) -> dict:
+    return {
+        "n": n,
+        "gate_a": {
+            "status": "PASS" if gate_a else "FAIL",
+            "checked": gate_a,
+            "stable": gate_a,
+        },
+        "gate_b": {"checked": gate_b, "stable": gate_b},
+    }
+
+
+def test_three_checkpoint_points_are_not_three_transitions() -> None:
+    from scripts.stage7_stability import has_required_stability_window
+
+    history = [_stable_checkpoint(n) for n in (300, 600, 1200)]
+    assert has_required_stability_window(history) is False
+
+
+def test_four_adjacent_doubling_points_satisfy_three_transition_window() -> None:
+    from scripts.stage7_stability import has_required_stability_window
+
+    history = [_stable_checkpoint(n) for n in (300, 600, 1200, 2400)]
+    assert has_required_stability_window(history) is True
+
+
+def test_non_adjacent_or_non_doubling_points_fail_closed() -> None:
+    from scripts.stage7_stability import has_required_stability_window
+
+    history = [_stable_checkpoint(n) for n in (300, 600, 1200, 4800)]
+    assert has_required_stability_window(history) is False
+
+
+def test_stability_constants_express_three_transitions_and_four_points() -> None:
+    assert constants.STABILITY_CONSECUTIVE_TRANSITIONS_REQUIRED == 3
+    assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 4

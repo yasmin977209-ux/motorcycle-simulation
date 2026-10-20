@@ -42,6 +42,52 @@ def next_statistical_checkpoint(completed_trials: int) -> int:
     return target
 
 
+def has_required_stability_window(
+    history: list[dict[str, Any]],
+    *,
+    required_points: int | None = None,
+) -> bool:
+    """Fail closed unless three adjacent doubling transitions pass across four points."""
+    points_needed = (
+        constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
+        if required_points is None
+        else required_points
+    )
+    if type(points_needed) is not int or points_needed < 2:
+        return False
+    if len(history) < points_needed:
+        return False
+
+    recent = history[-points_needed:]
+    previous_n: int | None = None
+    for item in recent:
+        if not isinstance(item, dict):
+            return False
+        n = item.get("n")
+        if type(n) is not int or not is_statistical_checkpoint(n):
+            return False
+        if previous_n is not None and n != previous_n * STATISTICAL_ESCALATION_MULTIPLIER:
+            return False
+
+        gate_a = item.get("gate_a")
+        if (
+            not isinstance(gate_a, dict)
+            or gate_a.get("status") != "PASS"
+            or gate_a.get("checked") is not True
+            or gate_a.get("stable") is not True
+        ):
+            return False
+        gate_b = item.get("gate_b")
+        if (
+            not isinstance(gate_b, dict)
+            or gate_b.get("checked") is not True
+            or gate_b.get("stable") is not True
+        ):
+            return False
+        previous_n = n
+    return True
+
+
 def filter_statistical_history(
     history: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[int | None]]:

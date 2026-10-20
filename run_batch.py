@@ -25,6 +25,7 @@ from scripts.stage7_stability import (
     evaluate_gate_a as evaluate_stage7_gate_a,
     evaluate_gate_b as evaluate_stage7_gate_b,
     filter_statistical_history,
+    has_required_stability_window,
     next_statistical_checkpoint,
 )
 
@@ -835,18 +836,7 @@ def run_batch(
                 }
             )
 
-            recent = state["stability_history"][
-                -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
-            ]
-            stable_now = (
-                len(recent)
-                == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
-                and all(
-                    item["gate_a"]["stable"]
-                    and item["gate_b"]["stable"]
-                    for item in recent
-                )
-            )
+            stable_now = has_required_stability_window(state["stability_history"])
             state["final_status"] = (
                 "stable" if stable_now else "running"
             )

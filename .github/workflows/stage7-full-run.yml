@@ -18,7 +18,7 @@ env:
   INITIAL_NON_C100_TRIALS: "300"
   INITIAL_C100_TRIALS: "1"
   ESCALATION_MULTIPLIER: "2"
-  STABILITY_CONSECUTIVE_CHECKS: "3"
+  STABILITY_CONSECUTIVE_CHECKS: "4"
   CI_RELATIVE_EPSILON: "0.01"
   CI_ABSOLUTE_EPSILON: "1"
   # Operational orchestration cap; model logic has no max_days limit.
@@ -341,8 +341,8 @@ jobs:
           )
           from scripts.stage7_stability import (
               ci_half_width_limit, evaluate_gate_a, evaluate_gate_b,
-              filter_statistical_history, is_statistical_checkpoint,
-              next_statistical_checkpoint,
+              filter_statistical_history, has_required_stability_window,
+              is_statistical_checkpoint, next_statistical_checkpoint,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -780,19 +780,13 @@ jobs:
                   history.append(check_entry)
                   state["stability_history"] = history
 
-                  recent = history[-REQUIRED_CONSECUTIVE:]
                   gate_a_status = gate_a.get("status", "BLOCKED")
                   gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
                   stable_now = (
                       not gate_a_stop
                       and gate_a_status == "PASS"
-                      and len(recent) == REQUIRED_CONSECUTIVE
-                      and all(
-                          item.get("gate_a", {}).get("status") == "PASS"
-                          and item.get("gate_a", {}).get("checked") is True
-                          and item.get("gate_a", {}).get("stable") is True
-                          and item.get("gate_b", {}).get("stable") is True
-                          for item in recent
+                      and has_required_stability_window(
+                          history, required_points=REQUIRED_CONSECUTIVE
                       )
                   )
 
