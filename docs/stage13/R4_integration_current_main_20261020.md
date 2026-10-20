@@ -208,3 +208,25 @@ Therefore classify Stage 9C C-1..C-6 as `PASS_SCOPED` based on the merged state 
 
 This does not clear Gate A provider integration, `SOURCE_SHA_DRIFT`, Stage 11 topology, MaxCase partner memo source fields, or final seven-file acceptance.
 
+
+
+## Read-back results — Stage 12 MaxCase daily extraction and Stage 3 compatibility
+
+### Stage 12 MaxCase extraction
+
+- Run `39367346036`, conclusion `success`, tested HEAD `56e8c286b8be254b24f8bb8c2c4c26e18af04fd6`.
+- Artifact `12239369983`, `stage13-maxcase-source-audit-39367346036`, ZIP size 1,567,864 bytes, SHA-256 `f3e036ef1c88fc188633b784da12f76b32c41d3fe3283c768a0c3ea1f4b669e9`; downloaded read-back matched exact digest and size.
+- Embedded `stage13_maxcase_source_audit.json`: 1,088,172 bytes, SHA-256 `eafcc583375b7f85e6c2682744bd173ca29fa196132df83716104a1a4311053d`.
+- Embedded `stage13_maxcase_daily_payloads.json`: 28,105,275 bytes, SHA-256 `36b6fbb2f32978112f938a4d116e21ab4e039c20dd18d197a6657191615ade7f`.
+- Result: `integrity_status=PASS_SCOPED`, `payload_status=MISSING_EVIDENCE`; 25/25 scenarios; 11,005/11,005 trial-result fingerprints rehashed; 25/25 Stage 12 artifacts validated; 22,546,465/22,546,465 daily rows validated; zero fingerprint mismatches; 25 positive MaxCase selections; 52,541 selected MaxCase daily rows extracted. The sidecar contains no partner memo balance values and marks both as `MISSING_EVIDENCE`.
+- Independent read-back of the sidecar confirmed for all 25 selected trials: every daily row has the selected `trial_id`, canonical source SHA, constant `result_sha256`, contiguous date range from 2027-01-01 through the selected final close date, and terminal Cash/Equity/Cumulative_Project_Profit exactly match the canonical TrialResult summary. No simulation, trial rerun, checkpoint, workbook build, or historical data modification occurred.
+- The canonical manifest/inventory mismatch remains explicit: scenario `C050_G000` inventory artifact ID `11503510055` differs from canonical manifest ID `11503191706`; this prevents claiming that the *entire representative payload inventory* is identity-matched. It does not affect the newly extracted Stage 12 MaxCase daily rows, whose source files are bound to CP12B/CP12C hashes and canonical TrialResult hashes.
+- Resulting status: MaxCase selection and daily-series extraction `PASS_SCOPED`; final workbook and seven-file delivery remain `BLOCKED / MISSING_EVIDENCE` until the two partner memo balances are supplied from a trusted identity-matched event-level source or an authoritative rule/source resolves the gap.
+
+### Stage 3 compatibility regressions
+
+- Run `39367690224`, conclusion `success`, tested HEAD `66f138c1431ded40048ab24561b7ac076eb3f405`.
+- Artifact `12240271068`, `stage3-compat-evidence-39367690224`, 1,178 bytes, SHA-256 `1382312a428fb279012fd792dc71cd6cef9cddd3ef9be9a39b7ec69987ba316f`; downloaded read-back matched exact digest and size.
+- Pytest: `12 passed in 9.12s`, exit code 0 across `tests/test_stage3_path_integration.py`, `tests/test_stage3b.py`, and `tests/test_stage3b_rollforward.py`. Tested code/test/workflow blobs are identical to the current candidate branch.
+- This targeted PASS supersedes the old missing-`_create_contract` and two targeted Stage 3B failure observations for the tested current blobs. The historical repository-wide raw pytest Run `38164248220` remains a historical non-PASS; this scoped run does not relabel it or claim full-repository pytest PASS. `SOURCE_SHA_DRIFT` remains open.
+
