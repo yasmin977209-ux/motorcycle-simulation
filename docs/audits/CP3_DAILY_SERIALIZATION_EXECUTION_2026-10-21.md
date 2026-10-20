@@ -34,3 +34,16 @@ No source SHA, seed/RNG, sampling policy, trial IDs, cohort, reference, manifest
 ## Next permitted action
 
 Obtain and inspect the run record tied to candidate SHA `158ca2558bcbeccbf90f593a50e28478359fe4ea`, then inspect the actual `cp3-daily-regression-evidence` artifact for its `tested_sha`, exit code, file hashes, JUnit and test log. Until then keep this CP `PARTIAL / MISSING_EVIDENCE`.
+
+
+## Post-run and artifact read-back — 2026-10-21
+
+**Disposition update:** the earlier `MISSING_EVIDENCE` finding for the focused verification is resolved. The *targeted CI gate only* is now `PASS_SCOPED`; this does not accept the workbook or the full project.
+
+- Workflow: `.github/workflows/cp-path3-daily-workflow-20261021.yml`; Run [39503426859](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39503426859); event `push`; branch `tmp/cp-path3-daily-workflow-20261021`; conclusion `success`; status `completed`; attempt 1. Run `head_sha` = tested SHA = checkout SHA in the job log = `158ca2558bcbeccbf90f593a50e28478359fe4ea`.
+- Job ID `118906324570`, `DAILY synthetic XLSX regression only`: every substantive step completed `success` including exact-SHA checkout, dependency installation, compile, focused pytest, evidence generation, artifact upload, and final exit-code gate.
+- Test output: `1 passed in 0.25s`; JUnit: 1 test, 0 failures, 0 errors, 0 skipped; saved test exit code `0`.
+- Artifact: [cp3-daily-regression-evidence — ID 12302286623](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39503426859/artifacts/12302286623). GitHub API size 1,229 bytes; SHA-256 digest `d6ab3e8cef568ccd2f3f061b3d074317010d0485cdae825cd78829d4df9c2274`; downloaded local ZIP size 1,229 bytes and recalculated SHA-256 exactly matched the API digest. Artifact contained `evidence.json`, `junit.xml`, `pytest.txt`, and `test-exit-code.txt`; all were read. Artifact retention expiry: `2026-11-03T21:49:40Z`.
+- Recomputed raw-byte SHA-256 for each source/test/workflow file fetched at the exact tested SHA; all match the artifact's `evidence.json` values: `scripts/excel_builder.py` = `3925538c119aeccac3b2e6f6eed3f5b83dbd3e4542f330c8607409f8547ba597`; `tests/test_excel_daily_serialization.py` = `1f319d0aa79b6a007d9319bf332a842501604a9c6a6a1c3030e2a585106ab968`; workflow = `eeeb76dd002b674b565ca464cb339945146695f5aeb081a899b58088038e07c6`.
+- `main` remains exactly `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. Comparing the tested SHA to current branch head shows the only later changes are this audit addendum and `docs/PROJECT_CONTINUITY.md`; no executable/test/workflow paths changed after the verified run.
+- **Scope limit:** synthetic DAILY XLSX serialization only; not the full regression inventory, not a 185-sheet production workbook, not Gate A/B or final delivery acceptance. No production simulation, trial, or checkpoint ran.
