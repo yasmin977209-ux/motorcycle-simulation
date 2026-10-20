@@ -785,8 +785,20 @@ def main():
     parser.add_argument("--output-path",required=True)
     parser.add_argument("--manifest",required=True)
     parser.add_argument("--representatives",required=True)
+    parser.add_argument(
+        "--role-payload-labels-json",
+        help="Optional explicit JSON object mapping all five approved roles to payload filenames; omission fails closed.",
+    )
     args=parser.parse_args()
-    result=build_workbook(args.dataset_root,args.output_path,args.manifest,args.representatives)
+    role_payload_labels = (
+        load_json(Path(args.role_payload_labels_json))
+        if args.role_payload_labels_json
+        else None
+    )
+    result=build_workbook(
+        args.dataset_root,args.output_path,args.manifest,args.representatives,
+        role_to_payload_labels=role_payload_labels,
+    )
     print(json.dumps(result,ensure_ascii=False,sort_keys=True))
     raise SystemExit(0 if result["success"] else 1)
 
