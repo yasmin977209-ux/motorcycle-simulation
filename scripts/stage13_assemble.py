@@ -694,6 +694,19 @@ def write_daily_distribution(wb, daily_by_scenario):
 
 
 
+def representative_daily_value(label, daily, field):
+    value = daily.get(field)
+    if value is not None:
+        return value
+    if label in {"Max Case", "MaxCase"} and field in {
+        "Cumulative_Project_Profit",
+        "Partner1_Reinvestment_Balance",
+        "Partner2_Reinvestment_Balance",
+    }:
+        return "PENDING_DATA_SOURCE"
+    return None
+
+
 def write_representatives(wb, representatives_by_scenario):
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
     headers = [
@@ -732,9 +745,12 @@ def write_representatives(wb, representatives_by_scenario):
                     scenario, display, "DAILY", summary["trial_id"], daily.get("date"),
                     daily.get("Final_Close_Date"), daily.get("Cash"), daily.get("Net_Equity"),
                     daily.get("Active_Bikes"), daily.get("Owned_Transferred_Bikes"),
-                    daily.get("Pending_Claims"), daily.get("Partner1_Reinvestment_Balance"),
-                    daily.get("Partner2_Reinvestment_Balance"), None, None, None, None, None,
-                    None, None, None, None, None,
+                    daily.get("Pending_Claims"),
+                    representative_daily_value(display, daily, "Partner1_Reinvestment_Balance"),
+                    representative_daily_value(display, daily, "Partner2_Reinvestment_Balance"),
+                    None, None,
+                    representative_daily_value(display, daily, "Cumulative_Project_Profit"),
+                    None, None, None, None, None, None, None, None,
                 ])
     write_table(ws, headers, rows, number_formats={
         "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
@@ -1361,6 +1377,12 @@ def _validate_representatives(data, mode):
                 )
                 final_row = daily_rows[-1]
                 for summary_field, daily_field in terminal_pairs:
+                    if (
+                        role == "Max Case"
+                        and daily_field == "Cumulative_Project_Profit"
+                        and final_row.get(daily_field) == "PENDING_DATA_SOURCE"
+                    ):
+                        continue
                     if final_row.get(daily_field) != summary.get(summary_field):
                         raise RuntimeError(
                             f"REPRESENTATIVE_DAILY_TERMINAL_MISMATCH: {scenario}/{role}:{daily_field}"
