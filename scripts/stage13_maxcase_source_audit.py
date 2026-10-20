@@ -207,7 +207,7 @@ def run_audit() -> dict[str, Any]:
         "repository": REPO,
         "tested_head_sha": os.environ.get("GITHUB_SHA"),
         "tested_branch": os.environ.get("GITHUB_REF_NAME"),
-        "scope": "READ_ONLY_EXISTING_STAGE7_STAGE10_TRIALRESULTS; NO_SIMULATION; NO_STAGE12_ARTIFACT_MUTATION; NO_WORKBOOK",
+        "scope": "READ_ONLY_STAGE7_STAGE10_TRIALRESULTS_AND_STAGE12_DAILY_PARQUET_EXTRACTION; NO_SIMULATION; NO_HISTORICAL_ARTIFACT_MUTATION; NO_WORKBOOK",
         "source_identity": {
             "source_sha": SOURCE_SHA,
             "master_seed": MASTER_SEED,
@@ -479,6 +479,8 @@ def run_audit() -> dict[str, Any]:
         and report["stage12_daily_validation"]["scenarios_validated"] == 25
         and report["stage12_daily_validation"]["daily_rows_validated"] == 22546465
         and report["stage12_daily_validation"]["trial_result_fingerprint_mismatches"] == 0
+        and len(extracted_payloads) == 25
+        and all(x["daily_rows"] for x in extracted_payloads)
         and all(x["source_artifact"]["artifact_zip_sha256"] == x["source_artifact"]["api_digest"].removeprefix("sha256:")
                 for x in report["scenarios"])
         and all(x["source_artifact"]["artifact_zip_sha256"] == x["source_artifact"]["api_digest"].removeprefix("sha256:")
@@ -489,7 +491,12 @@ def run_audit() -> dict[str, Any]:
         report["integrity_status"] = "FAIL"
     if undefined:
         report["payload_status"] = "UNDEFINED_BUSINESS_RULE"
-    elif payload_missing or inventory_mismatches:
+    elif (
+        payload_missing
+        or inventory_mismatches
+        or not stage12_contract_has["Partner1_Reinvestment_Balance"]
+        or not stage12_contract_has["Partner2_Reinvestment_Balance"]
+    ):
         report["payload_status"] = "MISSING_EVIDENCE"
     else:
         report["payload_status"] = "EXISTING_PAYLOADS_REUSABLE"
