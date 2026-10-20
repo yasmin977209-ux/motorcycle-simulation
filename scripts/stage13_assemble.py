@@ -22,6 +22,8 @@ def validate_role_payload_mapping(
     required = set(REQUIRED_REPRESENTATIVE_ROLES)
     if role_to_payload_labels is None:
         raise ValueError("STAGE13_ROLE_TO_PAYLOAD_MAPPING_UNRESOLVED")
+    if not isinstance(role_to_payload_labels, Mapping):
+        raise ValueError("STAGE13_ROLE_TO_PAYLOAD_MAPPING_INVALID_TYPE")
     actual = set(role_to_payload_labels)
     if actual != required:
         missing = sorted(required - actual)
@@ -97,6 +99,8 @@ def validate_representative_payload(
     payload: Mapping[str, Any],
 ) -> None:
     """Require exact scenario/trial identity in a representative's summary and daily rows."""
+    if type(assigned_trial_id) is not int or assigned_trial_id < 1:
+        raise ValueError(f"STAGE13_REPRESENTATIVE_TRIAL_ID_INVALID: {scenario}/{role}")
     summary = payload.get("summary")
     if not isinstance(summary, Mapping):
         raise ValueError(f"STAGE13_REPRESENTATIVE_SUMMARY_MISSING: {scenario}/{role}")
@@ -108,6 +112,8 @@ def validate_representative_payload(
     daily = payload.get("daily")
     if not isinstance(daily, list):
         raise ValueError(f"STAGE13_REPRESENTATIVE_DAILY_MISSING: {scenario}/{role}")
+    if not daily:
+        raise ValueError(f"STAGE13_REPRESENTATIVE_DAILY_EMPTY: {scenario}/{role}")
     for index, row in enumerate(daily):
         if not isinstance(row, Mapping):
             raise ValueError(f"STAGE13_REPRESENTATIVE_DAILY_ROW_INVALID: {scenario}/{role}/{index}")
@@ -217,7 +223,7 @@ def assemble_workbook(
     for scenario in scenarios:
         p50_trial_id = assignments[scenario]["P50"]
         p50_label = role_map["P50"]
-        payload = builder.load_rep_payload(Path(data["dataset_root"]), scenario, p50_label)
+        payload = data["representatives_by_scenario"][scenario]["P50"]
         validate_representative_payload(scenario, "P50", p50_trial_id, payload)
         builder.write_stats_sheet(
             wb, scenario, all_rows[scenario], int(manifest["total_capital"])
