@@ -17,6 +17,8 @@ REQUIRED_REPRESENTATIVE_ROLES = ("P10", "P50", "P90", "LossCase", "MaxCase")
 
 def validate_role_payload_mapping(
     role_to_payload_labels: Mapping[str, str] | None,
+    *,
+    allow_pending_maxcase: bool = False,
 ) -> dict[str, str]:
     """Require an explicit, complete role-to-file contract; never infer aliases."""
     required = set(REQUIRED_REPRESENTATIVE_ROLES)
@@ -34,7 +36,11 @@ def validate_role_payload_mapping(
     values = list(role_to_payload_labels.values())
     if any(type(value) is not str or not value.strip() for value in values):
         raise ValueError("STAGE13_ROLE_TO_PAYLOAD_MAPPING_VALUE_INVALID")
-    if len(set(values)) != len(values):
+    pending_maxcase = role_to_payload_labels.get("MaxCase") == "PENDING_DATA_SOURCE"
+    if pending_maxcase and not allow_pending_maxcase:
+        raise ValueError("STAGE13_MAXCASE_PENDING_NOT_ALLOWED")
+    duplicate_values = len(set(values)) != len(values)
+    if duplicate_values:
         raise ValueError("STAGE13_ROLE_TO_PAYLOAD_MAPPING_LABEL_DUPLICATE")
     return {role: role_to_payload_labels[role] for role in REQUIRED_REPRESENTATIVE_ROLES}
 
@@ -192,7 +198,14 @@ def assemble_workbook(
     """Build sheets in canonical order using injected helpers, then audit the saved XLSX."""
     from openpyxl import Workbook
 
-    role_map = validate_role_payload_mapping(role_to_payload_labels)
+    provisional_pending_maxcase = mode == "provisional"
+    role_map = validate_role_payload_mapping(
+        role_to_payload_labels,
+        allow_pending_maxcase=provisional_pending_maxcase,
+    )
+    warnings = list(data.get("warnings", []))
+    if provisional_pending_maxcase and role_map.get("MaxCase") == "PENDING_DATA_SOURCE":
+        warnings.append("WARNING: MAXCASE_PAYLOAD_PENDING — explicit PENDING_DATA_SOURCE row retained")
     manifest = data["manifest"]
     all_rows = data["trials_by_scenario"]
     assignments = data["representative_trial_ids"]
@@ -206,7 +219,10 @@ def assemble_workbook(
         trial_rows_by_scenario=all_rows,
     )
     wb = Workbook()
-    builder.write_readme(wb, manifest, validation, [])
+    builder.write_readme(
+        wb, manifest, validation, [],
+        data.get("provisional_metadata") if provisional_pending_maxcase else None,
+    )
     builder.write_constants(wb, manifest)
     summaries = builder.build_scenario_summary(all_rows)
     builder.write_scenario_matrix(wb, summaries, manifest)
@@ -222,8 +238,12 @@ def assemble_workbook(
 
     for scenario in scenarios:
         p50_trial_id = assignments[scenario]["P50"]
-        p50_label = role_map["P50"]
-        payload = data["representatives_by_scenario"][scenario]["P50"]
+        payload_source = data["representatives_by_scenario"]
+        payload = (
+            payload_source.get_payload(scenario, "P50")
+            if hasattr(payload_source, "get_payload")
+            else payload_source[scenario]["P50"]
+        )
         validate_representative_payload(scenario, "P50", p50_trial_id, payload)
         builder.write_stats_sheet(
             wb, scenario, all_rows[scenario], int(manifest["total_capital"])
@@ -268,5 +288,7 @@ def assemble_workbook(
         "sheets_count": audit["sheet_count"],
         "excel_errors": 0,
         "formula_cells": 0,
+        "warnings": warnings,
+        "provisional": provisional_pending_maxcase,
         "stats_precision_serialization": precision,
     }
