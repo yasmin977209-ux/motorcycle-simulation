@@ -155,3 +155,13 @@ The one-line candidate edit to the canonical manifest was reverted. The candidat
 
 Impact: the canonical TrialResult-based MaxCase selection and row fingerprint evidence remain `PASS_SCOPED`; the earlier count of five reusable payloads was based on four-role ID matching, but the candidate inventory/manifest mismatch is now separately visible and blocks any claim that the representative payload inventory is fully canonical. Final production payloads and delivery remain `BLOCKED / MISSING_EVIDENCE`.
 
+
+
+## R4 — derive MaxCase cumulative project profit from canonical Retained_Earnings
+
+| Field | Current state | Authority | Branch / base | Governing rule | Defect | Minimum change | Authority | Acceptance | Risk |
+|---|---|---|---|---|---|---|---|---|---|
+| MaxCase daily `Cumulative_Project_Profit` | `representative_daily_value` emits `PENDING_DATA_SOURCE` when the field is absent | Original approved reference §10.10 and Stage 12 contract | Candidate branch `tmp/cp-stage13-integration-20261020`, base `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; pre-change assembler blob `2ab2a8e6c69da12d9ea8b3776510eb4ec5d2bf6e` | Reference explicitly defines `Cumulative_Project_Profit = Final_Retained_Earnings`; Stage 12 schema carries `Retained_Earnings` per daily row | `K_CODE` — known value is available under the canonical field name but the MaxCase adapter fails to map it | For MaxCase only, if `Cumulative_Project_Profit` is absent, return the row's `Retained_Earnings`; keep explicit `Cumulative_Project_Profit` precedence and keep missing partner memo balances pending | Authorized by the normative formula; no rule or data identity change | Regression tests prove fallback, explicit-value precedence, and that partner memo fields remain `PENDING_DATA_SOURCE`; integration workflow must pass | Low; wrong mapping could affect representative reports, mitigated by source-derived equality and focused tests |
+
+The daily Stage 12 Parquet files contain all trials, so MaxCase daily rows can be extracted by trial ID from the historical dataset without rerunning simulations. This R4 changes only a deterministic field mapping in the candidate assembler; it does not write or alter historical Parquet, change SOURCE_SHA/seed/cohort, create production workbooks, or infer partner memo balances.
+
