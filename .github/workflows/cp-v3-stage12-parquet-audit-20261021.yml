@@ -1,0 +1,67 @@
+name: CP V3 MaxCase and Stage12 schema audit (read-only)
+
+on:
+  push:
+    branches:
+      - tmp/cp-v3-stage12-parquet-audit-20261021
+    paths:
+      - .github/workflows/cp-v3-stage12-parquet-audit-20261021.yml
+      - scripts/audit_v3_stage12_parquet.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect-existing-artifacts:
+    name: Read-only V3 and Stage12 Parquet identity/schema audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact pushed audit SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Assert branch, SHA, and no production mode
+        shell: bash
+        env:
+          AUDIT_SHA: ${{ github.sha }}
+          AUDIT_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test "${AUDIT_BRANCH}" = "tmp/cp-v3-stage12-parquet-audit-20261021"
+          test "$(git rev-parse HEAD)" = "${AUDIT_SHA}"
+          printf 'branch=%s\nsha=%s\nmode=read-only-existing-artifacts\n' "${AUDIT_BRANCH}" "${AUDIT_SHA}"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Parquet reader only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pyarrow==26.0.0
+          python -m py_compile scripts/audit_v3_stage12_parquet.py
+
+      - name: Download and inspect the two pinned artifacts
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python scripts/audit_v3_stage12_parquet.py
+
+      - name: Upload exact read-only audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp-v3-stage12-parquet-audit-${{ github.run_id }}
+          path: parquet_audit_evidence/v3_stage12_parquet_audit.json
+          if-no-files-found: error
+          retention-days: 30
