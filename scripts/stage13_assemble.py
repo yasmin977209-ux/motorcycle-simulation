@@ -206,7 +206,7 @@ def assemble_workbook(
     builder: Any,
     data: Mapping[str, Any],
     output_path: str | Path,
-    role_to_payload_labels: Mapping[str, str],
+    role_to_payload_labels: Mapping[str, str | None],
     mode: str = "canonical",
 ) -> dict[str, Any]:
     """Build sheets in canonical order using injected helpers, then audit the saved XLSX."""
