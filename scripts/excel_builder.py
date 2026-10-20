@@ -402,57 +402,149 @@ def write_daily_distribution(wb, dataset_root):
     style_sheet(ws,"B2")
 
 
-def write_representatives(wb, manifest, rep_path):
+REPRESENTATIVE_CASE_HEADERS = [
+    "scenario","case","record_type","trial_id","date","final_close_date",
+    "Cash","Net_Equity","Active_Bikes","Owned_Transferred_Bikes","Pending_Claims",
+    "Partner1_Reinvestment_Balance","Partner2_Reinvestment_Balance",
+    "final_net_project_equity","final_cash","cumulative_project_profit",
+    "termination_count","secondary_cycle_count","owned_bikes","held_assets",
+    "total_operating_revenue","bad_debt","guarantee_recovered","payload_source"
+]
+
+
+def start_representative_sheet(wb):
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
-    headers = [
-        "scenario","case","record_type","trial_id","date","final_close_date",
-        "Cash","Net_Equity","Active_Bikes","Owned_Transferred_Bikes","Pending_Claims",
-        "Partner1_Reinvestment_Balance","Partner2_Reinvestment_Balance",
-        "final_net_project_equity","final_cash","cumulative_project_profit",
-        "termination_count","secondary_cycle_count","owned_bikes","held_assets",
-        "total_operating_revenue","bad_debt","guarantee_recovered"
-    ]
-    rows = []
-    rep_all = load_json(rep_path)["scenarios"]
-    for s in EXPECTED_SCENARIOS:
-        for label in ("P10","P50","P90","Loss"):
-            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, label)
-            summary = payload["summary"]
-            rows.append([
-                s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
-                None,None,None,None,None,None,None,
-                summary["final_net_project_equity"],summary["final_cash"],
-                summary["cumulative_project_profit"],summary["termination_count"],
-                summary["secondary_cycle_count"],summary["owned_bikes"],summary["held_assets"],
-                summary["total_operating_revenue"],summary["bad_debt"],summary["guarantee_recovered"]
-            ])
-            for daily in payload.get("daily",[]):
-                rows.append([
-                    s,label,"DAILY",summary["trial_id"],daily.get("date"),daily.get("Final_Close_Date"),
-                    daily.get("Cash"),daily.get("Net_Equity"),daily.get("Active_Bikes"),
-                    daily.get("Owned_Transferred_Bikes"),daily.get("Pending_Claims"),
-                    daily.get("Partner1_Reinvestment_Balance"),
-                    daily.get("Partner2_Reinvestment_Balance"),
-                    None,None,None,None,None,None,None,None,None,None
-                ])
-    write_table(
-        ws,
-        headers,
-        rows,
-        number_formats={
-            "Cash":FINANCE_FMT,
-            "Net_Equity":FINANCE_FMT,
-            "Partner1_Reinvestment_Balance":FINANCE_FMT,
-            "Partner2_Reinvestment_Balance":FINANCE_FMT,
-            "final_net_project_equity":FINANCE_FMT,
-            "final_cash":FINANCE_FMT,
-            "cumulative_project_profit":FINANCE_FMT,
-            "total_operating_revenue":FINANCE_FMT,
-            "bad_debt":FINANCE_FMT,
-            "guarantee_recovered":FINANCE_FMT,
-        }
+    write_table(ws, REPRESENTATIVE_CASE_HEADERS, [])
+    return ws
+
+
+def _append_representative_row(ws, row):
+    headers = REPRESENTATIVE_CASE_HEADERS
+    if len(row) != len(headers):
+        raise RuntimeError(f"REPRESENTATIVE_ROW_WIDTH_MISMATCH: {len(row)} != {len(headers)}")
+    ws.append([py_value(value) for value in row])
+    row_num = ws.max_row
+    money_fields = {
+        "Cash", "Net_Equity", "Partner1_Reinvestment_Balance",
+        "Partner2_Reinvestment_Balance", "final_net_project_equity",
+        "final_cash", "cumulative_project_profit", "total_operating_revenue",
+        "bad_debt", "guarantee_recovered",
+    }
+    for cell in ws[row_num]:
+        cell.alignment = RIGHT
+        header = headers[cell.column - 1]
+        if header in money_fields:
+            cell.number_format = FINANCE_FMT
+        if isinstance(cell.value, date):
+            cell.number_format = DATE_FMT
+    return row_num
+
+
+def append_representative_scenario(
+    ws,
+    scenario,
+    representative_payloads,
+    assignments,
+    role_to_payload_labels,
+    trial_rows,
+    *,
+    on_p50=None,
+):
+    """Validate and write one scenario's payloads once; reuse P50 while building its detail sheets."""
+    stage13 = _stage13_module()
+    required_roles = stage13.REQUIRED_REPRESENTATIVE_ROLES
+    summary_fields = (
+        "final_net_project_equity", "final_cash", "cumulative_project_profit",
+        "termination_count", "secondary_cycle_count", "owned_bikes", "held_assets",
+        "total_operating_revenue", "bad_debt", "guarantee_recovered",
     )
-    style_sheet(ws,"E2")
+    by_id = {}
+    for trial in trial_rows:
+        trial_id = trial.get("trial_id")
+        if type(trial_id) is int:
+            if trial_id in by_id:
+                raise RuntimeError(f"REPRESENTATIVE_TRIAL_ID_DUPLICATE: {scenario}/{trial_id}")
+            by_id[trial_id] = trial
+
+    headers = REPRESENTATIVE_CASE_HEADERS
+    for role in required_roles:
+        trial_id = assignments[role]
+        if role == "MaxCase":
+            row = [scenario, "MaxCase", "PENDING_DATA_SOURCE", trial_id]
+            row.extend(["PENDING_DATA_SOURCE"] * (len(headers) - len(row)))
+            row_num = _append_representative_row(ws, row)
+            comment = (
+                "MaxCase trial_id=60; daily payload missing from V3 — see R4-V2.1 §5.4"
+                if scenario == "C050_G000"
+                else f"MaxCase trial_id={trial_id}; daily payload missing from enrichment artifact — see R4-V2.1 §5.4"
+            )
+            ws.cell(row=row_num, column=1).comment = Comment(comment, "OpenAI")
+            ws.cell(row=row_num, column=headers.index("Partner1_Reinvestment_Balance") + 1).comment = Comment(
+                "PENDING_DATA_SOURCE: MaxCase partner 1 reinvestment balance absent from source", "OpenAI"
+            )
+            ws.cell(row=row_num, column=headers.index("Partner2_Reinvestment_Balance") + 1).comment = Comment(
+                "PENDING_DATA_SOURCE: MaxCase partner 2 reinvestment balance absent from source", "OpenAI"
+            )
+            continue
+
+        payload = representative_payloads[role]
+        stage13.validate_representative_payload(scenario, role, trial_id, payload)
+        summary = payload["summary"]
+        source_row = by_id.get(trial_id)
+        if source_row is None:
+            raise RuntimeError(f"STAGE13_REPRESENTATIVE_TRIAL_BINDING_INVALID: {scenario}/{role}/trial_id={trial_id}")
+        for field in summary_fields:
+            if field in summary and field in source_row and summary[field] != source_row[field]:
+                raise RuntimeError(
+                    f"STAGE13_REPRESENTATIVE_RESULT_MISMATCH: {scenario}/{role}/trial_id={trial_id}/{field}"
+                )
+        source_ref = f"representatives/{role_to_payload_labels[role]}.json"
+        _append_representative_row(ws, [
+            scenario, role, "SUMMARY", trial_id, None, summary.get("final_close_date"),
+            None, None, None, None, None, None, None,
+            summary.get("final_net_project_equity"), summary.get("final_cash"),
+            summary.get("cumulative_project_profit"), summary.get("termination_count"),
+            summary.get("secondary_cycle_count"), summary.get("owned_bikes"), summary.get("held_assets"),
+            summary.get("total_operating_revenue"), summary.get("bad_debt"), summary.get("guarantee_recovered"),
+            source_ref
+        ])
+        for daily in payload.get("daily", []):
+            _append_representative_row(ws, [
+                scenario, role, "DAILY", trial_id, daily.get("date"),
+                daily.get("Final_Close_Date"), daily.get("Cash"), daily.get("Net_Equity"),
+                daily.get("Active_Bikes"), daily.get("Owned_Transferred_Bikes"),
+                daily.get("Pending_Claims"), daily.get("Partner1_Reinvestment_Balance"),
+                daily.get("Partner2_Reinvestment_Balance"), None, None, None, None, None,
+                None, None, None, None, None, source_ref
+            ])
+        if role == "P50" and on_p50 is not None:
+            on_p50(payload)
+        del payload
+
+
+def finish_representative_sheet(ws):
+    style_sheet(ws, "E2")
+
+
+def write_representatives(
+    wb,
+    manifest,
+    representatives_by_scenario,
+    assignments,
+    role_to_payload_labels,
+    trial_rows_by_scenario=None,
+):
+    """Write all representative roles; P16 uses the incremental scenario API to avoid re-reading large JSONs."""
+    ws = start_representative_sheet(wb)
+    for scenario in EXPECTED_SCENARIOS:
+        rows = [] if trial_rows_by_scenario is None else trial_rows_by_scenario[scenario]
+        append_representative_scenario(
+            ws, scenario, representatives_by_scenario[scenario], assignments[scenario],
+            role_to_payload_labels, rows,
+        )
+    finish_representative_sheet(ws)
+
+
 
 
 def write_stats_sheet(wb, scenario, rows, total_capital):
