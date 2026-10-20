@@ -46,9 +46,10 @@ def expected_recovery_rate(scenario: str) -> int:
     return int(scenario[6:9])
 
 
-def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[int, str]]:
     rows: list[dict[str, Any]] = []
     block_evidence: list[dict[str, Any]] = []
+    trial_hashes: dict[int, str] = {}
     with zipfile.ZipFile(archive_path, "r") as zf:
         if scenario.startswith("C100_"):
             meta_raw = gatea.member(zf, "block_1_1_metadata.json")
@@ -60,6 +61,7 @@ def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -
             if list(hashes) != [1] or len(block_rows) != 1:
                 raise RuntimeError(f"C100_TRIAL_COVERAGE_MISMATCH: {scenario}")
             rows.extend(block_rows)
+            trial_hashes.update(hashes)
             block_evidence.append(evidence)
         else:
             expected_ids: list[int] = []
@@ -84,6 +86,7 @@ def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -
                 if block_ids != wanted_ids or list(hashes) != wanted_ids:
                     raise RuntimeError(f"TRIAL_ID_SEQUENCE_MISMATCH: {scenario}/{name}")
                 rows.extend(block_rows)
+                trial_hashes.update(hashes)
                 expected_ids.extend(wanted_ids)
                 block_evidence.append(evidence)
             if [int(row.get("trial_id", -1)) for row in rows] != list(range(1, 551)):
@@ -100,7 +103,7 @@ def rows_from_zip(scenario: str, archive_path: Path, manifest: dict[str, Any]) -
             raise RuntimeError(f"RECOVERY_RATE_MISMATCH: {scenario}/{row.get('trial_id')}")
         if type(row.get("final_net_project_equity")) is not int:
             raise RuntimeError(f"FINAL_EQUITY_NOT_INTEGER: {scenario}/{row.get('trial_id')}")
-    return rows, block_evidence
+    return rows, block_evidence, trial_hashes
 
 
 def select_maxcase(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -210,7 +213,7 @@ def run_audit() -> dict[str, Any]:
                 raise RuntimeError(f"ARTIFACT_RUN_HEAD_MISMATCH: {scenario}/{artifact_name}")
             zip_path = root / f"{scenario}.zip"
             download_evidence = gatea.download_artifact(artifact, zip_path)
-            rows, blocks = rows_from_zip(scenario, zip_path, manifest)
+            rows, blocks, trial_hashes = rows_from_zip(scenario, zip_path, manifest)
             selected = select_maxcase(rows)
             roles = existing[scenario]["roles"]
             role_matches: list[str] = []
@@ -245,6 +248,10 @@ def run_audit() -> dict[str, Any]:
                 "maxcase_trial_id": int(selected["trial_id"]) if selected is not None else None,
                 "maxcase_final_net_project_equity": (
                     selected["final_net_project_equity"] if selected is not None else None
+                ),
+                "maxcase_summary": selected,
+                "maxcase_trial_result_sha256": (
+                    trial_hashes.get(int(selected["trial_id"])) if selected is not None else None
                 ),
                 "existing_role_trial_ids": {
                     role: int(value["trial_id"]) for role, value in roles.items()
