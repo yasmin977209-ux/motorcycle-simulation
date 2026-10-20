@@ -35,7 +35,7 @@ def _representative_payload(scenario: str, trial_id: int):
             "bad_debt": 10,
             "guarantee_recovered": 0,
         },
-        "daily": [],
+        "daily": [{"trial_id": trial_id, "date": "2033-02-12"}],
     }
 
 
