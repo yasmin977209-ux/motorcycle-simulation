@@ -460,6 +460,9 @@ def run_audit() -> dict[str, Any]:
         "undefined_business_rule_scenarios": [x["scenario"] for x in undefined],
         "maxcase_payload_can_reuse_existing_role": len(payload_reuse),
         "maxcase_payload_needs_new_daily_payload": len(payload_missing),
+        "stage12_daily_scenarios_validated": report["stage12_daily_validation"]["scenarios_validated"],
+        "stage12_daily_rows_validated": report["stage12_daily_validation"]["daily_rows_validated"],
+        "maxcase_daily_rows_extracted": sum(len(x["daily_rows"]) for x in extracted_payloads),
         "representative_inventory_provenance_mismatch_count": len(inventory_mismatches),
         "representative_inventory_provenance_mismatch_scenarios": sorted(inventory_mismatch_scenarios),
         "new_payload_scenarios_missing_partner_memo_source": [
@@ -471,6 +474,9 @@ def run_audit() -> dict[str, Any]:
         report["summary"]["scenario_count"] == 25
         and report["summary"]["actual_trial_rows"] == 11005
         and report["summary"]["trial_rows_rehashed"] == 11005
+        and report["stage12_daily_validation"]["scenarios_validated"] == 25
+        and report["stage12_daily_validation"]["daily_rows_validated"] == 22546465
+        and report["stage12_daily_validation"]["trial_result_fingerprint_mismatches"] == 0
         and all(x["source_artifact"]["artifact_zip_sha256"] == x["source_artifact"]["api_digest"].removeprefix("sha256:")
                 for x in report["scenarios"])
     ):
@@ -483,6 +489,25 @@ def run_audit() -> dict[str, Any]:
         report["payload_status"] = "MISSING_EVIDENCE"
     else:
         report["payload_status"] = "EXISTING_PAYLOADS_REUSABLE"
+    daily_payload_document = {
+        "schema_version": "stage13-maxcase-daily-payloads-v1",
+        "created_at_utc": report["created_at_utc"],
+        "repository": REPO,
+        "tested_head_sha": report["tested_head_sha"],
+        "scope": "READ_ONLY_EXTRACTION_FROM_VERIFIED_STAGE12_PARQUET; NO_SIMULATION; NO_HISTORICAL_MUTATION; NOT_A_FINAL_WORKBOOK",
+        "source_identity": report["source_identity"],
+        "stage12_run": stage12_run,
+        "stage12_global_sha256": roll_forward.get("expected_global_sha256_from_cp12b"),
+        "scenario_count": len(extracted_payloads),
+        "maxcase_daily_rows": sum(len(x["daily_rows"]) for x in extracted_payloads),
+        "missing_fields": ["Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance"],
+        "missing_fields_status": "MISSING_EVIDENCE",
+        "scenarios": extracted_payloads,
+    }
+    Path("stage13_maxcase_daily_payloads.json").write_text(
+        json.dumps(daily_payload_document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     return report
 
 
