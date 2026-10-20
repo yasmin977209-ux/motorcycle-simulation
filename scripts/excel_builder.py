@@ -402,7 +402,16 @@ def write_daily_distribution(wb, dataset_root):
     style_sheet(ws,"B2")
 
 
-def write_representatives(wb, manifest, rep_path):
+def write_representatives(
+    wb,
+    manifest,
+    representatives_by_scenario,
+    assignments,
+    role_to_payload_labels,
+):
+    """Write all five approved roles after explicit identity validation."""
+    from scripts.stage13_assemble import REQUIRED_REPRESENTATIVE_ROLES
+
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
     headers = [
         "scenario","case","record_type","trial_id","date","final_close_date",
@@ -413,46 +422,41 @@ def write_representatives(wb, manifest, rep_path):
         "total_operating_revenue","bad_debt","guarantee_recovered"
     ]
     rows = []
-    rep_all = load_json(rep_path)["scenarios"]
-    for s in EXPECTED_SCENARIOS:
-        for label in ("P10","P50","P90","Loss"):
-            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, label)
+    for scenario in EXPECTED_SCENARIOS:
+        for role in REQUIRED_REPRESENTATIVE_ROLES:
+            payload = representatives_by_scenario[scenario][role]
             summary = payload["summary"]
+            trial_id = assignments[scenario][role]
             rows.append([
-                s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
-                None,None,None,None,None,None,None,
-                summary["final_net_project_equity"],summary["final_cash"],
-                summary["cumulative_project_profit"],summary["termination_count"],
-                summary["secondary_cycle_count"],summary["owned_bikes"],summary["held_assets"],
-                summary["total_operating_revenue"],summary["bad_debt"],summary["guarantee_recovered"]
+                scenario, role, "SUMMARY", trial_id, None, summary["final_close_date"],
+                None, None, None, None, None, None, None,
+                summary["final_net_project_equity"], summary["final_cash"],
+                summary["cumulative_project_profit"], summary["termination_count"],
+                summary["secondary_cycle_count"], summary["owned_bikes"], summary["held_assets"],
+                summary["total_operating_revenue"], summary["bad_debt"], summary["guarantee_recovered"]
             ])
-            for daily in payload.get("daily",[]):
+            for daily in payload.get("daily", []):
                 rows.append([
-                    s,label,"DAILY",summary["trial_id"],daily.get("date"),daily.get("Final_Close_Date"),
-                    daily.get("Cash"),daily.get("Net_Equity"),daily.get("Active_Bikes"),
-                    daily.get("Owned_Transferred_Bikes"),daily.get("Pending_Claims"),
-                    daily.get("Partner1_Reinvestment_Balance"),
+                    scenario, role, "DAILY", trial_id, daily.get("date"),
+                    daily.get("Final_Close_Date"), daily.get("Cash"), daily.get("Net_Equity"),
+                    daily.get("Active_Bikes"), daily.get("Owned_Transferred_Bikes"),
+                    daily.get("Pending_Claims"), daily.get("Partner1_Reinvestment_Balance"),
                     daily.get("Partner2_Reinvestment_Balance"),
-                    None,None,None,None,None,None,None,None,None,None
+                    None, None, None, None, None, None, None, None, None, None
                 ])
     write_table(
-        ws,
-        headers,
-        rows,
+        ws, headers, rows,
         number_formats={
-            "Cash":FINANCE_FMT,
-            "Net_Equity":FINANCE_FMT,
-            "Partner1_Reinvestment_Balance":FINANCE_FMT,
-            "Partner2_Reinvestment_Balance":FINANCE_FMT,
-            "final_net_project_equity":FINANCE_FMT,
-            "final_cash":FINANCE_FMT,
-            "cumulative_project_profit":FINANCE_FMT,
-            "total_operating_revenue":FINANCE_FMT,
-            "bad_debt":FINANCE_FMT,
-            "guarantee_recovered":FINANCE_FMT,
+            "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
+            "Partner1_Reinvestment_Balance": FINANCE_FMT,
+            "Partner2_Reinvestment_Balance": FINANCE_FMT,
+            "final_net_project_equity": FINANCE_FMT, "final_cash": FINANCE_FMT,
+            "cumulative_project_profit": FINANCE_FMT, "total_operating_revenue": FINANCE_FMT,
+            "bad_debt": FINANCE_FMT, "guarantee_recovered": FINANCE_FMT,
         }
     )
-    style_sheet(ws,"E2")
+    style_sheet(ws, "E2")
+
 
 
 def write_stats_sheet(wb, scenario, rows, total_capital):
@@ -703,43 +707,76 @@ def build_workbook(
     output_path: str,
     manifest_path: str,
     representatives_path: str,
+    *,
+    role_to_payload_labels: dict[str, str] | None = None,
 ) -> dict:
-    root=Path(dataset_root)
-    manifest=load_json(Path(manifest_path))
-    manifest["_dataset_root"]=str(root)
-    if manifest.get("source_sha")!=EXPECTED_SOURCE_SHA:
-        raise RuntimeError("source_sha mismatch")
-    if manifest.get("scenarios") is None or sorted(manifest["scenarios"])!=sorted(EXPECTED_SCENARIOS):
-        raise RuntimeError("scenario identity mismatch")
-    validation=load_json(root/"validation_163.json") if (root/"validation_163.json").exists() else {"status":"not-provided","tests":[]}
-    errors=load_json(root/"error_log.json") if (root/"error_log.json").exists() else []
-    all_rows={s:load_scenario_trials(root,s) for s in EXPECTED_SCENARIOS}
-    summaries=build_scenario_summary(all_rows)
-    wb=Workbook()
-    write_readme(wb,manifest,validation,[])
-    write_constants(wb,manifest)
-    write_scenario_matrix(wb,summaries,manifest)
-    write_heatmap(wb,summaries)
-    write_sensitivity(wb,summaries)
-    write_validation(wb,validation)
-    write_errors(wb,errors)
-    write_final_closure(wb,all_rows)
-    write_daily_distribution(wb,root)
-    write_representatives(wb,manifest,Path(representatives_path))
-    rep_all=load_json(Path(representatives_path))["scenarios"]
+    """Load evidence as orchestrator; Stage 13 owns ordered assembly and post-write audit."""
+    from scripts.stage13_assemble import (
+        REQUIRED_REPRESENTATIVE_ROLES,
+        assemble_workbook,
+        validate_representative_assignments,
+        validate_representative_payload,
+        validate_role_payload_mapping,
+    )
+
+    root = Path(dataset_root)
+    manifest = load_json(Path(manifest_path))
+    manifest["_dataset_root"] = str(root)
+    if manifest.get("source_sha") != EXPECTED_SOURCE_SHA:
+        raise RuntimeError("SOURCE_SHA_MISMATCH")
+    if manifest.get("scenarios") is None or list(sorted(manifest["scenarios"])) != list(sorted(EXPECTED_SCENARIOS)):
+        raise RuntimeError("SCENARIO_IDENTITY_MISMATCH")
+
+    assignment_object = load_json(Path(representatives_path))
+    assignments = assignment_object.get("scenarios")
+    if not isinstance(assignments, dict):
+        raise ValueError("STAGE13_REPRESENTATIVE_ASSIGNMENTS_MISSING")
+    # Validate the role inventory before opening/parsing scenario Parquet files.
+    validate_representative_assignments(
+        assignments, expected_scenarios=EXPECTED_SCENARIOS
+    )
+    role_map = validate_role_payload_mapping(role_to_payload_labels)
+
+    # Load and bind the named role payloads before any workbook is constructed.
+    representatives_by_scenario = {}
     for scenario in EXPECTED_SCENARIOS:
-        p50=int(rep_all[scenario]["P50"])
-        payload=load_rep_payload(root, scenario, "P50")
-        total_capital = int(manifest["total_capital"])
-        write_stats_sheet(wb,scenario,all_rows[scenario],total_capital)
-        write_scenario_detail(wb,scenario,payload)
-    actual=len(wb.sheetnames)
-    expected=185
-    if actual!=expected:
-        return {"success":False,"sheets_count":actual,"excel_errors":[f"SHEET_COUNT:{actual}"],"path":str(output_path)}
-    precision_serialization = save_workbook_preserving_stats_precision(wb, output_path)
-    errors_found=collect_excel_errors(Path(output_path))
-    return {"success":len(errors_found)==0,"sheets_count":actual,"excel_errors":errors_found,"path":str(output_path),"stats_precision_serialization":precision_serialization}
+        by_role = {}
+        for role in REQUIRED_REPRESENTATIVE_ROLES:
+            payload = load_rep_payload(root, scenario, role_map[role])
+            validate_representative_payload(scenario, role, assignments[scenario][role], payload)
+            by_role[role] = payload
+        representatives_by_scenario[scenario] = by_role
+
+    validation = (
+        load_json(root / "validation_163.json")
+        if (root / "validation_163.json").exists()
+        else {"status": "not-provided", "tests": []}
+    )
+    errors = load_json(root / "error_log.json") if (root / "error_log.json").exists() else []
+    all_rows = {scenario: load_scenario_trials(root, scenario) for scenario in EXPECTED_SCENARIOS}
+    validate_representative_assignments(
+        assignments,
+        expected_scenarios=EXPECTED_SCENARIOS,
+        trial_rows_by_scenario=all_rows,
+    )
+
+    data = {
+        "manifest": manifest,
+        "trials_by_scenario": all_rows,
+        "daily_distributions_by_scenario": {},
+        "representatives_by_scenario": representatives_by_scenario,
+        "representative_trial_ids": assignments,
+        "validation": validation,
+        "errors": errors,
+        "dataset_root": str(root),
+    }
+    return assemble_workbook(
+        builder=__import__(__name__, fromlist=["*"]),
+        data=data,
+        output_path=output_path,
+        role_to_payload_labels=role_map,
+        mode="canonical",
+    )
 
 
 def main():
