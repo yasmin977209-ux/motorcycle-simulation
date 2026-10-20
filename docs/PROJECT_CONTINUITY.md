@@ -1631,3 +1631,13 @@ This append is considered persisted only after the GitHub API reports the result
 ### الاستئناف من الدردشة الجديدة
 
 اقرأ `docs/continuity/HANDOFF_2026-10-20_CHAT_MIGRATION.md` كاملًا، وأعد قراءة PR #46 وفرع الاستمرارية والـHEADs الحية. لا تعتمد على التقرير وحده. ابدأ من موانع Gate A وSOURCE_SHA وStage11 وStage13/Partner memo وفق R4، مع إبقاء C050_G000 CONFLICTED. لا تنشئ أي Release ولا ترفع حالة التسليم عن NOT_ACCEPTED.
+
+
+## CP-CHAT-START-HERE-POINTER-2026-10-20
+
+بعد إنشاء تقرير الانتقال وإضافته إلى السجل ومؤشر المخرجات، أُضيف رابط واضح إليه في `docs/continuity/START_HERE.md` لتقليل احتمال ضياع مسار الاستعادة عند بدء دردشة أخرى.
+
+- Commit تحديث START_HERE: `8d7d5421c0cd112d79050faa9b3d97f814b5ddcf`.
+- Blob بعد read-back لـSTART_HERE: `3aed08ce4ec764fb6364a369ab53205062685c26`.
+- التحقق: أعيد جلب الملف من الفرع نفسه، وثبت وجود رابط HANDOFF_2026-10-20_CHAT_MIGRATION.md.
+- الفرع ما زال فرع الاستمرارية المؤقت؛ main لم يتغير بسبب هذه العملية، ولم يجر دمج أو إغلاق PR أو إصدار Release.
