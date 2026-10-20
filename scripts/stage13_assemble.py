@@ -211,7 +211,7 @@ def assemble_workbook(
     builder.write_final_closure(wb, all_rows)
     builder.write_daily_distribution(wb, Path(data["dataset_root"]))
     builder.write_representatives(
-        wb, manifest, Path(data["representatives_path"]), assignments, role_map
+        wb, manifest, data["representatives_by_scenario"], assignments, role_map
     )
 
     for scenario in scenarios:
