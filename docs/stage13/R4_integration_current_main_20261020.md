@@ -196,3 +196,15 @@ Field mapping authorized by the contracts/reference: `Closing_Cash → Cash`, `C
 
 The job is strictly a regression test of existing tests against current candidate code. It does not remove the known `SOURCE_SHA_DRIFT` finding or authorize a source identity change.
 
+
+
+## Live status reconciliation — Stage 9C re-audit is now PASS_SCOPED; the older report text is historical
+
+Live `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936` records `full_stage9c_status=PASS`, since 2026-10-12, based on `Stage9C_reaudit_C1_to_C6`, superseding the earlier CP-D-only status. This status was merged by PR `#38` at merge commit `74b103cd782c9e75e210a090c94fbcb4b01844c4`; the PR changed only `state.json` and documents an evidence-only read-only reassessment. The current main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+
+Recorded re-audit evidence: the canonical Stage 9A subset has 9,005/9,005 exact trial hash matches across 25 scenarios, zero hash mismatches, 20/20 aggregate gates, and 18,449,224 daily rows counted from the existing identity-matched Stage 12 ledger; the full Stage 12 superset has 22,546,465 daily rows with zero roll-forward and closure/balance violations. Existing CP-D evidence is 500/500 exact XLSX comparisons, 185 sheets, zero formula cells and zero Excel error cells. No trials, data, tests, or workflows were changed in that re-audit.
+
+Therefore classify Stage 9C C-1..C-6 as `PASS_SCOPED` based on the merged state and cited existing runs, not as an open technical blocker. Keep the old `docs/stage9c/STAGE9C_REPORT.md` PARTIAL verdict as historical evidence; it has not been rewritten. Documentation reconciliation remains `MISSING_EVIDENCE` because the re-audit R4 report was recorded as `repository_committed=false` in state and is not part of PR #38. The older CP-D statement that the daily ledger was unavailable is superseded by the later full-scope ledger re-audit, not erased.
+
+This does not clear Gate A provider integration, `SOURCE_SHA_DRIFT`, Stage 11 topology, MaxCase partner memo source fields, or final seven-file acceptance.
+
