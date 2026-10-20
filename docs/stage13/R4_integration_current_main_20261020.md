@@ -186,3 +186,13 @@ Field mapping authorized by the contracts/reference: `Closing_Cash → Cash`, `C
 - The Stage 12 extraction maps `Closing_Cash → Cash`, `Closing_Equity → Net_Equity`, and `Retained_Earnings → Cumulative_Project_Profit`. The latter follows the original reference §10.10. Both partner memo balances remain missing because the canonical Stage 12 schema has no event-level inputs from which their transaction-level 70/30 floors and expansion deductions can be exactly reconstructed. They remain pending; no estimates or inferred substitutes are emitted.
 - Current live `main` remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; no PR, merge, release, or production simulation has been created or performed.
 
+
+
+## R4 — rerun historical Stage 3 compatibility findings on current candidate code
+
+| Item | Current state | Governing evidence | Classification | Minimum action | Acceptance | Risk |
+|---|---|---|---|---|---|---|
+| Legacy `daily_engine._create_contract` calls | Current `daily_engine.py` contains a direct compatibility wrapper delegating to `_new_contract`; historical raw pytest Run `38164248220` recorded five missing-method failures on an older tested SHA | Current main/candidate `daily_engine.py`; `tests/test_stage3_path_integration.py` | Historical finding is `REPORTED_ONLY` until current-HEAD targeted tests rerun; source byte-identity drift remains separate | Add a branch-pinned, read-only CI job for the five Stage 3 path tests and the existing Stage 3B / roll-forward tests | Exact tested HEAD recorded; all selected tests pass; no tests modified and no production run or checkpoint executed | Unit tests include a single deterministic trial fixture; they do not invoke production Monte Carlo or write historical data |
+
+The job is strictly a regression test of existing tests against current candidate code. It does not remove the known `SOURCE_SHA_DRIFT` finding or authorize a source identity change.
+
