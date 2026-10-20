@@ -289,3 +289,59 @@ def test_synthetic_assembly_creates_and_reopens_exact_185_sheet_structure(tmp_pa
         assert all(cell.data_type != "f" and cell.data_type != "e" for ws in wb.worksheets for row in ws.iter_rows() for cell in row)
     finally:
         wb.close()
+
+
+def test_provisional_p16_uses_incremental_role_writer_and_keeps_185_sheet_order(tmp_path: Path):
+    assignments = assignments_for()
+    rows = trial_rows_for(trial_ids=(1,))
+    payloads = {
+        scenario: {role: payload_for(scenario, 1) for role in REQUIRED_REPRESENTATIVE_ROLES if role != "MaxCase"}
+        for scenario in SCENARIOS
+    }
+    data = {
+        "manifest": {"total_capital": 10000},
+        "trials_by_scenario": rows,
+        "representatives_by_scenario": payloads,
+        "representative_trial_ids": assignments,
+        "validation": {"status": "synthetic-test-only", "tests": []},
+        "errors": [],
+        "dataset_root": str(tmp_path),
+        "pending_roles": ["MaxCase"],
+    }
+    fake_builder = _fake_builder(payloads)
+
+    def start_representative_sheet(wb):
+        ws = wb.create_sheet("REPRESENTATIVE_CASES")
+        ws.append(["scenario", "case", "record_type", "trial_id"])
+        return ws
+
+    def append_representative_scenario(ws, scenario, role_payloads, assignment, role_map, scenario_rows, *, on_p50=None):
+        ws.append([scenario, "MaxCase", "PENDING_DATA_SOURCE", assignment["MaxCase"]])
+        if on_p50 is not None:
+            on_p50(role_payloads["P50"])
+
+    fake_builder.start_representative_sheet = start_representative_sheet
+    fake_builder.append_representative_scenario = append_representative_scenario
+    fake_builder.finish_representative_sheet = lambda ws: None
+
+    output = tmp_path / "provisional-p16.xlsx"
+    result = assemble_workbook(
+        builder=fake_builder,
+        data=data,
+        output_path=output,
+        role_to_payload_labels=ROLE_MAP,
+        mode="provisional-p16",
+    )
+    assert result["success"] is True
+    assert result["sheets_count"] == 185
+    assert result["warnings"]
+    workbook = load_workbook(output, data_only=True)
+    try:
+        assert workbook.sheetnames == expected_sheet_names(GLOBAL_SHEETS, SCENARIOS, SUFFIXES)
+        representative = workbook["REPRESENTATIVE_CASES"]
+        rows = list(representative.iter_rows(min_row=2, values_only=True))
+        assert len(rows) == 25
+        assert all(row[2] == "PENDING_DATA_SOURCE" for row in rows)
+        assert any("MAXCASE_PAYLOAD_PENDING_DATA_SOURCE" in warning for warning in result["warnings"])
+    finally:
+        workbook.close()
