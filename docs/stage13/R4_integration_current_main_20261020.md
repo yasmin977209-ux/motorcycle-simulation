@@ -39,6 +39,12 @@ The user directly instructed on 2026-10-20: “افوضك لتقوم بكلما 
 - Regression: `tests/test_stage13_assembler.py`, `tests/test_excel_builder_adaptive_mode.py`, `tests/test_excel_builder_legacy_compat.py`, and `tests/test_excel_builder_precision.py`.
 - Wider suite: deferred until the focused tests pass; no production workflow is run.
 
+## Additional read-only source-identity finding
+
+A live content comparison of `daily_engine.py` at main HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef` against the pinned source commit `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` found exactly 11 inserted lines and no deletions. The only difference is the historical compatibility wrapper `_create_contract(...)` delegating directly to `_new_contract(...)`; the main and pinned `monte_carlo.py` blobs are identical (`a8c3603487f92d3e15c3d754ce3faee3580a5f46`). GitHub code search found the added alias in `daily_engine.py` and a reference from the older `tests/test_stage3_path_integration.py`; no production caller was found in the search result set.
+
+This narrows the observed cause but does **not** remove the byte-identity drift. The wrapper's apparent delegation is not by itself a formal identity-preserving decision or numerical equivalence proof. Classification remains `CONFLICTED / PENDING_APPROVAL` for canonical source identity. Do not change `SOURCE_SHA`, remove the wrapper, alter tests, or use this observation to certify historical outputs.
+
 ## Known independent blockers that remain
 
 - Production Gate A provider remains blocked until approved golden/source identity evidence is wired into the production caller.
