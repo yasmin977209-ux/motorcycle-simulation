@@ -1577,3 +1577,57 @@ The authoritative partner logic depends on eligible inflow events (70% to Partne
 ### Persistence contract
 
 This append is considered persisted only after the GitHub API reports the resulting commit and blob and a fresh read of this same branch confirms the exact heading and tail. Until that read-back succeeds, treat it as unverified.
+
+
+## CP-CHAT-MIGRATION-HANDOFF-2026-10-20 — سجل هذه المحادثة وإقفال جلسة الاستمرارية
+
+**النطاق:** توثيق تلخيصي append-only للمحادثة السابقة التي قدمها المالك كاملة في هذه الدردشة، ولإعادة الفحص الحي التي أُجريت في هذه الدردشة، ولتجهيز انتقال آمن إلى محادثة جديدة. التقرير التفصيلي: `docs/continuity/HANDOFF_2026-10-20_CHAT_MIGRATION.md`، blob بعد read-back: `1abf0e79f211fa92b48c8427f3eb30c2f153126e`، commit الإنشاء: `549be08bb2f28b6bbf103e451bbddd36da3f19ff`. هذا السجل لا يغيّر المرجع أو قواعد الأعمال ولا يعلن قبولًا.
+
+### ما تم في المحادثة السابقة وفق النص الذي قدمه المالك
+
+- جرى تلخيص تقرير المراجعة الأولية ثم توحيد خطة الإغلاق وحالات الأدلة/القبول، مع قرار NOT_ACCEPTED للتسليم وBLOCKED للإصدار.
+- شُخّص عيب تحويل بيانات DAILY في `scripts/excel_builder.py`. أذن المالك بإصلاح محدد واختبار انحدار على فرع مؤقت. سجل الفرع `tmp/cp-excel-daily-fix-20261020` الالتزامات `59d1346a4c4cf10d83438b516d365cde50e5031a` و`f6f7a1aca829c15f61f0d58609d54cf7d5efa408` و`c1b13c9f096140b1a4ef6f85614a14ebdd01a8a0`.
+- أُبلغ عن نجاح محلي معزول للاختبار `1 passed` بعد مواءمة مقارنة date/datetime، وعن فشل اختبار إعادة الإنتاج مع السلوك القديم. هذا يظل PASS_SCOPED؛ لم يثبت في النص تشغيل CI أو pytest الكامل على رأس الفرع الكامل، ولا قبول مصنف 185 ورقة.
+- أُبلغ عن جرد 25 حزمة Stage9A بأدوار P10/P50/P90/Loss، وعن فجوة MaxCase، ثم تدقيق Stage12 انتقى 25 MaxCase واستخراج 52,541 صفًا يوميًا ضمن النطاق المذكور. لا يعني ذلك إغلاق Stage13.
+- تعارض أثر `C050_G000` وصل إلى مقارنة مصدرية: الأثر الموجود في main manifest هو `11503191706` من Run `37660610243` وproducer SHA `43e320abb79c3db82bdb70b8c6dece883ea7676d`؛ والأثر الثاني `11503510055` من Run `37662891608` وproducer SHA `6128b22864bb171ba49ec15dbb42439a6513c30`. ذُكر تطابق سبعة أعضاء أساسية واختلاف `scenario_metadata.json` فقط، لكن لا إذن باستبدال artifact identity. الحالة CONFLICTED/PENDING_APPROVAL.
+- أرصدة مذكرات الشركاء الخاصة بتدفقات MaxCase غير التمثيلية بقيت MISSING_EVIDENCE/PENDING_DATA_SOURCE لغياب سجل حدثي/عقد اشتقاق دقيق؛ لا تخمين أو أصفار.
+- أحدث فرع Stage13 المذكور في السجل الحي هو `tmp/cp-stage13-integration-20261020`, HEAD `fb27122d5c21fd111ccfe10a350b722bd17e2da6`. المجمّع موجود على المرشح وليس main. إصلاح التحقق الصارم للأنواع في commit `493cbe515afc081d6dcbf34d39b0952b0d36dccc`، والـRun `39473433150` قُرئ مرة واحدة IN_PROGRESS فقط؛ لا تكرر polling. تشغيلات 50 passed السابقة تخص SHAs أقدم واختبارات اصطناعية/توافق وليست قبول إنتاج.
+- التفويض العام المتكرر من المالك لم يُفسر إذنًا لتجاوز بوابات الصلاحيات المحمية أو قبول التسليم دون الأدلة.
+
+### ما أعيد التحقق منه حيًا في هذه المحادثة
+
+- main HEAD: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- `main/state.json` blob: `2178260bb18efeb81437486f13b6d10cf5e85936`; stage `12-CLOSED`; `state.sha=0b083fa472d7a11089a15137cfad16d87785689a`; semantics `parent_state_commit_pointer`.
+- `docs/STATE_SHA_SEMANTICS.md` blob `134363f0f2834f8087760b3148910a1a3d3af38b` يؤكد أن `state.sha` مؤشر commit سابق، وليس شرط تطابقه مع HEAD.
+- موانع state الحية: `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, طوبولوجيا Stage11 غير معرفة، `scripts/stage13_assemble.py` غير موجود في main، عدم اكتمال/قبول الملفات السبعة، فجوة governance decision `D-2026-10-12-01` في state، ومخاطر مدة Stage7.
+- فرع الاستمرارية `tmp/cp-session-continuity-20261017` كان HEAD `277b2c736b4371d70eaa1e4f04869e32e3b63fbd` قبل توثيق هذا التسليم؛ أنشئ تقرير التسليم على الفرع ذاته في commit `549be08bb2f28b6bbf103e451bbddd36da3f19ff`. يجب إعادة قراءة HEAD بعد كل كتابة.
+- PR #46 ما زال OPEN/DRAFT/UNMERGED؛ لا دمج ولا إغلاق.
+- فرع DAILY موجود عند `c1b13c9f096140b1a4ef6f85614a14ebdd01a8a0`.
+- فرع Stage13 integration موجود عند `fb27122d5c21fd111ccfe10a350b722bd17e2da6`; main manifest blob `e796fa2443493b607f1f9c60b58eb63607959c26` يشير إلى artifact `11503191706`، بينما manifest المرشح blob `ec0d4749f86c6f81d743dbb071f92e9f0eddef3d` يشير إلى `11503510055`؛ لا تستخدم تغيير المرشح في الإنتاج قبل حسم نطاق R4 والسلطة.
+- تم التحقق من أن `scripts/stage13_assemble.py` غير موجود في main لكنه موجود على فرع Stage13 integration بblob `47fc1828dfb0d298aa4528f58b558bf012882076`.
+- المقارنة الحية من baseline `647c19826b90d8224ce73ef9b90c306a45e03fb0` إلى main HEAD `6a218...` تُظهر 3 commits وثلاثة ملفات توثيقية مضافة فقط: `docs/audits/CP-STAGE13-REPRESENTATIVE-PAYLOAD-COVERAGE-READONLY_2026-10-19.md` (blob `88f4849bdc16ecf4875311b8586e0b679bda2dd2`)، `docs/PROJECT_CONTINUITY.md` (blob `08c9024b8a7de439cfd206c5225b97c712123eaa`)، و`docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md` (blob `78427954df76ae7eb66cde284e2cb6351a4e8236`). السجل السابق يقر بأن ملف تدقيق Stage13 أضيف إلى main عن طريق الخطأ. كما يظهر تناقض بين صياغة P18 التي تقول إنه لم يتغير main وبين كون commit P18 نفسه أضاف تقريرًا إلى main؛ وثّق التعارض ولا تحذفه أو تتراجع عنه دون قرار محدد.
+- ملف P18 يسجل أن P17 أعطى `NOT_ACCEPTED`، وأن endpoint الإصدارات كان فارغًا ولا Release أنشئ.
+- SHA-256 للمرجع الأصلي المحلي أعيد حسابه في هذه المحادثة: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`، الحجم 271,496 بايت. SHA-256 للملف المدمج المحلي مختلف: `c816e2b61734390e57500cab738829ae1810d0063f9b49bdf0d107344f867fd5`، الحجم 543,081 بايت. لم تُفحص إعدادات Project Sources/Instructions في واجهة ChatGPT.
+
+### حالات البوابات بعد هذه القراءة
+
+- الأصل المحلي وبصمته: VERIFIED ضمن البايتات المحلية المفحوصة.
+- main identity ودلالة state.sha: VERIFIED.
+- Gate A production: BLOCKED.
+- SOURCE_SHA identity: BLOCKED / PENDING_DECISION.
+- Stage11 topology: UNDEFINED_BUSINESS_RULE / BLOCKED.
+- Stage13 assembler على main: MISSING_ARTIFACT / BLOCKED.
+- C050_G000 manifest identity: CONFLICTED / PENDING_APPROVAL.
+- Partner memo balances لـMaxCase غير التمثيلي: MISSING_EVIDENCE / PENDING_DATA_SOURCE.
+- DAILY regression: PASS_SCOPED للاختبار المحلي المعزول فقط.
+- Stage13 CI: PASS_SCOPED على SHAs أقدم للاختبارات الاصطناعية فقط؛ Run `39473433150` MISSING_EVIDENCE بعد قراءة واحدة IN_PROGRESS.
+- الملفات السبعة والتدقيق النهائي: NOT_ACCEPTED / NOT_STARTED.
+- Release: BLOCKED / NOT_AUTHORIZED.
+
+### حدود الأفعال في هذه الجلسة
+
+لم يُكتب إلى main، ولم تُعدل بيانات أو المرجع أو state.json، ولم يشغل pytest كامل أو Workflow أو محاكاة/Trial/Checkpoint إنتاجي، ولم يجر polling ثاني للـRun `39473433150`، ولم يجر تعديل manifest، ولم يدمج أو يغلق PR، ولم ينشأ Release. التغيير الوحيد في هذه العملية هو تقرير الاستعادة وتحديث سجل التوثيق/المخرجات على فرع الاستمرارية المؤقت.
+
+### الاستئناف من الدردشة الجديدة
+
+اقرأ `docs/continuity/HANDOFF_2026-10-20_CHAT_MIGRATION.md` كاملًا، وأعد قراءة PR #46 وفرع الاستمرارية والـHEADs الحية. لا تعتمد على التقرير وحده. ابدأ من موانع Gate A وSOURCE_SHA وStage11 وStage13/Partner memo وفق R4، مع إبقاء C050_G000 CONFLICTED. لا تنشئ أي Release ولا ترفع حالة التسليم عن NOT_ACCEPTED.
