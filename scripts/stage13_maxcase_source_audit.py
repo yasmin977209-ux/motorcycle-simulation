@@ -278,6 +278,9 @@ def run_audit() -> dict[str, Any]:
                 "source_trial_rows_rehashed": sum(
                     int(item["trial_hashes_recomputed_from_parquet"]) for item in blocks
                 ),
+                "trial_result_hashes": {
+                    str(trial_id): digest for trial_id, digest in sorted(trial_hashes.items())
+                },
                 "block_evidence": blocks,
                 "maxcase_selection_status": selection_status,
                 "maxcase_trial_id": int(selected["trial_id"]) if selected is not None else None,
