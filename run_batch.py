@@ -23,6 +23,7 @@ from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_MULTIPLIER,
     ci_half_width_limit,
     evaluate_gate_a as evaluate_stage7_gate_a,
+    evaluate_gate_b as evaluate_stage7_gate_b,
     filter_statistical_history,
     next_statistical_checkpoint,
 )
@@ -276,19 +277,8 @@ def evaluate_gate_a(
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    metric_payload = {
-        field_name: {
-            "stable": bool(current_metrics[field_name]["stable"])
-        }
-        for field_name in STABILITY_FIELDS
-    }
-    return {
-        "checked": True,
-        "stable": all(
-            item["stable"] for item in metric_payload.values()
-        ),
-        "metrics": metric_payload,
-    }
+    """Use the shared fail-closed evaluator; do not coerce truthy strings."""
+    return evaluate_stage7_gate_b(current_metrics)
 
 
 def _checkpoint_identity_is_valid(

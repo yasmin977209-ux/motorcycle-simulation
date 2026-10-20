@@ -37,3 +37,22 @@ def test_ci_limit_uses_relative_branch_at_exact_reference_epsilon() -> None:
 def test_metric_summary_uses_conditional_limit() -> None:
     summary = run_batch._metric_summary([_trial(10.0), _trial(10.0)])
     assert summary["final_net_project_equity"]["limit"] == pytest.approx(0.1)
+
+
+def _gate_b_metrics(value: object = True) -> dict[str, dict[str, object]]:
+    return {
+        "final_net_project_equity": {"stable": value},
+        "partner1_final_entitlement": {"stable": True},
+        "partner2_final_entitlement": {"stable": True},
+    }
+
+
+def test_gate_b_accepts_explicit_boolean_evidence() -> None:
+    result = run_batch.evaluate_gate_b(_gate_b_metrics(True))
+    assert result["checked"] is True
+    assert result["stable"] is True
+
+
+def test_gate_b_rejects_truthy_string_false() -> None:
+    with pytest.raises(TypeError, match="stable must be a bool"):
+        run_batch.evaluate_gate_b(_gate_b_metrics("False"))

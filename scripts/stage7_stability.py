@@ -217,10 +217,13 @@ def evaluate_gate_a(
 
 
 def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Evaluate only explicit Boolean evidence; invalid values fail closed."""
     metric_payload = {}
     all_stable = True
     for name in STABILITY_METRICS:
-        stable = bool(current_metrics[name]["stable"])
+        stable = current_metrics[name]["stable"]
+        if type(stable) is not bool:
+            raise TypeError(f"Gate B metric {name} stable must be a bool")
         metric_payload[name] = {"stable": stable}
         all_stable = all_stable and stable
     return {
