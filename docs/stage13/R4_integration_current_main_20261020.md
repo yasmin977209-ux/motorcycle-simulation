@@ -175,3 +175,14 @@ The daily Stage 12 Parquet files contain all trials, so MaxCase daily rows can b
 
 Field mapping authorized by the contracts/reference: `Closing_Cash → Cash`, `Closing_Equity → Net_Equity`, and `Retained_Earnings → Cumulative_Project_Profit` (reference §10.10 explicitly equates the latter two cumulative-profit concepts). `Partner1_Reinvestment_Balance` and `Partner2_Reinvestment_Balance` are not present in the Stage 12 daily schema and remain `PENDING_DATA_SOURCE`; do not derive them from aggregate cash or equity values. The extraction is an audit/intermediate artifact only and does not constitute acceptance of the seven deliverables.
 
+
+
+## CI/read-back checkpoint — MaxCase daily mapping and extraction implementation
+
+- Integration Run `39366628194` completed `success` at tested HEAD `c3b3ec72387739921b0d73680dec2bb5425424a8`; artifact `12239951234`, `stage13-integration-evidence-39366628194`, 5,096 bytes, SHA-256 `e0cbf7bde94ed5de443708b8dcdd9cf7fa03d2641f855b8527db011b1b3cea56`. Downloaded artifact read-back matched exact size and SHA. Pytest log: `50 passed in 24.57s`, exit code 0.
+- Read-back confirms the assembler, Excel builder, all five focused test files, and integration workflow have identical Git blob SHAs at tested HEAD and current candidate HEAD `56e8c286b8be254b24f8bb8c2c4c26e18af04fd6`. This is `PASS_SCOPED` for those code/test blobs; it is not a full-repository pytest pass or production workbook acceptance.
+- The MaxCase source audit now also reads the exact existing Stage 12 daily artifacts for each scenario, verifies artifact API digest/size and run/head identity, invokes the existing Gate A Stage 12 validator against CP12B/CP12C file hashes and every canonical TrialResult fingerprint, checks selected-trial final values/dates, and emits `stage13_maxcase_daily_payloads.json` as an intermediate evidence artifact. It does not build a workbook or modify source data.
+- Latest source-audit Run `39367346036`, tested HEAD `56e8c286b8be254b24f8bb8c2c4c26e18af04fd6`, was `IN_PROGRESS` at the last status read. Its result and artifact have not yet been read back; no pass is claimed for this expanded Stage 12 extraction.
+- The Stage 12 extraction maps `Closing_Cash → Cash`, `Closing_Equity → Net_Equity`, and `Retained_Earnings → Cumulative_Project_Profit`. The latter follows the original reference §10.10. Both partner memo balances remain missing because the canonical Stage 12 schema has no event-level inputs from which their transaction-level 70/30 floors and expansion deductions can be exactly reconstructed. They remain pending; no estimates or inferred substitutes are emitted.
+- Current live `main` remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; no PR, merge, release, or production simulation has been created or performed.
+
