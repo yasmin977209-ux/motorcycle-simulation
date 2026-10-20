@@ -428,7 +428,8 @@ def write_representatives(
     assignments,
     role_to_payload_labels,
 ):
-    """Write four validated representative payloads and explicitly pending MaxCase rows."""
+    """Stream role rows to limit memory while leaving absent MaxCase payloads explicitly pending."""
+    from datetime import date as _date
     REQUIRED_REPRESENTATIVE_ROLES = _stage13_module().REQUIRED_REPRESENTATIVE_ROLES
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
     headers = [
@@ -439,27 +440,56 @@ def write_representatives(
         "termination_count","secondary_cycle_count","owned_bikes","held_assets",
         "total_operating_revenue","bad_debt","guarantee_recovered","payload_source"
     ]
-    rows = []
-    pending_comments = []
+    number_formats = {
+        "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
+        "Partner1_Reinvestment_Balance": FINANCE_FMT,
+        "Partner2_Reinvestment_Balance": FINANCE_FMT,
+        "final_net_project_equity": FINANCE_FMT, "final_cash": FINANCE_FMT,
+        "cumulative_project_profit": FINANCE_FMT, "total_operating_revenue": FINANCE_FMT,
+        "bad_debt": FINANCE_FMT, "guarantee_recovered": FINANCE_FMT,
+    }
+    write_table(ws, headers, [])
+    header_to_index = {name: index + 1 for index, name in enumerate(headers)}
+
+    def append_row(row):
+        if len(row) != len(headers):
+            raise RuntimeError(f"REPRESENTATIVE_ROW_WIDTH_MISMATCH: {len(row)} != {len(headers)}")
+        ws.append([py_value(value) for value in row])
+        row_num = ws.max_row
+        for cell in ws[row_num]:
+            cell.alignment = RIGHT
+            header = headers[cell.column - 1]
+            if header in number_formats:
+                cell.number_format = number_formats[header]
+            if isinstance(cell.value, (_date, date)):
+                cell.number_format = DATE_FMT
+        return row_num
+
     for scenario in EXPECTED_SCENARIOS:
         for role in REQUIRED_REPRESENTATIVE_ROLES:
             trial_id = assignments[scenario][role]
             if role == "MaxCase":
                 row = [scenario, "MaxCase", "PENDING_DATA_SOURCE", trial_id]
                 row.extend(["PENDING_DATA_SOURCE"] * (len(headers) - len(row)))
-                rows.append(row)
+                row_num = append_row(row)
                 comment = (
                     "MaxCase trial_id=60; daily payload missing from V3 — see R4-V2.1 §5.4"
                     if scenario == "C050_G000"
                     else f"MaxCase trial_id={trial_id}; daily payload missing from enrichment artifact — see R4-V2.1 §5.4"
                 )
-                pending_comments.append((len(rows) + 1, comment))
+                ws.cell(row=row_num, column=1).comment = Comment(comment, "OpenAI")
+                ws.cell(row=row_num, column=header_to_index["Partner1_Reinvestment_Balance"]).comment = Comment(
+                    "PENDING_DATA_SOURCE: MaxCase partner 1 reinvestment balance absent from source", "OpenAI"
+                )
+                ws.cell(row=row_num, column=header_to_index["Partner2_Reinvestment_Balance"]).comment = Comment(
+                    "PENDING_DATA_SOURCE: MaxCase partner 2 reinvestment balance absent from source", "OpenAI"
+                )
                 continue
             payload = representatives_by_scenario[scenario][role]
             summary = payload["summary"]
             source_label = role_to_payload_labels[role]
             source_ref = f"representatives/{source_label}.json"
-            rows.append([
+            append_row([
                 scenario, role, "SUMMARY", trial_id, None, summary.get("final_close_date"),
                 None, None, None, None, None, None, None,
                 summary.get("final_net_project_equity"), summary.get("final_cash"),
@@ -469,7 +499,7 @@ def write_representatives(
                 source_ref
             ])
             for daily in payload.get("daily", []):
-                rows.append([
+                append_row([
                     scenario, role, "DAILY", trial_id, daily.get("date"),
                     daily.get("Final_Close_Date"), daily.get("Cash"), daily.get("Net_Equity"),
                     daily.get("Active_Bikes"), daily.get("Owned_Transferred_Bikes"),
@@ -477,26 +507,9 @@ def write_representatives(
                     daily.get("Partner2_Reinvestment_Balance"), None, None, None, None, None,
                     None, None, None, None, None, source_ref
                 ])
-    write_table(
-        ws, headers, rows,
-        number_formats={
-            "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
-            "Partner1_Reinvestment_Balance": FINANCE_FMT,
-            "Partner2_Reinvestment_Balance": FINANCE_FMT,
-            "final_net_project_equity": FINANCE_FMT, "final_cash": FINANCE_FMT,
-            "cumulative_project_profit": FINANCE_FMT, "total_operating_revenue": FINANCE_FMT,
-            "bad_debt": FINANCE_FMT, "guarantee_recovered": FINANCE_FMT,
-        }
-    )
-    for row_num, comment in pending_comments:
-        ws.cell(row=row_num, column=1).comment = Comment(comment, "OpenAI")
-        ws.cell(row=row_num, column=headers.index("Partner1_Reinvestment_Balance") + 1).comment = Comment(
-            "PENDING_DATA_SOURCE: MaxCase partner 1 reinvestment balance absent from source", "OpenAI"
-        )
-        ws.cell(row=row_num, column=headers.index("Partner2_Reinvestment_Balance") + 1).comment = Comment(
-            "PENDING_DATA_SOURCE: MaxCase partner 2 reinvestment balance absent from source", "OpenAI"
-        )
+            del payload
     style_sheet(ws, "E2")
+
 
 
 
