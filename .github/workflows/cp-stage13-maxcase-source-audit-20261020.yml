@@ -1,0 +1,58 @@
+name: CP Stage 13 MaxCase source-row audit (read-only)
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage13-integration-20261020
+    paths:
+      - .github/workflows/cp-stage13-maxcase-source-audit-20261020.yml
+      - scripts/stage13_maxcase_source_audit.py
+      - scripts/stage13_gatea_fingerprint_bridge.py
+      - docs/stage9a/dataset_manifest.json
+      - docs/stage12/accounting_data_contract.json
+      - docs/audits/stage9a_payload_inventory_20261020.json
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source-audit:
+    name: Verify existing Stage 7/10 rows and select MaxCase IDs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install declared dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Read-only source identity and MaxCase audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: python scripts/stage13_maxcase_source_audit.py
+
+      - name: Upload source audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-maxcase-source-audit-${{ github.run_id }}
+          path: stage13_maxcase_source_audit.json
+          if-no-files-found: error
+          retention-days: 30
