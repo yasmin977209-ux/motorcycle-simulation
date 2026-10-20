@@ -312,6 +312,8 @@ def run_audit() -> dict[str, Any]:
                 raise RuntimeError(f"STAGE12_ARTIFACT_RUN_HEAD_MISMATCH: {scenario}/{stage12_name}")
             stage12_zip = root / f"{scenario}-stage12.zip"
             stage12_download = gatea.download_artifact(stage12_artifact, stage12_zip)
+            if stage12_zip.stat().st_size != int(stage12_artifact["size_in_bytes"]):
+                raise RuntimeError(f"STAGE12_ARTIFACT_SIZE_MISMATCH: {scenario}")
             parquet_path = root / f"{scenario}.parquet"
             with zipfile.ZipFile(stage12_zip, "r") as zf:
                 expected_member = f"{scenario}.parquet"
@@ -479,6 +481,8 @@ def run_audit() -> dict[str, Any]:
         and report["stage12_daily_validation"]["trial_result_fingerprint_mismatches"] == 0
         and all(x["source_artifact"]["artifact_zip_sha256"] == x["source_artifact"]["api_digest"].removeprefix("sha256:")
                 for x in report["scenarios"])
+        and all(x["source_artifact"]["artifact_zip_sha256"] == x["source_artifact"]["api_digest"].removeprefix("sha256:")
+                for x in extracted_payloads)
     ):
         report["integrity_status"] = "PASS_SCOPED"
     else:
