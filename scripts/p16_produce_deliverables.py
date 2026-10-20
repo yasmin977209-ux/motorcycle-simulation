@@ -330,6 +330,7 @@ def _report_table(rows_by_scenario: dict[str, list[dict]], summaries: dict[str, 
 
 def write_reports(
     output_dir: Path,
+    dataset_root: Path,
     manifest: dict,
     input_artifacts: dict,
     summaries: dict,
@@ -340,7 +341,7 @@ def write_reports(
 ) -> None:
     rows_by_scenario = {}
     for scenario in excel_builder.EXPECTED_SCENARIOS:
-        rows_by_scenario[scenario] = pq.read_table(output_dir.parent / "dataset" / scenario / "trial_results.parquet").to_pylist()
+        rows_by_scenario[scenario] = pq.read_table(dataset_root / scenario / "trial_results.parquet").to_pylist()
     table_en = _report_table(rows_by_scenario, summaries, assignments, "en")
     table_ar = _report_table(rows_by_scenario, summaries, assignments, "ar")
     common = "\n".join(_common_status_lines())
@@ -432,7 +433,7 @@ Gate A remains BLOCKED because the approved Golden provider is missing; SOURCE_S
 - C050_G000: MaxCase trial_id=60، equity=308,412,450 ريال، مثبت من V3 (450 trial).
 - أربع حمولات تمثيلية موجودة؛ MaxCase اليومي وأرصدة الشريكين موسومة PENDING_DATA_SOURCE.
 - LossCase يرتبط صراحةً بملف representatives/Loss.json.
-- لا CS؛ السياسة FIXED_LOOK_LOOK_WITH_CS_PENDING؟ لا، القيمة الصحيحة هي FIXED_LOOK_WITH_CS_PENDING.
+- لا CS؛ مستوى السياسة الإحصائية هو FIXED_LOOK_WITH_CS_PENDING.
 - النتيجة مرحلية، لا تقبل الإنتاج: Gate A BLOCKED، log_events PENDING_APPROVAL، Stage 9C PARTIAL/CONFLICTED، التسليم NOT_ACCEPTED.
 """
     summary_en = f"""# Summary — provisional P16
