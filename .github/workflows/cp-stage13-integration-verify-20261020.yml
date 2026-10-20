@@ -1,0 +1,161 @@
+name: CP Stage 13 integration verification (temporary)
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage13-integration-20261020
+    paths:
+      - .github/workflows/cp-stage13-integration-verify-20261020.yml
+      - scripts/stage13_assemble.py
+      - scripts/excel_builder.py
+      - docs/stage9a/dataset_manifest.json
+      - tests/test_stage13_assembler.py
+      - tests/test_excel_builder_adaptive_mode.py
+      - tests/test_excel_builder_legacy_compat.py
+      - tests/test_excel_daily_serialization.py
+      - tests/test_excel_builder_precision.py
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    name: Stage 13 synthetic and compatibility tests only
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact pushed candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Initialize evidence and assert branch/HEAD
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          CANDIDATE_BRANCH: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          mkdir -p stage13_integration_evidence
+          cat > stage13_integration_evidence/run_context.json <<EOF
+          {
+            "workflow": "CP-STAGE13-INTEGRATION-VERIFY-20261020",
+            "branch": "${CANDIDATE_BRANCH}",
+            "tested_head_sha": "${CANDIDATE_SHA}",
+            "run_id": "${RUN_ID}",
+            "run_attempt": "${RUN_ATTEMPT}",
+            "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+            "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+            "scope": "SYNTHETIC_AND_COMPATIBILITY_TESTS_ONLY",
+            "production_cohort_loaded": false,
+            "workbook_built": false,
+            "simulation_or_trial_generation": false,
+            "historical_data_modified": false,
+            "main_modified": false,
+            "delivery_accepted": false
+          }
+          EOF
+          git rev-parse HEAD > stage13_integration_evidence/tested_head_sha.txt
+          test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
+          test "${CANDIDATE_BRANCH}" = "tmp/cp-stage13-integration-20261020"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install declared project dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python --version > stage13_integration_evidence/python_version.txt
+          python -m pip freeze > stage13_integration_evidence/pip_freeze.txt
+
+      - name: Compile and capture source/test identities
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/stage13_assemble.py scripts/excel_builder.py
+          python - <<'PY' | tee stage13_integration_evidence/identity_smoke.log
+          import hashlib
+          import json
+          from pathlib import Path
+
+          import scripts.stage13_assemble as assembler
+          import scripts.excel_builder as builder
+
+          assert builder.patch_xlsx_numeric_values is assembler.patch_xlsx_numeric_values
+          assert builder.write_daily_sheet is assembler.write_daily_sheet
+          assert builder.DATE_FMT == assembler.DATE_FMT
+          assert builder.FINANCE_FMT == assembler.FINANCE_FMT
+          assert assembler.EXPECTED_SOURCE_SHA == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          assert assembler.EXPECTED_REFERENCE_SHA256 == "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+
+          paths = [
+              "scripts/stage13_assemble.py",
+              "scripts/excel_builder.py",
+              "docs/stage9a/dataset_manifest.json",
+              "tests/test_stage13_assembler.py",
+              "tests/test_excel_builder_adaptive_mode.py",
+              "tests/test_excel_builder_legacy_compat.py",
+              "tests/test_excel_daily_serialization.py",
+              "tests/test_excel_builder_precision.py",
+          ]
+          result = {
+              "status": "PASS",
+              "compatibility_imports": True,
+              "source_sha": assembler.EXPECTED_SOURCE_SHA,
+              "reference_sha256": assembler.EXPECTED_REFERENCE_SHA256,
+              "files": {
+                  path: {
+                      "bytes": Path(path).stat().st_size,
+                      "git_blob_sha": __import__("subprocess").check_output(
+                          ["git", "hash-object", path], text=True
+                      ).strip(),
+                      "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                  }
+                  for path in paths
+              },
+          }
+          Path("stage13_integration_evidence/code_identity.json").write_text(
+              json.dumps(result, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Run focused synthetic and compatibility regression suite
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          set -uo pipefail
+          set +e
+          python -m pytest -q \
+            tests/test_stage13_assembler.py \
+            tests/test_excel_builder_adaptive_mode.py \
+            tests/test_excel_builder_legacy_compat.py \
+            tests/test_excel_daily_serialization.py \
+            tests/test_excel_builder_precision.py \
+            --junitxml=stage13_integration_evidence/pytest.junit.xml \
+            2>&1 | tee stage13_integration_evidence/pytest.log
+          test_rc=${PIPESTATUS[0]}
+          printf '%s\n' "${test_rc}" > stage13_integration_evidence/pytest_exit_code.txt
+          exit "${test_rc}"
+
+      - name: Upload bounded test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-integration-evidence-${{ github.run_id }}
+          path: stage13_integration_evidence/
+          if-no-files-found: error
+          retention-days: 30
