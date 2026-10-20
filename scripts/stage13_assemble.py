@@ -704,6 +704,11 @@ def representative_daily_value(label, daily, field):
     value = daily.get(field)
     if value is not None:
         return value
+    if label in {"Max Case", "MaxCase"} and field == "Cumulative_Project_Profit":
+        # Normative reference §10.10: Cumulative_Project_Profit == Retained_Earnings.
+        retained_earnings = daily.get("Retained_Earnings")
+        if retained_earnings is not None:
+            return retained_earnings
     if label in {"Max Case", "MaxCase"} and field in {
         "Cumulative_Project_Profit",
         "Partner1_Reinvestment_Balance",
