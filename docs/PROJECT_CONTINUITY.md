@@ -1359,3 +1359,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - على الدردشة الجديدة أن تقرأ `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md` كاملًا ثم هذا السجل، وتتحقق حيًا من HEADs والـblobs والـRuns. ابدأ بالمسارات المستقلة المسموحة فقط، وطبّق R4 قبل كل تعديل. لا تعِد السؤال عن التفويض العام؛ لكن لا تعتبره تخويلًا للأفعال المحمية.
 
 **Read-back بعد إضافة التقرير:** commit التقرير `60979af86ce2e5d11c0b2f2934b06f1c2d1af2f1`; blob التقرير `0fb920c80280a80bff7cafb241fa224fb409296f`. سيتم التحقق من commit/blob هذا الملحق منفصلًا بعد حفظه.
+
+
+### CP-SESSION-RECOVERY-20261020 — تصحيح بصمة التقرير بعد read-back
+
+- النسخة الأولى من `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md` أُنشئت في commit `60979af86ce2e5d11c0b2f2934b06f1c2d1af2f1`، وكان blob الأول `0fb920c80280a80bff7cafb241fa224fb409296f`.
+- أُصلح بعد read-back وصف اسم فرع إصلاح DAILY فقط ليتطابق مع الاسم الفعلي `tmp/cp-excel-daily-fix-20261020`. النسخة الحالية النهائية من التقرير هي blob `8fbc638d3660eab7c5e850c85b839e00da89be2f`، في commit `b0e191fccbf86fef960a982be3eedce696ac4d32`. هذه القيم تحل محل blob التقرير الأول المذكور في الإدخال السابق؛ لا توجد تغييرات كود أو بيانات.
+- عملية إلحاق سجل الاستعادة الأساسية في هذا الملف أنتجت commit `21d33d9d4fad4868356e073b6644f34279c513b6` وblob `37ced2b0c2691dee09701053149bcb38e1ee24f1`. يُعاد التحقق من الحالة النهائية لهذا الملف ورأس الفرع بعد هذا التصحيح.
