@@ -112,3 +112,13 @@ Accordingly:
 
 The earlier candidate R4 `docs/stage13/R4_P16_P17_P18_MAXCASE_SCOPE_20261020.md` (branch `tmp/cp-maxcase-loader-20261020`, builder blob `34dbcd8fc484eb30568b6a8ec7c2ec207ffa6aa1`) explicitly authorizes candidate-only handling in which missing MaxCase daily partner balances and daily cumulative-project-profit values are labelled `PENDING_DATA_SOURCE`, never filled with zero or substituted from retained earnings. Port that narrow behavior into the separated assembler and add a regression test. The validator may skip only the daily cumulative-profit terminal comparison when the MaxCase row explicitly carries `PENDING_DATA_SOURCE`; final cash, final equity, operating net profit, trial identity, date sequence, and summary equality remain enforced. No production workbook is built.
 
+
+
+## Stage 10 run-level failure — retained separately from artifact validation
+
+The canonical Stage 10 run `37709936740` is **FAIL**, not PASS. Live run inspection shows 45 benchmark jobs succeeded and the only failed job was aggregate job `113098100249` (`aggregate-stage10`). Its exact error is `SyntaxError: unterminated string literal (detected at line 59)` in `scripts/stage10_aggregate.py`; the aggregate metrics artifact was consequently not produced. The Stage 10 run must remain recorded as failed.
+
+This is classified `WORKFLOW_DEFECT`. The source-row audit now records that run-level failure and proceeds only with separate artifact-level checks: live artifact ID/name/run/digest/size, Stage 7/10 block metadata, per-trial hashes, scenario identity, and exact 11,005-row coverage. This can establish `PASS_SCOPED` for the existing individual artifacts if those checks pass; it cannot convert Run `37709936740` into a successful run or substitute for the missing aggregate verdict.
+
+The first MaxCase source-audit attempt at HEAD `7ee40b22901e80a9db4226db13c43809019ed1b6` failed early with `RUN_CONCLUSION_MISMATCH` because it incorrectly required the failed Stage 10 run to have a success conclusion before checking its artifacts. That failure is preserved; the corrected script separates run-level and artifact-level status.
+
