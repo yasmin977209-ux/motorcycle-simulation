@@ -129,7 +129,7 @@ def run_audit() -> dict[str, Any]:
         raise RuntimeError("STAGE9A_MANIFEST_IDENTITY_MISMATCH")
 
     stage7_run = gatea.validate_run(STAGE7_RUN, STAGE7_HEAD, "success")
-    stage10_run = gatea.validate_run(STAGE10_RUN, STAGE10_HEAD, "success")
+    stage10_run = gatea.validate_run(STAGE10_RUN, STAGE10_HEAD, None)
     stage7_artifacts, _ = gatea.artifact_index(STAGE7_RUN)
     stage10_artifacts, _ = gatea.artifact_index(STAGE10_RUN)
 
@@ -148,6 +148,18 @@ def run_audit() -> dict[str, Any]:
 
     report: dict[str, Any] = {
         "schema_version": "stage13-maxcase-source-audit-v1",
+        "stage10_run_level_disposition": (
+            {
+                "status": "FAIL",
+                "classification": "WORKFLOW_DEFECT",
+                "run_conclusion": stage10_run.get("conclusion"),
+                "failed_job_id": 113098100249,
+                "exact_error": "SyntaxError: unterminated string literal at scripts/stage10_aggregate.py line 59",
+                "disposition": "Do not call the Stage 10 run successful; validate each existing artifact and row fingerprint independently.",
+            }
+            if stage10_run.get("conclusion") != "success"
+            else {"status": "PASS", "run_conclusion": "success"}
+        ),
         "created_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "repository": REPO,
         "tested_head_sha": os.environ.get("GITHUB_SHA"),
