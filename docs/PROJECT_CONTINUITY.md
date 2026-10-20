@@ -1366,3 +1366,11 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - النسخة الأولى من `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md` أُنشئت في commit `60979af86ce2e5d11c0b2f2934b06f1c2d1af2f1`، وكان blob الأول `0fb920c80280a80bff7cafb241fa224fb409296f`.
 - أُصلح بعد read-back وصف اسم فرع إصلاح DAILY فقط ليتطابق مع الاسم الفعلي `tmp/cp-excel-daily-fix-20261020`. النسخة الحالية النهائية من التقرير هي blob `8fbc638d3660eab7c5e850c85b839e00da89be2f`، في commit `b0e191fccbf86fef960a982be3eedce696ac4d32`. هذه القيم تحل محل blob التقرير الأول المذكور في الإدخال السابق؛ لا توجد تغييرات كود أو بيانات.
 - عملية إلحاق سجل الاستعادة الأساسية في هذا الملف أنتجت commit `21d33d9d4fad4868356e073b6644f34279c513b6` وblob `37ced2b0c2691dee09701053149bcb38e1ee24f1`. يُعاد التحقق من الحالة النهائية لهذا الملف ورأس الفرع بعد هذا التصحيح.
+
+
+### إغلاق سجل الاستعادة — verified read-back (2026-10-20)
+
+- قبل هذا الإلحاق كان رأس فرع المرشح `cf488d146ead864d3f7550faa58eafe030bbeb12`، وblob سجل الاستمرارية `54ce4ac50abcade90dd31dfe30a8e38685d3d3d3`.
+- أعاد GitHub read-back التقرير النهائي `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md` على الفرع نفسه: blob `8fbc638d3660eab7c5e850c85b839e00da89be2f`، 23,457 حرفًا و213 سطرًا؛ فرع إصلاح DAILY مصحح إلى `tmp/cp-excel-daily-fix-20261020` ولا توجد النسخة النصية القديمة الخاطئة.
+- أعاد GitHub read-back سجل الاستمرارية بعد الإضافات: blob `54ce4ac50abcade90dd31dfe30a8e38685d3d3d3`، 210,608 أحرف و1,369 سطرًا، وفيه سجل 2026-10-20 وتصحيح بصمة التقرير.
+- تأكد من جديد أن `main` ما زال عند HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef` و`main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`. لم يُعدّل main، ولم تُشغّل اختبارات/محاكاة جديدة.
