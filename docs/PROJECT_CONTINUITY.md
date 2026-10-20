@@ -1309,3 +1309,53 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+
+---
+
+## CP-SESSION-RECOVERY-20261020 — سجل استعادة شامل للدردشة الجديدة
+
+**التاريخ:** 2026-10-20  
+**النوع:** سجل استمرارية append-only، لا يغير قواعد الأعمال ولا يمنح صلاحيات.  
+**فرع الكتابة:** `tmp/cp-stage13-integration-20261020` فقط؛ لم تُجرَ كتابة إلى `main`.
+
+### خط أساس حي قبل الحفظ
+
+- `main` HEAD: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- `main/state.json` blob: `2178260bb18efeb81437486f13b6d10cf5e85936`; `stage=12-CLOSED`; `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`.
+- `docs/STATE_SHA_SEMANTICS.md` blob `134363f0f2834f8087760b3148910a1a3d3af38b` يقرر `state.sha_semantics=parent_state_commit_pointer`; لا يلزم تساوي state.sha مع HEAD.
+- HEAD الفرع المرشح قبل إضافة سجل الاستعادة: `78c1da565f580029ec7620543a3458ead1273d03`. أُضيف التقرير الكامل في commit `60979af86ce2e5d11c0b2f2934b06f1c2d1af2f1`.
+- التقرير المستقل: `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md`، blob `0fb920c80280a80bff7cafb241fa224fb409296f`، 23,545 حرفًا تقريبًا و213 سطرًا في read-back. يحتوي على خط الأساس، التسلسل، المرفقات وبصماتها، Runs/Artifacts، موانع التسليم وخطوات الدردشة الجديدة.
+
+### الملفات المرجعية المرفقة التي تم التحقق من بايتاتها
+
+- الأصل `المرجع_النهائي_الموحد_المعتمد.md`: 271,496 بايت؛ SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` — VERIFIED.
+- الملف المدمج `المرجع النهائي الموحد المعتمد المدمج.md`: 543,081 بايت؛ SHA-256 `c816e2b61734390e57500cab738829ae1810d0063f9b49bdf0d107344f867fd5`، وهي بصمة منفصلة عن بصمة الأصل.
+- حزمة البرومبتات: 45,218 بايت؛ SHA-256 `767b48991f0c067ee9881f8ddb31217e7d5589defd65b78363b0cb6332d0d1f4`.
+- تقرير التقييم المستقل 2026-10-16: 26,491 بايت؛ SHA-256 `9a788d1d357abb88fbb6d3516169d92ebe4917478622b1855e54f26721dd9216` — خط الأساس فيه تاريخي ويجب عدم نسخه كحالة حية.
+- الدليل التشغيلي الموسع: 17,537 بايت؛ SHA-256 `f9c1bb66252f1926caff2cd3612f27e55344b9c659c6883dad226cba8ac5fe3d`.
+- لم يتسنّ إثبات Project Sources/Instructions الفعلية في واجهة ChatGPT؛ لا تَدّعِ أن رفع هذه الملفات أو كتابتها إلى GitHub يجعلها تُطبق تلقائيًا داخل إعدادات ChatGPT.
+
+### ما جرى التحقق منه في هذه الدورة
+
+1. المستخدم كرر التفويض العام بعبارات «أفوضك لتقوم بكلما يلزم» و«تابع». التزم التنفيذ بالخطوات المسموحة دون سؤال روتيني، مع عدم تجاوز حظر main/هوية البيانات/التشغيل الإنتاجي/Release.
+2. أعيد فحص `main/state.json` و`docs/STATE_SHA_SEMANTICS.md` و`docs/stage9a/dataset_manifest.json` blob `e796fa2443493b607f1f9c60b58eb63607959c26` و`docs/stage12/accounting_data_contract.json` blob `dd3f7f102389def92df16af3b0732b77dd66df6d`.
+3. تأكد أن `scripts/stage13_assemble.py` و`scripts/golden_reference_provider.py` و`scripts/run_scenario.py` غير موجودة في main (GitHub API 404). الفرع الحالي Stage 13 ليس main ولا PR مدمجًا.
+4. حلل تعارض Artifact `C050_G000`: manifest يسجل `11503191706` مع Run `37662891608` بينما API يربط artifact `11503191706` بـRun `37660610243`. الأثر `11503510055` هو الذي يخص Run `37662891608`. الأول: v2 HEAD `43e320abb79c3db82bdb70b8c6dece883ea7676d`, 17,786,146 بايت, SHA-256 `f575044fb6a50cb5ed71d6303c40bd77841a6d38b633c105e560a4731e0a94f9`. الثاني: v3 HEAD `6128b22864bb171ba49ec15dbb42439a6513c30c`, 17,787,110 بايت, SHA-256 `111eb7a2abd7b85625a02c55ee6f3140a14644ef253141bfdc3f8fc5ae4c287d`. سبعة ملفات بيانات مطابقة بايتًا، والاختلاف الوحيد في `scenario_metadata.json`: v2 يسجل `log_events=true`، وv3 يسجل `representative_trials_only`. فُسر سبب الفرق من checkout branch في workflow. لم يعدل manifest، وتبقى الهوية `CONFLICTED/PENDING_APPROVAL`.
+5. نُزّل وفُحص read-only Artifact `12016903462` من Run `38830875732`, فرع `tmp/cp-gatea-provider-bind-20261016`, HEAD `cb2f603aacd93b910093d497deeea43710e7b0d3`. ZIP 1,719 بايت, SHA-256 `72f122bc2a78ab079f6c7064c45d78d40b6e9463b83454a1366e32138c0359d6`. تقريره يقول PASS لتغطية 25 سيناريو/25,205 fingerprints وmap SHA `0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1` عند seed 20270101/source SHA المثبت. هذا PASS_SCOPED على مرشح، وليس ربطًا إنتاجيًا على main؛ blockers لم تتغير.
+6. راجع الامتداد المنفصل لـC100: Run `39004726976`, artifact `12091571204`; 2,995/2,995 سجل trial IDs 2..600 عبر خمسة سيناريوهات وبصمة امتداد `a9850a0dc2cda16d8c89df52bf9715203d9cc9cc5fbffbd6792f13d90b6dcb46` بحسب R4. Artifact الامتداد لا يحتوي map الأساسي؛ لا ندّعي إعادة حساب digest الخريطة الأساسية أو المدمجة منه بشكل مستقل. لم تُدمج قاعدة التغطية في main.
+7. راجع Run Stage 13 integration `39366628194`: success, tested HEAD `c3b3ec72387739921b0d73680dec2bb5425424a8`, `50 passed in 24.57s`, artifact `12239951234`, 5,096 بايت, SHA-256 `e0cbf7bde94ed5de443708b8dcdd9cf7fa03d2641f855b8527db011b1b3cea56`. هذا اختبار موجه وليس workbook acceptance.
+8. راجع Run Stage 12 MaxCase source audit `39367346036`: artifact `12239369983`، ZIP 1,567,864 بايت، SHA-256 `f3e036ef1c88fc188633b784da12f76b32c41d3fe3283c768a0c3ea1f4b669e9`; embedded audit JSON SHA `eafcc583375b7f85e6c2682744bd173ca29fa196132df83716104a1a4311053d`; daily sidecar 28,105,275 بايت SHA `36b6fbb2f32978112f938a4d116e21ab4e039c20dd18d197a6657191615ade7f`. النطاق المبلغ عنه 25 سيناريو، 11,005 trial hashes، 22,546,465 daily rows، صفر mismatch؛ 52,541 daily rows استُخرجت لــMaxCase. حقلا partner memo لا يزالان غائبين.
+9. راجع Run Stage 3 compatibility `39367690224`: success، tested HEAD `66f138c1431ded40048ab24561b7ac076eb3f405`, `12 passed in 9.12s`; artifact `12240271068`, 1,178 بايت، SHA `1382312a428fb279012fd792dc71cd6cef9cddd3ef9be9a39b7ec69987ba316f`. PASS_SCOPED فقط.
+10. ثبت أن أرصدة المذكرات اليومية لا يمكن اشتقاقها بدقة من Stage 12 aggregates: `partner_equity.py` يعتمد على events مؤهلة وخصومات توسع؛ عقد البيانات لا يحتوي breakdown/field source. الحالة `MISSING_EVIDENCE`، ولا تخمين أو صفر.
+11. راجع بنية Stage 13 المرشحة؛ blob assembler `f3b944e3d33840831fbe84248e0cb0fb42254b50`, builder `c5db5f1113294224d371e98bab2edd7b015a30d2`, workflow الاختبار المؤقت `2dc46cbea34e4c9f13d5c557249a7dc9f74e8dd4`. يوجد إصلاح dict-to-values لـDAILY وتبقى أرصدة الشركاء pending. لا workbook canonical قُبل.
+12. إعادة تدقيق Stage 9C على main/الحالة تؤكد `full_stage9c_status=PASS` في state بناءً على C-1..C-6، لكن التقرير التاريخي PARTIAL وبوابة CP-D منفصلة؛ لا تمحُ التاريخ ولا تنقل PASS إلى التسليم.
+13. لا تشغيل pytest أو Monte Carlo جديد في هذه الدورة؛ كل ما سبق قراءة مصدر/Artifact/API وread-back. لا تغيير على main أو manifest أو source identity أو بيانات تاريخية أو tests/workflows في هذه الدورة.
+
+### موانع التسليم والخطوة التالية
+
+- `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, `UNDEFINED_BUSINESS_RULE` لطوبولوجيا Stage 11, غياب Stage13 assembler/provider/CLI من main، فجوة المذكرات، تعارض manifest/Artifact، وعدم وجود الحزمة السباعية المقبولة ما زالت نقاط منع.
+- لا ينتج ملف نهائي قبل حسم المصدر/cohort والفجوات المحاسبية والبوابات. لا Release دون إذن منفصل.
+- على الدردشة الجديدة أن تقرأ `docs/stage13/SESSION_RECOVERY_HANDOFF_20261020.md` كاملًا ثم هذا السجل، وتتحقق حيًا من HEADs والـblobs والـRuns. ابدأ بالمسارات المستقلة المسموحة فقط، وطبّق R4 قبل كل تعديل. لا تعِد السؤال عن التفويض العام؛ لكن لا تعتبره تخويلًا للأفعال المحمية.
+
+**Read-back بعد إضافة التقرير:** commit التقرير `60979af86ce2e5d11c0b2f2934b06f1c2d1af2f1`; blob التقرير `0fb920c80280a80bff7cafb241fa224fb409296f`. سيتم التحقق من commit/blob هذا الملحق منفصلًا بعد حفظه.
