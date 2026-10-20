@@ -1309,3 +1309,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+## اقتراحات معلقة — CP5 Confidence Sequences — 2026-10-21
+
+- **Status:** `PENDING_APPROVAL`; report-only proposal on `tmp/cp-path5-cs-options-20261021` from live main `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- Independent report: `docs/audits/CP5_CONFIDENCE_SEQUENCE_OWNER_OPTIONS_2026-10-21.md`, blob `ac58919253c8df23abab2f7a338512a80e6674bb`.
+- The owner must separately decide (1) financial-mean support/moment assumptions, (2) loss-probability precision/decision gate and numerical tolerance, and (3) the meaning of `alpha_s`, IUT versus simultaneous family-wise coverage, and the applicable numeric alpha. The report's recommendations are proposals, not decisions.
+- No Confidence Sequences, statistical threshold, tests, workflows, production evidence, source identity, data, or acceptance state were changed. Keep CS `BLOCKED / PENDING_APPROVAL` until the three decisions are recorded authoritatively.
