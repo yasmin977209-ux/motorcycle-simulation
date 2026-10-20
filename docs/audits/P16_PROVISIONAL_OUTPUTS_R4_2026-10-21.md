@@ -1,0 +1,19 @@
+# R4 — P16 provisional seven-deliverable build — 2026-10-21
+
+1. **Base:** clean temporary branch `tmp/p16-provisional-delivery-20261021` created from live `main` HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; no main write.
+2. **Main builder:** `scripts/excel_builder.py`, blob `50115a2fea5812727e0e5a8bfbb07e1f853f026b`.
+3. **DAILY accepted fix:** source branch `tmp/cp-path3-daily-workflow-20261021`, blob `10d0447b30e4dcda5ca33596cc0c107c5921d8b6`; materialize mapping values in header order.
+4. **Stage 13 structure:** `scripts/stage13_assemble.py` from accepted path4, blob `b459d0c6a99e50f545c25a09ca38cf1329f6ea6d`; strict 185-sheet saved-workbook audit remains.
+5. **Change needed:** allow missing MaxCase daily payload with explicit warning, while continuing to validate all four existing roles and their scenario/trial identities.
+6. **MaxCase source:** V3 Artifact `11503510055`, Run `37662891608`; the V3 cohort audit identified trial 60 at equity 308,412,450 YER. Do not use the 11,005-trial Stage 12 cohort as the V3 selector.
+7. **Partner fields:** Stage 12 Artifact `11634501915`; schema has neither Partner1 nor Partner2 reinvestment balance nor a clear memo alias. Leave both fields marked `PENDING_DATA_SOURCE`.
+8. **Cumulative profit:** reference §§10.9–10.10 settle its equality with `Final_Retained_Earnings` at the same point in time; do not list this as an owner decision. It may only be read/derived for a bound trial/date/source.
+9. **Representative mapping:** preserve P10=131, P50=29, P90=18, LossCase=304 from legacy `Loss.json`; write explicit `LossCase -> Loss.json` source annotation.
+10. **README:** for each workbook include `STATISTICAL_POLICY_LEVEL = FIXED_LOOK_WITH_CS_PENDING`, `MaxCase = PENDING_DATA_SOURCE (trial_id=60 for C050_G000)`, `log_events = PENDING_APPROVAL`, and `Gate A = BLOCKED`.
+11. **Pending case row:** append one MaxCase row per scenario to `REPRESENTATIVE_CASES`; preserve the selected trial ID where proven, mark unavailable payload cells `PENDING_DATA_SOURCE`, and attach the prescribed Excel comment for C050_G000: `MaxCase trial_id=60; daily payload missing from V3 — see R4-V2.1 §5.4`.
+12. **Data acquisition:** a read-only workflow downloads existing artifact IDs from the unmodified main manifest; override C050_G000 only at runtime to the approved-temporary V3 artifact. Verify GitHub API artifact/run/head IDs, exact byte sizes and ZIP SHA-256 before extracting.
+13. **Outputs:** two 185-sheet XLSX files plus Arabic/English report and summary and Arabic feasibility study; produce exact per-file SHA-256, bytes, worksheet count and pending-row count in a machine-readable output manifest.
+14. **Tests:** synthetic role-guard cases (four complete roles plus pending MaxCase), missing partner fields fail-closed, explicit legacy Loss mapping, saved-workbook reopen/audit, 185 ordered sheets, comments/README tags, no formulas/errors.
+15. **CI:** one run on the exact P16 branch SHA; artifact contains all seven named deliverables, evidence manifest, logs and test results. Read back the workflow Run and Artifact metadata and hash every file after writing.
+16. **Not allowed:** no changes to SOURCE_SHA/seed/RNG/cohort/trial IDs/data/Parquet or main manifest; no CS, Monte Carlo or new Trials; no Golden self-reference, Gate A provider, SCENARIO_STABLE or acceptance promotion.
+17. **Status stays:** Gate A BLOCKED; log_events PENDING_APPROVAL; Stage 9C PARTIAL/CONFLICTED; delivery NOT_ACCEPTED; Release BLOCKED / NOT_AUTHORIZED.
