@@ -1,0 +1,1329 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-10-20",
+  "mode": "read-only artifact inventory",
+  "source_identity": {
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101,
+    "stage9a_manifest_git_blob": "e796fa2443493b607f1f9c60b58eb63607959c26",
+    "stage9a_global_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6"
+  },
+  "rules": {
+    "artifact_sha256": "SHA-256 of downloaded outer GitHub Actions artifact ZIP; checked against the digest from the artifact's live workflow-run listing",
+    "representative_daily_rows": "Count of daily objects in the selected representative JSON payload; each daily object had only the summary trial_id",
+    "max_case": "No MaxCase payload was found in any of these 25 Stage 9A archives; no role was synthesized"
+  },
+  "summary": {
+    "scenario_count": 25,
+    "artifact_digest_matches": 25,
+    "source_sha_matches": 25,
+    "role_set": "P10/P50/P90/Loss",
+    "max_case_payloads": 0,
+    "representative_summary_id_matches_metadata": 25,
+    "daily_payloads_with_matching_trial_ids": 100,
+    "non_c100_trial_count": 450,
+    "c100_trial_count": 1
+  },
+  "artifacts": [
+    {
+      "scenario": "C030_G000",
+      "artifact_id": 11498686202,
+      "zip_size_bytes": 3973338,
+      "zip_sha256": "6e3ac626f51e9bc69579a231d2717b328f1d7db186279f102a64c993d1ac4d6e",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 1655,
+      "roles": {
+        "P10": {
+          "trial_id": 324,
+          "daily_rows": 1531,
+          "daily_trial_ids": [
+            324
+          ]
+        },
+        "P50": {
+          "trial_id": 298,
+          "daily_rows": 1551,
+          "daily_trial_ids": [
+            298
+          ]
+        },
+        "P90": {
+          "trial_id": 144,
+          "daily_rows": 1552,
+          "daily_trial_ids": [
+            144
+          ]
+        },
+        "Loss": {
+          "trial_id": 99,
+          "daily_rows": 1512,
+          "daily_trial_ids": [
+            99
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C030_G030",
+      "artifact_id": 11497409735,
+      "zip_size_bytes": 4781258,
+      "zip_sha256": "9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 1665,
+      "roles": {
+        "P10": {
+          "trial_id": 235,
+          "daily_rows": 1557,
+          "daily_trial_ids": [
+            235
+          ]
+        },
+        "P50": {
+          "trial_id": 156,
+          "daily_rows": 1568,
+          "daily_trial_ids": [
+            156
+          ]
+        },
+        "P90": {
+          "trial_id": 67,
+          "daily_rows": 1605,
+          "daily_trial_ids": [
+            67
+          ]
+        },
+        "Loss": {
+          "trial_id": 359,
+          "daily_rows": 1517,
+          "daily_trial_ids": [
+            359
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C030_G050",
+      "artifact_id": 11498069095,
+      "zip_size_bytes": 5391763,
+      "zip_sha256": "ee01014a40a60f23bdb815fcd7f19a1e472ed8256916ed21eae4ad43ff8d03bf",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 1704,
+      "roles": {
+        "P10": {
+          "trial_id": 103,
+          "daily_rows": 1547,
+          "daily_trial_ids": [
+            103
+          ]
+        },
+        "P50": {
+          "trial_id": 72,
+          "daily_rows": 1560,
+          "daily_trial_ids": [
+            72
+          ]
+        },
+        "P90": {
+          "trial_id": 28,
+          "daily_rows": 1585,
+          "daily_trial_ids": [
+            28
+          ]
+        },
+        "Loss": {
+          "trial_id": 306,
+          "daily_rows": 1526,
+          "daily_trial_ids": [
+            306
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C030_G070",
+      "artifact_id": 11498204610,
+      "zip_size_bytes": 6191846,
+      "zip_sha256": "bfe9467b74977778c33b29bf51f20278097585028d5574f3c282ad403e6300f6",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 1703,
+      "roles": {
+        "P10": {
+          "trial_id": 235,
+          "daily_rows": 1540,
+          "daily_trial_ids": [
+            235
+          ]
+        },
+        "P50": {
+          "trial_id": 132,
+          "daily_rows": 1560,
+          "daily_trial_ids": [
+            132
+          ]
+        },
+        "P90": {
+          "trial_id": 229,
+          "daily_rows": 1592,
+          "daily_trial_ids": [
+            229
+          ]
+        },
+        "Loss": {
+          "trial_id": 341,
+          "daily_rows": 1537,
+          "daily_trial_ids": [
+            341
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C030_G100",
+      "artifact_id": 11498980727,
+      "zip_size_bytes": 7517549,
+      "zip_sha256": "34352f4872824d94edbb0cb5669a42f2f416b2f9be9ee2756d84a63ec608e9dc",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 1669,
+      "roles": {
+        "P10": {
+          "trial_id": 326,
+          "daily_rows": 1552,
+          "daily_trial_ids": [
+            326
+          ]
+        },
+        "P50": {
+          "trial_id": 150,
+          "daily_rows": 1575,
+          "daily_trial_ids": [
+            150
+          ]
+        },
+        "P90": {
+          "trial_id": 224,
+          "daily_rows": 1606,
+          "daily_trial_ids": [
+            224
+          ]
+        },
+        "Loss": {
+          "trial_id": 115,
+          "daily_rows": 1533,
+          "daily_trial_ids": [
+            115
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C050_G000",
+      "artifact_id": 11503510055,
+      "zip_size_bytes": 17787110,
+      "zip_sha256": "111eb7a2abd7b85625a02c55ee6f3140a14644ef253141bfdc3f8fc5ae4c287d",
+      "run_id": 37662891608,
+      "run_head_sha": "6128b22864bb171ba49ec15dbb42439a6513c30c",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2235,
+      "roles": {
+        "P10": {
+          "trial_id": 131,
+          "daily_rows": 2226,
+          "daily_trial_ids": [
+            131
+          ]
+        },
+        "P50": {
+          "trial_id": 29,
+          "daily_rows": 2235,
+          "daily_trial_ids": [
+            29
+          ]
+        },
+        "P90": {
+          "trial_id": 18,
+          "daily_rows": 2228,
+          "daily_trial_ids": [
+            18
+          ]
+        },
+        "Loss": {
+          "trial_id": 304,
+          "daily_rows": 2233,
+          "daily_trial_ids": [
+            304
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C050_G030",
+      "artifact_id": 11499677773,
+      "zip_size_bytes": 18127364,
+      "zip_sha256": "f948c1c254c5df8430126c36316d8eb29b935e11d8521afa609b0b180042162f",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2235,
+      "roles": {
+        "P10": {
+          "trial_id": 292,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            292
+          ]
+        },
+        "P50": {
+          "trial_id": 270,
+          "daily_rows": 2233,
+          "daily_trial_ids": [
+            270
+          ]
+        },
+        "P90": {
+          "trial_id": 28,
+          "daily_rows": 2229,
+          "daily_trial_ids": [
+            28
+          ]
+        },
+        "Loss": {
+          "trial_id": 259,
+          "daily_rows": 2226,
+          "daily_trial_ids": [
+            259
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C050_G050",
+      "artifact_id": 11502991608,
+      "zip_size_bytes": 18460614,
+      "zip_sha256": "572275afb436fc20fc5606b27379d093296012a6ff427c29ee22ddd786b2b1c1",
+      "run_id": 37662891608,
+      "run_head_sha": "6128b22864bb171ba49ec15dbb42439a6513c30c",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2235,
+      "roles": {
+        "P10": {
+          "trial_id": 346,
+          "daily_rows": 2226,
+          "daily_trial_ids": [
+            346
+          ]
+        },
+        "P50": {
+          "trial_id": 141,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            141
+          ]
+        },
+        "P90": {
+          "trial_id": 314,
+          "daily_rows": 2231,
+          "daily_trial_ids": [
+            314
+          ]
+        },
+        "Loss": {
+          "trial_id": 168,
+          "daily_rows": 2225,
+          "daily_trial_ids": [
+            168
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C050_G070",
+      "artifact_id": 11503357996,
+      "zip_size_bytes": 18551329,
+      "zip_sha256": "c4a3487ad69c00d68cad7f04b138ebf005b5d2df92d988c20cc941ffb2c8ead6",
+      "run_id": 37662891608,
+      "run_head_sha": "6128b22864bb171ba49ec15dbb42439a6513c30c",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2235,
+      "roles": {
+        "P10": {
+          "trial_id": 320,
+          "daily_rows": 2231,
+          "daily_trial_ids": [
+            320
+          ]
+        },
+        "P50": {
+          "trial_id": 112,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            112
+          ]
+        },
+        "P90": {
+          "trial_id": 407,
+          "daily_rows": 2226,
+          "daily_trial_ids": [
+            407
+          ]
+        },
+        "Loss": {
+          "trial_id": 381,
+          "daily_rows": 2233,
+          "daily_trial_ids": [
+            381
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C050_G100",
+      "artifact_id": 11503961628,
+      "zip_size_bytes": 19131702,
+      "zip_sha256": "5c76239f5072d1fdb12af98413812a42df204df3e80a7d853f48aaca0574e866",
+      "run_id": 37662891608,
+      "run_head_sha": "6128b22864bb171ba49ec15dbb42439a6513c30c",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2235,
+      "roles": {
+        "P10": {
+          "trial_id": 67,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            67
+          ]
+        },
+        "P50": {
+          "trial_id": 227,
+          "daily_rows": 2235,
+          "daily_trial_ids": [
+            227
+          ]
+        },
+        "P90": {
+          "trial_id": 93,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            93
+          ]
+        },
+        "Loss": {
+          "trial_id": 40,
+          "daily_rows": 2232,
+          "daily_trial_ids": [
+            40
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C070_G000",
+      "artifact_id": 11500301100,
+      "zip_size_bytes": 14519146,
+      "zip_sha256": "285a9a1ac27fc68685842539871cbc5c6e59599c38ceb9795d483b09cc65fb42",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2215,
+      "roles": {
+        "P10": {
+          "trial_id": 196,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            196
+          ]
+        },
+        "P50": {
+          "trial_id": 193,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            193
+          ]
+        },
+        "P90": {
+          "trial_id": 124,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            124
+          ]
+        },
+        "Loss": {
+          "trial_id": 278,
+          "daily_rows": 2205,
+          "daily_trial_ids": [
+            278
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C070_G030",
+      "artifact_id": 11499331345,
+      "zip_size_bytes": 14506110,
+      "zip_sha256": "67550dc7d33f4462fdbe07c10cb0e473907ad003145438e7f901d1a4cd072823",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2217,
+      "roles": {
+        "P10": {
+          "trial_id": 37,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            37
+          ]
+        },
+        "P50": {
+          "trial_id": 166,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            166
+          ]
+        },
+        "P90": {
+          "trial_id": 150,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            150
+          ]
+        },
+        "Loss": {
+          "trial_id": 298,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            298
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C070_G050",
+      "artifact_id": 11498901762,
+      "zip_size_bytes": 14503434,
+      "zip_sha256": "a072fbfda165c1a2bb8b67db61dca22da1f09fe6232741aa4d0164bc6097d0b1",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2214,
+      "roles": {
+        "P10": {
+          "trial_id": 238,
+          "daily_rows": 2201,
+          "daily_trial_ids": [
+            238
+          ]
+        },
+        "P50": {
+          "trial_id": 29,
+          "daily_rows": 2202,
+          "daily_trial_ids": [
+            29
+          ]
+        },
+        "P90": {
+          "trial_id": 16,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            16
+          ]
+        },
+        "Loss": {
+          "trial_id": 231,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            231
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C070_G070",
+      "artifact_id": 11499668344,
+      "zip_size_bytes": 14524001,
+      "zip_sha256": "5a59d72fee4bac2d39a9e607cef479b6827422f693332fe260432d9d8501138d",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2214,
+      "roles": {
+        "P10": {
+          "trial_id": 158,
+          "daily_rows": 2204,
+          "daily_trial_ids": [
+            158
+          ]
+        },
+        "P50": {
+          "trial_id": 27,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            27
+          ]
+        },
+        "P90": {
+          "trial_id": 4,
+          "daily_rows": 2201,
+          "daily_trial_ids": [
+            4
+          ]
+        },
+        "Loss": {
+          "trial_id": 147,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            147
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C070_G100",
+      "artifact_id": 11499938620,
+      "zip_size_bytes": 14483171,
+      "zip_sha256": "a9f44e74051fcbc6fb64525cae6b7dc3626fbee27b2d600f4bd14e0ed1d167d5",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2214,
+      "roles": {
+        "P10": {
+          "trial_id": 257,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            257
+          ]
+        },
+        "P50": {
+          "trial_id": 12,
+          "daily_rows": 2200,
+          "daily_trial_ids": [
+            12
+          ]
+        },
+        "P90": {
+          "trial_id": 161,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            161
+          ]
+        },
+        "Loss": {
+          "trial_id": 132,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            132
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C085_G000",
+      "artifact_id": 11499442661,
+      "zip_size_bytes": 12873892,
+      "zip_sha256": "f58ff1147a581da08c329bcb0057d8f243871edacd8a994fd4f72e5ddc95d3e6",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2204,
+      "roles": {
+        "P10": {
+          "trial_id": 116,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            116
+          ]
+        },
+        "P50": {
+          "trial_id": 52,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            52
+          ]
+        },
+        "P90": {
+          "trial_id": 258,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            258
+          ]
+        },
+        "Loss": {
+          "trial_id": 44,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            44
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C085_G030",
+      "artifact_id": 11499958237,
+      "zip_size_bytes": 12880008,
+      "zip_sha256": "96445d3d6f9ab901b114a262c034927496793e6ec9979057285eb0c58a4d0aa",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2203,
+      "roles": {
+        "P10": {
+          "trial_id": 15,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            15
+          ]
+        },
+        "P50": {
+          "trial_id": 63,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            63
+          ]
+        },
+        "P90": {
+          "trial_id": 10,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            10
+          ]
+        },
+        "Loss": {
+          "trial_id": 136,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            136
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C085_G050",
+      "artifact_id": 11498784380,
+      "zip_size_bytes": 12834229,
+      "zip_sha256": "92aa2c3a498c3c2cb1c731fabc7bc0ed86cf6d541f6396f4daa3ec904238ec44",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2202,
+      "roles": {
+        "P10": {
+          "trial_id": 10,
+          "daily_rows": 2201,
+          "daily_trial_ids": [
+            10
+          ]
+        },
+        "P50": {
+          "trial_id": 42,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            42
+          ]
+        },
+        "P90": {
+          "trial_id": 57,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            57
+          ]
+        },
+        "Loss": {
+          "trial_id": 151,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            151
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C085_G070",
+      "artifact_id": 11498798098,
+      "zip_size_bytes": 12863194,
+      "zip_sha256": "62646de661459bbafc51d0c7427a6a837f4ea8a304c402d8ecb4509bbae026a0",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2205,
+      "roles": {
+        "P10": {
+          "trial_id": 5,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            5
+          ]
+        },
+        "P50": {
+          "trial_id": 30,
+          "daily_rows": 2201,
+          "daily_trial_ids": [
+            30
+          ]
+        },
+        "P90": {
+          "trial_id": 17,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            17
+          ]
+        },
+        "Loss": {
+          "trial_id": 138,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            138
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C085_G100",
+      "artifact_id": 11499553926,
+      "zip_size_bytes": 12857135,
+      "zip_sha256": "c6a1e11f8c7e749b2a8ee38e393ec2e86ae306d57b570bb3cb49d3a96c1c76a6",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 450,
+      "daily_distribution_parquet_rows": 2205,
+      "roles": {
+        "P10": {
+          "trial_id": 100,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            100
+          ]
+        },
+        "P50": {
+          "trial_id": 42,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            42
+          ]
+        },
+        "P90": {
+          "trial_id": 65,
+          "daily_rows": 2201,
+          "daily_trial_ids": [
+            65
+          ]
+        },
+        "Loss": {
+          "trial_id": 163,
+          "daily_rows": 2197,
+          "daily_trial_ids": [
+            163
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C100_G000",
+      "artifact_id": 11496939782,
+      "zip_size_bytes": 8033444,
+      "zip_sha256": "fc888978f92ed963c35774cb471dedd93d71ecc335c6fe1b765d897468821c16",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 1,
+      "daily_distribution_parquet_rows": 2198,
+      "roles": {
+        "P10": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P50": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P90": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "Loss": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C100_G030",
+      "artifact_id": 11497898524,
+      "zip_size_bytes": 8034811,
+      "zip_sha256": "66aee1cdd7829c25c8b5800b74a69a241eeddee6b90e657c23e0ccd68049ec12",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 1,
+      "daily_distribution_parquet_rows": 2198,
+      "roles": {
+        "P10": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P50": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P90": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "Loss": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C100_G050",
+      "artifact_id": 11497164787,
+      "zip_size_bytes": 8033619,
+      "zip_sha256": "61a90c9b0ca28ad7dc2943412822f3df99f4f5797bbb460343194cf5e28aadd8",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 1,
+      "daily_distribution_parquet_rows": 2198,
+      "roles": {
+        "P10": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P50": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P90": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "Loss": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C100_G070",
+      "artifact_id": 11497369182,
+      "zip_size_bytes": 8033749,
+      "zip_sha256": "3e6fccb33b4892f2b1f46b91d3781e4723d3914e9273f6e71bd605fc3895db3f",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 1,
+      "daily_distribution_parquet_rows": 2198,
+      "roles": {
+        "P10": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P50": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P90": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "Loss": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    },
+    {
+      "scenario": "C100_G100",
+      "artifact_id": 11498636066,
+      "zip_size_bytes": 8032425,
+      "zip_sha256": "05a2c44bcd2f4af5ef613ba2f97ba7d7f6fa289404552394df6952f0a65f680d",
+      "run_id": 37655041728,
+      "run_head_sha": "b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e",
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "trial_count": 1,
+      "daily_distribution_parquet_rows": 2198,
+      "roles": {
+        "P10": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P50": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "P90": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        },
+        "Loss": {
+          "trial_id": 1,
+          "daily_rows": 2198,
+          "daily_trial_ids": [
+            1
+          ]
+        }
+      },
+      "members": [
+        "scenario.tar.gz",
+        "daily_distribution.parquet",
+        "representatives/P10.json",
+        "representatives/P50.json",
+        "representatives/P90.json",
+        "representatives/Loss.json",
+        "trial_results.parquet",
+        "trial_fingerprints.json",
+        "scenario_metadata.json"
+      ]
+    }
+  ]
+}
