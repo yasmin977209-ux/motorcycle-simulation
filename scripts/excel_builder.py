@@ -475,7 +475,18 @@ def write_daily_sheet(wb, scenario, payload):
     ws=wb.create_sheet(f"{scenario}_DAILY")
     rows=payload["daily"]
     headers=list(rows[0]) if rows else ["date"]
-    write_table(ws,headers,rows,number_formats={h:FINANCE_FMT for h in headers if h not in {"date","Final_Close_Date"}})
+    # Materialize mappings as values in the exact worksheet header order.
+    value_rows = [[row.get(header) for header in headers] for row in rows]
+    write_table(
+        ws,
+        headers,
+        value_rows,
+        number_formats={
+            h: FINANCE_FMT
+            for h in headers
+            if h not in {"date", "Final_Close_Date"}
+        },
+    )
     style_sheet(ws,"B2")
 
 
