@@ -122,3 +122,14 @@ This is classified `WORKFLOW_DEFECT`. The source-row audit now records that run-
 
 The first MaxCase source-audit attempt at HEAD `7ee40b22901e80a9db4226db13c43809019ed1b6` failed early with `RUN_CONCLUSION_MISMATCH` because it incorrectly required the failed Stage 10 run to have a success conclusion before checking its artifacts. That failure is preserved; the corrected script separates run-level and artifact-level status.
 
+
+
+## R4 addendum — materialize a non-final MaxCase payload overlay from existing evidence
+
+- New bounded script/workflow: `scripts/stage13_materialize_maxcase_payloads.py` and `.github/workflows/cp-stage13-maxcase-payloads-20261020.yml`.
+- The script reruns only the read-only source-row audit, then validates each existing Stage 12 daily Parquet artifact against the live Run `37964656154`, the CP12B/CP12C file SHA reports, exact schema/identity, 11,005 TrialResult row hashes, and all daily-row continuity checks. It does not execute a simulation, Trial, or Checkpoint.
+- For the five C100 scenarios, the selected MaxCase trial ID is 1 and matches existing P50/P10/P90/Loss payload IDs; the script reuses the exact P50 payload after checking its summary and common daily fields against the canonical TrialResult/Stage12 rows.
+- For the other 20 scenarios, it builds only the `summary` and canonical daily record needed by the Stage 13 representative sheet from the selected TrialResult row and matching Stage 12 rows. It preserves the raw Stage 12 fields, adds exact aliases `Cash=Closing_Cash` and `Net_Equity=Closing_Equity`, and marks unavailable daily `Cumulative_Project_Profit`, `Partner1_Reinvestment_Balance`, and `Partner2_Reinvestment_Balance` as `PENDING_DATA_SOURCE`. It never substitutes `Retained_Earnings`, zero, or a guessed value.
+- Output is a separately hashed JSON payload overlay plus per-scenario provenance and a manifest. The overlay is explicitly `PARTIAL`; no Excel workbook or final delivery package is built. This output cannot be accepted as final while those 20 payloads contain pending fields and other mandatory gates remain open.
+- Any source artifact, TrialResult, daily-ledger, final-cash/equity, trial-ID, date, or hash mismatch fails closed and writes a failure report. All source files and historical artifacts remain unchanged.
+
