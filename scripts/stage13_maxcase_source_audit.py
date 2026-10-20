@@ -189,6 +189,10 @@ def run_audit() -> dict[str, Any]:
                 else f"stage10-bench-{scenario}-1"
             )
             artifact = gatea.find_artifact(index, artifact_name, run_id)
+            expected_head = STAGE7_HEAD if is_c100 else STAGE10_HEAD
+            artifact_run = artifact.get("workflow_run") or {}
+            if int(artifact_run.get("id", -1)) != run_id or artifact_run.get("head_sha") != expected_head:
+                raise RuntimeError(f"ARTIFACT_RUN_HEAD_MISMATCH: {scenario}/{artifact_name}")
             zip_path = root / f"{scenario}.zip"
             download_evidence = gatea.download_artifact(artifact, zip_path)
             rows, blocks = rows_from_zip(scenario, zip_path, manifest)
@@ -234,8 +238,8 @@ def run_audit() -> dict[str, Any]:
                 "existing_payload_reusable_exactly": payload_reuse,
                 "new_daily_payload_required": selected is not None and not payload_reuse,
                 "partner_memo_fields_available_in_stage12_contract": (
-                    "Partner1_Reinvestment_Balance" in stage12_contract_has
-                    and "Partner2_Reinvestment_Balance" in stage12_contract_has
+                    stage12_contract_has["Partner1_Reinvestment_Balance"]
+                    and stage12_contract_has["Partner2_Reinvestment_Balance"]
                 ),
             })
 
