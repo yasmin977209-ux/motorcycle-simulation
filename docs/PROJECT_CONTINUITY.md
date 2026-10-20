@@ -1309,3 +1309,11 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+## CP4 — Stage 13 assembly and representative contract — 2026-10-21
+
+- **Status:** `PARTIAL / MISSING_EVIDENCE`; representative data contract remains `CONFLICTED` until the five-role assignment and role-to-payload mapping are defined by approved evidence. Work is on a fresh candidate branch from live main `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; no main writes.
+- R4: `docs/audits/CP4_STAGE13_ASSEMBLER_R4_2026-10-21.md`, blob `8b91ae6755c46f15eb5912bc79823606837d105b`.
+- Added `scripts/stage13_assemble.py`, blob `b459d0c6a99e50f545c25a09ca38cf1329f6ea6d`, for explicit role checks, exact sheet inventory, and saved-XLSX read-back; refactored `scripts/excel_builder.py`, blob `daaaacb2e43954b77b01fdab7ef0dfa5b69e42d4`, to delegate ordered assembly and fail closed if the required roles/payload mapping are unresolved. Added synthetic-only contract tests `tests/test_stage13_assembly_contract.py`, blob `bb59c1af2a80fa7dbebe617e767308d904968f2c`, and a branch-pinned workflow `.github/workflows/cp-path4-stage13-guard-20261021.yml`.
+- Candidate code intentionally rejects legacy `Loss`/missing `MaxCase` role sets and rejects an absent role-to-payload mapping; no role alias, MaxCase selector, or payload filename was inferred. V3 remains a temporary provenance candidate only; the `log_events` bridge contract conflict is unchanged.
+- The commit-status endpoint returned an empty status list; no Actions Run ID/conclusion/artifact bytes were available for exact read-back through the current connector. Thus the synthetic test gate is `MISSING_EVIDENCE`, not PASS. No production workbook, Monte Carlo, Trial, Checkpoint, manifest, Parquet, source SHA, seed/RNG, cohort or main changes.
