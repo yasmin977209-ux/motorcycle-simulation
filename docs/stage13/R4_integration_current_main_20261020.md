@@ -243,3 +243,11 @@ Downloaded the exact workflow artifact `12239369983` and independently parsed th
 - Canonical identity still has one distinct representative artifact ID in `C050_G000` (inventory `11503510055` vs manifest `11503191706`). The manifest-referenced artifact is downloadable and distinct by API/archive digest; no substitution or manifest edit was made. Resolve provenance by comparing the original run/producer metadata and the nested archive contents under an explicit identity policy; do not choose one ID by recency or name.
 - Current branch read-back at documentation update: candidate HEAD `1df233596672dd38dc4feb4f385faf2a3cdc15a3`; live main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. No PR, merge, release, or production simulation.
 
+
+
+## Source-of-truth hash and memo-field derivability check
+
+- The uploaded original reference `المرجع_النهائي_الموحد_المعتمد.md` was available byte-for-byte at `/mnt/data`; actual size 271,496 bytes and SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`. This matches the expected original-reference hash exactly (`VERIFIED`). This is the original file's hash, not the merged Project Source file hash.
+- Read-only inspection of live `main/docs/stage12/accounting_data_contract.json` (blob `dd3f7f102389def92df16af3b0732b77dd66df6d`) confirms the schema has daily aggregate `cash_inflows`, `cash_outflows`, `ar_collections`, and asset roll-forward fields, but no partner memo balance fields or eligible-inflow event breakdown. The authoritative `partner_equity.py` logic adds integer-floor 70%/30% allocations only for specifically eligible cash events and subtracts the full eligible expansion spend from Partner 1's memo balance. Aggregate daily inflows/outflows cannot identify all eligible event classes or the exact timing of expansion deductions.
+- Therefore the two memo balances cannot be exactly reconstructed from the current Stage 12 daily schema without an additional trusted identity-matched event-level artifact or an authoritative approved derivation contract. The gap is `MISSING_EVIDENCE`, not an undefined rule and not permission to approximate. No code was changed to estimate either balance.
+
