@@ -1,6 +1,6 @@
 # CP — عقد الأدوار و `log_events` — 2026-10-21
 
-**الحالة الحالية:** `PHASE_1_PARTIAL / MAXCASE_PAYLOAD_BLOCKED`؛ هذا تقرير واحد يجري استكماله بعد تحليل المرحلة 2.
+**الحالة النهائية:** `ANALYSIS_COMPLETE / ROLE_CONTRACT_PARTIAL / MAXCASE_PAYLOAD_BLOCKED / LOG_EVENTS_PENDING_APPROVAL`.
 **النطاق:** قراءة الأدلة الموجودة فقط. لا تعديل كود/اختبارات/Workflows/بيانات/Parquet، ولا تشغيل Trial أو Monte Carlo أو CS، ولا إنتاج ملفات التسليم.
 **مرجع السلطة:** البايتات المحلية للمرجع الأصلي SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` (271,496 bytes، HASH VERIFIED).
 **المصدر المراجع:** `docs/governance/DECISIONS_LOG.md` blob `df4910e6a86bcce84f6b71d6d260913800474f95`; `docs/governance/REFERENCE_AMENDMENTS.md` blob `b4eab80bf657d72e9e49d14db81d2baf0a462d77`.
@@ -56,10 +56,47 @@
 6. رفض صف DAILY مفقود/مكرر/غير متصل، أو تاريخ نهائي/رصيد نهائي لا يطابق summary، أو fingerprint/source/seed/cohort لا يطابق الهوية المعتمدة.
 7. غياب MaxCase payload مع بقاء شرط الخمسة أدوار يجب أن يبقى BLOCKED؛ أي مسار pending-data لا يقبل إلا بقرار مكتوب ولا يصطنع أرصدة.
 
-## المرحلة 2 — تحليل `log_events`
+## المرحلة 2 — تحليل `log_events` (قراءة فقط)
 
-`PENDING_ANALYSIS` — ستضاف هنا بعد إنهاء مقارنة تاريخ validator وسلوك V2/V3، دون أي تعديل على artifact أو validator.
+### التسلسل الزمني ونطاق validator
 
+- الاختبار `tests/test_stage6_5_log_events.py` أُضيف في commit `0d8068ffcb20d6a02cd13ee38297d8a3e887a721` بتاريخ `2026-10-03T15:32:11Z`. يثبت الاختبار أن `TrialResult` يبقى مطابقًا عند `log_events=True/False`، مع كون `event_log` غير فارغ عند True وفارغًا عند False؛ كما يثبت قيم C100_G100 الذهبية.
+- validator في `scripts/stage13_gatea_fingerprint_bridge.py` أُنشئ في commit `025aed5115bcf812fb848ffa4ca16d763f2e3095` بتاريخ `2026-10-11T19:21:37Z`; تبعته إصلاحات provenance/aggregate hash في `400880fbb26c31cb9000040ff0d2e93d93409696` (19:35:05Z) و`c9acd88734f74cb310a257099e2bdd79bff7958e` (19:36:54Z). يبقي الكود الحالي شرط `meta.get("log_events") is False` داخل `validate_block()`.
+- نطاق هذا الشرط هو metadata لكتل المصدر الرسمية Stage 7/Stage 10 (`block_*_metadata.json`)، التي يجب أن تثبت أن تسجيل الأحداث معطل. لم أجد دليلًا في مسار الاستدعاء المفحوص يثبت أن `validate_block()` يقرأ `scenario_metadata.json` داخل حزمة الإثراء V2/V3. لذلك فادعاء أن هذا validator **يرفض V3 scenario_metadata مباشرةً** غير مثبت؛ المثبت هو اختلاف نوع/معنى الحقل بين schemaين ينبغي عدم خلطهما.
+- `scripts/stage12_gateb_n600_audit.py` لديه أيضًا حراسة `log_events is False` لmetadata كتل المصدر؛ آخر commit مسجل في تاريخ هذا الملف هو `9bd361c9a8072ff04f587d62f8e83dfcc3321c9f` بتاريخ `2026-10-11T21:02:06Z`. لا يثبت هذا بحد ذاته أن الملف يقرأ metadata الإثراء.
+- V2 run `37660610243` انتهى success، لكن سجلاته الحية تُظهر أن خطوة checkout استخدمت `tmp/stage9a-06-enrich-20261007` عند SHA `b4a88a117fa7d7fcdc7718d6a475699e3e8ac47e`، لا فرع `-v2`; blob سكريبت الإثراء الفعّال `e92381ddebef4c8792702e4d8a6aba6ef67b0614`.
+- V3 run `37662891608` انتهى success، وسجلاته تُظهر checkout الصحيح `tmp/stage9a-06-enrich-20261007-v3` عند SHA `6128b22864bb171ba49ec15dbb42439a6513c30c`; blob سكريبت الإثراء الفعّال `dfb27e7623f42e9ef1d81f3d6752ddd3de269d8d`.
+
+### سبب اختلاف V2/V3
+
+| البند | V2 | V3 |
+|---|---|---|
+| سياسة التشغيل الفعلية في `stage9a_enrich.py` | `log_events=True` لكل trial | `log_events = trial_id in representative_trial_ids`؛ أي تسجيل الأحداث فقط للتكرارات التمثيلية |
+| `scenario_metadata.json` | `log_events: true` (Boolean) | `log_events: "representative_trials_only"` (string policy descriptor) |
+| ZIP artifact | ID `11503191706`, Run `37660610243`, 17,786,146 bytes, SHA-256 `f575044fb6a50cb5ed71d6303c40bd77841a6d38b633c105e560a4731e0a94f9` | ID `11503510055`, Run `37662891608`, 17,787,110 bytes, SHA-256 `111eb7a2abd7b85625a02c55ee6f3140a14644ef253141bfdc3f8fc5ae4c287d` |
+| scenario metadata inner hash | 887 bytes; `21e2f33603e21346ae84873f372d39e301f399a0f449eb5db8e195e742d51735` | 911 bytes; `a143c3fb7f2cee8ab625b0beb40295ede2c5879975d08f455e59b85406004cab` |
+
+- تنزيل V2 وV3 ومقارنة TAR الداخلية أكد أن `scenario_metadata.json` هو **العضو الوحيد المختلف**. الأعضاء السبعة الأخرى متطابقة بايتًا ببايت، ومنها `trial_results.parquet` SHA-256 `09c223d8348f93a5c5e9246a409614d6345a76b224ff65f865c6bdbaea5fbbe8`، `daily_distribution.parquet` SHA-256 `caf8de98e7e907b01cb87ee2cfc879293a3acb740290f0d2a8ab6867ebb13cd3`، `trial_fingerprints.json`، وملفات الأدوار الأربع.
+- إذن الفرق في سياسة الاحتفاظ بـevent log داخل التشغيل وفي descriptor metadata، لا في نتيجة TrialResult أو DAILY المحفوظة لهذه الحزمة. يدعم ذلك اختبار 2026-10-03 أعلاه، كما تدعمه المطابقة البايتية الفعلية؛ ولا يعني ذلك أن سجلات الأحداث نفسها متطابقة.
+- تقرير CP2 السابق اعتبر أن V2 Boolean True وV3 string كلاهما لا يجتاز شرط `log_events is False`. هذا استنتاج لا يصح اعتماده كفشل مباشر للـV3 enrichment metadata ما لم يثبت أن validator يستهلك ذلك الملف؛ الشرط الحالي يخص metadata كتل المصدر. يبقى اختلاف العقد الوصفي/النوعي مسألة حوكمة منفصلة.
+
+### خيارات المعالجة — تحليل فقط، لا تعديل
+
+1. **الخيار الموصى به — فصل العقدين:** تبقى حراسة metadata كتل المصدر الرسمية Boolean False كما هي. ويُعرّف حقل سياسة الإثراء في schema مستقل بوصفه سياسة لكل trial؛ يبقى V3 مؤقتًا ولا تُعدّل أية artifact موجودة حتى قرار المالك.
+2. **Boolean واحد مشترك:** فرض أن `log_events` Boolean يمثل نفس المعنى في كل ملفات metadata. هذا لا يعبّر عن سياسة V3 المختلطة (True لأربعة أدوار فقط، False لغيرها) بوضوح؛ لذلك لا يكفي تغيير القيمة إلى False من غير تغيير المعنى والتوثيق، ولا يجوز تطبيع artifact تاريخي يدويًا.
+3. **حقل سياسة منفصل بإصدار schema:** في أي artifact مستقبلية مأذون بها، فصل `log_events` الخاص بكتل المصدر عن حقل مثل `log_events_policy = "representative_trials_only"` لملف الإثراء. يتطلب ذلك قرارًا مكتوبًا ومراجعة schema؛ لا ينفّذ في هذه المهمة ولا يغيّر V2/V3 الحاليين.
+4. **الإبقاء على الحجب:** إذا لم يُحسم معنى metadata ونطاق كل validator، يبقى `log_events = PENDING_APPROVAL`، ولا يختار التقرير V2 أو V3 بوصفه canonical بسبب هذا الحقل وحده.
+
+**التوصية:** الخيار 1 كفصل دلالي، مع بقاء `C050_G000` و`log_events` في حالة `PENDING_APPROVAL` حتى يُثبت عقد metadata والvalidator المعني ويعتمده المالك. لم يُعدل validator أو metadata أو manifest، ولم يُشغّل workflow أو test في هذه المهمة.
+
+### تحقق رؤوس الفروع ذات الصلة
+
+- التغيير اللاحق على رأس المسار 3 `dbc065fbb480bb60457f0c273fa40df458c35868` هو commit توثيقي فقط: `docs/PROJECT_CONTINUITY.md`.
+- التغيير اللاحق على رأس المسار 4 `2610fb3cd5af4ff925b23527b4b7da198c4de794` هو commit توثيقي فقط: `docs/PROJECT_CONTINUITY.md`.
+- التغيير اللاحق على رأس المسار 5 `4465287e8f5b8a0cd01ad5e7d1775458b69a55aa` هو commit توثيقي فقط: `docs/PROJECT_CONTINUITY.md`.
+- الرأس الحالي لفرع C050 المؤكد `tmp/cp-c050-g000-artifact-audit-20261021` يضيف تقرير المقارنة ويحدّث الاستمرارية فقط؛ لا كود/اختبارات/Workflow. الفرع غير الموجود `tmp/cp-path2-c050-g000-v3-20261021` لم يُستخدم. فرع P16 `tmp/cp-p16-provisional-20261021` تم تجاهله بالكامل.
+- لا تغيير لـmain أو PRs، ولا Trial/CS/Monte Carlo أو artifacts جديدة في هذه المهمة. حالة Stage 13 production تبقى BLOCKED.
+ 
 ## الحالة العامة المحفوظة
 
 `C050_G000 V3 = temporary only`; `log_events = PENDING_APPROVAL`; Gate A `BLOCKED`; Stage 9C `PARTIAL/CONFLICTED`; delivery `NOT_ACCEPTED`; Release `BLOCKED / NOT_AUTHORIZED`.
