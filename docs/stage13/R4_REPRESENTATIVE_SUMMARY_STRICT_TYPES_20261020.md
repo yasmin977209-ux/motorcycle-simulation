@@ -19,3 +19,12 @@
 ## Status at R4 creation
 
 **Not yet applied.** Test/read-back status pending. This does not clear Gate A, source byte identity drift, unresolved Stage 11 topology, C050_G000 R4-scope conflict, missing daily Partner memo source fields, final file acceptance, or Release authorization.
+
+
+## Execution checkpoint — 2026-10-20
+
+- Applied code commit `493cbe515afc081d6dcbf34d39b0952b0d36dccc`; only `scripts/stage13_assemble.py` changed in that code commit.
+- Assembler blob before: `4472547232ffef95d15c864b7bf1128a6f868301`; read-back after: `47fc1828dfb0d298aa4528f58b558bf012882076`, matching intended source exactly.
+- The summary comparison now requires exact type and value equality for all TrialResult summary fields, preventing a JSON float such as `1.0` from matching an integer monetary value merely by Python numeric equality.
+- Branch-pinned integration Run `39473433150` was observed once as `IN_PROGRESS` on the exact code SHA. No repeated status polling was performed; no test pass is claimed for this change yet.
+- `main` remains unchanged at `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. This candidate-only fix does not clear Gate A, source byte-identity drift, Stage11 topology, partner memo source gaps, C050 manifest scope conflict, or final delivery acceptance.
