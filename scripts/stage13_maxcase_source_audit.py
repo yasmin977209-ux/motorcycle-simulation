@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import tempfile
 import traceback
 import zipfile
@@ -20,6 +21,8 @@ STAGE7_RUN = 37225915321
 STAGE7_HEAD = "e0b2fab6710833774937d778097363d7a8ee8e59"
 STAGE10_RUN = 37709936740
 STAGE10_HEAD = "ca73f2df37baacebbcad965fc5f433f129675820"
+STAGE12_RUN = 37964656154
+STAGE12_HEAD = "0156c5f4272eb0ca7e32442657d0df9eaf4973d3"
 SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
 MASTER_SEED = 20270101
 REFERENCE_SHA256 = "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
@@ -146,6 +149,8 @@ def run_audit() -> dict[str, Any]:
     manifest = read_json("docs/stage9a/dataset_manifest.json")
     payload_inventory = read_json("docs/audits/stage9a_payload_inventory_20261020.json")
     accounting_contract = read_json("docs/stage12/accounting_data_contract.json")
+    roll_forward = read_json("docs/stage12/roll_forward_validation.json")
+    closure_report = read_json("docs/stage12/closure_settlement_validation.json")
     existing = {item["scenario"]: item for item in payload_inventory["artifacts"]}
     if set(existing) != set(SCENARIOS):
         raise RuntimeError("REPRESENTATIVE_INVENTORY_SCENARIO_SET_MISMATCH")
@@ -156,8 +161,10 @@ def run_audit() -> dict[str, Any]:
 
     stage7_run = gatea.validate_run(STAGE7_RUN, STAGE7_HEAD, "success")
     stage10_run = gatea.validate_run(STAGE10_RUN, STAGE10_HEAD, None)
+    stage12_run = gatea.validate_run(STAGE12_RUN, STAGE12_HEAD, "success")
     stage7_artifacts, _ = gatea.artifact_index(STAGE7_RUN)
     stage10_artifacts, _ = gatea.artifact_index(STAGE10_RUN)
+    stage12_artifacts, _ = gatea.artifact_index(STAGE12_RUN)
     stage10_jobs_response = gatea.gh_json(
         f"repos/{REPO}/actions/runs/{STAGE10_RUN}/jobs?per_page=100"
     )
@@ -169,14 +176,14 @@ def run_audit() -> dict[str, Any]:
         if str(job.get("name", "")).startswith("bench-") and job.get("conclusion") == "success"
     )
 
-    contract_text = json.dumps(accounting_contract, ensure_ascii=False, sort_keys=True)
     workbook_daily_fields = [
-        "Cash", "Net_Equity", "Active_Bikes", "Owned_Transferred_Bikes",
-        "Pending_Claims", "Partner1_Reinvestment_Balance",
-        "Partner2_Reinvestment_Balance",
+        "Closing_Cash", "Closing_Equity", "Retained_Earnings",
+        "Active_Bikes", "Owned_Transferred_Bikes", "Pending_Claims",
+        "Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance",
     ]
+    stage12_required_fields = set(accounting_contract.get("schema", {}).get("required_fields", []))
     stage12_contract_has = {
-        field: (f'"{field}"' in contract_text) for field in workbook_daily_fields
+        field: field in stage12_required_fields for field in workbook_daily_fields
     }
     missing_from_stage12_contract = [
         field for field, present in stage12_contract_has.items() if not present
@@ -213,6 +220,7 @@ def run_audit() -> dict[str, Any]:
         "runs": {
             "stage7": stage7_run,
             "stage10": stage10_run,
+            "stage12": stage12_run,
             "stage10_successful_benchmark_job_count": successful_stage10_benchmark_jobs,
             "stage10_aggregate_job_conclusion": next(
                 (job.get("conclusion") for job in stage10_jobs if job.get("name") == "aggregate-stage10"),
@@ -227,11 +235,12 @@ def run_audit() -> dict[str, Any]:
         },
         "daily_contract": {
             "contract_version": accounting_contract.get("contract_version"),
-            "schema_version": accounting_contract.get("daily_ledger_schema", {}).get("schema_version"),
+            "schema_version": accounting_contract.get("schema", {}).get("schema_version"),
             "workbook_daily_fields_checked": stage12_contract_has,
             "fields_absent_from_stage12_contract": missing_from_stage12_contract,
         },
         "scenarios": [],
+        "stage12_daily_validation": {"scenarios_validated": 0, "daily_rows_validated": 0, "trial_result_fingerprint_mismatches": 0},
         "integrity_status": "NOT_STARTED",
         "payload_status": "NOT_STARTED",
         "historical_artifacts_modified": False,
@@ -240,6 +249,7 @@ def run_audit() -> dict[str, Any]:
         "workbook_built": False,
     }
 
+    extracted_payloads: list[dict[str, Any]] = []
     with tempfile.TemporaryDirectory(prefix="stage13-maxcase-source-") as tmp:
         root = Path(tmp)
         for scenario in SCENARIOS:
@@ -278,13 +288,13 @@ def run_audit() -> dict[str, Any]:
             download_evidence = gatea.download_artifact(artifact, zip_path)
             rows, blocks, trial_hashes = rows_from_zip(scenario, zip_path, manifest)
             selected = select_maxcase(rows)
-            roles = existing[scenario]["roles"]
+            canonical_roles = manifest["representative_trials"][scenario]
             role_matches: list[str] = []
             inventory_identity_matches = scenario not in inventory_mismatch_scenarios
             if selected is not None and inventory_identity_matches:
                 role_matches = [
-                    role for role, value in roles.items()
-                    if int(value["trial_id"]) == int(selected["trial_id"])
+                    role for role in ("P10", "P50", "P90", "Loss")
+                    if int(canonical_roles[role]) == int(selected["trial_id"])
                 ]
             if selected is None:
                 selection_status = "UNDEFINED_BUSINESS_RULE"
@@ -322,7 +332,7 @@ def run_audit() -> dict[str, Any]:
                     trial_hashes.get(int(selected["trial_id"])) if selected is not None else None
                 ),
                 "existing_role_trial_ids": {
-                    role: int(value["trial_id"]) for role, value in roles.items()
+                    role: int(canonical_roles[role]) for role in ("P10", "P50", "P90", "Loss")
                 },
                 "representative_inventory_identity_matches_manifest": inventory_identity_matches,
                 "matched_existing_roles": role_matches,
