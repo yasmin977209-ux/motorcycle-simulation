@@ -1,0 +1,157 @@
+name: P16 provisional seven-deliverable build (import path fixed)
+
+on:
+  push:
+    branches:
+      - tmp/p16-provisional-outputs-20261021
+    paths:
+      - .github/workflows/p16-provisional-build-v4-20261021.yml
+      - scripts/excel_builder.py
+      - scripts/stage13_assemble.py
+      - scripts/p16_produce_deliverables_v3.py
+      - scripts/p16_finalize_register.py
+      - tests/test_stage13_assembly_contract.py
+      - tests/test_excel_daily_serialization.py
+      - tests/test_p16_provisional_outputs.py
+      - docs/audits/P16_PROVISIONAL_OUTPUTS_R4_2026-10-21.md
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: p16-provisional-outputs-20261021-v4
+  cancel-in-progress: false
+
+jobs:
+  build-provisional:
+    name: Verify existing evidence and build provisional deliverables
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assert branch, SHA and clean main base
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          CANDIDATE_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test "${CANDIDATE_BRANCH}" = "tmp/p16-provisional-outputs-20261021"
+          test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "6a218ebe0fccf210ec18f3552b141afbdd1a49ef" HEAD
+          test "$(git rev-parse origin/main)" = "6a218ebe0fccf210ec18f3552b141afbdd1a49ef"
+          mkdir -p p16_test_evidence deliverables
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          result = {
+              "branch": os.environ["CANDIDATE_BRANCH"],
+              "tested_sha": os.environ["CANDIDATE_SHA"],
+              "base_main_sha": "6a218ebe0fccf210ec18f3552b141afbdd1a49ef",
+              "git_head_matches": subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip() == os.environ["CANDIDATE_SHA"],
+              "main_modified": False,
+              "production_trials_or_simulation": False,
+              "statistical_policy_level": "FIXED_LOOK_WITH_CS_PENDING",
+              "delivery": "NOT_ACCEPTED",
+              "release": "BLOCKED / NOT_AUTHORIZED"
+          }
+          Path("p16_test_evidence/branch_identity.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile P16 modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/excel_builder.py scripts/stage13_assemble.py scripts/p16_produce_deliverables_v3.py scripts/p16_finalize_register.py
+
+      - name: Run deterministic regressions
+        id: tests
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p p16_test_evidence
+          set +e
+          python -m pytest -q \
+            tests/test_stage13_assembly_contract.py \
+            tests/test_excel_daily_serialization.py \
+            tests/test_p16_provisional_outputs.py \
+            --junitxml=p16_test_evidence/pytest.junit.xml \
+            2>&1 | tee p16_test_evidence/pytest.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "${rc}" > p16_test_evidence/pytest_exit_code.txt
+          exit "${rc}"
+
+      - name: Build seven provisional deliverables from existing artifacts
+        id: build
+        if: steps.tests.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: |
+          set -uo pipefail
+          set +e
+          python scripts/p16_produce_deliverables_v3.py 2>&1 | tee p16_test_evidence/build.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "${rc}" > p16_test_evidence/build_exit_code.txt
+          exit "${rc}"
+
+      - name: Copy CI evidence with outputs
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deliverables
+          cp -R p16_test_evidence deliverables/p16_test_evidence || true
+
+      - name: Upload P16 deliverables and evidence
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-provisional-seven-deliverables-${{ github.run_id }}
+          path: deliverables/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Finalize run and Artifact ID register
+        id: final-register
+        if: ${{ steps.tests.outcome == 'success' && steps.build.outcome == 'success' && steps.upload.outcome == 'success' }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/p16_finalize_register.py
+
+      - name: Upload final provenance register
+        if: ${{ steps.final-register.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-final-provenance-register-${{ github.run_id }}
+          path: |
+            deliverables/output_manifest.json
+            deliverables/p16_final_provenance_register.json
+            deliverables/p16_build_evidence.json
+          if-no-files-found: error
+          retention-days: 30
