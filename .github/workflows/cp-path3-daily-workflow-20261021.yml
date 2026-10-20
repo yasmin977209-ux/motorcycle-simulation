@@ -1,0 +1,95 @@
+name: CP3 DAILY focused serialization regression
+
+on:
+  push:
+    branches:
+      - "tmp/cp-path3-daily-workflow-20261021"
+    paths:
+      - "scripts/excel_builder.py"
+      - "tests/test_excel_daily_serialization.py"
+      - ".github/workflows/cp-path3-daily-workflow-20261021.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp3-daily-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  daily-regression:
+    name: DAILY synthetic XLSX regression only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile target module
+        run: python -m compileall -q scripts/excel_builder.py
+      - name: Run focused DAILY regression
+        shell: bash
+        run: |
+          mkdir -p cp3-evidence
+          set +e
+          python -m pytest -q tests/test_excel_daily_serialization.py --junitxml=cp3-evidence/junit.xml > cp3-evidence/pytest.txt 2>&1
+          rc=$?
+          echo "$rc" > cp3-evidence/test-exit-code.txt
+          cat cp3-evidence/pytest.txt
+          echo "CP3_TEST_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          exit 0
+      - name: Record exact tested identity and file hashes
+        if: always()
+        env:
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          mkdir -p cp3-evidence
+          python - <<'PY'
+          import hashlib, json, os, platform
+          from pathlib import Path
+          paths = [
+              "scripts/excel_builder.py",
+              "tests/test_excel_daily_serialization.py",
+              ".github/workflows/cp-path3-daily-workflow-20261021.yml",
+          ]
+          files = {}
+          for name in paths:
+              p = Path(name)
+              if p.is_file():
+                  files[name] = {"bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+          report = {
+              "scope": "synthetic DAILY XLSX serialization regression only",
+              "tested_sha": os.environ["TESTED_SHA"],
+              "run_id": os.environ["RUN_ID"],
+              "run_attempt": os.environ["RUN_ATTEMPT"],
+              "python": platform.python_version(),
+              "platform": platform.platform(),
+              "test_exit_code": int(Path("cp3-evidence/test-exit-code.txt").read_text().strip()) if Path("cp3-evidence/test-exit-code.txt").exists() else None,
+              "files": files,
+          }
+          Path("cp3-evidence/evidence.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+          PY
+      - name: Upload inspectable verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp3-daily-regression-evidence
+          path: cp3-evidence/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Fail if the focused regression failed
+        if: always()
+        shell: bash
+        run: |
+          rc="${CP3_TEST_EXIT_CODE:-99}"
+          echo "Focused DAILY test exit code: $rc"
+          test "$rc" = "0"
