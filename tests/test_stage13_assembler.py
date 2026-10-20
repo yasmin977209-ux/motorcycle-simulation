@@ -10,6 +10,7 @@ import monte_carlo
 import pytest
 from openpyxl import load_workbook
 
+from scripts.stage13_maxcase_source_audit import select_maxcase
 from scripts.stage13_assemble import (
     ADAPTIVE_CHECKPOINT_METRICS, EXPECTED_ADAPTIVE_COHORT_ID,
     EXPECTED_REFERENCE_SHA256, EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA,
@@ -692,3 +693,30 @@ def test_adaptive_mode_rejects_p50_value_not_linked_to_previous_checkpoint():
     entry["gate_b_p50_previous"] = 999.0
     with pytest.raises(RuntimeError, match="ADAPTIVE_GATE_B_P50_VALUE_LINK_MISMATCH"):
         _validate_mode_and_identity(data, mode="adaptive")
+
+def test_source_audit_maxcase_selects_highest_positive_equity():
+    rows = [
+        {"trial_id": 1, "final_net_project_equity": 100},
+        {"trial_id": 2, "final_net_project_equity": 900},
+        {"trial_id": 3, "final_net_project_equity": 500},
+    ]
+    assert select_maxcase(rows) == rows[1]
+
+
+def test_source_audit_maxcase_tie_breaks_on_smallest_trial_id():
+    rows = [
+        {"trial_id": 17, "final_net_project_equity": 900},
+        {"trial_id": 4, "final_net_project_equity": 900},
+        {"trial_id": 2, "final_net_project_equity": 899},
+    ]
+    assert select_maxcase(rows) == rows[1]
+
+
+def test_source_audit_maxcase_fails_closed_without_positive_integer_equity():
+    rows = [
+        {"trial_id": 1, "final_net_project_equity": 0},
+        {"trial_id": 2, "final_net_project_equity": -1},
+        {"trial_id": 3, "final_net_project_equity": 10.5},
+    ]
+    assert select_maxcase(rows) is None
+
