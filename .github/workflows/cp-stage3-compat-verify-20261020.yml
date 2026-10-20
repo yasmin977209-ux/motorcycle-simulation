@@ -1,0 +1,88 @@
+name: CP Stage 3 compatibility regression (temporary)
+
+on:
+  push:
+    branches:
+      - tmp/cp-stage13-integration-20261020
+    paths:
+      - .github/workflows/cp-stage3-compat-verify-20261020.yml
+      - daily_engine.py
+      - entities.py
+      - partner_equity.py
+      - accounting.py
+      - closure.py
+      - constants.py
+      - tests/test_stage3_path_integration.py
+      - tests/test_stage3b.py
+      - tests/test_stage3b_rollforward.py
+
+permissions:
+  contents: read
+
+jobs:
+  targeted-regression:
+    name: Current-code Stage 3/3B tests only
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install declared dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Assert tested identity and compatibility wrapper
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          CANDIDATE_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test "${CANDIDATE_BRANCH}" = "tmp/cp-stage13-integration-20261020"
+          git rev-parse HEAD | tee tested_head_sha.txt
+          test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
+          python - <<'PY'
+          import daily_engine
+          assert callable(daily_engine._create_contract)
+          assert daily_engine._create_contract.__name__ == "_create_contract"
+          print("compatibility_wrapper=PASS")
+          PY
+
+      - name: Run targeted legacy path and accounting regressions
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          python -m pytest -q \
+            tests/test_stage3_path_integration.py \
+            tests/test_stage3b.py \
+            tests/test_stage3b_rollforward.py \
+            --junitxml=stage3_compat_pytest.junit.xml \
+            2>&1 | tee stage3_compat_pytest.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "${rc}" > stage3_compat_pytest_exit_code.txt
+          exit "${rc}"
+
+      - name: Upload bounded test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage3-compat-evidence-${{ github.run_id }}
+          path: |
+            tested_head_sha.txt
+            stage3_compat_pytest.junit.xml
+            stage3_compat_pytest.log
+            stage3_compat_pytest_exit_code.txt
+          if-no-files-found: error
+          retention-days: 30
