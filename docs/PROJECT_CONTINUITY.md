@@ -1516,3 +1516,64 @@ Append-only closeout revalidation report: [SESSION-CLOSEOUT-REVALIDATION_2026-10
 ### Write read-back contract
 
 This entry must be considered persisted only after the GitHub write reports a commit and content blob, and a fresh read of this same branch confirms the appended heading and exact tail text. A commit/blob match is not a substitute for independent content verification.
+
+
+## CP-CONTINUITY-LIVE-RECONCILIATION — 2026-10-20 19:51 +03:00
+
+### Scope, authority, and R4
+
+Documentation-only append to this continuity ledger on `tmp/cp-session-continuity-20261017`; no source code, tests, workflows, state, manifest, reference, trial identity, Parquet, or production data changed in this CP. `main` was re-read at HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; `main/state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936`. The state field `sha` is interpreted under `docs/STATE_SHA_SEMANTICS.md` as `parent_state_commit_pointer`, not as the current main HEAD.
+
+R4 record: item = continuity ledger; current status = existing append-only record; governing source = original reference SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` (271,496 bytes, previously verified from the uploaded original); branch/head before this append = `tmp/cp-session-continuity-20261017` / `5f396d2a72e1a16df92135ec121d11e89c40b813`; defect class = documentation/provenance reconciliation, not a model defect; minimum change = append this evidence-only section; authorization = requested continuity-report update, with no protected source or production action; acceptance = GitHub write plus fresh read-back of commit, blob, heading, and tail; risk = incorrectly promoting scoped evidence to production acceptance.
+
+### Live repository identity and branch boundaries
+
+- `main` remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; no write was made to main during this CP.
+- Stage 13 integration candidate `tmp/cp-stage13-integration-20261020` was re-read at HEAD `9f8c37a517ff566d8f576fb73fb4bcab0389b601`. This is a candidate branch only, not main and not a release.
+- The continuity PR #46 remains OPEN, DRAFT, and UNMERGED. Do not merge or close it under this report update.
+- Project Sources/Instructions in the ChatGPT UI could not be inspected directly; this report relies on the supplied project instructions and live repository records. The original reference file itself was locally available and its byte hash was verified as recorded above; do not confuse it with the merged reference document.
+
+### New read-only provenance reconciliation: C050_G000
+
+The two disputed artifacts have been traced to distinct producer runs and heads:
+
+| Field | Canonical-manifest artifact | Inventory/v3 artifact |
+|---|---|---|
+| Artifact ID | `11503191706` | `11503510055` |
+| Run ID | `37660610243` | `37662891608` |
+| Producer HEAD | `43e320abb79c3db82bdb70b8c6dece883ea7676d` | `6128b22864bb171ba49ec15dbb42439a6513c30c` |
+| Artifact name | `stage9a06-enriched-C050_G000` | `stage9a06-enriched-C050_G000` |
+
+Independent archive inspection found the seven core data members byte-identical across these archives. The observed internal difference is `scenario_metadata.json`: `log_events=true` in the older artifact versus `log_events=representative_trials_only` in the v3 artifact. This explains a metadata-level difference but does **not** authorize changing canonical manifest identity or substituting an artifact ID. The canonical manifest still points to `11503191706`; source-identity policy/approval is not resolved here. Status remains `CONFLICTED / PENDING_APPROVAL` for any identity substitution, and no manifest or artifact was changed.
+
+### Stage 13 evidence read-back — scoped, not delivery acceptance
+
+- Integration verification Run `39366628194`: conclusion success on tested HEAD `c3b3ec72387739921b0d73680dec2bb5425424a8`; artifact `12239951234`, `stage13-integration-evidence-39366628194`, 5,096 bytes, SHA-256 `e0cbf7bde94ed5de443708b8dcdd9cf7fa03d2641f855b8527db011b1b3cea56`; pytest reported `50 passed in 24.57s`, exit 0. Code/test/workflow blob read-back matched the candidate at the time of verification. Classification: `PASS_SCOPED` for that tested SHA only, not full-repository pytest, current-head acceptance, workbook acceptance, or release.
+- Stage 3 compatibility Run `39367690224`: success on tested HEAD `66f138c1431ded40048ab24561b7ac076eb3f405`; `12 passed in 9.12s`; artifact `12240271068`, 1,178 bytes, SHA-256 `1382312a428fb279012fd792dc71cd6cef9cddd3ef9be9a39b7ec69987ba316f`. Classification: `PASS_SCOPED` for the listed tests and tested SHA.
+- Stage12 MaxCase source audit Run `39367346036`: success on tested HEAD `56e8c286b8be254b24f8bb8c2c4c26e18af04fd6`; artifact `12239369983`, 1,567,864 bytes, SHA-256 `f3e036ef1c88fc188633b784da12f76b32c41d3fe3283c768a0c3ea1f4b669e9`. Reported checks: 25/25 scenarios, 11,005/11,005 trial-result fingerprints rehashed, 25/25 Stage12 artifacts validated, 22,546,465/22,546,465 daily rows validated, zero fingerprint mismatches, 25 MaxCase selections, and 52,541 selected MaxCase daily rows extracted. Classification: `PASS_SCOPED` for the audit's declared scope only; its payload status remains `MISSING_EVIDENCE` for the partner memo fields.
+- The current Stage 13 candidate report records assembler/builder and the targeted DAILY dict-to-values repair. This does not prove a canonical 185-sheet workbook has been produced or accepted. The earlier isolated DAILY regression test was 1 passed; repository-wide test execution remained blocked previously by environment/dependency issues. Do not represent it as full-suite PASS.
+
+### Partner memo balances — still not derivable from available aggregates
+
+The authoritative partner logic depends on eligible inflow events (70% to Partner 1 and 30% to Partner 2 using integer arithmetic) and explicit Partner 1 expansion deductions. The current Stage12 daily aggregate schema does not preserve the event classes/timing needed to reproduce those memo balances exactly. Therefore these fields remain `MISSING_EVIDENCE`; do not fill zero, estimate, or infer them from total inflows/outflows. No new derivation or code change was made.
+
+### Current gates and delivery decision
+
+`main/state.json` still lists these blockers: `GATEA_PROVIDER_MISSING`, `SOURCE_SHA_DRIFT`, undefined Stage 11 execution topology, missing canonical Stage 13 assembler on main, incomplete/unaccepted seven-file delivery set, governance/state reconciliation gap, and Stage 7 duration risk. Stage 9C's later C-1..C-6 re-audit remains `PASS_SCOPED` according to state and does not erase the historical report's PARTIAL text or imply final delivery acceptance.
+
+- Seven required delivery files: not all built, reopened, and independently accepted as one identity-matched set.
+- 185-sheet workbook contract and ledger/roll-forward checks: no current canonical delivery artifact accepted.
+- Independent final delivery audit: not completed.
+- Release: `NOT_AUTHORIZED` absent the separate explicit release permission.
+
+### Next authorized actions
+
+1. Continue read-only provenance work on the canonical artifact/run metadata; do not change manifest identity without a scoped, effective decision.
+2. Keep Stage 13 partner memo fields blocked until event-level source data or an approved exact derivation contract exists.
+3. Resolve Gate A provider authority and full fingerprint-map evidence without rerunning/relabeling completed trials.
+4. Resolve SOURCE_SHA drift and Stage 11 topology through the required governance path before production extension or final assembly.
+5. After all blockers are closed, build the seven files outside main, inspect their actual bytes/185-sheet contracts and source/cohort/SHA identities, then run the independent delivery audit. No release or final acceptance is claimed in this update.
+
+### Persistence contract
+
+This append is considered persisted only after the GitHub API reports the resulting commit and blob and a fresh read of this same branch confirms the exact heading and tail. Until that read-back succeeds, treat it as unverified.
