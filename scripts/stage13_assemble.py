@@ -425,6 +425,9 @@ def write_daily_sheet(wb, scenario, payload):
     if "date" in headers and "Final_Close_Date" in headers:
         headers.remove("Final_Close_Date")
         headers.insert(headers.index("date") + 1, "Final_Close_Date")
+    if "trial_id" in headers:
+        headers.remove("trial_id")
+        headers.append("trial_id")
     # CP-EXCEL-DAILY-FIX: convert dictionary records into ordered cell values.
     value_rows = [[row.get(h) for h in headers] for row in rows]
     write_table(
@@ -1382,7 +1385,6 @@ def _validate_representatives(data, mode):
                     ("final_cash", "Cash"),
                     ("final_net_project_equity", "Net_Equity"),
                     ("cumulative_project_profit", "Cumulative_Project_Profit"),
-                    ("operating_net_profit", "Operating_Net_Profit"),
                 )
                 final_row = daily_rows[-1]
                 for summary_field, daily_field in terminal_pairs:
