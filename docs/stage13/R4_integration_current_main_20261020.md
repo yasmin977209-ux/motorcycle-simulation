@@ -145,3 +145,13 @@ The first MaxCase source-audit attempt at HEAD `7ee40b22901e80a9db4226db13c43809
 - The source-audit code, assembler, Excel builder, five focused test files, both branch-scoped workflows, Stage 9A manifest, Stage 12 contract, and representative inventory have identical Git blob SHAs between the tested audit HEAD and current branch HEAD `3a716582b2e9b76fd86629b3725521b15745ce96`. The integration workflow at `f3dedf7545eb6388f59cdc8d89219941d607d7d2` passed `42 passed in 23.45s`; it tested the same code/test/data blobs but is not a run at the current commit SHA. Treat this as `PASS_SCOPED`, not a full current-HEAD suite pass.
 - Historical Stage 10 run-level defect remains recorded separately: `WORKFLOW_DEFECT` (`SyntaxError: unterminated string literal at scripts/stage10_aggregate.py line 59`). The bounded source audit validated individual existing Stage 10 artifacts/rows independently; this does not convert the failed aggregate workflow into a successful run.
 
+
+
+## Provenance correction — canonical manifest versus representative inventory
+
+A further read-back comparison found exactly one artifact-ID mismatch between live `main`'s canonical `docs/stage9a/dataset_manifest.json` and the candidate's derived `docs/audits/stage9a_payload_inventory_20261020.json`: scenario `C050_G000`, canonical manifest artifact ID `11503191706`, inventory artifact ID `11503510055`; both list enrichment Run `37662891608`. The earlier audit verified the inventory artifact against the live artifact API but did not compare its ID to the canonical manifest mapping. Therefore it must not be described as a fully identity-matched canonical representative inventory.
+
+The one-line candidate edit to the canonical manifest was reverted. The candidate manifest now has the exact live-main blob `e796fa2443493b607f1f9c60b58eb63607959c26`; no canonical historical manifest metadata is changed. The source-audit code now records `representative_inventory_provenance.status=CONFLICTED` and disables payload reuse for any scenario whose inventory artifact/run identity differs from the canonical manifest. Focused tests were added for both drift detection and exact-match acceptance; a new branch-scoped CI run was triggered by the test change, but its result has not yet been read back here.
+
+Impact: the canonical TrialResult-based MaxCase selection and row fingerprint evidence remain `PASS_SCOPED`; the earlier count of five reusable payloads was based on four-role ID matching, but the candidate inventory/manifest mismatch is now separately visible and blocks any claim that the representative payload inventory is fully canonical. Final production payloads and delivery remain `BLOCKED / MISSING_EVIDENCE`.
+
