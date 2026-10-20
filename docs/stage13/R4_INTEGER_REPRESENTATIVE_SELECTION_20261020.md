@@ -30,3 +30,19 @@ A local, non-production comparison exercised 1,680 deterministic synthetic integ
 ## Status at R4 creation
 
 **Change not yet applied.** Test, read-back, and candidate acceptance remain pending. This R4 does not clear Gate A, `SOURCE_SHA_DRIFT`, partner memo fields, Stage 11 topology, the C050_G000 provenance conflict, the seven-file package, independent delivery audit, or Release authorization.
+
+
+## Execution and acceptance evidence — 2026-10-20
+
+The minimum code change was applied after the R4 was recorded.
+
+- Code commit: `5d6b3640176162cf206ba65838d623968fd7cb5c`
+- Changed code path: `scripts/stage13_assemble.py` only
+- Resulting source blob: `4472547232ffef95d15c864b7bf1128a6f868301`
+- Read-back: GitHub read-back content equals the intended replacement; commit diff confirms no tests or Workflow files were changed in that code commit.
+- Workflow: [Run 39469781828](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39469781828), exact tested HEAD `5d6b3640176162cf206ba65838d623968fd7cb5c`, branch `tmp/cp-stage13-integration-20261020`, conclusion `success`.
+- Artifact: `12286606754`, `stage13-integration-evidence-39469781828`, 5,085 bytes; GitHub API digest and downloaded bytes both SHA-256 `7c999d9e46fbb711244e68c3677b1d71e19a761a96a82bd0747f29fad0cd49aa`.
+- Artifact read-back: 9 files; `pytest.log` is exactly `50 passed in 23.17s`; `pytest_exit_code.txt` is `0`; `tested_head_sha.txt` is the SHA above. `pytest.junit.xml` records 50 tests, 0 failures, 0 errors, 0 skipped.
+- `code_identity.json` confirms the tested assembler Git blob is `4472547232ffef95d15c864b7bf1128a6f868301`; the reference SHA and pinned source SHA matched the expected values. Run context expressly says synthetic/compatibility tests only, production cohort not loaded, no workbook built, no simulation/trial generated, historical data not modified, `main` not modified, and delivery not accepted.
+
+**Disposition:** `PASS_SCOPED` for the listed focused synthetic/compatibility tests on the exact tested SHA. The later candidate-branch continuity commit is documentation-only; it does not alter the tested code/test blobs. This run is not a full repository pytest result, canonical production cohort acceptance, 185-sheet workbook acceptance, Gate A production PASS, seven-file delivery acceptance, or Release authorization.
