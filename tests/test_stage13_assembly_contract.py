@@ -7,6 +7,8 @@ from types import SimpleNamespace
 import pytest
 from openpyxl import Workbook, load_workbook
 
+from scripts import excel_builder
+
 from scripts.stage13_assemble import (
     REQUIRED_REPRESENTATIVE_ROLES,
     assemble_workbook,
@@ -177,6 +179,38 @@ def test_saved_xlsx_audit_reads_back_hash_size_and_rejects_formula(tmp_path: Pat
     wb.close()
     with pytest.raises(RuntimeError, match="STAGE13_FORMULA_CELLS"):
         audit_saved_workbook(formula_output, ["Sheet"])
+
+
+
+def test_public_builder_fails_closed_before_parquet_read_or_xlsx_output(tmp_path: Path):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        __import__("json").dumps({
+            "source_sha": excel_builder.EXPECTED_SOURCE_SHA,
+            "scenarios": {scenario: {} for scenario in SCENARIOS},
+            "total_capital": 10000,
+        }),
+        encoding="utf-8",
+    )
+    assignment_path = tmp_path / "representative_trial_ids.json"
+    assignment_path.write_text(
+        __import__("json").dumps({
+            "scenarios": {
+                scenario: {"P10": 1, "P50": 1, "P90": 1, "Loss": 1}
+                for scenario in SCENARIOS
+            }
+        }),
+        encoding="utf-8",
+    )
+    output = tmp_path / "must-not-be-created.xlsx"
+    with pytest.raises(ValueError, match="STAGE13_REPRESENTATIVE_ROLE_KEYS_INVALID"):
+        excel_builder.build_workbook(
+            str(tmp_path / "missing-dataset-root"),
+            str(output),
+            str(manifest_path),
+            str(assignment_path),
+        )
+    assert not output.exists()
 
 
 def _fake_builder(payloads):
