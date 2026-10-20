@@ -1309,3 +1309,25 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+
+---
+
+## CP1 Gate B R4 — owner-authorized candidate repair — 2026-10-21
+
+**Status at entry:** M1 verified the live main HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. Owner authorized the four narrowly scoped Gate B repairs on a temporary branch, including minimal tests and a candidate-only CI workflow. No production run, Monte Carlo, Trial, Checkpoint, data change, source-identity change, main write, merge, or Release is authorized.
+
+**R4 scope:** correct the Gate B near-zero tolerance branch; reject non-Boolean `stable` values; require three successful transitions over four adjacent doubling checkpoints; add adversarial regression tests. Code/CI evidence must remain tied to exact tested SHAs.
+
+### اقتراحات معلقة
+
+- **Statistical CS design (deferred):** prepare decision options only after path 2; no Confidence Sequence implementation before owner decisions on (a) financial-mean support/moment assumptions, (b) loss-probability precision gate, and (c) the exact `alpha_s`/IUT interpretation.
+- **C050_G000 provenance:** independently compare both Artifact IDs, producer Runs, SHA/digests and contents; present the evidence to owner before choosing the canonical mapping. Current status remains `CONFLICTED`.
+- **Stage 13:** start from a clean branch based on live main with minimum assembler/test changes; do not carry the conflicting manifest or assume missing MaxCase fields. The partner balances and cumulative project profit remain `MISSING_EVIDENCE`.
+- **Stage 11 topology:** `UNDEFINED_BUSINESS_RULE`; await owner decision, do not invent topology.
+- **Gate A provider:** `BLOCKED`; do not connect a provider without a later explicit decision.
+- **Stage 9C:** retain the historical `PARTIAL` verdict and mark the closure status `CONFLICTED` until documented reconciliation.
+- **Main documentation incident:** deferred; no rollback.
+- **Candidate hygiene:** do not merge the broad stability or Stage 13 candidate branches. Use a clean candidate branch and keep each change isolated for exact-SHA readback and review.
+
+This entry records the R4 and pending items only. It does not claim the repairs, CI, or any gate has passed.
