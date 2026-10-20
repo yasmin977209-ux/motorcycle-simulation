@@ -106,3 +106,9 @@ Accordingly:
 - Read-back comparison confirmed the workflow, bridge script, aggregate script, parser test, Stage 9A manifest, and Stage 12 accounting contract blobs are identical between that tested HEAD and live main. Therefore this is `PASS_SCOPED` for the exact source-data fingerprint bridge and matching code blobs, not a transfer of whole-branch PASS.
 - This evidence confirms source-data row identity but does not connect a production Gate A provider or clear the separate source-file byte-identity finding.
 
+
+
+## R4 addendum — explicit missing-data markers for derived MaxCase rows
+
+The earlier candidate R4 `docs/stage13/R4_P16_P17_P18_MAXCASE_SCOPE_20261020.md` (branch `tmp/cp-maxcase-loader-20261020`, builder blob `34dbcd8fc484eb30568b6a8ec7c2ec207ffa6aa1`) explicitly authorizes candidate-only handling in which missing MaxCase daily partner balances and daily cumulative-project-profit values are labelled `PENDING_DATA_SOURCE`, never filled with zero or substituted from retained earnings. Port that narrow behavior into the separated assembler and add a regression test. The validator may skip only the daily cumulative-profit terminal comparison when the MaxCase row explicitly carries `PENDING_DATA_SOURCE`; final cash, final equity, operating net profit, trial identity, date sequence, and summary equality remain enforced. No production workbook is built.
+
