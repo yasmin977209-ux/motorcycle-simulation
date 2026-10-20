@@ -96,3 +96,13 @@ Accordingly:
 - It verifies live run identity, artifact IDs/names/digests/sizes, official block fingerprints, per-trial hashes, scenario keys, and contiguous trial IDs. It uses the Stage 9A representative inventory to compare MaxCase against existing P10/P50/P90/Loss payload IDs.
 - Selection follows approved Amendment-03: highest positive `final_net_project_equity`, tie-break lowest `trial_id`. If no positive value exists, report `UNDEFINED_BUSINESS_RULE`; do not substitute another case.
 - The output is an audit JSON only. It must not synthesize missing partner memo balances or claim payload completeness when fields are absent from the Stage 12 daily contract. Source/seed/cohort/trial IDs and historical artifacts remain unchanged.
+
+
+## Existing Gate A bridge evidence read-back
+
+- Run: `38185460895`, conclusion `success`, tested HEAD `90073c8537b1f7f05ef9c0635b1a77a6dd8cae4f`.
+- Aggregate artifact: `11718779874`, `gatea-full-fingerprint-bridge-report`, 5,891 bytes, SHA-256 `69f2886e001711b7e4319f510288e09177e40aa22990ef795d30ae119e553726`.
+- Artifact report: `status=PASS`; 11,005 exact trial comparisons and row rehashes; 22,546,465 actual daily rows equal expected; 0 hash mismatches; actual and official ordered trial-hash-map SHA-256 both `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`; 25 scenario reports all PASS; historical artifacts/data unchanged; no simulation/trial executed.
+- Read-back comparison confirmed the workflow, bridge script, aggregate script, parser test, Stage 9A manifest, and Stage 12 accounting contract blobs are identical between that tested HEAD and live main. Therefore this is `PASS_SCOPED` for the exact source-data fingerprint bridge and matching code blobs, not a transfer of whole-branch PASS.
+- This evidence confirms source-data row identity but does not connect a production Gate A provider or clear the separate source-file byte-identity finding.
+
