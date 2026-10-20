@@ -1387,10 +1387,10 @@ def _validate_representatives(data, mode):
                 raise RuntimeError(f"REPRESENTATIVE_SUMMARY_SCHEMA_MISMATCH: {scenario}/{role}")
             for field, expected_value in expected_row.items():
                 actual_value = summary.get(field)
-                if isinstance(actual_value, bool) or isinstance(expected_value, bool):
-                    equal = type(actual_value) is type(expected_value) and actual_value == expected_value
-                else:
-                    equal = actual_value == expected_value
+                equal = (
+                    type(actual_value) is type(expected_value)
+                    and actual_value == expected_value
+                )
                 if not equal:
                     raise RuntimeError(
                         f"REPRESENTATIVE_SUMMARY_TRIAL_RESULT_MISMATCH: {scenario}/{role}:{field}"
