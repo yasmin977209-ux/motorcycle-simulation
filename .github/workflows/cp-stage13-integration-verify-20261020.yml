@@ -10,6 +10,7 @@ on:
       - scripts/excel_builder.py
       - docs/stage9a/dataset_manifest.json
       - tests/test_stage13_assembler.py
+      - tests/test_stage13_maxcase_pending_fields.py
       - tests/test_excel_builder_adaptive_mode.py
       - tests/test_excel_builder_legacy_compat.py
       - tests/test_excel_daily_serialization.py
