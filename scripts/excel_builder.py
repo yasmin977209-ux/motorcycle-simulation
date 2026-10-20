@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 import pyarrow.parquet as pq
 from openpyxl import Workbook, load_workbook
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -43,6 +44,15 @@ CENTER = Alignment(horizontal="center", vertical="center")
 FINANCE_FMT = "#,##0"
 PERCENT_FMT = "0.0%"
 DATE_FMT = "yyyy-mm-dd"
+
+
+def _stage13_module():
+    try:
+        from scripts import stage13_assemble
+    except ModuleNotFoundError:
+        import stage13_assemble
+        return stage13_assemble
+    return stage13_assemble
 
 
 def load_json(path: Path) -> Any:
@@ -219,6 +229,15 @@ def write_readme(wb, manifest, validation, excel_errors):
         ("Validation status", validation.get("status", "not-provided")),
         ("Excel sheets", len(wb.sheetnames)),
         ("Excel error count", len(excel_errors)),
+        ("STATISTICAL_POLICY_LEVEL", "FIXED_LOOK_WITH_CS_PENDING"),
+        ("MaxCase", "PENDING_DATA_SOURCE (trial_id=60 for C050_G000; scenario-specific IDs in REPRESENTATIVE_CASES)"),
+        ("log_events", "PENDING_APPROVAL; V3 metadata used provisionally"),
+        ("Gate A", "BLOCKED"),
+        ("LossCase source mapping", "LossCase -> representatives/Loss.json"),
+        ("MaxCase pending rows", len(EXPECTED_SCENARIOS)),
+        ("Workbook status", "PROVISIONAL — NOT ACCEPTED"),
+        ("Release status", "BLOCKED / NOT_AUTHORIZED"),
+        ("C050_G000 Artifact override", "V3 Artifact 11503510055 / Run 37662891608 (provisional)"),
     ]
     write_table(ws, ["Item", "Value"], rows)
     style_sheet(ws, "A2")
@@ -402,7 +421,15 @@ def write_daily_distribution(wb, dataset_root):
     style_sheet(ws,"B2")
 
 
-def write_representatives(wb, manifest, rep_path):
+def write_representatives(
+    wb,
+    manifest,
+    representatives_by_scenario,
+    assignments,
+    role_to_payload_labels,
+):
+    """Write four validated representative payloads and explicitly pending MaxCase rows."""
+    REQUIRED_REPRESENTATIVE_ROLES = _stage13_module().REQUIRED_REPRESENTATIVE_ROLES
     ws = wb.create_sheet("REPRESENTATIVE_CASES")
     headers = [
         "scenario","case","record_type","trial_id","date","final_close_date",
@@ -410,49 +437,67 @@ def write_representatives(wb, manifest, rep_path):
         "Partner1_Reinvestment_Balance","Partner2_Reinvestment_Balance",
         "final_net_project_equity","final_cash","cumulative_project_profit",
         "termination_count","secondary_cycle_count","owned_bikes","held_assets",
-        "total_operating_revenue","bad_debt","guarantee_recovered"
+        "total_operating_revenue","bad_debt","guarantee_recovered","payload_source"
     ]
     rows = []
-    rep_all = load_json(rep_path)["scenarios"]
-    for s in EXPECTED_SCENARIOS:
-        for label in ("P10","P50","P90","Loss"):
-            payload = load_rep_payload(Path(manifest["_dataset_root"]), s, label)
+    pending_comments = []
+    for scenario in EXPECTED_SCENARIOS:
+        for role in REQUIRED_REPRESENTATIVE_ROLES:
+            trial_id = assignments[scenario][role]
+            if role == "MaxCase":
+                row = [scenario, "MaxCase", "PENDING_DATA_SOURCE", trial_id]
+                row.extend(["PENDING_DATA_SOURCE"] * (len(headers) - len(row)))
+                rows.append(row)
+                comment = (
+                    "MaxCase trial_id=60; daily payload missing from V3 — see R4-V2.1 §5.4"
+                    if scenario == "C050_G000"
+                    else f"MaxCase trial_id={trial_id}; daily payload missing from enrichment artifact — see R4-V2.1 §5.4"
+                )
+                pending_comments.append((len(rows) + 1, comment))
+                continue
+            payload = representatives_by_scenario[scenario][role]
             summary = payload["summary"]
+            source_label = role_to_payload_labels[role]
+            source_ref = f"representatives/{source_label}.json"
             rows.append([
-                s,label,"SUMMARY",summary["trial_id"],None,summary["final_close_date"],
-                None,None,None,None,None,None,None,
-                summary["final_net_project_equity"],summary["final_cash"],
-                summary["cumulative_project_profit"],summary["termination_count"],
-                summary["secondary_cycle_count"],summary["owned_bikes"],summary["held_assets"],
-                summary["total_operating_revenue"],summary["bad_debt"],summary["guarantee_recovered"]
+                scenario, role, "SUMMARY", trial_id, None, summary.get("final_close_date"),
+                None, None, None, None, None, None, None,
+                summary.get("final_net_project_equity"), summary.get("final_cash"),
+                summary.get("cumulative_project_profit"), summary.get("termination_count"),
+                summary.get("secondary_cycle_count"), summary.get("owned_bikes"), summary.get("held_assets"),
+                summary.get("total_operating_revenue"), summary.get("bad_debt"), summary.get("guarantee_recovered"),
+                source_ref
             ])
-            for daily in payload.get("daily",[]):
+            for daily in payload.get("daily", []):
                 rows.append([
-                    s,label,"DAILY",summary["trial_id"],daily.get("date"),daily.get("Final_Close_Date"),
-                    daily.get("Cash"),daily.get("Net_Equity"),daily.get("Active_Bikes"),
-                    daily.get("Owned_Transferred_Bikes"),daily.get("Pending_Claims"),
-                    daily.get("Partner1_Reinvestment_Balance"),
-                    daily.get("Partner2_Reinvestment_Balance"),
-                    None,None,None,None,None,None,None,None,None,None
+                    scenario, role, "DAILY", trial_id, daily.get("date"),
+                    daily.get("Final_Close_Date"), daily.get("Cash"), daily.get("Net_Equity"),
+                    daily.get("Active_Bikes"), daily.get("Owned_Transferred_Bikes"),
+                    daily.get("Pending_Claims"), daily.get("Partner1_Reinvestment_Balance"),
+                    daily.get("Partner2_Reinvestment_Balance"), None, None, None, None, None,
+                    None, None, None, None, None, source_ref
                 ])
     write_table(
-        ws,
-        headers,
-        rows,
+        ws, headers, rows,
         number_formats={
-            "Cash":FINANCE_FMT,
-            "Net_Equity":FINANCE_FMT,
-            "Partner1_Reinvestment_Balance":FINANCE_FMT,
-            "Partner2_Reinvestment_Balance":FINANCE_FMT,
-            "final_net_project_equity":FINANCE_FMT,
-            "final_cash":FINANCE_FMT,
-            "cumulative_project_profit":FINANCE_FMT,
-            "total_operating_revenue":FINANCE_FMT,
-            "bad_debt":FINANCE_FMT,
-            "guarantee_recovered":FINANCE_FMT,
+            "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
+            "Partner1_Reinvestment_Balance": FINANCE_FMT,
+            "Partner2_Reinvestment_Balance": FINANCE_FMT,
+            "final_net_project_equity": FINANCE_FMT, "final_cash": FINANCE_FMT,
+            "cumulative_project_profit": FINANCE_FMT, "total_operating_revenue": FINANCE_FMT,
+            "bad_debt": FINANCE_FMT, "guarantee_recovered": FINANCE_FMT,
         }
     )
-    style_sheet(ws,"E2")
+    for row_num, comment in pending_comments:
+        ws.cell(row=row_num, column=1).comment = Comment(comment, "OpenAI")
+        ws.cell(row=row_num, column=headers.index("Partner1_Reinvestment_Balance") + 1).comment = Comment(
+            "PENDING_DATA_SOURCE: MaxCase partner 1 reinvestment balance absent from source", "OpenAI"
+        )
+        ws.cell(row=row_num, column=headers.index("Partner2_Reinvestment_Balance") + 1).comment = Comment(
+            "PENDING_DATA_SOURCE: MaxCase partner 2 reinvestment balance absent from source", "OpenAI"
+        )
+    style_sheet(ws, "E2")
+
 
 
 def write_stats_sheet(wb, scenario, rows, total_capital):
@@ -475,7 +520,18 @@ def write_daily_sheet(wb, scenario, payload):
     ws=wb.create_sheet(f"{scenario}_DAILY")
     rows=payload["daily"]
     headers=list(rows[0]) if rows else ["date"]
-    write_table(ws,headers,rows,number_formats={h:FINANCE_FMT for h in headers if h not in {"date","Final_Close_Date"}})
+    # Materialize mappings as values in the exact worksheet header order.
+    value_rows = [[row.get(header) for header in headers] for row in rows]
+    write_table(
+        ws,
+        headers,
+        value_rows,
+        number_formats={
+            h: FINANCE_FMT
+            for h in headers
+            if h not in {"date", "Final_Close_Date"}
+        },
+    )
     style_sheet(ws,"B2")
 
 
@@ -698,48 +754,138 @@ def save_workbook_preserving_stats_precision(workbook: Workbook, output_path: st
     }
 
 
+class _LazyScenarioRolePayloads:
+    def __init__(self, root: Path, scenario: str, role_map: dict[str, str], assignments: dict[str, dict[str, int]]):
+        self.root = root
+        self.scenario = scenario
+        self.role_map = role_map
+        self.assignments = assignments
+
+    def __getitem__(self, role: str):
+        REQUIRED = _stage13_module().REQUIRED_REPRESENTATIVE_ROLES
+        if role not in REQUIRED:
+            raise KeyError(role)
+        if role == "MaxCase":
+            return {
+                "_pending_data_source": True,
+                "summary": {"scenario_id": self.scenario, "trial_id": self.assignments[self.scenario][role]},
+                "daily": [],
+            }
+        return load_rep_payload(self.root, self.scenario, self.role_map[role])
+
+    def __iter__(self):
+        return iter(_stage13_module().REQUIRED_REPRESENTATIVE_ROLES)
+
+    def __len__(self):
+        return len(_stage13_module().REQUIRED_REPRESENTATIVE_ROLES)
+
+
+class _LazyRepresentativesByScenario:
+    def __init__(self, root: Path, role_map: dict[str, str], assignments: dict[str, dict[str, int]]):
+        self.root = root
+        self.role_map = role_map
+        self.assignments = assignments
+
+    def __getitem__(self, scenario: str):
+        if scenario not in self.assignments:
+            raise KeyError(scenario)
+        return _LazyScenarioRolePayloads(self.root, scenario, self.role_map, self.assignments)
+
+    def __iter__(self):
+        return iter(self.assignments)
+
+    def __len__(self):
+        return len(self.assignments)
+
+
 def build_workbook(
     dataset_root: str,
     output_path: str,
     manifest_path: str,
     representatives_path: str,
+    *,
+    role_to_payload_labels: dict[str, str] | None = None,
 ) -> dict:
-    root=Path(dataset_root)
-    manifest=load_json(Path(manifest_path))
-    manifest["_dataset_root"]=str(root)
-    if manifest.get("source_sha")!=EXPECTED_SOURCE_SHA:
-        raise RuntimeError("source_sha mismatch")
-    if manifest.get("scenarios") is None or sorted(manifest["scenarios"])!=sorted(EXPECTED_SCENARIOS):
-        raise RuntimeError("scenario identity mismatch")
-    validation=load_json(root/"validation_163.json") if (root/"validation_163.json").exists() else {"status":"not-provided","tests":[]}
-    errors=load_json(root/"error_log.json") if (root/"error_log.json").exists() else []
-    all_rows={s:load_scenario_trials(root,s) for s in EXPECTED_SCENARIOS}
-    summaries=build_scenario_summary(all_rows)
-    wb=Workbook()
-    write_readme(wb,manifest,validation,[])
-    write_constants(wb,manifest)
-    write_scenario_matrix(wb,summaries,manifest)
-    write_heatmap(wb,summaries)
-    write_sensitivity(wb,summaries)
-    write_validation(wb,validation)
-    write_errors(wb,errors)
-    write_final_closure(wb,all_rows)
-    write_daily_distribution(wb,root)
-    write_representatives(wb,manifest,Path(representatives_path))
-    rep_all=load_json(Path(representatives_path))["scenarios"]
+    """Build the canonical 185-sheet workbook with explicit pending MaxCase payloads."""
+    stage13 = _stage13_module()
+    REQUIRED_REPRESENTATIVE_ROLES = stage13.REQUIRED_REPRESENTATIVE_ROLES
+    assemble_workbook = stage13.assemble_workbook
+    validate_representative_assignments = stage13.validate_representative_assignments
+    validate_representative_payload = stage13.validate_representative_payload
+    validate_role_payload_mapping = stage13.validate_role_payload_mapping
+
+    root = Path(dataset_root)
+    manifest = load_json(Path(manifest_path))
+    manifest["_dataset_root"] = str(root)
+    if manifest.get("source_sha") != EXPECTED_SOURCE_SHA:
+        raise RuntimeError("SOURCE_SHA_MISMATCH")
+    if manifest.get("scenarios") is None or list(sorted(manifest["scenarios"])) != list(sorted(EXPECTED_SCENARIOS)):
+        raise RuntimeError("SCENARIO_IDENTITY_MISMATCH")
+
+    assignment_object = load_json(Path(representatives_path))
+    assignments = assignment_object.get("scenarios")
+    if not isinstance(assignments, dict):
+        raise ValueError("STAGE13_REPRESENTATIVE_ASSIGNMENTS_MISSING")
+    validate_representative_assignments(assignments, expected_scenarios=EXPECTED_SCENARIOS)
+    role_map = validate_role_payload_mapping(role_to_payload_labels)
+
+    # The parquet result table is compact; representative JSON payloads can be hundreds
+    # of MB after decompression. Validate and release one payload at a time.
+    all_rows = {scenario: load_scenario_trials(root, scenario) for scenario in EXPECTED_SCENARIOS}
+    validate_representative_assignments(
+        assignments, expected_scenarios=EXPECTED_SCENARIOS, trial_rows_by_scenario=all_rows
+    )
+    role_summary_fields = {
+        "final_net_project_equity": "final_net_project_equity",
+        "final_cash": "final_cash",
+        "cumulative_project_profit": "cumulative_project_profit",
+        "termination_count": "termination_count",
+        "secondary_cycle_count": "secondary_cycle_count",
+        "owned_bikes": "owned_bikes",
+        "held_assets": "held_assets",
+        "total_operating_revenue": "total_operating_revenue",
+        "bad_debt": "bad_debt",
+        "guarantee_recovered": "guarantee_recovered",
+    }
     for scenario in EXPECTED_SCENARIOS:
-        p50=int(rep_all[scenario]["P50"])
-        payload=load_rep_payload(root, scenario, "P50")
-        total_capital = int(manifest["total_capital"])
-        write_stats_sheet(wb,scenario,all_rows[scenario],total_capital)
-        write_scenario_detail(wb,scenario,payload)
-    actual=len(wb.sheetnames)
-    expected=185
-    if actual!=expected:
-        return {"success":False,"sheets_count":actual,"excel_errors":[f"SHEET_COUNT:{actual}"],"path":str(output_path)}
-    precision_serialization = save_workbook_preserving_stats_precision(wb, output_path)
-    errors_found=collect_excel_errors(Path(output_path))
-    return {"success":len(errors_found)==0,"sheets_count":actual,"excel_errors":errors_found,"path":str(output_path),"stats_precision_serialization":precision_serialization}
+        by_id = {int(row["trial_id"]): row for row in all_rows[scenario]}
+        for role in REQUIRED_REPRESENTATIVE_ROLES:
+            trial_id = assignments[scenario][role]
+            if role == "MaxCase":
+                continue
+            payload = load_rep_payload(root, scenario, role_map[role])
+            validate_representative_payload(scenario, role, trial_id, payload)
+            summary = payload["summary"]
+            source_row = by_id[trial_id]
+            for payload_field, trial_field in role_summary_fields.items():
+                if payload_field in summary and trial_field in source_row:
+                    if summary[payload_field] != source_row[trial_field]:
+                        raise RuntimeError(
+                            f"STAGE13_REPRESENTATIVE_RESULT_MISMATCH: "
+                            f"{scenario}/{role}/trial_id={trial_id}/{payload_field}"
+                        )
+            del payload
+
+    validation = load_json(root / "validation_163.json") if (root / "validation_163.json").exists() else {"status": "not-provided", "tests": []}
+    errors = load_json(root / "error_log.json") if (root / "error_log.json").exists() else []
+    data = {
+        "manifest": manifest,
+        "trials_by_scenario": all_rows,
+        "daily_distributions_by_scenario": {},
+        "representatives_by_scenario": _LazyRepresentativesByScenario(root, role_map, assignments),
+        "representative_trial_ids": assignments,
+        "validation": validation,
+        "errors": errors,
+        "dataset_root": str(root),
+        "pending_roles": ["MaxCase daily payload missing across enrichment artifacts"],
+    }
+    return assemble_workbook(
+        builder=__import__("sys").modules[__name__],
+        data=data,
+        output_path=output_path,
+        role_to_payload_labels=role_map,
+        mode="provisional-p16",
+    )
 
 
 def main():
@@ -748,8 +894,20 @@ def main():
     parser.add_argument("--output-path",required=True)
     parser.add_argument("--manifest",required=True)
     parser.add_argument("--representatives",required=True)
+    parser.add_argument(
+        "--role-payload-labels-json",
+        help="Optional explicit JSON object mapping all five approved roles to payload filenames; omission fails closed.",
+    )
     args=parser.parse_args()
-    result=build_workbook(args.dataset_root,args.output_path,args.manifest,args.representatives)
+    role_payload_labels = (
+        load_json(Path(args.role_payload_labels_json))
+        if args.role_payload_labels_json
+        else None
+    )
+    result=build_workbook(
+        args.dataset_root,args.output_path,args.manifest,args.representatives,
+        role_to_payload_labels=role_payload_labels,
+    )
     print(json.dumps(result,ensure_ascii=False,sort_keys=True))
     raise SystemExit(0 if result["success"] else 1)
 
