@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
@@ -37,7 +37,10 @@ def test_daily_sheet_writes_mapping_values_in_header_order_and_round_trips(tmp_p
     assert ws.max_column == len(headers)
     assert ws.max_row == len(payload["daily"]) + 1
 
-    actual = list(ws.iter_rows(min_row=2, values_only=True))
+    actual = [
+        tuple(value.date() if isinstance(value, datetime) else value for value in row)
+        for row in ws.iter_rows(min_row=2, values_only=True)
+    ]
     expected = [tuple(row.get(header) for header in headers) for row in payload["daily"]]
     assert actual == expected
     assert type(actual[0][headers.index("Cash")]) is int
