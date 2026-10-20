@@ -17,7 +17,7 @@ from scripts.stage13_assemble import (
     EXPECTED_ADAPTIVE_SOURCE_COMMIT, _canonical_scenario_fingerprint,
     _load_canonical_dataset_identity, _metric_status,
     _validate_canonical_dataset_fingerprints, _validate_mode_and_identity,
-    assemble_workbook, select_representative_trial_ids,
+    assemble_workbook, representative_daily_value, select_representative_trial_ids,
 )
 
 FOCUS_SCENARIOS = EXPECTED_SCENARIOS[:5]
@@ -758,4 +758,19 @@ def test_source_audit_accepts_exact_representative_inventory_identity():
         }]
     }
     assert inventory_identity_mismatches(manifest, inventory) == []
+
+def test_maxcase_cumulative_project_profit_uses_normative_retained_earnings_fallback():
+    daily = {"Retained_Earnings": -12500}
+    assert representative_daily_value("Max Case", daily, "Cumulative_Project_Profit") == -12500
+
+
+def test_maxcase_explicit_cumulative_project_profit_takes_precedence():
+    daily = {"Cumulative_Project_Profit": 1234, "Retained_Earnings": 5678}
+    assert representative_daily_value("Max Case", daily, "Cumulative_Project_Profit") == 1234
+
+
+def test_maxcase_partner_memo_balances_remain_pending_when_source_is_absent():
+    daily = {"Retained_Earnings": 1234}
+    assert representative_daily_value("Max Case", daily, "Partner1_Reinvestment_Balance") == "PENDING_DATA_SOURCE"
+    assert representative_daily_value("Max Case", daily, "Partner2_Reinvestment_Balance") == "PENDING_DATA_SOURCE"
 
