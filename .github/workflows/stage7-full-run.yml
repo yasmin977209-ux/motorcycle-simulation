@@ -340,8 +340,9 @@ jobs:
               validate_trial_sequence,
           )
           from scripts.stage7_stability import (
-              evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
-              is_statistical_checkpoint, next_statistical_checkpoint,
+              ci_half_width_limit, evaluate_gate_a, evaluate_gate_b,
+              filter_statistical_history, is_statistical_checkpoint,
+              next_statistical_checkpoint,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -389,7 +390,7 @@ jobs:
                   mean = float(sample.mean())
                   sd = float(sample.std(ddof=1))
                   half_ci = t_critical * sd / math.sqrt(n)
-                  limit = max(ABSOLUTE_EPSILON, RELATIVE_EPSILON * abs(mean))
+                  limit = ci_half_width_limit(mean)
                   out[key] = {
                       "n": n,
                       "mean": mean,

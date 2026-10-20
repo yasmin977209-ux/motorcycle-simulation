@@ -21,6 +21,7 @@ from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
     STATISTICAL_ESCALATION_MULTIPLIER,
+    ci_half_width_limit,
     evaluate_gate_a as evaluate_stage7_gate_a,
     filter_statistical_history,
     next_statistical_checkpoint,
@@ -230,10 +231,7 @@ def _metric_summary(
         mean = float(sample.mean())
         sample_std = float(sample.std(ddof=1))
         half_ci = float(t_critical * sample_std / math.sqrt(n))
-        limit = max(
-            constants.CI_ABSOLUTE_EPSILON,
-            constants.CI_RELATIVE_TOLERANCE * abs(mean),
-        )
+        limit = ci_half_width_limit(mean)
         summary[field_name] = {
             "n": n,
             "mean": mean,

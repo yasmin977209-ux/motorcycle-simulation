@@ -15,6 +15,13 @@ STABILITY_METRICS = (
 )
 
 
+def ci_half_width_limit(mean: float) -> float:
+    """Return the approved conditional absolute/relative Gate B threshold."""
+    if abs(mean) < constants.REFERENCE_EPSILON:
+        return float(constants.CI_ABSOLUTE_EPSILON)
+    return float(constants.CI_RELATIVE_TOLERANCE * abs(mean))
+
+
 def is_statistical_checkpoint(n: int) -> bool:
     """Return whether N is on the approved 300, 600, 1200, ... schedule."""
     if n < constants.STATISTICAL_CHECK_START_N:
