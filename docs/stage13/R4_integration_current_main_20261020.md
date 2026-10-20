@@ -230,3 +230,16 @@ This does not clear Gate A provider integration, `SOURCE_SHA_DRIFT`, Stage 11 to
 - Pytest: `12 passed in 9.12s`, exit code 0 across `tests/test_stage3_path_integration.py`, `tests/test_stage3b.py`, and `tests/test_stage3b_rollforward.py`. Tested code/test/workflow blobs are identical to the current candidate branch.
 - This targeted PASS supersedes the old missing-`_create_contract` and two targeted Stage 3B failure observations for the tested current blobs. The historical repository-wide raw pytest Run `38164248220` remains a historical non-PASS; this scoped run does not relabel it or claim full-repository pytest PASS. `SOURCE_SHA_DRIFT` remains open.
 
+
+
+## Independent local read-back of the MaxCase sidecar (not creator-report reuse)
+
+Downloaded the exact workflow artifact `12239369983` and independently parsed the embedded JSON using Python's JSON/date/hash libraries. This check did not invoke the creator script or trust its status fields.
+
+- Outer ZIP: 1,567,864 bytes; SHA-256 `f3e036ef1c88fc188633b784da12f76b32c41d3fe3283c768a0c3ea1f4b669e9`, matching the GitHub artifact API digest.
+- Sidecar: 25 scenarios; 52,541 rows total. Every scenario has a nonempty daily series; dates are contiguous from `2027-01-01` to the selected final close date; every row has the same selected trial ID, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, seed `20270101`, and one constant TrialResult hash; final Cash, Net_Equity, and Cumulative_Project_Profit equal that scenario's selected summary.
+- The independent row checks above passed for all 25 scenarios. Both partner memo fields are absent from every row, as explicitly declared by the sidecar; this is a known acceptance gap, not a successful field-level acceptance.
+- The nested creator report has SHA-256 `eafcc583375b7f85e6c2682744bd173ca29fa196132df83716104a1a4311053d`; the sidecar has SHA-256 `36b6fbb2f32978112f938a4d116e21ab4e039c20dd18d197a6657191615ade7f`.
+- Canonical identity still has one distinct representative artifact ID in `C050_G000` (inventory `11503510055` vs manifest `11503191706`). The manifest-referenced artifact is downloadable and distinct by API/archive digest; no substitution or manifest edit was made. Resolve provenance by comparing the original run/producer metadata and the nested archive contents under an explicit identity policy; do not choose one ID by recency or name.
+- Current branch read-back at documentation update: candidate HEAD `1df233596672dd38dc4feb4f385faf2a3cdc15a3`; live main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. No PR, merge, release, or production simulation.
+
