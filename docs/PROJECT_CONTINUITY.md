@@ -1309,3 +1309,22 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+
+---
+
+## CP2 — C050_G000 artifact comparison — 2026-10-21
+
+**Status:** `CONFLICTED / OWNER DECISION REQUIRED`. Independent artifact downloads and exact inner-file SHA-256 comparison found identical bytes for daily distribution Parquet, trial results Parquet, trial fingerprints, and all four representative JSON files. Only `scenario_metadata.json` differs: V2 `log_events=True`; V3 `log_events="representative_trials_only"`. The full table of file sizes/hashes, Run IDs, producer/control commits and decision options is in `docs/audits/CP2_C050_G000_ARTIFACT_COMPARISON_2026-10-21.md` on branch `tmp/cp-c050-g000-artifact-audit-20261021`.
+
+Main manifest blob `e796fa2443493b607f1f9c60b58eb63607959c26` pairs Artifact `11503191706` with Run `37662891608`, but API provenance says it belongs to Run `37660610243`. The candidate manifest blob `ec0d4749f86c6f81d743dbb071f92e9f0eddef3d` pairs V3 Artifact `11503510055` with its actual Run `37662891608`.
+
+**New independent contract conflict:** `scripts/stage13_gatea_fingerprint_bridge.py` blob `177eba71e3517ccb123c179fac6cb361127f92c1`, `validate_block()`, insists `meta.get("log_events") is False`. Neither artifact metadata satisfies that. No artifact, manifest, or validator was changed. Owner decision pending; recommended disposition remains option 3 (hold both until `log_events` semantics are reconciled), with V3 only a provisional provenance candidate, not an accepted canonical Artifact.
+
+### اقتراحات معلقة (محدثة)
+
+- C050_G000: owner to choose artifact provenance after review; separately decide how the Stage13 bridge's strict Boolean `log_events is False` contract relates to V2 Boolean true and V3 string `representative_trials_only`.
+- Stage 9C: preserve historical `PARTIAL`; closure stays `CONFLICTED` until written reconciliation.
+- Stage 13: later use a clean branch from live main and minimal code/tests; no conflicting manifest and no inferred MaxCase values.
+- Stage 11 topology `UNDEFINED_BUSINESS_RULE`; Gate A provider `BLOCKED`; MaxCase partner balances and cumulative profit `MISSING_EVIDENCE`; main documentation incident deferred.
+- Do not implement Confidence Sequences before owner decisions on financial-mean support/moment assumptions, the loss-probability precision gate and alpha_s/IUT semantics.
