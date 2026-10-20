@@ -47,6 +47,18 @@ The user directly instructed on 2026-10-20: “افوضك لتقوم بكلما 
 - Stage 9C historical PARTIAL report versus later recorded PASS must be reconciled without erasing historical evidence.
 - The seven final delivery files and their 185-sheet/content/accounting acceptance checks remain unaccepted.
 
+## Business-rule conflict — production representative assembly is CONFLICTED
+
+The uploaded original normative reference was read locally and its SHA-256 was recomputed from its actual bytes: `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` (match). Its §14.6 explicitly defines **four** illustrative representative trials per scenario: P50, P10, P90, and Loss Case. The approved-looking state entry for D-2026-10-10-03 lists a fifth role, MaxCase, and count 5. The original reference is higher authority than the decision/state record under the project hierarchy; the conflicting fifth-role requirement must not be silently applied or removed in code.
+
+The artifact inventory independently confirms all 25 official Stage 9A archives contain exactly the four roles defined in §14.6. This is consistent with the original reference and does not supply evidence that MaxCase is an approved fifth deliverable role.
+
+- Classification: `CONFLICTED` / `PENDING_APPROVAL` for the fifth-role contract.
+- Blocked action: deriving or inserting MaxCase payloads and accepting a production workbook against a five-role contract.
+- Allowed independent work: preserve and test the DAILY serializer, validate provenance mapping, run synthetic code/compatibility tests, and inspect source evidence without creating production outputs.
+- Resolution path: the project owner must approve an explicit amendment to the normative reference or an authoritative replacement decision that clearly resolves the four-versus-five-role conflict. A general instruction to continue engineering does not authorize changing business rules.
+- Until resolved, synthetic tests on the candidate assembler are technical-only; they do not approve the fifth role, establish production stability, or authorize final delivery.
+
 ## Acceptance status at R4 creation
 
 - Code changes: pending.
