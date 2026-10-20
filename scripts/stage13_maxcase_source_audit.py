@@ -302,6 +302,107 @@ def run_audit() -> dict[str, Any]:
             else:
                 selection_status = "PASS"
                 payload_reuse = bool(role_matches)
+            stage12_name = f"stage12-daily-{scenario}"
+            stage12_artifact = gatea.find_artifact(stage12_artifacts, stage12_name, STAGE12_RUN)
+            stage12_artifact_run = stage12_artifact.get("workflow_run") or {}
+            if (
+                int(stage12_artifact_run.get("id", -1)) != STAGE12_RUN
+                or stage12_artifact_run.get("head_sha") != STAGE12_HEAD
+            ):
+                raise RuntimeError(f"STAGE12_ARTIFACT_RUN_HEAD_MISMATCH: {scenario}/{stage12_name}")
+            stage12_zip = root / f"{scenario}-stage12.zip"
+            stage12_download = gatea.download_artifact(stage12_artifact, stage12_zip)
+            parquet_path = root / f"{scenario}.parquet"
+            with zipfile.ZipFile(stage12_zip, "r") as zf:
+                expected_member = f"{scenario}.parquet"
+                if zf.namelist() != [expected_member]:
+                    raise RuntimeError(f"STAGE12_ZIP_MEMBER_MISMATCH: {scenario}: {zf.namelist()}")
+                with zf.open(expected_member, "r") as source_stream, parquet_path.open("wb") as target_stream:
+                    shutil.copyfileobj(source_stream, target_stream)
+            trial_checks, stage12_daily_evidence = gatea.validate_stage12(
+                scenario, parquet_path, roll_forward, closure_report, trial_hashes
+            )
+            if any(not item["exact_match"] for item in trial_checks):
+                raise RuntimeError(f"STAGE12_TRIAL_RESULT_FINGERPRINT_MISMATCH: {scenario}")
+            selected_check = next(
+                (item for item in trial_checks if int(item["trial_id"]) == int(selected["trial_id"])),
+                None,
+            ) if selected is not None else None
+            selected_daily_payload = None
+            if selected is not None:
+                if selected_check is None or not selected_check["exact_match"]:
+                    raise RuntimeError(f"STAGE12_MAXCASE_TRIAL_NOT_VERIFIED: {scenario}/{selected['trial_id']}")
+                daily_rows = pq.read_table(
+                    parquet_path, filters=[("trial_id", "=", int(selected["trial_id"]))]
+                ).to_pylist()
+                daily_rows.sort(key=lambda row: row["date"])
+                if len(daily_rows) != int(selected_check["daily_rows"]) or not daily_rows:
+                    raise RuntimeError(f"STAGE12_MAXCASE_DAILY_ROW_COUNT_MISMATCH: {scenario}/{selected['trial_id']}")
+                expected_hash = trial_hashes[int(selected["trial_id"])]
+                if any(row.get("result_sha256") != expected_hash for row in daily_rows):
+                    raise RuntimeError(f"STAGE12_MAXCASE_RESULT_SHA_MISMATCH: {scenario}/{selected['trial_id']}")
+                if any(
+                    row.get("scenario_id") != scenario
+                    or int(row.get("trial_id", -1)) != int(selected["trial_id"])
+                    or row.get("source_sha") != SOURCE_SHA
+                    or int(row.get("master_seed", -1)) != MASTER_SEED
+                    or row.get("Final_Close_Date") != selected.get("final_close_date")
+                    for row in daily_rows
+                ):
+                    raise RuntimeError(f"STAGE12_MAXCASE_DAILY_IDENTITY_OR_CLOSE_DATE_MISMATCH: {scenario}/{selected['trial_id']}")
+                final_daily = daily_rows[-1]
+                if (
+                    int(final_daily["Closing_Cash"]) != int(selected["final_cash"])
+                    or int(final_daily["Closing_Equity"]) != int(selected["final_net_project_equity"])
+                    or int(final_daily["Retained_Earnings"]) != int(selected["cumulative_project_profit"])
+                ):
+                    raise RuntimeError(f"STAGE12_MAXCASE_FINAL_VALUE_MISMATCH: {scenario}/{selected['trial_id']}")
+                selected_daily_payload = [
+                    {
+                        "date": row["date"],
+                        "Final_Close_Date": row["Final_Close_Date"],
+                        "Cash": int(row["Closing_Cash"]),
+                        "Net_Equity": int(row["Closing_Equity"]),
+                        "Active_Bikes": int(row["Active_Bikes"]),
+                        "Owned_Transferred_Bikes": int(row["Owned_Transferred_Bikes"]),
+                        "Pending_Claims": int(row["Pending_Claims"]),
+                        "Cumulative_Project_Profit": int(row["Retained_Earnings"]),
+                        "trial_id": int(row["trial_id"]),
+                        "source_sha": row["source_sha"],
+                        "master_seed": int(row["master_seed"]),
+                        "result_sha256": row["result_sha256"],
+                    }
+                    for row in daily_rows
+                ]
+                extracted_payloads.append({
+                    "scenario": scenario,
+                    "case": "Max Case",
+                    "trial_id": int(selected["trial_id"]),
+                    "final_net_project_equity": int(selected["final_net_project_equity"]),
+                    "final_cash": int(selected["final_cash"]),
+                    "cumulative_project_profit": int(selected["cumulative_project_profit"]),
+                    "partner_memo_fields_status": "MISSING_EVIDENCE",
+                    "partner_memo_fields": [
+                        "Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance"
+                    ],
+                    "source_artifact": {
+                        "run_id": STAGE12_RUN,
+                        "run_head_sha": STAGE12_HEAD,
+                        "artifact_id": int(stage12_artifact["id"]),
+                        "artifact_name": stage12_name,
+                        "artifact_size_bytes": int(stage12_artifact["size_in_bytes"]),
+                        "artifact_api_digest": stage12_artifact.get("digest"),
+                        **stage12_download,
+                        **stage12_daily_evidence,
+                    },
+                    "daily_rows": selected_daily_payload,
+                })
+                report["stage12_daily_validation"]["scenarios_validated"] += 1
+                report["stage12_daily_validation"]["daily_rows_validated"] += int(stage12_daily_evidence["daily_rows"])
+                report["stage12_daily_validation"]["trial_result_fingerprint_mismatches"] += int(stage12_daily_evidence["mismatch_count"])
+            else:
+                report["stage12_daily_validation"]["scenarios_validated"] += 1
+                report["stage12_daily_validation"]["daily_rows_validated"] += int(stage12_daily_evidence["daily_rows"])
             report["scenarios"].append({
                 "scenario": scenario,
                 "stage10_scenario_job": stage10_scenario_job,
@@ -322,6 +423,8 @@ def run_audit() -> dict[str, Any]:
                     str(trial_id): digest for trial_id, digest in sorted(trial_hashes.items())
                 },
                 "block_evidence": blocks,
+                "stage12_daily_evidence": stage12_daily_evidence,
+                "maxcase_daily_rows_extracted": len(selected_daily_payload) if selected_daily_payload is not None else 0,
                 "maxcase_selection_status": selection_status,
                 "maxcase_trial_id": int(selected["trial_id"]) if selected is not None else None,
                 "maxcase_final_net_project_equity": (
