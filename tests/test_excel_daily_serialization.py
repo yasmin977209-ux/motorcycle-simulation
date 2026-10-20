@@ -11,14 +11,14 @@ def test_daily_sheet_writes_mapping_values_in_header_order_and_round_trips(tmp_p
         "daily": [
             {
                 "date": date(2027, 1, 1),
-                "Cash": 100_000,
                 "Final_Close_Date": date(2027, 1, 3),
+                "Cash": 100_000,
                 "Accounts_Receivable": None,
             },
             {
                 "date": date(2027, 1, 2),
-                "Cash": 99_000,
                 "Final_Close_Date": date(2027, 1, 3),
+                "Cash": 99_000,
                 "Accounts_Receivable": 250,
             },
         ]
