@@ -165,3 +165,13 @@ Impact: the canonical TrialResult-based MaxCase selection and row fingerprint ev
 
 The daily Stage 12 Parquet files contain all trials, so MaxCase daily rows can be extracted by trial ID from the historical dataset without rerunning simulations. This R4 changes only a deterministic field mapping in the candidate assembler; it does not write or alter historical Parquet, change SOURCE_SHA/seed/cohort, create production workbooks, or infer partner memo balances.
 
+
+
+## R4 — extract MaxCase daily rows from the canonical Stage 12 Parquet artifacts
+
+| Field | Current state | Authority | Source identity | Defect / work class | Minimum change | Acceptance | Risk |
+|---|---|---|---|---|---|---|---|
+| MaxCase daily payload | Stage 12 contains all 11,005 trials / 22,546,465 daily rows; Stage 13 needs the selected trial's daily series for each representative case | Stage 12 accounting contract; CP12B/CP12C reports; original reference §10.10 | Stage 12 Run `37964656154`, HEAD `0156c5f4272eb0ca7e32442657d0df9eaf4973d3`; global SHA-256 `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`; Stage 9A source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`; seed `20270101` | `K_CODE` / data extraction: the prior audit stopped after selecting trial IDs and did not materialize their existing Stage 12 daily rows | Read-only extraction from the exact Stage 12 scenario Parquet artifact; verify API artifact ID/name/run/head/digest/size, CP12B and CP12C file SHA, schema and embedded identity, all trial-result hashes and daily date continuity using the existing Gate A bridge validator; compare selected trial's terminal values with its canonical TrialResult | All 25 scenarios, all 11,005 trial rows, full Stage 12 source files validated, and one selected MaxCase daily payload per scenario extracted. Payload sidecar records missing partner memo fields as missing; no values fabricated. No workbook is produced | Large read-only artifact downloads; mitigated by sequential temporary files, official SHA checks, and no writes to historical source data |
+
+Field mapping authorized by the contracts/reference: `Closing_Cash → Cash`, `Closing_Equity → Net_Equity`, and `Retained_Earnings → Cumulative_Project_Profit` (reference §10.10 explicitly equates the latter two cumulative-profit concepts). `Partner1_Reinvestment_Balance` and `Partner2_Reinvestment_Balance` are not present in the Stage 12 daily schema and remain `PENDING_DATA_SOURCE`; do not derive them from aggregate cash or equity values. The extraction is an audit/intermediate artifact only and does not constitute acceptance of the seven deliverables.
+
