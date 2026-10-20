@@ -951,21 +951,63 @@ def _validate_canonical_dataset_fingerprints(
 
 
 def select_representative_trial_ids(rows, scenario):
-    """Apply Reference §§14.5–14.6 and normative decision D-2026-10-10-03."""
+    """Apply Reference §§14.5–14.6 and D-2026-10-10-03 with integer-exact money comparisons."""
     if not rows:
         return {}
     field = "final_net_project_equity"
-    values = np.asarray([float(row[field]) for row in rows], dtype=float)
+
+    def equity(row):
+        value = row.get(field)
+        if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+            raise RuntimeError(
+                f"REPRESENTATIVE_EQUITY_NOT_INTEGER: {scenario}/{_trial_id(row)}"
+            )
+        return int(value)
+
+    ordered_values = sorted(equity(row) for row in rows)
     selected = {}
-    for role, q in (("P10", 0.10), ("P50", 0.50), ("P90", 0.90)):
-        target = float(np.quantile(values, q, method="linear"))
-        selected[role] = _trial_id(min(rows, key=lambda row: (abs(float(row[field]) - target), _trial_id(row))))
-    selected["Loss"] = _trial_id(min(rows, key=lambda row: (abs(float(row[field])), _trial_id(row))))
-    positive = [row for row in rows if float(row[field]) > 0]
+
+    def closest_to_linear_quantile(q_num, q_den):
+        # NumPy method="linear": h=(n-1)*q. Keep the interpolated target
+        # as an exact rational and compare distances by integer cross-multiplication.
+        location_num = (len(ordered_values) - 1) * q_num
+        lower_index, remainder = divmod(location_num, q_den)
+        upper_index = min(lower_index + 1, len(ordered_values) - 1)
+        target_num = (
+            ordered_values[lower_index] * (q_den - remainder)
+            + ordered_values[upper_index] * remainder
+        )
+        return _trial_id(
+            min(
+                rows,
+                key=lambda row: (
+                    abs(equity(row) * q_den - target_num),
+                    _trial_id(row),
+                ),
+            )
+        )
+
+    for role, (q_num, q_den) in (
+        ("P10", (1, 10)),
+        ("P50", (1, 2)),
+        ("P90", (9, 10)),
+    ):
+        selected[role] = closest_to_linear_quantile(q_num, q_den)
+
+    # Amendment-03 defines LossCase as the closest equity to zero, either sign.
+    selected["Loss"] = _trial_id(
+        min(rows, key=lambda row: (abs(equity(row)), _trial_id(row)))
+    )
+
+    positive = [row for row in rows if equity(row) > 0]
     if not positive:
-        raise RuntimeError(f"UNDEFINED_BUSINESS_RULE: MaxCase has no positive Final_Net_Project_Equity in {scenario}")
-    highest = max(float(row[field]) for row in positive)
-    selected["Max Case"] = min(_trial_id(row) for row in positive if float(row[field]) == highest)
+        raise RuntimeError(
+            f"UNDEFINED_BUSINESS_RULE: MaxCase has no positive Final_Net_Project_Equity in {scenario}"
+        )
+    highest = max(equity(row) for row in positive)
+    selected["Max Case"] = min(
+        _trial_id(row) for row in positive if equity(row) == highest
+    )
     return selected
 
 
