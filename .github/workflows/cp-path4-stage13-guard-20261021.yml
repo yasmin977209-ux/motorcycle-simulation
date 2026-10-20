@@ -1,0 +1,97 @@
+name: CP4 Stage 13 assembly contract verification
+
+on:
+  push:
+    branches:
+      - "tmp/cp-path4-stage13-guard-20261021"
+    paths:
+      - "scripts/excel_builder.py"
+      - "scripts/stage13_assemble.py"
+      - "tests/test_stage13_assembly_contract.py"
+      - ".github/workflows/cp-path4-stage13-guard-20261021.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp4-stage13-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  synthetic-contract:
+    name: Synthetic Stage 13 contract only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile Stage 13 code
+        run: python -m compileall -q scripts/excel_builder.py scripts/stage13_assemble.py
+      - name: Run synthetic contract tests
+        shell: bash
+        run: |
+          mkdir -p cp4-evidence
+          set +e
+          python -m pytest -q tests/test_stage13_assembly_contract.py --junitxml=cp4-evidence/junit.xml > cp4-evidence/pytest.txt 2>&1
+          rc=$?
+          echo "$rc" > cp4-evidence/test-exit-code.txt
+          cat cp4-evidence/pytest.txt
+          echo "CP4_TEST_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          exit 0
+      - name: Record exact tested identity and file hashes
+        if: always()
+        env:
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          mkdir -p cp4-evidence
+          python - <<'PY'
+          import hashlib, json, os, platform
+          from pathlib import Path
+          paths = [
+              "scripts/excel_builder.py",
+              "scripts/stage13_assemble.py",
+              "tests/test_stage13_assembly_contract.py",
+              ".github/workflows/cp-path4-stage13-guard-20261021.yml",
+          ]
+          files = {}
+          for name in paths:
+              p = Path(name)
+              if p.is_file():
+                  files[name] = {"bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+          report = {
+              "scope": "synthetic Stage 13 contract and XLSX shape only; no production inputs",
+              "tested_sha": os.environ["TESTED_SHA"],
+              "run_id": os.environ["RUN_ID"],
+              "run_attempt": os.environ["RUN_ATTEMPT"],
+              "python": platform.python_version(),
+              "platform": platform.platform(),
+              "test_exit_code": int(Path("cp4-evidence/test-exit-code.txt").read_text().strip()) if Path("cp4-evidence/test-exit-code.txt").exists() else None,
+              "files": files,
+          }
+          Path("cp4-evidence/evidence.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+          PY
+      - name: Upload inspectable verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp4-stage13-contract-evidence
+          path: cp4-evidence/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Fail if synthetic contract tests failed
+        if: always()
+        shell: bash
+        run: |
+          rc="${CP4_TEST_EXIT_CODE:-99}"
+          echo "Focused Stage 13 test exit code: $rc"
+          test "$rc" = "0"
