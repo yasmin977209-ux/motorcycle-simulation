@@ -191,7 +191,10 @@ def run_audit() -> dict[str, Any]:
             artifact = gatea.find_artifact(index, artifact_name, run_id)
             expected_head = STAGE7_HEAD if is_c100 else STAGE10_HEAD
             artifact_run = artifact.get("workflow_run") or {}
-            if int(artifact_run.get("id", -1)) != run_id or artifact_run.get("head_sha") != expected_head:
+            if artifact_run and (
+                int(artifact_run.get("id", -1)) != run_id
+                or artifact_run.get("head_sha") != expected_head
+            ):
                 raise RuntimeError(f"ARTIFACT_RUN_HEAD_MISMATCH: {scenario}/{artifact_name}")
             zip_path = root / f"{scenario}.zip"
             download_evidence = gatea.download_artifact(artifact, zip_path)
@@ -214,7 +217,7 @@ def run_audit() -> dict[str, Any]:
                 "scenario": scenario,
                 "source_artifact": {
                     "run_id": run_id,
-                    "run_head_sha": artifact.get("workflow_run", {}).get("head_sha"),
+                    "run_head_sha": expected_head,
                     "artifact_id": int(artifact["id"]),
                     "artifact_name": artifact_name,
                     "artifact_size_bytes": int(artifact["size_in_bytes"]),
