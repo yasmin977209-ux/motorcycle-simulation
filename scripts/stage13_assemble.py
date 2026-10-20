@@ -258,6 +258,11 @@ def assemble_workbook(
         185, [], []
     ):
         raise RuntimeError(f"STAGE13_SAVED_XLSX_AUDIT_FAILURE: {audit}")
+    pending_roles = list(data.get("pending_roles", []))
+    warnings = [
+        "MAXCASE_PAYLOAD_PENDING_DATA_SOURCE: four validated roles plus pending MaxCase; final contract not accepted"
+        for _ in pending_roles
+    ]
     return {
         "success": True,
         "mode": mode,
@@ -268,5 +273,6 @@ def assemble_workbook(
         "sheets_count": audit["sheet_count"],
         "excel_errors": 0,
         "formula_cells": 0,
+        "warnings": warnings,
         "stats_precision_serialization": precision,
     }
