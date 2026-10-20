@@ -422,6 +422,9 @@ def write_daily_sheet(wb, scenario, payload):
     ws=wb.create_sheet(f"{scenario}_DAILY")
     rows=payload["daily"]
     headers=list(rows[0]) if rows else ["date"]
+    if "date" in headers and "Final_Close_Date" in headers:
+        headers.remove("Final_Close_Date")
+        headers.insert(headers.index("date") + 1, "Final_Close_Date")
     # CP-EXCEL-DAILY-FIX: convert dictionary records into ordered cell values.
     value_rows = [[row.get(h) for h in headers] for row in rows]
     write_table(
@@ -1357,14 +1360,20 @@ def _validate_representatives(data, mode):
                 dates = []
                 for daily_row in daily_rows:
                     raw_date = daily_row.get("date")
-                    if not isinstance(raw_date, str):
+                    if isinstance(raw_date, datetime):
+                        current_date = raw_date.date()
+                    elif isinstance(raw_date, date):
+                        current_date = raw_date
+                    elif isinstance(raw_date, str):
+                        try:
+                            current_date = date.fromisoformat(raw_date)
+                        except ValueError as exc:
+                            raise RuntimeError(
+                                f"REPRESENTATIVE_DAILY_DATE_INVALID: {scenario}/{role}"
+                            ) from exc
+                    else:
                         raise RuntimeError(f"REPRESENTATIVE_DAILY_DATE_INVALID: {scenario}/{role}")
-                    try:
-                        dates.append(date.fromisoformat(raw_date))
-                    except ValueError as exc:
-                        raise RuntimeError(
-                            f"REPRESENTATIVE_DAILY_DATE_INVALID: {scenario}/{role}"
-                        ) from exc
+                    dates.append(current_date)
                 if any(current_date != previous_date + timedelta(days=1)
                        for previous_date, current_date in zip(dates, dates[1:])):
                     raise RuntimeError(f"REPRESENTATIVE_DAILY_DATE_SEQUENCE_INVALID: {scenario}/{role}")
@@ -1387,8 +1396,8 @@ def _validate_representatives(data, mode):
                         raise RuntimeError(
                             f"REPRESENTATIVE_DAILY_TERMINAL_MISMATCH: {scenario}/{role}:{daily_field}"
                         )
-                final_close_date = summary.get("final_close_date")
-                if final_close_date is not None and final_row.get("date") != final_close_date:
+                final_close_date = ensure_date(summary.get("final_close_date"))
+                if final_close_date is not None and ensure_date(final_row.get("date")) != final_close_date:
                     raise RuntimeError(
                         f"REPRESENTATIVE_DAILY_TERMINAL_MISMATCH: {scenario}/{role}:date"
                     )
