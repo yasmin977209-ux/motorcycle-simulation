@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   source-audit:
-    name: Verify existing Stage 7/10 rows and select MaxCase IDs
+    name: Verify Stage 7/10 fingerprints and extract Stage 12 MaxCase daily rows
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
