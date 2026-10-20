@@ -227,7 +227,8 @@ def assemble_workbook(
     names_expected = expected_sheet_names(
         list(builder.GLOBAL_SHEETS), scenarios, list(builder.SUFFIXES)
     )
-    for row in wb.iter_rows(min_col=1, max_col=2):
+    readme = wb["README"]
+    for row in readme.iter_rows(min_col=1, max_col=2):
         label = row[0].value
         if label == "Excel sheets":
             row[1].value = len(wb.sheetnames)
