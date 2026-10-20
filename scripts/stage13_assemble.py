@@ -750,7 +750,7 @@ def write_representatives(wb, representatives_by_scenario):
                     representative_daily_value(display, daily, "Partner2_Reinvestment_Balance"),
                     None, None,
                     representative_daily_value(display, daily, "Cumulative_Project_Profit"),
-                    None, None, None, None, None, None, None, None,
+                    None, None, None, None, None, None, None,
                 ])
     write_table(ws, headers, rows, number_formats={
         "Cash": FINANCE_FMT, "Net_Equity": FINANCE_FMT,
