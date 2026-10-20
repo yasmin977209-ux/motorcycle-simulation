@@ -189,8 +189,6 @@ def assemble_workbook(
     role_map = validate_role_payload_mapping(role_to_payload_labels)
     manifest = data["manifest"]
     all_rows = data["trials_by_scenario"]
-    distributions = data.get("daily_distributions_by_scenario", {})
-    representatives = data["representatives_by_scenario"]
     assignments = data["representative_trial_ids"]
     validation = data.get("validation", {"status": "not-provided", "tests": []})
     errors = data.get("errors", [])
@@ -211,8 +209,10 @@ def assemble_workbook(
     builder.write_validation(wb, validation)
     builder.write_errors(wb, errors)
     builder.write_final_closure(wb, all_rows)
-    builder.write_daily_distribution(wb, distributions)
-    builder.write_representatives(wb, manifest, representatives, assignments, role_map)
+    builder.write_daily_distribution(wb, Path(data["dataset_root"]))
+    builder.write_representatives(
+        wb, manifest, Path(data["representatives_path"]), assignments, role_map
+    )
 
     for scenario in scenarios:
         p50_trial_id = assignments[scenario]["P50"]
