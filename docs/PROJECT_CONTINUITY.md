@@ -1317,3 +1317,11 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - DAILY mapping-to-values code: `scripts/excel_builder.py`, blob `10d0447b30e4dcda5ca33596cc0c107c5921d8b6`. Regression: `tests/test_excel_daily_serialization.py`, blob `95491e072c449f5f81b6fa82859898434eb5b813`. Temporary workflow: `.github/workflows/cp-path3-daily-workflow-20261021.yml`, blob `821f4782414828e24aab89a3fca878bb8031759b`.
 - Final code/workflow commit observed: `158ca2558bcbeccbf90f593a50e28478359fe4ea`. The commit-status endpoint returned an empty status list; the current available GitHub connector does not expose a list of Actions runs by workflow/branch, so a Run ID, conclusion, tested-SHA linkage, and artifact contents have **not** been verified here. Do not claim CI PASS until those exact details are read back.
 - Scope: one synthetic XLSX serialization regression only. No production workbook build, simulation, trial, checkpoint, source identity or data changes.
+
+
+## CP3 verification resolved — exact Run/Artifact read-back — 2026-10-21
+
+- Status update is limited to the DAILY synthetic-test gate: `PASS_SCOPED`. Run `39503426859`, head/tested SHA `158ca2558bcbeccbf90f593a50e28478359fe4ea`, conclusion `success`; job `118906324570`, all substantive steps `success`, test `1 passed in 0.25s`, JUnit 1/1, exit code 0.
+- Artifact `12302286623`, `cp3-daily-regression-evidence`, 1,229 bytes; downloaded ZIP SHA-256 `d6ab3e8cef568ccd2f3f061b3d074317010d0485cdae825cd78829d4df9c2274` matches GitHub API Digest and local recomputation. All four members were read. Raw SHA-256 for `scripts/excel_builder.py`, `tests/test_excel_daily_serialization.py`, and the workflow recomputed from GitHub content at the exact tested SHA and matches `evidence.json` values.
+- Post-tested-SHA compare found only `docs/PROJECT_CONTINUITY.md` and CP3 execution-report documentation changed. `main` remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. This PASS is not full regression/production workbook or project acceptance.
+- Detailed evidence: `docs/audits/CP3_DAILY_SERIALIZATION_EXECUTION_2026-10-21.md`, final blob `9cda041835f8cc1c5a4c424931a79727cf3c166d`.
