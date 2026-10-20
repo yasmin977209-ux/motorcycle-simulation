@@ -86,3 +86,13 @@ Accordingly:
 - Canonical MaxCase derivation: MISSING_EVIDENCE until the read-only derivation and exact identity checks are completed; the five-role rule is authorized by Amendment-03.
 - Main/state: unchanged by this CP.
 - Merge, final delivery acceptance, and Release: not performed.
+
+
+## R4 addendum — read-only MaxCase source-row audit
+
+- Purpose: derive the selected MaxCase trial ID per scenario from already completed canonical TrialResult artifacts and compare it with existing representative payload IDs.
+- Pinned inputs: Stage 7 Run 37225915321 / HEAD e0b2fab6710833774937d778097363d7a8ee8e59; Stage 10 Run 37709936740 / HEAD ca73f2df37baacebbcad965fc5f433f129675820; Stage 12 reference Run 37964656154 / HEAD 0156c5f4272eb0ca7e32442657d0df9eaf4973d3.
+- Bounded files: `scripts/stage13_maxcase_source_audit.py` and `.github/workflows/cp-stage13-maxcase-source-audit-20261020.yml`. The workflow is branch-pinned, read-only, and consumes existing Stage 7/10 artifact packages only. It does not run trials or build a workbook.
+- It verifies live run identity, artifact IDs/names/digests/sizes, official block fingerprints, per-trial hashes, scenario keys, and contiguous trial IDs. It uses the Stage 9A representative inventory to compare MaxCase against existing P10/P50/P90/Loss payload IDs.
+- Selection follows approved Amendment-03: highest positive `final_net_project_equity`, tie-break lowest `trial_id`. If no positive value exists, report `UNDEFINED_BUSINESS_RULE`; do not substitute another case.
+- The output is an audit JSON only. It must not synthesize missing partner memo balances or claim payload completeness when fields are absent from the Stage 12 daily contract. Source/seed/cohort/trial IDs and historical artifacts remain unchanged.
