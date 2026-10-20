@@ -721,10 +721,12 @@ def test_source_audit_maxcase_fails_closed_without_positive_integer_equity():
     assert select_maxcase(rows) is None
 
 def test_source_audit_rejects_representative_inventory_artifact_id_drift():
+    # These IDs are pinned from the independently inspected GitHub artifact records:
+    # V2 = artifact 11503191706 / run 37660610243; V3 = artifact 11503510055 / run 37662891608.
     manifest = {
         "artifact_manifest": {
             "enriched_artifacts": {"C050_G000": 11503191706},
-            "enrichment_run_ids": {"C050_G000": 37662891608},
+            "enrichment_run_ids": {"C050_G000": 37660610243},
         }
     }
     inventory = {
@@ -738,26 +740,73 @@ def test_source_audit_rejects_representative_inventory_artifact_id_drift():
         "scenario": "C050_G000",
         "manifest_artifact_id": 11503191706,
         "inventory_artifact_id": 11503510055,
-        "manifest_run_id": 37662891608,
+        "manifest_run_id": 37660610243,
         "inventory_run_id": 37662891608,
     }]
 
 
-def test_source_audit_accepts_exact_representative_inventory_identity():
+def test_source_audit_rejects_v2_artifact_paired_with_v3_run():
+    # Main's historical pair is internally inconsistent: the V2 artifact is owned by the V2 run.
     manifest = {
         "artifact_manifest": {
             "enriched_artifacts": {"C050_G000": 11503191706},
             "enrichment_run_ids": {"C050_G000": 37662891608},
         }
     }
-    inventory = {
+    verified_v2_inventory = {
         "artifacts": [{
             "scenario": "C050_G000",
             "artifact_id": 11503191706,
+            "run_id": 37660610243,
+        }]
+    }
+    assert inventory_identity_mismatches(manifest, verified_v2_inventory) == [{
+        "scenario": "C050_G000",
+        "manifest_artifact_id": 11503191706,
+        "inventory_artifact_id": 11503191706,
+        "manifest_run_id": 37662891608,
+        "inventory_run_id": 37660610243,
+    }]
+
+
+def test_source_audit_accepts_verified_v2_identity():
+    # Exact V2 artifact/run pair confirmed in GitHub artifact metadata.
+    manifest = {
+        "artifact_manifest": {
+            "enriched_artifacts": {"C050_G000": 11503191706},
+            "enrichment_run_ids": {"C050_G000": 37660610243},
+        }
+    }
+    verified_v2_inventory = {
+        "artifacts": [{
+            "scenario": "C050_G000",
+            "artifact_id": 11503191706,
+            "run_id": 37660610243,
+        }]
+    }
+    assert (verified_v2_inventory["artifacts"][0]["artifact_id"],
+            verified_v2_inventory["artifacts"][0]["run_id"]) == (11503191706, 37660610243)
+    assert inventory_identity_mismatches(manifest, verified_v2_inventory) == []
+
+
+def test_source_audit_accepts_verified_v3_identity():
+    # Exact V3 artifact/run pair confirmed in GitHub artifact metadata.
+    manifest = {
+        "artifact_manifest": {
+            "enriched_artifacts": {"C050_G000": 11503510055},
+            "enrichment_run_ids": {"C050_G000": 37662891608},
+        }
+    }
+    verified_v3_inventory = {
+        "artifacts": [{
+            "scenario": "C050_G000",
+            "artifact_id": 11503510055,
             "run_id": 37662891608,
         }]
     }
-    assert inventory_identity_mismatches(manifest, inventory) == []
+    assert (verified_v3_inventory["artifacts"][0]["artifact_id"],
+            verified_v3_inventory["artifacts"][0]["run_id"]) == (11503510055, 37662891608)
+    assert inventory_identity_mismatches(manifest, verified_v3_inventory) == []
 
 def test_maxcase_cumulative_project_profit_uses_normative_retained_earnings_fallback():
     daily = {"Retained_Earnings": -12500}
