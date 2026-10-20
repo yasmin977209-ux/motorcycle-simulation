@@ -65,6 +65,20 @@ The artifact inventory independently confirms all 25 official Stage 9A archives 
 - Resolution path: the project owner must approve an explicit amendment to the normative reference or an authoritative replacement decision that clearly resolves the four-versus-five-role conflict. A general instruction to continue engineering does not authorize changing business rules.
 - Until resolved, synthetic tests on the candidate assembler are technical-only; they do not approve the fifth role, establish production stability, or authorize final delivery.
 
+
+
+## Correction addendum — Amendment-03 read-back supersedes preliminary conflict finding
+
+**Correction time:** 2026-10-20. The earlier “Business-rule conflict” section above was incomplete because it had not yet checked the live normative amendment register. It is retained as historical audit trail but is **superseded by this addendum**.
+
+Live `main` `docs/governance/REFERENCE_AMENDMENTS.md` blob `b4eab80bf657d72e9e49d14db81d2baf0a462d77` has front matter `status: APPROVED_NORMATIVE_AMENDMENTS` and explicitly states that, within the defined scope, the updated text applies when it conflicts with the original. Amendment-03 expressly adopts five representative roles (P50, P10, P90, LossCase, MaxCase), defines LossCase as the smallest absolute `Final_Net_Project_Equity`, MaxCase as the highest positive `Final_Net_Project_Equity`, and says that absence of a positive value yields `UNDEFINED_BUSINESS_RULE` rather than a fabricated substitute. This is an approved normative amendment, not an inference from a candidate branch or a state label.
+
+Accordingly:
+- The five-role contract is **AUTHORIZED_BY_AMENDMENT_03**; the preliminary conflict classification is withdrawn for this scope.
+- The verified Stage 9A package finding remains: `MISSING_EVIDENCE` for the fifth MaxCase payload in the 25 current enrichment archives.
+- Deriving MaxCase from identity-matched canonical TrialResult rows is now an allowed read-only derivation path. It must use the approved 11,005-trial cohort, select the highest **positive** `Final_Net_Project_Equity` with the smallest `trial_id` tie-break, and bind the chosen trial's daily ledger rows to the same source identity. If no positive value exists, fail closed as `UNDEFINED_BUSINESS_RULE`.
+- No production trial is rerun, no source/seed/RNG/cohort identity is changed, and no final workbook is produced until the remaining mandatory gates and acceptance checks pass.
+
 ## Acceptance status at R4 creation
 
 - Code changes: pending.
