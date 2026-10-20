@@ -340,6 +340,8 @@ def run_audit() -> dict[str, Any]:
                 daily_rows.sort(key=lambda row: row["date"])
                 if len(daily_rows) != int(selected_check["daily_rows"]) or not daily_rows:
                     raise RuntimeError(f"STAGE12_MAXCASE_DAILY_ROW_COUNT_MISMATCH: {scenario}/{selected['trial_id']}")
+                if daily_rows[0]["date"] != "2027-01-01" or daily_rows[-1]["date"] != selected["final_close_date"]:
+                    raise RuntimeError(f"STAGE12_MAXCASE_FINAL_DATE_MISMATCH: {scenario}/{selected['trial_id']}")
                 expected_hash = trial_hashes[int(selected["trial_id"])]
                 if any(row.get("result_sha256") != expected_hash for row in daily_rows):
                     raise RuntimeError(f"STAGE12_MAXCASE_RESULT_SHA_MISMATCH: {scenario}/{selected['trial_id']}")
