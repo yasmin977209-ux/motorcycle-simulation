@@ -219,6 +219,16 @@ def write_readme(wb, manifest, validation, excel_errors):
         ("Validation status", validation.get("status", "not-provided")),
         ("Excel sheets", len(wb.sheetnames)),
         ("Excel error count", len(excel_errors)),
+        ("STATISTICAL_POLICY_LEVEL", "FIXED_LOOK_WITH_CS_PENDING"),
+        ("MaxCase", "PENDING_DATA_SOURCE (trial_id=60 for C050_G000; scenario-specific IDs in REPRESENTATIVE_CASES)"),
+        ("log_events", "PENDING_APPROVAL; V3 metadata used provisionally"),
+        ("Gate A", "BLOCKED"),
+        ("LossCase source mapping", "LossCase -> representatives/Loss.json"),
+        ("MaxCase pending rows", len(EXPECTED_SCENARIOS)),
+        ("Workbook status", "PROVISIONAL — NOT ACCEPTED"),
+        ("Release status", "BLOCKED / NOT_AUTHORIZED"),
+        ("C050_G000 Artifact override", "V3 Artifact 11503510055 / Run 37662891608 (provisional)"),
+        ("Language", "English — technical schema headers and sheet identifiers preserved"),
     ]
     write_table(ws, ["Item", "Value"], rows)
     style_sheet(ws, "A2")
@@ -459,12 +469,13 @@ def append_representative_scenario(
         "total_operating_revenue", "bad_debt", "guarantee_recovered",
     )
     by_id = {}
-    for trial in trial_rows:
-        trial_id = trial.get("trial_id")
-        if type(trial_id) is int:
-            if trial_id in by_id:
-                raise RuntimeError(f"REPRESENTATIVE_TRIAL_ID_DUPLICATE: {scenario}/{trial_id}")
-            by_id[trial_id] = trial
+    if trial_rows is not None:
+        for trial in trial_rows:
+            trial_id = trial.get("trial_id")
+            if type(trial_id) is int:
+                if trial_id in by_id:
+                    raise RuntimeError(f"REPRESENTATIVE_TRIAL_ID_DUPLICATE: {scenario}/{trial_id}")
+                by_id[trial_id] = trial
 
     headers = REPRESENTATIVE_CASE_HEADERS
     for role in required_roles:
@@ -490,14 +501,15 @@ def append_representative_scenario(
         payload = representative_payloads[role]
         stage13.validate_representative_payload(scenario, role, trial_id, payload)
         summary = payload["summary"]
-        source_row = by_id.get(trial_id)
-        if source_row is None:
-            raise RuntimeError(f"STAGE13_REPRESENTATIVE_TRIAL_BINDING_INVALID: {scenario}/{role}/trial_id={trial_id}")
-        for field in summary_fields:
-            if field in summary and field in source_row and summary[field] != source_row[field]:
-                raise RuntimeError(
-                    f"STAGE13_REPRESENTATIVE_RESULT_MISMATCH: {scenario}/{role}/trial_id={trial_id}/{field}"
-                )
+        if trial_rows is not None:
+            source_row = by_id.get(trial_id)
+            if source_row is None:
+                raise RuntimeError(f"STAGE13_REPRESENTATIVE_TRIAL_BINDING_INVALID: {scenario}/{role}/trial_id={trial_id}")
+            for field in summary_fields:
+                if field in summary and field in source_row and summary[field] != source_row[field]:
+                    raise RuntimeError(
+                        f"STAGE13_REPRESENTATIVE_RESULT_MISMATCH: {scenario}/{role}/trial_id={trial_id}/{field}"
+                    )
         source_ref = f"representatives/{role_to_payload_labels[role]}.json"
         _append_representative_row(ws, [
             scenario, role, "SUMMARY", trial_id, None, summary.get("final_close_date"),
@@ -537,7 +549,7 @@ def write_representatives(
     """Write all representative roles; P16 uses the incremental scenario API to avoid re-reading large JSONs."""
     ws = start_representative_sheet(wb)
     for scenario in EXPECTED_SCENARIOS:
-        rows = [] if trial_rows_by_scenario is None else trial_rows_by_scenario[scenario]
+        rows = None if trial_rows_by_scenario is None else trial_rows_by_scenario[scenario]
         append_representative_scenario(
             ws, scenario, representatives_by_scenario[scenario], assignments[scenario],
             role_to_payload_labels, rows,
@@ -564,11 +576,21 @@ def write_stats_sheet(wb, scenario, rows, total_capital):
 
 
 def write_daily_sheet(wb, scenario, payload):
-    ws=wb.create_sheet(f"{scenario}_DAILY")
-    rows=payload["daily"]
-    headers=list(rows[0]) if rows else ["date"]
-    write_table(ws,headers,rows,number_formats={h:FINANCE_FMT for h in headers if h not in {"date","Final_Close_Date"}})
-    style_sheet(ws,"B2")
+    ws = wb.create_sheet(f"{scenario}_DAILY")
+    rows = payload["daily"]
+    headers = list(rows[0]) if rows else ["date"]
+    value_rows = [[row.get(header) for header in headers] for row in rows]
+    write_table(
+        ws,
+        headers,
+        value_rows,
+        number_formats={
+            header: FINANCE_FMT
+            for header in headers
+            if header not in {"date", "Final_Close_Date"}
+        },
+    )
+    style_sheet(ws, "B2")
 
 
 def write_assets_sheet(wb, scenario, payload):
