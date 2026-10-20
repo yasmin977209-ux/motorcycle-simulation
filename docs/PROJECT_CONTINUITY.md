@@ -1309,3 +1309,11 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+
+## CP3 — DAILY serialization — 2026-10-21
+
+- **Status:** `PARTIAL / MISSING_EVIDENCE`. Changes are candidate-only on `tmp/cp-path3-daily-workflow-20261021`, based on live main `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; main was not written.
+- R4: `docs/audits/CP3_DAILY_SERIALIZATION_R4_2026-10-21.md`, blob `310ac658f8440478691da96a235fdd4b434e24a2`.
+- DAILY mapping-to-values code: `scripts/excel_builder.py`, blob `10d0447b30e4dcda5ca33596cc0c107c5921d8b6`. Regression: `tests/test_excel_daily_serialization.py`, blob `95491e072c449f5f81b6fa82859898434eb5b813`. Temporary workflow: `.github/workflows/cp-path3-daily-workflow-20261021.yml`, blob `821f4782414828e24aab89a3fca878bb8031759b`.
+- Final code/workflow commit observed: `158ca2558bcbeccbf90f593a50e28478359fe4ea`. The commit-status endpoint returned an empty status list; the current available GitHub connector does not expose a list of Actions runs by workflow/branch, so a Run ID, conclusion, tested-SHA linkage, and artifact contents have **not** been verified here. Do not claim CI PASS until those exact details are read back.
+- Scope: one synthetic XLSX serialization regression only. No production workbook build, simulation, trial, checkpoint, source identity or data changes.
