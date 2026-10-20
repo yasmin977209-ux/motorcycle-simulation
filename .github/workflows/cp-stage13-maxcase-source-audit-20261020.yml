@@ -20,7 +20,7 @@ jobs:
   source-audit:
     name: Verify existing Stage 7/10 rows and select MaxCase IDs
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout exact candidate SHA
         uses: actions/checkout@v4
@@ -53,6 +53,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stage13-maxcase-source-audit-${{ github.run_id }}
-          path: stage13_maxcase_source_audit.json
+          path: |
+            stage13_maxcase_source_audit.json
+            stage13_maxcase_daily_payloads.json
           if-no-files-found: error
           retention-days: 30
