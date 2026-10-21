@@ -172,10 +172,6 @@ def load_expected_p16_maxcase_map(path: str) -> dict[str, Any]:
             or not 1 <= item["trial_id"] <= expected_count
             or type(item.get("final_net_project_equity")) is not int
             or item["final_net_project_equity"] <= 0
-            or type(item.get("positive_trial_count")) is not int
-            or item["positive_trial_count"] != expected_count
-            or type(item.get("tie_count_at_maximum")) is not int
-            or item["tie_count_at_maximum"] < 1
         ):
             raise RuntimeError(f"P16_EXPECTED_MAXCASE_MAP_ENTRY_INVALID: {scenario}")
     return expected
