@@ -1319,3 +1319,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Not closed: Gate A provider wiring/source identity drift, the exact approved near-zero CI interpretation, checkpoint/stop-policy reconciliation, and final delivery. No Monte Carlo/Trial/Checkpoint, Workflow, merge, PR, or Release was performed.
 - Next permitted independent CP: continue source-only/root-cause investigation of the P16 monetary floating-point tail without changing money quantile rules or output artifacts; stop at the boundary if reference/decision does not define the intended numeric semantics.
 
+### CP-STAGE7-FAILCLOSED-TYPE-GUARDS — exact-SHA regression result (2026-10-21)
+
+- Candidate CI Run `39675160043`, exact tested SHA `17d91b3f4ea8bc8579edf017de81e91199d107ae`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675160043.
+- `tests/test_run_batch.py` and target-module compile checks all passed after repository requirements installation. Coverage includes invalid checkpoint N type values and malformed Gate B Boolean evidence across all three metrics.
+- R4 result report: `docs/audits/CP_STAGE7_FAILCLOSED_REGRESSION_CI_R4_2026-10-21.md`, read-back blob `54b4dd95034e738d27b5400464dba100de0c54fe`.
+- Disposition: `PASS_FOCUSED_CANDIDATE_CI`; no merge or production run. Gate A, source SHA drift, checkpoint stop policy and delivery acceptance remain unresolved.
+
