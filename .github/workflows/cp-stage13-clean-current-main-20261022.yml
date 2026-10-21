@@ -1,0 +1,48 @@
+name: Stage 13 clean current-main synthetic integration verification
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-clean-current-main-20261022"
+    paths:
+      - "scripts/stage13_assemble.py"
+      - "scripts/excel_builder.py"
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "tests/test_stage13_assembler.py"
+      - "tests/test_stage13_maxcase_pending_fields.py"
+      - "tests/test_excel_builder_adaptive_mode.py"
+      - "tests/test_excel_builder_legacy_compat.py"
+      - "tests/test_excel_builder_precision.py"
+      - ".github/workflows/cp-stage13-clean-current-main-20261022.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-stage13-clean-current-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  synthetic-contract:
+    name: Stage 13 synthetic and entrypoint contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile Stage 13 modules
+        run: python -m compileall -q scripts/stage13_assemble.py scripts/stage13_maxcase_source_audit.py scripts/excel_builder.py
+      - name: Run synthetic and compatibility tests only
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q             tests/test_stage13_assembler.py             tests/test_stage13_maxcase_pending_fields.py             tests/test_excel_builder_adaptive_mode.py             tests/test_excel_builder_legacy_compat.py             tests/test_excel_builder_precision.py
