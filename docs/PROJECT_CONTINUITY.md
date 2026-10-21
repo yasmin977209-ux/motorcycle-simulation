@@ -1309,3 +1309,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-GATEA-PROVIDER-COVERAGE-AUTHORITY — read-only audit (2026-10-21)
+
+- R4: `docs/audits/CP_GATEA_PROVIDER_COVERAGE_AUTHORITY_R4_2026-10-21.md`, updated blob `efaf1b7849d2424e6446b2a2b8ee817738cd3441`.
+- Current main source `run_batch.py` does not pass the five required golden/source identity inputs to `evaluate_gate_a`; the helper correctly remains BLOCKED when absent.
+- Historical bridge Run `38169163565` is a scoped pass for 11,005 TrialResult fingerprints / 25 scenarios / 22,546,465 daily rows and exact aggregate source map SHA `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`. It does not connect a provider into main production callers.
+- Live read-back of preflight Artifact `12016903462` found 25,205 fingerprints, 20 non-C100 maps through N=1200, five C100 IDs=1, and only `C030_G030` through N=2400. It depends on extension Artifact `11940485523` and decision labels `D-2026-10-14-01` / `D-2026-10-15-10` absent from main's effective decision log. Its source identity exception records byte-level `daily_engine.py` drift; 10/10 replay fingerprints did not make the whole historical pytest suite pass (3 failed, 384 passed, 1 skipped).
+- Judgment: `GATE A = BLOCKED / PROVIDER AUTHORITY + COVERAGE + SOURCE IDENTITY UNRESOLVED`. Do not wire the candidate or run further checkpoints solely from the successful preflight. No code, workflow, Golden map, identity, trial, data or state was modified.
+- Disposition: `PASS_SCOPED_READ_ONLY_AUDIT / MAIN_UNCHANGED`.
+
