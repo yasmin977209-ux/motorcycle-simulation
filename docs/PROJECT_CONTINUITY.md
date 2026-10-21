@@ -1309,3 +1309,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-P16-REPORT-PROVENANCE-VERIFIED — synthetic exact-SHA regression (2026-10-21)
+
+- R4: `docs/audits/CP_P16_REPORT_PROVENANCE_TEST_R4_2026-10-21.md`, final blob `c86aad0016ebc58d87d0d26de97c0ddfd422f873`.
+- Candidate branch `tmp/cp-p16-report-provenance-verified-20261021`; exact SHA tested: `41dc428cc63fdaef2e8b045a51bf0f1bdbe219d4`; CI Run `39678852090` passed: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39678852090.
+- Unit test `tests/test_p16_report_provenance.py` blob `6055ec2aa842c649cccd1ebfa2604ebb6cbbb3b6` passes (1 passed, 0 failed/skipped). It monkeypatches Parquet reads to empty synthetic rows and checks both English/Arabic full report templates use the actual branch argument and preserve pending/non-accepted labels.
+- Producer blob `scripts/p16_produce_deliverables_v4.py` remains `781615b297095a8fc625116575f1064941b29cb4`.
+- Evidence artifact `12381414115`, SHA-256 `3a340ebd979363065963295ed6f81df644dd259658113c1ada10a6309666c8c4`, verified locally; JUnit/log/source identity agree, and source identity says no production artifacts downloaded, no workbook built, no simulation/trial/checkpoint run.
+- Disposition: `PASS_FOCUSED_SYNTHETIC_CI / NOT_P16_RUNTIME_BUILD`. This replaces the prior static-only verdict for branch-name provenance only; no P16 workbook/output or source data changed.
+
