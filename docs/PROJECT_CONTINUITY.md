@@ -1390,3 +1390,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Full-suite R4: `docs/audits/CP_STAGE13_FULL_SUITE_REGRESSION_R4_2026-10-22.md`, latest result blob `440252140e67b560f1e5651809f912cb128f7727`.
 - Disposition: keep PR #59 draft; require explicit Stage 5 fixture/evidence provision or a documented repository-suite scope decision before a full suite pass can be claimed. No main, historical data or production artifacts changed.
 
+#### Independent baseline confirmation of the full-suite missing Stage 5 fixtures (2026-10-22)
+
+- Separate pre-port control Run `39686434487` on `tmp/cp-stage5-full-suite-baseline-20261022`, SHA `08d1ebedb0d970a9cde7afea5aebcebd4ed8a29f`, executed the same four Acceptance 16 tests before the Stage 13 assembler existed and failed on the same missing files: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39686434487.
+- Artifact `12386996668`, ZIP SHA-256 `aae5a1314d87a572c086b216fca91c9dbe6b598e0a16755d142dda02de3a93d9`, has `source_identity.json` recording `stage13_assembler_present=false`, `stage5_fixture_paths_in_git=[]`, and `production_data_generated=false`, `simulation_trials_or_checkpoints_run=false`.
+- Its JUnit records 4/4 failures, all `FileNotFoundError` on the same Stage 5 outputs. This corroborates the failures in Run `39694421445` as pre-existing missing external Stage 5 fixtures. Full suite still is not green; no tests or fixtures were altered.
+- R4 `docs/audits/CP_STAGE13_FULL_SUITE_REGRESSION_R4_2026-10-22.md` now includes the baseline confirmation (blob `861ada68ddee7768849651ef7fe69a6853623a05`).
+
