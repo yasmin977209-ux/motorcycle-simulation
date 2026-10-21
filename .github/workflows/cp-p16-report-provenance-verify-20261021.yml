@@ -1,0 +1,79 @@
+name: P16 report provenance focused regression
+
+on:
+  push:
+    branches:
+      - "tmp/cp-p16-report-provenance-verified-20261021"
+    paths:
+      - "scripts/p16_produce_deliverables_v4.py"
+      - "tests/test_p16_report_provenance.py"
+      - ".github/workflows/cp-p16-report-provenance-verify-20261021.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-p16-report-provenance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  report-unit-test:
+    name: Synthetic report branch provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Prepare evidence directory
+        run: mkdir -p p16_report_provenance_evidence
+      - name: Compile producer and test
+        run: python -m compileall -q scripts/p16_produce_deliverables_v4.py tests/test_p16_report_provenance.py
+      - name: Run synthetic report provenance test only
+        env:
+          PYTHONPATH: .
+        run: |
+          set -o pipefail
+          python -m pytest -q tests/test_p16_report_provenance.py             --junitxml=p16_report_provenance_evidence/pytest.junit.xml             2>&1 | tee p16_report_provenance_evidence/pytest.log
+      - name: Capture tested code/test identities
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          paths = [
+              "scripts/p16_produce_deliverables_v4.py",
+              "tests/test_p16_report_provenance.py",
+          ]
+          def run(*args):
+              return subprocess.check_output(args, text=True).strip()
+          record = {
+              "tested_head_sha": run("git", "rev-parse", "HEAD"),
+              "git_blob_sha": {path: run("git", "hash-object", path) for path in paths},
+              "production_artifacts_downloaded": False,
+              "production_workbook_built": False,
+              "simulation_trials_or_checkpoints_run": False,
+          }
+          Path("p16_report_provenance_evidence/source_identity.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Upload inspectable regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-report-provenance-regression
+          path: p16_report_provenance_evidence/
+          if-no-files-found: warn
+          retention-days: 30
