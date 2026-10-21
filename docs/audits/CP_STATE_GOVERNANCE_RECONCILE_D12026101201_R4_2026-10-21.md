@@ -37,3 +37,12 @@ No changes to statistical computation or executable code, checkpoint outcomes, `
 ## Disposition
 
 `PENDING_STATIC_READBACK`. This reconciles an approved decision's metadata index only; it is not new authority to alter Gate B policy, nor evidence that Gate A or overall delivery has passed.
+
+
+## Static read-back result
+
+- `state.json` updated on the candidate branch; prior blob `2178260bb18efeb81437486f13b6d10cf5e85936`; final blob after decision index and stale blocker removal: `32e9d039d2df628ca367b9dd8810f8e40bc80aec`.
+- Valid JSON read-back confirmed the new `governance_decisions.D-2026-10-12-01` entry, the already-approved values from DECISIONS_LOG, removal of exactly the stale governance-gap blocker, and preservation of all other open blockers.
+- Preserved `state.sha` parent pointer `0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED`; neither was rewritten. No rule, statistical computation, data or artifact changed.
+- Candidate diff against base before continuity note: 3 commits ahead / 0 behind; only this R4 and `state.json` changed. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`; main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- Disposition: `PASS_STATIC_STATE_RECONCILIATION_CANDIDATE_ONLY`. The other six blockers remain open; this does not accept overall delivery.
