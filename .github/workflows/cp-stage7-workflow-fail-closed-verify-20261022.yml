@@ -1,4 +1,4 @@
-name: Stage 7 fail-closed preflight verification
+name: Stage 7 fail-closed preflight verification after Gate B and source restore
 
 on:
   push:
