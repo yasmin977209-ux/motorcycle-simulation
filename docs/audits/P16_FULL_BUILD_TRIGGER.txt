@@ -1,0 +1,1 @@
+Authorized by the current M3 sequence. Launch exactly one full provisional P16 build using source code SHA 30ba2d5d47d3a3d6c117f0ef667115401c337ad7 after PASS_SCOPED_DIAGNOSTIC on C100_G100 and C030_G030. Existing artifacts only; no simulation, trials, CS, source/data/Parquet changes, main writes, merge or release.
