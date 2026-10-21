@@ -24,153 +24,103 @@
   "maxcase_by_scenario": {
     "C030_G000": {
       "trial_id": 199,
-      "final_net_project_equity": 28604150,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 28604150
     },
     "C030_G030": {
       "trial_id": 233,
-      "final_net_project_equity": 42228800,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 42228800
     },
     "C030_G050": {
       "trial_id": 366,
-      "final_net_project_equity": 56978100,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 56978100
     },
     "C030_G070": {
       "trial_id": 134,
-      "final_net_project_equity": 71289450,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 71289450
     },
     "C030_G100": {
       "trial_id": 280,
-      "final_net_project_equity": 101923650,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 101923650
     },
     "C050_G000": {
       "trial_id": 60,
-      "final_net_project_equity": 308412450,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 308412450
     },
     "C050_G030": {
       "trial_id": 122,
-      "final_net_project_equity": 316720350,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 316720350
     },
     "C050_G050": {
       "trial_id": 416,
-      "final_net_project_equity": 323662600,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 323662600
     },
     "C050_G070": {
       "trial_id": 7,
-      "final_net_project_equity": 329546000,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 329546000
     },
     "C050_G100": {
       "trial_id": 172,
-      "final_net_project_equity": 348013800,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 348013800
     },
     "C070_G000": {
       "trial_id": 165,
-      "final_net_project_equity": 209787500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209787500
     },
     "C070_G030": {
       "trial_id": 429,
-      "final_net_project_equity": 209621500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209621500
     },
     "C070_G050": {
       "trial_id": 214,
-      "final_net_project_equity": 209293500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209293500
     },
     "C070_G070": {
       "trial_id": 441,
-      "final_net_project_equity": 209749500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209749500
     },
     "C070_G100": {
       "trial_id": 106,
-      "final_net_project_equity": 209806500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209806500
     },
     "C085_G000": {
       "trial_id": 408,
-      "final_net_project_equity": 209888000,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209888000
     },
     "C085_G030": {
       "trial_id": 53,
-      "final_net_project_equity": 209880000,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209880000
     },
     "C085_G050": {
       "trial_id": 207,
-      "final_net_project_equity": 209877500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209877500
     },
     "C085_G070": {
       "trial_id": 285,
-      "final_net_project_equity": 209886500,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209886500
     },
     "C085_G100": {
       "trial_id": 439,
-      "final_net_project_equity": 209893000,
-      "positive_trial_count": 450,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209893000
     },
     "C100_G000": {
       "trial_id": 1,
-      "final_net_project_equity": 209671000,
-      "positive_trial_count": 1,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209671000
     },
     "C100_G030": {
       "trial_id": 1,
-      "final_net_project_equity": 209671000,
-      "positive_trial_count": 1,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209671000
     },
     "C100_G050": {
       "trial_id": 1,
-      "final_net_project_equity": 209671000,
-      "positive_trial_count": 1,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209671000
     },
     "C100_G070": {
       "trial_id": 1,
-      "final_net_project_equity": 209671000,
-      "positive_trial_count": 1,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209671000
     },
     "C100_G100": {
       "trial_id": 1,
-      "final_net_project_equity": 209671000,
-      "positive_trial_count": 1,
-      "tie_count_at_maximum": 1
+      "final_net_project_equity": 209671000
     }
   }
 }
