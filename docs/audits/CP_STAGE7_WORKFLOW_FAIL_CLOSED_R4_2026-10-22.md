@@ -1,0 +1,43 @@
+# R4 — Stage 7 workflow concurrency and state fail-closed hardening — 2026-10-22
+
+## Scope and baseline
+
+- Base/main HEAD: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- Candidate branch: `tmp/cp-stage7-workflow-fail-closed-20261022`.
+- Production workflow base blob: `4bb3b8df6742f51087b45eed1b9200468f12ac60`.
+- Test base blob: `6a4e11399e2c6b85e9dc240a0c669f395a639e66`.
+- Classification: `K_WORKFLOW + K_TEST`, candidate-only static/authoring tests. No production workflow run is authorized by this CP.
+
+## Verified defects
+
+1. Concurrency key `stage7-full-run-${{ github.run_id }}` differs across runs and cannot serialize concurrent executions on the same branch.
+2. Preflight holds `actions: write`, cancels any other incomplete Stage 7 run found in a hard-coded branch scan, then force-PATCHes existing `stage7-state/<scenario>` refs back to `SOURCE_SHA` when their `run_id` differs. These are remote side effects before model-file byte identity is checked.
+3. Model source identity is only fully checked later in each simulation job. Consequently the preflight could have mutated state refs before detecting `MODEL_SOURCE_DRIFT_DETECTED`.
+
+## Intended minimal change
+
+- Concurrency group: `stage7-full-run-${{ github.workflow }}-${{ github.ref }}`, with `cancel-in-progress: false`; runs for the same workflow/ref queue instead of running side by side.
+- Remove preflight's automatic cancellation and switch to read-only detection: if another incomplete run is present (including an older run that predates the new concurrency group), emit a concrete conflict and stop.
+- Set workflow `actions: read`, retaining `contents: write` only because the scenario StateStore writes state JSON and checkpoints.
+- Move full pinned model-file identity comparison into preflight **before any state-branch decision**. A source mismatch exits before state access/changes.
+- For an existing scenario state ref: resume only if its stored `run_id` equals this run ID. If it belongs to any other run or the state cannot be read/identified, emit `STAGE7_STATE_CONFLICT` and stop. Never PATCH the existing ref to `SOURCE_SHA`, delete state, or silently restart from a clean history.
+- Keep the runtime's separate source-identity check in each simulation job as defense in depth.
+- Update authoring tests to assert serialization and non-destructive fail-closed behavior. Add a candidate-only read-only verification workflow that compiles/parses code and runs `tests/test_stage7_authoring.py`; it must not invoke the production workflow.
+
+## Owner authorization / restrictions
+
+The owner explicitly authorized all necessary work in the conversation (2026-10-21/22). This R4 narrows that delegation to the listed workflow/test lines. It does not authorize running the production workflow, canceling existing jobs, patching remote state refs, executing trials/checkpoints, changing source SHA/seed/RNG/trial identity, changing statistical acceptance, merging, or releasing.
+
+## Acceptance criteria
+
+1. YAML parses and authoring tests pass on exact candidate SHA.
+2. Same workflow/ref gets a stable concurrency group, with non-canceling queue semantics.
+3. No automatic stale-run cancellation endpoint is invoked and no `PATCH` of any `stage7-state/*` ref exists in preflight.
+4. Preflight validates exact model-source byte identity before it inspects or decides about state refs.
+5. Same-run state may be preserved; state from another run or invalid state fails closed without mutation.
+6. No production workflow run, Monte Carlo, Trial, or Checkpoint occurred.
+7. Candidate compare lists only this R4, the Stage 7 workflow, authoring test file, candidate verification workflow, and continuity record.
+
+## Status
+
+`PENDING_STATIC_READBACK_AND_CI`. This is a preventative, candidate-only workflow repair; it does not establish Gate A or overall stability.
