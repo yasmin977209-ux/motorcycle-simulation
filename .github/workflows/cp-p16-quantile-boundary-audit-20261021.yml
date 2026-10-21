@@ -1,0 +1,48 @@
+name: P16 exact quantile boundary read-only audit
+
+on:
+  push:
+    branches:
+      - "tmp/cp-p16-quantile-boundary-audit-20261021"
+    paths:
+      - "scripts/audit_p16_quantile_boundary.py"
+      - ".github/workflows/cp-p16-quantile-boundary-audit-20261021.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-p16-quantile-boundary-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-only-audit:
+    name: Verify immutable input and exact P90 order statistics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact audit SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Run read-only exact quantile audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: python scripts/audit_p16_quantile_boundary.py
+      - name: Upload evidence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-quantile-boundary-audit
+          path: p16_quantile_audit/quantile_boundary_report.json
+          if-no-files-found: warn
+          retention-days: 30
