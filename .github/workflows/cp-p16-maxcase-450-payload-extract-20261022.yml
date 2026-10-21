@@ -1,0 +1,127 @@
+name: P16 450-trial MaxCase read-only source extraction
+
+on:
+  push:
+    branches:
+      - "tmp/cp-p16-maxcase-450-payload-extract-20261022"
+    paths:
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "docs/audits/p16_maxcase_expected_ids_20261021.json"
+      - "docs/audits/stage9a_payload_inventory_20261020.json"
+      - "tests/test_p16_maxcase_selection_scope.py"
+      - ".github/workflows/cp-p16-maxcase-450-payload-extract-20261022.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-p16-maxcase-450-payload-extract-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-only-extraction:
+    name: Verify P16 cohort and extract selected Stage 12 daily series
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify immutable P16 artifact and expected selection map
+        env:
+          GH_TOKEN: ${{ github.token }}
+          P16_ZIP: ${{ runner.temp }}/p16-primary-audit.zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12363135623/zip" > "${P16_ZIP}"
+          printf '%s  %s\n' "7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada" "${P16_ZIP}" | sha256sum -c -
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import Path
+
+          p16_zip = Path(os.environ["P16_ZIP"])
+          fixture_path = Path("docs/audits/p16_maxcase_expected_ids_20261021.json")
+          expected_zip_sha = "7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada"
+          expected_manifest_sha = "c50488f27541e20ba15b99d259966c41b51a5a15f5e8805cb8dd57f55027a44c"
+          actual_zip_sha = hashlib.sha256(p16_zip.read_bytes()).hexdigest()
+          assert actual_zip_sha == expected_zip_sha, "P16_ARTIFACT_ZIP_SHA_MISMATCH"
+          with zipfile.ZipFile(p16_zip) as archive:
+              assert "output_manifest.json" in archive.namelist(), "P16_OUTPUT_MANIFEST_MISSING"
+              manifest_raw = archive.read("output_manifest.json")
+          assert hashlib.sha256(manifest_raw).hexdigest() == expected_manifest_sha, "P16_OUTPUT_MANIFEST_SHA_MISMATCH"
+          manifest = json.loads(manifest_raw)
+          fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+          provenance = fixture["artifact_provenance"]
+          assert manifest.get("run_id") == provenance["p16_source_run_id"] == 39635040311
+          assert manifest.get("tested_sha") == provenance["p16_tested_source_sha"] == "30ba2d5d47d3a3d6c117f0ef667115401c337ad7"
+          assert manifest.get("source_sha") == provenance["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
+          assert manifest.get("cohort_total_trials") == provenance["cohort_total_trials"] == 9005
+          assert manifest.get("scenario_count") == 25
+          recorded = manifest.get("maxcase_by_scenario")
+          expected = fixture.get("maxcase_by_scenario")
+          assert isinstance(recorded, dict) and isinstance(expected, dict)
+          assert set(recorded) == set(expected) and len(expected) == 25
+          for scenario in sorted(expected):
+              assert recorded[scenario]["trial_id"] == expected[scenario]["trial_id"], f"P16_TRIAL_ID_MISMATCH:{scenario}"
+              assert recorded[scenario]["final_net_project_equity"] == expected[scenario]["final_net_project_equity"], f"P16_EQUITY_MISMATCH:{scenario}"
+          print(json.dumps({
+              "p16_artifact_sha256": actual_zip_sha,
+              "output_manifest_sha256": expected_manifest_sha,
+              "verified_scenarios": len(expected),
+              "cohort_total_trials": 9005,
+              "maxcase_selection_map_match": True,
+              "historical_artifact_modified": False,
+          }, sort_keys=True))
+          PY
+      - name: Compile extraction and source-identity modules
+        run: python -m compileall -q scripts/stage13_maxcase_source_audit.py scripts/stage13_gatea_fingerprint_bridge.py
+      - name: Test P16 450-trial selection contract
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_p16_maxcase_selection_scope.py
+      - name: Extract MaxCase daily series from existing Stage 12 artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: python scripts/stage13_maxcase_source_audit.py --maxcase-trial-id 450 --expected-p16-map docs/audits/p16_maxcase_expected_ids_20261021.json
+      - name: Assert truthful extraction disposition
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("stage13_maxcase_source_audit.json").read_text(encoding="utf-8"))
+          payload = json.loads(Path("stage13_maxcase_daily_payloads.json").read_text(encoding="utf-8"))
+          assert report["integrity_status"] == "PASS_SCOPED", report
+          assert report["summary"]["p16_expected_selections_matched"] == 25, report["summary"]
+          assert report["summary"]["p16_expected_selections_expected"] == 25, report["summary"]
+          assert report["summary"]["maxcase_positive_selected"] == 25, report["summary"]
+          assert payload["scenario_count"] == 25
+          assert payload["p16_expected_selections_matched"] == 25
+          assert payload["missing_fields_status"] == "MISSING_EVIDENCE"
+          assert set(payload["missing_fields"]) == {"Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance"}
+          assert payload["source_identity"]["stage9a_manifest_git_blob"] == "e796fa2443493b607f1f9c60b58eb63607959c26"
+          print("PASS_SCOPED_READ_ONLY_450_TRIAL_EXTRACTION / PARTNER_MEMO_FIELDS_MISSING_EVIDENCE")
+          PY
+      - name: Upload read-only extraction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-maxcase-450-daily-extraction
+          path: |
+            stage13_maxcase_source_audit.json
+            stage13_maxcase_daily_payloads.json
+          if-no-files-found: warn
+          retention-days: 30
