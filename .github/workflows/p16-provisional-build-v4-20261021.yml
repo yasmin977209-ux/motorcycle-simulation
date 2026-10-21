@@ -13,7 +13,6 @@ on:
       - tests/test_stage13_assembly_contract.py
       - tests/test_excel_daily_serialization.py
       - tests/test_p16_provisional_outputs.py
-      - docs/audits/P16_PROVISIONAL_OUTPUTS_R4_2026-10-21.md
 
 permissions:
   contents: read
@@ -103,7 +102,6 @@ jobs:
       - name: Build seven provisional deliverables from existing artifacts
         id: build
         if: steps.tests.outcome == 'success'
-        continue-on-error: true
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
