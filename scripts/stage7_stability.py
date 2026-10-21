@@ -50,10 +50,12 @@ def filter_statistical_history(
 
     for item in history:
         raw_n = item.get("n")
-        try:
-            n = int(raw_n)
-        except (TypeError, ValueError) as exc:
-            raise ValueError("stability history contains a missing or invalid N") from exc
+        if type(raw_n) is not int:
+            raise ValueError(
+                "stability history N must be an integer; "
+                "booleans, strings, floats, and missing values are invalid"
+            )
+        n = raw_n
 
         if n in seen:
             raise ValueError(f"duplicate stability-history N={n}")
