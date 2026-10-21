@@ -39,3 +39,13 @@ No main writes, merge, PR closure, release, production workflow dispatch, simula
 ## Status
 
 `PENDING_VALIDATION`. No acceptance claim should be made until the exact combined candidate SHA passes CI and code/test blobs are read back.
+
+
+## Exact-SHA integrated regression result
+
+- Candidate CI Run: `39675573231`; URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675573231
+- Exact tested SHA: `04ac00d0163ca2ee352863141f09d7e3c1074645`; status `completed`, conclusion `success`.
+- All steps passed: exact-SHA checkout, Python setup, requirements install, compilation, and focused `tests/test_run_batch.py`.
+- Read-back before recording result: `run_batch.py` blob `bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`; `scripts/stage7_stability.py` blob `13872f6aa9405bc72532d32756979dc2c7e8695d`; `tests/test_run_batch.py` blob `476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`.
+- This is scoped candidate CI for the changed code and tests, not production Stage 7 execution, not a historical checkpoint, not Gate A acceptance, and not overall statistical stability.
+- Disposition: `PASS_FOCUSED_INTEGRATED_CI`; no main write, merge, production run, or release.
