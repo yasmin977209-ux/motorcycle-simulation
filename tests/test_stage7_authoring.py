@@ -133,7 +133,8 @@ def test_stage7_preflight_fails_closed_on_existing_active_stage7_runs() -> None:
     assert "GH_TOKEN: ${{ github.token }}" in preflight
     assert "gh api --paginate" in preflight
     assert "actions/runs?branch=tmp%2Fstage7-full-run-20261004" in preflight
-    assert "select(.conclusion == null)" in preflight
+    assert 'select(.status == "in_progress")' in preflight
+    assert "select(.conclusion == null)" not in preflight
     assert "STAGE7_ACTIVE_RUN_CONFLICT=" in preflight
     assert "refusing to cancel another run" in preflight
     assert "actions/runs/${run_id}/cancel" not in preflight
