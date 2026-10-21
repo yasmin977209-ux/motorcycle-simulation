@@ -529,11 +529,15 @@ def write_representatives(
         "guarantee_recovered": "guarantee_recovered",
     }
 
+    current_row = ws.max_row
+
     def append_row(row):
+        nonlocal current_row
         if len(row) != len(headers):
             raise RuntimeError(f"REPRESENTATIVE_ROW_WIDTH_MISMATCH: {len(row)} != {len(headers)}")
         ws.append([py_value(value) for value in row])
-        row_num = ws.max_row
+        current_row += 1
+        row_num = current_row
         for cell in ws[row_num]:
             cell.alignment = RIGHT
             header = headers[cell.column - 1]
@@ -545,7 +549,7 @@ def write_representatives(
 
     for scenario_index, scenario in enumerate(EXPECTED_SCENARIOS, start=1):
         scenario_started = time.monotonic()
-        start_row = ws.max_row
+        start_row = current_row
         by_id = {int(row["trial_id"]): row for row in rows_by_scenario[scenario]}
         _p16_log("representative_scenario_start", index=scenario_index, total=len(EXPECTED_SCENARIOS), scenario=scenario)
         _stream_extract_non_p50_roles(root, scenario)
@@ -612,7 +616,7 @@ def write_representatives(
                 index=scenario_index,
                 total=len(EXPECTED_SCENARIOS),
                 scenario=scenario,
-                rows_written=ws.max_row - start_row,
+                rows_written=current_row - start_row,
                 elapsed_seconds=round(time.monotonic() - scenario_started, 3),
             )
     style_sheet(ws, "E2")
