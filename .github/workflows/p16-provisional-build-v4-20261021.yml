@@ -27,7 +27,7 @@ jobs:
   build-provisional:
     name: Verify existing evidence and build provisional deliverables
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
