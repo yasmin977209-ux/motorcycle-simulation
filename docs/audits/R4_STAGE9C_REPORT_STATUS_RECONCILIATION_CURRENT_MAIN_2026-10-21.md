@@ -47,3 +47,12 @@ Accept only as an append-only documentation clarification after exact diff/read-
 ## Status
 
 `PENDING_STATIC_READBACK`.
+
+
+## Post-write read-back
+
+- Stage 9C report: original blob `81fb79720988cfe261fa6d8d29371e616f9f9850`, candidate addendum blob `5644107020bb16344fd6212b007cb68cc0f9584d`. The complete original content is an exact byte-for-byte prefix of the candidate file.
+- Unified closure report: original blob `f2e3733b9ff48d00e5b512523a2ba98d20a3af33`, candidate addendum blob `47b6e9b10a02619132f3c820c28ae938c12168d5`. The complete original content is an exact byte-for-byte prefix of the candidate file.
+- Candidate `state.json` blob remains exactly `2178260bb18efeb81437486f13b6d10cf5e85936`, byte-identical to main; parent pointer `0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED` preserved.
+- No state, code, test, workflow, model source, dataset, Parquet or workbook artifact changed. All changes are documentation-only appendenda on this branch.
+- Disposition: `PASS_APPEND_ONLY_READBACK / STAGE9C_PASS_SCOPED / OVERALL_DELIVERY_NOT_ACCEPTED`.
