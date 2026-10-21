@@ -47,3 +47,17 @@ Keep all production calls fail-closed. Before provider wiring or a new checkpoin
 4. write a separate R4 for production caller/provider integration and exact regression tests, then run only the approved read-only validation before any trial/checkpoint is allowed.
 
 No new Golden values, trial IDs, source SHA, seed/RNG, cohort, data, production workflow or state status were altered in this audit. The production Gate A helper continues to fail closed.
+
+
+## Direct preflight artifact read-back
+
+- Downloaded Artifact `12016903462` and verified ZIP size 1,719 bytes and SHA-256 `72f122bc2a78ab079f6c7064c45d78d40b6e9463b83454a1366e32138c0359d6`, matching its Actions API digest.
+- Embedded `gatea_provider_preflight_report.json` (4,017 bytes, SHA-256 `5e200622ab0ed79dccf8a0abf0d9908c227680fb2e954f86dfd9927f9cd73f22`) reports:
+  - base map count 24,005 and extension to total 25,205;
+  - base map SHA-256 `166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c`;
+  - extension Artifact `11940485523`, digest `049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3`, Run `38662076725`, head `aafe5946a8a51c991471057d71f5643c46087086`, extension-map SHA `0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65`, and referenced decision `D-2026-10-15-10`;
+  - combined map SHA `0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1`, Golden reference label `D-2026-10-14-01:GateA:25205:0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1`;
+  - the 20 non-C100 scenarios have IDs 1..1200, five C100 scenarios have ID 1, and only `C030_G030` extends through 2400. It states no trial generation, Parquet mutation, historical dataset mutation, Workflow or Monte Carlo was executed.
+- Embedded `source_identity_exception_report.json` (995 bytes, SHA-256 `9c0a98ae2d7d18621ab8177733a51ee4be0d0140a39db0b32b5beff9aa3badbc`) labels the change an `additive_compatibility_adapter`, but also makes the byte-level discrepancy explicit: pinned `daily_engine.py` SHA-256 `a1c83c12232bc4e06b091f92878c16e3e34435ee9bc2caf3725a8a23b12e8b87` versus candidate `bd0263df323d42e88ddeb9d87a3526ba295fd26ed264086025041f6c18fe9301`. It reports a 10/10 fingerprint replay on Run `38461464864`, tested SHA `6da81aadbf451131304024d919f6a89be772b717`, but repository pytest still had 3 failed, 384 passed, 1 skipped. The source SHA was not bumped.
+- The explicit authority check independently re-read current main's `DECISIONS_LOG.md`: `D-2026-10-14-01` and `D-2026-10-15-10` are absent. Thus the candidate report's internal reference to them does not by itself authorize the extension map or identity exception.
+- Result: the preflight artifact is real and cryptographically identified, but the authority and future checkpoint coverage gap remain. No provider is connected.
