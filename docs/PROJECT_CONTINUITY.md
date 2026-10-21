@@ -1309,3 +1309,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STATE-GOVERNANCE-RECONCILE-D12026101201 — 2026-10-21
+
+- R4: `docs/audits/CP_STATE_GOVERNANCE_RECONCILE_D12026101201_R4_2026-10-21.md`; post-read-back blob `9bd6acd689347d116b88c41b5d85b975d81430c4`.
+- Base/main HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; candidate branch `tmp/cp-state-governance-reconcile-20261021`.
+- Target `state.json` changed only on this candidate: blob `32e9d039d2df628ca367b9dd8810f8e40bc80aec`. New structured `governance_decisions.D-2026-10-12-01` indexes the existing approved decision: compare adjacent 300→600 and 600→1200 checkpoints for 20 non-C100 scenarios, using linear P50 of Final_Net_Project_Equity, strict >5% trigger, and approved near-zero fallback. The decision log was not changed.
+- Valid JSON read-back confirmed removal of the now-stale `GOVERNANCE_GAP` blocker only. `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED` are unchanged. Other six blockers remain.
+- No source code, trials, data, workflow, test, or historical artifact changed. Main `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936` and main HEAD remain unchanged. No run/merge/release.
+- Disposition: `PASS_STATIC_STATE_RECONCILIATION_CANDIDATE_ONLY`; project delivery remains `NOT_ACCEPTED`.
+
