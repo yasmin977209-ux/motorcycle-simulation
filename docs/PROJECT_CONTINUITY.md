@@ -1309,3 +1309,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STAGE9C-STATUS-RECONCILIATION — C-1..C-6 historical-status addendum (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE9C_STATUS_RECONCILIATION_R4_2026-10-22.md`; read-back blob `13247feafed5689d7025ee455ebe803c19b4882e`.
+- New addendum: `docs/stage9c/STAGE9C_REAUDIT_C1_C6_ADDENDUM_2026-10-22.md`, blob `deaa76cd30a05fc052171134cb97909adf136512`.
+- Main state evidence read-back: `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936` still records `full_stage9c_status=PASS` based on `PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT`. Candidate state is exactly the same blob; no status was promoted.
+- Addendum preserves the original `docs/stage9c/STAGE9C_REPORT.md` (`PARTIAL`) untouched, and clearly records the later scoped evidence: 9,005/9,005 canonical hashes matched, 25/25 scenario reports, 20/20 aggregate gates, Stage 12 roll-forward/closure checks over 22,546,465 rows with zero violations, and the separate CP-D 500/500 exact XLSX comparison.
+- The broad raw pytest diagnostic Run `38164248220` remains `11 failed, 338 passed, 1 skipped, 1 warning`; no overall-repository test PASS is claimed.
+- Candidate branch `tmp/cp-stage9c-status-reconciliation-20261022` has only the R4 and this new addendum relative to main. No simulation, trial, checkpoint, historical-data, manifest, workbook or state mutation occurred. Main remains unchanged.
+- Disposition: `PASS_STATIC_DOCUMENTATION_RECONCILIATION_CANDIDATE_ONLY`; seven-file final delivery remains `NOT_ACCEPTED`.
+
