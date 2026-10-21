@@ -1,1 +1,2 @@
 Authorized M3 diagnostic trigger only. Uses synthetic copies of existing artifacts for C100_G100 and C030_G030; no simulation, no new trials, no source or data changes.
+Correction attempt 2: verbose exact SHA preflight; still diagnostic only.
