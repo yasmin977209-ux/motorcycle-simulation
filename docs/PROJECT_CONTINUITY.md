@@ -1351,3 +1351,24 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Scope: strict checkpoint N validation, strict Boolean Gate B input, and conditional near-zero CI limit. No production workflow/Monte Carlo/Trial/Checkpoint ran. No additional Source SHA, state, trial, seed/RNG, data, or Golden changes.
 - Disposition `PASS_FOCUSED_INTEGRATED_CI`. This still does not unblock Gate A/provider coverage or establish overall stability/delivery.
 
+## CP-STAGE7-WORKFLOW-FAIL-CLOSED — static workflow-safety result (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE7_WORKFLOW_FAIL_CLOSED_R4_2026-10-22.md`; post-final-result blob `bc2f52e0332f0c3289cfd47720db4aeecbf3b942`.
+- Candidate branch `tmp/cp-stage7-workflow-fail-closed-20261022`; Final exact-SHA Run `39684779907`, SHA `16df1cab1245297fc31b91ed5b008b721018b936`, conclusion success: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39684779907.
+- Workflow YAML parse and module compilation passed; `tests/test_stage7_authoring.py`: `67 passed`; tested workflow blob `5d7e1e5c73c7fdf619d26ce80987dac4ad79c929`; test blob `4f44e16aafdfa566b62105721a76dc8f1d4d5c86`.
+- The new concurrency key serializes by workflow/ref, sets `queue: max` (100 pending runs), and uses `cancel-in-progress: false`. The active-run query blocks only `status == in_progress`; queued runs wait rather than being mistaken for active conflicts. Preflight no longer cancels runs or force-patches state refs, checks model-file byte identity before state-ref requests, and fails closed for state associated with another run.
+- Prior candidate CI failures `39682882666`, `39682928810`, `39682998530` were iteration failures; their issues were fixed and the later successful exact SHA is authoritative.
+- No production Stage 7 workflow, simulation, Monte Carlo, Trial, Checkpoint, Golden provider, source SHA constant, seed/RNG, dataset or state ref was changed/run. Main remains unchanged. Runtime timing remains unvalidated.
+- Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`; Gate A and final delivery stay blocked.
+
+### CP-STAGE7-WORKFLOW-FAIL-CLOSED — latest post-main-merge static CI (2026-10-22)
+
+- R4 latest blob: `3f22cfe5a8d3c9b8c01a2f3be639976ed71b0b99`.
+- Candidate branch `tmp/cp-stage7-workflow-fail-closed-20261022` now includes main baseline `ed751ca0993ddec282743c6913864fd173c4d1fd`, so it retains the merged Gate B strict-N/Boolean/near-zero fixes and pinned `daily_engine.py`.
+- Final candidate CI Run `39688725055`, exact SHA `7b990adbd981f3f7aedba356628432eac7e1bbec`, conclusion success: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39688725055.
+- Steps passed: exact-SHA checkout; requirements installation; YAML parse of production Stage 7 workflow; compilation of `run_batch.py`, `scripts/stage7_stability.py`, `scripts/stage7_state.py`; focused authoring test suite **67 passed**.
+- Tested blobs: production workflow `5d7e1e5c73c7fdf619d26ce80987dac4ad79c929`; authoring tests `4f44e16aafdfa566b62105721a76dc8f1d4d5c86`; candidate verification workflow `d521bc99fea631b4f10694ff020e8cfcc49d22eb`. R4/continuity commits after tested SHA are evidence-only.
+- Safeguards: stable workflow/ref concurrency key; `cancel-in-progress: false`; `queue: max`; no auto-cancel endpoint; no force-PATCH reset for `stage7-state/*`; exact pinned model source comparison occurs before state-reference decisions; unverifiable/other-run state fails closed.
+- Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
+- Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
+

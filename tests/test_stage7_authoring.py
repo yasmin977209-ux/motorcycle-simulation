@@ -121,27 +121,27 @@ def test_stage7_timeout_change_is_documented() -> None:
 def test_stage7_workflow_has_concurrency_guard() -> None:
     concurrency = _workflow()["concurrency"]
     assert concurrency == {
-        "group": "stage7-full-run-${{ github.run_id }}",
+        "group": "stage7-full-run-${{ github.workflow }}-${{ github.ref }}",
         "cancel-in-progress": False,
+        "queue": "max",
     }
-
-
-def test_stage7_preflight_cancels_and_waits_for_stale_stage7_runs() -> None:
+def test_stage7_preflight_fails_closed_on_existing_active_stage7_runs() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
-    assert "actions: write" in text[:text.index("jobs:")]
+    top_permissions = text[:text.index("jobs:")]
+    assert "actions: read" in top_permissions
+    assert "actions: write" not in top_permissions
     assert "GH_TOKEN: ${{ github.token }}" in preflight
     assert "gh api --paginate" in preflight
     assert "actions/runs?branch=tmp%2Fstage7-full-run-20261004" in preflight
-    assert "select(.conclusion == null)" in preflight
-    assert "actions/runs/${run_id}/cancel" in preflight
-    assert "CANCELLED_STALE_RUN=" in preflight
-    assert "STALE_RUN_CANCELLATION_TIMEOUT=" in preflight
-    assert "for attempt in $(seq 1 90); do" in preflight
-    assert "STALE_RUN_STOPPED=" in preflight
-
-
-def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
+    assert 'select(.status == "in_progress")' in preflight
+    assert "select(.conclusion == null)" not in preflight
+    assert "STAGE7_ACTIVE_RUN_CONFLICT=" in preflight
+    assert "refusing to cancel another run" in preflight
+    assert "actions/runs/${run_id}/cancel" not in preflight
+    assert "CANCELLED_STALE_RUN=" not in preflight
+    assert "for attempt in $(seq 1 90); do" not in preflight
+def test_stage7_preflight_enumerates_state_branches_without_force_reset() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
     assert "SCENARIOS=(" in preflight
@@ -150,23 +150,27 @@ def test_stage7_preflight_resets_all_scenario_state_branches() -> None:
     assert "C070_G100 C070_G070 C070_G050 C070_G030 C070_G000" in preflight
     assert "C050_G100 C050_G070 C050_G050 C050_G030 C050_G000" in preflight
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
+    assert "STAGE7_STATE_CONFLICT=" in preflight
     assert "STAGE7_STATE_ABSENT=" in preflight
-    assert "git/refs/heads/${STATE_BRANCH}" in preflight
-    assert '-f "sha=${SOURCE_SHA}"' in preflight
-    assert "-F force=true" in preflight
-
-
-def test_stage7_preflight_preserves_state_for_same_run_and_resets_other_runs() -> None:
+    assert "git/ref/heads/${STATE_BRANCH}" in preflight
+    assert "STAGE7_STATE_RESET=" not in preflight
+    assert "gh api --method PATCH" not in preflight
+    assert "-F force=true" not in preflight
+def test_stage7_preflight_preserves_same_run_and_blocks_other_run_state() -> None:
     text = _workflow_text()
     preflight = text[text.index("  preflight-gates:"):text.index("  matrix-simulation:")]
+    identity_check = preflight.index('git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"')
+    state_check = preflight.index('STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"')
     assert "STATE_CONTENTS=\"repos/${GITHUB_REPOSITORY}/contents/state.json?ref=${STATE_BRANCH}\"" in preflight
     assert "jq -r '.run_id // empty'" in preflight
     assert 'if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then' in preflight
     assert "STAGE7_STATE_RESUME=" in preflight
-    assert "STAGE7_STATE_RESET=" in preflight
-
-
+    assert "STAGE7_STATE_CONFLICT=" in preflight
+    assert "STAGE7_STATE_UNVERIFIABLE=" in preflight
+    assert "STAGE7_STATE_RESET=" not in preflight
+    assert "gh api --method PATCH" not in preflight
+    assert identity_check < state_check
+    assert "MODEL_SOURCE_DRIFT_DETECTED_IN_PREFLIGHT" in preflight
 def test_stage7_restore_artifacts_is_scoped_to_current_workflow_run() -> None:
     text = _workflow_text()
     start = text.index("      - name: Restore previous scenario block artifacts when available")
