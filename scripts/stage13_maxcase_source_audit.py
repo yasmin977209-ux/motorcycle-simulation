@@ -287,6 +287,14 @@ def run_audit(
         "tested_head_sha": os.environ.get("GITHUB_SHA"),
         "tested_branch": os.environ.get("GITHUB_REF_NAME"),
         "scope": "READ_ONLY_STAGE7_STAGE10_TRIALRESULTS_AND_STAGE12_DAILY_PARQUET_EXTRACTION; NO_SIMULATION; NO_HISTORICAL_ARTIFACT_MUTATION; NO_WORKBOOK",
+        "maxcase_selection_scope": {
+            "max_trial_id_cap": max_trial_id_cap,
+            "cohort": "STAGE9A_9005" if max_trial_id_cap == 450 else "STAGE12_11005",
+            "expected_p16_output_manifest_sha256": (
+                P16_OUTPUT_MANIFEST_SHA256 if expected_p16_map is not None else None
+            ),
+            "expected_p16_selection_map_used": expected_p16_map is not None,
+        },
         "source_identity": {
             "source_sha": SOURCE_SHA,
             "master_seed": MASTER_SEED,
@@ -366,7 +374,29 @@ def run_audit(
             zip_path = root / f"{scenario}.zip"
             download_evidence = gatea.download_artifact(artifact, zip_path)
             rows, blocks, trial_hashes = rows_from_zip(scenario, zip_path, manifest)
-            selected = select_maxcase(rows)
+            effective_cap = 1 if is_c100 else (max_trial_id_cap or 550)
+            eligible_ids = sorted(
+                int(row["trial_id"])
+                for row in rows
+                if type(row.get("trial_id")) is int
+                and 1 <= int(row["trial_id"]) <= effective_cap
+            )
+            if eligible_ids != list(range(1, effective_cap + 1)):
+                raise RuntimeError(
+                    f"MAXCASE_SELECTION_COHORT_TRIAL_COVERAGE_MISMATCH: {scenario}"
+                )
+            selected = select_maxcase(rows, max_trial_id=max_trial_id_cap)
+            p16_expected_selection_match = None
+            if expected_p16_map is not None:
+                expected_selection = expected_p16_map["maxcase_by_scenario"][scenario]
+                p16_expected_selection_match = (
+                    selected is not None
+                    and int(selected["trial_id"]) == int(expected_selection["trial_id"])
+                    and int(selected["final_net_project_equity"])
+                    == int(expected_selection["final_net_project_equity"])
+                )
+                if not p16_expected_selection_match:
+                    raise RuntimeError(f"P16_MAXCASE_SELECTION_MISMATCH: {scenario}")
             canonical_roles = manifest["representative_trials"][scenario]
             role_matches: list[str] = []
             inventory_identity_matches = scenario not in inventory_mismatch_scenarios
@@ -509,6 +539,8 @@ def run_audit(
                 "stage12_daily_evidence": stage12_daily_evidence,
                 "maxcase_daily_rows_extracted": len(selected_daily_payload) if selected_daily_payload is not None else 0,
                 "maxcase_selection_status": selection_status,
+                "maxcase_selection_trial_id_cap": max_trial_id_cap,
+                "p16_expected_selection_match": p16_expected_selection_match,
                 "maxcase_trial_id": int(selected["trial_id"]) if selected is not None else None,
                 "maxcase_final_net_project_equity": (
                     selected["final_net_project_equity"] if selected is not None else None
@@ -537,6 +569,15 @@ def run_audit(
     report["summary"] = {
         "scenario_count": len(report["scenarios"]),
         "expected_trial_rows": sum(1 if s.startswith("C100_") else 550 for s in SCENARIOS),
+        "selection_scope_expected_trials": sum(
+            1 if s.startswith("C100_") else (max_trial_id_cap or 550)
+            for s in SCENARIOS
+        ),
+        "p16_expected_selections_matched": (
+            sum(x["p16_expected_selection_match"] is True for x in report["scenarios"])
+            if expected_p16_map is not None else None
+        ),
+        "p16_expected_selections_expected": 25 if expected_p16_map is not None else None,
         "actual_trial_rows": sum(x["trial_count"] for x in report["scenarios"]),
         "trial_rows_rehashed": sum(x["source_trial_rows_rehashed"] for x in report["scenarios"]),
         "maxcase_positive_selected": len(selected),
@@ -588,6 +629,10 @@ def run_audit(
         "tested_head_sha": report["tested_head_sha"],
         "scope": "READ_ONLY_EXTRACTION_FROM_VERIFIED_STAGE12_PARQUET; NO_SIMULATION; NO_HISTORICAL_MUTATION; NOT_A_FINAL_WORKBOOK",
         "source_identity": report["source_identity"],
+        "selection_scope": report["maxcase_selection_scope"],
+        "p16_expected_selections_matched": report["summary"].get(
+            "p16_expected_selections_matched"
+        ),
         "stage12_run": stage12_run,
         "stage12_global_sha256": roll_forward.get("expected_global_sha256_from_cp12b"),
         "scenario_count": len(extracted_payloads),
@@ -604,9 +649,24 @@ def run_audit(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Read-only Stage 13 MaxCase source and Stage 12 daily-ledger audit"
+    )
+    parser.add_argument(
+        "--maxcase-trial-id", type=int, choices=(450, 550), default=None,
+        help="restrict MaxCase selection to trial IDs 1..N; default preserves the 550-trial source audit",
+    )
+    parser.add_argument(
+        "--expected-p16-map", default=None,
+        help="provenance-pinned expected P16 selection map; requires --maxcase-trial-id 450",
+    )
+    args = parser.parse_args()
     out_path = Path("stage13_maxcase_source_audit.json")
     try:
-        report = run_audit()
+        report = run_audit(
+            max_trial_id_cap=args.maxcase_trial_id,
+            expected_p16_map_path=args.expected_p16_map,
+        )
         out_path.write_text(
             json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
