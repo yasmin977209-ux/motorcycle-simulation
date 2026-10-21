@@ -49,3 +49,15 @@ No direct main write, no canonical manifest/identity mutation, no SOURCE_SHA/see
 ## Status
 
 `PENDING_CURRENT_MAIN_STATIC_READBACK_AND_EXACT_SHA_CI`.
+
+
+## Exact-current-main validation result
+
+- The clean candidate began from live main HEAD `7621ddefe6c971e9eb231eb2a987519c86a2cb51`; all candidate edits remained on `tmp/cp-stage13-clean-current-main-20261022`.
+- Focused GitHub Actions Run `39694032014` passed on exact SHA `0a5c793f342266c1e0df91d3ca131e5cb2376ab7`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39694032014.
+- Job `119546932115` completed successfully; exact output: `54 passed in 13.44s`. Dependency installation, Python compile checks and all five selected test files passed.
+- Final code/test blobs at tested SHA: `scripts/stage13_assemble.py` `47fc1828dfb0d298aa4528f58b558bf012882076`; `scripts/excel_builder.py` `c5db5f1113294224d371e98bab2edd7b015a30d2`; `scripts/stage13_maxcase_source_audit.py` `f7835b5a6f2584f9a0679a496b565a5a229f6b4c`; `tests/test_stage13_assembler.py` `d4c0f8c52da53cb3ad50994e71632c04502ff873`; `tests/test_stage13_maxcase_pending_fields.py` `182c7e0ec62e6f48a1fce2d2c4d6bb692e76bce4`; `tests/test_excel_builder_adaptive_mode.py` `1c3b0a37d3643c2fd45270a63df61b8525b36d5f`; `tests/test_excel_builder_legacy_compat.py` `968006169c4b46408269fb954c4714e561065f31`.
+- `docs/stage9a/dataset_manifest.json` remained byte-identical to live main at blob `e796fa2443493b607f1f9c60b58eb63607959c26`.
+- Candidate comparison against current main: 9 commits ahead, 0 behind; changed files are limited to this R4, one candidate-only focused workflow, the two Stage 13 implementation files plus source audit helper, and four synthetic/compatibility test files. No historical data, production artifacts, source identity or manifest changed.
+- The earlier candidate run `39677426514` also passed 54 tests; current clean-descendant run above is the authoritative result for this branch. The earlier dirty branch is not used for PR.
+- Disposition: `PASS_FOCUSED_SYNTHETIC_CI_CANDIDATE_ONLY`. Do not build or accept a production workbook until C050_G000 provenance and missing Partner1/Partner2 daily memo balances are resolved from an authoritative source/decision; Gate A and final delivery remain open.
