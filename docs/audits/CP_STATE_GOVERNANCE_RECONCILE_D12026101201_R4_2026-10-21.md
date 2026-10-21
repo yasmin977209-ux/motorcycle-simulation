@@ -46,3 +46,15 @@ No changes to statistical computation or executable code, checkpoint outcomes, `
 - Preserved `state.sha` parent pointer `0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED`; neither was rewritten. No rule, statistical computation, data or artifact changed.
 - Candidate diff against base before continuity note: 3 commits ahead / 0 behind; only this R4 and `state.json` changed. Main state blob remains `2178260bb18efeb81437486f13b6d10cf5e85936`; main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
 - Disposition: `PASS_STATIC_STATE_RECONCILIATION_CANDIDATE_ONLY`. The other six blockers remain open; this does not accept overall delivery.
+
+
+## Post-merge source-identity recheck and state reconciliation (2026-10-22)
+
+After PR #55 merged, live main HEAD is `223ce1eea3db5f4c7e55fe329f63dc4f68eced97`. Direct file read-back confirms:
+- Main `daily_engine.py` blob = pinned source blob = `6c4496c3e9a9b41668c3d93063ad31d96df5f878`.
+- Main `monte_carlo.py` blob = pinned source blob = `a8c3603487f92d3e15c3d754ce3faee3580a5f46`.
+- `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` was not changed. No simulation or trial execution was run to achieve this result; the restored daily_engine bytes exactly match the already-approved pinned commit.
+
+The candidate `state.json` was accordingly updated from prior blob `32e9d039d2df628ca367b9dd8810f8e40bc80aec` to `0b7db78b2678aeea3f73f6114e69ab6802806fd3`, removing the now-stale `SOURCE_SHA_DRIFT` blocker and retaining the approved `D-2026-10-12-01` index. Static JSON read-back preserves `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED`; five other blockers remain. Canonical data/manifest/Golden/source constants were not altered.
+
+The previous paragraph noting `SOURCE_SHA_DRIFT` was still open refers to the pre-merge baseline at main HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; this addendum supersedes it for the post-merge main state. The provider/coverage blocker remains, so Gate A still stays BLOCKED.
