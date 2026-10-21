@@ -52,3 +52,12 @@ The owner explicitly authorized all necessary work in the conversation (2026-10-
 - The earlier candidate runs `39682882666`, `39682928810`, and `39682998530` failed during iteration (the former embedded-script duplication and then one incorrect test path assertion). Those exact failures were fixed and the later successful SHA above is authoritative; no production workflow was dispatched.
 - No trial, checkpoint, Monte Carlo, source SHA, seed/RNG, dataset, or main branch was changed. This CP improves safety but does not establish Gate A or validate runtime limits.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
+
+
+## Final refinement and latest-SHA verification
+
+- After the first successful static run, refined the active-run scan to select only `status == "in_progress"`, because queued runs should serialize through the workflow/ref concurrency group rather than be treated as already-active conflicts. This still detects old active runs that predate the concurrency group; it does not cancel them.
+- Final verification Run `39683924760`, exact SHA `bd63a22ed86655264cf99cbb3aff4d94fb66eca6`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39683924760.
+- YAML parse and module compile passed; `tests/test_stage7_authoring.py`: `67 passed in 0.36s`. Tested workflow blob `5508a069ec902d2e75b439cee22b8a0d0bfe4719`; tested authoring-test blob `a6d80e350eb4a568ebca3889431e410c0989f8fc`.
+- The prior Run `39683906067` failed because its tested SHA's test file asserted the former active-run predicate; the subsequent commit corrected that assertion and its exact-SHA rerun passed. Run `39683073413` passed the preceding implementation before this predicate refinement. No production workflow was run during any of these iterations.
+- Final disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`; main unchanged.
