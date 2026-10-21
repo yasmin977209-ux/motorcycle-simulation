@@ -1,0 +1,56 @@
+name: Stage 9A manifest artifact-run provenance audit
+
+on:
+  push:
+    branches:
+      - "tmp/cp-c050-provenance-correction-20261022"
+    paths:
+      - "docs/stage9a/dataset_manifest.json"
+      - "scripts/audit_stage9a_artifact_run_provenance.py"
+      - "tests/test_stage9a_manifest_provenance.py"
+      - ".github/workflows/cp-c050-provenance-audit-20261022.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-c050-provenance-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  provenance:
+    name: Verify all 25 artifact-run pairs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Compile provenance checker
+        run: python -m compileall -q scripts/audit_stage9a_artifact_run_provenance.py
+      - name: Run deterministic provenance contract tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_stage9a_manifest_provenance.py
+      - name: Audit live GitHub artifact/run metadata (read only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: python scripts/audit_stage9a_artifact_run_provenance.py
+      - name: Upload provenance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage9a-artifact-run-provenance
+          path: stage9a_provenance_audit/artifact_run_pair_report.json
+          if-no-files-found: warn
+          retention-days: 30
