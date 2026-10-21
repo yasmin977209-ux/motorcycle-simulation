@@ -10,3 +10,12 @@
 - Owner authorized focused tests and all necessary work on temporary branches. This R4 limits this workflow to deterministic local unit-test evidence only.
 - Acceptance: successful run against the exact SHA containing code and tests. If Actions cannot run, report `NOT_CI_VALIDATED`.
 - Excluded: unrelated tests, production workflow, main, source SHA, state, model/data/cohort/trial identity, merge, PR closure, release, delivery acceptance.
+
+
+## Exact-SHA CI result
+
+- GitHub Actions Run: `39675170837`; URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675170837
+- Tested commit SHA: `7b16d5f96e801156a77d1a2975ec8f0fc1f3edfc`; conclusion `success`; status `completed`.
+- All job steps passed: checkout of exact SHA, Python setup, dependency installation, compile of target modules, and `python -m pytest -q tests/test_run_batch.py`.
+- Test coverage checks negative and positive near-zero means, the exact epsilon boundary, a non-near-zero mean of 10, and a synthetic half-CI which lies between the old absolute floor and the correct relative limit.
+- This is candidate-only focused CI; it is not a production Gate B checkpoint or statistical acceptance.
