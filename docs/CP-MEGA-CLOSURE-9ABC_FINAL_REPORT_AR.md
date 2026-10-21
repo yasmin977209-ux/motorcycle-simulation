@@ -236,3 +236,33 @@ No value was invented.
 > **سبب PARTIAL: نقص daily Trial-level authoritative data اللازمة للبوابات الكاملة لـ9C.**
 
 هذا الحكم يحل التناقضات السابقة دون خفض صلاحية المنتج المتحقق، ودون منح PASS لبوابات لم تُنفذ فعليًا.
+
+
+---
+
+## ملحق توثيقي لاحق — فصل حالة Stage 9C عن حالة إغلاق المشروع (2026-10-19)
+
+**هذا ملحق إضافي وليس إعادة كتابة للتقرير التاريخي أعلاه.** كان `CP-MEGA-CLOSURE-9ABC-PARTIAL` يعكس أدلة الإغلاق المتاحة حينها، ومنها الحكم `STAGE-9C-PARTIAL-CLOSED` في تقرير Stage 9C. بعد ذلك، سُجلت إعادة تدقيق منفصلة لمراحل Stage 9C C-1..C-6 في `main/state.json` واعتمدت عبر PR #38 المدمج، merge commit `74b103cd782c9e75e210a090c94fbcb4b01844c4`.
+
+### حالة Stage 9C بعد إعادة التدقيق
+
+`state.json` الحالي على main (blob `2178260bb18efeb81437486f13b6d10cf5e85936`) يسجل:
+
+- `full_stage9c_status=PASS`
+- `stage9c_ledger_reaudit_20261012.status=PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT`
+- الهوية canonical: `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, seed `20270101`, manifest SHA-256 `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, و9,005 trials عبر 25 سيناريو.
+- إعادة التدقيق اعتمدت مجموعة Stage 12 القائمة: 11,005 trials و22,546,465 صفًا يوميًا؛ تم ربط معرّفات Trial والبصمات إلى golden map من خلال Gate A bridge، ثم استُخدمت أدلة roll-forward/closure وCP-D exact XLSX من دون محاكاة أو Trial rerun. استُخدم عدد 18,449,224 صفًا يوميًا بوصفه مجموع counts المحفوظة للتكرارات الـ9,005 المستهدفة.
+- Gate A bridge [Run 38169163565](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38169163565): 11,005/11,005 تطابق بصمة بالضبط وصفر اختلاف.
+- CP-12-C [Run 37971902520](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/37971902520): تدقيق 22,546,465 صفًا يوميًا وصفر مخالفات في الفحوص المسجلة.
+- CP-12-D [Run 37972735159](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/37972735159): فحوص إغلاق وتسوية نهائية عبر 22,546,465 صفًا وصفر مخالفات، مع الحفاظ على حدود مخطط البيانات الموثقة في تقرير التشغيل.
+- CP-D [Run 38165878333](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38165878333): 500/500 مقارنة رقمية exact، و185 ورقة، وصفر خلايا خطأ Excel وصفر صيغ.
+
+وبذلك فإن **حالة Stage 9C C-1..C-6 الأحدث هي PASS**، بينما تبقى العبارات التاريخية PARTIAL في متن التقرير وصفًا لحالة الإغلاق في ذلك الوقت ولم تُحذف. فحص CP-D وحده لم يرفع Stage 9C؛ الرفع استند إلى إعادة التدقيق المنفصلة بعد التحقق من هوية سجلات Stage 12.
+
+### الحكم الموحد الحالي وحدوده
+
+**لا يُرفع الحكم الإجمالي لهذا التقرير إلى PASS.** ما زالت حالة main هي `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`. تبقى مفتوحة: إنتاج Gate A الذي يفتقد provider موصولًا ومتحقق الهوية، SOURCE_SHA drift في `daily_engine.py`, طوبولوجيا Stage 11 غير المعرفة، غياب `scripts/stage13_assemble.py` من main، فجوات الحوكمة/تقارير التسليم، مخاطرة مهلة Stage 7، وعدم تحقق تسليم الملفات السبعة كحزمة واحدة. Stage 10 لم يُشغّل ولم يُمنح تصريحًا جديدًا بهذا الملحق.
+
+كما أن فشل التشخيص الشامل القديم لا يتغير: Run `38164248220` نتيجته `11 failed, 338 passed, 1 skipped, 1 warning`; هذا فشل تاريخي خارج inventory بوابات Stage 9C المحددة، ولا يجوز إعادة تسميته PASS.
+
+**فجوة التوثيق التي لا تزال مفتوحة:** تقرير `Stage9C_Ledger_Reaudit_R4_AR.md` المشار إليه في `state.json` يحمل SHA-256 مسجلًا `5dcb6ed2f4f0369af93fb732a25a1f72b58de5bc30f5e58e9b042b1559f7e1e9` و`repository_committed=false`; لم يُعثر على الملف في GitHub خلال المراجعة. يجب حفظ تقرير تدقيق مستقل متاح وقابل لإعادة القراءة في المستودع ضمن CP توثيقي لاحق. هذا الملحق لا يدعي أنه استعاد البايتات المفقودة، ولا يغيّر `state.json` أو main.

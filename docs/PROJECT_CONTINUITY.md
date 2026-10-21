@@ -1309,3 +1309,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STAGE9C-REPORT-RECONCILE-CURRENT-MAIN — append-only status addenda (2026-10-21)
+
+- R4: `docs/audits/R4_STAGE9C_REPORT_STATUS_RECONCILIATION_CURRENT_MAIN_2026-10-21.md`, final blob `9ad7699a9ec9aa3f678908ad0bb3f5bf2e8f736f`.
+- Candidate branch based directly on main `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- `docs/stage9c/STAGE9C_REPORT.md`: original main blob `81fb79720988cfe261fa6d8d29371e616f9f9850` is an exact prefix of candidate blob `5644107020bb16344fd6212b007cb68cc0f9584d`; only a dated addendum was appended.
+- `docs/CP-MEGA-CLOSURE-9ABC_FINAL_REPORT_AR.md`: original main blob `f2e3733b9ff48d00e5b512523a2ba98d20a3af33` is an exact prefix of candidate blob `47b6e9b10a02619132f3c820c28ae938c12168d5`; only a dated addendum was appended.
+- Candidate state read-back matches main byte-for-byte at blob `2178260bb18efeb81437486f13b6d10cf5e85936`; `state.sha` and `stage=12-CLOSED` unchanged.
+- Addenda preserve the historic PARTIAL rationale and record the later scoped C-1..C-6 PASS with its exact run evidence. They do not claim overall delivery PASS, recover the missing historical R4 bytes, or change the known repository-wide failure Run `38164248220` (`11 failed, 338 passed, 1 skipped, 1 warning`).
+- No source, state, workflow, tests, data, Parquet or workbook changed. Main remains unchanged; no merge/release.
+- Disposition: `PASS_APPEND_ONLY_READBACK / STAGE9C_PASS_SCOPED / OVERALL_DELIVERY_NOT_ACCEPTED`.
+
