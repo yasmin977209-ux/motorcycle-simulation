@@ -320,3 +320,34 @@ The next allowed action is closure review of the Stage 9C partial status and, on
 
 **التصنيف:** ACCEPTED-BY-USER.
 **الحالة:** CLOSED.
+
+
+---
+
+## ملحق لاحق — إعادة تدقيق C-1..C-6 بهوية يومية متطابقة (2026-10-19)
+
+**الغاية:** حفظ الحكم الأصلي `STAGE-9C-PARTIAL-CLOSED` أعلاه بوصفه وصفًا لنطاق الأدلة المتاحة وقت التقرير، مع تسجيل إعادة التدقيق اللاحقة التي أُضيفت إلى `main/state.json` عبر PR #38 المدمج. هذا الملحق لا يحذف أو يعيد صياغة القرار التاريخي، ولا ينقل الحكم إلى قبول المشروع كله.
+
+### الهوية والنطاق
+
+- `main` HEAD وقت المراجعة: `647c19826b90d8224ce73ef9b90c306a45e03fb0`; `state.json` blob: `2178260bb18efeb81437486f13b6d10cf5e85936`.
+- قرار الحالة الحية: `full_stage9c_status=PASS`, `stage9c_ledger_reaudit_20261012.status=PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT`; PR #38, merge commit `74b103cd782c9e75e210a090c94fbcb4b01844c4`.
+- Dataset canonical Stage 9A: `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, master seed `20270101`, manifest SHA-256 `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, 25 scenarios and 9,005 trials. Cohort membership: `trial_id=1..450` for each of 20 non-C100 scenarios and `trial_id=1` for each of five C100 scenarios.
+- The existing Stage 12 superset contains 11,005 trials and 22,546,465 daily accounting rows; the read-only target-subset reconciliation recorded 18,449,224 daily rows for the canonical 9,005-trial cohort. No daily data was regenerated and no trial was rerun for this reassessment.
+
+### Evidence by gate
+
+1. **C-1 — source identity: PASS (evidence re-audit).** Gate A fingerprint bridge [Run 38169163565](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38169163565), tested SHA `95288a2bccb40d6772f5a5d042fdabc152c9d89a`, read-back log reports `status=PASS`, 25 scenario reports and the expected pinned source provenance.
+2. **C-2 — trial identity and exact hashes: PASS.** Same Run: 11,005/11,005 exact trial-hash comparisons, zero mismatches; actual and source-golden maps both equal the official CP-12 global SHA-256 `7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44`. Its log explicitly reports the trial/scenario key map complete and unique, all 11,005 Stage 12 hashes matching source goldens, and inputs read-only.
+3. **C-3 — daily roll-forward: PASS for the identity-matched cohort.** CP-12-C [Run 37971902520](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/37971902520), tested SHA `d4b335926d25d4bc2c6440effc7568260ef5aeb8`, audits 22,546,465 daily rows across the 11,005-trial Stage 12 superset; the logged checks for cash, AR, gross assets, accumulated depreciation, equity and related daily continuity have zero violations.
+4. **C-4 — balance and closure: PASS within the recorded schema.** CP-12-D [Run 37972735159](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/37972735159), tested SHA `4b39e45c58aac3f7272002f4f241f930ca3c800c`, reports zero violations in 22,546,465 checked rows, including terminal closure and balance checks. Its explicit limitation remains: `stage12-daily-accounting-v1` does not contain per-bike lifecycle states or settlement start/due timestamps; this gate does not claim a per-bike settlement-duration census.
+5. **C-5 — effective acceptance inventory: PASS for the bounded inventory only.** The CP-D run's approved regression/acceptance/path inventory succeeded. This is not a claim that the full repository diagnostic is green: raw diagnostic [Run 38164248220](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38164248220) remains `11 failed, 338 passed, 1 skipped, 1 warning`, with its out-of-inventory findings preserved separately.
+6. **C-6 — exact Parquet-to-XLSX statistics: PASS for the specified 500-point precision gate.** CP-D [Run 38165878333](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/38165878333), tested SHA `2680335d365a8f923aec076f1fb72cb410f821fb`, logged 500/500 exact numeric matches, 185 worksheets, zero formula cells and zero Excel-error cells. Original workbook SHA-256 `0fb325fc9e196a534ba8ab7484dcfd0541cefd3a2ca37c3b6f930e3215f62f6d` remains unchanged; separate candidate workbook SHA-256 `4bc35a3047b5790e3921475d78a5dd84e05a5c52a729e3ce1f5caa01355185b1`.
+
+### Status ruling and limitations
+
+**Latest Stage 9C C-1..C-6 status: `PASS` in the merged state record**, supported by the separately approved evidence re-audit over the pre-existing, identity-matched Stage 12 daily ledger and the CP-D exact XLSX evidence. This is a later reassessment than the original PARTIAL decision above. CP-D by itself did not lift PARTIAL; the later PR #38 re-audit supplied the additional daily-ledger and exact-trial-identity evidence.
+
+The standalone R4 report cited in `state.json` (`Stage9C_Ledger_Reaudit_R4_AR.md`, SHA-256 `5dcb6ed2f4f0369af93fb732a25a1f72b58de5bc30f5e58e9b042b1559f7e1e9`) was marked `repository_committed=false` and could not be found in GitHub during this review. The supporting Gate A and CP-12/C/D/CP-D run logs and merged state were read back, but the standalone report's own bytes were not recovered; its repository status remains `LOCAL_ONLY/MISSING_REPOSITORY_EVIDENCE`.
+
+This Stage 9C substatus **does not** change the overall project to PASS. Main continues to record `repository_status=FINAL_DELIVERY_BLOCKERS_OPEN`. The production Gate A provider, `SOURCE_SHA_DRIFT`, undefined Stage 11 topology, missing `scripts/stage13_assemble.py` on main, governance reconciliation, Stage 7 timeout risk and final seven-file delivery package remain open. Stage 10 was not run or newly authorized. No simulation, trial, checkpoint, data, Parquet, workbook, source, RNG, seed, workflow or test was changed by this re-audit.
