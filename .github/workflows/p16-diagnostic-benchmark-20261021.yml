@@ -62,21 +62,21 @@ jobs:
         id: benchmark
         shell: bash
         env:
-          GITHUB_TOKEN: \${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           PYTHONPATH: .
           PYTHONUNBUFFERED: "1"
         run: |
           set -uo pipefail
           set +e
           python -u scripts/p16_diagnostic_benchmark.py 2>&1 | tee diagnostics/build.log
-          rc=\${PIPESTATUS[0]}
-          printf '%s\n' "\${rc}" > diagnostics/exit_code.txt
-          exit "\${rc}"
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "${rc}" > diagnostics/exit_code.txt
+          exit "${rc}"
       - name: Upload diagnostic report, logs, and synthetic workbook
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p16-two-scenario-diagnostic-\${{ github.run_id }}
+          name: p16-two-scenario-diagnostic-${{ github.run_id }}
           path: diagnostics/
           if-no-files-found: warn
           retention-days: 30
