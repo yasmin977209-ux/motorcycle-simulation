@@ -1372,3 +1372,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
 
+## CP-STAGE9C-STATUS-RECONCILIATION — historical PARTIAL versus later C-1..C-6 PASS (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE9C_STATUS_RECONCILIATION_R4_2026-10-22.md`; latest read-back blob `afc20652b0921122c61ea3acc7310f530d9343f6`.
+- Candidate branch `tmp/cp-stage9c-status-reconciliation-current-main-20261022`, base `7621ddefe6c971e9eb231eb2a987519c86a2cb51`. Candidate comparison: exactly two documentation files added; main `state.json` is unchanged at blob `0b7db78b2678aeea3f73f6114e69ab6802806fd3`, and historical `docs/stage9c/STAGE9C_REPORT.md` remains unchanged at blob `81fb79720988cfe261fa6d8d29371e616f9f9850`.
+- New addendum `docs/stage9c/STAGE9C_REAUDIT_C1_C6_ADDENDUM_2026-10-22.md`, blob `deaa76cd30a05fc052171134cb97909adf136512`, documents the existing read-only Stage 9C C-1..C-6 reassessment recorded in main state and merged PR #38; it preserves the old PARTIAL narrative rather than overwriting history.
+- The bounded evidence remains: 9,005/9,005 exact trial hashes; 25/25 scenario reports; 20/20 aggregate gates; Stage12 superset 22,546,465 daily rows with zero roll-forward/closure violations; CP-D separately 500/500 exact XLSX comparisons. Broad raw pytest Run `38164248220` remains `11 failed, 338 passed, 1 skipped, 1 warning` and is not reclassified as suite PASS.
+- No state status promotion, source/data/Parquet/manifest/workbook mutation, workflow, simulation, Trial, Checkpoint, merge or release occurred. Gate A provider, Stage11 topology, Stage13 missing memo balances/provenance, G2 timing risk and final seven-file delivery remain open.
+- Disposition: `PASS_STATIC_DOCUMENTATION_RECONCILIATION_CANDIDATE_ONLY`; overall final delivery remains `NOT_ACCEPTED`.
+
