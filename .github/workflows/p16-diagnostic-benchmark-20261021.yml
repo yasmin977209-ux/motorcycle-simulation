@@ -1,0 +1,71 @@
+name: P16 two-scenario synthetic performance diagnostic
+on:
+  push:
+    branches:
+      - tmp/p16-diagnostic-benchmark-20261021
+    paths:
+      - docs/audits/P16_DIAGNOSTIC_TRIGGER.txt
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: p16-diagnostic-benchmark-20261021
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    name: Verify two-scenario synthetic shape and writer performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact diagnostic branch commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assert diagnostic descendant and pinned input/code identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git merge-base HEAD 30ba2d5d47d3a3d6c117f0ef667115401c337ad7)" = "30ba2d5d47d3a3d6c117f0ef667115401c337ad7"
+          test "$(git rev-parse docs/stage9a/dataset_manifest.json)" = "e796fa2443493b607f1f9c60b58eb63607959c26"
+          test "$(git rev-parse scripts/excel_builder_p16.py)" = "1274e0055a81988ef72709a4c6ff9fc1f1351f3a"
+          test "$(git rev-parse scripts/p16_produce_deliverables_v4.py)" = "c3f630b883ec1c02c2fca6ab93363b2c099da51d"
+          test "$(git rev-parse scripts/stage13_assemble.py)" = "73aaf723753939a222dc4544990f71c4dae71c1f"
+          mkdir -p diagnostics
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Compile diagnostic and pinned P16 modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/excel_builder_p16.py scripts/p16_produce_deliverables_v4.py scripts/stage13_assemble.py scripts/p16_diagnostic_benchmark.py
+      - name: Execute bounded diagnostic and preserve exact exit code
+        id: benchmark
+        shell: bash
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+          PYTHONPATH: .
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -uo pipefail
+          set +e
+          python -u scripts/p16_diagnostic_benchmark.py 2>&1 | tee diagnostics/build.log
+          rc=\${PIPESTATUS[0]}
+          printf '%s\n' "\${rc}" > diagnostics/exit_code.txt
+          exit "\${rc}"
+      - name: Upload diagnostic report, logs, and synthetic workbook
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p16-two-scenario-diagnostic-\${{ github.run_id }}
+          path: diagnostics/
+          if-no-files-found: warn
+          retention-days: 30
