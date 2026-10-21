@@ -1,0 +1,77 @@
+name: Stage 5 acceptance artifact-fixture baseline control
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage5-full-suite-baseline-20261022"
+    paths:
+      - "tests/test_acceptance_16_v2.py"
+      - ".github/workflows/cp-stage5-full-suite-baseline-20261022.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-stage5-fixture-baseline-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  focused-baseline:
+    name: Reproduce four artifact-dependent tests against main baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact main-based candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Prepare baseline evidence
+        run: mkdir -p stage5_baseline_evidence
+      - name: Compile unchanged test module
+        run: python -m compileall -q tests/test_acceptance_16_v2.py
+      - name: Run four unchanged baseline tests
+        env:
+          PYTHONPATH: .
+        run: |
+          set -o pipefail
+          python -m pytest -q tests/test_acceptance_16_v2.py             -k "test_127 or test_159 or test_160 or test_161"             --junitxml=stage5_baseline_evidence/pytest.junit.xml             2>&1 | tee stage5_baseline_evidence/pytest.log
+      - name: Record test/blob identity
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          def run(*args):
+              return subprocess.check_output(args, text=True).strip()
+          path = "tests/test_acceptance_16_v2.py"
+          record = {
+              "tested_head_sha": run("git", "rev-parse", "HEAD"),
+              "test_blob_sha": run("git", "hash-object", path),
+              "stage13_assembler_present": Path("scripts/stage13_assemble.py").exists(),
+              "stage5_fixture_paths_in_git": [
+                  p for p in run("git", "ls-tree", "-r", "--name-only", "HEAD").splitlines()
+                  if p.startswith("results_stage5/")
+              ],
+              "simulation_trials_or_checkpoints_run": False,
+              "production_data_generated": False,
+          }
+          Path("stage5_baseline_evidence/source_identity.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          PY
+      - name: Upload baseline diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-acceptance-fixture-baseline
+          path: stage5_baseline_evidence/
+          if-no-files-found: error
+          retention-days: 30
