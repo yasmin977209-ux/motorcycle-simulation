@@ -41,3 +41,14 @@ The owner explicitly authorized all necessary work in the conversation (2026-10-
 ## Status
 
 `PENDING_STATIC_READBACK_AND_CI`. This is a preventative, candidate-only workflow repair; it does not establish Gate A or overall stability.
+
+
+## Exact-SHA static verification result
+
+- GitHub Actions Run `39683073413`, candidate SHA `5c3f77091bec0037e6331253ce2e8fa855ee391c`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39683073413.
+- YAML parse and compile checks passed; `tests/test_stage7_authoring.py`: `67 passed in 0.23s`.
+- Verified workflow blob after the safe-preflight changes: `30b07f55c000b3b5ca1319b34d1b41f5e8f36557`; test blob at exact tested SHA: `8b5912818c255e1ff8a7624734157cd2a2d57678`.
+- Static read-back confirms concurrency key uses `github.workflow` + `github.ref`; workflow permissions are `contents: write` and `actions: read`; preflight has no run cancellation API and no force PATCH; exact model-file identity check precedes any state-ref request; existing non-current-run state fails closed.
+- The earlier candidate runs `39682882666`, `39682928810`, and `39682998530` failed during iteration (the former embedded-script duplication and then one incorrect test path assertion). Those exact failures were fixed and the later successful SHA above is authoritative; no production workflow was dispatched.
+- No trial, checkpoint, Monte Carlo, source SHA, seed/RNG, dataset, or main branch was changed. This CP improves safety but does not establish Gate A or validate runtime limits.
+- Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
