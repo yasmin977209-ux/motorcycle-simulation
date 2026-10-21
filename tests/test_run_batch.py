@@ -253,3 +253,63 @@ def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_en
         filter_statistical_history([{"n": 350}, {"n": 350}])
     with pytest.raises(ValueError, match="not ordered"):
         filter_statistical_history([{"n": 400}, {"n": 350}])
+
+
+def _metric_summary_rows(values: tuple[float, float]) -> list[object]:
+    from types import SimpleNamespace
+
+    return [
+        SimpleNamespace(
+            final_net_project_equity=value,
+            partner1_final_entitlement=value,
+            partner2_final_entitlement=value,
+        )
+        for value in values
+    ]
+
+
+def test_metric_summary_uses_absolute_limit_only_inside_near_zero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(run_batch.t, "ppf", lambda *_args, **_kwargs: 1.0)
+    epsilon = run_batch.constants.REFERENCE_EPSILON
+
+    positive_near_zero = run_batch._metric_summary(
+        _metric_summary_rows((0.0, epsilon * 1.8))
+    )
+    for metric in run_batch.STABILITY_FIELDS:
+        assert positive_near_zero[metric]["mean"] == pytest.approx(epsilon * 0.9)
+        assert positive_near_zero[metric]["limit"] == run_batch.constants.CI_ABSOLUTE_EPSILON
+
+    negative_near_zero = run_batch._metric_summary(
+        _metric_summary_rows((-epsilon * 1.8, 0.0))
+    )
+    for metric in run_batch.STABILITY_FIELDS:
+        assert negative_near_zero[metric]["mean"] == pytest.approx(-epsilon * 0.9)
+        assert negative_near_zero[metric]["limit"] == run_batch.constants.CI_ABSOLUTE_EPSILON
+
+    boundary = run_batch._metric_summary(
+        _metric_summary_rows((0.0, epsilon * 2.0))
+    )
+    for metric in run_batch.STABILITY_FIELDS:
+        assert boundary[metric]["mean"] == pytest.approx(epsilon)
+        assert boundary[metric]["limit"] == pytest.approx(
+            run_batch.constants.CI_RELATIVE_TOLERANCE * epsilon
+        )
+
+
+def test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(run_batch.t, "ppf", lambda *_args, **_kwargs: 1.0)
+    summary = run_batch._metric_summary(_metric_summary_rows((9.8, 10.2)))
+
+    for metric in run_batch.STABILITY_FIELDS:
+        point = summary[metric]
+        assert point["mean"] == pytest.approx(10.0)
+        assert point["limit"] == pytest.approx(
+            run_batch.constants.CI_RELATIVE_TOLERANCE * 10.0
+        )
+        assert point["half_ci_95"] > point["limit"]
+        assert point["half_ci_95"] < run_batch.constants.CI_ABSOLUTE_EPSILON
+        assert point["stable"] is False
