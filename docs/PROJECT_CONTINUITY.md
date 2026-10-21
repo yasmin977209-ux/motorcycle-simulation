@@ -1309,3 +1309,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STAGE7-GATEB-INTEGRATED — exact-SHA candidate CI result (2026-10-21)
+
+- R4: `docs/audits/CP_STAGE7_GATEB_INTEGRATED_R4_2026-10-21.md`; result blob `159747a395c03d82524c266eea3da12753a569f9`.
+- Candidate branch `tmp/cp-stage7-gateb-guards-integration-20261021`; tested SHA `04ac00d0163ca2ee352863141f09d7e3c1074645`.
+- GitHub Actions Run `39675573231` passed all steps (exact-SHA checkout, install requirements, compile target modules, focused `tests/test_run_batch.py`): https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675573231.
+- Read-back blobs: `run_batch.py` `bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`; `scripts/stage7_stability.py` `13872f6aa9405bc72532d32756979dc2c7e8695d`; `tests/test_run_batch.py` `476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`.
+- Scope is only strict type handling and the conditional near-zero CI threshold. The test/workflow runs deterministic unit tests only; it does not run the production simulation, create checkpoints, resolve the stopping rule, establish Gate A, or accept release.
+- Disposition: `PASS_FOCUSED_INTEGRATED_CI / MAIN_UNCHANGED`. Do not merge/release solely from this CP.
+
