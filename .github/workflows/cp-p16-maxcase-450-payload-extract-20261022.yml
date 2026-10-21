@@ -65,7 +65,7 @@ jobs:
           manifest = json.loads(manifest_raw)
           fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
           provenance = fixture["artifact_provenance"]
-          assert manifest.get("run_id") == provenance["p16_source_run_id"] == 39635040311
+          assert str(manifest.get("run_id")) == str(provenance["p16_source_run_id"]) == "39635040311"
           assert manifest.get("tested_sha") == provenance["p16_tested_source_sha"] == "30ba2d5d47d3a3d6c117f0ef667115401c337ad7"
           assert manifest.get("source_sha") == provenance["source_sha"] == "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
           assert manifest.get("cohort_total_trials") == provenance["cohort_total_trials"] == 9005
