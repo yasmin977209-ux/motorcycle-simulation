@@ -487,7 +487,7 @@ def main():
     finally:
         readwb.close()
     readback_seconds = time.monotonic() - t
-    if audit.get("sheet_count") != 17 or audit.get("sheet_names_exact") is not True or readback_order != expected_order:
+    if audit.get("sheet_count") != 16 or audit.get("sheet_names_exact") is not True or readback_order != expected_order:
         raise RuntimeError(f"SYNTHETIC_WORKBOOK_READBACK_SHEET_AUDIT_FAIL:{audit}")
     if audit.get("formula_cells") or audit.get("error_cells"): raise RuntimeError(f"SYNTHETIC_WORKBOOK_FORMULAS_OR_ERRORS:{audit}")
     expected_pending = len(SCENARIOS)
@@ -548,12 +548,12 @@ def main():
         "source_identity_pass": True,
         "synthetic_structure_matches_source": all_shapes_equal,
         "sheet_names_order_and_dimensions_exact": dims_equal and wb.sheetnames == expected_order,
-        "workbook_readback_pass": audit.get("sheet_count") == 17 and audit.get("sheet_names_exact") and not audit.get("formula_cells") and not audit.get("error_cells"),
+        "workbook_readback_pass": audit.get("sheet_count") == 16 and audit.get("sheet_names_exact") and not audit.get("formula_cells") and not audit.get("error_cells"),
         "pending_rows_measured_from_saved_workbook": pending_rows,
         "execution_seconds_monotonic": round(total_elapsed, 6),
         "under_20_minutes": total_elapsed < 1200,
-        "eligible_for_full_run": bool(all_shapes_equal and dims_equal and pending_rows == len(SCENARIOS) and audit.get("sheet_count") == 17 and not audit.get("formula_cells") and not audit.get("error_cells") and total_elapsed < 1200),
-        "full_run_gate": "PASS" if all_shapes_equal and dims_equal and pending_rows == len(SCENARIOS) and audit.get("sheet_count") == 17 and not audit.get("formula_cells") and not audit.get("error_cells") and total_elapsed < 1200 else "PARTIAL / DO NOT LAUNCH FULL RUN",
+        "eligible_for_full_run": bool(all_shapes_equal and dims_equal and pending_rows == len(SCENARIOS) and audit.get("sheet_count") == 16 and not audit.get("formula_cells") and not audit.get("error_cells") and total_elapsed < 1200),
+        "full_run_gate": "PASS" if all_shapes_equal and dims_equal and pending_rows == len(SCENARIOS) and audit.get("sheet_count") == 16 and not audit.get("formula_cells") and not audit.get("error_cells") and total_elapsed < 1200 else "PARTIAL / DO NOT LAUNCH FULL RUN",
     }
     REPORT["status"] = "PASS_SCOPED_DIAGNOSTIC" if REPORT["acceptance"]["eligible_for_full_run"] else "PARTIAL"
     persist()
