@@ -1309,3 +1309,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STAGE7-FAILCLOSED-TYPE-GUARDS — 2026-10-21
+
+- R4: `docs/audits/CP_STAGE7_FAILCLOSED_TYPE_GUARDS_R4_2026-10-21.md`; read-back blob `b12303e85c28dfd716a08ff6daa3b9b053a01d36`; latest report commit `8ac461a96c9253225267449ffb7e6dfa8ba361d6`.
+- Base/main HEAD at CP start: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. Candidate branch: `tmp/cp-stage7-failclosed-type-guards-20261021`; code commit `da9e11a8d8da6b987846563439d41a2962fdc8a0` updates `scripts/stage7_stability.py` (blob `13872f6aa9405bc72532d32756979dc2c7e8695d`); code commit `f1f824f56c6160f3283737b9cb25a4618d49e005` updates `run_batch.py` (blob `3acc9bdc27694b2fef3925e05f4eaba5a110ddef`).
+- Classification: `K_CODE`. History N coercion now rejects non-int values instead of truncating/converting them; Gate B now rejects non-Boolean `stable` values instead of applying Python truthiness. No threshold/formula/stop-policy, source identity, trial/cohort, tests/workflows, state or main change.
+- A temporary, uncommitted logic probe passed valid checkpoints `300/600/1200/2400`, integer intermediate classification, rejection of `300.9`, `300.0`, `"300"`, `True`, `None` and missing N, rejection of `"False"`/0/1/None as Gate B Boolean fields, plus order/duplicate fail-closed checks. This is `PASS_SCOPED_LOCAL_LOGIC_PROBE`, not pytest, full-module integration, GitHub CI, or production proof.
+- Candidate was compared against base: 3 commits ahead / 0 behind, exactly three files changed: this R4, `run_batch.py`, and `scripts/stage7_stability.py`. No test/workflow or historical data changed. Live main read-back remained `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`.
+- Not closed: Gate A provider wiring/source identity drift, the exact approved near-zero CI interpretation, checkpoint/stop-policy reconciliation, and final delivery. No Monte Carlo/Trial/Checkpoint, Workflow, merge, PR, or Release was performed.
+- Next permitted independent CP: continue source-only/root-cause investigation of the P16 monetary floating-point tail without changing money quantile rules or output artifacts; stop at the boundary if reference/decision does not define the intended numeric semantics.
+
