@@ -50,3 +50,10 @@ Still open: production Gate A provider/coverage, missing Stage 11 topology defin
 - Historical `docs/stage9c/STAGE9C_REPORT.md` stays at blob `81fb79720988cfe261fa6d8d29371e616f9f9850`, unchanged. Addendum blob `deaa76cd30a05fc052171134cb97909adf136512` preserves the older `PARTIAL` chronology and the later bounded C-1..C-6 re-audit.
 - Main HEAD remained `7621ddefe6c971e9eb231eb2a987519c86a2cb51`; no simulation, trial, checkpoint, data write, workflow, or status promotion occurred.
 - Disposition: `PASS_STATIC_DOCUMENTATION_RECONCILIATION_CANDIDATE_ONLY`; overall delivery remains `NOT_ACCEPTED`.
+
+
+## Final branch comparison after continuity indexing
+
+- The candidate comparison now includes three documentation paths: this R4, `docs/stage9c/STAGE9C_REAUDIT_C1_C6_ADDENDUM_2026-10-22.md`, and the append-only continuity entry in `docs/PROJECT_CONTINUITY.md`. The branch is 4 commits ahead / 0 behind current main; the extra commit records continuity only.
+- Candidate `state.json` remains byte-identical to main at blob `0b7db78b2678aeea3f73f6114e69ab6802806fd3`; historical `STAGE9C_REPORT.md` remains byte-identical to main at blob `81fb79720988cfe261fa6d8d29371e616f9f9850`.
+- Current continuity blob: `8464b50e166ce439fd678b369776b9510598b545`. No state or historical-report write is part of this candidate.
