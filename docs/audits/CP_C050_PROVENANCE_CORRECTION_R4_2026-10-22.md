@@ -42,3 +42,13 @@ A read-only, candidate-only checker will query the two unique recorded Runs, ver
 ## Status
 
 `PENDING_CHANGE_AND_EXACT_SHA_CHECK`.
+
+
+## Exact-SHA verification result
+
+- Candidate CI Run `39684819546`, exact tested SHA `d5db721abb47fa35ad6b15bc9b2294b31aa3e207`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39684819546.
+- All workflow steps passed: checkout of exact SHA, dependency installation, checker compile, 2 unit tests, read-only live Actions metadata audit, and evidence artifact upload.
+- The live API audit verified **25/25 artifact/run pairs, 0 mismatches** across the two distinct recorded run IDs. It checked the exact artifact ID, scenario artifact name, parent run, positive size, non-expired status, and SHA-256 digest presence.
+- Evidence artifact `12386190424`, name `stage9a-artifact-run-provenance`, size 2,197 bytes, ZIP SHA-256 `dbde066e6457f095a5a560cbd17d58bd762a2a7e4fcc160e6e76850176c07a3d`; the workflow log reports this digest at finalization.
+- Candidate manifest Git blob: `2866da6dcd071eb480754595ffc586479bc1e6f7`. Only the C050_G000 artifact ID changed. The recorded run ID, global manifest fingerprint, source SHA, master seed, total trial count, representative selections, other artifact IDs, and other run IDs are unchanged. Main manifest remains at base blob `e796fa2443493b607f1f9c60b58eb63607959c26`.
+- Status: `PASS_SCOPED_PROVENANCE_CANDIDATE / MAIN_UNCHANGED`. This repairs the artifact/run pairing metadata in the candidate only. It does not create missing daily partner balances, accept a production workbook, resolve Gate A/source drift/Stage 11, or authorize merge/release.
