@@ -144,6 +144,21 @@
       "non_c100_scenarios": 20,
       "no_resume_or_identity_change": true
     },
+    "D-2026-10-12-01": {
+      "topic": "gate_b_p50_relative_change",
+      "scope": "20_NON_C100_SCENARIOS; C100_EXCLUDED",
+      "p50_metric": "Final_Net_Project_Equity",
+      "p50_method": "numpy.quantile(method=linear)",
+      "trial_range": "1..N",
+      "adjacent_checkpoints": ["300->600", "600->1200"],
+      "formula": "100 * abs(P50_new - P50_previous) / abs(P50_previous)",
+      "threshold_percent": 5.0,
+      "trigger": "STRICTLY_GREATER_THAN_5_PERCENT_REQUIRES_PRELIMINARY_STABLE_AND_N2400",
+      "near_zero_epsilon": 1e-6,
+      "near_zero_absolute_epsilon_currency_units": 1,
+      "decision_status": "APPROVED_NORMATIVE_DEFINITION",
+      "date": "2026-10-12"
+    },
     "D-2026-10-12-02": {
       "topic": "cp_d_stage9c_canonical_xlsx_precision_gate_scope",
       "value": "CANONICAL_STAGE9A_9005_ROWS; 25_SCENARIOS_X_4_METRICS_X_5_STATS=500_EXACT_COMPARISONS; NO_TOLERANCE; STAGE13_625_COHORT_SEPARATE; DO_NOT_UPGRADE_HISTORICAL_STAGE9C_PARTIAL",
