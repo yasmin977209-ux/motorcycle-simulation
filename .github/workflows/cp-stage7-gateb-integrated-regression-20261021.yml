@@ -1,4 +1,4 @@
-name: Integrated Stage 7 Gate B focused regressions
+name: Integrated Stage 7 Gate B focused regressions after pinned-source restoration
 
 on:
   push:
