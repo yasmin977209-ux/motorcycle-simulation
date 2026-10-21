@@ -2,3 +2,4 @@ Authorized M3 diagnostic trigger only. Uses synthetic copies of existing artifac
 Correction attempt 2: verbose exact SHA preflight; still diagnostic only.
 Correction attempt 3: use HEAD:path for git blob identity readback.
 Correction attempt 4: correctly expand GITHUB_TOKEN and bash variables; fix original parquet hash readback.
+Correction attempt 5: diagnostic expected 16 subset worksheets, and all source SHA/phase checks remain pinned.
