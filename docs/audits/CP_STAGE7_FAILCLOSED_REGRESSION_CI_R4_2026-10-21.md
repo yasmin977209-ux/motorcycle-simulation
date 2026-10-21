@@ -10,3 +10,11 @@
 - Exact scope requested by owner and accepted in chat on 2026-10-21: maintain `tests/test_run_batch.py` candidate-only and run focused regression tests without changing main. This R4 records the additional technical execution needed to validate those tests.
 - Acceptance: a successful run on an exact SHA containing both code and test changes. If Actions are disabled or the run cannot execute, status must stay `NOT_CI_VALIDATED`.
 - Excluded: other tests, any production workflow, `state.json`, source SHA, model/data/cohort/trial identities, main, merge, PR closure, release, delivery acceptance.
+
+
+## Exact-SHA CI result
+
+- GitHub Actions Run: `39675160043`; URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675160043
+- Tested commit SHA: `17d91b3f4ea8bc8579edf017de81e91199d107ae`; conclusion `success`; status `completed`.
+- All job steps passed: checkout of exact SHA, Python setup, dependency installation, compile of `run_batch.py` and `scripts/stage7_stability.py`, and `python -m pytest -q tests/test_run_batch.py`.
+- This is candidate-only focused CI evidence. It does not authorize merge, production simulation, Gate A, or delivery acceptance.
