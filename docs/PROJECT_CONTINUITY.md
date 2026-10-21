@@ -1309,3 +1309,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-P16-QUANTILE-BOUNDARY-AUDIT — exact P90 float-tail investigation (2026-10-21)
+
+- R4: `docs/audits/CP_P16_QUANTILE_BOUNDARY_AUDIT_R4_2026-10-21.md`; read-back blob `fa420296a8aca69ef611d9df4fe23de2fe2add1b`.
+- Audit script blob `6ff53f114bcb088c6b061ea76b6d46b41bbcbfb9`; candidate branch `tmp/cp-p16-quantile-boundary-audit-20261021`; successful run `39676592373`, exact SHA `61ac5b4e5458e13b65ed4392dc7f84e1b051e1ab`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39676592373.
+- Evidence artifact `12381982953`, SHA-256 `d1a8c072fc41062d3a2212a36df56e45c6691ceeabfa03475422f74485e29ed0`. Input Stage 9A artifact `11497409735` ZIP digest `9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07`; embedded trial Parquet digest `deaaf22000a56eb674ea4d349235f1e6d9410b838979ae043f41712983924b54`; 450 verified rows with integer Final_Cash.
+- The two order statistics around linear P90 are 13,181,600 and 13,222,800 YER with interpolation weight 1/10; exact rational P90 = 13,185,720/1 YER. NumPy's float64 path yields 13,185,720.000000002, reproducing `C030_G030_STATS!L3`; discrepancy is about `1.862645149230957e-9`. This exact example is a float-evaluation tail; no source values or published workbook were changed.
+- A first run `39676486085` failed before reading data due an auth header being forwarded through redirect (HTTP 401). Redirect handling was corrected to keep the API token only on the GitHub API request. Successful rerun `39676592373` is the authoritative evidence.
+- No P16 producer/workbook patch: CP-D's accepted exact historical comparison requires zero tolerance and the existing R4 excludes changing the old quantile or historical workbook. A new numeric-output behavior must be versioned and reconciled with CP-D before implementation.
+- Disposition: `PASS_SCOPED_READ_ONLY_AUDIT / NOT_FIXED_BY_DESIGN`. No historical data, manifest, producer, published workbook, tests, source identity, trial or checkpoint changed; main remains unchanged.
+
