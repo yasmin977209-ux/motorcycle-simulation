@@ -31,7 +31,7 @@ jobs:
           printf 'head=%s\nbase=%s\nmerge_base=%s\n' "$(git rev-parse HEAD)" "${base}" "${merge_base}"
           if [ "${merge_base}" != "${base}" ]; then echo "PREFLIGHT_FAIL: base is not an ancestor"; fail=1; fi
           while IFS='|' read -r path expected; do
-            actual="$(git rev-parse "${path}")"
+            actual="$(git rev-parse "HEAD:${path}")"
             printf 'blob path=%s expected=%s actual=%s\n' "${path}" "${expected}" "${actual}"
             if [ "${actual}" != "${expected}" ]; then echo "PREFLIGHT_FAIL: blob mismatch for ${path}"; fail=1; fi
           done <<'IDENTITIES'
