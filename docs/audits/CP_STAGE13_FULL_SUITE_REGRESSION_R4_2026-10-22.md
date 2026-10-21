@@ -47,3 +47,10 @@ No additional source, test, data, manifest, reference, policy, source SHA, seed/
 - All four failures are in `tests/test_acceptance_16_v2.py` and fail with `FileNotFoundError` for absent `results_stage5/worker_equivalence_manifest.json`, `results_stage5/trials_summary.parquet`, and `results_stage5/daily_distribution.parquet` (tests 127, 159, 160, 161). These files are not in the clean checkout/tree and are not produced by the Stage 13 test workflow. This run therefore cannot be described as a full-suite PASS; the observed failure class is `MISSING_TEST_FIXTURE_OR_EXTERNAL_STAGE5_ARTIFACT`, not a demonstrated Stage 13 implementation regression. The four failures remain visible and are not suppressed.
 - Focused Stage 13 regression remains `54 passed` on exact SHA `0a5c793f342266c1e0df91d3ca131e5cb2376ab7`, Run `39694032014`. That scoped result is distinct from the non-passing repository-wide run.
 - Disposition: `PASS_FOCUSED_STAGE13 / FULL_SUITE_NONPASS_DUE_MISSING_STAGE5_FIXTURES`. No tests were edited to mask these failures. Do not claim repository-wide CI green.
+
+
+## Independent pre-port baseline confirmation
+
+- Baseline-control Run `39686434487` on branch `tmp/cp-stage5-full-suite-baseline-20261022`, tested SHA `08d1ebedb0d970a9cde7afea5aebcebd4ed8a29f`, ran the four Acceptance 16 tests independently before the Stage 13 assembler was present; it failed on the same four missing Stage 5 paths. Run URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39686434487.
+- Baseline-control artifact `12386996668`, SHA-256 `aae5a1314d87a572c086b216fca91c9dbe6b598e0a16755d142dda02de3a93d9`, contains `source_identity.json` stating `stage13_assembler_present=false`, `stage5_fixture_paths_in_git=[]`, and `production_data_generated=false`, `simulation_trials_or_checkpoints_run=false`.
+- Its JUnit recorded 4/4 failures, all `FileNotFoundError` for those same paths. This is independent evidence the full-suite failures predate the Stage 13 port, not a new regression. No fixture/data was synthesized or inserted.
