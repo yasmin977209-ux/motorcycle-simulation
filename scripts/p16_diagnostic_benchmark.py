@@ -116,6 +116,7 @@ def synthetic_value(value, key=None, date_map=None):
     return value
 
 def synthetic_daily_distribution(path):
+    source_file_sha256_before_syntheticization = file_sha(path)
     source = pq.read_table(path)
     original_rows = source.to_pylist()
     unique = []
@@ -154,7 +155,7 @@ def synthetic_daily_distribution(path):
         "schema_equal": back.schema.equals(source.schema, check_metadata=True),
         "row_count_equal": back.num_rows == source.num_rows,
         "unique_dates_source": len(unique), "expected_sheet_rows_including_header": count_rows + 1,
-        "source_file_sha256_before_syntheticization": file_sha(path),
+        "source_file_sha256_before_syntheticization": source_file_sha256_before_syntheticization,
         "synthetic_file_sha256": file_sha(path)
     }
 
