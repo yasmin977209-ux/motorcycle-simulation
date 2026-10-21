@@ -1309,6 +1309,31 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-SOURCE-SHA-DRIFT-RESTORE-PINNED — exact source identity candidate (2026-10-22)
+
+- R4: `docs/audits/CP_SOURCE_SHA_DRIFT_RESTORE_PINNED_R4_2026-10-22.md`; result blob `0c570d4841123a22adc9b76141bf307493e0e05d`.
+- Candidate branch `tmp/cp-source-sha-drift-restore-pinned-20261022`; successful GitHub Actions Run `39682451002`, tested SHA `60b16a2e82269107a5fa241b409f4b2c061f8540`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39682451002.
+- `daily_engine.py` now exactly matches pinned source blob `6c4496c3e9a9b41668c3d93063ad31d96df5f878`; CI also verified `monte_carlo.py` exact identity with the pinned commit. No `SOURCE_SHA` constant was changed.
+- Test-only adjustment: `tests/test_stage3_path_integration.py` calls the actual `_new_contract` function rather than the historical alias that was introduced solely as a wrapper. The targeted inventory passed: 11 tests in 0.43s.
+- No Monte Carlo/trial/checkpoint, historical data, Parquet, manifest or production model-output edit occurred. Main still has the previous `daily_engine.py` blob and its `SOURCE_SHA_DRIFT` blocker remains until a reviewed PR is merged.
+- Disposition: `PASS_PINNED_SOURCE_AND_PATH_TESTS_CANDIDATE_ONLY`; no merge or release.
+
+## CP-STATE-GOVERNANCE-RECONCILE-D12026101201 — 2026-10-21
+
+- R4: `docs/audits/CP_STATE_GOVERNANCE_RECONCILE_D12026101201_R4_2026-10-21.md`; post-read-back blob `9bd6acd689347d116b88c41b5d85b975d81430c4`.
+- Base/main HEAD `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; candidate branch `tmp/cp-state-governance-reconcile-20261021`.
+- Target `state.json` changed only on this candidate: blob `32e9d039d2df628ca367b9dd8810f8e40bc80aec`. New structured `governance_decisions.D-2026-10-12-01` indexes the existing approved decision: compare adjacent 300→600 and 600→1200 checkpoints for 20 non-C100 scenarios, using linear P50 of Final_Net_Project_Equity, strict >5% trigger, and approved near-zero fallback. The decision log was not changed.
+- Valid JSON read-back confirmed removal of the now-stale `GOVERNANCE_GAP` blocker only. `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED` are unchanged. Other six blockers remain.
+- No source code, trials, data, workflow, test, or historical artifact changed. Main `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936` and main HEAD remain unchanged. No run/merge/release.
+- Disposition: `PASS_STATIC_STATE_RECONCILIATION_CANDIDATE_ONLY`; project delivery remains `NOT_ACCEPTED`.
+
+### CP-STATE-GOVERNANCE-RECONCILE — post-PR #55 identity verification (2026-10-22)
+
+- PR #55 merged successfully as commit `223ce1eea3db5f4c7e55fe329f63dc4f68eced97`. Main `daily_engine.py` now has pinned blob `6c4496c3e9a9b41668c3d93063ad31d96df5f878`; main `monte_carlo.py` matches pinned blob `a8c3603487f92d3e15c3d754ce3faee3580a5f46`. The `SOURCE_SHA` constant is unchanged and no trials/simulation were run.
+- On this PR #50 candidate only, state `SOURCE_SHA_DRIFT` blocker was removed after those live-main blob equality checks. Candidate state blob is `0b7db78b2678aeea3f73f6114e69ab6802806fd3`; it contains D-2026-10-12-01, removes stale governance-gap and source-drift blockers, and retains five unrelated open blockers. `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED` remain unchanged.
+- R4 post-merge addendum blob: `3c6d1e288e2156b198c76f29c548804965accfce`. Main state is still unchanged at this point; the candidate is pending the same PR #50 review/merge, not directly written to main.
+- Gate A remains blocked by missing approved production Golden/provider and coverage authority. Pinned source identity does not imply Gate A PASS or overall delivery acceptance.
+
 ## CP-STAGE7-GATEB-INTEGRATED — exact-SHA candidate CI result (2026-10-21)
 
 - R4: `docs/audits/CP_STAGE7_GATEB_INTEGRATED_R4_2026-10-21.md`; result blob `159747a395c03d82524c266eea3da12753a569f9`.
@@ -1317,4 +1342,3 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Read-back blobs: `run_batch.py` `bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`; `scripts/stage7_stability.py` `13872f6aa9405bc72532d32756979dc2c7e8695d`; `tests/test_run_batch.py` `476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`.
 - Scope is only strict type handling and the conditional near-zero CI threshold. The test/workflow runs deterministic unit tests only; it does not run the production simulation, create checkpoints, resolve the stopping rule, establish Gate A, or accept release.
 - Disposition: `PASS_FOCUSED_INTEGRATED_CI / MAIN_UNCHANGED`. Do not merge/release solely from this CP.
-
