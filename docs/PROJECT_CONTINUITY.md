@@ -1309,6 +1309,15 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-SOURCE-SHA-DRIFT-RESTORE-PINNED — exact source identity candidate (2026-10-22)
+
+- R4: `docs/audits/CP_SOURCE_SHA_DRIFT_RESTORE_PINNED_R4_2026-10-22.md`; result blob `0c570d4841123a22adc9b76141bf307493e0e05d`.
+- Candidate branch `tmp/cp-source-sha-drift-restore-pinned-20261022`; successful GitHub Actions Run `39682451002`, tested SHA `60b16a2e82269107a5fa241b409f4b2c061f8540`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39682451002.
+- `daily_engine.py` now exactly matches pinned source blob `6c4496c3e9a9b41668c3d93063ad31d96df5f878`; CI also verified `monte_carlo.py` exact identity with the pinned commit. No `SOURCE_SHA` constant was changed.
+- Test-only adjustment: `tests/test_stage3_path_integration.py` calls the actual `_new_contract` function rather than the historical alias that was introduced solely as a wrapper. The targeted inventory passed: 11 tests in 0.43s.
+- No Monte Carlo/trial/checkpoint, historical data, Parquet, manifest or production model-output edit occurred. Main still has the previous `daily_engine.py` blob and its `SOURCE_SHA_DRIFT` blocker remains until a reviewed PR is merged.
+- Disposition: `PASS_PINNED_SOURCE_AND_PATH_TESTS_CANDIDATE_ONLY`; no merge or release.
+
 ## CP-STATE-GOVERNANCE-RECONCILE-D12026101201 — 2026-10-21
 
 - R4: `docs/audits/CP_STATE_GOVERNANCE_RECONCILE_D12026101201_R4_2026-10-21.md`; post-read-back blob `9bd6acd689347d116b88c41b5d85b975d81430c4`.
@@ -1324,4 +1333,3 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - On this PR #50 candidate only, state `SOURCE_SHA_DRIFT` blocker was removed after those live-main blob equality checks. Candidate state blob is `0b7db78b2678aeea3f73f6114e69ab6802806fd3`; it contains D-2026-10-12-01, removes stale governance-gap and source-drift blockers, and retains five unrelated open blockers. `state.sha=0b083fa472d7a11089a15137cfad16d87785689a` and `stage=12-CLOSED` remain unchanged.
 - R4 post-merge addendum blob: `3c6d1e288e2156b198c76f29c548804965accfce`. Main state is still unchanged at this point; the candidate is pending the same PR #50 review/merge, not directly written to main.
 - Gate A remains blocked by missing approved production Golden/provider and coverage authority. Pinned source identity does not imply Gate A PASS or overall delivery acceptance.
-
