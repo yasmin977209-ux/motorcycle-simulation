@@ -1372,3 +1372,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
 
+## CP-STAGE13-CLEAN-CURRENT-MAIN — exact-SHA synthetic verification (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE13_CLEAN_CURRENT_MAIN_R4_2026-10-22.md`; result blob `7c44ca4e70774bea9d0f66e8205757ab0071b85d`.
+- Candidate branch `tmp/cp-stage13-clean-current-main-20261022`, clean base `7621ddefe6c971e9eb231eb2a987519c86a2cb51`. GitHub Actions Run `39694032014` passed on exact SHA `0a5c793f342266c1e0df91d3ca131e5cb2376ab7`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39694032014. Log confirms `54 passed in 13.44s`; compile checks passed.
+- Verified implementation/test blobs: assembler `47fc1828dfb0d298aa4528f58b558bf012882076`; Excel entrypoint `c5db5f1113294224d371e98bab2edd7b015a30d2`; MaxCase identity helper `f7835b5a6f2584f9a0679a496b565a5a229f6b4c`; tests `d4c0f8c52da53cb3ad50994e71632c04502ff873`, `182c7e0ec62e6f48a1fce2d2c4d6bb692e76bce4`, `1c3b0a37d3643c2fd45270a63df61b8525b36d5f`, `968006169c4b46408269fb954c4714e561065f31`.
+- Canonical Stage 9A manifest blob on candidate and current main both remains `e796fa2443493b607f1f9c60b58eb63607959c26`. Current-main comparison: 9 commits ahead / 0 behind; files are limited to Stage 13 assembler/orchestrator/source-audit, four synthetic test files, this R4/continuity, and a candidate-only focused workflow.
+- This CI is synthetic only. No canonical artifact downloads, data extracts, production workbook, Monte Carlo, Trial/Checkpoint, Golden extension, source identity change, or manifest mutation. It does not settle C050_G000 provenance or missing MaxCase Partner1/Partner2 daily memo balances.
+- Disposition: `PASS_FOCUSED_SYNTHETIC_CI_CANDIDATE_ONLY`. Do not merge or claim Stage 13/overall delivery accepted; keep production build blocked until provenance and daily partner-balance evidence are resolved.
+
