@@ -1,0 +1,71 @@
+name: Stage 13 candidate full-suite regression
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-clean-current-main-20261022"
+    paths:
+      - "scripts/stage13_assemble.py"
+      - "scripts/excel_builder.py"
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "tests/**"
+      - "docs/audits/CP_STAGE13_FULL_SUITE_REGRESSION_R4_2026-10-22.md"
+      - ".github/workflows/cp-stage13-full-suite-regression-20261022.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-stage13-full-suite-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  full-suite:
+    name: Compile Stage 13 modules and run all repository tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile Stage 13 modules
+        run: python -m compileall -q scripts/stage13_assemble.py scripts/stage13_maxcase_source_audit.py scripts/excel_builder.py
+      - name: Run the full existing test suite
+        id: pytest
+        continue-on-error: true
+        env:
+          PYTHONPATH: .
+        run: |
+          mkdir -p stage13_full_suite
+          set +e
+          python -m pytest -q tests --junitxml=stage13_full_suite/junit.xml 2>&1 | tee stage13_full_suite/pytest.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "$rc" > stage13_full_suite/pytest_exit_code.txt
+          exit "$rc"
+      - name: Record exact tested SHA and current source blobs
+        if: always()
+        run: |
+          mkdir -p stage13_full_suite
+          git rev-parse HEAD > stage13_full_suite/tested_head_sha.txt
+          git hash-object scripts/stage13_assemble.py > stage13_full_suite/assembler_blob.txt
+          git hash-object scripts/excel_builder.py > stage13_full_suite/excel_builder_blob.txt
+          git hash-object scripts/stage13_maxcase_source_audit.py > stage13_full_suite/maxcase_audit_blob.txt
+      - name: Upload full-suite evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-full-suite-regression-evidence
+          path: stage13_full_suite/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Require full-suite success
+        if: steps.pytest.outcome == 'failure'
+        run: exit 1
