@@ -1318,3 +1318,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Compare against base: 3 commits ahead / 0 behind, exactly the R4, `run_batch.py`, and this continuity record changed. Main remains unchanged.
 - Scope limits: this does not define a three-transition stop policy, alter trial/cohort identities, clear Gate A/provider/source drift, implement CS, or accept delivery. Gate B is not globally accepted until the exact candidate code receives authorized focused tests and the complete governing checkpoint logic is resolved.
 
+### CP-GATEB-CI-NEAR-ZERO — exact-SHA regression result (2026-10-21)
+
+- Candidate CI Run `39675170837`, exact tested SHA `7b16d5f96e801156a77d1a2975ec8f0fc1f3edfc`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39675170837.
+- `tests/test_run_batch.py` and target-module compile checks passed. The tests cover both signs inside the near-zero boundary, the exact boundary, ordinary means, and a synthetic example that fails under the stricter relative limit even though it would pass under the old absolute floor.
+- R4 result: `docs/audits/CP_GATEB_NEAR_ZERO_REGRESSION_CI_R4_2026-10-21.md`, read-back blob `c5729dcc829f0240818034053ae6280144441763`.
+- Disposition: `PASS_FOCUSED_CANDIDATE_CI`; this is unit/integration regression evidence only, not a historical checkpoint or production Gate B acceptance. No merge or production run.
+
