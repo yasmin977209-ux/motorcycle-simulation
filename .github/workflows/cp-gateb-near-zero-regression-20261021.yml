@@ -1,0 +1,42 @@
+name: CP Gate B near-zero regression
+
+on:
+  push:
+    branches:
+      - "tmp/cp-gateb-ci-near-zero-20261021"
+    paths:
+      - "run_batch.py"
+      - "scripts/stage7_stability.py"
+      - "tests/test_run_batch.py"
+      - ".github/workflows/cp-gateb-near-zero-regression-20261021.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-gateb-near-zero-regression-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  focused-regression:
+    name: Conditional CI limit around zero
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Compile target modules
+        run: python -m compileall -q run_batch.py scripts/stage7_stability.py
+      - name: Run focused deterministic regressions
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_run_batch.py
