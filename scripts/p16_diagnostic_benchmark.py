@@ -154,7 +154,7 @@ def synthetic_daily_distribution(path):
         "schema_equal": back.schema.equals(source.schema, check_metadata=True),
         "row_count_equal": back.num_rows == source.num_rows,
         "unique_dates_source": len(unique), "expected_sheet_rows_including_header": count_rows + 1,
-        "source_file_sha256_before_syntheticization": hashlib.sha256(source.serialize().to_pybytes()).hexdigest(),
+        "source_file_sha256_before_syntheticization": file_sha(path),
         "synthetic_file_sha256": file_sha(path)
     }
 
