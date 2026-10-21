@@ -41,3 +41,12 @@ Still open: production Gate A provider/coverage, missing Stage 11 topology defin
 ## Status
 
 `PENDING_STATIC_READBACK`; branch-only documentation candidate, no merge.
+
+
+## Static read-back result
+
+- Candidate compare against current-main base `7621ddefe6c971e9eb231eb2a987519c86a2cb51`: 2 commits ahead / 0 behind; exactly two files added, this R4 and the dated addendum.
+- Current main and candidate `state.json` both use blob `0b7db78b2678aeea3f73f6114e69ab6802806fd3`; status `full_stage9c_status=PASS`, stage `12-CLOSED`, and parent-state pointer unchanged.
+- Historical `docs/stage9c/STAGE9C_REPORT.md` stays at blob `81fb79720988cfe261fa6d8d29371e616f9f9850`, unchanged. Addendum blob `deaa76cd30a05fc052171134cb97909adf136512` preserves the older `PARTIAL` chronology and the later bounded C-1..C-6 re-audit.
+- Main HEAD remained `7621ddefe6c971e9eb231eb2a987519c86a2cb51`; no simulation, trial, checkpoint, data write, workflow, or status promotion occurred.
+- Disposition: `PASS_STATIC_DOCUMENTATION_RECONCILIATION_CANDIDATE_ONLY`; overall delivery remains `NOT_ACCEPTED`.
