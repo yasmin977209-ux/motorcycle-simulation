@@ -37,3 +37,12 @@ The historical `STAGE9C_REPORT.md` is not edited. No automated status promotion 
 ## Status
 
 `PENDING_STATIC_READBACK`. This is documentation reconciliation only, not overall project acceptance.
+
+
+## Static verification result
+
+- Read-back addendum: `docs/stage9c/STAGE9C_REAUDIT_C1_C6_ADDENDUM_2026-10-22.md`, blob `deaa76cd30a05fc052171134cb97909adf136512`, 5,021 bytes.
+- Current main `state.json` blob `2178260bb18efeb81437486f13b6d10cf5e85936` records `full_stage9c_status=PASS` and `stage9c_ledger_reaudit_20261012.status=PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT`; candidate `state.json` is byte-identical. `stage=12-CLOSED` and its parent-state pointer are unchanged.
+- Base/main HEAD remains `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`; candidate diff is only this R4 and the new addendum (2 commits ahead, 0 behind).
+- No run, simulation, trial, checkpoint, manifest or data mutation occurred.
+- Disposition: `PASS_STATIC_DOCUMENTATION_RECONCILIATION_CANDIDATE_ONLY`. Final delivery still remains `NOT_ACCEPTED`.
