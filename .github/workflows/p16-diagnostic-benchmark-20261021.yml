@@ -24,13 +24,24 @@ jobs:
       - name: Assert diagnostic descendant and pinned input/code identities
         shell: bash
         run: |
-          set -euo pipefail
-          test "$(git merge-base HEAD 30ba2d5d47d3a3d6c117f0ef667115401c337ad7)" = "30ba2d5d47d3a3d6c117f0ef667115401c337ad7"
-          test "$(git rev-parse docs/stage9a/dataset_manifest.json)" = "e796fa2443493b607f1f9c60b58eb63607959c26"
-          test "$(git rev-parse scripts/excel_builder_p16.py)" = "1274e0055a81988ef72709a4c6ff9fc1f1351f3a"
-          test "$(git rev-parse scripts/p16_produce_deliverables_v4.py)" = "c3f630b883ec1c02c2fca6ab93363b2c099da51d"
-          test "$(git rev-parse scripts/stage13_assemble.py)" = "73aaf723753939a222dc4544990f71c4dae71c1f"
+          set -uo pipefail
+          fail=0
+          base="30ba2d5d47d3a3d6c117f0ef667115401c337ad7"
+          merge_base="$(git merge-base HEAD "${base}")"
+          printf 'head=%s\nbase=%s\nmerge_base=%s\n' "$(git rev-parse HEAD)" "${base}" "${merge_base}"
+          if [ "${merge_base}" != "${base}" ]; then echo "PREFLIGHT_FAIL: base is not an ancestor"; fail=1; fi
+          while IFS='|' read -r path expected; do
+            actual="$(git rev-parse "${path}")"
+            printf 'blob path=%s expected=%s actual=%s\n' "${path}" "${expected}" "${actual}"
+            if [ "${actual}" != "${expected}" ]; then echo "PREFLIGHT_FAIL: blob mismatch for ${path}"; fail=1; fi
+          done <<'IDENTITIES'
+          docs/stage9a/dataset_manifest.json|e796fa2443493b607f1f9c60b58eb63607959c26
+          scripts/excel_builder_p16.py|1274e0055a81988ef72709a4c6ff9fc1f1351f3a
+          scripts/p16_produce_deliverables_v4.py|c3f630b883ec1c02c2fca6ab93363b2c099da51d
+          scripts/stage13_assemble.py|73aaf723753939a222dc4544990f71c4dae71c1f
+          IDENTITIES
           mkdir -p diagnostics
+          exit "${fail}"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
