@@ -230,10 +230,10 @@ def _metric_summary(
         mean = float(sample.mean())
         sample_std = float(sample.std(ddof=1))
         half_ci = float(t_critical * sample_std / math.sqrt(n))
-        limit = max(
-            constants.CI_ABSOLUTE_EPSILON,
-            constants.CI_RELATIVE_TOLERANCE * abs(mean),
-        )
+        if abs(mean) < constants.REFERENCE_EPSILON:
+            limit = constants.CI_ABSOLUTE_EPSILON
+        else:
+            limit = constants.CI_RELATIVE_TOLERANCE * abs(mean)
         summary[field_name] = {
             "n": n,
             "mean": mean,
@@ -278,12 +278,14 @@ def evaluate_gate_a(
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    metric_payload = {
-        field_name: {
-            "stable": bool(current_metrics[field_name]["stable"])
-        }
-        for field_name in STABILITY_FIELDS
-    }
+    metric_payload = {}
+    for field_name in STABILITY_FIELDS:
+        raw_stable = current_metrics[field_name]["stable"]
+        if type(raw_stable) is not bool:
+            raise ValueError(
+                f"Gate B stable field for {field_name!r} must be a Boolean"
+            )
+        metric_payload[field_name] = {"stable": raw_stable}
     return {
         "checked": True,
         "stable": all(
