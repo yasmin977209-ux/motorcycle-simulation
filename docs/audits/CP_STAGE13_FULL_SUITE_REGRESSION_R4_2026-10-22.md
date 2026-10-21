@@ -36,3 +36,14 @@ No additional source, test, data, manifest, reference, policy, source SHA, seed/
 ## Status
 
 `PENDING_FULL_SUITE_RUN`.
+
+
+## Exact-SHA full-suite result
+
+- Run: `39694421445`; tested SHA `f4d8dc0c304a5edc9592cde858f4fe756ba42f0c`; URL https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39694421445.
+- Final result: **432 passed, 4 failed, 1 skipped in 243.13 seconds**; Python compilation and focused Stage 13 tests remained successful.
+- Evidence artifact: `12390027512`, ZIP SHA-256 `785d96fec1092442e0f587376f56940b324f36c568213d3745c433669dc745a4`.
+- Exact tested code blobs recorded by the workflow: assembler `47fc1828dfb0d298aa4528f58b558bf012882076`; Excel entrypoint `c5db5f1113294224d371e98bab2edd7b015a30d2`; MaxCase audit helper `f7835b5a6f2584f9a0679a496b565a5a229f6b4c`.
+- All four failures are in `tests/test_acceptance_16_v2.py` and fail with `FileNotFoundError` for absent `results_stage5/worker_equivalence_manifest.json`, `results_stage5/trials_summary.parquet`, and `results_stage5/daily_distribution.parquet` (tests 127, 159, 160, 161). These files are not in the clean checkout/tree and are not produced by the Stage 13 test workflow. This run therefore cannot be described as a full-suite PASS; the observed failure class is `MISSING_TEST_FIXTURE_OR_EXTERNAL_STAGE5_ARTIFACT`, not a demonstrated Stage 13 implementation regression. The four failures remain visible and are not suppressed.
+- Focused Stage 13 regression remains `54 passed` on exact SHA `0a5c793f342266c1e0df91d3ca131e5cb2376ab7`, Run `39694032014`. That scoped result is distinct from the non-passing repository-wide run.
+- Disposition: `PASS_FOCUSED_STAGE13 / FULL_SUITE_NONPASS_DUE_MISSING_STAGE5_FIXTURES`. No tests were edited to mask these failures. Do not claim repository-wide CI green.
