@@ -36,3 +36,14 @@ No production source, tests, statistical policy, money value, model source SHA, 
 ## Status
 
 `PENDING_EXACT_ORDER_STATISTIC_READBACK`. Do not patch with blind rounding.
+
+
+## Exact-SHA run and source values
+
+- Successful read-only Actions Run: `39676592373`, exact SHA `61ac5b4e5458e13b65ed4392dc7f84e1b051e1ab`; URL https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39676592373.
+- Evidence artifact: ID `12381982953`, name `p16-quantile-boundary-audit`, ZIP SHA-256 `d1a8c072fc41062d3a2212a36df56e45c6691ceeabfa03475422f74485e29ed0`. The downloaded evidence artifact was re-hashed locally and matched the Actions API digest.
+- Downloaded immutable input ZIP SHA matched `9331c726560471f3092b2c61893a7ad87f3bafed363217249b6f4a992c029c07`; inner Parquet SHA matched `deaaf22000a56eb674ea4d349235f1e6d9410b838979ae043f41712983924b54`. The audit verified exactly 450 rows and integer `final_cash` values; all historical inputs were read-only.
+- For N=450, NumPy's linear P90 index is `404.1`: lower value at zero-based index 404 is `13,181,600`; upper value at index 405 is `13,222,800`; linear weight is `1/10`. Exact rational interpolation is `13,185,720/1` YER, an integer.
+- NumPy float64 output is `13185720.000000002`; exact linear interpolation is `13185720.0`; difference is approximately `1.862645149230957e-9`. The output reproduces the observed P16 cell `C030_G030_STATS!L3` exactly. Classification: `EXACT_INTEGER_QUANTILE_FLOAT_TAIL_CANDIDATE`.
+- A first audit run (`39676486085`) failed before reading input because urllib forwarded the GitHub API authorization header through a redirect to the signed artifact-storage URL, resulting in HTTP 401. The redirect handler was corrected to confine the token to the API request and fetch the signed URL without Authorization. No input data was changed. Successful rerun is the authoritative evidence.
+- Disposition: the apparent decimal tail is a binary floating-point evaluation artifact for this verified P90; the exact linear quantile of the integer observations is exactly 13,185,720 YER. However, CP-D requires exact numeric equality to the already-published workbook and its R4 explicitly forbids changing the quantile formula, underlying metric, or historical workbook. This audit therefore **does not patch** the producer or any workbook. A change to stored numeric values must be versioned and reconciled with that exact historical comparison contract before production code is changed.
