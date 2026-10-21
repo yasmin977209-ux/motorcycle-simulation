@@ -49,3 +49,12 @@ No main writes, merge, PR closure, release, production workflow dispatch, simula
 - Read-back before recording result: `run_batch.py` blob `bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`; `scripts/stage7_stability.py` blob `13872f6aa9405bc72532d32756979dc2c7e8695d`; `tests/test_run_batch.py` blob `476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`.
 - This is scoped candidate CI for the changed code and tests, not production Stage 7 execution, not a historical checkpoint, not Gate A acceptance, and not overall statistical stability.
 - Disposition: `PASS_FOCUSED_INTEGRATED_CI`; no main write, merge, production run, or release.
+
+
+## Post-merge source-identity regression rerun (2026-10-22)
+
+- After main incorporated PR #55 (merge commit `223ce1eea3db5f4c7e55fe329f63dc4f68eced97`), the integrated Gate B candidate was updated with current main as an ancestor and rerun.
+- Exact-SHA GitHub Actions Run `39688212783`, tested commit `597d97c01cee409807d0a9830fc360b5218f3395`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39688212783.
+- Exact-source candidate and all test steps passed: requirements installation, compilation, and `tests/test_run_batch.py`. This run confirms the fail-closed N/Boolean guards and near-zero CI threshold coexist with the restored pinned `daily_engine.py`.
+- The tested code/test blobs remain `run_batch.py=bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`, `scripts/stage7_stability.py=13872f6aa9405bc72532d32756979dc2c7e8695d`, and `tests/test_run_batch.py=476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`. This run did not invoke the production Stage 7 workflow, Monte Carlo, Trial, or Checkpoint.
+- Disposition remains scoped: `PASS_FOCUSED_INTEGRATED_CI`. It does not provide Golden/provider inputs to production Gate A, establish all-scenario stability, resolve stop-policy questions, or accept delivery.
