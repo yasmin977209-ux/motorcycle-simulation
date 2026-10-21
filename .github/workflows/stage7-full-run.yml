@@ -105,7 +105,7 @@ jobs:
           assert len(set(scenarios)) == 25
           for scenario in scenarios:
               monte_carlo.parse_scenario_id(scenario)
-          print("STAGE7_PREFLIGHT_CONTRACT_OK")
+          print("STAGE7_PREFLIGHT_OK")
           PY
 
           for scenario in "${SCENARIOS[@]}"; do
@@ -134,19 +134,6 @@ jobs:
               echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
           done
-          import yaml
-          import monte_carlo
-
-          spec = yaml.safe_load(
-              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
-          )
-          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
-          assert len(scenarios) == 25
-          assert len(set(scenarios)) == 25
-          for scenario in scenarios:
-              monte_carlo.parse_scenario_id(scenario)
-          print("STAGE7_PREFLIGHT_OK")
-          PY
   matrix-simulation:
     name: simulation-${{ matrix.scenario }}
     needs: preflight-gates
