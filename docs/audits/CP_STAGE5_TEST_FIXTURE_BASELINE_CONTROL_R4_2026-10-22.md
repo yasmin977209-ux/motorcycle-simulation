@@ -37,3 +37,12 @@ It must not generate or download Stage 5 production data, run Monte Carlo or sim
 ## Status
 
 `PENDING_CONTROL_RUN`. This CP is diagnostic only; it does not amend main, generate production data, or accept the Stage 13 delivery.
+
+
+## Baseline-control read-back
+
+- Control Run `39686434487`, tested SHA `08d1ebedb0d970a9cde7afea5aebcebd4ed8a29f`, result `failure` as expected: exactly the four selected tests failed with the same missing-file paths; `159 deselected`; runtime `0.74s`. URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39686434487.
+- The control branch is based directly on main. Test blob remained exactly `a93dba6435e0561f82600617ba6c658999409d59`; the identity artifact records no `results_stage5/` paths in the tested Git tree and `stage13_assembler_present=false`.
+- Evidence artifact `12386996668`, name `stage5-acceptance-fixture-baseline`, size 4,587 bytes, API SHA-256 `aae5a1314d87a572c086b216fca91c9dbe6b598e0a16755d142dda02de3a93d9`. Downloaded ZIP matched the API digest; it contains the complete test log, JUnit XML, and source identity record.
+- Classification: `BASELINE_TEST_FIXTURE_DEFECT_CONFIRMED`. These four full-suite failures are not introduced by the Stage 13 candidate. They must remain recorded; do not fabricate missing files or alter the assertions without a separate test-fixture repair scope.
+- No simulation, Trial, Checkpoint, production data generation, source/test mutation, or main change occurred.
