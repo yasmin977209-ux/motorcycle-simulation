@@ -247,9 +247,45 @@ def test_statistical_history_migration_fails_closed_on_malformed_or_duplicate_en
     import pytest
     from scripts.stage7_stability import filter_statistical_history
 
-    with pytest.raises(ValueError, match="missing or invalid N"):
+    with pytest.raises(ValueError, match="N must be an integer"):
         filter_statistical_history([{"metrics": {}}])
     with pytest.raises(ValueError, match="duplicate stability-history N"):
         filter_statistical_history([{"n": 350}, {"n": 350}])
     with pytest.raises(ValueError, match="not ordered"):
         filter_statistical_history([{"n": 400}, {"n": 350}])
+
+
+
+def test_statistical_history_rejects_non_integer_checkpoint_n() -> None:
+    from scripts.stage7_stability import filter_statistical_history
+
+    for invalid_n in (300.9, 300.0, "300", True, None):
+        with pytest.raises(ValueError, match="N must be an integer"):
+            filter_statistical_history([{"n": invalid_n}])
+
+    with pytest.raises(ValueError, match="N must be an integer"):
+        filter_statistical_history([{"metrics": {}}])
+
+
+def test_gate_b_requires_actual_boolean_stability_evidence() -> None:
+    valid = {
+        field_name: {"mean": 10.0, "stable": True}
+        for field_name in run_batch.STABILITY_FIELDS
+    }
+    assert run_batch.evaluate_gate_b(valid)["stable"] is True
+
+    false_metrics = {
+        field_name: {"mean": 10.0, "stable": False}
+        for field_name in run_batch.STABILITY_FIELDS
+    }
+    assert run_batch.evaluate_gate_b(false_metrics)["stable"] is False
+
+    for invalid_value in ("False", 0, 1, None):
+        for field_name in run_batch.STABILITY_FIELDS:
+            malformed = {
+                name: dict(metric)
+                for name, metric in valid.items()
+            }
+            malformed[field_name]["stable"] = invalid_value
+            with pytest.raises(ValueError, match="must be a Boolean"):
+                run_batch.evaluate_gate_b(malformed)
