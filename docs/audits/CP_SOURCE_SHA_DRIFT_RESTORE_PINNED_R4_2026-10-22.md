@@ -37,3 +37,14 @@ The project records the alias addition as source-identity drift and a historical
 ## Status
 
 `PENDING_STATIC_READBACK_AND_CI`. Do not claim source drift is resolved unless exact content identity and targeted tests both pass.
+
+
+## Exact-SHA validation result
+
+- GitHub Actions Run `39682451002`, tested SHA `60b16a2e82269107a5fa241b409f4b2c061f8540`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39682451002.
+- All steps passed, including exact pinned model-source identity check, compile, and targeted tests.
+- `daily_engine.py` at the tested SHA has Git blob `6c4496c3e9a9b41668c3d93063ad31d96df5f878`, exactly the blob at the pinned source commit. CI also confirmed `monte_carlo.py` exactly matches its pinned source-commit blob.
+- Focused regressions: `tests/test_stage3_path_integration.py`, `tests/test_stage3b_path1.py`, and `tests/test_stage3b_paths.py`: `11 passed in 0.43s`.
+- `tests/test_stage3_path_integration.py` changed only its direct constructor call from the nonexistent alias to the existing `_new_contract`; the test's scenario assertions and engine behavior are unchanged.
+- Main is still unchanged; `SOURCE_SHA` remains the approved pinned commit. This candidate makes the main-file drift removable upon reviewed merge, but until then the main blocker remains accurate. No trial, simulation, checkpoint, model seed, source SHA constant, historical data, or manifest was changed.
+- Disposition: `PASS_PINNED_SOURCE_AND_PATH_TESTS_CANDIDATE_ONLY`.
