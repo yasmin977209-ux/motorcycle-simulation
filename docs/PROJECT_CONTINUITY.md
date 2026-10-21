@@ -1309,3 +1309,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-C050-PROVENANCE-CORRECTION — exact API match (2026-10-22)
+
+- R4: `docs/audits/CP_C050_PROVENANCE_CORRECTION_R4_2026-10-22.md`; result blob `8bb0c77dc2419f2fa638ccc3854c49240d19f89a`.
+- Candidate branch `tmp/cp-c050-provenance-correction-20261022`; successful exact-SHA Run `39684819546`, tested SHA `d5db721abb47fa35ad6b15bc9b2294b31aa3e207`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39684819546.
+- Live Actions metadata audit passed 25/25 artifact/run pairs with 0 mismatches, after checking each artifact exists in its recorded run, matching scenario name, non-expired status, digest and size. Two distinct run IDs covered all 25 artifacts.
+- Candidate manifest blob `2866da6dcd071eb480754595ffc586479bc1e6f7` changes only `artifact_manifest.enriched_artifacts.C050_G000` from `11503191706` to `11503510055`; `enrichment_run_ids.C050_G000=37662891608` remains unchanged. Global fingerprint `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, seed `20270101`, trial count 9005, other scenario IDs/roles and all other artifact/run pairings are unchanged.
+- Provenance basis: V2 artifact `11503191706` belongs to Run `37660610243`; manifest-recorded Run `37662891608` has artifact `11503510055`. Both runs succeeded, and the previous direct archive comparison disclosed `scenario_metadata.json` as the only regular-file difference; the V2 workflow checked out an older control branch while V3 used the matching control branch.
+- Evidence artifact `12386190424`, digest `sha256:dbde066e6457f095a5a560cbd17d58bd762a2a7e4fcc160e6e76850176c07a3d`.
+- Disposition: `PASS_SCOPED_PROVENANCE_CANDIDATE / MAIN_UNCHANGED`. No historical data, source SHA, seed, cohort, trial, workbook or production simulation changed. Missing MaxCase Partner 1/2 daily memo balances remain `MISSING_EVIDENCE`; Gate A remains blocked; delivery remains `NOT_ACCEPTED`.
+
