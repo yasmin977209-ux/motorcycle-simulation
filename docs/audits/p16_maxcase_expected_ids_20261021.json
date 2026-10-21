@@ -1,0 +1,176 @@
+{
+  "schema_version": "p16-maxcase-selection-map-v1",
+  "status": "DERIVED_READ_ONLY_EXPECTED_MAP_NOT_CANONICAL_MANIFEST",
+  "artifact_provenance": {
+    "repository": "yasmin977209-ux/motorcycle-simulation",
+    "p16_primary_artifact_id": 12363135623,
+    "p16_source_run_id": 39635040311,
+    "p16_source_branch": "tmp/p16-diagnostic-benchmark-20261021",
+    "p16_tested_source_sha": "30ba2d5d47d3a3d6c117f0ef667115401c337ad7",
+    "p16_artifact_zip_sha256": "7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada",
+    "embedded_output_manifest_sha256": "c50488f27541e20ba15b99d259966c41b51a5a15f5e8805cb8dd57f55027a44c",
+    "cohort_total_trials": 9005,
+    "canonical_stage9a_manifest_git_blob": "e796fa2443493b607f1f9c60b58eb63607959c26",
+    "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "master_seed": 20270101
+  },
+  "selection_contract": {
+    "non_c100_trial_ids": "1..450",
+    "c100_trial_ids": "1",
+    "criterion": "highest positive integer final_net_project_equity; ties choose smallest trial_id",
+    "used_only_as_expected_value_for_read_only_comparison": true,
+    "canonical_dataset_manifest_modified": false
+  },
+  "maxcase_by_scenario": {
+    "C030_G000": {
+      "trial_id": 199,
+      "final_net_project_equity": 28604150,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C030_G030": {
+      "trial_id": 233,
+      "final_net_project_equity": 42228800,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C030_G050": {
+      "trial_id": 366,
+      "final_net_project_equity": 56978100,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C030_G070": {
+      "trial_id": 134,
+      "final_net_project_equity": 71289450,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C030_G100": {
+      "trial_id": 280,
+      "final_net_project_equity": 101923650,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C050_G000": {
+      "trial_id": 60,
+      "final_net_project_equity": 308412450,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C050_G030": {
+      "trial_id": 122,
+      "final_net_project_equity": 316720350,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C050_G050": {
+      "trial_id": 416,
+      "final_net_project_equity": 323662600,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C050_G070": {
+      "trial_id": 7,
+      "final_net_project_equity": 329546000,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C050_G100": {
+      "trial_id": 172,
+      "final_net_project_equity": 348013800,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C070_G000": {
+      "trial_id": 165,
+      "final_net_project_equity": 209787500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C070_G030": {
+      "trial_id": 429,
+      "final_net_project_equity": 209621500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C070_G050": {
+      "trial_id": 214,
+      "final_net_project_equity": 209293500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C070_G070": {
+      "trial_id": 441,
+      "final_net_project_equity": 209749500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C070_G100": {
+      "trial_id": 106,
+      "final_net_project_equity": 209806500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C085_G000": {
+      "trial_id": 408,
+      "final_net_project_equity": 209888000,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C085_G030": {
+      "trial_id": 53,
+      "final_net_project_equity": 209880000,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C085_G050": {
+      "trial_id": 207,
+      "final_net_project_equity": 209877500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C085_G070": {
+      "trial_id": 285,
+      "final_net_project_equity": 209886500,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C085_G100": {
+      "trial_id": 439,
+      "final_net_project_equity": 209893000,
+      "positive_trial_count": 450,
+      "tie_count_at_maximum": 1
+    },
+    "C100_G000": {
+      "trial_id": 1,
+      "final_net_project_equity": 209671000,
+      "positive_trial_count": 1,
+      "tie_count_at_maximum": 1
+    },
+    "C100_G030": {
+      "trial_id": 1,
+      "final_net_project_equity": 209671000,
+      "positive_trial_count": 1,
+      "tie_count_at_maximum": 1
+    },
+    "C100_G050": {
+      "trial_id": 1,
+      "final_net_project_equity": 209671000,
+      "positive_trial_count": 1,
+      "tie_count_at_maximum": 1
+    },
+    "C100_G070": {
+      "trial_id": 1,
+      "final_net_project_equity": 209671000,
+      "positive_trial_count": 1,
+      "tie_count_at_maximum": 1
+    },
+    "C100_G100": {
+      "trial_id": 1,
+      "final_net_project_equity": 209671000,
+      "positive_trial_count": 1,
+      "tie_count_at_maximum": 1
+    }
+  }
+}
