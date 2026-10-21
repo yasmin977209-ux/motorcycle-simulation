@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -130,10 +131,72 @@ def inventory_identity_mismatches(
     return mismatches
 
 
-def select_maxcase(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+P16_PRIMARY_ARTIFACT_ZIP_SHA256 = "7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada"
+P16_OUTPUT_MANIFEST_SHA256 = "c50488f27541e20ba15b99d259966c41b51a5a15f5e8805cb8dd57f55027a44c"
+P16_STAGE9A_MANIFEST_GIT_BLOB = "e796fa2443493b607f1f9c60b58eb63607959c26"
+
+
+def load_expected_p16_maxcase_map(path: str) -> dict[str, Any]:
+    expected = read_json(path)
+    provenance = expected.get("artifact_provenance", {})
+    if (
+        expected.get("schema_version") != "p16-maxcase-selection-map-v1"
+        or provenance.get("p16_primary_artifact_id") != 12363135623
+        or provenance.get("p16_source_run_id") != 39635040311
+        or provenance.get("p16_artifact_zip_sha256") != P16_PRIMARY_ARTIFACT_ZIP_SHA256
+        or provenance.get("embedded_output_manifest_sha256") != P16_OUTPUT_MANIFEST_SHA256
+        or provenance.get("cohort_total_trials") != 9005
+        or provenance.get("canonical_stage9a_manifest_git_blob") != P16_STAGE9A_MANIFEST_GIT_BLOB
+        or provenance.get("source_sha") != SOURCE_SHA
+        or provenance.get("master_seed") != MASTER_SEED
+    ):
+        raise RuntimeError("P16_EXPECTED_MAXCASE_MAP_PROVENANCE_MISMATCH")
+    if expected.get("status") != "DERIVED_READ_ONLY_EXPECTED_MAP_NOT_CANONICAL_MANIFEST":
+        raise RuntimeError("P16_EXPECTED_MAXCASE_MAP_STATUS_MISMATCH")
+    contract = expected.get("selection_contract", {})
+    if (
+        contract.get("non_c100_trial_ids") != "1..450"
+        or contract.get("c100_trial_ids") != "1"
+        or contract.get("criterion") != "highest positive integer final_net_project_equity; ties choose smallest trial_id"
+        or contract.get("canonical_dataset_manifest_modified") is not False
+    ):
+        raise RuntimeError("P16_EXPECTED_MAXCASE_MAP_SELECTION_CONTRACT_MISMATCH")
+    selections = expected.get("maxcase_by_scenario")
+    if not isinstance(selections, dict) or set(selections) != set(SCENARIOS):
+        raise RuntimeError("P16_EXPECTED_MAXCASE_MAP_SCENARIO_COVERAGE_MISMATCH")
+    for scenario, item in selections.items():
+        expected_count = 1 if scenario.startswith("C100_") else 450
+        if (
+            not isinstance(item, dict)
+            or type(item.get("trial_id")) is not int
+            or not 1 <= item["trial_id"] <= expected_count
+            or type(item.get("final_net_project_equity")) is not int
+            or item["final_net_project_equity"] <= 0
+            or type(item.get("positive_trial_count")) is not int
+            or item["positive_trial_count"] != expected_count
+            or type(item.get("tie_count_at_maximum")) is not int
+            or item["tie_count_at_maximum"] < 1
+        ):
+            raise RuntimeError(f"P16_EXPECTED_MAXCASE_MAP_ENTRY_INVALID: {scenario}")
+    return expected
+
+
+def select_maxcase(
+    rows: list[dict[str, Any]],
+    *,
+    max_trial_id: int | None = None,
+) -> dict[str, Any] | None:
+    if max_trial_id is not None:
+        if type(max_trial_id) is not int or max_trial_id not in (450, 550):
+            raise ValueError("max_trial_id must be exactly 450 or 550 when specified")
+        rows = [
+            row for row in rows
+            if type(row.get("trial_id")) is int and 1 <= row["trial_id"] <= max_trial_id
+        ]
     positive = [
         row for row in rows
-        if type(row.get("final_net_project_equity")) is int
+        if type(row.get("trial_id")) is int
+        and type(row.get("final_net_project_equity")) is int
         and row["final_net_project_equity"] > 0
     ]
     if not positive:
@@ -141,11 +204,27 @@ def select_maxcase(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
     highest = max(row["final_net_project_equity"] for row in positive)
     return min(
         (row for row in positive if row["final_net_project_equity"] == highest),
-        key=lambda row: int(row["trial_id"]),
+        key=lambda row: row["trial_id"],
     )
 
 
-def run_audit() -> dict[str, Any]:
+def run_audit(
+    *,
+    max_trial_id_cap: int | None = None,
+    expected_p16_map_path: str | None = None,
+) -> dict[str, Any]:
+    if max_trial_id_cap is not None and (
+        type(max_trial_id_cap) is not int or max_trial_id_cap not in (450, 550)
+    ):
+        raise ValueError("max_trial_id_cap must be exactly 450 or 550 when specified")
+    if max_trial_id_cap == 450 and not expected_p16_map_path:
+        raise ValueError("P16_EXPECTED_MAXCASE_MAP_REQUIRED_FOR_450_TRIAL_SCOPE")
+    expected_p16_map = (
+        load_expected_p16_maxcase_map(expected_p16_map_path)
+        if expected_p16_map_path else None
+    )
+    if expected_p16_map is not None and max_trial_id_cap != 450:
+        raise ValueError("P16_EXPECTED_MAXCASE_MAP_REQUIRES_450_TRIAL_SCOPE")
     manifest = read_json("docs/stage9a/dataset_manifest.json")
     payload_inventory = read_json("docs/audits/stage9a_payload_inventory_20261020.json")
     accounting_contract = read_json("docs/stage12/accounting_data_contract.json")
