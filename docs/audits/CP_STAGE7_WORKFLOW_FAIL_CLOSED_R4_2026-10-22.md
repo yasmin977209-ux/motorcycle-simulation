@@ -70,3 +70,14 @@ The owner explicitly authorized all necessary work in the conversation (2026-10-
 - YAML parse and compile passed; `tests/test_stage7_authoring.py`: `67 passed`. The exact test now asserts `queue == "max"` in addition to the stable workflow/ref concurrency group and `cancel-in-progress: false`.
 - The preceding Run `39684747170` failed because it tested the workflow update before the matching regression-test update was committed; the next exact-SHA run above passed with the test and workflow changes present together.
 - Final tested workflow blob: `5d7e1e5c73c7fdf619d26ce80987dac4ad79c929`; final tested test blob: `4f44e16aafdfa566b62105721a76dc8f1d4d5c86`.
+
+
+## Final post-main-merge candidate verification (2026-10-22)
+
+- Main baseline included in this candidate is `ed751ca0993ddec282743c6913864fd173c4d1fd`, which contains the reviewed Gate B fail-closed fixes and exact pinned model source.
+- Latest exact-SHA verification Run `39688725055`, tested SHA `7b990adbd981f3f7aedba356628432eac7e1bbec`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39688725055.
+- Every step passed: exact candidate checkout, Python setup, requirements installation, YAML parse for `.github/workflows/stage7-full-run.yml`, module compilation, and `tests/test_stage7_authoring.py` (67 deterministic authoring tests).
+- Final tested blobs: production workflow `5d7e1e5c73c7fdf619d26ce80987dac4ad79c929`, authoring tests `4f44e16aafdfa566b62105721a76dc8f1d4d5c86`; candidate-only verification workflow `d521bc99fea631b4f10694ff020e8cfcc49d22eb`.
+- Main-source integration did not reintroduce prior Stage 7/Gate B code: the main baseline already has the exact pinned source and fail-closed N/Boolean/near-zero code. No source SHA constant, seed/RNG, cohort/trial ID, state ref, Parquet, or production data changed.
+- The production Stage 7 workflow was **not run**. Static checks do not validate runtime timeouts or create Gate A proof. The five state blockers remain as documented; Gate A stays BLOCKED.
+- Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`; ready for independent review, not evidence of operational Stage 7 or final-delivery acceptance.
