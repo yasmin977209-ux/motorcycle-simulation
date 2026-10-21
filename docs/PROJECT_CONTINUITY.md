@@ -1342,3 +1342,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Read-back blobs: `run_batch.py` `bc6c3f7d3fbba742ab1f3d2c7dbaee5e827220f6`; `scripts/stage7_stability.py` `13872f6aa9405bc72532d32756979dc2c7e8695d`; `tests/test_run_batch.py` `476c2ab5e76d4b3c960f3f9a0df5a80f753486c4`.
 - Scope is only strict type handling and the conditional near-zero CI threshold. The test/workflow runs deterministic unit tests only; it does not run the production simulation, create checkpoints, resolve the stopping rule, establish Gate A, or accept release.
 - Disposition: `PASS_FOCUSED_INTEGRATED_CI / MAIN_UNCHANGED`. Do not merge/release solely from this CP.
+
+### CP-STAGE7-GATEB — successful regression after source restoration (2026-10-22)
+
+- Main HEAD at integration: `223ce1eea3db5f4c7e55fe329f63dc4f68eced97`; candidate branch `tmp/cp-stage7-gateb-guards-integration-20261021`.
+- Candidate Run `39688212783`, exact tested SHA `597d97c01cee409807d0a9830fc360b5218f3395`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39688212783.
+- R4 latest blob `fe1bec620165e0dc171d530e2aa14e5f6ec0a997`. The tests and changed code blobs match previous verified versions; the latest run also includes restored pinned `daily_engine.py` from PR #55.
+- Scope: strict checkpoint N validation, strict Boolean Gate B input, and conditional near-zero CI limit. No production workflow/Monte Carlo/Trial/Checkpoint ran. No additional Source SHA, state, trial, seed/RNG, data, or Golden changes.
+- Disposition `PASS_FOCUSED_INTEGRATED_CI`. This still does not unblock Gate A/provider coverage or establish overall stability/delivery.
+
