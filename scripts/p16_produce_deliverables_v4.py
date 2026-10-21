@@ -363,8 +363,8 @@ def fetch_scenario_artifact(
             "final_net_project_equity": select_maxcase_row(rows)["final_net_project_equity"],
         },
         "_rows": rows,
-        "p50_cache_path": extracted["p50_cache_path"],
         "p50_cache_bytes_gzip": extracted["p50_cache_bytes_gzip"],
+        "p50_cache_bytes_raw": extracted["p50_json_bytes_raw"],
         "elapsed_seconds": round(time.monotonic() - started, 3),
     }
 
