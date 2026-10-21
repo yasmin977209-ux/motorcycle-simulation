@@ -150,7 +150,7 @@ def test_stage7_preflight_enumerates_state_branches_without_force_reset() -> Non
     assert "C030_G100 C030_G070 C030_G050 C030_G030 C030_G000" in preflight
     assert "STAGE7_STATE_CONFLICT=" in preflight
     assert "STAGE7_STATE_ABSENT=" in preflight
-    assert "git/refs/heads/${STATE_BRANCH}" in preflight
+    assert "git/ref/heads/${STATE_BRANCH}" in preflight
     assert "STAGE7_STATE_RESET=" not in preflight
     assert "gh api --method PATCH" not in preflight
     assert "-F force=true" not in preflight
