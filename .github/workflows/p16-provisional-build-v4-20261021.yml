@@ -8,7 +8,8 @@ on:
       - .github/workflows/p16-provisional-build-v4-20261021.yml
       - scripts/excel_builder.py
       - scripts/stage13_assemble.py
-      - scripts/p16_produce_deliverables_v3.py
+      - scripts/excel_builder_p16.py
+      - scripts/p16_produce_deliverables_v4.py
       - scripts/p16_finalize_register.py
       - tests/test_stage13_assembly_contract.py
       - tests/test_excel_daily_serialization.py
@@ -80,7 +81,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m compileall -q scripts/excel_builder.py scripts/stage13_assemble.py scripts/p16_produce_deliverables_v3.py scripts/p16_finalize_register.py
+          python -m compileall -q scripts/excel_builder.py scripts/excel_builder_p16.py scripts/stage13_assemble.py scripts/p16_produce_deliverables_v4.py scripts/p16_finalize_register.py
 
       - name: Run deterministic regressions
         id: tests
@@ -106,10 +107,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PYTHONPATH: .
+          PYTHONUNBUFFERED: "1"
         run: |
           set -uo pipefail
+          df -h .
           set +e
-          python scripts/p16_produce_deliverables_v3.py 2>&1 | tee p16_test_evidence/build.log
+          python -u scripts/p16_produce_deliverables_v4.py 2>&1 | tee p16_test_evidence/build.log
           rc=${PIPESTATUS[0]}
           printf '%s\n' "${rc}" > p16_test_evidence/build_exit_code.txt
           exit "${rc}"
