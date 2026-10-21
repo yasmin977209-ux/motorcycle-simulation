@@ -5,6 +5,7 @@ import io
 import json
 import os
 import tarfile
+import urllib.error
 import urllib.request
 import zipfile
 from fractions import Fraction
@@ -50,9 +51,28 @@ def download_artifact_zip() -> bytes:
             "User-Agent": "motorcycle-simulation-p16-quantile-audit",
         },
     )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        fail(response.status == 200, f"artifact download status={response.status}")
-        return response.read()
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(
+            self, req, fp, code, msg, headers, newurl
+        ):
+            return None
+
+    # Keep the repository token confined to the GitHub API request. The
+    # signed artifact-storage URL is fetched separately without Authorization.
+    opener = urllib.request.build_opener(NoRedirect)
+    try:
+        with opener.open(request, timeout=120) as response:
+            fail(response.status == 200, f"artifact API status={response.status}")
+            return response.read()
+    except urllib.error.HTTPError as response:
+        if response.code not in (301, 302, 303, 307, 308):
+            raise
+        signed_url = response.headers.get("Location")
+        fail(bool(signed_url), "artifact API redirect has no Location header")
+        with urllib.request.urlopen(signed_url, timeout=120) as download:
+            fail(download.status == 200, f"signed artifact download status={download.status}")
+            return download.read()
 
 
 def extract_verified_trial_results(artifact_zip: bytes) -> bytes:
