@@ -62,7 +62,7 @@ jobs:
           )
           active_runs="$(
             gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
-              --jq '.workflow_runs[] | select(.conclusion == null) | [.id,.status] | join(" ")'
+              --jq '.workflow_runs[] | select(.status == "in_progress") | [.id,.status] | join(" ")'
           )"
           while read -r run_id status; do
             [ -n "${run_id}" ] || continue
