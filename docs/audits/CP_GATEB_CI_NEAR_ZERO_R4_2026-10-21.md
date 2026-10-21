@@ -46,3 +46,13 @@ Replace only the `max(...)` expression with the conditional limit described abov
 ## Disposition
 
 This is a bounded K_CODE correction under current technical delegation. It does not close Gate A/source identity, establish stability, implement CS, or accept delivery.
+
+
+## Execution/read-back result
+
+- Code commit: `200ede08bfc7d5055d04f770ae8b4d2a67ee7144`; new `run_batch.py` blob: `00ae8901af5e57799c31680fa54a06ffb7a1997c`.
+- The change replaces only the `max(...)` tolerance selection; `half_ci < limit` is unchanged. Candidate compare against base `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`: 2 commits ahead / 0 behind, exactly the R4 document and `run_batch.py` changed.
+- Temporary, uncommitted logic probe passed: mean 0 and ±0.999e-6 use limit 1; mean exactly 1e-6 uses the relative branch; mean 10 uses 0.1; mean -10 uses 0.1; mean 200 uses 2. Output: `PASS_SCOPED_LOCAL_LIMIT_PROBE`.
+- This is not pytest, not CI, not a full `run_batch.py` integration test, and not a production Gate B run. No test/workflow was changed or triggered.
+- Live `main` re-read as `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`, unchanged.
+- Disposition: `PASS_SCOPED_LOCAL / NOT_CI_VALIDATED`. This corrects only the CI-limit branch and does not establish Gate A, checkpoint stopping policy, overall scenario stability, Confidence Sequences, or delivery acceptance.
