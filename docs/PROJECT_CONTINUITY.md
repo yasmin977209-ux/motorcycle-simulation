@@ -1309,3 +1309,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-GATEB-CI-NEAR-ZERO — 2026-10-21
+
+- R4: `docs/audits/CP_GATEB_CI_NEAR_ZERO_R4_2026-10-21.md`; post-verification report blob `b5bb26c35453b8a1f66ba59c2d8552adc3e8343b`; report commit `f80a202d05370b022bcc9a19df75f4b394985610`.
+- Base/main HEAD: `6a218ebe0fccf210ec18f3552b141afbdd1a49ef`. Candidate branch `tmp/cp-gateb-ci-near-zero-20261021`; source code commit `200ede08bfc7d5055d04f770ae8b4d2a67ee7144`; `run_batch.py` blob `00ae8901af5e57799c31680fa54a06ffb7a1997c`.
+- Change: replace `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean))` with the reference-bound conditional: use the absolute epsilon only when `abs(mean) < constants.REFERENCE_EPSILON`; otherwise use the relative limit. The strict `half_ci < limit` comparison is unchanged. No threshold constant was changed.
+- Local standalone limit probe passed for means 0, ±0.999e-6, exactly 1e-6, ±10, and 200; output `PASS_SCOPED_LOCAL_LIMIT_PROBE`. No repository tests/workflows or production run were changed or triggered; not CI/integration evidence.
+- Compare against base: 3 commits ahead / 0 behind, exactly the R4, `run_batch.py`, and this continuity record changed. Main remains unchanged.
+- Scope limits: this does not define a three-transition stop policy, alter trial/cohort identities, clear Gate A/provider/source drift, implement CS, or accept delivery. Gate B is not globally accepted until the exact candidate code receives authorized focused tests and the complete governing checkpoint logic is resolved.
+
