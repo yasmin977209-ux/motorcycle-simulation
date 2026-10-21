@@ -61,3 +61,12 @@ The owner explicitly authorized all necessary work in the conversation (2026-10-
 - YAML parse and module compile passed; `tests/test_stage7_authoring.py`: `67 passed in 0.36s`. Tested workflow blob `5508a069ec902d2e75b439cee22b8a0d0bfe4719`; tested authoring-test blob `a6d80e350eb4a568ebca3889431e410c0989f8fc`.
 - The prior Run `39683906067` failed because its tested SHA's test file asserted the former active-run predicate; the subsequent commit corrected that assertion and its exact-SHA rerun passed. Run `39683073413` passed the preceding implementation before this predicate refinement. No production workflow was run during any of these iterations.
 - Final disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`; main unchanged.
+
+
+## Queue preservation correction — final exact-SHA run
+
+- Added `concurrency.queue: max`. GitHub's default concurrency mode keeps at most one pending run and replaces that pending run when a newer one arrives; queue mode now allows up to 100 pending runs to wait. This is required to support the stated non-cancellation requirement. Source: GitHub Actions concurrency documentation, https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency.
+- Final exact-SHA verification Run `39684779907`, SHA `16df1cab1245297fc31b91ed5b008b721018b936`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39684779907.
+- YAML parse and compile passed; `tests/test_stage7_authoring.py`: `67 passed`. The exact test now asserts `queue == "max"` in addition to the stable workflow/ref concurrency group and `cancel-in-progress: false`.
+- The preceding Run `39684747170` failed because it tested the workflow update before the matching regression-test update was committed; the next exact-SHA run above passed with the test and workflow changes present together.
+- Final tested workflow blob: `5d7e1e5c73c7fdf619d26ce80987dac4ad79c929`; final tested test blob: `4f44e16aafdfa566b62105721a76dc8f1d4d5c86`.
