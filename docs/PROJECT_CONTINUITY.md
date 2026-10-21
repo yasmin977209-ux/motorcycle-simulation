@@ -1372,3 +1372,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
 
+## CP-P16-MAXCASE-450-PAYLOAD-EXTRACTION — exact cohort read-only result (2026-10-22)
+
+- R4: `docs/audits/CP_P16_MAXCASE_450_PAYLOAD_EXTRACTION_R4_2026-10-22.md`; result blob `ffb33aba9e61c228f17f2e9bc33b4898a986361c`.
+- Candidate branch `tmp/cp-p16-maxcase-450-payload-extract-20261022`; tested SHA `fd9b04e2f9a2a381f0dcd34dc8ab8bbe77e0a391`; successful Run `39695520068`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39695520068.
+- Output evidence Artifact `12390501400`; ZIP SHA-256 `983497711a992ce51fe32ccbcbf8997b2cbcaa9170f73097d0ae598ca34e65ff`. Inner `stage13_maxcase_source_audit.json` SHA `2f871ae8a073088a1e8ad0fdaebab84ede66417026b5c2cd3cfaea5e509990ab`; `stage13_maxcase_daily_payloads.json` SHA `7cda3e4bbfcaa48ed0b02f49b77dd1af79b4b585c56983dd3cf8dfdaf45df97c`.
+- P16 archive identity reverified: Artifact `12363135623`, ZIP SHA `7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada`; embedded `output_manifest.json` SHA `c50488f27541e20ba15b99d259966c41b51a5a15f5e8805cb8dd57f55027a44c`. Expected MaxCase IDs and equity values match the P16 manifest 25/25.
+- Existing Stage12 daily data was checked 25/25 scenarios, all 11,005 source TrialResult hashes and 22,546,465 daily rows validated, zero fingerprint mismatches; extracted 52,533 rows for the exact P16 9,005-trial cohort. Summary indicates five P16 selections can reuse existing representative-role payload; 20 non-C100 scenarios require new daily data.
+- Result remains `integrity_status=PASS_SCOPED`, `payload_status=MISSING_EVIDENCE`; the canonical/inventory C050_G000 provenance mismatch remains open and Partner1/Partner2 memo daily balances remain missing for 20 non-C100 new payloads. No values were invented and no simulation, Trial, Checkpoint, workbook build, manifest change or historical data modification occurred.
+- Initial preflight Run `39695347496` failed due the P16 `run_id` JSON string type; the comparison was corrected to canonical string equality and the successful rerun is authoritative.
+- Disposition: `PASS_SCOPED_READ_ONLY_EXTRACTION / NOT_A_COMPLETE_PRODUCTION_PAYLOAD`; no merge/release.
+
