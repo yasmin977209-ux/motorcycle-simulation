@@ -417,6 +417,8 @@ def write_reports(
     total_trials: int,
     tested_sha: str,
     run_id: str,
+    *,
+    branch: str,
 ) -> None:
     rows_by_scenario = {}
     for scenario in excel_builder.EXPECTED_SCENARIOS:
@@ -445,7 +447,7 @@ def write_reports(
 هذه وثيقة نتائج وصفية مبنية على artifacts محفوظة لهوية المصدر {SOURCE_SHA} والمرجع SHA-256 {REFERENCE_SHA256}. عدد السيناريوهات {len(excel_builder.EXPECTED_SCENARIOS)}، وعدد trial rows المقروءة {total_trials}. لم تُشغّل محاكاة أو Trials أو Monte Carlo أو Confidence Sequences في هذا البناء. أرقام الاحتمال إحصاءات وصفية للعينة وليست ضمانات Confidence Sequence أو إثبات استقرار.
 
 ## هوية بناء P16
-- branch: tmp/p16-provisional-outputs-20261021
+- branch: {branch}
 - tested SHA: {tested_sha}
 - workflow Run ID: {run_id}
 - main HEAD الأساس: {MAIN_HEAD_REQUIRED}
@@ -478,7 +480,7 @@ Gate A BLOCKED لغياب Golden provider، وSOURCE_SHA_DRIFT لم يُحل، �
 This is a descriptive result package using existing artifacts tied to source SHA {SOURCE_SHA} and reference SHA-256 {REFERENCE_SHA256}. It covers {len(excel_builder.EXPECTED_SCENARIOS)} scenarios and {total_trials} loaded trial rows. No simulation, new Trial, Monte Carlo, or Confidence Sequence was run. Loss probabilities are descriptive sample frequencies, not Confidence Sequence guarantees or proof of stability.
 
 ## P16 build identity
-- branch: tmp/p16-provisional-outputs-20261021
+- branch: {branch}
 - tested SHA: {tested_sha}
 - workflow Run ID: {run_id}
 - base main HEAD: {MAIN_HEAD_REQUIRED}
@@ -900,6 +902,7 @@ def main() -> int:
         write_reports(
             output_dir, dataset_root, manifest, artifact_evidence, summaries, assignments,
             total_trials, evidence["tested_sha"], evidence["run_id"],
+            branch=evidence["branch"],
         )
         _progress("reports_complete", expected_output_count=len(OUTPUT_NAMES))
         missing = [name for name in OUTPUT_NAMES if not (output_dir / name).is_file()]
