@@ -123,6 +123,7 @@ def test_stage7_workflow_has_concurrency_guard() -> None:
     assert concurrency == {
         "group": "stage7-full-run-${{ github.workflow }}-${{ github.ref }}",
         "cancel-in-progress": False,
+        "queue": "max",
     }
 def test_stage7_preflight_fails_closed_on_existing_active_stage7_runs() -> None:
     text = _workflow_text()
