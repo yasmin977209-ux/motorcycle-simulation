@@ -1383,3 +1383,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Initial preflight Run `39695347496` failed due the P16 `run_id` JSON string type; the comparison was corrected to canonical string equality and the successful rerun is authoritative.
 - Disposition: `PASS_SCOPED_READ_ONLY_EXTRACTION / NOT_A_COMPLETE_PRODUCTION_PAYLOAD`; no merge/release.
 
+### CP-P16-MAXCASE-450 — independent payload artifact read-back confirmation
+
+- Locally downloaded ZIP `12390501400` and independently verified its SHA-256 `983497711a992ce51fe32ccbcbf8997b2cbcaa9170f73097d0ae598ca34e65ff`.
+- Reopened both JSON members and reasserted 25/25 exact P16 selections, 25/25 Stage12 validations, 22,546,465 Stage12 rows, zero fingerprint mismatches and 52,533 selected daily rows. Selected IDs resolved: C085_G070=285, C070_G050=214, C050_G050=416. Each selected date series contains only its selected trial ID and spans the required opening date through Final_Close_Date.
+- Focused test evidence: `11 passed in 0.12s`; compile checks passed on the run SHA. Audit R4 latest blob `c74a1750bc2ef033133fcda9b11668d8c8640a86`.
+- Final status remains `PASS_SCOPED` for integrity and `MISSING_EVIDENCE` for the two partner memo balances; no historical data or canonical manifest altered.
+
