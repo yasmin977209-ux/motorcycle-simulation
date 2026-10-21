@@ -1309,3 +1309,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 **Next:** continue only read-only or candidate/continuity-branch work while asking the owner for authorization to remove the one unintended documentation file from main. No merge/PR closure/Release or production run.
 
+## CP-STAGE7-WORKFLOW-FAIL-CLOSED — static workflow-safety result (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE7_WORKFLOW_FAIL_CLOSED_R4_2026-10-22.md`; post-result blob `1926c3d1008521883665f70963e1c05e3726f193`.
+- Candidate branch `tmp/cp-stage7-workflow-fail-closed-20261022`; Run `39683073413`, exact tested SHA `5c3f77091bec0037e6331253ce2e8fa855ee391c`, conclusion success: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39683073413.
+- Workflow YAML parse and module compilation passed; `tests/test_stage7_authoring.py`: `67 passed in 0.23s`. Tested workflow blob `30b07f55c000b3b5ca1319b34d1b41f5e8f36557`; test blob `8b5912818c255e1ff8a7624734157cd2a2d57678`.
+- The new concurrency key serializes by workflow/ref without cancelling in-progress jobs. Preflight no longer cancels runs or force-patches state refs, checks model-file byte identity before state-ref requests, and fails closed for state associated with another run.
+- Prior candidate CI failures `39682882666`, `39682928810`, `39682998530` were iteration failures; their issues were fixed and the later successful exact SHA is authoritative.
+- No production Stage 7 workflow, simulation, Monte Carlo, Trial, Checkpoint, Golden provider, source SHA constant, seed/RNG, dataset or state ref was changed/run. Main remains unchanged. Runtime timing remains unvalidated.
+- Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`; Gate A and final delivery stay blocked.
+
