@@ -6,12 +6,12 @@ on:
       - "tmp/stage7-full-run-20261004"
 
 concurrency:
-  group: stage7-full-run-${{ github.run_id }}
+  group: stage7-full-run-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
-  actions: write
+  actions: read
 
 env:
   MASTER_SEED: "20270101"
@@ -60,39 +60,54 @@ jobs:
             C050_G100 C050_G070 C050_G050 C050_G030 C050_G000
             C030_G100 C030_G070 C030_G050 C030_G030 C030_G000
           )
-          stale_runs="$(
+          active_runs="$(
             gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?branch=tmp%2Fstage7-full-run-20261004&per_page=100" \
               --jq '.workflow_runs[] | select(.conclusion == null) | [.id,.status] | join(" ")'
           )"
-          stale_ids=()
           while read -r run_id status; do
             [ -n "${run_id}" ] || continue
             if [ "${run_id}" != "${GITHUB_RUN_ID}" ]; then
-              gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" >/dev/null
-              echo "CANCELLED_STALE_RUN=${run_id} STATUS=${status}"
-              stale_ids+=("${run_id}")
-            fi
-          done <<< "${stale_runs}"
-          for run_id in "${stale_ids[@]}"; do
-            stopped=false
-            for attempt in $(seq 1 90); do
-              status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq ".status")"
-              if [ "${status}" = "completed" ]; then
-                stopped=true
-                break
-              fi
-              sleep 2
-            done
-            if [ "${stopped}" != "true" ]; then
-              echo "STALE_RUN_CANCELLATION_TIMEOUT=${run_id}" >&2
+              echo "STAGE7_ACTIVE_RUN_CONFLICT=${run_id} STATUS=${status}; refusing to cancel another run" >&2
               exit 1
             fi
-            echo "STALE_RUN_STOPPED=${run_id}"
-          done
+          done <<< "${active_runs}"
+
+          # Fail closed on pinned source identity BEFORE inspecting or modifying
+          # any stage7-state ref. State refs are never force-reset by preflight.
           git cat-file -e "${SOURCE_SHA}^{commit}"
-          for path in constants.py dateutils.py rng.py entities.py state_machine.py daily_engine.py accounting.py collection.py guarantee.py friday.py settlement.py closure.py partner_equity.py monte_carlo.py; do
-            git cat-file -e "${SOURCE_SHA}:${path}"
+          MODEL_FILES=(
+            constants.py dateutils.py rng.py entities.py state_machine.py
+            daily_engine.py accounting.py collection.py guarantee.py friday.py
+            settlement.py closure.py partner_equity.py monte_carlo.py
+          )
+          for path in "${MODEL_FILES[@]}"; do
+            if ! git cat-file -e "${SOURCE_SHA}:${path}"; then
+              echo "PINNED_SOURCE_FILE_MISSING=${path}" >&2
+              exit 1
+            fi
           done
+          if ! git diff --quiet "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "MODEL_SOURCE_DRIFT_DETECTED_IN_PREFLIGHT" >&2
+            git diff --name-status "${SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
+
+          # Pure preflight checks before any state-branch decisions.
+          python - <<'PY'
+          import yaml
+          import monte_carlo
+
+          spec = yaml.safe_load(
+              open(".github/workflows/stage7-full-run.yml", encoding="utf-8")
+          )
+          scenarios = spec["jobs"]["matrix-simulation"]["strategy"]["matrix"]["scenario"]
+          assert len(scenarios) == 25
+          assert len(set(scenarios)) == 25
+          for scenario in scenarios:
+              monte_carlo.parse_scenario_id(scenario)
+          print("STAGE7_PREFLIGHT_CONTRACT_OK")
+          PY
+
           for scenario in "${SCENARIOS[@]}"; do
             STATE_BRANCH="stage7-state/${scenario}"
             STATE_REF="repos/${GITHUB_REPOSITORY}/git/ref/heads/${STATE_BRANCH}"
@@ -105,19 +120,20 @@ jobs:
                   base64 -d 2>/dev/null |
                   jq -r '.run_id // empty' 2>/dev/null || true
               )"
+              if [ -z "${state_run_id}" ]; then
+                echo "STAGE7_STATE_UNVERIFIABLE=${scenario}; refusing to reset existing ref" >&2
+                exit 1
+              fi
               if [ "${state_run_id}" = "${GITHUB_RUN_ID}" ]; then
                 echo "STAGE7_STATE_RESUME=${scenario} RUN_ID=${GITHUB_RUN_ID}"
               else
-                gh api --method PATCH \
-                  "repos/${GITHUB_REPOSITORY}/git/refs/heads/${STATE_BRANCH}" \
-                  -f "sha=${SOURCE_SHA}" -F force=true >/dev/null
-                echo "STAGE7_STATE_RESET=${scenario}"
+                echo "STAGE7_STATE_CONFLICT=${scenario} EXISTING_RUN_ID=${state_run_id} CURRENT_RUN_ID=${GITHUB_RUN_ID}; refusing to reset state" >&2
+                exit 1
               fi
             else
               echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
           done
-          python - <<'PY'
           import yaml
           import monte_carlo
 
