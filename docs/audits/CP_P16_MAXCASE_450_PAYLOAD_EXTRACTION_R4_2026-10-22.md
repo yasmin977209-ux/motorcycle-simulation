@@ -38,3 +38,15 @@ No changes to canonical dataset manifest, Stage 9A representative IDs, output wo
 ## Status
 
 `PENDING_STATIC_READBACK_AND_READ_ONLY_EXTRACTION`.
+
+
+## Exact-SHA extraction result
+
+- Successful read-only Run `39695520068`, tested SHA `fd9b04e2f9a2a381f0dcd34dc8ab8bbe77e0a391`; URL https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39695520068.
+- The preflight re-downloaded P16 artifact `12363135623`; archive SHA-256 `7e2e821e8c1f8e13b37189638e9a975ac8fc8862ee349abce928fea0cd048ada` matched. Embedded `output_manifest.json` SHA-256 `c50488f27541e20ba15b99d259966c41b51a5a15f5e8805cb8dd57f55027a44c` matched. The 25 expected `trial_id/final_net_project_equity` pairs matched the raw P16 output manifest, 25/25.
+- GitHub Actions evidence Artifact ID `12390501400`, name `p16-maxcase-450-daily-extraction`, ZIP size 1,568,026 bytes, SHA-256 `983497711a992ce51fe32ccbcbf8997b2cbcaa9170f73097d0ae598ca34e65ff`; a local download matched the exact API digest.
+- Embedded report `stage13_maxcase_source_audit.json`: SHA-256 `2f871ae8a073088a1e8ad0fdaebab84ede66417026b5c2cd3cfaea5e509990ab`; payload `stage13_maxcase_daily_payloads.json`: SHA-256 `7cda3e4bbfcaa48ed0b02f49b77dd1af79b4b585c56983dd3cf8dfdaf45df97c`.
+- Integrity read-back: `integrity_status=PASS_SCOPED`; 25/25 Stage 12 scenario artifacts validated; 11,005/11,005 TrialResult rows re-hashed; 22,546,465/22,546,465 Stage 12 daily rows validated; 0 fingerprint mismatches; all 25 P16 MaxCase IDs/equity values match. Extracted 52,533 daily rows for exact P16-selected IDs (9,005-trial cohort).
+- Summary: five selections can reuse an identity-matched existing representative-role payload; 20 require new daily payload. There remains one inventory provenance mismatch, `C050_G000`, where the official manifest artifact ID and inventory/run identity conflict. The two memo balance fields remain `MISSING_EVIDENCE` for the 20 non-C100 new payloads. The sidecar does not infer partner balances or create/modify historical data.
+- Initial Run `39695347496` failed in preflight because P16 `run_id` is stored as a string; no source artifact was changed. The workflow comparison was corrected to compare canonical string IDs, and successful Run `39695520068` is authoritative.
+- Disposition: `PASS_SCOPED_READ_ONLY_EXTRACTION / PAYLOAD_MISSING_EVIDENCE`. No simulation, Trial, Checkpoint, workbook build, source data mutation, manifest change, or release occurred.
