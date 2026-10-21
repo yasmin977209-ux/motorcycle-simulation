@@ -1381,3 +1381,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - This CI is synthetic only. No canonical artifact downloads, data extracts, production workbook, Monte Carlo, Trial/Checkpoint, Golden extension, source identity change, or manifest mutation. It does not settle C050_G000 provenance or missing MaxCase Partner1/Partner2 daily memo balances.
 - Disposition: `PASS_FOCUSED_SYNTHETIC_CI_CANDIDATE_ONLY`. Do not merge or claim Stage 13/overall delivery accepted; keep production build blocked until provenance and daily partner-balance evidence are resolved.
 
+### CP-STAGE13-FULL-SUITE — non-passing repository-wide regression result (2026-10-22)
+
+- Run `39694421445`, tested SHA `f4d8dc0c304a5edc9592cde858f4fe756ba42f0c`; result `432 passed, 4 failed, 1 skipped in 243.13s`; artifact `12390027512`, SHA-256 `785d96fec1092442e0f587376f56940b324f36c568213d3745c433669dc745a4`.
+- All four failures are in `tests/test_acceptance_16_v2.py` tests 127, 159, 160 and 161, each failing with `FileNotFoundError` for missing `results_stage5/worker_equivalence_manifest.json`, `results_stage5/trials_summary.parquet`, or `results_stage5/daily_distribution.parquet`. These files are absent from the current checkout and are not produced by the candidate's focused Stage 13 workflow.
+- Classification: `MISSING_TEST_FIXTURE_OR_EXTERNAL_STAGE5_ARTIFACT`; no evidence that the Stage 13 code changes caused these four failures, but the full suite is **not green**. Tests were not altered to mask results.
+- Focused Stage 13 run remains `54 passed in 13.44s` on SHA `0a5c793f342266c1e0df91d3ca131e5cb2376ab7`, Run `39694032014`.
+- Full-suite R4: `docs/audits/CP_STAGE13_FULL_SUITE_REGRESSION_R4_2026-10-22.md`, latest result blob `440252140e67b560f1e5651809f912cb128f7727`.
+- Disposition: keep PR #59 draft; require explicit Stage 5 fixture/evidence provision or a documented repository-suite scope decision before a full suite pass can be claimed. No main, historical data or production artifacts changed.
+
