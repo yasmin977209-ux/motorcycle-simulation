@@ -538,9 +538,10 @@ def write_representatives(
         ws.append([py_value(value) for value in row])
         current_row += 1
         row_num = current_row
-        for cell in ws[row_num]:
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_num, column=col_idx)
             cell.alignment = RIGHT
-            header = headers[cell.column - 1]
+            header = headers[col_idx - 1]
             if header in number_formats:
                 cell.number_format = number_formats[header]
             if isinstance(cell.value, (_date, date)):
