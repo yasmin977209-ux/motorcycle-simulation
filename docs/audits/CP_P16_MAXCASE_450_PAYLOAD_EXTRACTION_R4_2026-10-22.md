@@ -50,3 +50,11 @@ No changes to canonical dataset manifest, Stage 9A representative IDs, output wo
 - Summary: five selections can reuse an identity-matched existing representative-role payload; 20 require new daily payload. There remains one inventory provenance mismatch, `C050_G000`, where the official manifest artifact ID and inventory/run identity conflict. The two memo balance fields remain `MISSING_EVIDENCE` for the 20 non-C100 new payloads. The sidecar does not infer partner balances or create/modify historical data.
 - Initial Run `39695347496` failed in preflight because P16 `run_id` is stored as a string; no source artifact was changed. The workflow comparison was corrected to compare canonical string IDs, and successful Run `39695520068` is authoritative.
 - Disposition: `PASS_SCOPED_READ_ONLY_EXTRACTION / PAYLOAD_MISSING_EVIDENCE`. No simulation, Trial, Checkpoint, workbook build, source data mutation, manifest change, or release occurred.
+
+
+## Independent local artifact read-back
+
+- Downloaded Actions ZIP locally and independently verified ZIP SHA-256 `983497711a992ce51fe32ccbcbf8997b2cbcaa9170f73097d0ae598ca34e65ff`.
+- Reopened both JSON members and independently asserted: 25 scenarios; 25/25 exact P16 trial ID/equity matches; 25/25 Stage12 scenario validations; 22,546,465 daily rows validated; 0 fingerprint mismatches; 52,533 MaxCase daily rows extracted; source-manifest blob remains `e796fa2443493b607f1f9c60b58eb63607959c26`; missing partner fields remain explicitly marked.
+- The prior 550-cohort mismatches are corrected in the P16-scoped output: `C085_G070=285`, `C070_G050=214`, `C050_G050=416`; each selected daily array uses only the respective selected trial ID, is date-sorted, starts at `2027-01-01`, and ends on the reported Final_Close_Date.
+- Focused pytest for this audit: `11 passed in 0.12s`; compile checks passed. This remains a read-only source-data extraction, not a simulation or accepted delivery artifact.
