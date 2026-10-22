@@ -69,6 +69,21 @@ def test_workflow_ci_limit_matches_runtime_reference_epsilon_branch() -> None:
     assert "limit = max(" not in text
 
 
+def test_stage7_resume_preflight_requires_explicit_gate_a_pass() -> None:
+    text = _workflow_text()
+    assert 'latest_gate_a.get("checked") is True' in text
+    assert 'latest_gate_a.get("stable") is True' in text
+    assert "if not latest_gate_a_pass:" in text
+
+
+def test_stage7_runtime_stops_on_non_explicit_gate_a_pass() -> None:
+    text = _workflow_text()
+    assert 'gate_a.get("checked") is True' in text
+    assert 'gate_a.get("stable") is True' in text
+    assert "gate_a_stop = not explicit_gate_a_pass" in text
+    assert 'if not latest_gate_a_pass:' in text
+
+
 def test_requirements_include_pyyaml() -> None:
     requirements = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
     assert "pyyaml" in requirements.lower()
