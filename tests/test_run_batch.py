@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -32,14 +33,14 @@ def _base_checkpoint() -> dict:
     }
 
 
-@pytest.mark.parametrize("terminal_status", ["blocked", "failed"])
+@pytest.mark.parametrize("terminal_status", ["blocked", "failed", "stable"])
 def test_run_batch_refuses_resume_after_terminal_local_state(
     terminal_status: str,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     (tmp_path / run_batch.STATE_JSON).write_text(
-        __import__("json").dumps(
+        json.dumps(
             {
                 "final_status": terminal_status,
                 "reason_if_not_stable": "Gate A did not PASS",
@@ -60,6 +61,77 @@ def test_run_batch_refuses_resume_after_terminal_local_state(
             resume_from_checkpoint=True,
             source_sha=APPROVED_SOURCE_SHA,
         )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        [],
+        {},
+        {"final_status": None},
+        {"final_status": 17},
+        {"final_status": "unknown"},
+    ],
+)
+def test_run_batch_refuses_resume_after_invalid_local_state(
+    payload: object,
+    tmp_path: Path,
+) -> None:
+    (tmp_path / run_batch.STATE_JSON).write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(StateIntegrityError):
+        run_batch._refuse_terminal_local_state_on_resume(
+            tmp_path,
+            resume_from_checkpoint=True,
+        )
+
+
+def test_run_batch_refuses_resume_when_local_state_is_missing(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(StateIntegrityError, match="state is missing"):
+        run_batch._refuse_terminal_local_state_on_resume(
+            tmp_path,
+            resume_from_checkpoint=True,
+        )
+
+
+def test_run_batch_refuses_resume_when_local_state_is_unreadable(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / run_batch.STATE_JSON).write_text("{not-json", encoding="utf-8")
+
+    with pytest.raises(StateIntegrityError, match="unreadable"):
+        run_batch._refuse_terminal_local_state_on_resume(
+            tmp_path,
+            resume_from_checkpoint=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "gate_a",
+    [
+        {"status": "PASS", "checked": False, "stable": True},
+        {"status": "PASS", "checked": True, "stable": False},
+        {"status": "PASS", "checked": 1, "stable": True},
+        {"status": "PASS", "stable": True},
+        {"status": "FAIL", "checked": True, "stable": False},
+        None,
+        [],
+    ],
+)
+def test_prior_gate_a_requires_explicit_checked_stable_pass(gate_a: object) -> None:
+    assert run_batch._has_explicit_gate_a_pass(gate_a) is False
+
+
+def test_prior_gate_a_accepts_only_explicit_checked_stable_pass() -> None:
+    assert run_batch._has_explicit_gate_a_pass(
+        {"status": "PASS", "checked": True, "stable": True}
+    ) is True
 
 
 def test_run_batch_starts_from_trial_1_by_default() -> None:
