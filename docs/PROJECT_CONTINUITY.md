@@ -1701,3 +1701,9 @@ This append is considered persisted only after the GitHub API reports the result
 - Current disposition: delivery `NOT_ACCEPTED`; Gate A `BLOCKED`; Stage 13 production acceptance `BLOCKED`; independent final audit `NOT_ACCEPTED`; Release `BLOCKED / NOT_AUTHORIZED`. No code, tests, workflows, canonical manifest, data, `state.json`, main, merge or release was changed in this documentation step.
 - Next chat: verify the live state again; inspect PR #49/#60/#61/#62/#47 and exact-SHA CI logs; start with read-only provenance/data-contract review for C050_G000 and missing partner memo balances, while independently verifying the source pin/Gate A provider. Do not fabricate values or edit the canonical manifest without a scoped business/owner decision.
 
+## NEW-CHAT-EXECUTION-PROMPT-2026-10-22 — appended after final handoff
+
+- Self-contained prompt: `docs/continuity/NEW_CHAT_PROMPT_2026-10-22.md`, read-back blob `0bcaf4cb64b3c9b4bdf75c010d19af83156acf34`, 10,061 bytes; creation commit `a3368e94840863004ec52ce64dfc4d35d00395f1`.
+- Append-only output-register entry `NEW-CHAT-EXECUTION-PROMPT-2026-10-22` was added after the previous final-handoff record. The register is now expected to contain 90 JSONL lines; verify live after this commit.
+- This is a prompt/documentation addition only. It does not apply Project Instructions in ChatGPT, accept delivery, clear Gate A, make Stage 13 production-ready, authorize merges, or authorize a Release.
+
