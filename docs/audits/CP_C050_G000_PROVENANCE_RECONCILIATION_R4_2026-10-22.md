@@ -71,3 +71,18 @@ This change resolves only the C050_G000 artifact/run pointer conflict. It does n
 ## Initial status
 
 PENDING_MANIFEST_WRITE_AND_EXACT_READBACK. No manifest has been changed yet.
+
+
+## Exact-SHA verification result
+
+- The candidate-only workflow initially failed on Run `39804237467` at the baseline-manifest blob guard. Read-back of the workflow showed the custom Git-blob hash helper encoded the NUL separator incorrectly. This was an audit-workflow defect only; live main still held manifest blob `e796fa2443493b607f1f9c60b58eb63607959c26`. The helper was corrected to use Git's own `git hash-object --stdin`.
+- A subsequent run `39804526079` passed all steps, but the uploaded JSON had a literal backslash-n suffix. Local evidence read-back caught this artifact-serialization defect. The report writer was changed to use `write_bytes(serialized_json + bytes([10]) )` and to parse the serialized string with `json.loads` before writing.
+- Authoritative corrected Run: `39804956817`, exact tested SHA `8904c5549ecbfc0446a1a677c4650615ed189f25`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39804956817.
+- Evidence artifact: `12436947542`, size 928 bytes, ZIP SHA-256 `bd201d632deec8e761068bb6316e6628d32b9369316488a0154fd34e22ee88ef`. Downloaded locally and re-hashed against the Actions API digest. Embedded `result.json` is 1,505 bytes, SHA-256 `dbd18737c9ea63e7142550b0687de5bb245e14829426e48f3d19020ffd54fbbb`; it parses as valid JSON and ends with an actual newline.
+- Evidence confirms base manifest blob `e796fa2443493b607f1f9c60b58eb63607959c26`, candidate manifest blob `c8591aac3d309fd94c4e67a547d33fb62ac5694d`, and exactly two changed JSON paths:
+  1. `artifact_manifest.enriched_artifacts.C050_G000`: 11503191706 → 11503510055.
+  2. `scenarios.C050_G000.enriched_artifact_id`: 11503191706 → 11503510055.
+- Recorded enrichment Run remains `37662891608`; the candidate artifact/run ID exists in that run's live API artifact inventory, and both V2/V3 runs conclude success with the exact expected ZIP digests.
+- The global manifest SHA `892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6`, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, seed `20270101`, C050 scenario fingerprint `dc428780bd6603269c0816842c4f7ead8153ec14bde69bdbe820ab40ad99f3fc`, trial count 450, and representative IDs/values remained unchanged.
+- The workflow did not build a production workbook or run a trial/checkpoint. The candidate is ready for independent review only; do not merge automatically. Missing Partner 1/2 MaxCase daily memo balances and the remaining Gate A/Stage 11/delivery blockers are outside this pointer correction.
+- Disposition: `PASS_SCOPED_PROVENANCE_POINTER_RECONCILIATION / PR_REVIEW_REQUIRED`.
