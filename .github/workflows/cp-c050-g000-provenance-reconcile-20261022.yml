@@ -174,7 +174,6 @@ jobs:
           Path("c050_provenance_evidence/result.json").write_bytes(
               serialized_report.encode("utf-8") + bytes([10])
           )
-          )
           print(json.dumps(report, indent=2, sort_keys=True))
           PY
       - name: Upload provenance verification evidence
