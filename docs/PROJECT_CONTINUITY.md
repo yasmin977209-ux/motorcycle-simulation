@@ -1372,3 +1372,17 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
 
+
+### CP-STAGE7-HELPER-GATEB-STRICT-BOOLEAN — exact-SHA verification (2026-10-22)
+
+- R4: `docs/audits/CP_STAGE7_HELPER_GATEB_STRICT_BOOLEAN_R4_2026-10-22.md`; blob `d4cefcae928b9376fca735f8d462d985b49d1971`.
+- Candidate branch: `tmp/cp-stage7-helper-bool-gate-20261022`; verified current head before this continuity append: `227e383137fe42aabbb2464fd8892f519c4eeefa`; base/main observed for this CP: `7621ddefe6c971e9eb231eb2a987519c86a2cb51`.
+- Defect found: the production workflow directly imports `scripts.stage7_stability.evaluate_gate_b`; unlike the already-guarded wrapper in `run_batch.py`, this helper still coerced `stable` via `bool(value)`, so a non-empty string such as `"False"` could be interpreted as true.
+- Minimal fix: helper blob `5d6a81475bf377132c0f83d9e60cfcc9f0782477`; regression test blob `818a4195ea9bd6a656fe1715e3199a65fc27d6e6`. The helper now requires each metric evidence to be a mapping and each `stable` value to be an actual Boolean; malformed/missing input raises `ValueError` rather than silently passing.
+- Candidate-only workflow blob: `e008ec91b8da35229dc69e47a17ba9763f304b42`; it checks out the exact PR head and runs compile plus `tests/test_stage7_authoring.py` only. No production workflow dispatch and no simulation/Monte Carlo/Trial/Checkpoint.
+- Draft PR #63: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/63; remains open/draft/unmerged.
+- Exact-SHA Run `39822508011`, tested SHA `227e383137fe42aabbb2464fd8892f519c4eeefa`, conclusion `success`; job `119977168124`. Live job logs verified `68 passed in 0.38s`, exit code 0, compile success, and exact source identity values.
+- Evidence Artifact `12446030198`, name `cp-stage7-helper-bool-gate-evidence`, size 2,439 bytes, SHA-256 `fb5b89996cb12021221a81adf5956dc0d3dee2aa3bbf75b1811d5aa50ea29e07`; artifact metadata matches the Run head SHA. Artifact contains pytest log, JUnit, exit-code and source-identity files.
+- Current candidate SHA/blob read-back verified before this continuity append: `scripts/stage7_stability.py` blob `5d6a81475bf377132c0f83d9e60cfcc9f0782477`; `tests/test_stage7_authoring.py` blob `818a4195ea9bd6a656fe1715e3199a65fc27d6e6`; workflow blob `e008ec91b8da35229dc69e47a17ba9763f304b42`.
+- Disposition: `PASS_SCOPED_HELPER_GUARD_CI / NOT_MERGED`. This only closes the Boolean input-coercion defect in this helper path. It does not establish overall Gate B, the seven-metric §2.5 stopping decision, a sequential/anytime confidence guarantee, Gate A provider coverage, or final delivery acceptance.
+- No main ref/state, source SHA, seed/RNG, cohort/trial ID, canonical manifest, historical data/Parquet, production workflow, merge, or release was changed. Main remains blocked for Gate A and final delivery.
