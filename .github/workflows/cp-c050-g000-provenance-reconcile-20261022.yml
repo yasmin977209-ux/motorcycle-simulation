@@ -75,7 +75,9 @@ jobs:
                   return json.loads(response.read())
 
           def git_blob_sha(raw: bytes) -> str:
-              return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+              return subprocess.check_output(
+                  ["git", "hash-object", "--stdin"], input=raw
+              ).decode().strip()
 
           def changes(x, y, prefix=""):
               found = []
