@@ -215,7 +215,17 @@ def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any
     metric_payload = {}
     all_stable = True
     for name in STABILITY_METRICS:
-        stable = bool(current_metrics[name]["stable"])
+        metric = current_metrics.get(name)
+        if not isinstance(metric, dict):
+            raise ValueError(
+                f"Gate B metric evidence for {name!r} must be a mapping"
+            )
+        raw_stable = metric.get("stable")
+        if type(raw_stable) is not bool:
+            raise ValueError(
+                f"Gate B stable field for {name!r} must be a Boolean"
+            )
+        stable = raw_stable
         metric_payload[name] = {"stable": stable}
         all_stable = all_stable and stable
     return {
