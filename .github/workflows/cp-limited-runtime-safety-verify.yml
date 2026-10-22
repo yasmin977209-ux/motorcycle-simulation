@@ -49,8 +49,8 @@ jobs:
           workflow_text = Path(
               ".github/workflows/stage7-full-run.yml"
           ).read_text(encoding="utf-8")
-          start_marker = "cat > /tmp/stage7_orchestrator.py <<'PY'\\n"
-          end_marker = "\\n          PY\\n          python /tmp/stage7_orchestrator.py"
+          start_marker = "cat > /tmp/stage7_orchestrator.py <<'PY'\n"
+          end_marker = "\n          PY\n          python /tmp/stage7_orchestrator.py"
           start = workflow_text.index(start_marker) + len(start_marker)
           end = workflow_text.index(end_marker, start)
           embedded = textwrap.dedent(workflow_text[start:end])
