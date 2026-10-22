@@ -480,7 +480,9 @@ def _refuse_terminal_local_state_on_resume(
 
     state_path = output_dir / STATE_JSON
     if not state_path.exists():
-        return
+        raise StateIntegrityError(
+            "resume refused because the previous local batch state is missing"
+        )
 
     try:
         previous_state = json.loads(state_path.read_text(encoding="utf-8"))
@@ -489,12 +491,31 @@ def _refuse_terminal_local_state_on_resume(
             "resume refused because the previous local batch state is unreadable"
         ) from exc
 
+    if not isinstance(previous_state, dict):
+        raise StateIntegrityError(
+            "resume refused because the previous local batch state must be a JSON object"
+        )
+
     previous_status = previous_state.get("final_status")
-    if previous_status in {"blocked", "failed"}:
+    if previous_status not in {"running", "stable", "blocked", "failed"}:
+        raise StateIntegrityError(
+            "resume refused because the previous local batch state has a missing or invalid final_status"
+        )
+    if previous_status in {"blocked", "failed", "stable"}:
         raise StateIntegrityError(
             f"resume refused because the previous local batch state is {previous_status}; "
             "operator review is required before any additional trials"
         )
+
+
+def _has_explicit_gate_a_pass(gate_a: Any) -> bool:
+    """Require an explicit, checked Gate A PASS before continuing a batch."""
+    return (
+        isinstance(gate_a, dict)
+        and gate_a.get("status") == "PASS"
+        and gate_a.get("checked") is True
+        and gate_a.get("stable") is True
+    )
 
 
 def _ensure_output_contract(
@@ -773,14 +794,28 @@ def run_batch(
         and len(results) >= constants.STATISTICAL_CHECK_START_N
     ):
         prior_history = state.get("stability_history", [])
-        prior_gate_a = (
-            prior_history[-1].get("gate_a", {})
-            if prior_history
+        prior_checkpoint = (
+            prior_history[-1]
+            if isinstance(prior_history, list) and prior_history
             else {}
         )
-        prior_gate_a_status = prior_gate_a.get("status")
-        if prior_gate_a_status != "PASS":
-            is_failure = prior_gate_a_status == "FAIL"
+        prior_gate_a = (
+            prior_checkpoint.get("gate_a", {})
+            if isinstance(prior_checkpoint, dict)
+            else {}
+        )
+        prior_gate_a_status = (
+            prior_gate_a.get("status")
+            if isinstance(prior_gate_a, dict)
+            else None
+        )
+        if not _has_explicit_gate_a_pass(prior_gate_a):
+            is_failure = (
+                isinstance(prior_gate_a, dict)
+                and prior_gate_a.get("status") == "FAIL"
+                and prior_gate_a.get("checked") is True
+                and prior_gate_a.get("stable") is False
+            )
             state["final_status"] = "failed" if is_failure else "blocked"
             state["stable_at_n"] = None
             state["included_in_final_stats"] = False
