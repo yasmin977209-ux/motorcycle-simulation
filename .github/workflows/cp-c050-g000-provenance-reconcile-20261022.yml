@@ -169,9 +169,11 @@ jobs:
               "trial_or_checkpoint_run": False,
               "production_workbook_built": False,
           }
-          Path("c050_provenance_evidence/result.json").write_text(
-              json.dumps(report, indent=2, sort_keys=True) + "\\n",
-              encoding="utf-8",
+          serialized_report = json.dumps(report, indent=2, sort_keys=True)
+          json.loads(serialized_report)  # Fail if the evidence object is not valid JSON.
+          Path("c050_provenance_evidence/result.json").write_bytes(
+              serialized_report.encode("utf-8") + bytes([10])
+          )
           )
           print(json.dumps(report, indent=2, sort_keys=True))
           PY
