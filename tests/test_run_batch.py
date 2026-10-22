@@ -520,3 +520,51 @@ def test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means(
         assert point["half_ci_95"] > point["limit"]
         assert point["half_ci_95"] < run_batch.constants.CI_ABSOLUTE_EPSILON
         assert point["stable"] is False
+
+
+def test_stage7_lease_rejects_malformed_records_fail_closed(tmp_path: Path) -> None:
+    store = run_batch.StateStore(
+        repo="yasmin977209-ux/motorcycle-simulation",
+        token="test-token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="run-current",
+        run_attempt="1",
+        local_path=tmp_path / "state.json",
+    )
+
+    assert store._lease_is_active_for_other_owner(None) is False
+    malformed_records = (
+        {},
+        {"expires_at": "2099-01-01T00:00:00Z"},
+        {"owner": "run-other"},
+        {"owner": "run-other", "expires_at": "not-a-date"},
+        {"owner": "run-other", "expires_at": "2099-01-01T00:00:00"},
+        [],
+        "run-other",
+    )
+    for lease in malformed_records:
+        with pytest.raises(StateIntegrityError):
+            store._lease_is_active_for_other_owner(lease)
+
+
+def test_stage7_lease_detects_active_other_owner_and_accepts_current_owner(
+    tmp_path: Path,
+) -> None:
+    store = run_batch.StateStore(
+        repo="yasmin977209-ux/motorcycle-simulation",
+        token="test-token",
+        scenario="C070_G100",
+        source_sha=APPROVED_SOURCE_SHA,
+        run_id="run-current",
+        run_attempt="1",
+        local_path=tmp_path / "state.json",
+    )
+    expiry = "2099-01-01T00:00:00Z"
+
+    assert store._lease_is_active_for_other_owner(
+        {"owner": "run-other", "expires_at": expiry}
+    ) is True
+    assert store._lease_is_active_for_other_owner(
+        {"owner": "run-current", "expires_at": expiry}
+    ) is False
