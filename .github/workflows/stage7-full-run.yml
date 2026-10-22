@@ -546,14 +546,27 @@ jobs:
               state["next_check_n"] = target_n
 
           if not SCENARIO.startswith("C100_") and completed >= INITIAL_NON_C100:
+              latest_checkpoint = history[-1] if history else {}
               latest_gate_a = (
-                  history[-1].get("gate_a", {})
-                  if history
+                  latest_checkpoint.get("gate_a", {})
+                  if isinstance(latest_checkpoint, dict)
                   else {}
               )
+              if not isinstance(latest_gate_a, dict):
+                  latest_gate_a = {}
               latest_status = latest_gate_a.get("status")
-              if latest_status != "PASS":
-                  blocked_or_failed = "failed" if latest_status == "FAIL" else "blocked"
+              latest_gate_a_pass = (
+                  latest_status == "PASS"
+                  and latest_gate_a.get("checked") is True
+                  and latest_gate_a.get("stable") is True
+              )
+              if not latest_gate_a_pass:
+                  confirmed_failure = (
+                      latest_status == "FAIL"
+                      and latest_gate_a.get("checked") is True
+                      and latest_gate_a.get("stable") is False
+                  )
+                  blocked_or_failed = "failed" if confirmed_failure else "blocked"
                   state["final_status"] = blocked_or_failed
                   state["stable_at_n"] = None
                   state["included_in_final_stats"] = False
@@ -788,10 +801,19 @@ jobs:
 
                   recent = history[-REQUIRED_CONSECUTIVE:]
                   gate_a_status = gate_a.get("status", "BLOCKED")
-                  gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
+                  explicit_gate_a_pass = (
+                      gate_a_status == "PASS"
+                      and gate_a.get("checked") is True
+                      and gate_a.get("stable") is True
+                  )
+                  confirmed_gate_a_failure = (
+                      gate_a_status == "FAIL"
+                      and gate_a.get("checked") is True
+                      and gate_a.get("stable") is False
+                  )
+                  gate_a_stop = not explicit_gate_a_pass
                   stable_now = (
-                      not gate_a_stop
-                      and gate_a_status == "PASS"
+                      explicit_gate_a_pass
                       and len(recent) == REQUIRED_CONSECUTIVE
                       and all(
                           item.get("gate_a", {}).get("status") == "PASS"
@@ -809,7 +831,7 @@ jobs:
                   elif gate_a_stop:
                       state["stable_at_n"] = None
                       state["final_status"] = (
-                          "blocked" if gate_a_status == "BLOCKED" else "failed"
+                          "failed" if confirmed_gate_a_failure else "blocked"
                       )
                       state["reason_if_not_stable"] = (
                           f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
