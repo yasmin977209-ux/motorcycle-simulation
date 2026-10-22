@@ -1383,3 +1383,10 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Earlier failed runs `39804237467` (blob-hash helper defect) and `39804526079` (literal newline in emitted JSON) remain recorded as workflow defects. Both were corrected; the successful final run proves valid JSON and API identity. No historical artifact was modified.
 - No main write/merge, production workbook, trial, or checkpoint. This is a provenance-pointer correction only; missing Partner 1/2 MaxCase memo balances, Gate A provider, Stage 11 topology, timeout measurement and final delivery remain unresolved. Keep candidate PR draft pending independent review.
 
+### PR review handoff — C050_G000 provenance pointer only
+
+- Draft PR #62 opened: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/62; current head `a1a19d9809b324c62c8069c80a149514a5b2b859`; base remains main at `7621ddefe6c971e9eb231eb2a987519c86a2cb51`.
+- Candidate diff has five paths: the two-pointer Stage 9A manifest correction, this continuity entry, the R4 report, one focused regression test file, and a read-only provenance-verification workflow. No production code or data rows changed.
+- Main manifest remains the original blob `e796fa2443493b607f1f9c60b58eb63607959c26`; candidate uses `c8591aac3d309fd94c4e67a547d33fb62ac5694d`. The branch is not merged.
+- Dependency note: the separate Stage 13 assembler PR #49 pins the manifest to the old main blob. If #62 is merged first, #49's source-identity check will need a deliberate update to the new canonical manifest blob followed by exact-SHA focused CI. Do not merge either PR automatically or claim Stage 13 is ready from the provenance correction alone.
+
