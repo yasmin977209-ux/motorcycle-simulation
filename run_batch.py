@@ -470,6 +470,33 @@ def _validate_resume_dataset(
         )
 
 
+def _refuse_terminal_local_state_on_resume(
+    output_dir: Path,
+    *,
+    resume_from_checkpoint: bool,
+) -> None:
+    if not resume_from_checkpoint:
+        return
+
+    state_path = output_dir / STATE_JSON
+    if not state_path.exists():
+        return
+
+    try:
+        previous_state = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise StateIntegrityError(
+            "resume refused because the previous local batch state is unreadable"
+        ) from exc
+
+    previous_status = previous_state.get("final_status")
+    if previous_status in {"blocked", "failed"}:
+        raise StateIntegrityError(
+            f"resume refused because the previous local batch state is {previous_status}; "
+            "operator review is required before any additional trials"
+        )
+
+
 def _ensure_output_contract(
     output_dir: Path,
     *,
@@ -562,6 +589,11 @@ def run_batch(
         raise ValueError("SOURCE_SHA must be supplied by environment")
 
     monte_carlo.parse_scenario_id(scenario)
+
+    _refuse_terminal_local_state_on_resume(
+        output_dir,
+        resume_from_checkpoint=resume_from_checkpoint,
+    )
 
     checkpoint = None
     if resume_from_checkpoint:

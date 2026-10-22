@@ -32,6 +32,36 @@ def _base_checkpoint() -> dict:
     }
 
 
+@pytest.mark.parametrize("terminal_status", ["blocked", "failed"])
+def test_run_batch_refuses_resume_after_terminal_local_state(
+    terminal_status: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / run_batch.STATE_JSON).write_text(
+        __import__("json").dumps(
+            {
+                "final_status": terminal_status,
+                "reason_if_not_stable": "Gate A did not PASS",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def unexpected_checkpoint_load(**_kwargs):
+        pytest.fail("checkpoint loading must not bypass the terminal local state")
+
+    monkeypatch.setattr(run_batch, "load_stage7_checkpoint", unexpected_checkpoint_load)
+    with pytest.raises(StateIntegrityError, match="operator review is required"):
+        run_batch.run_batch(
+            scenario="C070_G100",
+            trials=300,
+            output_dir=tmp_path,
+            resume_from_checkpoint=True,
+            source_sha=APPROVED_SOURCE_SHA,
+        )
+
+
 def test_run_batch_starts_from_trial_1_by_default() -> None:
     args = run_batch.parse_args(
         [
