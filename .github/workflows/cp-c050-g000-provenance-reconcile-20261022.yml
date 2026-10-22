@@ -1,0 +1,183 @@
+name: C050_G000 manifest provenance reconciliation
+
+on:
+  push:
+    branches:
+      - "tmp/cp-c050-g000-provenance-reconcile-20261022"
+    paths:
+      - "docs/stage9a/dataset_manifest.json"
+      - "docs/audits/CP_C050_G000_PROVENANCE_RECONCILIATION_R4_2026-10-22.md"
+      - "tests/test_stage9a_manifest_provenance.py"
+      - ".github/workflows/cp-c050-g000-provenance-reconcile-20261022.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-c050-g000-provenance-reconcile-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-provenance:
+    name: Verify exact C050_G000 artifact/run binding
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependency
+        run: python -m pip install "pytest>=9,<10"
+      - name: Run candidate manifest regression tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_stage9a_manifest_provenance.py
+      - name: Verify exact manifest diff and live artifact/run metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags origin main --depth=1
+          mkdir -p c050_provenance_evidence
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          import os
+          import subprocess
+          import urllib.request
+          from pathlib import Path
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          candidate_sha = os.environ["CANDIDATE_SHA"]
+          path = "docs/stage9a/dataset_manifest.json"
+
+          def api(endpoint: str) -> dict:
+              req = urllib.request.Request(
+                  f"https://api.github.com/repos/{repo}/{endpoint}",
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "stage9a-c050-provenance-read-only-audit",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  return json.loads(response.read())
+
+          def git_blob_sha(raw: bytes) -> str:
+              return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+
+          def changes(x, y, prefix=""):
+              found = []
+              if isinstance(x, dict) and isinstance(y, dict):
+                  for key in sorted(set(x) | set(y)):
+                      p = f"{prefix}.{key}" if prefix else key
+                      if key not in x or key not in y:
+                          found.append(p)
+                      else:
+                          found.extend(changes(x[key], y[key], p))
+              elif isinstance(x, list) and isinstance(y, list):
+                  if len(x) != len(y):
+                      found.append(prefix + ".__length__")
+                  else:
+                      for i, (a, b) in enumerate(zip(x, y)):
+                          found.extend(changes(a, b, f"{prefix}[{i}]"))
+              elif x != y:
+                  found.append(prefix)
+              return found
+
+          baseline_raw = subprocess.check_output(
+              ["git", "show", f"origin/main:{path}"]
+          )
+          base_blob = git_blob_sha(baseline_raw)
+          if base_blob != "e796fa2443493b607f1f9c60b58eb63607959c26":
+              raise SystemExit(f"BASE_MANIFEST_BLOB_DRIFT: {base_blob}")
+          candidate_raw = Path(path).read_bytes()
+          base = json.loads(baseline_raw)
+          current = json.loads(candidate_raw)
+          diff_paths = changes(base, current)
+          expected_paths = {
+              "artifact_manifest.enriched_artifacts.C050_G000",
+              "scenarios.C050_G000.enriched_artifact_id",
+          }
+          if set(diff_paths) != expected_paths:
+              raise SystemExit(f"UNEXPECTED_MANIFEST_DIFF: {diff_paths}")
+          if current["artifact_manifest"]["enriched_artifacts"]["C050_G000"] != 11503510055:
+              raise SystemExit("C050_ARTIFACT_POINTER_MISMATCH")
+          if current["artifact_manifest"]["enrichment_run_ids"]["C050_G000"] != 37662891608:
+              raise SystemExit("C050_RECORDED_RUN_CHANGED")
+          if current["scenarios"]["C050_G000"]["enriched_artifact_id"] != 11503510055:
+              raise SystemExit("C050_SCENARIO_POINTER_MISMATCH")
+          for key in ("global_manifest_sha256", "source_sha", "master_seed"):
+              if current[key] != base[key]:
+                  raise SystemExit(f"IDENTITY_FIELD_CHANGED: {key}")
+          if current["scenarios"]["C050_G000"]["scenario_fingerprint"] != base["scenarios"]["C050_G000"]["scenario_fingerprint"]:
+              raise SystemExit("C050_SCENARIO_FINGERPRINT_CHANGED")
+          if current["representative_trials"]["C050_G000"] != base["representative_trials"]["C050_G000"]:
+              raise SystemExit("C050_REPRESENTATIVE_SELECTION_CHANGED")
+
+          run_v2 = api("actions/runs/37660610243")
+          run_v3 = api("actions/runs/37662891608")
+          arts_v2 = api("actions/runs/37660610243/artifacts?per_page=100")["artifacts"]
+          arts_v3 = api("actions/runs/37662891608/artifacts?per_page=100")["artifacts"]
+          art_v2 = next((a for a in arts_v2 if a["id"] == 11503191706), None)
+          art_v3 = next((a for a in arts_v3 if a["id"] == 11503510055), None)
+          if not art_v2 or art_v2.get("workflow_run", {}).get("id") != 37660610243:
+              raise SystemExit("V2_ARTIFACT_RUN_BINDING_MISMATCH")
+          if not art_v3 or art_v3.get("workflow_run", {}).get("id") != 37662891608:
+              raise SystemExit("V3_ARTIFACT_RUN_BINDING_MISMATCH")
+          if art_v2.get("digest") != "sha256:f575044fb6a50cb5ed71d6303c40bd77841a6d38b633c105e560a4731e0a94f9":
+              raise SystemExit("V2_ARTIFACT_DIGEST_CHANGED")
+          if art_v3.get("digest") != "sha256:111eb7a2abd7b85625a02c55ee6f3140a14644ef253141bfdc3f8fc5ae4c287d":
+              raise SystemExit("V3_ARTIFACT_DIGEST_CHANGED")
+          if run_v2.get("conclusion") != "success" or run_v3.get("conclusion") != "success":
+              raise SystemExit("ENRICHMENT_RUN_NOT_SUCCESSFUL")
+          if run_v3.get("head_branch") != "tmp/stage9a-06-enrich-20261007-v3":
+              raise SystemExit("V3_BRANCH_PROVENANCE_MISMATCH")
+
+          report = {
+              "status": "PASS_SCOPED_PROVENANCE_POINTER_RECONCILIATION",
+              "candidate_sha": candidate_sha,
+              "baseline_manifest_blob": base_blob,
+              "candidate_manifest_git_blob": git_blob_sha(candidate_raw),
+              "changed_json_paths": sorted(diff_paths),
+              "c050_g000": {
+                  "artifact_id_before": 11503191706,
+                  "artifact_id_after": 11503510055,
+                  "recorded_enrichment_run_id": 37662891608,
+                  "source_sha": current["source_sha"],
+                  "master_seed": current["master_seed"],
+                  "scenario_fingerprint": current["scenarios"]["C050_G000"]["scenario_fingerprint"],
+              },
+              "global_manifest_sha256_unchanged": current["global_manifest_sha256"],
+              "stage11_identity_blob_unchanged": "72a481d509d39820fba78732724fde4fa9f25134",
+              "v2": {"artifact_id": art_v2["id"], "run_id": run_v2["id"], "head_sha": run_v2["head_sha"], "artifact_sha256": art_v2["digest"]},
+              "v3": {"artifact_id": art_v3["id"], "run_id": run_v3["id"], "head_sha": run_v3["head_sha"], "artifact_sha256": art_v3["digest"]},
+              "historical_artifacts_modified": False,
+              "trial_or_checkpoint_run": False,
+              "production_workbook_built": False,
+          }
+          Path("c050_provenance_evidence/result.json").write_text(
+              json.dumps(report, indent=2, sort_keys=True) + "\\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+      - name: Upload provenance verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c050-g000-provenance-verification
+          path: c050_provenance_evidence/result.json
+          if-no-files-found: warn
+          retention-days: 30
