@@ -393,7 +393,10 @@ jobs:
                   mean = float(sample.mean())
                   sd = float(sample.std(ddof=1))
                   half_ci = t_critical * sd / math.sqrt(n)
-                  limit = max(ABSOLUTE_EPSILON, RELATIVE_EPSILON * abs(mean))
+                  if abs(mean) < constants.REFERENCE_EPSILON:
+                      limit = constants.CI_ABSOLUTE_EPSILON
+                  else:
+                      limit = constants.CI_RELATIVE_TOLERANCE * abs(mean)
                   out[key] = {
                       "n": n,
                       "mean": mean,

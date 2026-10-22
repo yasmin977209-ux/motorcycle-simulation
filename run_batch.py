@@ -849,6 +849,25 @@ def run_batch(
                 }
             )
 
+            gate_a_status = gate_a.get("status")
+            if (
+                gate_a_status != "PASS"
+                or gate_a.get("checked") is not True
+                or gate_a.get("stable") is not True
+            ):
+                state["final_status"] = (
+                    "failed" if gate_a_status == "FAIL" else "blocked"
+                )
+                state["stable_at_n"] = None
+                state["included_in_final_stats"] = False
+                state["reason_if_not_stable"] = (
+                    f"Gate A {gate_a_status or 'UNVERIFIED'}: exact-golden evidence "
+                    "is missing or Gate A did not PASS; refusing to execute additional trials"
+                )
+                state["next_check_n"] = next_statistical_checkpoint(len(results))
+                _atomic_write_json(output_dir / STATE_JSON, state)
+                break
+
             recent = state["stability_history"][
                 -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
             ]

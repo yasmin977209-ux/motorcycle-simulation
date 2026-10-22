@@ -280,7 +280,7 @@ def test_gate_b_requires_actual_boolean_stability_evidence() -> None:
     }
     assert run_batch.evaluate_gate_b(false_metrics)["stable"] is False
 
-    for invalid_value in ("False", 0, 1, None):
+    for invalid_value in ("False", "True", 0, 1, 1.0, None, [], {}):
         for field_name in run_batch.STABILITY_FIELDS:
             malformed = {
                 name: dict(metric)
@@ -289,6 +289,66 @@ def test_gate_b_requires_actual_boolean_stability_evidence() -> None:
             malformed[field_name]["stable"] = invalid_value
             with pytest.raises(ValueError, match="must be a Boolean"):
                 run_batch.evaluate_gate_b(malformed)
+
+
+def test_run_batch_stops_after_gate_a_is_blocked(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from types import SimpleNamespace
+
+    trial_blocks: list[list[int]] = []
+
+    def fake_run_trials(scenario, trial_ids, *, master_seed):
+        ids = list(trial_ids)
+        trial_blocks.append(ids)
+        return [SimpleNamespace(trial_id=trial_id) for trial_id in ids], None
+
+    metrics = {
+        field_name: {"mean": 1.0, "stable": False}
+        for field_name in run_batch.STABILITY_FIELDS
+    }
+    monkeypatch.setattr(run_batch, "_ensure_output_contract", lambda *a, **k: None)
+    monkeypatch.setattr(run_batch, "_write_dataset", lambda *a, **k: None)
+    monkeypatch.setattr(run_batch, "_update_state_identity", lambda *a, **k: None)
+    monkeypatch.setattr(run_batch, "_atomic_write_json", lambda *a, **k: None)
+    monkeypatch.setattr(run_batch, "_metric_summary", lambda _results: metrics)
+    monkeypatch.setattr(
+        run_batch,
+        "evaluate_gate_a",
+        lambda **_kwargs: {
+            "checked": False,
+            "stable": False,
+            "status": "BLOCKED",
+            "reason": "golden provider missing",
+        },
+    )
+    monkeypatch.setattr(
+        run_batch,
+        "evaluate_gate_b",
+        lambda _metrics: {"checked": True, "stable": False, "metrics": {}},
+    )
+    monkeypatch.setattr(
+        run_batch.monte_carlo,
+        "run_trials_sequentially",
+        fake_run_trials,
+    )
+
+    state = run_batch.run_batch(
+        scenario="C070_G100",
+        trials=600,
+        output_dir=tmp_path,
+        source_sha=APPROVED_SOURCE_SHA,
+    )
+
+    assert len(trial_blocks) == 1
+    assert trial_blocks[0] == list(range(1, 301))
+    assert state["final_status"] == "blocked"
+    assert state["stability_history"][-1]["gate_a"]["status"] == "BLOCKED"
+    assert state["included_in_final_stats"] is False
+    assert state["stable_at_n"] is None
+    assert "refusing to execute additional trials" in state["reason_if_not_stable"]
+    assert state["final_status"] != "stable"
 
 
 def _metric_summary_rows(values: tuple[float, float]) -> list[object]:
@@ -331,6 +391,15 @@ def test_metric_summary_uses_absolute_limit_only_inside_near_zero(
         assert boundary[metric]["mean"] == pytest.approx(epsilon)
         assert boundary[metric]["limit"] == pytest.approx(
             run_batch.constants.CI_RELATIVE_TOLERANCE * epsilon
+        )
+
+    above_boundary = run_batch._metric_summary(
+        _metric_summary_rows((0.0, epsilon * 2.2))
+    )
+    for metric in run_batch.STABILITY_FIELDS:
+        assert above_boundary[metric]["mean"] == pytest.approx(epsilon * 1.1)
+        assert above_boundary[metric]["limit"] == pytest.approx(
+            run_batch.constants.CI_RELATIVE_TOLERANCE * epsilon * 1.1
         )
 
 

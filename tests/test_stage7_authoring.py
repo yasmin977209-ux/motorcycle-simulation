@@ -53,6 +53,22 @@ def _metrics(means: tuple[float, float, float], stable: bool = True) -> dict[str
     return {key: {"mean": value, "stable": stable} for key, value in zip(keys, means)}
 
 
+@pytest.mark.parametrize("invalid_value", ["False", "True", 0, 1, 1.0, None, [], {}])
+def test_stage7_gate_b_rejects_non_boolean_stability_values(invalid_value) -> None:
+    current = _metrics((1000.0, 700.0, 300.0), stable=True)
+    current["final_net_project_equity"]["stable"] = invalid_value
+    with pytest.raises(ValueError, match="must be a Boolean"):
+        evaluate_gate_b(current)
+
+
+def test_workflow_ci_limit_matches_runtime_reference_epsilon_branch() -> None:
+    text = _workflow_text()
+    assert "if abs(mean) < constants.REFERENCE_EPSILON:" in text
+    assert "limit = constants.CI_ABSOLUTE_EPSILON" in text
+    assert "limit = constants.CI_RELATIVE_TOLERANCE * abs(mean)" in text
+    assert "limit = max(" not in text
+
+
 def test_requirements_include_pyyaml() -> None:
     requirements = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
     assert "pyyaml" in requirements.lower()
