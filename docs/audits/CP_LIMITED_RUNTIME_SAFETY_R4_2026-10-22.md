@@ -61,3 +61,21 @@ Earlier scoped runs also passed at the preceding revisions (111 and 113 tests). 
 These tests establish only the targeted code-contract behavior at the exact tested SHA. They do not prove production source identity, availability of a trusted Golden provider, valid statistical stopping inference, or end-to-end production acceptance.
 
 Next permitted work: continue read-only evidence reconciliation and bounded isolated engineering work on the temporary branch. Do not start production cohorts or alter the approved source/reference/statistical policy. Any future report must state its exact tested SHA and preserve the distinction between scoped test success and project delivery acceptance.
+
+
+## 7. Follow-up limited safety cycle — lease record validation
+
+A subsequent bounded review found that a non-null but malformed Stage 7 lease record (for example, a missing owner or expiry) was treated as if no lease existed. This could bypass the intended fail-closed ownership check.
+
+Changes on the same temporary branch:
+- `scripts/stage7_state.py`: only `None` represents an absent lease; malformed lease types, missing owner/expiry, invalid timestamps, and timezone-naive expiry values now raise `StateIntegrityError`.
+- `tests/test_run_batch.py`: added regression tests for malformed lease records, an active lease owned by another run, and the current run's lease.
+
+Verification evidence for code/test revision:
+- Workflow run: [39859177743](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39859177743)
+- Tested SHA: `ec2ef09473fea1e8d35ed2c15b1a9ab0f9c18796`
+- Result: `success`
+- Targeted tests: `119 passed in 1.35s`
+- Python parsing and workflow YAML parsing passed.
+
+This remains `PASS_SCOPED` only. No production simulation, checkpoint mutation, Golden expansion, reference/source pin change, state transition, merge, or release was performed. The baseline `main` remains `7621ddefe6c971e9eb231eb2a987519c86a2cb51`; the project remains incomplete and P17/final delivery remain unaccepted.
