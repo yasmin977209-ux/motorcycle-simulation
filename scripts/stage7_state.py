@@ -269,20 +269,35 @@ class StateStore:
         }
 
     def _lease_is_active_for_other_owner(self, lease):
-        if not isinstance(lease, dict):
+        # None is the only valid representation of an absent lease. A
+        # malformed lease record must not be treated as an unlocked state.
+        if lease is None:
             return False
+        if not isinstance(lease, dict):
+            raise StateIntegrityError("lease record must be an object or null")
+
         owner = lease.get("owner")
         expires_at = lease.get("expires_at")
-        if not owner or not expires_at or owner == self.lease_owner:
-            return False
+        if not isinstance(owner, str) or not owner.strip():
+            raise StateIntegrityError("lease record is missing a valid owner")
+        if not isinstance(expires_at, str) or not expires_at.strip():
+            raise StateIntegrityError("lease record is missing a valid expiry")
+
         try:
             expiry = datetime.fromisoformat(
-                str(expires_at).replace("Z", "+00:00")
+                expires_at.replace("Z", "+00:00")
             )
         except ValueError as exc:
             raise StateIntegrityError(
                 f"invalid lease expiry: {expires_at!r}"
             ) from exc
+        if expiry.tzinfo is None or expiry.utcoffset() is None:
+            raise StateIntegrityError(
+                "lease expiry must include a timezone"
+            )
+
+        if owner == self.lease_owner:
+            return False
         return expiry > _utc_now()
 
     def _validate_identity(self, state):
