@@ -30,20 +30,35 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Parse modified Python files
+      - name: Parse modified Python and embedded Stage 7 orchestrator
         run: |
           python - <<'PY'
           import ast
           from pathlib import Path
+          import textwrap
 
           for name in (
               "run_batch.py",
               "scripts/stage7_stability.py",
               "tests/test_run_batch.py",
               "tests/test_stage7_authoring.py",
+              "tests/test_stage13_gatea_fingerprint_bridge.py",
           ):
               ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
-          print("Python AST parse passed")
+
+          workflow_text = Path(
+              ".github/workflows/stage7-full-run.yml"
+          ).read_text(encoding="utf-8")
+          start_marker = "cat > /tmp/stage7_orchestrator.py <<'PY'\\n"
+          end_marker = "\\n          PY\\n          python /tmp/stage7_orchestrator.py"
+          start = workflow_text.index(start_marker) + len(start_marker)
+          end = workflow_text.index(end_marker, start)
+          embedded = textwrap.dedent(workflow_text[start:end])
+          ast.parse(
+              embedded,
+              filename=".github/workflows/stage7-full-run.yml#orchestrator",
+          )
+          print("Python and embedded orchestrator AST parse passed")
           PY
 
       - name: Parse workflow YAML
@@ -61,4 +76,4 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest -q tests/test_run_batch.py tests/test_stage7_authoring.py
+          python -m pytest -q tests/test_run_batch.py tests/test_stage7_authoring.py tests/test_stage13_gatea_fingerprint_bridge.py
