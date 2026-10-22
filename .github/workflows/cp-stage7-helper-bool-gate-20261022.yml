@@ -9,6 +9,14 @@ on:
       - "tests/test_stage7_authoring.py"
       - ".github/workflows/cp-stage7-helper-bool-gate-20261022.yml"
       - "docs/audits/CP_STAGE7_HELPER_GATEB_STRICT_BOOLEAN_R4_2026-10-22.md"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "scripts/stage7_stability.py"
+      - "tests/test_stage7_authoring.py"
+      - ".github/workflows/cp-stage7-helper-bool-gate-20261022.yml"
+      - "docs/audits/CP_STAGE7_HELPER_GATEB_STRICT_BOOLEAN_R4_2026-10-22.md"
 
 permissions:
   contents: read
@@ -26,7 +34,7 @@ jobs:
       - name: Checkout exact candidate SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,6 +46,9 @@ jobs:
         run: python -m compileall -q scripts/stage7_stability.py
       - name: Run deterministic Stage 7 authoring regressions
         shell: bash
+        env:
+          TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TESTED_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
         run: |
           mkdir -p validation_output
           set +e
@@ -56,8 +67,8 @@ jobs:
               ".github/workflows/cp-stage7-helper-bool-gate-20261022.yml",
           ]
           identity = {
-              "tested_sha": os.environ.get("GITHUB_SHA"),
-              "branch": os.environ.get("GITHUB_REF_NAME"),
+              "tested_sha": os.environ.get("TESTED_SHA"),
+              "branch": os.environ.get("TESTED_BRANCH"),
               "source_blobs": {
                   path: subprocess.check_output(
                       ["git", "hash-object", path], text=True
