@@ -1,0 +1,64 @@
+name: cp-limited-runtime-safety-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-limited-runtime-safety-20261022"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Isolated safety regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Parse modified Python files
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          for name in (
+              "run_batch.py",
+              "scripts/stage7_stability.py",
+              "tests/test_run_batch.py",
+              "tests/test_stage7_authoring.py",
+          ):
+              ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
+          print("Python AST parse passed")
+          PY
+
+      - name: Parse workflow YAML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          for path in Path(".github/workflows").glob("*.yml"):
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+          print("Workflow YAML parse passed")
+          PY
+
+      - name: Run isolated regression tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q tests/test_run_batch.py tests/test_stage7_authoring.py
