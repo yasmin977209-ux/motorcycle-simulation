@@ -827,3 +827,27 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
     ]
     assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
     assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
+
+def test_stage7_gate_b_requires_actual_boolean_stability_evidence() -> None:
+    valid = _metrics((1000.0, 700.0, 300.0), stable=True)
+    assert evaluate_gate_b(valid)["stable"] is True
+
+    explicitly_false = _metrics((1000.0, 700.0, 300.0), stable=False)
+    assert evaluate_gate_b(explicitly_false)["stable"] is False
+
+    invalid_values = ("False", 0, 1, None, [], {})
+    for invalid in invalid_values:
+        metrics = _metrics((1000.0, 700.0, 300.0), stable=True)
+        metrics["final_net_project_equity"]["stable"] = invalid
+        with pytest.raises(ValueError, match="must be a Boolean"):
+            evaluate_gate_b(metrics)
+
+    missing_stability = _metrics((1000.0, 700.0, 300.0), stable=True)
+    missing_stability["final_net_project_equity"].pop("stable")
+    with pytest.raises(ValueError, match="must be a Boolean"):
+        evaluate_gate_b(missing_stability)
+
+    missing_metric = _metrics((1000.0, 700.0, 300.0), stable=True)
+    missing_metric.pop("partner2_final_entitlement")
+    with pytest.raises(ValueError, match="must be a mapping"):
+        evaluate_gate_b(missing_metric)
