@@ -1372,3 +1372,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - Production workflow was not dispatched. No Monte Carlo, Trial, Checkpoint, source SHA, seed/RNG, cohort, Parquet or production state ref was changed. This does not verify production runtime timing, connect the Gate A provider, establish stability, or accept delivery.
 - Disposition: `PASS_STATIC_AUTHORING_CI / PRODUCTION_WORKFLOW_NOT_RUN`.
 
+## CP-C050-G000-PROVENANCE-RECONCILE — 2026-10-22
+
+- Candidate branch: `tmp/cp-c050-g000-provenance-reconcile-20261022`; base/main HEAD: `7621ddefe6c971e9eb231eb2a987519c86a2cb51`.
+- Target Stage 9A manifest changes only two values: `artifact_manifest.enriched_artifacts.C050_G000` and `scenarios.C050_G000.enriched_artifact_id`, both 11503191706 → 11503510055. Run ID remains 37662891608; all 24 other scenario IDs unchanged.
+- Direct API confirms artifact 11503191706 belongs to Run 37660610243/V2 while 11503510055 belongs to the recorded Run 37662891608/V3. The two archives were downloaded and compared: seven data/payload files byte-identical; only scenario_metadata.json differs (log_events=true vs representative_trials_only).
+- Original manifest blob: `e796fa2443493b607f1f9c60b58eb63607959c26`; candidate blob: `c8591aac3d309fd94c4e67a547d33fb62ac5694d`. Structured JSON diff contains exactly the two approved pointer paths. Global manifest SHA, source SHA, master seed, 450 trial count, representative IDs/values and scenario fingerprint are unchanged.
+- Regression test `tests/test_stage9a_manifest_provenance.py` blob `9e28f20fb660e3cc81c2793ddfb72cfefee00c3a` passes.
+- Authoritative candidate CI Run `39804956817`, exact SHA `8904c5549ecbfc0446a1a677c4650615ed189f25`, conclusion `success`: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/39804956817. Verification artifact 12436947542, ZIP SHA-256 `bd201d632deec8e761068bb6316e6628d32b9369316488a0154fd34e22ee88ef`; downloaded archive was re-hashed, its JSON member parsed successfully, and digest matches API.
+- Earlier failed runs `39804237467` (blob-hash helper defect) and `39804526079` (literal newline in emitted JSON) remain recorded as workflow defects. Both were corrected; the successful final run proves valid JSON and API identity. No historical artifact was modified.
+- No main write/merge, production workbook, trial, or checkpoint. This is a provenance-pointer correction only; missing Partner 1/2 MaxCase memo balances, Gate A provider, Stage 11 topology, timeout measurement and final delivery remain unresolved. Keep candidate PR draft pending independent review.
+
