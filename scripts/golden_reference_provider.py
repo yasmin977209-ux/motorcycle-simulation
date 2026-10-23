@@ -55,6 +55,7 @@ EXTENSION_RUN_HEAD = "aafe5946a8a51c991471057d71f5643c46087086"
 EXTENSION_ARTIFACT_ID = 11940485523
 EXTENSION_ARTIFACT_NAME = "gatea-golden-c030-g1201-2400-attempt-1"
 EXTENSION_ARTIFACT_SHA256 = "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3"
+EXPECTED_EXTENSION_MAP_SHA256 = "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65"
 EXTENSION_ARTIFACT_MEMBER = "golden_extension.json"
 BASE_TRIAL_COUNT = 24005
 EXTENDED_TRIAL_COUNT = 25205
@@ -756,6 +757,7 @@ class GoldenReferenceProvider:
             "extension_run_head_sha": EXTENSION_RUN_HEAD,
             "extension_artifact_id": EXTENSION_ARTIFACT_ID,
             "extension_artifact_sha256": EXTENSION_ARTIFACT_SHA256,
+            "extension_map_sha256": EXPECTED_EXTENSION_MAP_SHA256,
         }
         for key, expected in expected_fixed.items():
             if payload.get(key) != expected:
