@@ -105,6 +105,24 @@ def test_stage7_workflow_consumes_verified_provider_cache_and_fails_closed() -> 
     assert "GATE_A_EXACT_GOLDEN_BLOCKED_OR_FAILED=" in text
 
 
+def test_coverage_guard_blocks_unsupported_checkpoint_before_execution() -> None:
+    trials = _trials(300)
+    provider = _provider_for(trials)
+    assert run_batch._gate_a_target_is_covered(provider, "C070_G100", 300)
+    assert not run_batch._gate_a_target_is_covered(provider, "C070_G100", 600)
+    assert not run_batch._gate_a_target_is_covered(provider, "C070_G100", 2400)
+    assert not run_batch._gate_a_target_is_covered(provider, "C000_G000", 300)
+
+
+def test_stage7_coverage_guard_precedes_trial_runner() -> None:
+    workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
+    guard = workflow.index("GATE_A_GOLDEN_COVERAGE_EXHAUSTED=")
+    trial_block = workflow.index('"--trial-id-start", str(trial_start)')
+    assert guard < trial_block
+    assert "_gate_a_target_is_covered(" in workflow
+    assert '"trial_block_executed": False' in workflow
+
+
 def test_provider_cache_rejects_wrong_schema_or_identity(tmp_path: Path) -> None:
     path = tmp_path / "golden.json"
     path.write_text(json.dumps({"schema_version": "wrong"}), encoding="utf-8")
