@@ -7,7 +7,12 @@ from pathlib import Path
 import pytest
 
 import run_batch
-from scripts.golden_reference_provider import APPROVED_SOURCE_SHA, GoldenReferenceProvider, stage10_trial_result_sha256
+from scripts.golden_reference_provider import (
+    APPROVED_SOURCE_SHA,
+    GoldenReferenceProvider,
+    golden_authority_status,
+    stage10_trial_result_sha256,
+)
 
 
 @dataclass(frozen=True)
@@ -128,3 +133,26 @@ def test_provider_cache_rejects_wrong_schema_or_identity(tmp_path: Path) -> None
     path.write_text(json.dumps({"schema_version": "wrong"}), encoding="utf-8")
     with pytest.raises(RuntimeError, match="GOLDEN_PROVIDER_CACHE_SCHEMA_INVALID"):
         GoldenReferenceProvider.from_verified_payload(path)
+
+
+def test_current_governance_record_does_not_authorize_candidate_golden_map() -> None:
+    authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+    assert authority["authorized"] is False
+    assert authority["status"] == "BLOCKED_GOVERNANCE_AUTHORITY"
+    blockers = " ".join(authority["blockers"])
+    assert "D-2026-10-14-01" in blockers
+    assert "D-2026-10-15-10" in blockers
+
+
+def test_production_preflight_blocks_missing_golden_authority_before_matrix() -> None:
+    workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
+    guard = workflow.index("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+    upload = workflow.index("Upload verified Gate A map for matrix workers")
+    matrix = workflow.index("matrix-simulation:")
+    assert guard < upload < matrix
+
+
+def test_read_only_verifier_reports_authority_separately_from_map_integrity() -> None:
+    workflow = Path(".github/workflows/cp-gatea-provider-wire-verify-20261024.yml").read_text(encoding="utf-8")
+    assert '"production_authority_status": authority["status"]' in workflow
+    assert '"production_authority_blockers": authority["blockers"]' in workflow
