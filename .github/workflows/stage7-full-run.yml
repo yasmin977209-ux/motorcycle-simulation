@@ -146,8 +146,19 @@ jobs:
           import hashlib
           import json
           from pathlib import Path
-          from scripts.golden_reference_provider import GoldenReferenceProvider
+          from scripts.golden_reference_provider import (
+              GoldenReferenceProvider, golden_authority_status,
+          )
 
+          authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          if not authority["authorized"]:
+              print(json.dumps({
+                  "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+                  "blockers": authority["blockers"],
+                  "decision_log_sha256": authority.get("decision_log_sha256"),
+                  "no_simulation_or_trial_executed": True,
+              }, sort_keys=True))
+              raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
           provider = GoldenReferenceProvider()
           if not provider._verified or provider.load_error:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
