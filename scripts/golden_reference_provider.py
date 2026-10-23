@@ -123,6 +123,70 @@ def _ordered_map_sha256(
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
+
+def golden_authority_status(
+    decision_log_path: str | Path = Path("docs/governance/DECISIONS_LOG.md"),
+) -> dict[str, Any]:
+    """Check whether the base and scenario-extension Golden authority records are intact."""
+    path = Path(decision_log_path)
+    if not path.is_file():
+        return {"authorized": False, "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+                "blockers": ["GOLDEN_DECISION_LOG_MISSING"], "decision_log_path": str(path)}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception as exc:
+        return {"authorized": False, "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+                "blockers": [f"GOLDEN_DECISION_LOG_UNREADABLE:{type(exc).__name__}"],
+                "decision_log_path": str(path)}
+
+    def section(decision_id: str) -> str | None:
+        match = re.search(rf"(?m)^## {re.escape(decision_id)}(?:\\s|$)", text)
+        if match is None:
+            return None
+        nxt = re.search(r"(?m)^## D-", text[match.end():])
+        end = match.end() + nxt.start() if nxt else len(text)
+        return text[match.start():end]
+
+    contracts = {
+        "D-2026-10-14-01": (
+            ("24,005 trial fingerprints", "38174743440", "38179919488",
+             "C100 scenarios remain trial ID 1 only"),
+        ),
+        "D-2026-10-15-10": (
+            ("C030_G030", "1201..2400", "38662076725", "11940485523",
+             "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
+             "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
+             "Preserve the historic N=300→N=600 FAIL"),
+        ),
+    }
+    blockers: list[str] = []
+    details: dict[str, Any] = {}
+    for decision_id, (required_terms,) in contracts.items():
+        body = section(decision_id)
+        if body is None:
+            blockers.append(f"GOLDEN_DECISION_MISSING:{decision_id}")
+            details[decision_id] = {"present": False, "integrity": "MISSING"}
+            continue
+        corrupted = "NaNNaN" in body
+        missing = [term for term in required_terms if term not in body]
+        if corrupted or missing:
+            blockers.append(f"GOLDEN_DECISION_CORRUPT_OR_INCOMPLETE:{decision_id}")
+        details[decision_id] = {
+            "present": True,
+            "contains_corruption_marker": corrupted,
+            "missing_required_terms": missing,
+            "integrity": "PASS" if not corrupted and not missing else "FAIL",
+        }
+    return {
+        "authorized": not blockers,
+        "status": "AUTHORIZED" if not blockers else "BLOCKED_GOVERNANCE_AUTHORITY",
+        "decision_log_path": str(path),
+        "decision_log_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "required_decisions": details,
+        "blockers": blockers,
+    }
+
+
 def stage10_trial_result_sha256(result: Any) -> str:
     """Hash one TrialResult exactly as Stage 10's per-trial result_sha does."""
     if is_dataclass(result):
