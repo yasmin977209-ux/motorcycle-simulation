@@ -45,8 +45,11 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          from scripts.golden_reference_provider import GoldenReferenceProvider
+          from scripts.golden_reference_provider import (
+              GoldenReferenceProvider, golden_authority_status,
+          )
 
+          authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
           provider = GoldenReferenceProvider()
           if not provider._verified:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
@@ -74,6 +77,8 @@ jobs:
               "scenario_count": round_trip.scenario_count,
               "source_map_sha256": round_trip.source_map_sha256,
               "reference_id": round_trip.get_golden_reference_id(),
+              "production_authority_status": authority["status"],
+              "production_authority_blockers": authority["blockers"],
               "no_simulation_or_trial_execution": True,
           }, sort_keys=True))
           PY
