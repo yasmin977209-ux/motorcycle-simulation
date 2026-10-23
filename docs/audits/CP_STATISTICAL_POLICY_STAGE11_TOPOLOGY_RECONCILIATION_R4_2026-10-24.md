@@ -22,47 +22,73 @@ Do not collapse three distinct scopes into one count or identity:
 
 The v2.0 initial-N table (5000/8000/15000/20000) and its B=1000 bootstrap sufficiency rule must not be silently mixed into the new-execution cohort. The later scoped execution decision controls its defined scope; it does not rewrite historical cohort identities or every output rule in v2.0.
 
-## 2. Resolved operational statistical protocol for new execution
+## 2. Approved statistical decision framework versus blocked implementation
 
 ### Gate A — exact Golden identity, not mean closeness
 
-Gate A is an integrity/provenance gate, not a statistical tolerance test. For every covered trial ID it requires exact SHA-256 equality with the approved Golden TrialResult, plus the approved source SHA, master seed, scenario identity, and complete ID coverage. A missing provider/fingerprint or unsupported checkpoint is **BLOCKED**; a mismatching result/source/seed is **FAIL**. Gate A must not be replaced by average/percentage similarity.
+Gate A is an integrity/provenance gate. For every covered trial ID it requires exact SHA-256 equality with the approved Golden TrialResult, plus source SHA, master seed, scenario identity, and complete ID coverage. A missing/corrupt governing decision, provider/fingerprint, or unsupported checkpoint is **BLOCKED**; a result/source/seed mismatch is **FAIL**. A correct artifact digest proves integrity, not project authority.
 
-### Gate B — pointwise confidence-interval precision
+### Family-wise error and IUT — decision accepted, evidence implementation still blocked
 
-For the approved new-execution path, Gate B uses the Student-t 95% confidence interval for the three approved financial metrics:
-- `Final_Net_Project_Equity`
-- `Partner1_Final_Entitlement`
-- `Partner2_Final_Entitlement`
+The latest owner-approved IUT record is present in current main's docs/PROJECT_CONTINUITY.md (blob 1a69a1f4cf8c87b8e2575a800b92fc80bcd6677e):
 
-At each applicable checkpoint, the half-width must be strictly less than 1% of the absolute mean; the approved absolute tolerance is 1 currency unit near zero. The implementation must retain the approved strict inequality. All three metrics must pass. This is a pointwise precision test at each checkpoint; by itself it is **not** a demonstrated family-wise false-stability guarantee under adaptive stopping.
+- Family-wise target: probability of one or more false SCENARIO_STABLE declarations among the 20 stochastic non-C100 scenarios across the full adaptive inspection horizon is at most 0.05. C100 follows its separate determinism-verification path and is outside this stochastic family.
+- Per-scenario risk: alpha_s = 0.0025, with sum_s alpha_s <= 0.05.
+- The scenario-level decision is an intersection–union test: every required statistical component and every non-statistical gate must pass. Each component procedure must be valid over all eligible adaptive looks at the required scenario-level risk. This does not imply simultaneous 1-alpha coverage for every table cell/interval.
+- The former seven-way within-scenario alpha allocation is retained as historical text and is superseded for this scenario-level IUT decision. Do not silently apply both IUT and the old Bonferroni allocation.
 
-### Escalation and the supplementary §2.5 transition rule
+**Status distinction:** the IUT/family-wise policy is **APPROVED AS A DECISION FRAMEWORK**; production false-stability control is **NOT IMPLEMENTED / NOT VERIFIED** until every component test/CS is valid across adaptive looks, required data-identity assumptions hold, and the acceptance code is independently tested.
 
-- For non-C100 scenarios, the operational checkpoint schedule is (300 	o 600 	o 1200 	o 2400 	o 4800 	o cdots); there is no general cap in the governing execution policy. Never rerun completed IDs; generate only the missing next interval.
-- C100 is a deterministic special case: one canonical TrialResult (trial ID 1), plus the specified independent verification execution with a different trial identity/derived seed. C100 is not treated as a 300-sample stochastic cohort.
-- A scenario can be finally stable only after **three consecutive checkpoint points** satisfy the approved Gate A and Gate B criteria. Do not reinterpret this as three transitions: three points and three transitions are different counts.
-- The approved P50 continuation rule is separate: compare adjacent checkpoint P50 values using the declared formula; a relative change **strictly greater than 5.0%** requires continuation to N=2400 for that scenario. At a denominator below the approved reference epsilon, use the already approved one-currency absolute comparison rather than inventing a percentage or a new epsilon.
-- The separately specified seven-indicator §2.5 adjacent-transition evaluator remains a **supplementary transition gate**. It neither replaces exact Gate A nor changes the three-metric Gate B definition. Preserve each failed transition in history even if a later transition passes.
+### Seven §2.5 indicators — target margins and candidate confidence-sequence method
 
-### How current evidence bounds extension
+The accepted method-review record identifies a distribution-free, time-uniform fixed-quantile confidence sequence based on order statistics (Howard–Ramdas family; beta-binomial mixture variant is the primary candidate). Preserve the report estimator numpy.quantile(..., method="linear"); it is the point estimate, not a confidence interval. Precision is demonstrated only when the complete confidence set lies within the preapproved band around that estimate. Discrete ties for Held_Assets and Termination_Count must be tested deterministically.
 
-The preserved N=300/600/1200 reports and the read-only P50 review show 40 adjacent transitions across the 20 non-C100 scenarios; none exceeded 5%. The largest P50 changes recorded were 0.348341% for N=300→600 and 0.191901% for N=600→1200 (both C050_G000). Those calculations do not create universal N=2400 Golden evidence.
+The current policy/method review records these seven indicators and margins:
+- P10/P50/P90_Cumulative_Project_Profit and P90_Final_Cash: ±18,500 project-currency units.
+- P90_Termination_Count: ±1 termination.
+- P90_Held_Assets: ±1 asset.
+- Probability_of_Accounting_Loss: time-uniform Bernoulli mean CS/e-process candidate; half-width strictly below 0.005 and the independent adjacent-change condition abs(Delta p) < 0.005.
 
-The current exact Golden map supports IDs 1–1200 for the non-C100 scenarios and IDs 1–2400 for C030_G030 only, with the five C100 scenarios covered at ID 1. The approved scenario-specific extension decision authorizes C030_G030 IDs 1201–2400. For the other 19 non-C100 scenarios, a Gate A pass cannot be claimed beyond ID 1200 until exact, independently approved extension maps are verified. The runtime must refuse to start a target checkpoint whose whole ID range is not covered.
+These candidate methods are **not integrated into the current production decision path**. The prior metric alpha split is not automatically retained under IUT, and no simultaneous all-cells coverage claim is inferred.
 
-## 3. Statistical assurance items deliberately not fabricated
+### Gate B financial means — acceptance band known; inferential construction blocked
 
-The reference conflict map records a proposed family-wise α / IUT approach, a requirement for valid inference across adaptive looks, disagreement over the v2.0 bootstrap method and seven metrics, and an unresolved source/threshold for `P90_Held_Assets`. The current documented pointwise t-CI rule does not, by itself, settle those inferential questions.
+The underlying Gate B acceptance criterion remains the approved three-metric rule:
+- Final_Net_Project_Equity
+- Partner1_Final_Entitlement
+- Partner2_Final_Entitlement
 
-Therefore:
-- Status for family-wise error control under adaptive stopping: **UNRESOLVED / NOT CLAIMED**.
-- Do not implement Bonferroni/IUT, a confidence sequence, percentile/BCa bootstrap, finite-support assumptions, or a new `P90_Held_Assets` threshold by intuition.
-- Before making a claim that the whole adaptive procedure controls false stability at family-wise 0.05, the owner must approve a formal specification that states the estimand/null, scenario family, metric family, dependence and look structure, stopping rule, interval or test construction, simulation/calibration tests, and treatment of all previously observed looks.
+The precision band remains a 95% confidence interval half-width strictly below 1% of abs(mean), with the approved absolute one-currency-unit rule near zero. But the current run_batch.py implementation uses pointwise Student-t intervals at each N and the faulty max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean)) threshold. It is not time-uniform under adaptive stopping and it does not implement the required branch-at-near-zero rule. The continuity record states no finite support bound or quantified variance/tail/moment bound has been proved for the financial mean outcomes.
+
+Therefore Gate B financial-mean construction remains **K_SPEC / BLOCKED**. Do not substitute bootstrap, Bonferroni, empirical-Bernstein, Catoni, or another CS based on assumed bounds that are not sourced and approved. A bounded-support proof or a separately approved quantified moment/tail assumption is required first. This CP records the current limit; it does not invent one.
+
+### Checkpoint schedule, stopping window, and historical failure
+
+- The policy schedule for non-C100 scenarios is 300 → 600 → 1200 → 2400 → 4800 → …; completed IDs are never rerun. C100 stays on its deterministic trial-ID-1 path under the current applicable decision.
+- The accepted IUT record requires **three successful adjacent transitions across four cumulative points**. This is stricter than three checkpoint points/two transitions. Main's current window accepts three history entries, so it is a live implementation defect and must not be called stable under the later rule.
+- The P50 continuation trigger is strictly greater than 5.0% on adjacent comparisons 300→600 or 600→1200; when triggered, continue to N=2400 without resetting the failed transition history. This rule is separate from the seven §2.5 indicators.
+- C030_G030 / P90_Final_Cash failed N=300→600 at 1.5715059335%. A later pass at 600→1200 does not erase that failure. The prior scenario-specific decision authorizes Golden reference preparation for C030_G030 IDs 1201–2400, not an automatic overall acceptance or N=4800 run. Further requalification beyond the explicitly approved scope needs its own reviewed authority.
+
+### Coverage guard and observed evidence
+
+The read-only P50 review recorded 40 adjacent transitions across 20 non-C100 scenarios; none exceeded the separate 5% continuation trigger (maximum 300→600 change 0.348341%, maximum 600→1200 change 0.191901%, both C050_G000). That does not prove time-uniform precision and does not replace any failed §2.5 indicator.
+
+The current candidate Golden map covers non-C100 IDs 1–1200 and C030_G030 IDs 1–2400 only; the five C100 scenarios have ID 1 each. The other 19 non-C100 scenarios are not Golden-covered to N=2400. The production guard must stop before executing an unsupported target checkpoint and must never create its own Golden reference from the sample it evaluates.
+
+## 3. Remaining blockers and acceptance consequences
+
+The family-wise IUT target and scenario-level decision logic are approved in the continuity record, but the current code does not implement the required valid-over-time component procedures. The approved method-review record specifically leaves financial-mean confidence sequences blocked because finite support or quantified tail/moment bounds have not been established; the seven-metric/quantile and Bernoulli CS choices are recorded as candidates and lack production integration/acceptance evidence. The present pointwise Student-t code and current three-point/two-transition stop window cannot support a final adaptive-stability PASS.
+
+Consequently:
+- Family-wise target/framework: **APPROVED**; end-to-end assurance implementation: **K_CODE/K_SPEC — BLOCKED**.
+- Financial means: **K_SPEC / BLOCKED** pending support proof or explicit quantitative tail/moment assumptions.
+- Quantile and probability-of-loss CS: **METHOD SELECTED AS CANDIDATE; IMPLEMENTATION/ACCEPTANCE MISSING**.
+- P90_Held_Assets: threshold ±1 is recorded, but production data path/integration/acceptance test remain missing.
+- Do not claim SCENARIO_STABLE or FINAL_ACCEPTED on the basis of pointwise t intervals or historical P50 comparisons alone.
 
 ### Historical failed transition: C030_G030 / P90_Final_Cash
 
-The documented N=300→600 relative change is 1.5715059334983579%, exceeding the historical strict <1% threshold; a later passing transition does not erase this fact. The available decisions do not unambiguously specify whether this historical failure is permanently disqualifying for overall scenario acceptance or whether a later, explicitly defined requalification rule may resolve it. Preserve the failed point in the record and classify overall acceptance of that scenario as `UNDEFINED_BUSINESS_RULE` pending a written owner decision. No N=4800 run or rule change is authorized by this note.
+The documented N=300→600 relative change is 1.5715059334983579%, exceeding the strict <1% historical threshold. A later passing transition does not erase the failure. The approved IUT record additionally requires three successful adjacent transitions across four cumulative points; the existing C030_G030 record does not satisfy that rule, and its 1201..2400 extension artifact is reference-preparation evidence, not a completed statistical checkpoint. The overall scenario remains blocked. Do not start N=4800 or rewrite the threshold without new explicit authorization.
 
 ## 4. Execution topology — separate implemented orchestration from Stage 11 scope
 
