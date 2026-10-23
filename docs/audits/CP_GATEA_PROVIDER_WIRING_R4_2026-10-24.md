@@ -26,7 +26,7 @@ A candidate-only workflow loads the real pinned artifacts and performs a cache r
 
 ## Authority reconciliation — blocking finding (2026-10-24)
 
-**Provider integrity CI:** PASS on Run [40028771552](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40028771552), exact tested SHA `a7f738cd0c00b6efad8e60fb9a16d0655cf4ecdd`. It validated the immutable artifact map, cache round-trip, source/seed/map identity, supported coverage, YAML/compile checks, and 75 focused tests.
+**Provider integrity CI:** PASS on latest Run [40031544345](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40031544345), exact tested SHA `9435384d1ffdbda3dc8ba759994d981314e34acf`: **79 passed in 1.32s**; the immutable artifact map/cache round-trip, source/seed/map identity, supported coverage, workflow YAML and compile checks all passed. The verifier also emitted the separate `BLOCKED_GOVERNANCE_AUTHORITY` disposition.
 
 **Production authority:** `BLOCKED_GOVERNANCE_AUTHORITY`. Current `main` `docs/governance/DECISIONS_LOG.md` is blob `df4910e6a86bcce84f6b71d6d260913800474f95` and does not contain `D-2026-10-14-01` or `D-2026-10-15-10`. The candidate log copies inspected at `tmp/cp-golden-provider-20261014` (blob `d6a7ecd15e7335800dc8b2865e0a4fef6d5e9c70`) and `tmp/cp-gatea-c030-n2400-20261015` (blob `6104378f40791c95331b615cf511a0f38de759df`) contain a `NaNNaN...` corruption inside the D-2026-10-14-01 section, so those copies are not suitable as a verbatim authority source. D-2026-10-15-10 exists on the candidate branch but cannot independently repair its corrupt predecessor.
 
