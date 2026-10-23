@@ -405,7 +405,7 @@ jobs:
               evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
               is_statistical_checkpoint, next_statistical_checkpoint,
           )
-          from run_batch import _evaluate_gate_a_with_provider
+          from run_batch import _evaluate_gate_a_with_provider, _gate_a_target_is_covered
           from scripts.golden_reference_provider import (
               GoldenReferenceProvider, stage10_trial_result_sha256,
           )
@@ -722,6 +722,34 @@ jobs:
                       "completed_trials": completed,
                   }, sort_keys=True))
                   raise SystemExit(0)
+
+              if not SCENARIO.startswith("C100_") and not _gate_a_target_is_covered(
+                  GOLDEN_PROVIDER, SCENARIO, target_n
+              ):
+                  available_ids = GOLDEN_PROVIDER.get_coverage(SCENARIO)
+                  covered_through = max(available_ids) if available_ids else 0
+                  state["final_status"] = "blocked"
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      f"approved Gate A Golden coverage ends at {covered_through}; "
+                      f"refusing to execute unsupported checkpoint N={target_n}"
+                  )
+                  state["next_check_n"] = target_n
+                  state["golden_coverage_block"] = {
+                      "scenario": SCENARIO,
+                      "requested_checkpoint_n": target_n,
+                      "covered_through": covered_through,
+                      "golden_reference_id": GOLDEN_PROVIDER.get_golden_reference_id(),
+                      "trial_block_executed": False,
+                  }
+                  blob_sha = store.save_state(state, blob_sha)
+                  print(
+                      "GATE_A_GOLDEN_COVERAGE_EXHAUSTED="
+                      + f"{SCENARIO}:covered_through={covered_through}:requested_N={target_n}; "
+                      "stopping before trial block"
+                  )
+                  break
 
               trial_start = completed + 1
               trial_end = target_n
