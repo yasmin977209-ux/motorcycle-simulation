@@ -46,7 +46,7 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
-      - name: Golden governance authority preflight
+      - name: Golden and statistical authority preflight
         env:
           PYTHONPATH: .
         shell: bash
@@ -55,18 +55,26 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          from scripts.golden_reference_provider import golden_authority_status
+          from scripts.golden_reference_provider import (
+              golden_authority_status, statistical_execution_status,
+          )
 
-          status = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          golden = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          statistics = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
           print(json.dumps({
-              "status": status["status"],
-              "blockers": status["blockers"],
-              "decision_log_sha256": status.get("decision_log_sha256"),
+              "golden_authority_status": golden["status"],
+              "golden_authority_blockers": golden["blockers"],
+              "golden_decision_log_sha256": golden.get("decision_log_sha256"),
+              "statistical_execution_status": statistics["status"],
+              "statistical_execution_blockers": statistics["blockers"],
+              "statistical_contract_sha256": statistics.get("contract_sha256"),
               "before_state_branch_inspection": True,
               "no_simulation_or_trial_executed": True,
           }, sort_keys=True))
-          if not status["authorized"]:
+          if not golden["authorized"]:
               raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED_BEFORE_STATE_INSPECTION")
+          if not statistics["authorized"]:
+              raise SystemExit("STATISTICAL_INFERENCE_BLOCKED_BEFORE_STATE_INSPECTION")
           PY
 
       - name: Stage 7-specific preflight
@@ -171,9 +179,11 @@ jobs:
           from pathlib import Path
           from scripts.golden_reference_provider import (
               GoldenReferenceProvider, golden_authority_status,
+              statistical_execution_status,
           )
 
           authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          statistics = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
           if not authority["authorized"]:
               print(json.dumps({
                   "status": "BLOCKED_GOVERNANCE_AUTHORITY",
@@ -182,6 +192,14 @@ jobs:
                   "no_simulation_or_trial_executed": True,
               }, sort_keys=True))
               raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+          if not statistics["authorized"]:
+              print(json.dumps({
+                  "status": "STATISTICAL_INFERENCE_BLOCKED",
+                  "blockers": statistics["blockers"],
+                  "contract_sha256": statistics.get("contract_sha256"),
+                  "no_simulation_or_trial_executed": True,
+              }, sort_keys=True))
+              raise SystemExit("STATISTICAL_INFERENCE_BLOCKED")
           provider = GoldenReferenceProvider()
           if not provider._verified or provider.load_error:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
