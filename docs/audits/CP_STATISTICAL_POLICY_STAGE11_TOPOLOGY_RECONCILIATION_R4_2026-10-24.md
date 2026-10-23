@@ -64,24 +64,28 @@ Therefore:
 
 The documented N=300→600 relative change is 1.5715059334983579%, exceeding the historical strict <1% threshold; a later passing transition does not erase this fact. The available decisions do not unambiguously specify whether this historical failure is permanently disqualifying for overall scenario acceptance or whether a later, explicitly defined requalification rule may resolve it. Preserve the failed point in the record and classify overall acceptance of that scenario as `UNDEFINED_BUSINESS_RULE` pending a written owner decision. No N=4800 run or rule change is authorized by this note.
 
-## 4. Execution topology — observed facts vs target design
+## 4. Execution topology — separate implemented orchestration from Stage 11 scope
 
-### Verified / observed
+### Verified / observed in the current repository
 
-- Stage 7 is implemented as a 25-scenario matrix with a per-scenario state/history, checkpoint evaluation and immutable trial-block outputs.
-- The Stage 10 benchmark report records 45 successful matrix jobs, maximum observed concurrency 10, matrix elapsed time 1051 seconds, and a slowest job of 470 seconds.
-- The Stage 10 report explicitly states that a dedicated Stage 11 workflow/topology was **not defined in the repository**. An input identity JSON is not evidence of an implemented Stage 11 execution workflow.
+- Stage 7 is implemented as a 25-scenario matrix with per-scenario state/history, checkpoint evaluation, and immutable trial-block outputs. Its workflow has `max-parallel: 10`, a 40-minute internal budget, and a 45-minute job timeout. The Golden-wiring candidate adds a preflight and per-worker exact-coverage guard, but remains an unmerged draft PR.
+- The accepted Stage 10 benchmark report records 45 successful matrix jobs, maximum observed concurrency 10, matrix elapsed time 1051 seconds, and slowest job 470 seconds. This is a measured Stage 10 benchmark, not a measured full Stage 11 runtime.
+- Main contains `docs/stage11/dataset_identity.json`, but that file alone does not define an execution workflow.
+- A candidate-only decision record, `D-2026-10-14-02`, says Stage 11 is **documentation-only**, its outputs are `docs/stage11/dataset_identity.json` and `docs/stage11/global_manifest_11005_reconciled.json`, no execution topology is required, and the status is `CLOSED_BY_APPROVED_SCOPE_DECISION` (intentionally not `COMPLETE`). It also preserves Stage 10 metadata drift as open. That decision record is not present in the effective `main` decision log at the reviewed HEAD, so its authority still needs formal governance reconciliation; do not treat a candidate-only decision as an effective-main rule.
+- Therefore, do **not** invent or implement a separate Stage 11 production workflow just to fill the earlier topology gap. Reconcile the missing scope decision and retain the recorded Stage 10 metadata-drift blocker.
 
-### Target topology to implement and validate (proposal, not an observed run)
+### Topology contract for the existing Stage 7 → Stage 12 → Stage 13 path
 
-1. **Read-only preflight:** pin source SHA/seed, scenario set, immutable manifest identities, Golden provider provenance, complete coverage through the exact next checkpoint, and required tool/schema versions.
-2. **Scenario workers:** up to 10 concurrent jobs for the 25 scenarios; acquire only the state for that scenario; restore exact completed IDs; execute only the next authorized interval; write immutable block outputs and a provenance receipt.
-3. **Checkpoint gate:** validate canonical ID continuity and full block/source identity; run exact Gate A first and Gate B plus the supplementary transition gate. If Gate A is not explicit PASS, save a blocked/failed state and stop before any further trial block. If target coverage is missing, block before execution.
-4. **Aggregate barrier:** no Stage 12 aggregation until every required scenario satisfies the cohort contract and its identity checks. Revalidate the manifest/payload inventory, row counts, and hashes before writing the next immutable aggregate.
-5. **Stage 12 → Stage 13:** Stage 13 reads only the accepted Stage 12 delivery input and manifest. It validates representative trial ID + exact TrialResult fingerprint + daily terminal reconciliation + 185-sheet workbook structure, precision serialization, formulas/errors, and README sheet count. Any absent required financial field remains missing evidence and fails acceptance.
-6. **Runtime budget:** an internal 40-minute budget under a 45-minute job timeout leaves a 5-minute unwind/upload margin. The Stage 10 measurement is comfortably below this bound, but the full Stage 11 production workload has not been measured; this must be validated on its actual, authorized workload before calling the budget proven.
+This is the target control sequence for review; items marked target are not a claim that an authorized production rehearsal has passed.
 
-**Topology status:** Stage 7 wiring is being validated on a candidate branch. Stage 11 production topology remains **NOT IMPLEMENTED / NOT ACCEPTED** until the target stages above are put in a reviewed workflow and one authorized non-destructive rehearsal (followed, separately, by authorized production execution) proves state locking, resume, stop-before-trial behavior, artifact persistence, maximum parallelism, wall-clock margin and aggregate barrier.
+1. **Read-only preflight (target):** pin source SHA/seed, scenario set, immutable manifest identities, Golden provider provenance and approval status, full exact Golden coverage through the requested checkpoint, and tool/schema versions. Coverage alone must not be mistaken for decision authority.
+2. **Scenario workers (partly observed in Stage 7):** matrix over 25 scenarios with maximum parallelism 10; restore exact completed IDs and run only missing authorized ranges. Each scenario has its own state/history. No worker may start an unsupported target checkpoint.
+3. **Checkpoint gate (target for the provider candidate):** validate canonical ID continuity and source/block identity, then apply exact Gate A, Gate B and the supplementary transition checks. Gate A that is not explicit PASS or coverage that is absent stops before any next trial block. The 75 focused/static checks validate wiring contracts, not production checkpoint acceptance.
+4. **Aggregate barrier (Stage 12 evidence):** only accept the aggregate after all required scenario data has matching identity, row counts and hashes. Historical Run 37964656154 is recorded as 25 scenario ledgers, 22,546,465 daily rows and zero retries; verify current source artifacts/contract before reuse.
+5. **Stage 12 → Stage 13:** Stage 13 must use the accepted Stage 12 delivery input and manifest, validate representative trial identity/fingerprint, daily terminal reconciliation, exactly 185 workbook sheets, precision serialization, zero formula/error cells, and README sheet count. Missing financial fields stay `MISSING_EVIDENCE`; pending markers may keep a diagnostic workbook explicit but do not qualify as final acceptance.
+6. **Runtime safety:** the 40-minute internal cap within a 45-minute job timeout leaves five minutes for unwind/state persistence/upload. Stage 10's 470-second maximum is not evidence for the full adaptive Stage 7 path, and no full production-workload timing has been established here. Do not label the runtime budget production-proven without an authorized, identified rehearsal.
+
+**Disposition:** Stage 11's intended scope is candidate-documented as documentation-only/no execution topology, but that scope decision is absent from effective `main` governance and Stage 10 metadata drift is still open. Stage 7 Golden provider wiring is candidate-only and passed focused static/unit verification; it has not executed or passed a production checkpoint. The overall sequence and final delivery remain unaccepted until governance authority, statistical validity, data blockers and final artifact checks are closed.
 
 ## 5. Required status vocabulary
 
