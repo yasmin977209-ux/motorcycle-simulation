@@ -1,0 +1,106 @@
+{
+  "schema_version": "stage7-statistical-execution-gate-v1",
+  "reviewed_at": "2026-10-24",
+  "status": "BLOCKED_FOR_IMPLEMENTATION",
+  "source_basis": {
+    "owner_approved_iut_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
+    "owner_approved_iut_record_blob": "1a69a1f4cf8c87b8e2575a800b92fc80bcd6677e",
+    "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+  },
+  "approved_policy": {
+    "familywise_false_stability_target": 0.05,
+    "stochastic_scenario_count": 20,
+    "per_scenario_alpha": 0.0025,
+    "decision_framework": "intersection_union_test",
+    "every_required_component_must_pass": true,
+    "component_procedures_must_be_valid_over_adaptive_looks": true,
+    "required_successful_adjacent_transitions": 3,
+    "required_cumulative_checkpoint_points": 4,
+    "checkpoint_schedule": [
+      300,
+      600,
+      1200,
+      2400
+    ],
+    "c100_path": "DETERMINISM_VERIFIED_SEPARATE_FROM_STOCHASTIC_FAMILY"
+  },
+  "component_status": {
+    "gate_a_exact_golden": {
+      "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+      "blockers": [
+        "D-2026-10-14-01 missing from effective main decision log and inspected candidate copy is corrupted",
+        "D-2026-10-15-10 absent from effective main decision log"
+      ]
+    },
+    "gate_b_financial_means": {
+      "status": "K_SPEC_BLOCKED",
+      "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
+      "implementation_gap": "Current pointwise Student-t intervals are not time-uniform under adaptive stopping; max(absolute, relative) threshold is not the approved near-zero branch",
+      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption, followed by a validated all-time-valid component procedure"
+    },
+    "section_2_5_quantiles": {
+      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
+      "candidate": "Distribution-free time-uniform fixed-quantile confidence sequence based on order statistics; beta-binomial mixture variant is primary candidate",
+      "margins": {
+        "P10_Cumulative_Project_Profit": 18500,
+        "P50_Cumulative_Project_Profit": 18500,
+        "P90_Cumulative_Project_Profit": 18500,
+        "P90_Final_Cash": 18500,
+        "P90_Termination_Count": 1,
+        "P90_Held_Assets": 1
+      }
+    },
+    "probability_of_accounting_loss": {
+      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
+      "candidate": "Time-uniform Bernoulli mean confidence sequence / beta-binomial mixture e-process",
+      "maximum_half_width": 0.005,
+      "maximum_adjacent_change": 0.005
+    },
+    "p90_held_assets": {
+      "status": "PRODUCTION_ACCEPTANCE_MISSING",
+      "margin": 1,
+      "blockers": [
+        "Production data-identity/completeness path is not proven",
+        "No integrated fail-closed acceptance test in production decision path"
+      ]
+    },
+    "stopping_window": {
+      "status": "IMPLEMENTATION_MISMATCH",
+      "required_points": 4,
+      "required_successful_transitions": 3,
+      "current_main_code": "3 checkpoint records / 2 adjacent transitions"
+    },
+    "gate_b_implementation_guards": {
+      "status": "K_CODE_FAIL",
+      "blockers": [
+        "Unsafe truthiness conversion of stable values",
+        "max(absolute, relative) threshold instead of the approved near-zero branch",
+        "No time-uniform financial-mean procedure"
+      ]
+    },
+    "c030_g030_historical_transition": {
+      "status": "FAILED_NOT_REQUALIFIED",
+      "metric": "P90_Final_Cash",
+      "transition": "N=300 to N=600",
+      "relative_change_percent": 1.5715059334983579,
+      "next_step_authorized": "Golden reference preparation for N=2400 only; this is not a completed checkpoint and does not by itself establish stability"
+    }
+  },
+  "execution_authorization": {
+    "production_trial_checkpoint_monte_carlo_allowed": false,
+    "scenario_stability_declaration_allowed": false,
+    "final_delivery_acceptance_allowed": false,
+    "allowed_next_work": "Resolve statistical method assumptions, implement/test valid component procedures and four-point/three-transition stopping; separately restore intact Golden authority text"
+  },
+  "acceptance_to_clear_gate": {
+    "required_status": "ACCEPTED_FOR_PRODUCTION",
+    "requirements": [
+      "Explicit reviewed approval record and exact tested source identity",
+      "All component_status entries marked implemented and independently validated",
+      "Gate A authority records are complete, intact, and present in effective governance",
+      "Four cumulative checkpoint points and three successful adjacent transitions are implemented and tested",
+      "P90_Held_Assets source, identity, completeness, and threshold are verified",
+      "Pointwise-versus-time-uniform distinctions and family-wise IUT assumptions are explicitly validated"
+    ]
+  }
+}
