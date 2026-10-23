@@ -153,7 +153,7 @@ jobs:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
           cache = Path("stage7-golden-provider.json")
           cache.write_text(
-              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\\n",
+              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
           )
           digest = hashlib.sha256(cache.read_bytes()).hexdigest()
