@@ -22,3 +22,14 @@ Every non-C100 checkpoint compares each actual TrialResult SHA-256 with the corr
 ## Verification
 
 A candidate-only workflow loads the real pinned artifacts and performs a cache round-trip, exact coverage checks, YAML parse, compile and deterministic tests. It never invokes the production Stage 7 workflow. Status: `PENDING_PROVIDER_CI`; production acceptance is not asserted by static tests alone.
+
+
+## Authority reconciliation — blocking finding (2026-10-24)
+
+**Provider integrity CI:** PASS on Run [40028771552](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40028771552), exact tested SHA `a7f738cd0c00b6efad8e60fb9a16d0655cf4ecdd`. It validated the immutable artifact map, cache round-trip, source/seed/map identity, supported coverage, YAML/compile checks, and 75 focused tests.
+
+**Production authority:** `BLOCKED_GOVERNANCE_AUTHORITY`. Current `main` `docs/governance/DECISIONS_LOG.md` is blob `df4910e6a86bcce84f6b71d6d260913800474f95` and does not contain `D-2026-10-14-01` or `D-2026-10-15-10`. The candidate log copies inspected at `tmp/cp-golden-provider-20261014` (blob `d6a7ecd15e7335800dc8b2865e0a4fef6d5e9c70`) and `tmp/cp-gatea-c030-n2400-20261015` (blob `6104378f40791c95331b615cf511a0f38de759df`) contain a `NaNNaN...` corruption inside the D-2026-10-14-01 section, so those copies are not suitable as a verbatim authority source. D-2026-10-15-10 exists on the candidate branch but cannot independently repair its corrupt predecessor.
+
+The code now separates map-integrity verification from governance authority. The production Stage 7 preflight refuses to publish the provider artifact or start matrix workers unless both required decision sections are present and required scope/artifact terms validate; it emits `GATE_A_GOVERNANCE_AUTHORITY_BLOCKED` otherwise. The read-only verifier reports map integrity independently and never turns current authority blockage into a production PASS.
+
+**Required review:** restore the complete, uncorrupted, formally approved decision text into effective governance via an explicitly reviewed change. Do not reconstruct omitted normative text from hashes, and do not merge this draft just because candidate CI passes. The separate D-2026-10-17-07 C100 extension is out of scope; this provider intentionally retains C100 trial ID 1 only.
