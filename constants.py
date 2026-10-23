@@ -251,8 +251,8 @@ STATISTICAL_CHECK_STEP_N: Final[int] = 50
 # [R6-1][User decision] Non-C100 cannot stop before completing n=400.
 MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 400
 
-# [R6-1][User decision] Three consecutive checkpoints must satisfy stability gates.
-STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3
+# [CP-IUT-2026-10-18][Owner-approved] Three successful adjacent transitions require four cumulative checkpoints.
+STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 4
 
 # [R6-1][User decision] One initial smoke trial per scenario.
 INITIAL_SMOKE_TRIALS_PER_SCENARIO: Final[int] = 1
