@@ -1,0 +1,87 @@
+name: Gate A provider wiring verification
+
+on:
+  push:
+    branches:
+      - "tmp/cp-gatea-provider-wire-20261024"
+    paths:
+      - ".github/workflows/stage7-full-run.yml"
+      - ".github/workflows/cp-gatea-provider-wire-verify-20261024.yml"
+      - "run_batch.py"
+      - "scripts/golden_reference_provider.py"
+      - "tests/test_golden_provider_workflow_integration.py"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-gatea-provider-wire-verify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  provider-and-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+      - name: Verify immutable Golden map and cache round-trip (read-only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.golden_reference_provider import GoldenReferenceProvider
+
+          provider = GoldenReferenceProvider()
+          if not provider._verified:
+              raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
+          path = Path("stage7-golden-provider.json")
+          path.write_text(
+              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\\n",
+              encoding="utf-8",
+          )
+          round_trip = GoldenReferenceProvider.from_verified_payload(path)
+          assert round_trip._verified
+          assert round_trip.source_map_sha256 == provider.source_map_sha256
+          assert round_trip.get_golden_reference_id() == provider.get_golden_reference_id()
+          assert round_trip.scenario_count == 25 and round_trip.trial_count == 25205
+          for scenario in round_trip._fingerprints:
+              coverage = round_trip.get_coverage(scenario)
+              if scenario.startswith("C100_"):
+                  assert 1 in coverage
+              else:
+                  for n in (300, 600, 1200):
+                      assert set(range(1, n + 1)).issubset(coverage)
+          assert set(range(1, 2401)).issubset(round_trip.get_coverage("C030_G030"))
+          print(json.dumps({
+              "status": "PASS",
+              "trial_count": round_trip.trial_count,
+              "scenario_count": round_trip.scenario_count,
+              "source_map_sha256": round_trip.source_map_sha256,
+              "reference_id": round_trip.get_golden_reference_id(),
+              "no_simulation_or_trial_execution": True,
+          }, sort_keys=True))
+          PY
+      - name: Compile changed Stage 7 modules
+        run: python -m compileall -q run_batch.py scripts/golden_reference_provider.py scripts/stage7_stability.py
+      - name: Parse production workflow YAML
+        run: python -c "import yaml; yaml.safe_load(open('.github/workflows/stage7-full-run.yml', encoding='utf-8'))"
+      - name: Run provider and Stage 7 authoring tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_golden_provider_workflow_integration.py tests/test_stage7_authoring.py
