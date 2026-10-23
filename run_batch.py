@@ -413,6 +413,19 @@ def _evaluate_gate_a_with_provider(
 
 
 
+
+def _gate_a_target_is_covered(
+    provider: GoldenReferenceProvider,
+    scenario_id: str,
+    target_n: int,
+) -> bool:
+    """True only when every canonical ID required by the checkpoint has a pinned hash."""
+    if type(target_n) is not int or target_n < 1 or not provider._verified:
+        return False
+    coverage = provider.get_coverage(scenario_id)
+    return set(range(1, target_n + 1)).issubset(coverage)
+
+
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
