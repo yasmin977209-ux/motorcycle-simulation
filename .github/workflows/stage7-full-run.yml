@@ -46,6 +46,29 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
+      - name: Golden governance authority preflight
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.golden_reference_provider import golden_authority_status
+
+          status = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          print(json.dumps({
+              "status": status["status"],
+              "blockers": status["blockers"],
+              "decision_log_sha256": status.get("decision_log_sha256"),
+              "before_state_branch_inspection": True,
+              "no_simulation_or_trial_executed": True,
+          }, sort_keys=True))
+          if not status["authorized"]:
+              raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED_BEFORE_STATE_INSPECTION")
+          PY
+
       - name: Stage 7-specific preflight
         env:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
