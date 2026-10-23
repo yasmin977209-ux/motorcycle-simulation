@@ -273,7 +273,10 @@ def statistical_execution_status(
                 "IMPLEMENTED_AND_VALIDATED",
             ):
                 state = value.get("status", "MISSING") if isinstance(value, dict) else "MISSING"
-                blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
+                if name == "p90_held_assets":
+                    blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:P90_Held_Assets:{state}")
+                else:
+                    blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
 
     return {
         "authorized": not blockers,
