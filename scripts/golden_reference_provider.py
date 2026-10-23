@@ -187,6 +187,108 @@ def golden_authority_status(
     }
 
 
+
+def statistical_execution_status(
+    contract_path: str | Path = Path("docs/stage7/statistical_execution_gate.json"),
+) -> dict[str, Any]:
+    """Require explicit reviewed statistical-method acceptance before any production sampling."""
+    path = Path(contract_path)
+    if not path.is_file():
+        return {
+            "authorized": False,
+            "status": "STATISTICAL_INFERENCE_BLOCKED",
+            "blockers": ["STATISTICAL_EXECUTION_CONTRACT_MISSING"],
+            "contract_path": str(path),
+        }
+    try:
+        contract = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {
+            "authorized": False,
+            "status": "STATISTICAL_INFERENCE_BLOCKED",
+            "blockers": [f"STATISTICAL_EXECUTION_CONTRACT_INVALID:{type(exc).__name__}"],
+            "contract_path": str(path),
+        }
+    if not isinstance(contract, dict) or contract.get("schema_version") != "stage7-statistical-execution-gate-v1":
+        return {
+            "authorized": False,
+            "status": "STATISTICAL_INFERENCE_BLOCKED",
+            "blockers": ["STATISTICAL_EXECUTION_CONTRACT_SCHEMA_INVALID"],
+            "contract_path": str(path),
+        }
+
+    blockers: list[str] = []
+    if contract.get("status") != "ACCEPTED_FOR_PRODUCTION":
+        blockers.append(f"STATISTICAL_GATE_STATUS:{contract.get('status', 'MISSING')}")
+    execution = contract.get("execution_authorization", {})
+    if (
+        not isinstance(execution, dict)
+        or execution.get("production_trial_checkpoint_monte_carlo_allowed") is not True
+        or execution.get("scenario_stability_declaration_allowed") is not True
+        or execution.get("final_delivery_acceptance_allowed") is not True
+    ):
+        blockers.append("STATISTICAL_EXECUTION_AUTHORIZATION_INCOMPLETE")
+
+    approval = contract.get("implementation_approval", {})
+    if (
+        not isinstance(approval, dict)
+        or approval.get("reviewed_approval_id") in (None, "")
+        or approval.get("owner_approved") is not True
+        or COMMIT_SHA_RE.fullmatch(str(approval.get("validated_source_head_sha", ""))) is None
+        or SHA256_RE.fullmatch(str(approval.get("evidence_sha256", ""))) is None
+    ):
+        blockers.append("STATISTICAL_IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING")
+
+    policy = contract.get("approved_policy", {})
+    if (
+        not isinstance(policy, dict)
+        or policy.get("familywise_false_stability_target") != 0.05
+        or policy.get("stochastic_scenario_count") != 20
+        or policy.get("per_scenario_alpha") != 0.0025
+        or policy.get("decision_framework") != "intersection_union_test"
+        or policy.get("required_successful_adjacent_transitions") != 3
+        or policy.get("required_cumulative_checkpoint_points") != 4
+    ):
+        blockers.append("STATISTICAL_POLICY_CONTRACT_MISMATCH")
+
+    components = contract.get("component_status", {})
+    required_components = (
+        "gate_a_exact_golden",
+        "gate_b_financial_means",
+        "section_2_5_quantiles",
+        "probability_of_accounting_loss",
+        "p90_held_assets",
+        "stopping_window",
+        "gate_b_implementation_guards",
+        "c030_g030_historical_transition",
+    )
+    if not isinstance(components, dict):
+        blockers.append("STATISTICAL_COMPONENT_STATUS_MISSING")
+    else:
+        for name in required_components:
+            value = components.get(name)
+            if not isinstance(value, dict) or value.get("status") not in (
+                "PASS",
+                "PASS_REQUALIFIED",
+                "IMPLEMENTED_AND_VALIDATED",
+            ):
+                state = value.get("status", "MISSING") if isinstance(value, dict) else "MISSING"
+                blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
+
+    return {
+        "authorized": not blockers,
+        "status": "AUTHORIZED" if not blockers else "STATISTICAL_INFERENCE_BLOCKED",
+        "contract_path": str(path),
+        "contract_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "declared_contract_status": contract.get("status"),
+        "component_status": {
+            key: value.get("status") if isinstance(value, dict) else "MISSING"
+            for key, value in components.items()
+        } if isinstance(components, dict) else {},
+        "blockers": blockers,
+    }
+
+
 def stage10_trial_result_sha256(result: Any) -> str:
     """Hash one TrialResult exactly as Stage 10's per-trial result_sha does."""
     if is_dataclass(result):
