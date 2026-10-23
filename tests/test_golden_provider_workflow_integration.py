@@ -144,12 +144,16 @@ def test_current_governance_record_does_not_authorize_candidate_golden_map() -> 
     assert "D-2026-10-15-10" in blockers
 
 
-def test_production_preflight_blocks_missing_golden_authority_before_matrix() -> None:
+def test_production_preflight_blocks_missing_golden_authority_before_state_inspection() -> None:
     workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
-    guard = workflow.index("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+    early_guard = workflow.index("Golden governance authority preflight")
+    stage7_preflight = workflow.index("Stage 7-specific preflight")
+    state_ref = workflow.index("STATE_REF=")
+    map_guard = workflow.index("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
     upload = workflow.index("Upload verified Gate A map for matrix workers")
     matrix = workflow.index("matrix-simulation:")
-    assert guard < upload < matrix
+    assert early_guard < stage7_preflight < state_ref
+    assert map_guard < upload < matrix
 
 
 def test_read_only_verifier_reports_authority_separately_from_map_integrity() -> None:
