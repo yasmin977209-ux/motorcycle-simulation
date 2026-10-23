@@ -11,6 +11,7 @@ from scripts.golden_reference_provider import (
     APPROVED_SOURCE_SHA,
     GoldenReferenceProvider,
     golden_authority_status,
+    statistical_execution_status,
     stage10_trial_result_sha256,
 )
 
@@ -144,16 +145,18 @@ def test_current_governance_record_does_not_authorize_candidate_golden_map() -> 
     assert "D-2026-10-15-10" in blockers
 
 
-def test_production_preflight_blocks_missing_golden_authority_before_state_inspection() -> None:
+def test_production_preflight_blocks_authority_and_statistics_before_state_inspection() -> None:
     workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
-    early_guard = workflow.index("Golden governance authority preflight")
+    early_guard = workflow.index("Golden and statistical authority preflight")
     stage7_preflight = workflow.index("Stage 7-specific preflight")
     state_ref = workflow.index("STATE_REF=")
-    map_guard = workflow.index("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+    golden_map_guard = workflow.index("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+    statistical_guard = workflow.index("STATISTICAL_INFERENCE_BLOCKED")
     upload = workflow.index("Upload verified Gate A map for matrix workers")
     matrix = workflow.index("matrix-simulation:")
     assert early_guard < stage7_preflight < state_ref
-    assert map_guard < upload < matrix
+    assert golden_map_guard < upload < matrix
+    assert statistical_guard < upload < matrix
 
 
 def test_read_only_verifier_reports_authority_separately_from_map_integrity() -> None:
@@ -183,3 +186,27 @@ def test_golden_authority_parser_accepts_complete_and_rejects_corrupt_records(tm
     status = golden_authority_status(path)
     assert status["authorized"] is False
     assert any("D-2026-10-14-01" in item for item in status["blockers"])
+
+
+def test_statistical_execution_contract_blocks_unimplemented_components() -> None:
+    status = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
+    assert status["authorized"] is False
+    assert status["status"] == "STATISTICAL_INFERENCE_BLOCKED"
+    assert any("K_SPEC_BLOCKED" in item for item in status["blockers"])
+    assert any("P90_Held_Assets" in item for item in status["blockers"])
+
+
+def test_statistical_gate_cannot_be_cleared_by_status_string_alone(tmp_path: Path) -> None:
+    path = tmp_path / "statistical_execution_gate.json"
+    contract = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+    contract["status"] = "ACCEPTED_FOR_PRODUCTION"
+    contract["execution_authorization"] = {
+        "production_trial_checkpoint_monte_carlo_allowed": True,
+        "scenario_stability_declaration_allowed": True,
+        "final_delivery_acceptance_allowed": True,
+    }
+    contract["component_status"] = {key: {"status": "PASS"} for key in contract["component_status"]}
+    path.write_text(json.dumps(contract), encoding="utf-8")
+    result = statistical_execution_status(path)
+    assert result["authorized"] is False
+    assert any("IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING" in item for item in result["blockers"])
