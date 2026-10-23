@@ -140,7 +140,7 @@ def golden_authority_status(
                 "decision_log_path": str(path)}
 
     def section(decision_id: str) -> str | None:
-        match = re.search(rf"(?m)^## {re.escape(decision_id)}(?:\\s|$)", text)
+        match = re.search(rf"(?m)^## {re.escape(decision_id)}(?:\s|$)", text)
         if match is None:
             return None
         nxt = re.search(r"(?m)^## D-", text[match.end():])
