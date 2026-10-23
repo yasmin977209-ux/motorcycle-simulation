@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/stage7-full-run.yml"
       - ".github/workflows/cp-gatea-provider-wire-verify-20261024.yml"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "docs/PROJECT_CONTINUITY.md"
       - "run_batch.py"
       - "scripts/golden_reference_provider.py"
       - "tests/test_golden_provider_workflow_integration.py"
@@ -47,9 +49,11 @@ jobs:
           from pathlib import Path
           from scripts.golden_reference_provider import (
               GoldenReferenceProvider, golden_authority_status,
+              statistical_execution_status,
           )
 
           authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          statistics = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
           provider = GoldenReferenceProvider()
           if not provider._verified:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
@@ -79,6 +83,8 @@ jobs:
               "reference_id": round_trip.get_golden_reference_id(),
               "production_authority_status": authority["status"],
               "production_authority_blockers": authority["blockers"],
+              "statistical_execution_status": statistics["status"],
+              "statistical_execution_blockers": statistics["blockers"],
               "no_simulation_or_trial_execution": True,
           }, sort_keys=True))
           PY
