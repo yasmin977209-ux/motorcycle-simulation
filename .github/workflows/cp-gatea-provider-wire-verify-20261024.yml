@@ -52,7 +52,7 @@ jobs:
               raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
           path = Path("stage7-golden-provider.json")
           path.write_text(
-              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\\n",
+              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
           )
           round_trip = GoldenReferenceProvider.from_verified_payload(path)
