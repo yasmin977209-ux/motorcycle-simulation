@@ -156,3 +156,26 @@ def test_read_only_verifier_reports_authority_separately_from_map_integrity() ->
     workflow = Path(".github/workflows/cp-gatea-provider-wire-verify-20261024.yml").read_text(encoding="utf-8")
     assert '"production_authority_status": authority["status"]' in workflow
     assert '"production_authority_blockers": authority["blockers"]' in workflow
+
+
+def test_golden_authority_parser_accepts_complete_and_rejects_corrupt_records(tmp_path: Path) -> None:
+    path = tmp_path / "DECISIONS_LOG.md"
+    d14 = (
+        "## D-2026-10-14-01 — extension_of_gate_a_golden_coverage\n"
+        "24,005 trial fingerprints; 38174743440; 38179919488; "
+        "C100 scenarios remain trial ID 1 only\n"
+    )
+    d15 = (
+        "## D-2026-10-15-10 — C030_G030 Gate A extension and N=2400 checkpoint\n"
+        "C030_G030; 1201..2400; 38662076725; 11940485523; "
+        "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3; "
+        "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65; "
+        "Preserve the historic N=300→N=600 FAIL\n"
+    )
+    path.write_text(d14 + "\n" + d15, encoding="utf-8")
+    assert golden_authority_status(path)["authorized"] is True
+
+    path.write_text(d14.replace("24,005", "NaNNaN") + "\n" + d15, encoding="utf-8")
+    status = golden_authority_status(path)
+    assert status["authorized"] is False
+    assert any("D-2026-10-14-01" in item for item in status["blockers"])
