@@ -16,6 +16,10 @@ import pyarrow.parquet as pq
 from scipy.stats import t
 
 import constants
+from scripts.golden_reference_provider import (
+    GoldenReferenceProvider,
+    stage10_trial_result_sha256,
+)
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
@@ -274,6 +278,139 @@ def evaluate_gate_a(
         expected_source_sha=expected_source_sha,
         actual_source_sha=actual_source_sha,
     )
+
+def _gate_a_trial_map_sha256(
+    scenario_id: str,
+    trial_hashes: dict[int, str],
+) -> str:
+    payload = "".join(
+        f"{scenario_id}|{trial_id}|{trial_hashes[trial_id]}\n"
+        for trial_id in sorted(trial_hashes)
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _evaluate_gate_a_with_provider(
+    *,
+    provider: GoldenReferenceProvider,
+    scenario_id: str,
+    trial_results: list[monte_carlo.TrialResult],
+    source_sha: str,
+    master_seed: int,
+    previous_metrics: dict[str, dict[str, Any]] | None,
+    previous_n: int | None,
+    current_metrics: dict[str, dict[str, Any]],
+    current_n: int,
+) -> dict[str, Any]:
+    """Evaluate Gate A only after exact golden coverage and source identity are available."""
+    common = {
+        "previous_metrics": previous_metrics,
+        "previous_n": previous_n,
+        "current_metrics": current_metrics,
+        "current_n": current_n,
+    }
+    reference_id = provider.get_golden_reference_id()
+    provider_is_valid = bool(reference_id) and provider.verify_source_identity(
+        provider.source_sha
+    )
+    if not provider_is_valid:
+        result = evaluate_gate_a(**common)
+        result["golden_provider_status"] = "BLOCKED_UNVERIFIED_PROVIDER"
+        result["golden_provider_error"] = provider.load_error
+        return result
+
+    source_identity_matches = provider.verify_source_identity(source_sha)
+    provider_master_seed = getattr(provider, "master_seed", None)
+    if master_seed != provider_master_seed:
+        result = evaluate_gate_a(
+            **common,
+            expected_golden_fingerprint_sha256="0" * 64,
+            actual_fingerprint_sha256="1" * 64,
+            golden_reference_id=reference_id,
+            expected_source_sha=provider.source_sha,
+            actual_source_sha=source_sha,
+        )
+        result.update(
+            status="FAIL",
+            checked=True,
+            stable=False,
+            reason=(
+                "actual master seed differs from the approved golden reference"
+            ),
+            expected_master_seed=provider_master_seed,
+            actual_master_seed=master_seed,
+        )
+        return result
+
+    ordered_ids = [int(result.trial_id) for result in trial_results]
+    expected_ids = list(range(1, current_n + 1))
+    coverage = provider.get_coverage(scenario_id)
+    if (
+        ordered_ids != expected_ids
+        or not set(expected_ids).issubset(coverage)
+        or len(ordered_ids) != current_n
+    ):
+        result = evaluate_gate_a(**common)
+        result.update(
+            golden_provider_status="BLOCKED_INCOMPLETE_COVERAGE",
+            golden_coverage_count=len(coverage),
+            golden_trials_expected=current_n,
+            golden_trials_actual=len(ordered_ids),
+        )
+        return result
+
+    actual_hashes: dict[int, str] = {}
+    expected_hashes: dict[int, str] = {}
+    for trial_result in trial_results:
+        trial_id = int(trial_result.trial_id)
+        actual_hashes[trial_id] = stage10_trial_result_sha256(trial_result)
+        expected = provider.get_fingerprint(scenario_id, trial_id)
+        if expected is None:
+            result = evaluate_gate_a(**common)
+            result.update(
+                golden_provider_status="BLOCKED_MISSING_FINGERPRINT",
+                missing_trial_id=trial_id,
+                golden_coverage_count=len(coverage),
+            )
+            return result
+        expected_hashes[trial_id] = expected
+
+    actual_fingerprint = _gate_a_trial_map_sha256(scenario_id, actual_hashes)
+    expected_fingerprint = _gate_a_trial_map_sha256(scenario_id, expected_hashes)
+    mismatches = [
+        trial_id
+        for trial_id in expected_ids
+        if actual_hashes[trial_id] != expected_hashes[trial_id]
+    ]
+    result = evaluate_gate_a(
+        **common,
+        expected_golden_fingerprint_sha256=expected_fingerprint,
+        actual_fingerprint_sha256=actual_fingerprint,
+        golden_reference_id=reference_id,
+        expected_source_sha=provider.source_sha,
+        actual_source_sha=source_sha,
+    )
+    result.update(
+        golden_provider_status="VERIFIED",
+        golden_reference_id=reference_id,
+        golden_coverage_count=len(coverage),
+        golden_trials_compared=len(expected_ids),
+        golden_trial_mismatch_count=len(mismatches),
+        golden_trial_mismatch_ids=mismatches,
+        golden_source_identity_matches=source_identity_matches,
+        expected_golden_fingerprint_sha256=expected_fingerprint,
+        actual_fingerprint_sha256=actual_fingerprint,
+    )
+    if mismatches:
+        result.update(
+            status="FAIL",
+            checked=True,
+            stable=False,
+            reason="one or more actual per-trial hashes differ from approved golden hashes",
+        )
+    return result
+
+
 
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
@@ -561,6 +698,7 @@ def run_batch(
     if not source_sha:
         raise ValueError("SOURCE_SHA must be supplied by environment")
 
+    golden_provider = GoldenReferenceProvider()
     monte_carlo.parse_scenario_id(scenario)
 
     checkpoint = None
@@ -668,7 +806,12 @@ def run_batch(
                     0,
                     {
                         "n": constants.STATISTICAL_CHECK_START_N,
-                        "gate_a": evaluate_gate_a(
+                        "gate_a": _evaluate_gate_a_with_provider(
+                            provider=golden_provider,
+                            scenario_id=scenario,
+                            trial_results=baseline_results,
+                            source_sha=source_sha,
+                            master_seed=master_seed,
                             previous_metrics=None,
                             previous_n=None,
                             current_metrics=baseline_metrics,
@@ -808,6 +951,23 @@ def run_batch(
             verification_dict.pop("trial_id")
 
             exact_equality = primary_dict == verification_dict
+            expected_golden = golden_provider.get_fingerprint(scenario, 1)
+            actual_golden = stage10_trial_result_sha256(primary)
+            golden_ok = (
+                golden_provider.verify_source_identity(source_sha)
+                and master_seed == golden_provider.master_seed
+                and expected_golden is not None
+                and expected_golden == actual_golden
+            )
+            state["c100_gate_a"] = {
+                "status": "PASS" if golden_ok else (
+                    "BLOCKED" if expected_golden is None or not golden_provider._verified else "FAIL"
+                ),
+                "golden_reference_id": golden_provider.get_golden_reference_id(),
+                "expected_sha256": expected_golden,
+                "actual_sha256": actual_golden,
+                "source_identity_matches": golden_provider.verify_source_identity(source_sha),
+            }
             state["c100_independent_verification"] = {
                 "primary_trial_id": 1,
                 "verification_trial_id": 2,
@@ -817,12 +977,15 @@ def run_batch(
                 "stable": exact_equality,
             }
             state["final_status"] = (
-                "stable" if exact_equality else "failed"
+                "stable" if exact_equality and golden_ok
+                else "blocked" if not golden_provider._verified or expected_golden is None
+                else "failed"
             )
             state["reason_if_not_stable"] = (
                 None
-                if exact_equality
-                else "C100 independent result mismatch"
+                if exact_equality and golden_ok
+                else "C100 independent result mismatch" if not exact_equality
+                else "C100 exact-golden provider missing or source mismatch"
             )
             _atomic_write_json(output_dir / STATE_JSON, state)
             break
@@ -832,7 +995,12 @@ def run_batch(
             and trial_end == resolved_next_check
         ):
             metrics = _metric_summary(results)
-            gate_a = evaluate_gate_a(
+            gate_a = _evaluate_gate_a_with_provider(
+                provider=golden_provider,
+                scenario_id=scenario,
+                trial_results=results,
+                source_sha=source_sha,
+                master_seed=master_seed,
                 previous_metrics=previous_metrics,
                 previous_n=previous_n,
                 current_metrics=metrics,
@@ -852,23 +1020,31 @@ def run_batch(
             recent = state["stability_history"][
                 -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
             ]
+            gate_a_status = gate_a.get("status", "BLOCKED")
+            gate_a_stop = gate_a_status != "PASS"
             stable_now = (
-                len(recent)
-                == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
+                not gate_a_stop
+                and len(recent) == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
                 and all(
-                    item["gate_a"]["stable"]
-                    and item["gate_b"]["stable"]
+                    item.get("gate_a", {}).get("status") == "PASS"
+                    and item.get("gate_a", {}).get("checked") is True
+                    and item.get("gate_a", {}).get("stable") is True
+                    and item.get("gate_b", {}).get("stable") is True
                     for item in recent
                 )
             )
-            state["final_status"] = (
-                "stable" if stable_now else "running"
-            )
-            state["reason_if_not_stable"] = (
-                None
-                if stable_now
-                else "dual stability gates not yet satisfied"
-            )
+            if stable_now:
+                state["final_status"] = "stable"
+                state["reason_if_not_stable"] = None
+            elif gate_a_stop:
+                state["final_status"] = "blocked" if gate_a_status == "BLOCKED" else "failed"
+                state["reason_if_not_stable"] = (
+                    f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
+                    "execution stopped before the next checkpoint"
+                )
+            else:
+                state["final_status"] = "running"
+                state["reason_if_not_stable"] = "dual stability gates not yet satisfied"
 
             previous_metrics = metrics
             previous_n = len(results)
@@ -877,7 +1053,7 @@ def run_batch(
 
             _atomic_write_json(output_dir / STATE_JSON, state)
 
-            if stable_now:
+            if gate_a_stop or stable_now:
                 break
         else:
             if (
