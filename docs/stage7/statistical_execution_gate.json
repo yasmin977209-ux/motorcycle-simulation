@@ -102,5 +102,12 @@
       "P90_Held_Assets source, identity, completeness, and threshold are verified",
       "Pointwise-versus-time-uniform distinctions and family-wise IUT assumptions are explicitly validated"
     ]
+  },
+  "implementation_approval": {
+    "reviewed_approval_id": null,
+    "owner_approved": false,
+    "validated_source_head_sha": null,
+    "evidence_sha256": null,
+    "note": "Must be supplied by a separately reviewed implementation/acceptance record; changing status alone is not sufficient."
   }
 }
