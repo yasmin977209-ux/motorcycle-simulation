@@ -1,0 +1,129 @@
+name: Stage 11 scope and manifest governance verification
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage11-scope-mainline-20261024"
+    paths:
+      - ".github/workflows/cp-stage11-governance-static-20261024.yml"
+      - "state.json"
+      - "docs/governance/DECISIONS_LOG.md"
+      - "docs/PROJECT_CONTINUITY.md"
+      - "docs/stage11/dataset_identity.json"
+      - "docs/stage11/global_manifest_11005_reconciled.json"
+      - "docs/stage10/STAGE10_METRICS.json"
+      - "docs/audits/CP_STATISTICAL_POLICY_STAGE11_TOPOLOGY_RECONCILIATION_R4_2026-10-24.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-stage11-governance-static-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  governance-and-identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate JSON, scoped decision, and canonical identities
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          def read_json(path):
+              return json.loads(Path(path).read_text(encoding="utf-8"))
+
+          state = read_json("state.json")
+          decisions = read_json("docs/stage11/global_manifest_11005_reconciled.json")
+          identity = read_json("docs/stage11/dataset_identity.json")
+          metrics = read_json("docs/stage10/STAGE10_METRICS.json")
+          log = Path("docs/governance/DECISIONS_LOG.md").read_text(encoding="utf-8")
+          continuity = Path("docs/PROJECT_CONTINUITY.md").read_text(encoding="utf-8")
+
+          decision_id = "D-2026-10-24-02"
+          decision = state.get("governance_decisions", {}).get(decision_id)
+          assert decision is not None, f"missing state decision {decision_id}"
+          assert decision["value"] == "STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY"
+          assert decision["execution_topology_required_for_stage11"] is False
+          assert decision["no_data_mutation"] is True
+          assert decision["no_trial_or_checkpoint_execution"] is True
+          assert decision_id in log
+          assert decision_id in continuity
+
+          assert state["stage"] == "12-CLOSED"
+          assert state["sha_semantics"] == "parent_state_commit_pointer"
+          blockers = "\n".join(state.get("blockers", []))
+          assert "STATISTICAL_INFERENCE_BLOCKED" in blockers
+          assert "STAGE10_METADATA_DRIFT_OPEN" in blockers
+          assert "FINAL_DELIVERY_NOT_ACCEPTED" in blockers
+          assert "G2_RISK" in blockers
+
+          assert decisions["manifest_status"] == "PASS"
+          assert decisions["total_trials_expected"] == 11005
+          assert decisions["total_trials_evidenced"] == 11005
+          assert decisions["source_sha"] == state["source_sha"]
+          assert decisions["master_seed"] == 20270101
+          assert all(decisions["gates"][f"G{i}"]["result"] == "PASS" for i in range(1, 9))
+          assert identity["total_canonical_trials"] == 11005
+          assert identity["scenarios_count"] == 25
+          assert identity["validation"]["all_25_present"] is True
+          assert identity["validation"]["no_gaps_in_trial_ids"] is True
+          assert identity["validation"]["no_duplicate_trial_ids"] is True
+          assert identity["validation"]["source_sha_matches"] is True
+          assert identity["sources"]["stage7"]["source_sha"] == state["source_sha"]
+          assert metrics["status"] == "PASS"
+          assert metrics["benchmarks"]["matrix_jobs"] == 45
+          assert metrics["benchmarks"]["observed_max_concurrency"] == 10
+          assert metrics["benchmarks"]["matrix_wall_seconds"] == 1051
+          assert metrics["benchmarks"]["max_job_wall_seconds"] == 470
+          assert metrics["gates"]["source_identity"] == "PARTIAL"
+          assert metrics["gates"]["fidelity"] == "PARTIAL"
+          assert metrics["stage11_estimates"]["topology_status"] == "NOT_DEFINED_IN_CURRENT_REPOSITORY"
+          assert decision["stage10_benchmark"]["accepted_as_stage11_runtime_measurement"] is False
+          assert decision["stage10_benchmark"]["source_identity"] == "PARTIAL"
+          assert decision["stage10_benchmark"]["fidelity"] == "PARTIAL"
+
+          stat_path = Path("docs/stage7/statistical_execution_gate.json")
+          assert stat_path.is_file(), "missing merged statistical execution gate"
+          stat_gate = read_json(str(stat_path))
+          assert stat_gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+          assert stat_gate["execution_authorization"]["production_trial_checkpoint_monte_carlo_allowed"] is False
+          assert stat_gate["execution_authorization"]["scenario_stability_declaration_allowed"] is False
+          assert stat_gate["execution_authorization"]["final_delivery_acceptance_allowed"] is False
+          d1_marker = "## D-2026-10-24-01 — Explicit Gate A Golden provider authorization and bounded use"
+          assert d1_marker in log, "scoped Golden authority decision absent after PR64 merge"
+          assert "D-2026-10-24-02" in state.get("governance_decisions", {})
+
+          print(json.dumps({
+              "status": "PASS_SCOPED",
+              "decision_id": decision_id,
+              "stage11_scope": "DOCUMENTATION_ONLY_NO_RUNTIME_WORKFLOW",
+              "canonical_trials": decisions["total_trials_evidenced"],
+              "scenarios": identity["scenarios_count"],
+              "stage10_identity_and_fidelity": "PARTIAL_OPEN",
+              "statistical_execution": "BLOCKED",
+              "final_delivery": "NOT_ACCEPTED",
+              "no_trial_or_checkpoint_executed": True
+          }, sort_keys=True))
+          PY
+      - name: Install YAML parser for static validation
+        run: python -m pip install pyyaml
+      - name: Compile all workflow YAML files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          files = sorted(Path(".github/workflows").glob("*.yml")) + sorted(Path(".github/workflows").glob("*.yaml"))
+          for path in files:
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+          print(f"parsed {len(files)} workflow YAML files")
+          PY
