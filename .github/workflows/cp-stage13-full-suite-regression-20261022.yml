@@ -1,0 +1,327 @@
+name: Stage 13 adapter full repository regression suite after latest main merge
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-current-main-integration-20261021"
+    paths:
+      - "scripts/stage13_assemble.py"
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "scripts/excel_builder.py"
+      - "tests/**"
+      - "requirements.txt"
+      - "docs/stage9a/dataset_manifest.json"
+      - ".github/workflows/cp-stage13-full-suite-regression-20261022.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-stage13-full-suite-v2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  full-repository-tests:
+    name: Full existing unit/integration test inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Build Stage 5 fixtures for v2 parquet tests
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf results_stage5
+          mkdir -p results_stage5
+
+          cat > /tmp/stage5_round5_build.py <<'PY'
+          from __future__ import annotations
+
+          import json
+          from dataclasses import asdict
+
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def main():
+              c100_result, c100_daily = monte_carlo.run_single_trial(
+                  "C100_G100", 1, master_seed=20270101
+              )
+              c100_results = [c100_result]
+              c100_slices = {1: c100_daily}
+              selection = monte_carlo.select_representative_trials(c100_results)
+
+              assert c100_result.final_net_project_equity == 209671000
+              assert c100_result.partner1_final_entitlement == 146769700
+              assert c100_result.partner2_final_entitlement == 62901300
+              assert c100_result.final_cash == 209671000
+              assert c100_result.final_close_date == "2033-01-06"
+              assert len(c100_daily) == 2198
+
+              pq.write_table(
+                  pa.Table.from_pylist([asdict(c100_result)]),
+                  f"{RESULTS}/trials_summary.parquet",
+              )
+
+              pq.write_table(
+                  pa.Table.from_pylist([
+                      {"selection_key": key, "trial_id": int(trial_id)}
+                      for key, trial_id in selection.items()
+                  ]),
+                  f"{RESULTS}/selection.parquet",
+              )
+
+              with open(
+                  f"{RESULTS}/C100_G100_trial_{selection.p50_trial_id:06d}_daily.json",
+                  "w",
+                  encoding="utf-8",
+              ) as handle:
+                  json.dump(
+                      c100_daily,
+                      handle,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
+                  handle.write("\n")
+
+              long_distribution = monte_carlo.build_daily_distribution(
+                  c100_results,
+                  c100_slices,
+              )
+
+              wide_by_date = {}
+              for row in long_distribution:
+                  current = wide_by_date.setdefault(
+                      row["date"],
+                      {
+                          "date": row["date"],
+                          "active_trial_count": row["active_trial_count"],
+                      },
+                  )
+                  for metric in (
+                      "Cash",
+                      "Net_Equity",
+                      "Active_Bikes",
+                      "Owned_Transferred_Bikes",
+                      "Pending_Claims",
+                  ):
+                      current[f"{row['quantile_name']}_{metric}"] = row[metric]
+
+              daily_distribution = [
+                  wide_by_date[key]
+                  for key in sorted(wide_by_date)
+              ]
+
+              pq.write_table(
+                  pa.Table.from_pylist(daily_distribution),
+                  f"{RESULTS}/daily_distribution.parquet",
+              )
+
+              print(json.dumps({
+                  "artifacts": [
+                      "results_stage5/trials_summary.parquet",
+                      "results_stage5/daily_distribution.parquet",
+                      "results_stage5/selection.parquet",
+                  ],
+                  "c100_golden": {
+                      "final_net_project_equity": c100_result.final_net_project_equity,
+                      "partner1_final_entitlement": c100_result.partner1_final_entitlement,
+                      "partner2_final_entitlement": c100_result.partner2_final_entitlement,
+                      "final_cash": c100_result.final_cash,
+                      "final_close_date": c100_result.final_close_date,
+                      "daily_balance_checks": len(c100_daily),
+                  },
+                  "selection": selection,
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY
+
+          python /tmp/stage5_round5_build.py
+
+          cat > /tmp/stage5_round5_worker_manifest.py <<'PY2'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          from dataclasses import asdict
+
+          import monte_carlo
+
+          RESULTS = "results_stage5"
+
+          def stable_sha(value):
+              payload = json.dumps(
+                  value,
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  separators=(",", ":"),
+                  default=str,
+              ).encode("utf-8")
+              return hashlib.sha256(payload).hexdigest()
+
+          def main():
+              trial_ids = (1, 2, 3)
+
+              seq_results, seq_slices = monte_carlo.run_trials_sequentially(
+                  "C070_G100",
+                  trial_ids,
+              )
+
+              par2_results, par2_slices = monte_carlo.run_trials_parallel(
+                  "C070_G100",
+                  trial_ids,
+                  2,
+              )
+
+              par4_results, par4_slices = monte_carlo.run_trials_parallel(
+                  "C070_G100",
+                  trial_ids,
+                  4,
+              )
+
+              def by_id(results):
+                  return {result.trial_id: result for result in results}
+
+              seq_by_id = by_id(seq_results)
+              par2_by_id = by_id(par2_results)
+              par4_by_id = by_id(par4_results)
+
+              manifest = []
+              for trial_id in trial_ids:
+                  seq_result = asdict(seq_by_id[trial_id])
+                  p2_result = asdict(par2_by_id[trial_id])
+                  p4_result = asdict(par4_by_id[trial_id])
+                  seq_daily = seq_slices[trial_id]
+                  p2_daily = par2_slices[trial_id]
+                  p4_daily = par4_slices[trial_id]
+
+                  manifest.append({
+                      "scenario_id": "C070_G100",
+                      "trial_id": trial_id,
+                      "exact_1_eq_2": (
+                          seq_result == p2_result
+                          and seq_daily == p2_daily
+                      ),
+                      "exact_1_eq_4": (
+                          seq_result == p4_result
+                          and seq_daily == p4_daily
+                      ),
+                      "trial_result_sha256_1": stable_sha(seq_result),
+                      "trial_result_sha256_2": stable_sha(p2_result),
+                      "trial_result_sha256_4": stable_sha(p4_result),
+                      "daily_slice_sha256_1": stable_sha(seq_daily),
+                      "daily_slice_sha256_2": stable_sha(p2_daily),
+                      "daily_slice_sha256_4": stable_sha(p4_daily),
+                  })
+
+              assert all(
+                  row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                  for row in manifest
+              )
+
+              with open(
+                  f"{RESULTS}/worker_equivalence_manifest.json",
+                  "w",
+                  encoding="utf-8",
+              ) as handle:
+                  json.dump(
+                      manifest,
+                      handle,
+                      ensure_ascii=False,
+                      indent=2,
+                      sort_keys=True,
+                  )
+                  handle.write("\n")
+
+              print(json.dumps({
+                  "worker_manifest_rows": len(manifest),
+                  "exact_all": all(
+                      row["exact_1_eq_2"] and row["exact_1_eq_4"]
+                      for row in manifest
+                  ),
+              }, ensure_ascii=False, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+          PY2
+
+          python /tmp/stage5_round5_worker_manifest.py
+      - name: Prepare isolated test evidence
+        run: mkdir -p stage13_full_suite_evidence
+      - name: Compile candidate Stage 13 modules
+        run: python -m compileall -q scripts/stage13_assemble.py scripts/stage13_maxcase_source_audit.py scripts/excel_builder.py
+      - name: Run complete existing test suite
+        env:
+          PYTHONPATH: .
+        run: |
+          set -o pipefail
+          python -m pytest -q tests             --junitxml=stage13_full_suite_evidence/pytest.junit.xml             2>&1 | tee stage13_full_suite_evidence/pytest.log
+      - name: Capture exact source and test identity
+        if: always()
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import subprocess
+          from pathlib import Path
+
+          def run(*args):
+              return subprocess.check_output(args, text=True).strip()
+
+          files = [
+              "scripts/stage13_assemble.py",
+              "scripts/stage13_maxcase_source_audit.py",
+              "scripts/excel_builder.py",
+              "docs/stage9a/dataset_manifest.json",
+              "docs/stage11/dataset_identity.json",
+              "daily_engine.py",
+              "monte_carlo.py",
+          ]
+          tests = sorted(str(p) for p in Path("tests").glob("test_*.py"))
+          all_files = files + tests
+          record = {
+              "tested_head_sha": run("git", "rev-parse", "HEAD"),
+              "git_blob_sha": {p: run("git", "hash-object", p) for p in all_files},
+              "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in files},
+              "stage9a_manifest_blob_matches_main": (
+                  run("git", "hash-object", "docs/stage9a/dataset_manifest.json")
+                  == "e796fa2443493b607f1f9c60b58eb63607959c26"
+              ),
+              "stage11_identity_blob_matches_main": (
+                  run("git", "hash-object", "docs/stage11/dataset_identity.json")
+                  == "72a481d509d39820fba78732724fde4fa9f25134"
+              ),
+              "production_workbook_built": False,
+              "production_monte_carlo_trial_or_checkpoint_run": False,
+          }
+          Path("stage13_full_suite_evidence/source_identity.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Upload full-suite logs and identity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-full-repository-regression
+          path: stage13_full_suite_evidence/
+          if-no-files-found: error
+          retention-days: 30

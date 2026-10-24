@@ -1,0 +1,246 @@
+name: Stage 13 current-main synthetic integration verification on integrated main
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-current-main-integration-20261021"
+    paths:
+      - "scripts/stage13_assemble.py"
+      - "scripts/excel_builder.py"
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "tests/test_stage13_assembler.py"
+      - "tests/test_stage13_maxcase_pending_fields.py"
+      - "tests/test_stage13_maxcase_audit_loader.py"
+      - "tests/test_excel_builder_adaptive_mode.py"
+      - "tests/test_excel_builder_legacy_compat.py"
+      - "tests/test_excel_builder_precision.py"
+      - "tests/test_excel_daily_serialization.py"
+      - ".github/workflows/cp-stage13-current-main-integration-20261021.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: cp-stage13-current-main-integration-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  synthetic-contract:
+    name: Synthetic Stage 13 assembler and entrypoint contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Prepare isolated verification evidence
+        run: mkdir -p stage13_synthetic_evidence
+      - name: Compile Stage 13 modules
+        run: python -m compileall -q scripts/stage13_assemble.py scripts/stage13_maxcase_source_audit.py scripts/excel_builder.py
+      - name: Validate immutable MaxCase audit artifact against actual loader
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          mkdir -p stage13_synthetic_evidence/maxcase_audit_input
+          archive="stage13_synthetic_evidence/maxcase-source-audit.zip"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12537818827/zip" > "$archive"
+          printf '%s  %s\n' "88abdc9e0ce4097df044280b517f08b1595642476c8d596ac13fc128b88092b3" "$archive" | sha256sum --check -
+          python - <<'PY'
+          import hashlib
+          import json
+          import zipfile
+          from pathlib import Path
+          from scripts.excel_builder import _read_maxcase_audit_bundle
+
+          archive = Path("stage13_synthetic_evidence/maxcase-source-audit.zip")
+          target = Path("stage13_synthetic_evidence/maxcase_audit_input")
+          with zipfile.ZipFile(archive) as zf:
+              names = zf.namelist()
+              required = {
+                  "stage13_maxcase_source_audit.json",
+                  "stage13_maxcase_daily_payloads.json",
+                  "stage13_maxcase_audit.log",
+              }
+              if set(names) != required or len(names) != len(required):
+                  raise SystemExit(f"MAXCASE_AUDIT_ARCHIVE_MEMBERS_MISMATCH: {names}")
+              audit_raw = zf.read("stage13_maxcase_source_audit.json")
+              payloads_raw = zf.read("stage13_maxcase_daily_payloads.json")
+          audit_path = target / "stage13_maxcase_source_audit.json"
+          payloads_path = target / "stage13_maxcase_daily_payloads.json"
+          audit_path.write_bytes(audit_raw)
+          payloads_path.write_bytes(payloads_raw)
+          manifest = json.loads(Path("docs/stage9a/dataset_manifest.json").read_text(encoding="utf-8"))
+          result = _read_maxcase_audit_bundle(
+              audit_path,
+              payloads_path,
+              audit_sha256=hashlib.sha256(audit_raw).hexdigest(),
+              payloads_sha256=hashlib.sha256(payloads_raw).hexdigest(),
+              manifest=manifest,
+          )
+          payloads = result["payloads_by_scenario"]
+          statuses = {
+              name: sum(item.get("partner_memo_fields_status") == name for item in payloads.values())
+              for name in ("VERIFIED_REUSED_SOURCE_ARTIFACT", "MISSING_EVIDENCE")
+          }
+          expected = {
+              "VERIFIED_REUSED_SOURCE_ARTIFACT": 15,
+              "MISSING_EVIDENCE": 10,
+          }
+          if statuses != expected:
+              raise SystemExit(f"MAXCASE_AUDIT_SOURCE_STATUS_COUNTS_MISMATCH: {statuses}")
+          if result["metadata"]["tested_head_sha"] != "c00b48912e10cc0334dfb0d7bb3c3741eb002315":
+              raise SystemExit("MAXCASE_AUDIT_SOURCE_HEAD_MISMATCH")
+          if result["metadata"]["integrity_status"] != "PASS_SCOPED":
+              raise SystemExit("MAXCASE_AUDIT_INTEGRITY_STATUS_MISMATCH")
+          if result["metadata"]["payload_status"] != "MISSING_EVIDENCE":
+              raise SystemExit("MAXCASE_AUDIT_PAYLOAD_STATUS_MISMATCH")
+          if result["metadata"]["representative_inventory_mismatch_count"] != 1:
+              raise SystemExit("MAXCASE_AUDIT_MANIFEST_CONFLICT_MISMATCH")
+          if len(result["metadata"]["missing_memo_scenarios"]) != 10:
+              raise SystemExit("MAXCASE_AUDIT_MISSING_MEMO_SCENARIO_COUNT_MISMATCH")
+          print(json.dumps({
+              "artifact_zip_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "audit_json_sha256": result["metadata"]["audit_sha256"],
+              "payloads_json_sha256": result["metadata"]["payloads_sha256"],
+              "source_tested_head": result["metadata"]["tested_head_sha"],
+              "source_status_counts": statuses,
+              "stage12_integrity": result["metadata"]["integrity_status"],
+              "payload_status": result["metadata"]["payload_status"],
+              "manifest_provenance_mismatch_count": result["metadata"]["representative_inventory_mismatch_count"],
+              "production_workbook_built": False,
+              "simulation_trials_or_checkpoints_run": False,
+          }, sort_keys=True))
+          PY
+      - name: Validate exact replay recovery artifact against the source audit bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          archive="stage13_synthetic_evidence/maxcase-replay-recovery.zip"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12542814312/zip" > "$archive"
+          printf '%s  %s\n' "85e0d747044910d8d9837085b3a221a7459feb418eb78776ae3b4f1a31f5db68" "$archive" | sha256sum --check -
+          mkdir -p stage13_synthetic_evidence/maxcase_replay_input
+          unzip -q "$archive" -d stage13_synthetic_evidence/maxcase_replay_input
+          printf '%s  %s\n' "c477e390a5b0b9c8c35a3d5474e5b359056e59d1f2254395e589af4621982006" "stage13_synthetic_evidence/maxcase_replay_input/stage13_maxcase_replay_recovery.json" | sha256sum --check -
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from scripts.excel_builder import _read_maxcase_audit_bundle, _read_maxcase_replay_bundle
+
+          base = Path("stage13_synthetic_evidence/maxcase_audit_input")
+          replay_path = Path("stage13_synthetic_evidence/maxcase_replay_input/stage13_maxcase_replay_recovery.json")
+          manifest = json.loads(Path("docs/stage9a/dataset_manifest.json").read_text(encoding="utf-8"))
+          audit_path = base / "stage13_maxcase_source_audit.json"
+          payloads_path = base / "stage13_maxcase_daily_payloads.json"
+          audit_bundle = _read_maxcase_audit_bundle(
+              audit_path, payloads_path,
+              audit_sha256=hashlib.sha256(audit_path.read_bytes()).hexdigest(),
+              payloads_sha256=hashlib.sha256(payloads_path.read_bytes()).hexdigest(),
+              manifest=manifest,
+          )
+          replay_bundle = _read_maxcase_replay_bundle(
+              replay_path,
+              replay_sha256=hashlib.sha256(replay_path.read_bytes()).hexdigest(),
+              manifest=manifest,
+              audit_bundle=audit_bundle,
+          )
+          metadata = replay_bundle["metadata"]
+          if len(replay_bundle["payloads_by_scenario"]) != 10:
+              raise SystemExit("MAXCASE_REPLAY_SCENARIO_COVERAGE_MISMATCH")
+          if metadata["replay_recovered_daily_rows"] != 21575:
+              raise SystemExit("MAXCASE_REPLAY_DAILY_ROW_COVERAGE_MISMATCH")
+          if metadata["replay_covers_all_missing_memo_scenarios"] is not True:
+              raise SystemExit("MAXCASE_REPLAY_MISSING_SCENARIOS_NOT_COVERED")
+          print(json.dumps({
+              "recovery_status": metadata["replay_recovery_status"],
+              "replay_json_sha256": metadata["replay_json_sha256"],
+              "replay_artifact_id": metadata["replay_artifact_id"],
+              "replay_recovered_scenarios": metadata["replay_recovered_scenarios"],
+              "replay_recovered_daily_rows": metadata["replay_recovered_daily_rows"],
+              "replay_selected_trial_sha256_mismatches": metadata["replay_selected_trial_sha256_mismatches"],
+              "replay_stage12_common_field_mismatches": metadata["replay_stage12_common_field_mismatches"],
+              "canonical_stage12_files_modified": False,
+              "production_workbook_built": False,
+          }, sort_keys=True))
+          PY
+
+      - name: Run synthetic and compatibility tests only
+        env:
+          PYTHONPATH: .
+        run: |
+          set -o pipefail
+          python -m pytest -q \
+            tests/test_stage13_assembler.py \
+            tests/test_stage13_maxcase_pending_fields.py \
+            tests/test_stage13_maxcase_audit_loader.py \
+            tests/test_excel_builder_adaptive_mode.py \
+            tests/test_excel_builder_legacy_compat.py \
+            tests/test_excel_builder_precision.py \
+            tests/test_excel_daily_serialization.py \
+            --junitxml=stage13_synthetic_evidence/pytest.junit.xml \
+            2>&1 | tee stage13_synthetic_evidence/pytest.log
+      - name: Capture exact candidate source identity
+        if: always()
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import subprocess
+          from pathlib import Path
+
+          paths = [
+              "scripts/stage13_assemble.py",
+              "scripts/excel_builder.py",
+              "scripts/stage13_maxcase_source_audit.py",
+              "tests/test_stage13_assembler.py",
+              "tests/test_stage13_maxcase_pending_fields.py",
+              "tests/test_stage13_maxcase_audit_loader.py",
+              "tests/test_excel_builder_adaptive_mode.py",
+              "tests/test_excel_builder_legacy_compat.py",
+              "tests/test_excel_builder_precision.py",
+              "tests/test_excel_daily_serialization.py",
+              "docs/stage9a/dataset_manifest.json",
+              "docs/stage11/dataset_identity.json",
+          ]
+          def run(*args):
+              return subprocess.check_output(args, text=True).strip()
+          record = {
+              "tested_head_sha": run("git", "rev-parse", "HEAD"),
+              "git_blob_sha": {path: run("git", "hash-object", path) for path in paths},
+              "manifest_sha256": {
+                  path: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                  for path in paths[-2:]
+              },
+              "stage9a_manifest_git_blob_matches_main": (
+                  run("git", "hash-object", "docs/stage9a/dataset_manifest.json")
+                  == "c8591aac3d309fd94c4e67a547d33fb62ac5694d"
+              ),
+              "production_workbook_built": False,
+              "simulation_trials_or_checkpoints_run": False,
+          }
+          Path("stage13_synthetic_evidence/source_identity.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Upload inspectable test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-current-main-synthetic-verification
+          path: stage13_synthetic_evidence/
+          if-no-files-found: warn
+          retention-days: 30
