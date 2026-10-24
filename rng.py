@@ -34,8 +34,11 @@ def derive_seed(
     day: date,
     event_type: str,
 ) -> bytes:
+    # Couple scenarios that differ only in guarantee recovery: the reference
+    # defines the random stream by collection level, not the full Cxxx_Gxxx ID.
+    rng_stream_id = scenario_id.partition("_G")[0] if "_G" in scenario_id else scenario_id
     key = (
-        f"{master_seed}|{scenario_id}|{trial_id}|{bike_id}|{day}|{event_type}"
+        f"{master_seed}|{rng_stream_id}|{trial_id}|{bike_id}|{day}|{event_type}"
     )
     return hashlib.sha256(key.encode("utf-8")).digest()
 
