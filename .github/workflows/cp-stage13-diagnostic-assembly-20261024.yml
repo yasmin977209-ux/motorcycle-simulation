@@ -36,7 +36,7 @@ jobs:
       - name: Run 11005 preparation unit contracts
         env:
           PYTHONPATH: .
-        run: python -m pytest -q tests/test_stage13_prepare_11005_diagnostic_dataset.py tests/test_stage13_maxcase_audit_loader.py
+        run: python -m pytest -q tests/test_stage13_prepare_11005_diagnostic_dataset.py tests/test_stage13_maxcase_audit_loader.py tests/test_stage13_assembler.py
 
       - name: Confirm production and final-acceptance gates remain closed
         run: |
