@@ -74,9 +74,9 @@ This is a code/schema integration change, not proof that the historical 11,005-t
 The v2.1 reference hash reconciliation, K_SPEC/time-uniform inference, Gate A coverage, source/data provenance, realism calibration, PREP reachability, Stage 10 workload/fidelity, and P17/P18 acceptance blockers remain unchanged.
 
 
-## Gate B near-zero epsilon path — candidate correction
+## Mean-tolerance discrepancy — unresolved pending reference authority
 
-The embedded Stage 7 workflow now applies the absolute tolerance only when `abs(mean) < constants.REFERENCE_EPSILON`; otherwise it applies `CI_RELATIVE_EPSILON * abs(mean)`. This removes the stale `max(absolute, relative × abs(mean))` implementation, which had allowed the absolute tolerance to override the relative tolerance far from zero. The threshold values and Gate B status are unchanged. Unit coverage asserts the exact branch and guards against regression. The financial-mean confidence interval itself is still pointwise Student-t, so this code correction does not clear `K_SPEC` or authorize production execution.
+The current candidate workflow and `run_batch.py` use `max(CI_ABSOLUTE_EPSILON, CI_RELATIVE_TOLERANCE * abs(mean))`, with the repository constant `CI_ABSOLUTE_EPSILON=1`. The attached reference v2.1-1 instead specifies `max(STAT_REL_TOL * abs(mean), STAT_CAPITAL_FLOOR_FRACTION * TOTAL_CAPITAL)`; its stated values `0.01` and `TOTAL_CAPITAL=3,700,000` imply a floor of `37,000`. This material difference must be reconciled with the effective reference SHA before the production tolerance is selected. The temporary candidate-only change that isolated the absolute tolerance to a near-zero branch has been reverted; neither formula is being newly declared authoritative here. The execution gate and production authorization remain blocked.
 
 
 ## Statistical policy mismatch between attached reference and execution gate
