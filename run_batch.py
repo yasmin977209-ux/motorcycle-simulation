@@ -29,6 +29,7 @@ from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_MULTIPLIER,
     evaluate_gate_a as evaluate_stage7_gate_a,
     filter_statistical_history,
+    has_successful_adjacent_transition_window,
     next_statistical_checkpoint,
 )
 
@@ -799,6 +800,7 @@ def run_batch(
         "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
         "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
+        "cumulative_checkpoints_required": constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED,
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
         "ci_relative_tolerance": constants.CI_RELATIVE_TOLERANCE,
         "ci_absolute_epsilon": constants.CI_ABSOLUTE_EPSILON,
@@ -1054,20 +1056,14 @@ def run_batch(
                 }
             )
 
-            recent = state["stability_history"][
-                -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
-            ]
             gate_a_status = gate_a.get("status", "BLOCKED")
             gate_a_stop = gate_a_status != "PASS"
             stable_now = (
                 not gate_a_stop
-                and len(recent) == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
-                and all(
-                    item.get("gate_a", {}).get("status") == "PASS"
-                    and item.get("gate_a", {}).get("checked") is True
-                    and item.get("gate_a", {}).get("stable") is True
-                    and item.get("gate_b", {}).get("stable") is True
-                    for item in recent
+                and has_successful_adjacent_transition_window(
+                    state["stability_history"],
+                    required_transitions=constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
+                    required_points=constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED,
                 )
             )
             if stable_now:
