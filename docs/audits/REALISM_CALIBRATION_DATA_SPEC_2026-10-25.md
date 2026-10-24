@@ -38,6 +38,16 @@ Use pseudonymous IDs rather than names, phone numbers, national IDs, addresses o
 - Freeze a versioned raw-data extract and record hashes, schema, transformation code and row counts. Keep personally identifying data out of model artifacts.
 - Split data chronologically into calibration, validation and untouched out-of-time test periods; avoid random row splits that leak the same contract or episode across sets.
 
+## Public context research completed on 2026-10-25 (context only, not model inputs)
+
+This is a source lead list for the data collection effort, not a locally calibrated parameter set.
+
+- **Motorcycle acquisition price:** Asharq Al-Awsat reported on 2026-10-23 that a showroom owner in southern Sana'a quoted a current range of **YER 280,000–500,000 per motorcycle**, amid an unusual demand/supply shock. The report does not specify a representative model/year/specification sample, invoice evidence, transaction volumes, or a distribution. The reference model's YER 350,000 base cost falls inside that single reported range, but this is **not** validation that the reference value is representative or current for the project's intended bike model. Obtain the project's own dated supplier invoices/quotes and record make/model/year/specification, condition, taxes/customs, registration, delivery, and the currency/exchange market used. Source: [Asharq Al-Awsat, 23 Oct 2026](https://english.aawsat.com/arab-world/5332765-houthis-deplete-motorcycle-market-military-use).
+- **Inflation and macro context:** the IMF country page reports a **2026 projected consumer-price change of 26.5%** for Yemen, and the April 2026 Article IV release describes significant macroeconomic pressures and risks. These are national/macro context, not Sana'a-specific rental-cost series; they must not be directly multiplied into rents or repair costs. Source: [IMF Yemen country page](https://www.imf.org/en/countries/yem) and [IMF Article IV press release, 3 Apr 2026](https://www.imf.org/en/news/articles/2026/04/02/pr-26106-yemen-imf-executive-board-concludes-2025-article-iv-consult).
+- **Fuel cost lead:** the Yemen Ministry of Economy/Industry/Investment price page showed a dated table for 17 Sep 2026 with gasoline at YER 525/litre versus YER 475 previously, and diesel at YER 575/litre versus YER 475 previously. The geographic/currency-market coverage and relevance to the project's operating area were not independently established during this pass; treat it as a lead requiring validation, not as an adopted assumption. Source: [Ministry price tables](https://moit.gov.ye/complaints/prices).
+
+**Interpretation:** these public findings confirm that acquisition costs, fuel and broader prices can move and that market quotations may be volatile. They do not supply the contract-level payment, vacancy, guarantee recovery, maintenance, resale, local financing, or demand data needed to calibrate the model. Do not update constants, scenario probabilities or results from these three sources alone.
+
 ## Calibration and validation plan
 
 1. Descriptive checks: contract durations, arrears, recovery delays, vacancy, maintenance costs and net cash flow distributions with sample counts and uncertainty intervals.
