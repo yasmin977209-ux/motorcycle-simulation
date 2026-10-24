@@ -35,8 +35,9 @@
     "gate_b_financial_means": {
       "status": "K_SPEC_BLOCKED",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "Current pointwise Student-t intervals are not time-uniform under adaptive stopping; max(absolute, relative) threshold is not the approved near-zero branch",
-      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption, followed by a validated all-time-valid component procedure"
+      "implementation_gap": "The explicit near-zero absolute-tolerance branch is implemented; pointwise Student-t intervals remain invalid for adaptive stopping because they are not time-uniform. No approved finite support or quantitative tail/moment bound is available.",
+      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption, followed by a validated all-time-valid component procedure",
+      "implementation_status": "NEAR_ZERO_GUARD_VERIFIED_TIME_UNIFORM_INFERENCE_BLOCKED"
     },
     "section_2_5_quantiles": {
       "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
@@ -65,18 +66,20 @@
       ]
     },
     "stopping_window": {
-      "status": "IMPLEMENTATION_MISMATCH",
+      "status": "CODE_GUARD_IMPLEMENTED_TESTED_STATISTICAL_ACCEPTANCE_BLOCKED",
       "required_points": 4,
       "required_successful_transitions": 3,
-      "current_main_code": "3 checkpoint records / 2 adjacent transitions"
+      "current_main_code": "Four cumulative checkpoint points and three successful adjacent transitions are enforced by a shared exact-N transition guard; the window is not itself proof of anytime-valid inference or a stability decision.",
+      "evidence": "tests/test_stage7_authoring.py pins the 300/600/1200/2400 schedule, rejects stopping after three points, rejects a non-doubling transition and a mismatched previous/current N binding, and rejects any failed gate in the four-point window."
     },
     "gate_b_implementation_guards": {
-      "status": "K_CODE_FAIL",
+      "status": "STRICT_BOOLEAN_GUARD_IMPLEMENTED_TESTED_INFERENCE_BLOCKED",
       "blockers": [
-        "Unsafe truthiness conversion of stable values",
-        "max(absolute, relative) threshold instead of the approved near-zero branch",
-        "No time-uniform financial-mean procedure"
-      ]
+        "The exact-Boolean guard rejects missing values, strings such as 'False', integers, and null values.",
+        "No time-uniform financial-mean confidence sequence is implemented or accepted; the current Student-t interval is pointwise only.",
+        "Quantile and Bernoulli time-uniform confidence sequences remain candidate-only and unintegrated."
+      ],
+      "evidence": "scripts/stage7_stability.py requires type(stable) is bool; tests/test_stage7_authoring.py checks wrong types fail closed."
     },
     "c030_g030_historical_transition": {
       "status": "FAILED_NOT_REQUALIFIED",
@@ -90,7 +93,7 @@
     "production_trial_checkpoint_monte_carlo_allowed": false,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "allowed_next_work": "Resolve statistical method assumptions, implement/test valid component procedures and four-point/three-transition stopping; separately restore intact Golden authority text"
+    "allowed_next_work": "Build diagnostic reports from exact pinned historical evidence; validate Stage13 source identities and missing-field counts; resolve mean confidence-sequence support/tail assumptions; integrate and validate time-uniform mean, quantile and Bernoulli procedures. Production Trial/Checkpoint/Monte Carlo, stability declaration and final acceptance remain prohibited."
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
