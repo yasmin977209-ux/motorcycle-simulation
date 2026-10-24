@@ -887,3 +887,36 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
     ]
     assert all(is_statistical_checkpoint(n) for n in (300, 600, 1200, 2400))
     assert not any(is_statistical_checkpoint(n) for n in (350, 400, 450, 500, 550))
+
+
+
+def test_stage7_gate_b_requires_actual_boolean_stability_evidence() -> None:
+    valid = _metrics((1000.0, 700.0, 300.0), stable=True)
+    result = evaluate_gate_b(valid)
+    assert result["checked"] is True
+    assert result["stable"] is True
+
+    explicit_false = _metrics((1000.0, 700.0, 300.0), stable=False)
+    assert evaluate_gate_b(explicit_false)["stable"] is False
+
+    invalid_values = ("False", "true", 0, 1, None, [], {}, float("nan"))
+    for field_name in ("final_net_project_equity", "partner1_final_entitlement", "partner2_final_entitlement"):
+        for invalid in invalid_values:
+            malformed = _metrics((1000.0, 700.0, 300.0), stable=True)
+            malformed[field_name]["stable"] = invalid
+            with pytest.raises(ValueError, match="must be a Boolean"):
+                evaluate_gate_b(malformed)
+
+    missing_stability = _metrics((1000.0, 700.0, 300.0), stable=True)
+    missing_stability["final_net_project_equity"].pop("stable")
+    with pytest.raises(ValueError, match="must be a Boolean"):
+        evaluate_gate_b(missing_stability)
+
+    missing_metric = _metrics((1000.0, 700.0, 300.0), stable=True)
+    missing_metric.pop("partner2_final_entitlement")
+    with pytest.raises(ValueError, match="must be a mapping"):
+        evaluate_gate_b(missing_metric)
+
+    for malformed_top_level in (None, [], "not-a-mapping"):
+        with pytest.raises(ValueError, match="current metrics must be a mapping"):
+            evaluate_gate_b(malformed_top_level)  # type: ignore[arg-type]

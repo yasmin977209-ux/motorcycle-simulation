@@ -213,15 +213,27 @@ def evaluate_gate_a(
 
 
 def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Fail closed if the production Stage 7 caller supplies malformed Gate B evidence."""
+    if not isinstance(current_metrics, dict):
+        raise ValueError("Gate B current metrics must be a mapping")
+
     metric_payload = {}
-    all_stable = True
     for name in STABILITY_METRICS:
-        stable = bool(current_metrics[name]["stable"])
-        metric_payload[name] = {"stable": stable}
-        all_stable = all_stable and stable
+        metric = current_metrics.get(name)
+        if not isinstance(metric, dict):
+            raise ValueError(
+                f"Gate B metric evidence for {name!r} must be a mapping"
+            )
+        raw_stable = metric.get("stable")
+        if type(raw_stable) is not bool:
+            raise ValueError(
+                f"Gate B stable field for {name!r} must be a Boolean"
+            )
+        metric_payload[name] = {"stable": raw_stable}
+
     return {
         "checked": True,
-        "stable": all_stable,
+        "stable": all(item["stable"] for item in metric_payload.values()),
         "metrics": metric_payload,
     }
 
