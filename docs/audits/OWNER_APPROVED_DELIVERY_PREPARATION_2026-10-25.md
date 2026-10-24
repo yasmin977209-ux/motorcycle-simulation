@@ -61,3 +61,18 @@ The reference-compliant baseline and a realism-calibrated business forecast are 
 ## Final status
 
 `CANDIDATE_WORK_IN_PROGRESS` — this branch contains bounded work only. No production simulation or new Golden generation was run by this record. `main`, canonical historical outputs and release status remain unchanged.
+
+## Candidate verification evidence — 2026-10-25
+
+The current code/test diff was exercised by candidate-only GitHub Actions (no production workflow was dispatched):
+
+- [Stage 1 Run 40137686463](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40137686463), tested code head `1fb21be99eccf3a4bb96006bd41a169edd87dcf2`: **7 passed**. This includes the exact collection-level key digest, coupling across all configured recovery levels and cross-process reproducibility.
+- [Candidate preflight Run 40137686458](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40137686458), same tested head: **158 passed, 1 skipped, 4 deselected** in the active acceptance subset; the four tests requiring Stage 5-generated fixtures were explicitly excluded, not counted as passed. The second deterministic regression group passed **164 tests with one warning**, covering `run_batch`/Stage 7 fail-closed checks, daily Excel serialization and Stage 13 assembler/audit-loader/pending-field checks.
+- No Monte Carlo cohort, production Trial/checkpoint, Golden generation/extension, stability declaration, final workbook acceptance or Release was run by these candidate workflows.
+
+The owner-authorized P17 report restoration and current P17/P18 revalidation documents are now also retained on this branch; their verdict remains **P17 = NOT_ACCEPTED; P18 = BLOCKED, no Release**. This restores review evidence on the candidate branch only, not on `main`.
+
+## Exact current repository state
+
+- `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- This branch is candidate-only. It must not be merged while the RNG/source identity and Golden plan, reference SHA reconciliation, `K_SPEC`, incomplete Gate A coverage, historical failed transition, realism data, and final delivery acceptance remain unresolved.
