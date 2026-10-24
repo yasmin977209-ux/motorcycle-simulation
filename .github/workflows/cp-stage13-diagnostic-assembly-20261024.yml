@@ -121,22 +121,33 @@ jobs:
                   nested_tar = zf.read(outer_member)
               with tarfile.open(fileobj=io.BytesIO(nested_tar), mode="r:gz") as tf:
                   members = tf.getmembers()
-                  normalized = []
+                  normalized_files = []
+                  file_members = []
                   for member in members:
                       name = member.name[2:] if member.name.startswith("./") else member.name
                       path = Path(name)
-                      if not member.isfile() or path.is_absolute() or ".." in path.parts or name.startswith("/"):
+                      if path.is_absolute() or ".." in path.parts or name.startswith("/"):
                           raise SystemExit(f"UNSAFE_TAR_MEMBER {scenario}: {member.name}")
-                      normalized.append(name)
-                  if len(normalized) != len(set(normalized)) or set(normalized) != expected_members:
-                      raise SystemExit(f"ARTIFACT_INNER_TAR_MEMBER_MISMATCH {scenario}: {normalized}")
-                  for member, name in zip(members, normalized):
+                      if member.isdir():
+                          if name not in (".", "representatives"):
+                              raise SystemExit(f"UNEXPECTED_TAR_DIRECTORY {scenario}: {member.name}")
+                          continue
+                      if not member.isfile():
+                          raise SystemExit(f"UNSUPPORTED_TAR_MEMBER_TYPE {scenario}: {member.name}")
+                      normalized_files.append(name)
+                      file_members.append((member, name))
+                  expected_inner_files = expected_members - {"scenario.tar.gz"}
+                  if len(normalized_files) != len(set(normalized_files)) or set(normalized_files) != expected_inner_files:
+                      raise SystemExit(f"ARTIFACT_INNER_TAR_MEMBER_MISMATCH {scenario}: {normalized_files}")
+                  for member, name in file_members:
                       source = tf.extractfile(member)
                       if source is None:
                           raise SystemExit(f"UNREADABLE_TAR_MEMBER {scenario}: {name}")
                       target_path = target / name
                       target_path.parent.mkdir(parents=True, exist_ok=True)
                       target_path.write_bytes(source.read())
+              # In the GitHub artifact ZIP, this byte stream is the canonical scenario.tar.gz member.
+              (target / "scenario.tar.gz").write_bytes(nested_tar)
               downloaded.append({
                   "scenario": scenario, "artifact_id": artifact_id,
                   "run_id": int(entry["run_id"]), "zip_sha256": actual_sha,
