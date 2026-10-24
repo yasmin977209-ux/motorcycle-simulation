@@ -1,0 +1,390 @@
+name: Stage 13 pinned-source diagnostic workbook assembly (never final acceptance)
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-diagnostic-assembly-20261024"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: cp-stage13-diagnostic-assembly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  diagnostic-assembly:
+    name: Assemble current Stage 13 diagnostic candidate from pinned sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Confirm production and final-acceptance gates remain closed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+          auth = gate["execution_authorization"]
+          assert auth["production_trial_checkpoint_monte_carlo_allowed"] is False
+          assert auth["scenario_stability_declaration_allowed"] is False
+          assert auth["final_delivery_acceptance_allowed"] is False
+          print(json.dumps({
+              "global_statistical_gate": gate["status"],
+              "production_trials_allowed": auth["production_trial_checkpoint_monte_carlo_allowed"],
+              "scenario_stability_allowed": auth["scenario_stability_declaration_allowed"],
+              "final_acceptance_allowed": auth["final_delivery_acceptance_allowed"],
+          }, sort_keys=True))
+          PY
+
+      - name: Download and rehash the 25 pinned Stage 9A enriched artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          mkdir -p stage13_diagnostic_input/archives stage13_diagnostic_input/dataset stage13_diagnostic_output
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          import os
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          manifest_path = Path("docs/stage9a/dataset_manifest.json")
+          inventory_path = Path("docs/audits/stage9a_payload_inventory_20261020.json")
+          manifest_raw = manifest_path.read_bytes()
+          manifest = json.loads(manifest_raw)
+          inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+          manifest_blob = hashlib.sha1(b"blob " + str(len(manifest_raw)).encode() + b"\0" + manifest_raw).hexdigest()
+          expected_manifest_blob = inventory["reconciliation_after_c050_g000_pointer_merge"]["canonical_manifest_git_blob"]
+          if manifest_blob != expected_manifest_blob:
+              raise SystemExit(f"CANONICAL_MANIFEST_BLOB_MISMATCH expected={expected_manifest_blob} actual={manifest_blob}")
+          if len(manifest.get("scenarios", {})) != 25 or len(inventory.get("artifacts", [])) != 25:
+              raise SystemExit("STAGE9A_SCENARIO_OR_ARTIFACT_COUNT_MISMATCH")
+          dataset = Path("stage13_diagnostic_input/dataset")
+          archive_dir = Path("stage13_diagnostic_input/archives")
+          expected_members = {
+              "scenario.tar.gz", "daily_distribution.parquet",
+              "representatives/P10.json", "representatives/P50.json",
+              "representatives/P90.json", "representatives/Loss.json",
+              "trial_results.parquet", "trial_fingerprints.json", "scenario_metadata.json",
+          }
+          downloaded = []
+          for entry in inventory["artifacts"]:
+              scenario = entry["scenario"]
+              artifact_id = int(entry["artifact_id"])
+              scenario_meta = manifest["scenarios"].get(scenario)
+              if scenario_meta is None or int(scenario_meta["enriched_artifact_id"]) != artifact_id:
+                  raise SystemExit(f"MANIFEST_ARTIFACT_ID_MISMATCH {scenario} artifact={artifact_id}")
+              if set(entry["members"]) != expected_members:
+                  raise SystemExit(f"INVENTORY_MEMBER_CONTRACT_MISMATCH {scenario}: {sorted(entry['members'])}")
+              archive = archive_dir / f"{scenario}.zip"
+              with archive.open("wb") as output:
+                  subprocess.run(
+                      ["gh", "api", f"repos/{repo}/actions/artifacts/{artifact_id}/zip"],
+                      stdout=output, check=True,
+                  )
+              raw = archive.read_bytes()
+              actual_sha = hashlib.sha256(raw).hexdigest()
+              if actual_sha != entry["zip_sha256"]:
+                  raise SystemExit(f"ARTIFACT_SHA256_MISMATCH {scenario} expected={entry['zip_sha256']} actual={actual_sha}")
+              if len(raw) != int(entry["zip_size_bytes"]):
+                  raise SystemExit(f"ARTIFACT_SIZE_MISMATCH {scenario}")
+              target = dataset / scenario
+              target.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(archive) as zf:
+                  names = zf.namelist()
+                  if len(names) != len(set(names)) or set(names) != expected_members:
+                      raise SystemExit(f"ARTIFACT_MEMBER_MISMATCH {scenario}: {names}")
+                  for name in names:
+                      path = Path(name)
+                      if path.is_absolute() or ".." in path.parts or name.startswith("/"):
+                          raise SystemExit(f"UNSAFE_ARCHIVE_MEMBER {scenario}: {name}")
+                      zf.extract(name, target)
+              downloaded.append({
+                  "scenario": scenario, "artifact_id": artifact_id,
+                  "run_id": int(entry["run_id"]), "zip_sha256": actual_sha,
+                  "zip_size_bytes": len(raw), "trial_count": int(entry["trial_count"]),
+              })
+
+          roles = {}
+          for scenario, meta in manifest["scenarios"].items():
+              chosen = meta["representative_trials"]
+              roles[scenario] = {key: int(chosen[key]) for key in ("P10", "P50", "P90", "Loss")}
+          reps_path = dataset / "representative_trial_ids.json"
+          reps_path.write_text(json.dumps({
+              "schema_version": "stage13-diagnostic-role-ids-v1",
+              "scenarios": roles,
+              "source_manifest_git_blob_sha": manifest_blob,
+              "diagnostic_only": True,
+          }, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          report = {
+              "schema_version": "stage13-pinned-input-download-v1",
+              "tested_head_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "canonical_manifest_git_blob_sha": manifest_blob,
+              "scenario_count": len(downloaded),
+              "artifact_count": len(downloaded),
+              "total_trials_from_manifest": manifest.get("total_trials"),
+              "artifacts": downloaded,
+              "representative_role_ids_file_sha256": hashlib.sha256(reps_path.read_bytes()).hexdigest(),
+              "stage12_data_modified": False,
+              "simulation_trials_or_checkpoints_run": False,
+              "production_or_release_assembly": False,
+          }
+          Path("stage13_diagnostic_input/inputs_manifest.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps({
+              "artifact_count": len(downloaded),
+              "total_trials_from_manifest": manifest.get("total_trials"),
+              "canonical_manifest_git_blob_sha": manifest_blob,
+              "stage12_data_modified": False,
+              "simulation_trials_or_checkpoints_run": False,
+          }, sort_keys=True))
+          PY
+
+      - name: Download and digest-pin the scoped MaxCase audit bundle and exact replay bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p stage13_diagnostic_input/audit stage13_diagnostic_input/replay
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12544311885/zip" > stage13_diagnostic_input/maxcase-source-audit.zip
+          printf '%s  %s\n' "93b150e5d3360c8d160f3facad85c28dc676819466ed3fded3167bcb703c3f32" "stage13_diagnostic_input/maxcase-source-audit.zip" | sha256sum --check -
+          python - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          archive = Path("stage13_diagnostic_input/maxcase-source-audit.zip")
+          target = Path("stage13_diagnostic_input/audit")
+          required = {"stage13_maxcase_source_audit.json", "stage13_maxcase_daily_payloads.json", "stage13_maxcase_audit.log"}
+          with zipfile.ZipFile(archive) as zf:
+              names = zf.namelist()
+              if set(names) != required or len(names) != len(required):
+                  raise SystemExit(f"MAXCASE_AUDIT_ARCHIVE_MEMBERS_MISMATCH: {names}")
+              for name in names:
+                  zf.extract(name, target)
+          audit = target / "stage13_maxcase_source_audit.json"
+          payloads = target / "stage13_maxcase_daily_payloads.json"
+          Path("stage13_diagnostic_input/audit_sha256.json").write_text(json.dumps({
+              "audit_zip_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "audit_json_sha256": hashlib.sha256(audit.read_bytes()).hexdigest(),
+              "payloads_json_sha256": hashlib.sha256(payloads.read_bytes()).hexdigest(),
+          }, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          PY
+
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12542814312/zip" > stage13_diagnostic_input/maxcase-replay-recovery.zip
+          printf '%s  %s\n' "85e0d747044910d8d9837085b3a221a7459feb418eb78776ae3b4f1a31f5db68" "stage13_diagnostic_input/maxcase-replay-recovery.zip" | sha256sum --check -
+          unzip -q stage13_diagnostic_input/maxcase-replay-recovery.zip -d stage13_diagnostic_input/replay
+          printf '%s  %s\n' "c477e390a5b0b9c8c35a3d5474e5b359056e59d1f2254395e589af4621982006" "stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json" | sha256sum --check -
+
+      - name: Validate audit and replay against the canonical manifest before building
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib, json, subprocess
+          from pathlib import Path
+          from scripts.excel_builder import _read_maxcase_audit_bundle, _read_maxcase_replay_bundle
+          manifest_path = Path("docs/stage9a/dataset_manifest.json")
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest_blob = subprocess.check_output(["git", "hash-object", str(manifest_path)], text=True).strip()
+          audit_path = Path("stage13_diagnostic_input/audit/stage13_maxcase_source_audit.json")
+          payloads_path = Path("stage13_diagnostic_input/audit/stage13_maxcase_daily_payloads.json")
+          replay_path = Path("stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json")
+          audit_bundle = _read_maxcase_audit_bundle(
+              audit_path, payloads_path,
+              audit_sha256=hashlib.sha256(audit_path.read_bytes()).hexdigest(),
+              payloads_sha256=hashlib.sha256(payloads_path.read_bytes()).hexdigest(),
+              manifest=manifest, manifest_git_blob_sha=manifest_blob,
+          )
+          replay_bundle = _read_maxcase_replay_bundle(
+              replay_path,
+              replay_sha256=hashlib.sha256(replay_path.read_bytes()).hexdigest(),
+              manifest=manifest, manifest_git_blob_sha=manifest_blob,
+              audit_bundle=audit_bundle,
+          )
+          a, r = audit_bundle["metadata"], replay_bundle["metadata"]
+          statuses = {
+              name: sum(p.get("partner_memo_fields_status") == name for p in audit_bundle["payloads_by_scenario"].values())
+              for name in ("VERIFIED_REUSED_SOURCE_ARTIFACT", "MISSING_EVIDENCE")
+          }
+          if statuses != {"VERIFIED_REUSED_SOURCE_ARTIFACT": 15, "MISSING_EVIDENCE": 10}:
+              raise SystemExit(f"MAXCASE_AUDIT_STATUS_COUNTS_MISMATCH: {statuses}")
+          if a["integrity_status"] != "PASS_SCOPED" or a["representative_inventory_mismatch_count"] != 0:
+              raise SystemExit("MAXCASE_AUDIT_INTEGRITY_OR_INVENTORY_MISMATCH")
+          if len(replay_bundle["payloads_by_scenario"]) != 10 or r["replay_recovered_daily_rows"] != 21575:
+              raise SystemExit("MAXCASE_REPLAY_COVERAGE_MISMATCH")
+          if r["replay_selected_trial_sha256_mismatches"] != 0 or r["replay_stage12_common_field_mismatches"] != 0:
+              raise SystemExit("MAXCASE_REPLAY_SOURCE_MISMATCH")
+          print(json.dumps({
+              "audit_integrity_status": a["integrity_status"],
+              "audit_payload_status": a["payload_status"],
+              "representative_inventory_mismatch_count": a["representative_inventory_mismatch_count"],
+              "source_reuse_status_counts": statuses,
+              "replay_status": r["replay_recovery_status"],
+              "replay_scenarios": len(replay_bundle["payloads_by_scenario"]),
+              "replay_daily_rows": r["replay_recovered_daily_rows"],
+              "replay_trial_fingerprint_mismatches": r["replay_selected_trial_sha256_mismatches"],
+              "replay_stage12_common_field_mismatches": r["replay_stage12_common_field_mismatches"],
+          }, sort_keys=True))
+          PY
+
+      - name: Assemble diagnostic workbook from pinned existing data (no simulation)
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          AUDIT_SHA=$(sha256sum stage13_diagnostic_input/audit/stage13_maxcase_source_audit.json | cut -d ' ' -f1)
+          PAYLOADS_SHA=$(sha256sum stage13_diagnostic_input/audit/stage13_maxcase_daily_payloads.json | cut -d ' ' -f1)
+          REPLAY_SHA=$(sha256sum stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json | cut -d ' ' -f1)
+          python scripts/excel_builder.py \
+            --dataset-path stage13_diagnostic_input/dataset \
+            --manifest docs/stage9a/dataset_manifest.json \
+            --representatives stage13_diagnostic_input/dataset/representative_trial_ids.json \
+            --output-path stage13_diagnostic_output/Stage13_Diagnostic_Candidate_NOT_FINAL.xlsx \
+            --mode canonical \
+            --maxcase-audit stage13_diagnostic_input/audit/stage13_maxcase_source_audit.json \
+            --maxcase-payloads stage13_diagnostic_input/audit/stage13_maxcase_daily_payloads.json \
+            --maxcase-audit-sha256 "$AUDIT_SHA" \
+            --maxcase-payloads-sha256 "$PAYLOADS_SHA" \
+            --maxcase-replay stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json \
+            --maxcase-replay-sha256 "$REPLAY_SHA" \
+            | tee stage13_diagnostic_output/assembly_result.json
+
+      - name: Independently inspect workbook and preserve blocked acceptance status
+        if: always()
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          from openpyxl import load_workbook
+
+          outdir = Path("stage13_diagnostic_output")
+          workbook_path = outdir / "Stage13_Diagnostic_Candidate_NOT_FINAL.xlsx"
+          result_path = outdir / "assembly_result.json"
+          report = {
+              "schema_version": "stage13-diagnostic-assembly-report-v1",
+              "run_id": int(os.environ["GITHUB_RUN_ID"]),
+              "tested_head_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "diagnostic_only": True,
+              "simulation_trials_or_checkpoints_run": False,
+              "stage12_data_modified": False,
+              "canonical_manifest_sha256": hashlib.sha256(Path("docs/stage9a/dataset_manifest.json").read_bytes()).hexdigest(),
+              "global_statistical_gate_status": json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))["status"],
+          }
+          if not result_path.is_file():
+              report.update({"build_status": "NO_ASSEMBLY_RESULT", "final_acceptance_status": "NOT_FINAL_BLOCKED"})
+              (outdir / "diagnostic_build_report.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+              raise SystemExit("ASSEMBLY_RESULT_MISSING")
+          raw = result_path.read_text(encoding="utf-8").strip()
+          result = json.loads(raw.splitlines()[-1])
+          report["assembly_result"] = result
+          report["final_acceptance_status"] = result.get("final_acceptance_status", "NOT_FINAL_BLOCKED")
+          report["success"] = bool(result.get("success"))
+          report["final_acceptance_blockers"] = result.get("final_acceptance_blockers", [])
+          if report["final_acceptance_status"] != "NOT_FINAL_BLOCKED":
+              raise SystemExit(f"UNEXPECTED_ACCEPTANCE_STATUS: {report['final_acceptance_status']}; diagnostic build must never claim final acceptance")
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          if gate["status"] != "BLOCKED_FOR_IMPLEMENTATION":
+              raise SystemExit("STATISTICAL_GATE_UNEXPECTEDLY_OPEN")
+          if any(gate["execution_authorization"][key] is not False for key in (
+              "production_trial_checkpoint_monte_carlo_allowed",
+              "scenario_stability_declaration_allowed",
+              "final_delivery_acceptance_allowed",
+          )):
+              raise SystemExit("PRODUCTION_OR_FINAL_ACCEPTANCE_AUTHORIZATION_UNEXPECTEDLY_ENABLED")
+          if not report["success"]:
+              raise SystemExit("DIAGNOSTIC_ASSEMBLY_BUILD_FAILED")
+          if not workbook_path.is_file():
+              raise SystemExit("DIAGNOSTIC_WORKBOOK_MISSING")
+          report["workbook_sha256"] = hashlib.sha256(workbook_path.read_bytes()).hexdigest()
+          wb = load_workbook(workbook_path, read_only=True, data_only=False)
+          report["sheet_count"] = len(wb.sheetnames)
+          if len(wb.sheetnames) != 185 or len(set(wb.sheetnames)) != 185:
+              wb.close()
+              raise SystemExit(f"WORKBOOK_SHEET_COUNT_MISMATCH: {len(wb.sheetnames)}")
+          if "REPRESENTATIVE_CASES" not in wb.sheetnames or "README" not in wb.sheetnames:
+              wb.close()
+              raise SystemExit("WORKBOOK_REQUIRED_SHEET_MISSING")
+          ws = wb["REPRESENTATIVE_CASES"]
+          header = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+          col = {name: idx for idx, name in enumerate(header)}
+          for required in ("scenario", "case", "Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance"):
+              if required not in col:
+                  wb.close()
+                  raise SystemExit(f"REPRESENTATIVE_CASES_HEADER_MISSING: {required}")
+          maxcase_scenarios, maxcase_rows, pending_memo_cells, pending_any_cells, excel_error_cells = set(), 0, 0, 0, 0
+          for row in ws.iter_rows(min_row=2, values_only=False):
+              values = [cell.value for cell in row]
+              if any(cell.data_type == "e" for cell in row):
+                  excel_error_cells += sum(cell.data_type == "e" for cell in row)
+              if "PENDING_DATA_SOURCE" in values:
+                  pending_any_cells += values.count("PENDING_DATA_SOURCE")
+              if len(values) > max(col.values()) and values[col["case"]] == "Max Case":
+                  maxcase_rows += 1
+                  maxcase_scenarios.add(str(values[col["scenario"]]))
+                  for field in ("Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance"):
+                      if values[col[field]] == "PENDING_DATA_SOURCE":
+                          pending_memo_cells += 1
+          wb.close()
+          report.update({
+              "maxcase_daily_rows": maxcase_rows,
+              "maxcase_scenario_count": len(maxcase_scenarios),
+              "maxcase_scenarios": sorted(maxcase_scenarios),
+              "pending_memo_cells": pending_memo_cells,
+              "pending_data_source_cells_anywhere": pending_any_cells,
+              "excel_error_cells": excel_error_cells,
+              "production_or_release_acceptance": False,
+          })
+          if len(maxcase_scenarios) != 25:
+              raise SystemExit(f"MAXCASE_SCENARIO_COVERAGE_MISMATCH: {len(maxcase_scenarios)}")
+          if pending_memo_cells != 0:
+              raise SystemExit(f"MAXCASE_PARTNER_MEMO_FIELD_INCOMPLETE: {pending_memo_cells}")
+          if excel_error_cells != 0:
+              raise SystemExit(f"EXCEL_ERROR_CELLS_FOUND: {excel_error_cells}")
+          (outdir / "diagnostic_build_report.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps({
+              "build_success": report["success"],
+              "final_acceptance_status": report["final_acceptance_status"],
+              "workbook_sha256": report["workbook_sha256"],
+              "sheet_count": report["sheet_count"],
+              "maxcase_scenarios": report["maxcase_scenario_count"],
+              "maxcase_daily_rows": report["maxcase_daily_rows"],
+              "pending_memo_cells": report["pending_memo_cells"],
+              "pending_data_source_cells_anywhere": report["pending_data_source_cells_anywhere"],
+              "excel_error_cells": report["excel_error_cells"],
+              "production_or_release_acceptance": False,
+          }, sort_keys=True))
+          PY
+
+      - name: Upload diagnostic candidate and provenance only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-diagnostic-candidate-not-final-${{ github.run_id }}
+          path: |
+            stage13_diagnostic_output/
+            stage13_diagnostic_input/inputs_manifest.json
+            stage13_diagnostic_input/audit_sha256.json
+          if-no-files-found: warn
+          retention-days: 30
