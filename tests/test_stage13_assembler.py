@@ -29,8 +29,13 @@ def trial_result_sha256(row):
     trial_result = monte_carlo.TrialResult(
         **{key: value for key, value in row.items() if key != "result_sha256"}
     )
+    # The Stage 13 result_sha256 covers the financial TrialResult payload;
+    # RNG checksum metadata is validated separately and must not change it.
+    fingerprint_payload = asdict(trial_result)
+    fingerprint_payload.pop("rng_checksum", None)
+    fingerprint_payload.pop("rng_draw_count", None)
     raw = json.dumps(
-        asdict(trial_result),
+        fingerprint_payload,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
