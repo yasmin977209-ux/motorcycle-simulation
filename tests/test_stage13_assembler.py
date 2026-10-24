@@ -851,7 +851,7 @@ def test_diagnostic_scenario_detail_marks_missing_source_sections_without_fabric
         "C085_G070_PARTNER", "C085_G070_GUARANTEE", "C085_G070_CONTRACTS",
     }
     daily = wb["C085_G070_DAILY"]
-    assert daily["A2"].value == "2027-01-01"
+    assert daily["A2"].value == date(2027, 1, 1)
     for suffix in ("_ASSETS", "_ACCTG", "_PARTNER", "_GUARANTEE", "_CONTRACTS"):
         ws = wb[f"C085_G070{suffix}"]
         assert ws["A2"].value == "SOURCE_NOT_AVAILABLE_IN_DIAGNOSTIC_COHORT"
