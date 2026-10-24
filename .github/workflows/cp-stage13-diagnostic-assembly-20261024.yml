@@ -65,6 +65,8 @@ jobs:
           import json
           import os
           import subprocess
+          import io
+          import tarfile
           import zipfile
           from pathlib import Path
 
@@ -91,10 +93,6 @@ jobs:
           downloaded = []
           for entry in inventory["artifacts"]:
               scenario = entry["scenario"]
-              expected_archive_members = {
-                  f"{scenario}.tar.gz" if member == "scenario.tar.gz" else member
-                  for member in expected_members
-              }
               artifact_id = int(entry["artifact_id"])
               scenario_meta = manifest["scenarios"].get(scenario)
               if scenario_meta is None or int(scenario_meta["enriched_artifact_id"]) != artifact_id:
@@ -116,17 +114,29 @@ jobs:
               target = dataset / scenario
               target.mkdir(parents=True, exist_ok=True)
               with zipfile.ZipFile(archive) as zf:
-                  names = zf.namelist()
-                  if len(names) != len(set(names)) or set(names) != expected_archive_members:
-                      raise SystemExit(f"ARTIFACT_MEMBER_MISMATCH {scenario}: {names}")
-                  for name in names:
+                  outer_names = zf.namelist()
+                  outer_member = f"{scenario}.tar.gz"
+                  if len(outer_names) != 1 or outer_names[0] != outer_member:
+                      raise SystemExit(f"ARTIFACT_OUTER_ZIP_MEMBER_MISMATCH {scenario}: {outer_names}")
+                  nested_tar = zf.read(outer_member)
+              with tarfile.open(fileobj=io.BytesIO(nested_tar), mode="r:gz") as tf:
+                  members = tf.getmembers()
+                  normalized = []
+                  for member in members:
+                      name = member.name[2:] if member.name.startswith("./") else member.name
                       path = Path(name)
-                      if path.is_absolute() or ".." in path.parts or name.startswith("/"):
-                          raise SystemExit(f"UNSAFE_ARCHIVE_MEMBER {scenario}: {name}")
-                      canonical_name = "scenario.tar.gz" if name == f"{scenario}.tar.gz" else name
-                      target_path = target / canonical_name
+                      if not member.isfile() or path.is_absolute() or ".." in path.parts or name.startswith("/"):
+                          raise SystemExit(f"UNSAFE_TAR_MEMBER {scenario}: {member.name}")
+                      normalized.append(name)
+                  if len(normalized) != len(set(normalized)) or set(normalized) != expected_members:
+                      raise SystemExit(f"ARTIFACT_INNER_TAR_MEMBER_MISMATCH {scenario}: {normalized}")
+                  for member, name in zip(members, normalized):
+                      source = tf.extractfile(member)
+                      if source is None:
+                          raise SystemExit(f"UNREADABLE_TAR_MEMBER {scenario}: {name}")
+                      target_path = target / name
                       target_path.parent.mkdir(parents=True, exist_ok=True)
-                      target_path.write_bytes(zf.read(name))
+                      target_path.write_bytes(source.read())
               downloaded.append({
                   "scenario": scenario, "artifact_id": artifact_id,
                   "run_id": int(entry["run_id"]), "zip_sha256": actual_sha,
