@@ -124,3 +124,11 @@ Keep these statuses separate:
 - `FINAL_ACCEPTED` only after all required delivery files are built from the approved cohort and independently verified
 
 This reconciliation is a documentary candidate. It does not alter production code, authoritative reference files, historical records, manifests, trial IDs, or delivery status.
+
+## 6. Effective branch reconciliation — D-2026-10-24-02
+
+The branch now records decision `D-2026-10-24-02` in `docs/governance/DECISIONS_LOG.md`, reflects it in `state.json` and `docs/PROJECT_CONTINUITY.md`, and adds a static verification workflow. The decision closes the Stage 11 *scope question* as documentation/identity reconciliation only; it does not claim a production runtime topology was measured. It preserves the observed Stage 10 benchmark values and leaves its `source_identity=PARTIAL`, `fidelity=PARTIAL`, and 40/45-minute `G2_RISK` open.
+
+The effective branch checks the reconciled `global_manifest_11005_reconciled.json` and `dataset_identity.json` without rewriting them: 11,005 canonical trials, 25 scenarios, seed 20270101, source SHA `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, and G1–G8 pass. It also verifies `state.json` remains `12-CLOSED` and keeps `STATISTICAL_INFERENCE_BLOCKED`, `STAGE10_METADATA_DRIFT_OPEN`, `FINAL_DELIVERY_NOT_ACCEPTED`, and `G2_RISK` as explicit blockers.
+
+This is a candidate governance CP on `tmp/cp-statistical-topology-reconcile-20261024`; it does not write `main` or alter canonical trial data. Its static workflow must pass on the exact final head before this decision/state correction is merged.
