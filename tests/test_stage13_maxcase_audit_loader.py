@@ -16,6 +16,9 @@ from scripts.excel_builder import (
     _maxcase_role_from_replay,
     _read_maxcase_audit_bundle,
     _read_maxcase_replay_bundle,
+    _load_maxcase_source_manifest,
+    load_dataset,
+    _git_blob_sha,
 )
 from scripts.stage13_assemble import _final_acceptance_disposition, _maxcase_pending_field_summary, EXPECTED_SCENARIOS
 
@@ -258,6 +261,66 @@ def _write_json(tmp_path, name, value):
     path = tmp_path / name
     path.write_text(json.dumps(value, sort_keys=True), encoding="utf-8")
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_source_manifest_can_be_separate_from_11005_cohort_manifest(tmp_path, monkeypatch):
+    import scripts.excel_builder as builder
+
+    cohort = {
+        "cohort_id": "STAGE13_CANONICAL_11005_STAGE7_450_STAGE10_100_V1",
+        "mode": "canonical",
+        "total_trials": 11005,
+        "global_manifest_sha256": "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+        "scenarios": {scenario: {} for scenario in EXPECTED_SCENARIOS},
+    }
+    source = _active_manifest()
+    cohort_path, _ = _write_json(tmp_path, "manifest.json", cohort)
+    source_path, source_sha256 = _write_json(tmp_path, "stage9a_source_manifest.json", source)
+    audit_path, audit_sha256 = _write_json(tmp_path, "audit.json", {"test": "paired"})
+    payload_path, payload_sha256 = _write_json(tmp_path, "payloads.json", {"test": "paired"})
+    captured = {}
+
+    def fake_root_layout(dataset_path, manifest_path):
+        return tmp_path, tmp_path, Path(manifest_path)
+
+    def fake_audit_reader(*args, **kwargs):
+        captured["manifest"] = kwargs["manifest"]
+        captured["manifest_git_blob_sha"] = kwargs["manifest_git_blob_sha"]
+        return {
+            "metadata": {"payload_status": "MISSING_EVIDENCE"},
+            "audit_by_scenario": {},
+            "payloads_by_scenario": {},
+        }
+
+    monkeypatch.setattr(builder, "_root_layout", fake_root_layout)
+    monkeypatch.setattr(builder, "_read_maxcase_audit_bundle", fake_audit_reader)
+    data = load_dataset(
+        tmp_path,
+        mode="demo",
+        manifest_path=cohort_path,
+        source_manifest_path=source_path,
+        maxcase_audit_path=audit_path,
+        maxcase_payloads_path=payload_path,
+        maxcase_audit_sha256=audit_sha256,
+        maxcase_payloads_sha256=payload_sha256,
+    )
+    assert data["manifest"]["total_trials"] == 11005
+    assert data["manifest"]["global_manifest_sha256"] == cohort["global_manifest_sha256"]
+    assert captured["manifest"] == source
+    assert captured["manifest"]["global_manifest_sha256"] == MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_global_manifest_sha256"]
+    assert captured["manifest_git_blob_sha"] == _git_blob_sha(source_path.read_bytes())
+    assert data["maxcase_audit_status"]["source_manifest_git_blob_sha"] == _git_blob_sha(source_path.read_bytes())
+    assert data["maxcase_audit_status"]["cohort_manifest_git_blob_sha"] == _git_blob_sha(cohort_path.read_bytes())
+    assert data["maxcase_audit_status"]["source_manifest_git_blob_sha"] != data["maxcase_audit_status"]["cohort_manifest_git_blob_sha"]
+
+
+def test_source_manifest_loader_defaults_to_manifest_for_legacy_callers(tmp_path):
+    source = _active_manifest()
+    path, _ = _write_json(tmp_path, "manifest.json", source)
+    loaded, blob_sha, loaded_path = _load_maxcase_source_manifest(path)
+    assert loaded == source
+    assert blob_sha == _git_blob_sha(path.read_bytes())
+    assert loaded_path == str(path)
 
 
 def test_maxcase_audit_bundle_requires_matching_digest_pins_and_pair_identity(tmp_path):
