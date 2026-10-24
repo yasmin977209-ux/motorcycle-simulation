@@ -1,10 +1,10 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STAGE13-ASSEMBLER-MAXCASE-20261024 + CP-STAGE11-SCOPE-RECONCILE-20261024 + CP-GATEA-GOLDEN-PROVIDER-WIRE-20261024 + CP-STAGE7-TIME-UNIFORM-CANDIDATE-METHODS-20261024 + CP-STAGE7-FINITE-SUPPORT-REVIEW-20261024 + CP-STAGE7-DIRECT-GATEB-BOOL-20261024 + CP-STAGE13-POST-C050-AUDIT-20261024 + CP-STAGE13-DIAGNOSTIC-ASSEMBLY-20261024",
-  "sha": "0577ff769018546226bf501bcd419e94020b5310",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STAGE13-ASSEMBLER-MAXCASE-20261024 + CP-STAGE11-SCOPE-RECONCILE-20261024 + CP-GATEA-GOLDEN-PROVIDER-WIRE-20261024 + CP-STAGE7-TIME-UNIFORM-CANDIDATE-METHODS-20261024 + CP-STAGE7-FINITE-SUPPORT-REVIEW-20261024 + CP-STAGE7-DIRECT-GATEB-BOOL-20261024 + CP-STAGE13-POST-C050-AUDIT-20261024 + CP-STAGE13-DIAGNOSTIC-ASSEMBLY-20261024 + CP-P17-P18-CURRENT-MAIN-REVALIDATION-20261024",
+  "sha": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "The pinned-source Stage 13 diagnostic assembly completed successfully on exact candidate HEAD 81129768c26661ce121ecee0b052d0da523e9685 (Run 40118156691; artifact 12570058426). Workbook SHA-256 cfb0afd7d2ab7ad8271c8a76fa190f33e5d351820c9a8300183e2855cb7fab96; 11,005 TrialResults, 22,546,465 Stage12 daily rows validated, 185 sheets, 25 _STATS sheets, 52,566 MaxCase daily rows across 25 scenarios, zero Excel error/formula cells, zero pending memo/source cells. This is DIAGNOSTIC_ONLY / NOT_FINAL_BLOCKED, not final delivery. Next: review/implement the remaining P17/P18 release requirements only after registered blockers are independently resolved. Keep statistical K_SPEC blocked (no approved finite support/tail-moment bound or time-uniform mean procedure), Golden coverage limitations, historical C030_G030 N=300→600 P90_Final_Cash failure, P90_Held_Assets acceptance, Stage10 metadata/fidelity drift, G2 runtime risk, and all production/final-acceptance authorization flags false. Final seven-file AR/EN set + manifest remains NOT_FINAL_BLOCKED.",
+  "next": "P17/P18 revalidation recorded on current main baseline: P17 remains NOT_ACCEPTED and P18 remains BLOCKED_NO_RELEASE. Historical P17 body is restored from the exact blob it referenced, and dated append-only addenda reconcile the stale 2026-10-20 observations. Diagnostic Stage13 run 40118156691 and artifact 12570058426 are PASS only for pinned-source diagnostic build; not final delivery. Next: resolve K_SPEC with a valid time-uniform mean method and justified support/tail assumptions; complete authorized Gate A target coverage; qualify P90_Held_Assets; requalify historical C030_G030 N=300→600 P90_Final_Cash failure; resolve Stage10 metadata/fidelity and G2 runtime risk; then produce and independently verify the seven-file AR/EN delivery + manifest. No Release/tag until P17 independently accepts.",
   "blockers": [
     "STATISTICAL_INFERENCE_BLOCKED: approved IUT/FWER framework is recorded. Direct Stage7 Gate B input truthiness has been fixed and unit-tested, but financial-mean K_SPEC remains blocked: pointwise Student-t intervals are not time-uniform under adaptive stopping; no deterministic support or approved quantitative tail/moment bound exists; standalone quantile/Bernoulli candidate methods are not integrated/accepted; exact-source end-to-end stopping and historical failed-transition handling remain open.",
     "GOLDEN_COVERAGE_INCOMPLETE: immutable Gate A provider is wired and authorized only for the pinned read-only map (25 scenarios, 25,205 fingerprints); 19 non-C100 scenarios have coverage only through N=1200 and only C030_G030 extends to N=2400. Unsupported target checkpoints block before Trial execution.",
@@ -13,7 +13,7 @@
     "G2_RISK: Stage7 uses a 40-minute internal budget within a 45-minute job timeout. The Stage10 470-second maximum is a bounded historical benchmark, not full adaptive-production runtime evidence."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-  "head_sha": "0577ff769018546226bf501bcd419e94020b5310",
+  "head_sha": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
   "stage12_closure_evidence": {
     "cp12a_commit": "6df051f680a43ff86a41d3cfab3c04bce40c2724",
     "cp12b_doc_commit": "6a626dc31d8f255a0698fe18749f4f3d90750ce6",
@@ -795,5 +795,37 @@
       "production_or_release_acceptance": false
     },
     "output_is_final_delivery": false
+  },
+  "p17_p18_current_main_revalidation_20261024": {
+    "status": "P17_NOT_ACCEPTED_P18_BLOCKED_NO_RELEASE",
+    "baseline_main_sha": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
+    "historical_p17_blob_sha": "412014b4ec58b52b3e62edcd69c433554bb1abd6",
+    "p17_status": "NOT_ACCEPTED",
+    "p18_status": "BLOCKED_NO_RELEASE",
+    "live_release_count": 0,
+    "releases_checked_at": "2026-10-24",
+    "historical_p17_path_absent_at_baseline": true,
+    "historical_p17_text_restored_as_prefix": true,
+    "current_diagnostic_run_id": 40118156691,
+    "current_diagnostic_candidate_sha": "81129768c26661ce121ecee0b052d0da523e9685",
+    "diagnostic_artifact_id": 12570058426,
+    "diagnostic_workbook_sha256": "cfb0afd7d2ab7ad8271c8a76fa190f33e5d351820c9a8300183e2855cb7fab96",
+    "source_identity_status": "PASS_SCOPED_PINNED_DIAGNOSTIC_ONLY",
+    "diagnostic_build_not_final": true,
+    "global_statistical_gate": "BLOCKED_FOR_IMPLEMENTATION",
+    "production_authorization": false,
+    "final_acceptance_authorization": false,
+    "blockers": [
+      "GOLDEN_COVERAGE_INCOMPLETE",
+      "STATISTICAL_K_SPEC_BLOCKED",
+      "QUANTILE_AND_BERNOULLI_METHODS_NOT_INTEGRATED",
+      "P90_HELD_ASSETS_SOURCE_ACCEPTANCE_MISSING",
+      "C030_G030_N300_TO_N600_P90_FINAL_CASH_FAILED_NOT_REQUALIFIED",
+      "STAGE9C_OVERALL_PARTIAL",
+      "STAGE10_SOURCE_IDENTITY_AND_FIDELITY_PARTIAL",
+      "G2_RUNTIME_RISK_OPEN",
+      "SEVEN_FILE_AR_EN_DELIVERY_AND_P17_P18_ACCEPTANCE_MISSING"
+    ],
+    "release_created": false
   }
 }
