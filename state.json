@@ -1,16 +1,16 @@
 {
   "stage": "12-CLOSED",
   "schema_version": "1.0",
-  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013",
+  "cp_completed": "CP-A-GOVERNANCE-DECISIONS + CP-PREFLIGHT-20261010 + CP-B1-20261011 + CP-B2-20261011 + CP-C-GATEB-N300-N600-N1200-20261012 + CP-GATEA-EXACT-GOLDEN-FINGERPRINT-BRIDGE-20261012 + CP-D-STAGE9C-EXACT-XLSX-500POINT-GATE-20261012 + CP-STAGE9C-LEDGER-REAUDIT-20261012 + CP-3B-PYTEST-DEFECT-FIX-20261012 + CP-STATISTICAL-DOUBLING-20261013 + CP-GATEA-FAIL-CLOSED-20261013 + CP-STAGE13-ASSEMBLER-MAXCASE-20261024 + CP-STAGE11-SCOPE-RECONCILE-20261024",
   "sha": "0b083fa472d7a11089a15137cfad16d87785689a",
   "sha_semantics": "parent_state_commit_pointer",
-  "next": "CP-GATEA-FAIL-CLOSED-20261013 passed targeted verification on the temporary branch; Gate A semantics now require exact SHA-256 golden equality and source identity equality, and checkpoint/resume orchestration fails closed when this proof is missing. Production Gate A remains BLOCKED until an approved golden provider is explicitly connected and validated. Next CP: implement/validate that provider against trusted golden evidence without rerunning or re-labeling completed trials; resolve SOURCE_SHA drift before any production dataset extension, then address Stage 11 topology and Stage 13 delivery assembly. No stage transition implied.",
+  "next": "Stage 13 assembler and exact-Trial MaxCase audit/replay loader are merged and their exact candidate suite passed (469 passed, 1 documented K_TEST skipped); this does not mean final delivery acceptance. Stage 11 is now scoped as documentation/identity reconciliation only, with no separate runtime topology; Stage 10 metadata/fidelity drift and G2 runtime risk stay open. Next: finish full fixture-first test inventory on the Gate A provider candidate, merge it only after exact-head success, then reconcile this state again. Production Stage 7/Monte Carlo/checkpoints remain blocked by statistical_execution_gate; do not claim SCENARIO_STABLE or final acceptance.",
   "blockers": [
-    "GATEA_PROVIDER_MISSING: relative-mean Gate A logic has been removed and exact SHA-256/source-identity fail-closed checks are implemented, but production callers do not yet supply a validated approved-golden provider. Gate A must remain BLOCKED; do not claim statistical stability or run further checkpoints until provider identity and coverage are proven.",
-    "UNDEFINED_BUSINESS_RULE: Stage 11 execution topology remains undefined in the current repository; the Stage 10 report explicitly records NOT_DEFINED_IN_CURRENT_REPOSITORY.",
-    "MISSING_ARTIFACT: scripts/stage13_assemble.py is absent from main; the canonical Stage 13 assembler path is not implemented.",
-    "MISSING_ARTIFACT/MISSING_REPORT: the seven final delivery files are not complete and verified as one delivery set; the Stage 9C report still carries the historical PARTIAL verdict while state.json records the later PASS.",
-    "G2_RISK: Stage 7 workflow uses a 40-minute internal limit with a 45-minute job timeout; jobs over 35 minutes are a recorded project risk and the corrected schedule has not been measured with a production Monte Carlo run."
+    "GATEA_PROVIDER_MISSING: exact immutable Golden map/provider candidate exists and read-only map/cache tests pass, but provider PR #64 is not yet merged into main. Even after wiring, production execution remains blocked by statistical_execution_gate until time-uniform inference is implemented and accepted.",
+    "STATISTICAL_INFERENCE_BLOCKED: the approved IUT/FWER decision framework requires four cumulative checkpoints and three successful adjacent transitions. Current mean CI uses pointwise Student-t and is not time-uniform under adaptive stopping; quantile and Bernoulli confidence sequences are not integrated/accepted. No finite support/tail/moment bound has been approved.",
+    "STAGE10_METADATA_DRIFT_OPEN: Stage 11 scope has been reconciled as documentation/identity/manifest only; its outputs and canonical identity are present and validated. The historical Stage 10 benchmark still records source_identity=PARTIAL, fidelity=PARTIAL, and topology_status=NOT_DEFINED_IN_CURRENT_REPOSITORY; those metadata and runtime measurement gaps remain open.",
+    "FINAL_DELIVERY_NOT_ACCEPTED: the seven required AR/EN files plus manifest.json have not been built as one current, independently verified set and have not passed P17/P18 release acceptance. The historical Stage 9C workbook/precision evidence is scoped to its canonical cohort and does not constitute the final Stage 13 delivery.",
+    "G2_RISK: Stage 7 uses a 40-minute internal budget within a 45-minute job timeout. A full production workload timing has not been measured; the Stage 10 470-second maximum is not a measurement of the full adaptive workload."
   ],
   "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
   "head_sha": "0b083fa472d7a11089a15137cfad16d87785689a",
@@ -148,11 +148,14 @@
       "p50_metric": "Final_Net_Project_Equity",
       "p50_method": "numpy.quantile(method=linear)",
       "trial_range": "1..N",
-      "adjacent_checkpoints": ["300->600", "600->1200"],
+      "adjacent_checkpoints": [
+        "300->600",
+        "600->1200"
+      ],
       "formula": "100 * abs(P50_new - P50_previous) / abs(P50_previous)",
-      "threshold_percent": 5.0,
+      "threshold_percent": 5,
       "trigger": "STRICTLY_GREATER_THAN_5_PERCENT_REQUIRES_PRELIMINARY_STABLE_AND_N2400",
-      "near_zero_epsilon": 1e-6,
+      "near_zero_epsilon": 0.000001,
       "near_zero_absolute_epsilon_currency_units": 1,
       "decision_status": "APPROVED_NORMATIVE_DEFINITION",
       "date": "2026-10-12"
@@ -162,6 +165,47 @@
       "value": "CANONICAL_STAGE9A_9005_ROWS; 25_SCENARIOS_X_4_METRICS_X_5_STATS=500_EXACT_COMPARISONS; NO_TOLERANCE; STAGE13_625_COHORT_SEPARATE; DO_NOT_UPGRADE_HISTORICAL_STAGE9C_PARTIAL",
       "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
       "date": "2026-10-12"
+    },
+    "D-2026-10-24-02": {
+      "topic": "stage11_scope_and_topology",
+      "value": "STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY",
+      "decision_status": "APPROVED_BY_DELEGATED_PROJECT_OWNER",
+      "date": "2026-10-24",
+      "outputs": [
+        "docs/stage11/dataset_identity.json",
+        "docs/stage11/global_manifest_11005_reconciled.json",
+        "docs/stage11/R4_manifest_reconciliation.md"
+      ],
+      "execution_topology_required_for_stage11": false,
+      "existing_topology_scope": {
+        "stage7_scenario_count": 25,
+        "stage7_max_parallel": 10,
+        "stage12_materialization_jobs": 25,
+        "stage12_after_jobs": [
+          "validate",
+          "aggregate"
+        ],
+        "stage13": "separate delivery assembly stage"
+      },
+      "stage10_benchmark": {
+        "run_id": 37709936740,
+        "matrix_jobs": 45,
+        "max_parallel": 10,
+        "matrix_wall_seconds": 1051,
+        "max_job_wall_seconds": 470,
+        "source_identity": "PARTIAL",
+        "fidelity": "PARTIAL",
+        "accepted_as_stage11_runtime_measurement": false
+      },
+      "blockers_preserved": [
+        "STAGE10_METADATA_DRIFT_OPEN",
+        "G2_RISK",
+        "STATISTICAL_INFERENCE_BLOCKED",
+        "GATEA_PROVIDER_MISSING"
+      ],
+      "no_data_mutation": true,
+      "no_trial_or_checkpoint_execution": true,
+      "does_not_authorize_final_delivery_acceptance": true
     }
   },
   "preflight_merge": {
@@ -685,5 +729,12 @@
     "historical_data_or_metadata_modified": false,
     "production_monte_carlo_started": false,
     "merge_commit_sha": null
+  },
+  "stage11_scope_decision": {
+    "decision_id": "D-2026-10-24-02",
+    "status": "CLOSED_BY_APPROVED_SCOPE_DECISION",
+    "runtime_topology_required": false,
+    "historical_manifest_identity_unchanged": true,
+    "stage10_metadata_drift_open": true
   }
 }
