@@ -33,6 +33,11 @@ jobs:
       - name: Install project dependencies
         run: python -m pip install -r requirements.txt
 
+      - name: Run 11005 preparation unit contracts
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_stage13_prepare_11005_diagnostic_dataset.py tests/test_stage13_maxcase_audit_loader.py
+
       - name: Confirm production and final-acceptance gates remain closed
         run: |
           python - <<'PY'
@@ -52,141 +57,49 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: Download and rehash the 25 pinned Stage 9A enriched artifacts
+      - name: Verify immutable manifests and initialize diagnostic directories
         env:
-          GH_TOKEN: ${{ github.token }}
           PYTHONPATH: .
         run: |
           set -euo pipefail
-          mkdir -p stage13_diagnostic_input/archives stage13_diagnostic_input/dataset stage13_diagnostic_output
+          mkdir -p stage13_diagnostic_input/audit stage13_diagnostic_input/replay stage13_diagnostic_input/cohort_artifacts stage13_diagnostic_output
           python - <<'PY'
-          from __future__ import annotations
-          import hashlib
-          import json
-          import os
-          import subprocess
-          import io
-          import tarfile
-          import zipfile
+          import hashlib, json
           from pathlib import Path
-
-          repo = os.environ["GITHUB_REPOSITORY"]
-          manifest_path = Path("docs/stage9a/dataset_manifest.json")
-          inventory_path = Path("docs/audits/stage9a_payload_inventory_20261020.json")
-          manifest_raw = manifest_path.read_bytes()
-          manifest = json.loads(manifest_raw)
-          inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-          manifest_blob = hashlib.sha1(b"blob " + str(len(manifest_raw)).encode() + b"\0" + manifest_raw).hexdigest()
-          expected_manifest_blob = inventory["reconciliation_after_c050_g000_pointer_merge"]["canonical_manifest_git_blob"]
-          if manifest_blob != expected_manifest_blob:
-              raise SystemExit(f"CANONICAL_MANIFEST_BLOB_MISMATCH expected={expected_manifest_blob} actual={manifest_blob}")
-          if len(manifest.get("scenarios", {})) != 25 or len(inventory.get("artifacts", [])) != 25:
-              raise SystemExit("STAGE9A_SCENARIO_OR_ARTIFACT_COUNT_MISMATCH")
-          dataset = Path("stage13_diagnostic_input/dataset")
-          archive_dir = Path("stage13_diagnostic_input/archives")
-          expected_members = {
-              "scenario.tar.gz", "daily_distribution.parquet",
-              "representatives/P10.json", "representatives/P50.json",
-              "representatives/P90.json", "representatives/Loss.json",
-              "trial_results.parquet", "trial_fingerprints.json", "scenario_metadata.json",
+          def git_blob(path):
+              raw = Path(path).read_bytes()
+              return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+          expected = {
+              "docs/stage9a/dataset_manifest.json": "c8591aac3d309fd94c4e67a547d33fb62ac5694d",
+              "docs/stage11/dataset_identity.json": "72a481d509d39820fba78732724fde4fa9f25134",
+              "docs/stage11/global_manifest_11005_reconciled.json": "b8947a60051a244784248875f5e0435b9996d95b",
           }
-          downloaded = []
-          for entry in inventory["artifacts"]:
-              scenario = entry["scenario"]
-              artifact_id = int(entry["artifact_id"])
-              scenario_meta = manifest["scenarios"].get(scenario)
-              if scenario_meta is None or int(scenario_meta["enriched_artifact_id"]) != artifact_id:
-                  raise SystemExit(f"MANIFEST_ARTIFACT_ID_MISMATCH {scenario} artifact={artifact_id}")
-              if set(entry["members"]) != expected_members:
-                  raise SystemExit(f"INVENTORY_MEMBER_CONTRACT_MISMATCH {scenario}: {sorted(entry['members'])}")
-              archive = archive_dir / f"{scenario}.zip"
-              with archive.open("wb") as output:
-                  subprocess.run(
-                      ["gh", "api", f"repos/{repo}/actions/artifacts/{artifact_id}/zip"],
-                      stdout=output, check=True,
-                  )
-              raw = archive.read_bytes()
-              actual_sha = hashlib.sha256(raw).hexdigest()
-              if actual_sha != entry["zip_sha256"]:
-                  raise SystemExit(f"ARTIFACT_SHA256_MISMATCH {scenario} expected={entry['zip_sha256']} actual={actual_sha}")
-              if len(raw) != int(entry["zip_size_bytes"]):
-                  raise SystemExit(f"ARTIFACT_SIZE_MISMATCH {scenario}")
-              target = dataset / scenario
-              target.mkdir(parents=True, exist_ok=True)
-              with zipfile.ZipFile(archive) as zf:
-                  outer_names = zf.namelist()
-                  outer_member = f"{scenario}.tar.gz"
-                  if len(outer_names) != 1 or outer_names[0] != outer_member:
-                      raise SystemExit(f"ARTIFACT_OUTER_ZIP_MEMBER_MISMATCH {scenario}: {outer_names}")
-                  nested_tar = zf.read(outer_member)
-              with tarfile.open(fileobj=io.BytesIO(nested_tar), mode="r:gz") as tf:
-                  members = tf.getmembers()
-                  normalized_files = []
-                  file_members = []
-                  for member in members:
-                      name = member.name[2:] if member.name.startswith("./") else member.name
-                      path = Path(name)
-                      if path.is_absolute() or ".." in path.parts or name.startswith("/"):
-                          raise SystemExit(f"UNSAFE_TAR_MEMBER {scenario}: {member.name}")
-                      if member.isdir():
-                          if name not in (".", "representatives"):
-                              raise SystemExit(f"UNEXPECTED_TAR_DIRECTORY {scenario}: {member.name}")
-                          continue
-                      if not member.isfile():
-                          raise SystemExit(f"UNSUPPORTED_TAR_MEMBER_TYPE {scenario}: {member.name}")
-                      normalized_files.append(name)
-                      file_members.append((member, name))
-                  expected_inner_files = expected_members - {"scenario.tar.gz"}
-                  if len(normalized_files) != len(set(normalized_files)) or set(normalized_files) != expected_inner_files:
-                      raise SystemExit(f"ARTIFACT_INNER_TAR_MEMBER_MISMATCH {scenario}: {normalized_files}")
-                  for member, name in file_members:
-                      source = tf.extractfile(member)
-                      if source is None:
-                          raise SystemExit(f"UNREADABLE_TAR_MEMBER {scenario}: {name}")
-                      target_path = target / name
-                      target_path.parent.mkdir(parents=True, exist_ok=True)
-                      target_path.write_bytes(source.read())
-              # In the GitHub artifact ZIP, this byte stream is the canonical scenario.tar.gz member.
-              (target / "scenario.tar.gz").write_bytes(nested_tar)
-              downloaded.append({
-                  "scenario": scenario, "artifact_id": artifact_id,
-                  "run_id": int(entry["run_id"]), "zip_sha256": actual_sha,
-                  "zip_size_bytes": len(raw), "trial_count": int(entry["trial_count"]),
-              })
-
-          roles = {}
-          for scenario, meta in manifest["scenarios"].items():
-              chosen = meta["representative_trials"]
-              roles[scenario] = {key: int(chosen[key]) for key in ("P10", "P50", "P90", "Loss")}
-          reps_path = dataset / "representative_trial_ids.json"
-          reps_path.write_text(json.dumps({
-              "schema_version": "stage13-diagnostic-role-ids-v1",
-              "scenarios": roles,
-              "source_manifest_git_blob_sha": manifest_blob,
-              "diagnostic_only": True,
-          }, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-          report = {
-              "schema_version": "stage13-pinned-input-download-v1",
-              "tested_head_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-              "canonical_manifest_git_blob_sha": manifest_blob,
-              "scenario_count": len(downloaded),
-              "artifact_count": len(downloaded),
-              "total_trials_from_manifest": manifest.get("total_trials"),
-              "artifacts": downloaded,
-              "representative_role_ids_file_sha256": hashlib.sha256(reps_path.read_bytes()).hexdigest(),
-              "stage12_data_modified": False,
-              "simulation_trials_or_checkpoints_run": False,
-              "production_or_release_assembly": False,
-          }
-          Path("stage13_diagnostic_input/inputs_manifest.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-          print(json.dumps({
-              "artifact_count": len(downloaded),
-              "total_trials_from_manifest": manifest.get("total_trials"),
-              "canonical_manifest_git_blob_sha": manifest_blob,
-              "stage12_data_modified": False,
-              "simulation_trials_or_checkpoints_run": False,
-          }, sort_keys=True))
+          for path, sha in expected.items():
+              actual = git_blob(path)
+              if actual != sha:
+                  raise SystemExit(f"IMMUTABLE_MANIFEST_BLOB_MISMATCH {path} expected={sha} actual={actual}")
+          stage9a = json.loads(Path("docs/stage9a/dataset_manifest.json").read_text(encoding="utf-8"))
+          identity = json.loads(Path("docs/stage11/dataset_identity.json").read_text(encoding="utf-8"))
+          cohort = json.loads(Path("docs/stage11/global_manifest_11005_reconciled.json").read_text(encoding="utf-8"))
+          if stage9a.get("total_trials") != 9005 or identity.get("total_canonical_trials") != 11005:
+              raise SystemExit("STAGE9A_VS_STAGE11_COHORT_COUNTS_NOT_AS_EXPECTED")
+          if cohort.get("total_trials_expected") != 11005 or cohort.get("total_trials_evidenced") != 11005:
+              raise SystemExit("STAGE11_GLOBAL_COHORT_MANIFEST_NOT_11005")
+          if stage9a.get("source_sha") != cohort.get("source_sha") or stage9a.get("master_seed") != cohort.get("master_seed"):
+              raise SystemExit("STAGE9A_STAGE11_SOURCE_IDENTITY_MISMATCH")
+          print(json.dumps({"stage9a_trials": stage9a["total_trials"], "stage11_trials": cohort["total_trials_expected"], "simulation_trials_or_checkpoints_run": False}, sort_keys=True))
           PY
+
+      - name: Build exact 11005-trial diagnostic dataset from pinned artifacts
+        env:
+          GH_TOKEN: \${{ github.token }}
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python scripts/stage13_prepare_11005_diagnostic_dataset.py \
+            --output-dataset stage13_diagnostic_input/dataset_11005 \
+            --manifest-out stage13_diagnostic_input/manifest_11005.json \
+            --provenance-out stage13_diagnostic_input/11005_cohort_provenance.json
 
       - name: Download and digest-pin the scoped MaxCase audit bundle and exact replay bundle
         env:
@@ -283,9 +196,9 @@ jobs:
           PAYLOADS_SHA=$(sha256sum stage13_diagnostic_input/audit/stage13_maxcase_daily_payloads.json | cut -d ' ' -f1)
           REPLAY_SHA=$(sha256sum stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json | cut -d ' ' -f1)
           python scripts/excel_builder.py \
-            --dataset-path stage13_diagnostic_input/dataset \
-            --manifest docs/stage9a/dataset_manifest.json \
-            --representatives stage13_diagnostic_input/dataset/representative_trial_ids.json \
+            --dataset-path stage13_diagnostic_input/dataset_11005 \
+            --manifest stage13_diagnostic_input/manifest_11005.json \
+            --representatives stage13_diagnostic_input/dataset_11005/representative_trial_ids.json \
             --output-path stage13_diagnostic_output/Stage13_Diagnostic_Candidate_NOT_FINAL.xlsx \
             --mode canonical \
             --maxcase-audit stage13_diagnostic_input/audit/stage13_maxcase_source_audit.json \
@@ -294,6 +207,7 @@ jobs:
             --maxcase-payloads-sha256 "$PAYLOADS_SHA" \
             --maxcase-replay stage13_diagnostic_input/replay/stage13_maxcase_replay_recovery.json \
             --maxcase-replay-sha256 "$REPLAY_SHA" \
+            --maxcase-source-manifest docs/stage9a/dataset_manifest.json \
             | tee stage13_diagnostic_output/assembly_result.json
 
       - name: Independently inspect workbook and preserve blocked acceptance status
@@ -325,7 +239,21 @@ jobs:
               (outdir / "diagnostic_build_report.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
               raise SystemExit("ASSEMBLY_RESULT_MISSING")
           raw = result_path.read_text(encoding="utf-8").strip()
-          result = json.loads(raw.splitlines()[-1])
+          try:
+              if not raw:
+                  raise ValueError("assembly stdout is empty after the build command")
+              result = json.loads(raw.splitlines()[-1])
+              if not isinstance(result, dict):
+                  raise ValueError("assembly result is not a JSON object")
+          except (ValueError, json.JSONDecodeError, IndexError) as exc:
+              report.update({
+                  "build_status": "INVALID_OR_EMPTY_ASSEMBLY_RESULT",
+                  "final_acceptance_status": "NOT_FINAL_BLOCKED",
+                  "assembly_stdout_tail": raw.splitlines()[-20:],
+                  "inspection_error": str(exc),
+              })
+              (outdir / "diagnostic_build_report.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+              raise SystemExit("ASSEMBLY_RESULT_JSON_INVALID_OR_EMPTY")
           report["assembly_result"] = result
           report["final_acceptance_status"] = result.get("final_acceptance_status", "NOT_FINAL_BLOCKED")
           report["success"] = bool(result.get("success"))
