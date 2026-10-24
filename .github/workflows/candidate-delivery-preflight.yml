@@ -19,10 +19,16 @@ jobs:
           python-version: "3.11"
       - name: Install test dependencies
         run: python -m pip install -r requirements.txt
-      - name: Run acceptance tests that do not require the Stage 5 generated fixtures
+      - name: Build bounded Stage 5 fixtures in the ephemeral runner only
         env:
           PYTHONPATH: .
-        run: python -m pytest -q tests/test_acceptance_16_v2.py -k "not test_127 and not test_159 and not test_160 and not test_161"
+        run: |
+          rm -rf results_stage5
+          python tests/build_stage5_acceptance_fixtures.py
+      - name: Run the complete acceptance inventory against ephemeral fixtures
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_acceptance_16_v2.py
       - name: Run deterministic delivery, ledger, and fail-closed gate regressions
         env:
           PYTHONPATH: .
