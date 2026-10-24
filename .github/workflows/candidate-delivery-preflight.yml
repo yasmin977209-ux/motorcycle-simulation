@@ -40,3 +40,7 @@ jobs:
             tests/test_stage13_assembler.py \
             tests/test_stage13_maxcase_audit_loader.py \
             tests/test_stage13_maxcase_pending_fields.py
+      - name: Run full repository pytest suite with ephemeral acceptance fixtures
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q
