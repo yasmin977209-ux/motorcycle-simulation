@@ -197,3 +197,15 @@ Run `38165878333` on candidate head `2680335d365a8f923aec076f1fb72cb410f821fb` c
 This authorization is tied to the provider implementation constants and runtime provenance checks in `scripts/golden_reference_provider.py`. Its exact map and scope validation is separately exercised by the candidate-only verifier and tests. Any change to the pinned artifact IDs, digests, map hashes, source SHA, seed, or supported coverage requires a new review.
 
 **Boundary:** this decision establishes only authority to consume this precisely scoped, immutable Golden map as a test reference. It does not retroactively repair D-2026-10-14-01 / D-2026-10-15-10 text and does not establish statistical stability or project release acceptance.
+
+## D-2026-10-24-02 — Stage 11 execution scope and topology
+
+- **Status:** APPROVED_BY_DELEGATED_PROJECT_OWNER; scoped to Stage 11 scope only.
+- **Decision:** Stage 11 is the documentation/identity reconciliation stage for the already-existing canonical 11,005-trial cohort. Its deliverables are `docs/stage11/dataset_identity.json`, `docs/stage11/global_manifest_11005_reconciled.json`, and their reconciliation evidence. Stage 11 does not create a new production simulation workflow, worker matrix, Monte Carlo run, Trial, or checkpoint.
+- **Existing execution topology remains separate:** Stage 7 is the 25-scenario matrix with maximum parallelism 10 and per-scenario checkpoint/state handling; Stage 12 materializes the 25 scenario ledgers and then validates/aggregates; Stage 13 performs the delivery assembly. This decision documents scope; it does not change any workflow.
+- **Evidence boundary:** `docs/stage10/STAGE10_METRICS.json` records the historical benchmark of 45 matrix jobs, observed max concurrency 10, matrix wall 1,051 seconds, and slowest job 470 seconds. It also records `source_identity=PARTIAL`, `fidelity=PARTIAL`, and `topology_status=NOT_DEFINED_IN_CURRENT_REPOSITORY`. Those metrics describe the Stage 10 benchmark, not a measured full adaptive Stage 7 or Stage 11 production runtime.
+- **Open blockers preserved:** Stage 10 metadata/source-identity/fidelity drift remains open; the 40-minute internal timeout / 45-minute job timeout risk remains unmeasured under a full production workload; statistical execution remains blocked until the time-uniform inference contract is implemented and accepted. This decision is not Gate A PASS, Gate B PASS, scenario stability, or delivery acceptance.
+- **No data mutation:** this decision does not alter the canonical 11,005-trial identities, source SHA, master seed, RNG, Trial IDs, trial/daily ledgers, manifest hashes, historical stability claims, or the approved 300→600→1200→2400 execution policy. It does not authorize any new Trial/checkpoint/Golden expansion.
+- **Disposition:** `STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY`; keep Stage 10 metadata drift and runtime-risk blockers explicitly open.
+
+References: `docs/stage11/dataset_identity.json`; `docs/stage11/global_manifest_11005_reconciled.json`; `docs/stage11/R4_manifest_reconciliation.md`; `docs/stage10/STAGE10_METRICS.json`; `docs/PROJECT_CONTINUITY.md` and the five supplied references.
