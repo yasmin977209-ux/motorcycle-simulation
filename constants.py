@@ -254,6 +254,14 @@ MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 400
 # [R6-1][User decision] Three consecutive checkpoints must satisfy stability gates.
 STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3
 
+# [D-2026-10-24-01][R4] Three adjacent transitions require four cumulative checkpoint points.
+STABILITY_SUCCESSFUL_ADJACENT_TRANSITIONS_REQUIRED: Final[int] = 3
+STABILITY_CUMULATIVE_POINTS_REQUIRED: Final[int] = 4
+
+# [D-2026-10-24-01][R4] Three adjacent transitions require four cumulative checkpoint points.
+STABILITY_SUCCESSFUL_ADJACENT_TRANSITIONS_REQUIRED: Final[int] = 3
+STABILITY_CUMULATIVE_POINTS_REQUIRED: Final[int] = 4
+
 # [R6-1][User decision] One initial smoke trial per scenario.
 INITIAL_SMOKE_TRIALS_PER_SCENARIO: Final[int] = 1
 

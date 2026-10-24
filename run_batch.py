@@ -25,6 +25,13 @@ from scripts.stage7_stability import (
     filter_statistical_history,
     next_statistical_checkpoint,
 )
+from scripts.statistical_confidence_sequences import (
+    DEFAULT_ALPHA as REFERENCE_CS_ALPHA,
+    DEFAULT_T_OPT as REFERENCE_CS_T_OPT,
+    evaluate_adjacent_transition,
+    evaluate_reference_indicators,
+    evaluate_stopping_window,
+)
 
 
 TRIALS_PARQUET = "trials_summary.parquet"
@@ -624,6 +631,10 @@ def run_batch(
         "escalation_multiplier": STATISTICAL_ESCALATION_MULTIPLIER,
         "check_start_n": constants.STATISTICAL_CHECK_START_N,
         "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
+        "required_cumulative_points": constants.STABILITY_CUMULATIVE_POINTS_REQUIRED,
+        "required_successful_adjacent_transitions": constants.STABILITY_SUCCESSFUL_ADJACENT_TRANSITIONS_REQUIRED,
+        "reference_cs_alpha_per_scenario": REFERENCE_CS_ALPHA,
+        "reference_cs_t_opt": REFERENCE_CS_T_OPT,
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
         "ci_relative_tolerance": constants.CI_RELATIVE_TOLERANCE,
         "ci_absolute_epsilon": constants.CI_ABSOLUTE_EPSILON,
@@ -839,35 +850,59 @@ def run_batch(
                 current_n=len(results),
             )
             gate_b = evaluate_gate_b(metrics)
-
-            state["stability_history"].append(
-                {
-                    "n": len(results),
-                    "gate_a": gate_a,
-                    "gate_b": gate_b,
-                    "metrics": metrics,
-                }
+            prior_entry = (
+                state["stability_history"][-1]
+                if state["stability_history"] else None
             )
-
-            recent = state["stability_history"][
-                -constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED:
-            ]
-            stable_now = (
-                len(recent)
-                == constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
-                and all(
-                    item["gate_a"]["stable"]
-                    and item["gate_b"]["stable"]
-                    for item in recent
-                )
+            prior_reference = (
+                prior_entry.get("reference_indicators")
+                if isinstance(prior_entry, dict) else None
             )
+            reference_indicators = evaluate_reference_indicators(
+                results,
+                alpha=REFERENCE_CS_ALPHA,
+                t_opt=REFERENCE_CS_T_OPT,
+                previous=prior_reference,
+            )
+            statistical_inference = {
+                "status": "BLOCKED",
+                "blockers": [
+                    "FINANCIAL_MEAN_TIME_UNIFORM_CS_NOT_IMPLEMENTED_OR_ACCEPTED",
+                    "GATE_A_PRODUCTION_GOLDEN_PROVIDER_NOT_CONNECTED_TO_THIS_SOURCE_HEAD",
+                    "POINTWISE_STUDENT_T_IS_NOT_VALIDATED_FOR_ADAPTIVE_STOPPING",
+                ],
+                "gate_b_method_status": "POINTWISE_T_NOT_TIME_UNIFORM",
+            }
+            entry = {
+                "n": len(results),
+                "gate_a": gate_a,
+                "gate_b": {
+                    **gate_b,
+                    "status": "BLOCKED_POINTWISE_T_NOT_TIME_UNIFORM",
+                },
+                "metrics": metrics,
+                "reference_indicators": reference_indicators,
+                "statistical_inference": statistical_inference,
+            }
+            entry["transition"] = evaluate_adjacent_transition(prior_entry, entry)
+            state["stability_history"].append(entry)
+
+            stopping_window = evaluate_stopping_window(
+                state["stability_history"],
+                required_points=constants.STABILITY_CUMULATIVE_POINTS_REQUIRED,
+                required_transitions=constants.STABILITY_SUCCESSFUL_ADJACENT_TRANSITIONS_REQUIRED,
+                minimum_stop_n=constants.MINIMUM_STOP_N_FOR_NON_C100,
+            )
+            state["stopping_window"] = stopping_window
+            stable_now = stopping_window["stable"]
+            point_blocked = statistical_inference["status"] != "ACCEPTED"
             state["final_status"] = (
-                "stable" if stable_now else "running"
+                "stable" if stable_now else ("blocked" if point_blocked else "running")
             )
             state["reason_if_not_stable"] = (
-                None
-                if stable_now
-                else "dual stability gates not yet satisfied"
+                None if stable_now else "; ".join(
+                    statistical_inference["blockers"] + stopping_window["blockers"]
+                )
             )
 
             previous_metrics = metrics
@@ -877,7 +912,7 @@ def run_batch(
 
             _atomic_write_json(output_dir / STATE_JSON, state)
 
-            if stable_now:
+            if stable_now or point_blocked:
                 break
         else:
             if (
@@ -886,7 +921,7 @@ def run_batch(
             ):
                 _atomic_write_json(output_dir / STATE_JSON, state)
 
-        if state["final_status"] == "stable":
+        if state["final_status"] in ("stable", "blocked"):
             break
 
         resolved_start = trial_end + 1
