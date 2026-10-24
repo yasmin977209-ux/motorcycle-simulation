@@ -340,7 +340,10 @@ jobs:
           name: stage13-diagnostic-candidate-not-final-${{ github.run_id }}
           path: |
             stage13_diagnostic_output/
-            stage13_diagnostic_input/inputs_manifest.json
+            stage13_diagnostic_input/manifest_11005.json
+            stage13_diagnostic_input/11005_cohort_provenance.json
+            stage13_diagnostic_input/audit/
+            stage13_diagnostic_input/replay/
             stage13_diagnostic_input/audit_sha256.json
           if-no-files-found: warn
           retention-days: 30

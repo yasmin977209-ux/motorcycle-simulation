@@ -216,6 +216,8 @@ def build_derived_manifest(
     derived = copy.deepcopy(source_manifest)
     derived["manifest_version"] = "stage13-diagnostic-11005-v1"
     derived["manifest_status"] = "DERIVED_DIAGNOSTIC_ONLY_NOT_FINAL"
+    derived["dataset_status"] = "DIAGNOSTIC_ONLY_NOT_FINAL"
+    derived["validation_status"] = "SOURCE_IDENTITY_VERIFIED_DIAGNOSTIC_NOT_FINAL"
     derived["diagnostic_only"] = True
     derived["cohort_id"] = "STAGE13_DIAGNOSTIC_CANONICAL_11005_V1"
     derived["total_trials"] = sum(len(rows) for rows in rows_by_scenario.values())

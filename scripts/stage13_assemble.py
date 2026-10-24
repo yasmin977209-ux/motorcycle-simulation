@@ -196,13 +196,47 @@ def numeric_metrics(rows):
 def write_readme(wb, manifest, validation, excel_errors):
     ws = wb.active
     ws.title = "README"
-    if manifest.get("cohort_id") == EXPECTED_ADAPTIVE_COHORT_ID:
+    diagnostic_only = manifest.get("diagnostic_only") is True
+    if diagnostic_only:
+        sources = manifest.get("source_artifacts", {})
+        provenance = (
+            f"DIAGNOSTIC ONLY — cohort {manifest.get('cohort_id')}; "
+            "TrialResult rows from pinned Stage 7/Stage 10 artifacts and daily ledger from "
+            "pinned Stage 12 artifacts; the Stage 9A manifest is retained only as the original "
+            "identity pin for the separate MaxCase audit/replay bundle. NOT_FINAL_BLOCKED."
+        )
+        run_label = "Pinned source Run IDs"
+        run_value = (
+            f"Stage 7: {sources.get('stage7_run_id')}; "
+            f"Stage 10: {sources.get('stage10_run_id')}; "
+            f"Stage 12: {sources.get('stage12_run_id')}"
+        )
+        head_label = "Pinned source HEAD SHAs"
+        head_value = (
+            f"Stage 7: {sources.get('stage7_head_sha')}; "
+            f"Stage 10: {sources.get('stage10_head_sha')}; "
+            f"Stage 12: {sources.get('stage12_head_sha')}"
+        )
+        cohort_digest_label = "Stage 11 global cohort aggregate SHA-256"
+        dataset_status = "DIAGNOSTIC_ONLY_NOT_FINAL"
+        validation_status = "SOURCE_IDENTITY_VERIFIED_DIAGNOSTIC_NOT_FINAL"
+    elif manifest.get("cohort_id") == EXPECTED_ADAPTIVE_COHORT_ID:
         provenance = (
             f"Stage 13 adaptive cohort {manifest['cohort_id']}; "
             f"provenance run {manifest['run_id']}"
         )
+        run_label, run_value = "Official Run ID", manifest["run_id"]
+        head_label, head_value = "Official Run HEAD SHA", manifest["run_head_sha"]
+        cohort_digest_label = "Dataset manifest SHA-256"
+        dataset_status = manifest.get("dataset_status", "verified enrichment")
+        validation_status = validation.get("status", "not-provided")
     else:
         provenance = f"Stage 9A from official Run {manifest['run_id']}"
+        run_label, run_value = "Official Run ID", manifest["run_id"]
+        head_label, head_value = "Official Run HEAD SHA", manifest["run_head_sha"]
+        cohort_digest_label = "Dataset manifest SHA-256"
+        dataset_status = manifest.get("dataset_status", "verified enrichment")
+        validation_status = validation.get("status", "not-provided")
     rows = [
         ("Project", "motorcycle-simulation — Motorcycle Rental Simulation — Sana'a"),
         ("Workbook build provenance", provenance),
@@ -211,12 +245,13 @@ def write_readme(wb, manifest, validation, excel_errors):
         ("Total representatives", manifest["total_representatives"]),
         ("MASTER_SEED", manifest["master_seed"]),
         ("Source SHA", manifest["source_sha"]),
-        ("Official Run ID", manifest["run_id"]),
-        ("Official Run HEAD SHA", manifest["run_head_sha"]),
+        (run_label, run_value),
+        (head_label, head_value),
         ("Reference SHA-256", manifest.get("reference_sha256")),
-        ("Dataset manifest SHA-256", manifest.get("global_manifest_sha256")),
-        ("Dataset status", manifest.get("dataset_status", "verified enrichment")),
-        ("Validation status", validation.get("status", "not-provided")),
+        (cohort_digest_label, manifest.get("global_manifest_sha256")),
+        ("Dataset status", dataset_status),
+        ("Validation status", validation_status),
+        ("Final acceptance status", "NOT_FINAL_BLOCKED" if diagnostic_only else "NOT_ASSERTED_BY_WORKBOOK_BUILDER"),
         ("Excel sheets", 0),
         ("Excel error cells", 0),
     ]

@@ -857,3 +857,43 @@ def test_diagnostic_scenario_detail_marks_missing_source_sections_without_fabric
         assert ws["A2"].value == "SOURCE_NOT_AVAILABLE_IN_DIAGNOSTIC_COHORT"
         assert "no values were inferred or zero-filled" in ws["C2"].value
     wb.close()
+
+
+def test_diagnostic_readme_discloses_multi_run_cohort_and_does_not_claim_stage9a_run():
+    from openpyxl import Workbook
+    from scripts.stage13_assemble import write_readme
+
+    wb = Workbook()
+    manifest = {
+        "diagnostic_only": True,
+        "cohort_id": "STAGE13_DIAGNOSTIC_CANONICAL_11005_V1",
+        "total_trials": 11005,
+        "total_representatives": 125,
+        "master_seed": 20270101,
+        "source_sha": "a" * 40,
+        "run_id": 37671448546,
+        "run_head_sha": "b" * 40,
+        "reference_sha256": "c" * 64,
+        "global_manifest_sha256": "d" * 64,
+        "dataset_status": "STABLE",
+        "source_artifacts": {
+            "stage7_run_id": 37225915321,
+            "stage7_head_sha": "e" * 40,
+            "stage10_run_id": 37709936740,
+            "stage10_head_sha": "f" * 40,
+            "stage12_run_id": 37964656154,
+            "stage12_head_sha": "0" * 40,
+        },
+    }
+    write_readme(wb, manifest, {"status": "ok-from-loader"}, [])
+    readme = {row[0].value: row[1].value for row in wb["README"].iter_rows(min_row=2, max_col=2)}
+    assert "DIAGNOSTIC ONLY" in readme["Workbook build provenance"]
+    assert "Stage 9A manifest is retained only" in readme["Workbook build provenance"]
+    assert readme["Pinned source Run IDs"] == (
+        "Stage 7: 37225915321; Stage 10: 37709936740; Stage 12: 37964656154"
+    )
+    assert readme["Pinned source HEAD SHAs"].startswith("Stage 7: ")
+    assert readme["Dataset status"] == "DIAGNOSTIC_ONLY_NOT_FINAL"
+    assert readme["Final acceptance status"] == "NOT_FINAL_BLOCKED"
+    assert "Official Run ID" not in readme
+    wb.close()
