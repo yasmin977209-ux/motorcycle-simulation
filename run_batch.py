@@ -23,6 +23,7 @@ from scripts.golden_reference_provider import (
     statistical_execution_status,
 )
 import monte_carlo
+import rng
 from scripts.stage7_state import StateIntegrityError, StateStore
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
@@ -234,6 +235,66 @@ def _validate_trial_sequence(
     expected = list(range(1, trial_ids[-1] + 1))
     if trial_ids != expected:
         raise StateIntegrityError("run_batch trial sequence mismatch")
+
+
+def _validate_rng_audits(
+    results: list[monte_carlo.TrialResult],
+    *,
+    expected_scenario: str,
+) -> None:
+    """Fail closed on malformed RNG audits and repeated nonzero checksums."""
+    if not results:
+        return
+    try:
+        expected_probability, expected_recovery = monte_carlo.parse_scenario_id(
+            expected_scenario
+        )
+    except ValueError as exc:
+        raise StateIntegrityError(
+            f"invalid RNG audit scenario: {expected_scenario}"
+        ) from exc
+
+    seen: dict[int, int] = {}
+    for result in results:
+        if (
+            result.scenario_id != expected_scenario
+            or result.collection_probability != expected_probability
+            or result.recovery_rate_pct != expected_recovery
+        ):
+            raise StateIntegrityError(
+                f"RNG audit scenario identity mismatch at trial_id={result.trial_id}"
+            )
+        checksum = result.rng_checksum
+        draw_count = result.rng_draw_count
+        if type(checksum) is not int or not 0 <= checksum < (1 << 64):
+            raise StateIntegrityError(
+                f"invalid RNG checksum at trial_id={result.trial_id}"
+            )
+        if type(draw_count) is not int or draw_count < 0:
+            raise StateIntegrityError(
+                f"invalid RNG draw count at trial_id={result.trial_id}"
+            )
+        if draw_count == 0 and checksum != 0:
+            raise StateIntegrityError(
+                f"RNG checksum must be zero when no draw occurred at trial_id={result.trial_id}"
+            )
+        if expected_probability in (0.0, 1.0):
+            if draw_count != 0 or checksum != 0:
+                raise StateIntegrityError(
+                    f"deterministic probability must not record draws at trial_id={result.trial_id}"
+                )
+        elif draw_count == 0:
+            raise StateIntegrityError(
+                f"stochastic trial has no RNG draws at trial_id={result.trial_id}"
+            )
+        if checksum != 0:
+            prior = seen.get(checksum)
+            if prior is not None and prior != result.trial_id:
+                raise StateIntegrityError(
+                    "DUPLICATE_SEED_DETECTED:"
+                    f"trial_ids={prior},{result.trial_id}:checksum={checksum}"
+                )
+            seen[checksum] = result.trial_id
 
 
 def _metric_summary(
@@ -618,6 +679,30 @@ def _validate_resume_dataset(
     checkpoint: dict[str, Any],
 ) -> None:
     _validate_trial_sequence(results)
+    scenario = str(checkpoint.get("scenario", ""))
+    source_sha = str(checkpoint.get("source_sha", ""))
+    master_seed = checkpoint.get("master_seed")
+    if type(master_seed) is not int:
+        raise StateIntegrityError("checkpoint master_seed is missing or invalid")
+    _validate_rng_audits(results, expected_scenario=scenario)
+
+    identity = checkpoint.get("artifact_identity")
+    if not isinstance(identity, dict):
+        raise StateIntegrityError("checkpoint artifact_identity is missing")
+    if identity.get("master_seed") != master_seed:
+        raise StateIntegrityError("checkpoint artifact master_seed mismatch")
+    if identity.get("rng_audit_schema") != rng.RNG_CHECKSUM_SCHEMA:
+        raise StateIntegrityError("checkpoint RNG audit schema mismatch")
+    expected_audit = identity.get("rng_checksum_fingerprint_sha256")
+    if not isinstance(expected_audit, str):
+        raise StateIntegrityError("checkpoint RNG audit fingerprint is missing")
+    actual_audit = monte_carlo.fingerprint_rng_audit(
+        results, source_sha=source_sha, master_seed=master_seed
+    )
+    if actual_audit != expected_audit:
+        raise StateIntegrityError(
+            "resume dataset RNG audit fingerprint differs from checkpoint"
+        )
 
     expected_end = int(
         checkpoint["artifact_identity"]["trial_id_end"]
@@ -666,6 +751,7 @@ def _build_artifact_identity(
     *,
     scenario: str,
     source_sha: str,
+    master_seed: int,
     results: list[monte_carlo.TrialResult],
 ) -> dict[str, Any] | None:
     if not results:
@@ -673,10 +759,13 @@ def _build_artifact_identity(
     return {
         "scenario": scenario,
         "source_sha": source_sha,
+        "master_seed": master_seed,
+        "rng_audit_schema": rng.RNG_CHECKSUM_SCHEMA,
         "trial_id_start": results[0].trial_id,
         "trial_id_end": results[-1].trial_id,
-        "fingerprint_sha256": (
-            monte_carlo.fingerprint_trial_results(results)
+        "fingerprint_sha256": monte_carlo.fingerprint_trial_results(results),
+        "rng_checksum_fingerprint_sha256": monte_carlo.fingerprint_rng_audit(
+            results, source_sha=source_sha, master_seed=master_seed
         ),
     }
 
@@ -686,6 +775,7 @@ def _update_state_identity(
     *,
     scenario: str,
     source_sha: str,
+    master_seed: int,
     results: list[monte_carlo.TrialResult],
 ) -> None:
     state["completed_trial_count"] = len(results)
@@ -702,6 +792,7 @@ def _update_state_identity(
     state["artifact_identity"] = _build_artifact_identity(
         scenario=scenario,
         source_sha=source_sha,
+        master_seed=master_seed,
         results=results,
     )
 
@@ -775,6 +866,8 @@ def run_batch(
     )
 
     if resume_from_checkpoint:
+        if checkpoint.get("master_seed") != master_seed:
+            raise StateIntegrityError("checkpoint master_seed mismatch")
         _validate_resume_dataset(results, checkpoint)
 
     initial_target = (
@@ -969,11 +1062,13 @@ def run_batch(
         results.sort(key=lambda item: item.trial_id)
 
         _validate_trial_sequence(results)
+        _validate_rng_audits(results, expected_scenario=scenario)
         _write_dataset(results, output_dir)
         _update_state_identity(
             state,
             scenario=scenario,
             source_sha=source_sha,
+            master_seed=master_seed,
             results=results,
         )
 
@@ -1104,6 +1199,7 @@ def run_batch(
         state,
         scenario=scenario,
         source_sha=source_sha,
+        master_seed=master_seed,
         results=results,
     )
     if state["final_status"] == "running":

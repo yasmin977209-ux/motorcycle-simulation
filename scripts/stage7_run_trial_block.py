@@ -15,6 +15,7 @@ import pyarrow.parquet as pq
 import constants
 import daily_engine
 import monte_carlo
+import rng
 
 
 def load_trial_range(trial_id_start: int, trial_id_end: int) -> range:
@@ -36,7 +37,10 @@ def _canonical_json(value: object) -> bytes:
 
 
 def _trial_result_sha256(result: monte_carlo.TrialResult) -> str:
-    return hashlib.sha256(_canonical_json(asdict(result))).hexdigest()
+    payload = asdict(result)
+    payload.pop("rng_checksum", None)
+    payload.pop("rng_draw_count", None)
+    return hashlib.sha256(_canonical_json(payload)).hexdigest()
 
 
 def run_block(
@@ -53,14 +57,15 @@ def run_block(
 
     results: list[monte_carlo.TrialResult] = []
     for trial_id in load_trial_range(trial_id_start, trial_id_end):
-        project = daily_engine.run_deterministic_trial(
-            recovery_rate_pct=recovery_rate_pct,
-            trial_id=trial_id,
-            scenario_id=scenario_id,
-            master_seed=master_seed,
-            collection_probability=collection_probability,
-            log_events=log_events,
-        )
+        with rng.capture_rng_checksum() as rng_audit:
+            project = daily_engine.run_deterministic_trial(
+                recovery_rate_pct=recovery_rate_pct,
+                trial_id=trial_id,
+                scenario_id=scenario_id,
+                master_seed=master_seed,
+                collection_probability=collection_probability,
+                log_events=log_events,
+            )
         results.append(
             monte_carlo._trial_result_from_project(
                 project,
@@ -68,6 +73,8 @@ def run_block(
                 collection_probability=collection_probability,
                 recovery_rate_pct=recovery_rate_pct,
                 trial_id=trial_id,
+                rng_checksum=rng_audit.checksum,
+                rng_draw_count=rng_audit.draw_count,
             )
         )
     return results
@@ -85,6 +92,7 @@ def write_block_artifact(
     trial_id_end: int,
     output_dir: str,
     source_sha: str,
+    master_seed: int,
     run_id: str | None,
     elapsed_seconds: float,
     max_rss_kb: int,
@@ -111,6 +119,11 @@ def write_block_artifact(
         "cpu_count": os.cpu_count(),
         "fingerprint_sha256": fingerprint_block(results),
         "per_trial_sha256": [_trial_result_sha256(result) for result in results],
+        "rng_audit_schema": rng.RNG_CHECKSUM_SCHEMA,
+        "rng_checksum_fingerprint_sha256": monte_carlo.fingerprint_rng_audit(
+            results, source_sha=source_sha, master_seed=master_seed
+        ),
+        "master_seed": master_seed,
         "log_events": log_events,
         "source_sha": source_sha,
         "run_id": run_id,
@@ -155,6 +168,7 @@ def main() -> None:
         trial_id_end=args.trial_id_end,
         output_dir=args.output_dir,
         source_sha=args.source_sha,
+        master_seed=args.master_seed,
         run_id=args.run_id,
         elapsed_seconds=elapsed_seconds,
         max_rss_kb=max_rss_kb,

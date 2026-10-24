@@ -4,11 +4,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
-import constants, daily_engine, monte_carlo
+import constants, daily_engine, monte_carlo, rng
 
 def utc_now(): return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
 def canonical_json(v): return json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(",",":"),default=str).encode("utf-8")
-def result_sha(x): return hashlib.sha256(canonical_json(dataclasses.asdict(x))).hexdigest()
+def result_sha(x):
+    payload=dataclasses.asdict(x)
+    payload.pop("rng_checksum",None); payload.pop("rng_draw_count",None)
+    return hashlib.sha256(canonical_json(payload)).hexdigest()
 def dataset_fp(xs): return monte_carlo.fingerprint_trial_results(xs)
 def blob_sha(path): return subprocess.check_output(["git","rev-parse",f"HEAD:{path}"],text=True).strip()
 def percentile(vals,q):
@@ -59,10 +62,11 @@ def read_baseline(root,s,source,artifact_id,expected_run):
 def run_trial(s,trial_id,seed):
     c,r=monte_carlo.parse_scenario_id(s)
     before=resource.getrusage(resource.RUSAGE_SELF); t=time.perf_counter()
-    project=daily_engine.run_deterministic_trial(recovery_rate_pct=r,trial_id=trial_id,scenario_id=s,master_seed=seed,collection_probability=c,log_events=False)
+    with rng.capture_rng_checksum() as rng_audit:
+        project=daily_engine.run_deterministic_trial(recovery_rate_pct=r,trial_id=trial_id,scenario_id=s,master_seed=seed,collection_probability=c,log_events=False)
     elapsed=time.perf_counter()-t; after=resource.getrusage(resource.RUSAGE_SELF)
-    x=monte_carlo._trial_result_from_project(project,scenario_id=s,collection_probability=c,recovery_rate_pct=r,trial_id=trial_id)
-    return x,{"trial_id":trial_id,"elapsed_seconds":elapsed,"cpu_user_seconds":after.ru_utime-before.ru_utime,"cpu_system_seconds":after.ru_stime-before.ru_stime,"result_sha256":result_sha(x)}
+    x=monte_carlo._trial_result_from_project(project,scenario_id=s,collection_probability=c,recovery_rate_pct=r,trial_id=trial_id,rng_checksum=rng_audit.checksum,rng_draw_count=rng_audit.draw_count)
+    return x,{"trial_id":trial_id,"elapsed_seconds":elapsed,"cpu_user_seconds":after.ru_utime-before.ru_utime,"cpu_system_seconds":after.ru_stime-before.ru_stime,"result_sha256":result_sha(x),"rng_checksum":x.rng_checksum,"rng_draw_count":x.rng_draw_count}
 
 def percentile(vals,q):
     if not vals:return None
@@ -87,11 +91,11 @@ def main(argv):
         block=out/f"block_{start}_{end}.parquet"
         pq.write_table(pa.Table.from_pylist([dataclasses.asdict(x) for x in new]),block)
         combined=rs+new
-        meta={"scenario":s,"trial_id_start":start,"trial_id_end":end,"trial_count":100,"elapsed_seconds":sum(m["elapsed_seconds"] for m in measures),"max_rss_kb":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),"cpu_count":os.cpu_count(),"fingerprint_sha256":dataset_fp(new),"per_trial_sha256":[result_sha(x) for x in new],"log_events":False,"source_sha":source,"run_id":str(current_run),"baseline_fingerprint_sha256":basefp,"combined_fingerprint_sha256":dataset_fp(combined)}
+        meta={"scenario":s,"trial_id_start":start,"trial_id_end":end,"trial_count":100,"elapsed_seconds":sum(m["elapsed_seconds"] for m in measures),"max_rss_kb":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),"cpu_count":os.cpu_count(),"fingerprint_sha256":dataset_fp(new),"per_trial_sha256":[result_sha(x) for x in new],"log_events":False,"source_sha":source,"run_id":str(current_run),"baseline_fingerprint_sha256":basefp,"combined_fingerprint_sha256":dataset_fp(combined),"rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed)}
         write_json(out/f"block_{start}_{end}_metadata.json",meta)
         for p in sorted(baseline_root.rglob("block_*.parquet")): shutil.copy2(p,out/p.name)
         for p in sorted(baseline_root.rglob("*_metadata.json")): shutil.copy2(p,out/p.name)
-        write_json(out/"resume_descriptor.json",{"schema_version":"stage10-resume-v1","scenario":s,"source_sha":source,"master_seed":seed,"baseline_trials":len(rs),"canonical_trials_added":100,"new_trial_range":[start,end],"next_trial_id":end+1,"baseline_fingerprint_sha256":basefp,"new_block_fingerprint_sha256":dataset_fp(new),"combined_dataset_fingerprint_sha256":dataset_fp(combined),"baseline_state_sha":st.get("state_sha"),"baseline_final_status":st.get("final_status"),"baseline_stable_at_n":st.get("stable_at_n"),"baseline_next_check_n":st.get("next_check_n"),"baseline_stability_history":st.get("stability_history",[])})
+        write_json(out/"resume_descriptor.json",{"schema_version":"stage10-resume-v1","scenario":s,"source_sha":source,"master_seed":seed,"baseline_trials":len(rs),"canonical_trials_added":100,"new_trial_range":[start,end],"next_trial_id":end+1,"baseline_fingerprint_sha256":basefp,"new_block_fingerprint_sha256":dataset_fp(new),"combined_dataset_fingerprint_sha256":dataset_fp(combined),"rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed),"baseline_state_sha":st.get("state_sha"),"baseline_final_status":st.get("final_status"),"baseline_stable_at_n":st.get("stable_at_n"),"baseline_next_check_n":st.get("next_check_n"),"baseline_stability_history":st.get("stability_history",[])})
         canonical_added=100
     elif mode=="c100":
         if end-start+1!=20 or len(rs)!=1: raise RuntimeError("C100_CHUNK_RANGE_MISMATCH")
