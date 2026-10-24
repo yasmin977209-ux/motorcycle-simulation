@@ -623,11 +623,15 @@ def test_exact_replay_role_constructor_rechecks_selected_trial_id():
 
 def test_final_gate_drops_only_recovered_memo_blocker_and_retains_release_blockers():
     pending = {"count": 0, "by_scenario": {}, "by_field": {}}
+    missing_scenarios = list(MAXCASE_REPLAY_PLAN)
     audit = {
         "representative_inventory_mismatch_count": 1,
         "payload_status": "MISSING_EVIDENCE",
+        "missing_memo_scenarios": missing_scenarios,
         "replay_recovery_status": "PASS_EXACT_REPLAY",
         "replay_covers_all_missing_memo_scenarios": True,
+        "replay_recovered_scenarios": missing_scenarios,
+        "replay_scenarios_used_by_loader": missing_scenarios,
         "replay_selected_trial_sha256_mismatches": 0,
         "replay_stage12_common_field_mismatches": 0,
     }
@@ -661,3 +665,21 @@ def test_current_manifest_must_keep_approved_c050_artifact_and_run_pointer():
             current_manifest,
             manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
         )
+
+def test_final_gate_keeps_memo_evidence_blocked_when_replay_was_not_used_for_every_missing_scenario():
+    missing_scenarios = list(MAXCASE_REPLAY_PLAN)
+    audit = {
+        "representative_inventory_mismatch_count": 0,
+        "payload_status": "MISSING_EVIDENCE",
+        "missing_memo_scenarios": missing_scenarios,
+        "replay_recovery_status": "PASS_EXACT_REPLAY",
+        "replay_covers_all_missing_memo_scenarios": True,
+        "replay_recovered_scenarios": missing_scenarios,
+        "replay_scenarios_used_by_loader": missing_scenarios[:-1],
+        "replay_selected_trial_sha256_mismatches": 0,
+        "replay_stage12_common_field_mismatches": 0,
+    }
+    pending = {"count": 0, "by_scenario": {}, "by_field": {}}
+    result = _final_acceptance_disposition(pending, audit)
+    assert "MAXCASE_PAYLOAD_EVIDENCE_INCOMPLETE" in result["final_acceptance_blockers"]
+    assert "GOVERNANCE_RELEASE_GATE_NOT_RUN" in result["final_acceptance_blockers"]

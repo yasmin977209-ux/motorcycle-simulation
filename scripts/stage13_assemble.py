@@ -1530,11 +1530,26 @@ def _final_acceptance_disposition(pending, audit_status):
     else:
         if audit_status.get("representative_inventory_mismatch_count", 0):
             blockers.append("REPRESENTATIVE_INVENTORY_PROVENANCE_MISMATCH")
+        missing_scenarios = audit_status.get("missing_memo_scenarios")
+        replay_scenarios = audit_status.get("replay_recovered_scenarios")
+        loader_scenarios = audit_status.get("replay_scenarios_used_by_loader")
+        def valid_scenario_list(value):
+            return (
+                isinstance(value, list)
+                and all(isinstance(item, str) and item for item in value)
+                and len(value) == len(set(value))
+            )
         replay_reconciles_all_missing = (
             audit_status.get("replay_recovery_status") == "PASS_EXACT_REPLAY"
             and audit_status.get("replay_covers_all_missing_memo_scenarios") is True
             and audit_status.get("replay_selected_trial_sha256_mismatches") == 0
             and audit_status.get("replay_stage12_common_field_mismatches") == 0
+            and valid_scenario_list(missing_scenarios)
+            and bool(missing_scenarios)
+            and valid_scenario_list(replay_scenarios)
+            and valid_scenario_list(loader_scenarios)
+            and set(replay_scenarios) == set(missing_scenarios)
+            and set(loader_scenarios) == set(missing_scenarios)
         )
         if (
             audit_status.get("payload_status") != "EXISTING_PAYLOADS_REUSABLE"
