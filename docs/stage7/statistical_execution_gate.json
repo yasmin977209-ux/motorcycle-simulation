@@ -82,11 +82,12 @@
       "status": "NONINFERENTIAL_GUARDS_VERIFIED_NOT_STATISTICALLY_ACCEPTED",
       "evidence": [
         "tests/test_run_batch.py::test_gate_b_requires_actual_boolean_stability_evidence",
+        "tests/test_stage7_authoring.py::test_stage7_gate_b_requires_actual_boolean_stability_evidence (covers the direct helper imported by .github/workflows/stage7-full-run.yml)",
         "tests/test_run_batch.py::test_metric_summary_uses_absolute_limit_only_inside_near_zero",
         "tests/test_run_batch.py::test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means"
       ],
       "blockers": [
-        "K_SPEC remains blocked: mean intervals are pointwise Student-t under adaptive stopping, with no accepted time-uniform financial-mean procedure or approved finite-support/quantified-tail assumption."
+        "K_SPEC remains blocked: the financial-mean interval is pointwise Student-t under adaptive stopping, with no accepted time-uniform procedure or approved finite-support/quantified-tail assumption. This strict-Boolean fix establishes input-type safety only, not Gate B statistical acceptance."
       ]
     },
     "c030_g030_historical_transition": {

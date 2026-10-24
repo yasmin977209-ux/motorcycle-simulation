@@ -1425,3 +1425,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **Gate unchanged in substance:** docs/stage7/statistical_execution_gate.json remains BLOCKED_FOR_IMPLEMENTATION; mean K_SPEC, standalone/unintegrated quantile/loss procedures, P90_Held_Assets acceptance, Golden coverage and historical C030_G030 transition remain blockers. All trial/checkpoint/Monte Carlo and final-delivery authorization flags remain false.
 - **Exact-main validation observed before this CP:** Stage 1 Run 40108022784, Stage 2 Run 40108022745, Stage 3A Run 40108022830, Stage 3B Run 40108022912 and Stage 5 round-3 Run 40108022892 succeeded on exact main SHA 6e108209c75a2705c9ba4d669578b6f472d74a4f. PR #69 candidate checks passed pre-merge on exact candidate SHA 30b66687105355cdacd980a3b8e9c59f6641c78e.
 - **No mutation boundary:** no model/RNG source, historical Trial, checkpoint, ledger, artifact, Golden map, or production workflow was changed or dispatched by this CP.
+
+
+## CP-STAGE7-DIRECT-GATEB-BOOL-20261024 — direct production helper guard
+
+- **Base main SHA:** 2c3832915bd0a71aa64c5ee54f388445ea7cc705; branch `tmp/cp-stage7-direct-gateb-bool-20261024`.
+- **Defect:** `scripts/stage7_stability.py::evaluate_gate_b` is directly imported in `.github/workflows/stage7-full-run.yml` and was using `bool(current_metrics[name]["stable"])`. Consequently, non-empty strings such as `"False"` could be treated as `True`. The strict guard in `run_batch.evaluate_gate_b` did not protect this second call path.
+- **Fix:** require the top-level metrics and every expected metric payload to be mappings; require each `stable` field to have exact type `bool`; raise `ValueError` for malformed/missing evidence. No statistical threshold or stop rule changes.
+- **Tests:** `tests/test_stage7_authoring.py::test_stage7_gate_b_requires_actual_boolean_stability_evidence` covers True/False, strings, numbers, null, lists/dicts, NaN, missing fields/metrics, and malformed top-level payloads. PR CI also runs the current candidate method and run_batch regression suites.
+- **Gate boundary:** add the direct helper test to statistical gate evidence, but leave `BLOCKED_FOR_IMPLEMENTATION`, `K_SPEC_BLOCKED`, quantile/loss production statuses, P90_Held_Assets blocker and all execution/final acceptance authorization flags unchanged. This is type-safety hardening, not a statistical PASS.
+- **Supersession:** this is a fresh exact-main CP to remediate the issue recorded in old draft PR #63, whose branch is based on pre-Golden main and does not include the latest direct helper fix.
+- No model-source/RNG, trial IDs, Monte Carlo, historic datasets, Stage12/Stage13 artefacts, Golden map, production workflow dispatch or release was changed/run. Stage 5 validation on the immediately preceding main SHA remains tracked separately.
