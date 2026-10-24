@@ -16,6 +16,7 @@ on:
       - "tests/test_run_batch.py"
       - "tests/test_stage7_time_uniform_candidates.py"
       - ".github/workflows/cp-stage7-time-uniform-candidates-verify.yml"
+      - ".github/workflows/stage1-verification.yml"
       - "docs/audits/CP_STAGE7_TIME_UNIFORM_CANDIDATE_METHODS_2026-10-24.md"
       - "docs/stage7/statistical_execution_gate.json"
 
