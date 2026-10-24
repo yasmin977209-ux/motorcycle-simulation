@@ -223,3 +223,62 @@ def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any
         "stable": all_stable,
         "metrics": metric_payload,
     }
+
+def has_successful_adjacent_transition_window(
+    history: list[dict[str, Any]],
+    *,
+    required_transitions: int | None = None,
+    required_points: int | None = None,
+) -> bool:
+    """Require four cumulative checkpoint points to evidence three successful adjacent transitions.
+
+    The first point is a baseline, not itself a transition. Every point in the
+    window must have exact Gate A and Gate B PASS evidence, and each later Gate A
+    record must explicitly bind the prior and current checkpoint N values.
+    """
+    transitions = (
+        constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED
+        if required_transitions is None
+        else required_transitions
+    )
+    points = (
+        constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED
+        if required_points is None
+        else required_points
+    )
+    if (
+        type(transitions) is not int
+        or type(points) is not int
+        or transitions < 1
+        or points != transitions + 1
+    ):
+        return False
+    if len(history) < points:
+        return False
+
+    window = history[-points:]
+    for item in window:
+        n = item.get("n")
+        if type(n) is not int or not is_statistical_checkpoint(n):
+            return False
+        gate_a = item.get("gate_a")
+        gate_b = item.get("gate_b")
+        if not isinstance(gate_a, dict) or not isinstance(gate_b, dict):
+            return False
+        if (
+            gate_a.get("status") != "PASS"
+            or gate_a.get("checked") is not True
+            or gate_a.get("stable") is not True
+            or gate_b.get("stable") is not True
+        ):
+            return False
+
+    for previous, current in zip(window, window[1:]):
+        previous_n = previous["n"]
+        current_n = current["n"]
+        gate_a = current["gate_a"]
+        if current_n != previous_n * STATISTICAL_ESCALATION_MULTIPLIER:
+            return False
+        if gate_a.get("previous_n") != previous_n or gate_a.get("current_n") != current_n:
+            return False
+    return True

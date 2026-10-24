@@ -17,7 +17,11 @@ from scripts.stage7_state import (
     build_artifact_identity,
     validate_trial_sequence,
 )
-from scripts.stage7_stability import evaluate_gate_a, evaluate_gate_b
+from scripts.stage7_stability import (
+    evaluate_gate_a,
+    evaluate_gate_b,
+    has_successful_adjacent_transition_window,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "stage7-full-run.yml"
@@ -307,6 +311,60 @@ def test_gate_a_exact_golden_and_gate_b_pass_requires_three_consecutive_points()
         gate_b = evaluate_gate_b(current_metrics)
         checks.append(gate_a["stable"] and gate_b["stable"])
     assert checks == [True, True, True]
+
+
+
+def _checkpoint_history(ns: list[int]) -> list[dict]:
+    history = []
+    previous_n = None
+    for n in ns:
+        history.append({
+            "n": n,
+            "gate_a": {
+                "previous_n": previous_n,
+                "current_n": n,
+                "status": "PASS",
+                "checked": True,
+                "stable": True,
+            },
+            "gate_b": {"checked": True, "stable": True},
+        })
+        previous_n = n
+    return history
+
+
+def test_stability_requires_four_cumulative_points_for_three_adjacent_transitions() -> None:
+    history = _checkpoint_history([300, 600, 1200, 2400])
+    assert has_successful_adjacent_transition_window(
+        history, required_transitions=3, required_points=4
+    )
+
+
+def test_stability_does_not_stop_after_only_three_points() -> None:
+    history = _checkpoint_history([300, 600, 1200])
+    assert not has_successful_adjacent_transition_window(
+        history, required_transitions=3, required_points=4
+    )
+
+
+def test_stability_rejects_non_doubling_or_misbound_transition() -> None:
+    history = _checkpoint_history([300, 600, 1000, 2400])
+    assert not has_successful_adjacent_transition_window(
+        history, required_transitions=3, required_points=4
+    )
+    history = _checkpoint_history([300, 600, 1200, 2400])
+    history[-1]["gate_a"]["previous_n"] = 600
+    assert not has_successful_adjacent_transition_window(
+        history, required_transitions=3, required_points=4
+    )
+
+
+def test_stability_rejects_a_failed_gate_in_any_checkpoint() -> None:
+    history = _checkpoint_history([300, 600, 1200, 2400])
+    history[1]["gate_b"]["stable"] = False
+    assert not has_successful_adjacent_transition_window(
+        history, required_transitions=3, required_points=4
+    )
 
 
 def test_gate_a_rejects_source_identity_mismatch() -> None:

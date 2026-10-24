@@ -46,6 +46,37 @@ jobs:
           python-version: "3.11"
       - name: Install requirements
         run: python -m pip install -r requirements.txt
+      - name: Golden and statistical authority preflight
+        env:
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.golden_reference_provider import (
+              golden_authority_status, statistical_execution_status,
+          )
+
+          golden = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          statistics = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
+          print(json.dumps({
+              "golden_authority_status": golden["status"],
+              "golden_authority_blockers": golden["blockers"],
+              "golden_decision_log_sha256": golden.get("decision_log_sha256"),
+              "statistical_execution_status": statistics["status"],
+              "statistical_execution_blockers": statistics["blockers"],
+              "statistical_contract_sha256": statistics.get("contract_sha256"),
+              "before_state_branch_inspection": True,
+              "no_simulation_or_trial_executed": True,
+          }, sort_keys=True))
+          if not golden["authorized"]:
+              raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED_BEFORE_STATE_INSPECTION")
+          if not statistics["authorized"]:
+              raise SystemExit("STATISTICAL_INFERENCE_BLOCKED_BEFORE_STATE_INSPECTION")
+          PY
+
       - name: Stage 7-specific preflight
         env:
           SOURCE_SHA: ${{ env.SOURCE_SHA }}
@@ -135,6 +166,79 @@ jobs:
               echo "STAGE7_STATE_ABSENT=${scenario}"
             fi
           done
+      - name: Validate and package exact Gate A golden map
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from scripts.golden_reference_provider import (
+              GoldenReferenceProvider, golden_authority_status,
+              statistical_execution_status,
+          )
+
+          authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
+          statistics = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
+          if not authority["authorized"]:
+              print(json.dumps({
+                  "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+                  "blockers": authority["blockers"],
+                  "decision_log_sha256": authority.get("decision_log_sha256"),
+                  "no_simulation_or_trial_executed": True,
+              }, sort_keys=True))
+              raise SystemExit("GATE_A_GOVERNANCE_AUTHORITY_BLOCKED")
+          if not statistics["authorized"]:
+              print(json.dumps({
+                  "status": "STATISTICAL_INFERENCE_BLOCKED",
+                  "blockers": statistics["blockers"],
+                  "contract_sha256": statistics.get("contract_sha256"),
+                  "no_simulation_or_trial_executed": True,
+              }, sort_keys=True))
+              raise SystemExit("STATISTICAL_INFERENCE_BLOCKED")
+          provider = GoldenReferenceProvider()
+          if not provider._verified or provider.load_error:
+              raise SystemExit(f"GOLDEN_PROVIDER_BLOCKED: {provider.load_error}")
+          cache = Path("stage7-golden-provider.json")
+          cache.write_text(
+              json.dumps(provider.to_verified_payload(), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
+              encoding="utf-8",
+          )
+          digest = hashlib.sha256(cache.read_bytes()).hexdigest()
+          loaded = GoldenReferenceProvider.from_verified_payload(cache)
+          if loaded.source_map_sha256 != provider.source_map_sha256:
+              raise SystemExit("GOLDEN_PROVIDER_CACHE_ROUNDTRIP_MISMATCH")
+          for scenario in loaded._fingerprints:
+              coverage = loaded.get_coverage(scenario)
+              if scenario.startswith("C100_"):
+                  assert 1 in coverage
+              else:
+                  for n in (300, 600, 1200):
+                      assert set(range(1, n + 1)).issubset(coverage)
+          assert set(range(1, 2401)).issubset(loaded.get_coverage("C030_G030"))
+          print(json.dumps({
+              "status": "VERIFIED",
+              "trial_count": loaded.trial_count,
+              "scenario_count": loaded.scenario_count,
+              "source_map_sha256": loaded.source_map_sha256,
+              "golden_reference_id": loaded.get_golden_reference_id(),
+              "cache_sha256": digest,
+              "checkpoint_coverage": {"all": [300, 600, 1200], "N2400": ["C030_G030"]},
+              "no_simulation_or_trial_executed": True,
+          }, sort_keys=True))
+          PY
+      - name: Upload verified Gate A map for matrix workers
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage7-golden-provider-${{ github.run_id }}
+          path: stage7-golden-provider.json
+          if-no-files-found: error
+          retention-days: 1
+
   matrix-simulation:
     name: simulation-${{ matrix.scenario }}
     needs: preflight-gates
@@ -297,6 +401,12 @@ jobs:
             exit 0
           fi
 
+      - name: Download verified Gate A provider map
+        uses: actions/download-artifact@v4
+        with:
+          name: stage7-golden-provider-${{ github.run_id }}
+          path: .
+
       - name: Adaptive scenario orchestration
         env:
           PYTHONPATH: .
@@ -345,7 +455,12 @@ jobs:
           )
           from scripts.stage7_stability import (
               evaluate_gate_a, evaluate_gate_b, filter_statistical_history,
+              has_successful_adjacent_transition_window,
               is_statistical_checkpoint, next_statistical_checkpoint,
+          )
+          from run_batch import _evaluate_gate_a_with_provider, _gate_a_target_is_covered
+          from scripts.golden_reference_provider import (
+              GoldenReferenceProvider, stage10_trial_result_sha256,
           )
 
           REPO = os.environ["GITHUB_REPOSITORY"]
@@ -365,6 +480,11 @@ jobs:
           JOB_TIMEOUT_SECONDS = int(os.environ["JOB_TIMEOUT_MINUTES"]) * 60
           CP3_SCENARIO = os.environ["CP3_SCENARIO"]
           CP3_AGGREGATE_SHA256 = os.environ["CP3_AGGREGATE_SHA256"]
+          GOLDEN_PROVIDER = GoldenReferenceProvider.from_verified_payload(Path("stage7-golden-provider.json"))
+          if not GOLDEN_PROVIDER.verify_source_identity(SOURCE_SHA):
+              raise RuntimeError("GOLDEN_PROVIDER_SOURCE_IDENTITY_MISMATCH")
+          if MASTER_SEED != GOLDEN_PROVIDER.master_seed:
+              raise RuntimeError("GOLDEN_PROVIDER_MASTER_SEED_MISMATCH")
           RESULTS_DIR = Path("results_stage7") / SCENARIO
           BLOCKS_DIR = RESULTS_DIR / "blocks"
           BLOCKS_DIR.mkdir(parents=True, exist_ok=True)
@@ -483,14 +603,16 @@ jobs:
                       baseline_metrics = statistics(baseline_results)
                       history.insert(0, {
                           "n": INITIAL_NON_C100,
-                          "gate_a": evaluate_gate_a(
+                          "gate_a": _evaluate_gate_a_with_provider(
+                              provider=GOLDEN_PROVIDER,
+                              scenario_id=SCENARIO,
+                              trial_results=baseline_results,
+                              source_sha=SOURCE_SHA,
+                              master_seed=MASTER_SEED,
                               previous_n=None,
                               previous_metrics=None,
                               current_n=INITIAL_NON_C100,
                               current_metrics=baseline_metrics,
-                              escalation_multiplier=ESCALATION_MULTIPLIER,
-                              relative_epsilon=RELATIVE_EPSILON,
-                              absolute_epsilon=ABSOLUTE_EPSILON,
                           ),
                           "gate_b": evaluate_gate_b(baseline_metrics),
                           "metrics": baseline_metrics,
@@ -654,6 +776,34 @@ jobs:
                   }, sort_keys=True))
                   raise SystemExit(0)
 
+              if not SCENARIO.startswith("C100_") and not _gate_a_target_is_covered(
+                  GOLDEN_PROVIDER, SCENARIO, target_n
+              ):
+                  available_ids = GOLDEN_PROVIDER.get_coverage(SCENARIO)
+                  covered_through = max(available_ids) if available_ids else 0
+                  state["final_status"] = "blocked"
+                  state["stable_at_n"] = None
+                  state["included_in_final_stats"] = False
+                  state["reason_if_not_stable"] = (
+                      f"approved Gate A Golden coverage ends at {covered_through}; "
+                      f"refusing to execute unsupported checkpoint N={target_n}"
+                  )
+                  state["next_check_n"] = target_n
+                  state["golden_coverage_block"] = {
+                      "scenario": SCENARIO,
+                      "requested_checkpoint_n": target_n,
+                      "covered_through": covered_through,
+                      "golden_reference_id": GOLDEN_PROVIDER.get_golden_reference_id(),
+                      "trial_block_executed": False,
+                  }
+                  blob_sha = store.save_state(state, blob_sha)
+                  print(
+                      "GATE_A_GOLDEN_COVERAGE_EXHAUSTED="
+                      + f"{SCENARIO}:covered_through={covered_through}:requested_N={target_n}; "
+                      "stopping before trial block"
+                  )
+                  break
+
               trial_start = completed + 1
               trial_end = target_n
 
@@ -731,6 +881,14 @@ jobs:
                       )
 
                   equality = primary_dict == verification_dict
+                  c100_expected_golden = GOLDEN_PROVIDER.get_fingerprint(SCENARIO, 1)
+                  c100_actual_golden = stage10_trial_result_sha256(primary)
+                  c100_golden_ok = (
+                      c100_expected_golden is not None
+                      and c100_expected_golden == c100_actual_golden
+                      and GOLDEN_PROVIDER.verify_source_identity(SOURCE_SHA)
+                      and MASTER_SEED == GOLDEN_PROVIDER.master_seed
+                  )
 
                   c100_proof = {
                       "scenario": SCENARIO,
@@ -741,7 +899,11 @@ jobs:
                       "different_trial_id": True,
                       "different_derived_seed": seed_primary != seed_verification,
                       "exact_result_equality": equality,
-                      "stable": equality,
+                      "golden_reference_id": GOLDEN_PROVIDER.get_golden_reference_id(),
+                      "golden_expected_sha256": c100_expected_golden,
+                      "golden_actual_sha256": c100_actual_golden,
+                      "golden_exact_match": c100_golden_ok,
+                      "stable": equality and c100_golden_ok,
                   }
                   write_json(
                       RESULTS_DIR / "c100_independent_verification.json",
@@ -749,28 +911,35 @@ jobs:
                   )
 
                   state["c100_independent_verification"] = c100_proof
-                  if equality:
+                  if equality and c100_golden_ok:
                       state["stable_at_n"] = 1
                       state["final_status"] = "stable"
                       state["reason_if_not_stable"] = None
+                  elif not c100_golden_ok and c100_expected_golden is None:
+                      state["stable_at_n"] = None
+                      state["final_status"] = "blocked"
+                      state["reason_if_not_stable"] = "C100 approved golden fingerprint is missing"
                   else:
                       state["stable_at_n"] = None
-                      state["final_status"] = None
+                      state["final_status"] = "failed"
                       state["reason_if_not_stable"] = (
                           "independent C100 trial result mismatch"
+                          if not equality else "C100 result differs from approved golden"
                       )
               else:
                   current_stats = statistics(results)
                   previous = history[-1] if history else None
 
-                  gate_a = evaluate_gate_a(
+                  gate_a = _evaluate_gate_a_with_provider(
+                      provider=GOLDEN_PROVIDER,
+                      scenario_id=SCENARIO,
+                      trial_results=results,
+                      source_sha=SOURCE_SHA,
+                      master_seed=MASTER_SEED,
                       previous_n=previous.get("n") if previous else None,
                       previous_metrics=previous.get("metrics") if previous else None,
                       current_n=len(results),
                       current_metrics=current_stats,
-                      escalation_multiplier=ESCALATION_MULTIPLIER,
-                      relative_epsilon=RELATIVE_EPSILON,
-                      absolute_epsilon=ABSOLUTE_EPSILON,
                   )
                   gate_b = evaluate_gate_b(current_stats)
 
@@ -783,19 +952,15 @@ jobs:
                   history.append(check_entry)
                   state["stability_history"] = history
 
-                  recent = history[-REQUIRED_CONSECUTIVE:]
                   gate_a_status = gate_a.get("status", "BLOCKED")
                   gate_a_stop = gate_a_status in ("BLOCKED", "FAIL")
                   stable_now = (
                       not gate_a_stop
                       and gate_a_status == "PASS"
-                      and len(recent) == REQUIRED_CONSECUTIVE
-                      and all(
-                          item.get("gate_a", {}).get("status") == "PASS"
-                          and item.get("gate_a", {}).get("checked") is True
-                          and item.get("gate_a", {}).get("stable") is True
-                          and item.get("gate_b", {}).get("stable") is True
-                          for item in recent
+                      and has_successful_adjacent_transition_window(
+                          history,
+                          required_transitions=REQUIRED_CONSECUTIVE,
+                          required_points=REQUIRED_CONSECUTIVE + 1,
                       )
                   )
 

@@ -132,6 +132,7 @@ def test_chapter_2_4_claim_waiting_periods_are_exact() -> None:
 def test_user_approved_execution_overrides_are_exact() -> None:
     for name, expected in USER_APPROVED_EXECUTION_OVERRIDES.items():
         assert getattr(constants, name) == expected, name
+    assert constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED == 4
     assert constants.STATISTICAL_START_TRIALS_BY_COLLECTION == {
         1.00: 1,
         0.85: 300,
