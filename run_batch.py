@@ -689,6 +689,10 @@ def _validate_resume_dataset(
     identity = checkpoint.get("artifact_identity")
     if not isinstance(identity, dict):
         raise StateIntegrityError("checkpoint artifact_identity is missing")
+    if identity.get("master_seed") != master_seed:
+        raise StateIntegrityError("checkpoint artifact master_seed mismatch")
+    if identity.get("rng_audit_schema") != rng.RNG_CHECKSUM_SCHEMA:
+        raise StateIntegrityError("checkpoint RNG audit schema mismatch")
     expected_audit = identity.get("rng_checksum_fingerprint_sha256")
     if not isinstance(expected_audit, str):
         raise StateIntegrityError("checkpoint RNG audit fingerprint is missing")

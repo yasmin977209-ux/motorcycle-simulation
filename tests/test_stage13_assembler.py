@@ -59,6 +59,13 @@ def trial_row(scenario, trial_id, offset):
         "bad_debt": trial_id * 2, "guarantee_recovered": trial_id,
         "partner1_final_entitlement": equity * 7 // 10,
         "partner2_final_entitlement": equity - equity * 7 // 10,
+        "rng_checksum": (
+            0 if int(scenario[1:4]) / 100.0 in (0.0, 1.0)
+            else (offset + 1) * 1_000_000 + trial_id
+        ),
+        "rng_draw_count": (
+            0 if int(scenario[1:4]) / 100.0 in (0.0, 1.0) else 20
+        ),
     }
 
 
@@ -463,6 +470,14 @@ def adaptive_data(stable_counts=None):
         for row in trials[scenario]
     ]
     ordered_sha = hashlib.sha256("".join(ordered_rows).encode("utf-8")).hexdigest()
+    ordered_rng_audit_rows = [
+        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\n"
+        for scenario in EXPECTED_SCENARIOS
+        for row in trials[scenario]
+    ]
+    rng_audit_sha = hashlib.sha256(
+        "".join(ordered_rng_audit_rows).encode("utf-8")
+    ).hexdigest()
     manifest = dict(base["manifest"])
     manifest.update({
         "cohort_id": EXPECTED_ADAPTIVE_COHORT_ID,
@@ -479,6 +494,7 @@ def adaptive_data(stable_counts=None):
         "total_representatives": len(EXPECTED_SCENARIOS) * 5,
         "ordered_trial_hash_map_sha256": ordered_sha,
         "gate_a_ordered_trial_hash_map_sha256": ordered_sha,
+        "rng_audit_map_sha256": rng_audit_sha,
         "scenarios": scenario_evidence,
         "dataset_status": "SYNTHETIC_TEST_ONLY",
     })
@@ -902,3 +918,29 @@ def test_diagnostic_readme_discloses_multi_run_cohort_and_does_not_claim_stage9a
     assert readme["Final acceptance status"] == "NOT_FINAL_BLOCKED"
     assert "Official Run ID" not in readme
     wb.close()
+
+
+def test_adaptive_mode_rejects_rng_audit_map_tampering():
+    data = adaptive_data()
+    row = data["trials_by_scenario"]["C070_G100"][0]
+    row["rng_checksum"] += 1
+    with pytest.raises(RuntimeError, match="ADAPTIVE_RNG_AUDIT_MAP_SHA_MISMATCH"):
+        _validate_mode_and_identity(data, "adaptive")
+
+
+def test_adaptive_mode_rejects_duplicate_rng_audit_checksums():
+    data = adaptive_data()
+    rows = data["trials_by_scenario"]["C070_G100"]
+    rows[1]["rng_checksum"] = rows[0]["rng_checksum"]
+    # Recompute the audit-map hash to prove the independent duplicate detector
+    # rejects reuse even when the manifest itself is internally consistent.
+    ordered = [
+        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\n"
+        for scenario in EXPECTED_SCENARIOS
+        for row in data["trials_by_scenario"][scenario]
+    ]
+    data["manifest"]["rng_audit_map_sha256"] = hashlib.sha256(
+        "".join(ordered).encode("utf-8")
+    ).hexdigest()
+    with pytest.raises(RuntimeError, match="DUPLICATE_SEED_DETECTED"):
+        _validate_mode_and_identity(data, "adaptive")
