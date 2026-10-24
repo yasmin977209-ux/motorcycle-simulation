@@ -1229,6 +1229,8 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
                 raise RuntimeError(
                     f"ADAPTIVE_DETERMINISTIC_RNG_AUDIT_NOT_EMPTY: {scenario}:{row.get('trial_id')}"
                 )
+            if expected_collection_probability not in (0.0, 1.0) and draw_count == 0:
+                raise RuntimeError(f"ADAPTIVE_STOCHASTIC_RNG_AUDIT_EMPTY: {scenario}:{row.get('trial_id')}")
             if checksum != 0:
                 previous_trial = seen_rng_checksums.get(checksum)
                 if previous_trial is not None:

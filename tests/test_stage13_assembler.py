@@ -944,3 +944,20 @@ def test_adaptive_mode_rejects_duplicate_rng_audit_checksums():
     ).hexdigest()
     with pytest.raises(RuntimeError, match="DUPLICATE_SEED_DETECTED"):
         _validate_mode_and_identity(data, "adaptive")
+
+
+def test_adaptive_mode_rejects_stochastic_trial_with_empty_rng_audit():
+    data = adaptive_data()
+    row = data["trials_by_scenario"]["C070_G100"][0]
+    row["rng_checksum"] = 0
+    row["rng_draw_count"] = 0
+    ordered = [
+        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\\n"
+        for scenario in EXPECTED_SCENARIOS
+        for row in data["trials_by_scenario"][scenario]
+    ]
+    data["manifest"]["rng_audit_map_sha256"] = hashlib.sha256(
+        "".join(ordered).encode("utf-8")
+    ).hexdigest()
+    with pytest.raises(RuntimeError, match="ADAPTIVE_STOCHASTIC_RNG_AUDIT_EMPTY"):
+        _validate_mode_and_identity(data, "adaptive")
