@@ -3,7 +3,7 @@ name: Stage 13 CP-F MaxCase source audit (read-only)
 on:
   push:
     branches:
-      - "tmp/cp-stage13-current-main-integration-20261021"
+      - "tmp/cp-stage13-maxcase-audit-post-c050-reconcile-20261024"
     paths:
       - "scripts/stage13_maxcase_source_audit.py"
       - "scripts/stage13_gatea_fingerprint_bridge.py"
