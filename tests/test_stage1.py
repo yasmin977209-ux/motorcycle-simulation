@@ -308,3 +308,11 @@ def test_rng_collection_success_uses_exact_integer_comparison() -> None:
         assert "whole integer percentage" in str(exc)
     else:
         raise AssertionError("noncanonical fractional percent must fail closed")
+
+
+def test_rng_float_view_uses_53_bits_and_never_rounds_to_one() -> None:
+    maximum = ((1 << 64) - 1).to_bytes(8, "big") + bytes(24)
+    zero = bytes(32)
+    assert rng.rng_draw(maximum) == ((1 << 53) - 1) / (1 << 53)
+    assert 0.0 <= rng.rng_draw(maximum) < 1.0
+    assert rng.rng_draw(zero) == 0.0

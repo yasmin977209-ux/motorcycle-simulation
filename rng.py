@@ -22,6 +22,7 @@ HASH_ALGORITHM: Final[str] = "sha256"
 SHA256_DIGEST_BYTES: Final[int] = 32
 RNG_WORD_BYTES: Final[int] = 8
 RNG_DENOMINATOR: Final[int] = 1 << 64
+RNG_FLOAT_DENOMINATOR: Final[int] = 1 << 53
 RNG_CHECKSUM_MODULUS: Final[int] = 1 << 64
 RNG_CHECKSUM_SCHEMA: Final[str] = "rng-checksum-high53-mod2^64-v1"
 
@@ -104,7 +105,7 @@ def rng_draw(seed_bytes: bytes) -> float:
             f"seed_bytes must contain exactly {SHA256_DIGEST_BYTES} bytes"
         )
     value = int.from_bytes(seed_bytes[:RNG_WORD_BYTES], "big")
-    return value / RNG_DENOMINATOR
+    return (value >> 11) / RNG_FLOAT_DENOMINATOR
 
 
 def draw_success(seed_bytes: bytes, pct: int) -> bool:
