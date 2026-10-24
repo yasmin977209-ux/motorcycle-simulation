@@ -457,7 +457,7 @@ def _read_maxcase_audit_bundle(
         or not isinstance(summary_mismatch_scenarios, list)
         or [item.get("scenario") for item in mismatch_rows if isinstance(item, dict)] != summary_mismatch_scenarios
         or len([item for item in mismatch_rows if isinstance(item, dict)]) != len(mismatch_rows)
-        or provenance.get("status") not in {"PASS", "CONFLICTED"}
+        or provenance.get("status") not in {"PASS", "PASS_SCOPED", "CONFLICTED"}
     ):
         raise RuntimeError("MAXCASE_AUDIT_PROVENANCE_STATUS_MISSING")
     return {
