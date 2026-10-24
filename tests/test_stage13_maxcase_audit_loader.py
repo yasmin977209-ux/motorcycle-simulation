@@ -7,6 +7,7 @@ import pytest
 
 from scripts.excel_builder import (
     MAXCASE_EXPECTED_SOURCE_IDENTITY,
+    MAXCASE_EXPECTED_C050_POINTER_PREVIOUS_ARTIFACT_ID,
     MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY,
     MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256,
     MAXCASE_REPLAY_PLAN,
@@ -275,6 +276,7 @@ def test_maxcase_audit_bundle_requires_matching_digest_pins_and_pair_identity(tm
         _read_maxcase_audit_bundle(
             audit_path, payload_path,
             audit_sha256=audit_sha, payloads_sha256="0" * 64, manifest=manifest,
+            manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
         )
 
 
