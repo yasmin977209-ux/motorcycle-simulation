@@ -54,11 +54,12 @@ jobs:
           set -euo pipefail
           mkdir -p stage13_synthetic_evidence/maxcase_audit_input
           archive="stage13_synthetic_evidence/maxcase-source-audit.zip"
-          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12537818827/zip" > "$archive"
-          printf '%s  %s\n' "88abdc9e0ce4097df044280b517f08b1595642476c8d596ac13fc128b88092b3" "$archive" | sha256sum --check -
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12544311885/zip" > "$archive"
+          printf '%s  %s\n' "93b150e5d3360c8d160f3facad85c28dc676819466ed3fded3167bcb703c3f32" "$archive" | sha256sum --check -
           python - <<'PY'
           import hashlib
           import json
+          import subprocess
           import zipfile
           from pathlib import Path
           from scripts.excel_builder import _read_maxcase_audit_bundle
@@ -81,12 +82,16 @@ jobs:
           audit_path.write_bytes(audit_raw)
           payloads_path.write_bytes(payloads_raw)
           manifest = json.loads(Path("docs/stage9a/dataset_manifest.json").read_text(encoding="utf-8"))
+          manifest_git_blob_sha = subprocess.check_output(
+              ["git", "hash-object", "docs/stage9a/dataset_manifest.json"], text=True,
+          ).strip()
           result = _read_maxcase_audit_bundle(
               audit_path,
               payloads_path,
               audit_sha256=hashlib.sha256(audit_raw).hexdigest(),
               payloads_sha256=hashlib.sha256(payloads_raw).hexdigest(),
               manifest=manifest,
+              manifest_git_blob_sha=manifest_git_blob_sha,
           )
           payloads = result["payloads_by_scenario"]
           statuses = {
@@ -99,13 +104,13 @@ jobs:
           }
           if statuses != expected:
               raise SystemExit(f"MAXCASE_AUDIT_SOURCE_STATUS_COUNTS_MISMATCH: {statuses}")
-          if result["metadata"]["tested_head_sha"] != "c00b48912e10cc0334dfb0d7bb3c3741eb002315":
+          if result["metadata"]["tested_head_sha"] != "73934c2062e8dc7e1062b9a784cf07b6a16cce28":
               raise SystemExit("MAXCASE_AUDIT_SOURCE_HEAD_MISMATCH")
           if result["metadata"]["integrity_status"] != "PASS_SCOPED":
               raise SystemExit("MAXCASE_AUDIT_INTEGRITY_STATUS_MISMATCH")
           if result["metadata"]["payload_status"] != "MISSING_EVIDENCE":
               raise SystemExit("MAXCASE_AUDIT_PAYLOAD_STATUS_MISMATCH")
-          if result["metadata"]["representative_inventory_mismatch_count"] != 1:
+          if result["metadata"]["representative_inventory_mismatch_count"] != 0:
               raise SystemExit("MAXCASE_AUDIT_MANIFEST_CONFLICT_MISMATCH")
           if len(result["metadata"]["missing_memo_scenarios"]) != 10:
               raise SystemExit("MAXCASE_AUDIT_MISSING_MEMO_SCENARIO_COUNT_MISMATCH")
@@ -137,12 +142,16 @@ jobs:
           python - <<'PY'
           import hashlib
           import json
+          import subprocess
           from pathlib import Path
           from scripts.excel_builder import _read_maxcase_audit_bundle, _read_maxcase_replay_bundle
 
           base = Path("stage13_synthetic_evidence/maxcase_audit_input")
           replay_path = Path("stage13_synthetic_evidence/maxcase_replay_input/stage13_maxcase_replay_recovery.json")
           manifest = json.loads(Path("docs/stage9a/dataset_manifest.json").read_text(encoding="utf-8"))
+          manifest_git_blob_sha = subprocess.check_output(
+              ["git", "hash-object", "docs/stage9a/dataset_manifest.json"], text=True,
+          ).strip()
           audit_path = base / "stage13_maxcase_source_audit.json"
           payloads_path = base / "stage13_maxcase_daily_payloads.json"
           audit_bundle = _read_maxcase_audit_bundle(
@@ -150,11 +159,13 @@ jobs:
               audit_sha256=hashlib.sha256(audit_path.read_bytes()).hexdigest(),
               payloads_sha256=hashlib.sha256(payloads_path.read_bytes()).hexdigest(),
               manifest=manifest,
+              manifest_git_blob_sha=manifest_git_blob_sha,
           )
           replay_bundle = _read_maxcase_replay_bundle(
               replay_path,
               replay_sha256=hashlib.sha256(replay_path.read_bytes()).hexdigest(),
               manifest=manifest,
+              manifest_git_blob_sha=manifest_git_blob_sha,
               audit_bundle=audit_bundle,
           )
           metadata = replay_bundle["metadata"]

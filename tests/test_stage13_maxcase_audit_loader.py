@@ -7,6 +7,7 @@ import pytest
 
 from scripts.excel_builder import (
     MAXCASE_EXPECTED_SOURCE_IDENTITY,
+    MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY,
     MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256,
     MAXCASE_REPLAY_PLAN,
     MAXCASE_REPLAY_EXPECTED_ENGINE_BLOBS,
@@ -16,6 +17,19 @@ from scripts.excel_builder import (
     _read_maxcase_replay_bundle,
 )
 from scripts.stage13_assemble import _final_acceptance_disposition, _maxcase_pending_field_summary, EXPECTED_SCENARIOS
+
+
+def _active_manifest():
+    return {
+        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
+        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
+        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
+        "global_manifest_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_global_manifest_sha256"],
+        "artifact_manifest": {
+            "enriched_artifacts": {"C050_G000": 11503510055},
+            "enrichment_run_ids": {"C050_G000": 37662891608},
+        },
+    }
 
 
 def _source_row(scenario):
@@ -249,14 +263,11 @@ def test_maxcase_audit_bundle_requires_matching_digest_pins_and_pair_identity(tm
     audit, payloads = _bundle()
     audit_path, audit_sha = _write_json(tmp_path, "audit.json", audit)
     payload_path, payload_sha = _write_json(tmp_path, "payloads.json", payloads)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     result = _read_maxcase_audit_bundle(
         audit_path, payload_path,
         audit_sha256=audit_sha, payloads_sha256=payload_sha, manifest=manifest,
+        manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
     )
     assert len(result["payloads_by_scenario"]) == 25
     assert result["metadata"]["payload_status"] == "MISSING_EVIDENCE"
@@ -353,14 +364,11 @@ def test_maxcase_verified_stage9a_source_requires_explicit_manifest_authorizatio
     first["selected_daily_payload_artifact"]["manifest_authorized_source"] = False
     ap, ah = _write_json(tmp_path, "audit.json", audit)
     pp, ph = _write_json(tmp_path, "payloads.json", payloads)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     with pytest.raises(RuntimeError, match="MAXCASE_AUDIT_SOURCE_PROVENANCE_MISMATCH"):
         _read_maxcase_audit_bundle(
             ap, pp, audit_sha256=ah, payloads_sha256=ph, manifest=manifest,
+            manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
         )
 
 
@@ -399,14 +407,11 @@ def test_maxcase_verified_cpf_source_requires_reconciliation_and_gatea_proof(tmp
     audit_item["existing_payload_reusable_exactly"] = True
     ap, ah = _write_json(tmp_path, "audit.json", audit)
     pp, ph = _write_json(tmp_path, "payloads.json", payloads)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     with pytest.raises(RuntimeError, match="MAXCASE_AUDIT_SOURCE_PROVENANCE_MISMATCH"):
         _read_maxcase_audit_bundle(
             ap, pp, audit_sha256=ah, payloads_sha256=ph, manifest=manifest,
+            manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
         )
 
 
@@ -416,14 +421,11 @@ def test_maxcase_audit_rejects_unpinned_audit_execution_head(tmp_path):
     payloads["tested_head_sha"] = "d" * 40
     ap, ah = _write_json(tmp_path, "audit.json", audit)
     pp, ph = _write_json(tmp_path, "payloads.json", payloads)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     with pytest.raises(RuntimeError, match="MAXCASE_AUDIT_EXECUTION_HEAD_NOT_APPROVED"):
         _read_maxcase_audit_bundle(
             ap, pp, audit_sha256=ah, payloads_sha256=ph, manifest=manifest,
+            manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
         )
 
 
@@ -511,7 +513,10 @@ def _replay_fixture(plan=None):
     audit_bundle = {
         "audit_by_scenario": audit_by,
         "payloads_by_scenario": payload_by,
-        "metadata": {"missing_memo_scenarios": list(plan)},
+        "metadata": {
+            "missing_memo_scenarios": list(plan),
+            "source_identity": MAXCASE_EXPECTED_SOURCE_IDENTITY,
+        },
     }
     recovery = {
         "schema_version": "stage13-maxcase-replay-recovery-v1",
@@ -519,7 +524,7 @@ def _replay_fixture(plan=None):
         "status": "PASS",
         "owner_authorization": "EXPLICIT_USER_DELEGATION_2026-10-24_FOR_BOUNDED_EXACT_TRIAL_REPLAY",
         "pinned_source_commit": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "source_identity": MAXCASE_EXPECTED_SOURCE_IDENTITY,
+        "source_identity": MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY,
         "pinned_engine_git_blobs": MAXCASE_REPLAY_EXPECTED_ENGINE_BLOBS,
         "input_artifacts": {
             "audit_artifact_id": 12537818827,
@@ -568,13 +573,11 @@ def test_exact_replay_bundle_is_digest_pinned_and_bound_to_original_audit(tmp_pa
     audit_bundle, recovery = _replay_fixture(plan)
     path, digest = _write_json(tmp_path, "recovery.json", recovery)
     monkeypatch.setattr(builder, "MAXCASE_REPLAY_EXPECTED_JSON_SHA256", digest)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     result = _read_maxcase_replay_bundle(
-        path, replay_sha256=digest, manifest=manifest, audit_bundle=audit_bundle,
+        path, replay_sha256=digest, manifest=manifest,
+        manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
+        audit_bundle=audit_bundle,
     )
     assert set(result["payloads_by_scenario"]) == set(MAXCASE_REPLAY_PLAN)
     assert result["metadata"]["replay_recovery_status"] == "PASS_EXACT_REPLAY"
@@ -590,14 +593,12 @@ def test_exact_replay_bundle_rejects_one_mismatched_stage12_common_field(tmp_pat
     recovery["scenarios"][0]["daily_rows"][0]["Cash"] = 11
     path, digest = _write_json(tmp_path, "recovery-bad.json", recovery)
     monkeypatch.setattr(builder, "MAXCASE_REPLAY_EXPECTED_JSON_SHA256", digest)
-    manifest = {
-        "source_sha": MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"],
-        "master_seed": MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"],
-        "reference_sha256": MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"],
-    }
+    manifest = _active_manifest()
     with pytest.raises(RuntimeError, match="MAXCASE_REPLAY_STAGE12_COMMON_FIELD_MISMATCH"):
         _read_maxcase_replay_bundle(
-            path, replay_sha256=digest, manifest=manifest, audit_bundle=audit_bundle,
+            path, replay_sha256=digest, manifest=manifest,
+        manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
+        audit_bundle=audit_bundle,
         )
 
 
@@ -633,3 +634,28 @@ def test_final_gate_drops_only_recovered_memo_blocker_and_retains_release_blocke
     assert "MAXCASE_PAYLOAD_EVIDENCE_INCOMPLETE" not in result["final_acceptance_blockers"]
     assert "REPRESENTATIVE_INVENTORY_PROVENANCE_MISMATCH" in result["final_acceptance_blockers"]
     assert "GOVERNANCE_RELEASE_GATE_NOT_RUN" in result["final_acceptance_blockers"]
+
+
+def test_active_stage9a_manifest_pin_is_separate_from_historical_replay_identity():
+    from scripts.excel_builder import _validate_active_stage9a_manifest
+
+    current_manifest = _active_manifest()
+    current_sha = MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]
+    old_replay_sha = MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]
+    assert current_sha == "c8591aac3d309fd94c4e67a547d33fb62ac5694d"
+    assert old_replay_sha == "e796fa2443493b607f1f9c60b58eb63607959c26"
+    assert _validate_active_stage9a_manifest(current_manifest, manifest_git_blob_sha=current_sha) is None
+    with pytest.raises(RuntimeError, match="MAXCASE_ACTIVE_MANIFEST_GIT_BLOB_MISMATCH"):
+        _validate_active_stage9a_manifest(current_manifest, manifest_git_blob_sha=old_replay_sha)
+
+
+def test_current_manifest_must_keep_approved_c050_artifact_and_run_pointer():
+    from scripts.excel_builder import _validate_active_stage9a_manifest
+
+    current_manifest = _active_manifest()
+    current_manifest["artifact_manifest"]["enriched_artifacts"]["C050_G000"] = MAXCASE_EXPECTED_C050_POINTER_PREVIOUS_ARTIFACT_ID
+    with pytest.raises(RuntimeError, match="MAXCASE_ACTIVE_MANIFEST_IDENTITY_OR_C050_POINTER_MISMATCH"):
+        _validate_active_stage9a_manifest(
+            current_manifest,
+            manifest_git_blob_sha=MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"],
+        )

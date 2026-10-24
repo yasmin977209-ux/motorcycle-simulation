@@ -303,7 +303,7 @@ jobs:
               "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in files},
               "stage9a_manifest_blob_matches_main": (
                   run("git", "hash-object", "docs/stage9a/dataset_manifest.json")
-                  == "e796fa2443493b607f1f9c60b58eb63607959c26"
+                  == "c8591aac3d309fd94c4e67a547d33fb62ac5694d"
               ),
               "stage11_identity_blob_matches_main": (
                   run("git", "hash-object", "docs/stage11/dataset_identity.json")

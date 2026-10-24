@@ -55,8 +55,16 @@ MAXCASE_EXPECTED_SOURCE_IDENTITY = {
     "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
     "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
     "stage9a_global_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
+    "stage9a_manifest_git_blob": "c8591aac3d309fd94c4e67a547d33fb62ac5694d",
+}
+MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY = {
+    **MAXCASE_EXPECTED_SOURCE_IDENTITY,
     "stage9a_manifest_git_blob": "e796fa2443493b607f1f9c60b58eb63607959c26",
 }
+MAXCASE_EXPECTED_C050_ARTIFACT_ID = 11503510055
+MAXCASE_EXPECTED_C050_ENRICHMENT_RUN_ID = 37662891608
+MAXCASE_EXPECTED_C050_POINTER_PREVIOUS_ARTIFACT_ID = 11503191706
+MAXCASE_EXPECTED_C050_POINTER_PREVIOUS_RUN_ID = 37660610243
 MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256 = (
     "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
 )
@@ -126,6 +134,34 @@ def _is_sha256(value: Any) -> bool:
     )
 
 
+def _git_blob_sha(raw: bytes) -> str:
+    """Return Git's canonical SHA-1 blob identity for exact source bytes."""
+    header = b"blob " + str(len(raw)).encode("ascii") + b"\0"
+    return hashlib.sha1(header + raw).hexdigest()
+
+
+def _validate_active_stage9a_manifest(
+    manifest: dict[str, Any], *, manifest_git_blob_sha: str,
+) -> None:
+    """Require the one current Stage 9A manifest pointer approved on main."""
+    if manifest_git_blob_sha != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]:
+        raise RuntimeError("MAXCASE_ACTIVE_MANIFEST_GIT_BLOB_MISMATCH")
+    artifact_manifest = manifest.get("artifact_manifest")
+    enriched = artifact_manifest.get("enriched_artifacts") if isinstance(artifact_manifest, dict) else None
+    enrichment_runs = artifact_manifest.get("enrichment_run_ids") if isinstance(artifact_manifest, dict) else None
+    if (
+        manifest.get("source_sha") != MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"]
+        or manifest.get("master_seed") != MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"]
+        or manifest.get("reference_sha256") != MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"]
+        or manifest.get("global_manifest_sha256") != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_global_manifest_sha256"]
+        or not isinstance(enriched, dict)
+        or not isinstance(enrichment_runs, dict)
+        or enriched.get("C050_G000") != MAXCASE_EXPECTED_C050_ARTIFACT_ID
+        or enrichment_runs.get("C050_G000") != MAXCASE_EXPECTED_C050_ENRICHMENT_RUN_ID
+    ):
+        raise RuntimeError("MAXCASE_ACTIVE_MANIFEST_IDENTITY_OR_C050_POINTER_MISMATCH")
+
+
 def _read_maxcase_audit_bundle(
     audit_path: str | Path,
     payloads_path: str | Path,
@@ -133,12 +169,16 @@ def _read_maxcase_audit_bundle(
     audit_sha256: str | None,
     payloads_sha256: str | None,
     manifest: dict[str, Any],
+    manifest_git_blob_sha: str,
 ) -> dict[str, Any]:
     """Load a paired, digest-pinned MaxCase audit and daily-payload export.
 
     This source audit supports diagnostic assembly only. The Stage 13 assembler is
     not the project release gate and must never infer final acceptance from a build.
     """
+    _validate_active_stage9a_manifest(
+        manifest, manifest_git_blob_sha=manifest_git_blob_sha,
+    )
     if not _is_sha256(audit_sha256) or not _is_sha256(payloads_sha256):
         raise RuntimeError("MAXCASE_AUDIT_SHA256_REQUIRED")
     audit_raw = Path(audit_path).read_bytes()
@@ -214,11 +254,7 @@ def _read_maxcase_audit_bundle(
         raise RuntimeError("MAXCASE_AUDIT_SOURCE_IDENTITY_MISMATCH")
     if payload_document.get("stage12_global_sha256") != MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256:
         raise RuntimeError("MAXCASE_STAGE12_GLOBAL_IDENTITY_MISMATCH")
-    if (
-        manifest.get("source_sha") != MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"]
-        or manifest.get("master_seed") != MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"]
-        or manifest.get("reference_sha256") != MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"]
-    ):
+    if manifest_git_blob_sha != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]:
         raise RuntimeError("MAXCASE_AUDIT_DATASET_IDENTITY_MISMATCH")
     if (
         audit.get("integrity_status") != "PASS_SCOPED"
@@ -452,6 +488,7 @@ def _read_maxcase_replay_bundle(
     *,
     replay_sha256: str | None,
     manifest: dict[str, Any],
+    manifest_git_blob_sha: str,
     audit_bundle: dict[str, Any] | None,
 ) -> dict[str, Any]:
     """Read the pinned R4 replay artifact, bound to the paired original audit.
@@ -462,6 +499,11 @@ def _read_maxcase_replay_bundle(
     """
     if audit_bundle is None:
         raise RuntimeError("MAXCASE_REPLAY_REQUIRES_PINNED_SOURCE_AUDIT_BUNDLE")
+    _validate_active_stage9a_manifest(
+        manifest, manifest_git_blob_sha=manifest_git_blob_sha,
+    )
+    if audit_bundle.get("metadata", {}).get("source_identity") != MAXCASE_EXPECTED_SOURCE_IDENTITY:
+        raise RuntimeError("MAXCASE_REPLAY_CURRENT_AUDIT_IDENTITY_MISMATCH")
     if not _is_sha256(replay_sha256):
         raise RuntimeError("MAXCASE_REPLAY_SHA256_REQUIRED")
     raw = Path(replay_path).read_bytes()
@@ -483,7 +525,7 @@ def _read_maxcase_replay_bundle(
         or recovery.get("status") != "PASS"
         or recovery.get("repository") != "yasmin977209-ux/motorcycle-simulation"
         or recovery.get("pinned_source_commit") != MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"]
-        or recovery.get("source_identity") != MAXCASE_EXPECTED_SOURCE_IDENTITY
+        or recovery.get("source_identity") != MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY
         or recovery.get("owner_authorization") != "EXPLICIT_USER_DELEGATION_2026-10-24_FOR_BOUNDED_EXACT_TRIAL_REPLAY"
     ):
         raise RuntimeError("MAXCASE_REPLAY_SCHEMA_OR_SOURCE_IDENTITY_MISMATCH")
@@ -518,10 +560,17 @@ def _read_maxcase_replay_bundle(
     }
     if recovery.get("execution") != expected_execution:
         raise RuntimeError("MAXCASE_REPLAY_EXECUTION_DISPOSITION_MISMATCH")
+    replay_source_identity = recovery.get("source_identity")
+    active_source_identity = audit_bundle.get("metadata", {}).get("source_identity")
+    common_identity_fields = set(MAXCASE_EXPECTED_SOURCE_IDENTITY) - {"stage9a_manifest_git_blob"}
     if (
-        manifest.get("source_sha") != MAXCASE_EXPECTED_SOURCE_IDENTITY["source_sha"]
-        or manifest.get("master_seed") != MAXCASE_EXPECTED_SOURCE_IDENTITY["master_seed"]
-        or manifest.get("reference_sha256") != MAXCASE_EXPECTED_SOURCE_IDENTITY["reference_sha256"]
+        replay_source_identity != MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY
+        or not isinstance(active_source_identity, dict)
+        or active_source_identity != MAXCASE_EXPECTED_SOURCE_IDENTITY
+        or any(replay_source_identity.get(key) != active_source_identity.get(key) for key in common_identity_fields)
+        or replay_source_identity.get("stage9a_manifest_git_blob") != "e796fa2443493b607f1f9c60b58eb63607959c26"
+        or active_source_identity.get("stage9a_manifest_git_blob") != manifest_git_blob_sha
+        or manifest_git_blob_sha != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]
     ):
         raise RuntimeError("MAXCASE_REPLAY_DATASET_IDENTITY_MISMATCH")
     summary = recovery.get("summary")
@@ -806,6 +855,7 @@ def load_dataset(
     """Load immutable Parquet/JSON data; worksheet writing is delegated to Stage 13."""
     artifact_root, dataset_root, manifest_file = _root_layout(dataset_path, manifest_path)
     manifest = load_json(manifest_file)
+    manifest_git_blob_sha = _git_blob_sha(Path(manifest_file).read_bytes())
     audit_args = (
         maxcase_audit_path, maxcase_payloads_path,
         maxcase_audit_sha256, maxcase_payloads_sha256,
@@ -820,6 +870,7 @@ def load_dataset(
             audit_sha256=maxcase_audit_sha256,
             payloads_sha256=maxcase_payloads_sha256,
             manifest=manifest,
+            manifest_git_blob_sha=manifest_git_blob_sha,
         )
         if maxcase_audit_path is not None
         else None
@@ -834,6 +885,7 @@ def load_dataset(
             maxcase_replay_path,
             replay_sha256=maxcase_replay_sha256,
             manifest=manifest,
+            manifest_git_blob_sha=manifest_git_blob_sha,
             audit_bundle=maxcase_audit_bundle,
         )
         if maxcase_replay_path is not None
