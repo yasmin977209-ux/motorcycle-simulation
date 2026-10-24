@@ -49,16 +49,16 @@ jobs:
         run: |
           set -euo pipefail
           archive="stage13_recovery_input/source-audit.zip"
-          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12537818827/zip" > "$archive"
-          printf '%s  %s\n' "88abdc9e0ce4097df044280b517f08b1595642476c8d596ac13fc128b88092b3" "$archive" | sha256sum --check -
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12544311885/zip" > "$archive"
+          printf '%s  %s\n' "93b150e5d3360c8d160f3facad85c28dc676819466ed3fded3167bcb703c3f32" "$archive" | sha256sum --check -
           unzip -q "$archive" -d stage13_recovery_input
           python - <<'PY'
           import hashlib
           from pathlib import Path
 
           expected = {
-              "stage13_maxcase_source_audit.json": "b9ba0ff23b3dfd42abd7436b7935017f15ba8cbaf5198d8e31093a56441fb951",
-              "stage13_maxcase_daily_payloads.json": "096a85448ff5c7ece0648739fdc4ccad499763f1862467751983e0152f8e8c7d",
+              "stage13_maxcase_source_audit.json": "f599e59d5e8fa66e42a4bff7f42849bf7a627f79c88a48fd44bf519632bdb468",
+              "stage13_maxcase_daily_payloads.json": "c2c0e2b9541534c59901bbcd369f4d9cf6e630f35c0f7b18b8ce542e3ca52e9d",
           }
           for name, sha in expected.items():
               path = Path("stage13_recovery_input") / name
