@@ -90,14 +90,19 @@ REFERENCE_CLAIM_WAITING_PERIODS = {
 USER_APPROVED_EXECUTION_OVERRIDES = {
     "C100_STATISTICAL_START_TRIALS": 1,
     "NON_C100_STATISTICAL_START_TRIALS": 300,
-    "ITERATION_ESCALATION_STEP": 50,
     "STATISTICAL_CHECK_START_N": 300,
-    "STATISTICAL_CHECK_STEP_N": 50,
+    "STATISTICAL_ESCALATION_MULTIPLIER": 2,
     "MINIMUM_STOP_N_FOR_NON_C100": 400,
     "STABILITY_CONSECUTIVE_CHECKS_REQUIRED": 3,
     "INITIAL_SMOKE_TRIALS_PER_SCENARIO": 1,
     "C100_CI_GATE_ENABLED": False,
     "CI_ABSOLUTE_EPSILON": 1,
+}
+
+# Retained only for reading old metadata; these are not active execution overrides.
+LEGACY_STATISTICAL_COMPATIBILITY_CONSTANTS = {
+    "ITERATION_ESCALATION_STEP": 50,
+    "STATISTICAL_CHECK_STEP_N": 50,
 }
 
 
@@ -133,6 +138,9 @@ def test_user_approved_execution_overrides_are_exact() -> None:
     for name, expected in USER_APPROVED_EXECUTION_OVERRIDES.items():
         assert getattr(constants, name) == expected, name
     assert constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED == 4
+    for name, expected in LEGACY_STATISTICAL_COMPATIBILITY_CONSTANTS.items():
+        assert getattr(constants, name) == expected, name
+    assert constants.STATISTICAL_ESCALATION_MULTIPLIER == 2
     assert constants.STATISTICAL_START_TRIALS_BY_COLLECTION == {
         1.00: 1,
         0.85: 300,

@@ -877,8 +877,10 @@ def test_stage7_new_branch_does_not_inherit_root_state() -> None:
 
 def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
     from scripts.stage7_stability import is_statistical_checkpoint, next_statistical_checkpoint
+    import constants
 
-    assert _workflow()["env"]["ESCALATION_MULTIPLIER"] == "2"
+    assert constants.STATISTICAL_ESCALATION_MULTIPLIER == 2
+    assert _workflow()["env"]["ESCALATION_MULTIPLIER"] == str(constants.STATISTICAL_ESCALATION_MULTIPLIER)
     assert _workflow()["env"]["INITIAL_NON_C100_TRIALS"] == "300"
     assert [next_statistical_checkpoint(n) for n in (0, 300, 350, 600, 1200)] == [
         300, 600, 600, 1200, 2400

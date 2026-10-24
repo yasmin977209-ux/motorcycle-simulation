@@ -6,7 +6,8 @@ import constants
 import re
 
 STATISTICAL_ESCALATION_POLICY_ID = "DOUBLING_FROM_300_V1"
-STATISTICAL_ESCALATION_MULTIPLIER = 2
+# Compatibility alias for callers/tests; the normative value is centralized in constants.py.
+STATISTICAL_ESCALATION_MULTIPLIER = constants.STATISTICAL_ESCALATION_MULTIPLIER
 
 STABILITY_METRICS = (
     "final_net_project_equity",
