@@ -88,13 +88,13 @@ jobs:
               "representatives/P90.json", "representatives/Loss.json",
               "trial_results.parquet", "trial_fingerprints.json", "scenario_metadata.json",
           }
-          expected_archive_members = {
-              f"{scenario}.tar.gz" if member == "scenario.tar.gz" else member
-              for member in expected_members
-          }
           downloaded = []
           for entry in inventory["artifacts"]:
               scenario = entry["scenario"]
+              expected_archive_members = {
+                  f"{scenario}.tar.gz" if member == "scenario.tar.gz" else member
+                  for member in expected_members
+              }
               artifact_id = int(entry["artifact_id"])
               scenario_meta = manifest["scenarios"].get(scenario)
               if scenario_meta is None or int(scenario_meta["enriched_artifact_id"]) != artifact_id:
