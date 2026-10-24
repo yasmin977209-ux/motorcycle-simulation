@@ -1,0 +1,61 @@
+name: cp-stage7-finite-support-review-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage7-finite-support-review-20261024"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "constants.py"
+      - "daily_engine.py"
+      - "closure.py"
+      - "state.json"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "docs/PROJECT_CONTINUITY.md"
+      - "docs/audits/CP_STAGE7_FINITE_SUPPORT_REVIEW_2026-10-24.md"
+      - "tests/test_stage7_finite_support_review.py"
+      - ".github/workflows/cp-stage7-finite-support-review-verify.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  finite-support-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Parse source and workflow files
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          import yaml
+
+          for path in (
+              "daily_engine.py",
+              "closure.py",
+              "constants.py",
+              "tests/test_stage7_finite_support_review.py",
+          ):
+              ast.parse(Path(path).read_text(encoding="utf-8"), filename=path)
+          for path in Path(".github/workflows").glob("*.yml"):
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+          print("SOURCE_AST_AND_WORKFLOW_YAML_OK")
+          PY
+      - name: Run synthetic state and existing closure-precondition probes
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q \
+            tests/test_stage7_finite_support_review.py \
+            tests/test_stage3b_closure.py

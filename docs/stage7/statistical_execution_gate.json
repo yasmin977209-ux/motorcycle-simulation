@@ -35,8 +35,8 @@
     "gate_b_financial_means": {
       "status": "K_SPEC_BLOCKED",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "Current pointwise Student-t intervals are not time-uniform under adaptive stopping. The near-zero absolute-vs-relative branch is implemented, but no approved finite-support/quantified-tail assumption or accepted time-uniform mean confidence sequence exists.",
-      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption; a validated all-time-valid mean procedure; and exact-source acceptance tests."
+      "implementation_gap": "Source review: daily_engine.run_deterministic_trial loops until simulation_stopped with no max_days guard; FINAL_CLOSE_DATE is None; closure_preconditions_met rejects any PREP bike; and daily_engine._m2 leaves a PREP bike unfunded whenever project_cash or partner1_reinvestment_balance stays below the preparation/customs thresholds. An adversarial synthetic state confirms that no local progress/closure occurs without funding inflows. Reachability of that synthetic state from create_initial_project has not been proved or disproved, so no deterministic finite bound or valid moment/tail bound is established. Current pointwise Student-t intervals are not time-uniform under adaptive stopping.",
+      "required_evidence": "Either prove a deterministic bound/invariant that excludes all non-terminating underfunded-PREP paths from the canonical initialization, or record a separately reviewed quantitative tail/moment and event-dependence assumption grounded in the RNG/model; then validate an all-time-valid mean procedure and exact-source acceptance tests."
     },
     "section_2_5_quantiles": {
       "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
