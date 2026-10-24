@@ -72,3 +72,8 @@ The current candidate now separates the financial `fingerprint_sha256` from the 
 This is a code/schema integration change, not proof that the historical 11,005-trial cohort possesses valid checksums. Historical TrialResult blocks produced before this change cannot be backfilled with zero checksums or relabeled as audited. Any stochastic trial lacking the new audit fields remains blocked until independently generated under a newly reconciled source identity. No production trials, Golden extensions, or canonical dataset writes were run.
 
 The v2.1 reference hash reconciliation, K_SPEC/time-uniform inference, Gate A coverage, source/data provenance, realism calibration, PREP reachability, Stage 10 workload/fidelity, and P17/P18 acceptance blockers remain unchanged.
+
+
+## Gate B near-zero epsilon path — candidate correction
+
+The embedded Stage 7 workflow now applies the absolute tolerance only when `abs(mean) < constants.REFERENCE_EPSILON`; otherwise it applies `CI_RELATIVE_EPSILON * abs(mean)`. This removes the stale `max(absolute, relative × abs(mean))` implementation, which had allowed the absolute tolerance to override the relative tolerance far from zero. The threshold values and Gate B status are unchanged. Unit coverage asserts the exact branch and guards against regression. The financial-mean confidence interval itself is still pointwise Student-t, so this code correction does not clear `K_SPEC` or authorize production execution.

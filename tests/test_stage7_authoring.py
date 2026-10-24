@@ -925,3 +925,11 @@ def test_stage7_gate_b_requires_actual_boolean_stability_evidence() -> None:
     for malformed_top_level in (None, [], "not-a-mapping"):
         with pytest.raises(ValueError, match="current metrics must be a mapping"):
             evaluate_gate_b(malformed_top_level)  # type: ignore[arg-type]
+
+
+def test_stage7_workflow_uses_absolute_epsilon_only_in_near_zero_branch() -> None:
+    text = _workflow_text()
+    assert "if abs(mean) < constants.REFERENCE_EPSILON:" in text
+    assert "limit = ABSOLUTE_EPSILON" in text
+    assert "limit = RELATIVE_EPSILON * abs(mean)" in text
+    assert "max(ABSOLUTE_EPSILON, RELATIVE_EPSILON * abs(mean))" not in text
