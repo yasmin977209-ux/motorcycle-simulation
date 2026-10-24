@@ -20,7 +20,7 @@ from typing import Any, Mapping
 REPOSITORY = "yasmin977209-ux/motorcycle-simulation"
 APPROVED_SOURCE_SHA = "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
 MASTER_SEED = 20270101
-DECISION_ID = "D-2026-10-14-01"
+DECISION_ID = "D-2026-10-24-01"
 EXPECTED_CANONICAL_MAP_SHA256 = "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44"
 EXPECTED_N600_MAP_SHA256 = "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f"
 EXPECTED_N1200_MAP_SHA256 = "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3"
@@ -127,7 +127,12 @@ def _ordered_map_sha256(
 def golden_authority_status(
     decision_log_path: str | Path = Path("docs/governance/DECISIONS_LOG.md"),
 ) -> dict[str, Any]:
-    """Check whether the base and scenario-extension Golden authority records are intact."""
+    """Validate the clean, current approval for this exact pinned Golden map.
+
+    This does not reconstruct or claim to repair earlier missing/corrupted decisions.
+    It accepts only the newer bounded authorization whose scope, fingerprints,
+    extension provenance, and no-production-execution boundary are explicit.
+    """
     path = Path(decision_log_path)
     if not path.is_file():
         return {"authorized": False, "status": "BLOCKED_GOVERNANCE_AUTHORITY",
@@ -139,50 +144,62 @@ def golden_authority_status(
                 "blockers": [f"GOLDEN_DECISION_LOG_UNREADABLE:{type(exc).__name__}"],
                 "decision_log_path": str(path)}
 
-    def section(decision_id: str) -> str | None:
-        match = re.search(rf"(?m)^## {re.escape(decision_id)}(?:\s|$)", text)
-        if match is None:
-            return None
-        nxt = re.search(r"(?m)^## D-", text[match.end():])
-        end = match.end() + nxt.start() if nxt else len(text)
-        return text[match.start():end]
-
-    contracts = {
-        "D-2026-10-14-01": (
-            ("24,005 trial fingerprints", "38174743440", "38179919488",
-             "C100 scenarios remain trial ID 1 only"),
-        ),
-        "D-2026-10-15-10": (
-            ("C030_G030", "1201..2400", "38662076725", "11940485523",
-             "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
-             "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
-             "Preserve the historic N=300→N=600 FAIL"),
-        ),
-    }
-    blockers: list[str] = []
-    details: dict[str, Any] = {}
-    for decision_id, (required_terms,) in contracts.items():
-        body = section(decision_id)
-        if body is None:
-            blockers.append(f"GOLDEN_DECISION_MISSING:{decision_id}")
-            details[decision_id] = {"present": False, "integrity": "MISSING"}
-            continue
-        corrupted = "NaNNaN" in body
-        missing = [term for term in required_terms if term not in body]
-        if corrupted or missing:
-            blockers.append(f"GOLDEN_DECISION_CORRUPT_OR_INCOMPLETE:{decision_id}")
-        details[decision_id] = {
-            "present": True,
-            "contains_corruption_marker": corrupted,
-            "missing_required_terms": missing,
-            "integrity": "PASS" if not corrupted and not missing else "FAIL",
+    match = re.search(r"(?m)^## D-2026-10-24-01(?:\\s|$)", text)
+    if match is None:
+        return {
+            "authorized": False,
+            "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+            "decision_log_path": str(path),
+            "decision_log_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "required_decisions": {"D-2026-10-24-01": {"present": False, "integrity": "MISSING"}},
+            "blockers": ["GOLDEN_DECISION_MISSING:D-2026-10-24-01"],
         }
+    next_decision = re.search(r"(?m)^## D-", text[match.end():])
+    end = match.end() + next_decision.start() if next_decision else len(text)
+    body = text[match.start():end]
+    required_terms = (
+        "APPROVED — current explicit project-owner delegation dated 2026-10-24",
+        "20270101",
+        "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        "25,205 trial fingerprints",
+        "24,005 fingerprints",
+        "1..1200",
+        "C100",
+        "166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c",
+        "7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44",
+        "dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f",
+        "eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3",
+        "C030_G030",
+        "1201..2400",
+        "38662076725",
+        "11940485523",
+        "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3",
+        "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65",
+        "Preserve the previous C030_G030 N=300→600 failure record",
+        "STATISTICAL_INFERENCE_BLOCKED",
+        "No production Monte Carlo, Trial, checkpoint",
+        "does not reconstruct, replace, or claim recovery",
+    )
+    corrupted = "NaNNaN" in body
+    missing = [term for term in required_terms if term not in body]
+    blockers = []
+    if corrupted:
+        blockers.append("GOLDEN_DECISION_CORRUPTION_MARKER:D-2026-10-24-01")
+    if missing:
+        blockers.append("GOLDEN_DECISION_INCOMPLETE:D-2026-10-24-01")
+    detail = {
+        "present": True,
+        "contains_corruption_marker": corrupted,
+        "missing_required_terms": missing,
+        "integrity": "PASS" if not corrupted and not missing else "FAIL",
+        "scope": "exact pinned Golden map only; statistical execution remains separately blocked",
+    }
     return {
         "authorized": not blockers,
         "status": "AUTHORIZED" if not blockers else "BLOCKED_GOVERNANCE_AUTHORITY",
         "decision_log_path": str(path),
         "decision_log_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
-        "required_decisions": details,
+        "required_decisions": {"D-2026-10-24-01": detail},
         "blockers": blockers,
     }
 
