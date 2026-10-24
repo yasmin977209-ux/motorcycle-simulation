@@ -64,11 +64,13 @@ The reference-compliant baseline and a realism-calibrated business forecast are 
 
 ## Candidate verification evidence — 2026-10-25
 
-The current code/test diff was exercised by candidate-only GitHub Actions (no production workflow was dispatched):
+The current code/test diff was exercised by candidate-only GitHub Actions (no production cohort, checkpoint, Golden generation/extension, stability declaration, final workbook acceptance, or Release was dispatched):
 
-- [Stage 1 Run 40137686463](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40137686463), tested code head `1fb21be99eccf3a4bb96006bd41a169edd87dcf2`: **7 passed**. This includes the exact collection-level key digest, coupling across all configured recovery levels and cross-process reproducibility.
-- [Candidate preflight Run 40137686458](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40137686458), same tested head: **158 passed, 1 skipped, 4 deselected** in the active acceptance subset; the four tests requiring Stage 5-generated fixtures were explicitly excluded, not counted as passed. The second deterministic regression group passed **164 tests with one warning**, covering `run_batch`/Stage 7 fail-closed checks, daily Excel serialization and Stage 13 assembler/audit-loader/pending-field checks.
-- No Monte Carlo cohort, production Trial/checkpoint, Golden generation/extension, stability declaration, final workbook acceptance or Release was run by these candidate workflows.
+- [Stage 1 Run 40138772370](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40138772370), exact tested HEAD `37e2a7f8fa4b622c9ddd65ccbb1bcfa7878cfe91`: **7 passed**. Includes exact collection-level seed digest, coupling across every configured recovery level, and cross-process reproducibility.
+- [Candidate preflight Run 40138772366](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40138772366), same HEAD: **full repository pytest = 517 passed, 1 skipped in 465.15s (7m45s)**. The full acceptance inventory was **162 passed, 1 skipped**; deterministic delivery/ledger/fail-closed regressions were **164 passed, 1 warning**.
+- [Stage 7 candidate-method verification Run 40138776083](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40138776083), same HEAD: **114 passed**.
+- The four previously excluded acceptance tests were enabled using an ephemeral fixture builder in CI only. It generates one deterministic C100 fixture and a bounded 3-trial C070 sequential-versus-parallel equivalence fixture. Those are temporary test fixtures, not canonical cohort data, not Golden evidence, and not uploaded/committed outputs.
+- The suite emitted one Python invalid-escape deprecation warning in a display string, plus GitHub's Node.js 20 action deprecation warning. These are recorded, not treated as statistical acceptance evidence.
 
 The owner-authorized P17 report restoration and current P17/P18 revalidation documents are now also retained on this branch; their verdict remains **P17 = NOT_ACCEPTED; P18 = BLOCKED, no Release**. This restores review evidence on the candidate branch only, not on `main`.
 
@@ -76,3 +78,8 @@ The owner-authorized P17 report restoration and current P17/P18 revalidation doc
 
 - `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
 - This branch is candidate-only. It must not be merged while the RNG/source identity and Golden plan, reference SHA reconciliation, `K_SPEC`, incomplete Gate A coverage, historical failed transition, realism data, and final delivery acceptance remain unresolved.
+
+
+## Final test scope result — exact HEAD 37e2a7f8
+
+All candidate-only tests on the last code/test head passed, including the full repository inventory. This result is regression evidence only: it does not clear the separate production statistical gate, resolve the governing-reference SHA mismatch, grant new-source Golden authority, prove termination of all legal model paths, establish local market calibration, or accept P17/P18. The following docs-only reconciliation commit updates the status text without changing model/test code.
