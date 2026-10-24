@@ -1,9 +1,11 @@
 """Deterministic RNG from Chapter 14.
 
 Every logical random event is independently keyed by:
-master_seed | scenario_id | trial_id | bike_id | date | event_type
+master_seed | rng_stream_id | trial_id | bike_id | date | event_type
 
-Python built-in hash() is never used for seed derivation.
+For canonical Cxxx_Gxxx scenarios, rng_stream_id is Cxxx. This couples
+guarantee-recovery scenarios that share a collection probability, as required
+by the collection-level RNG scope. Python built-in hash() is never used.
 """
 
 from __future__ import annotations
@@ -26,6 +28,25 @@ def scenario_id(collection_probability: float, recovery_rate_pct: int) -> str:
     if not isinstance(recovery_rate_pct, int) or isinstance(recovery_rate_pct, bool):
         raise TypeError("recovery_rate_pct must be an int")
     return f"C{int(collection_probability * 100):03d}_G{recovery_rate_pct:03d}"
+def _rng_stream_id(scenario_id: str) -> str:
+    """Return the RNG stream ID required by the canonical scenario contract.
+
+    Recovery-rate variants share their collection-level stream. Preserve the
+    original identifier for noncanonical strings; canonical scenario
+    validation remains the responsibility of the scenario parser.
+    """
+    collection_part, separator, recovery_part = scenario_id.partition("_G")
+    is_canonical_shape = (
+        separator == "_G"
+        and len(collection_part) == 4
+        and collection_part.startswith("C")
+        and collection_part[1:].isdigit()
+        and len(recovery_part) == 3
+        and recovery_part.isdigit()
+    )
+    return collection_part if is_canonical_shape else scenario_id
+
+
 def derive_seed(
     master_seed: int,
     scenario_id: str,
@@ -34,8 +55,9 @@ def derive_seed(
     day: date,
     event_type: str,
 ) -> bytes:
+    rng_stream_id = _rng_stream_id(scenario_id)
     key = (
-        f"{master_seed}|{scenario_id}|{trial_id}|{bike_id}|{day}|{event_type}"
+        f"{master_seed}|{rng_stream_id}|{trial_id}|{bike_id}|{day}|{event_type}"
     )
     return hashlib.sha256(key.encode("utf-8")).digest()
 
