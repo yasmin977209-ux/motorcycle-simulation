@@ -57,10 +57,7 @@ MAXCASE_EXPECTED_SOURCE_IDENTITY = {
     "stage9a_global_manifest_sha256": "892da438955160bb59aff3046271402f57bdd61a4abb35f41db7188f61346ff6",
     "stage9a_manifest_git_blob": "c8591aac3d309fd94c4e67a547d33fb62ac5694d",
 }
-MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY = {
-    **MAXCASE_EXPECTED_SOURCE_IDENTITY,
-    "stage9a_manifest_git_blob": "e796fa2443493b607f1f9c60b58eb63607959c26",
-}
+MAXCASE_REPLAY_EXPECTED_SOURCE_IDENTITY = dict(MAXCASE_EXPECTED_SOURCE_IDENTITY)
 MAXCASE_EXPECTED_C050_ARTIFACT_ID = 11503510055
 MAXCASE_EXPECTED_C050_ENRICHMENT_RUN_ID = 37662891608
 MAXCASE_EXPECTED_C050_POINTER_PREVIOUS_ARTIFACT_ID = 11503191706
@@ -75,15 +72,15 @@ MAXCASE_REQUIRED_MEMO_FIELDS = (
 
 MAXCASE_REPLAY_SCHEMA = "stage13-maxcase-replay-recovery-v1"
 MAXCASE_REPLAY_EXPECTED_JSON_SHA256 = (
-    "c477e390a5b0b9c8c35a3d5474e5b359056e59d1f2254395e589af4621982006"
+    "1f8ad6893f23c7e7fe4900620ae37d2985d6ac8a51442f9d60f388c67cf14429"
 )
 MAXCASE_REPLAY_EXPECTED_ARTIFACT = {
-    "artifact_id": 12542814312,
-    "artifact_run_id": 40050459020,
-    "artifact_zip_sha256": "85e0d747044910d8d9837085b3a221a7459feb418eb78776ae3b4f1a31f5db68",
+    "artifact_id": 12564276707,
+    "artifact_run_id": 40104502885,
+    "artifact_zip_sha256": "cf21c1017e149d14250ba97630fcedcfc6eab1651b2e459b4619be17bda84109",
     "recovery_json_sha256": MAXCASE_REPLAY_EXPECTED_JSON_SHA256,
-    "recovery_script_git_blob_sha": "fbfe660b6847f42f89bb40c7eea474eca61e0a2c",
-    "tested_head_sha": "d80b91579bdfda6277f630ece764777261df2059",
+    "recovery_script_git_blob_sha": "8eb43d912398238837918f92a45bd4176df6792a",
+    "tested_head_sha": "eb0b1955778c8df5380ace8f901a5cce65dfb6e1",
 }
 MAXCASE_REPLAY_EXPECTED_ENGINE_BLOBS = {
     "accounting.py": "8bbbfacbefa4290dd3efbdee2aee3cc7661a42b4",
@@ -118,13 +115,13 @@ MAXCASE_REPLAY_COMMON_DAILY_FIELDS = (
 )
 MAXCASE_REPLAY_RECOVERED_ROWS = 21575
 MAXCASE_REPLAY_SOURCE_AUDIT_JSON_SHA256 = (
-    "b9ba0ff23b3dfd42abd7436b7935017f15ba8cbaf5198d8e31093a56441fb951"
+    "f599e59d5e8fa66e42a4bff7f42849bf7a627f79c88a48fd44bf519632bdb468"
 )
 MAXCASE_REPLAY_SOURCE_PAYLOADS_JSON_SHA256 = (
-    "096a85448ff5c7ece0648739fdc4ccad499763f1862467751983e0152f8e8c7d"
+    "c2c0e2b9541534c59901bbcd369f4d9cf6e630f35c0f7b18b8ce542e3ca52e9d"
 )
 MAXCASE_REPLAY_SOURCE_AUDIT_ZIP_SHA256 = (
-    "88abdc9e0ce4097df044280b517f08b1595642476c8d596ac13fc128b88092b3"
+    "93b150e5d3360c8d160f3facad85c28dc676819466ed3fded3167bcb703c3f32"
 )
 
 
@@ -138,6 +135,29 @@ def _git_blob_sha(raw: bytes) -> str:
     """Return Git's canonical SHA-1 blob identity for exact source bytes."""
     header = b"blob " + str(len(raw)).encode("ascii") + b"\0"
     return hashlib.sha1(header + raw).hexdigest()
+
+
+def _load_maxcase_source_manifest(
+    cohort_manifest_file: str | Path,
+    source_manifest_path: str | Path | None = None,
+) -> tuple[dict[str, Any], str, str]:
+    """Load the Stage 9A source manifest separately from the delivery cohort manifest.
+
+    Stage 9A pins 9,005 source rows; the Stage 13 canonical cohort has 11,005
+    rows. MaxCase audit/replay provenance must validate against the former while
+    workbook row counts and README identity use the latter.
+    """
+    path = Path(source_manifest_path) if source_manifest_path is not None else Path(cohort_manifest_file)
+    try:
+        raw = path.read_bytes()
+        source_manifest = json.loads(raw.decode("utf-8"))
+    except OSError as exc:
+        raise RuntimeError(f"MAXCASE_SOURCE_MANIFEST_READ_FAILED: {path}") from exc
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("MAXCASE_SOURCE_MANIFEST_JSON_INVALID") from exc
+    if not isinstance(source_manifest, dict):
+        raise RuntimeError("MAXCASE_SOURCE_MANIFEST_ROOT_INVALID")
+    return source_manifest, _git_blob_sha(raw), str(path)
 
 
 def _validate_active_stage9a_manifest(
@@ -532,15 +552,15 @@ def _read_maxcase_replay_bundle(
     if recovery.get("pinned_engine_git_blobs") != MAXCASE_REPLAY_EXPECTED_ENGINE_BLOBS:
         raise RuntimeError("MAXCASE_REPLAY_ENGINE_BLOBS_MISMATCH")
     expected_inputs = {
-        "audit_artifact_id": 12537818827,
-        "audit_run_id": 40038112945,
+        "audit_artifact_id": 12544311885,
+        "audit_run_id": 40053300044,
         "audit_artifact_zip_sha256": MAXCASE_REPLAY_SOURCE_AUDIT_ZIP_SHA256,
         "audit_json_sha256": MAXCASE_REPLAY_SOURCE_AUDIT_JSON_SHA256,
         "payloads_json_sha256": MAXCASE_REPLAY_SOURCE_PAYLOADS_JSON_SHA256,
         "stage12_global_sha256": MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256,
         "stage12_daily_rows_validated_before_replay": 22546465,
         "stage12_trial_fingerprint_mismatches_before_replay": 0,
-        "source_audit_tested_head_sha": "c00b48912e10cc0334dfb0d7bb3c3741eb002315",
+        "source_audit_tested_head_sha": "73934c2062e8dc7e1062b9a784cf07b6a16cce28",
         "source_audit_integrity_status": "PASS_SCOPED",
         "source_audit_payload_status_before_replay": "MISSING_EVIDENCE",
     }
@@ -844,6 +864,7 @@ def load_dataset(
     mode: str = "canonical",
     *,
     manifest_path: str | Path | None = None,
+    source_manifest_path: str | Path | None = None,
     representatives_path: str | Path | None = None,
     maxcase_audit_path: str | Path | None = None,
     maxcase_payloads_path: str | Path | None = None,
@@ -855,7 +876,10 @@ def load_dataset(
     """Load immutable Parquet/JSON data; worksheet writing is delegated to Stage 13."""
     artifact_root, dataset_root, manifest_file = _root_layout(dataset_path, manifest_path)
     manifest = load_json(manifest_file)
-    manifest_git_blob_sha = _git_blob_sha(Path(manifest_file).read_bytes())
+    cohort_manifest_git_blob_sha = _git_blob_sha(Path(manifest_file).read_bytes())
+    source_manifest, source_manifest_git_blob_sha, source_manifest_file = (
+        _load_maxcase_source_manifest(manifest_file, source_manifest_path)
+    )
     audit_args = (
         maxcase_audit_path, maxcase_payloads_path,
         maxcase_audit_sha256, maxcase_payloads_sha256,
@@ -869,8 +893,8 @@ def load_dataset(
             maxcase_audit_path, maxcase_payloads_path,
             audit_sha256=maxcase_audit_sha256,
             payloads_sha256=maxcase_payloads_sha256,
-            manifest=manifest,
-            manifest_git_blob_sha=manifest_git_blob_sha,
+            manifest=source_manifest,
+            manifest_git_blob_sha=source_manifest_git_blob_sha,
         )
         if maxcase_audit_path is not None
         else None
@@ -884,8 +908,8 @@ def load_dataset(
         _read_maxcase_replay_bundle(
             maxcase_replay_path,
             replay_sha256=maxcase_replay_sha256,
-            manifest=manifest,
-            manifest_git_blob_sha=manifest_git_blob_sha,
+            manifest=source_manifest,
+            manifest_git_blob_sha=source_manifest_git_blob_sha,
             audit_bundle=maxcase_audit_bundle,
         )
         if maxcase_replay_path is not None
@@ -1021,6 +1045,9 @@ def load_dataset(
             {
                 **maxcase_audit_bundle["metadata"],
                 **(maxcase_replay_bundle["metadata"] if maxcase_replay_bundle else {}),
+                "cohort_manifest_git_blob_sha": cohort_manifest_git_blob_sha,
+                "source_manifest_git_blob_sha": source_manifest_git_blob_sha,
+                "source_manifest_path": source_manifest_file,
                 "replay_scenarios_used_by_loader": list(replay_scenarios_used),
             }
             if maxcase_audit_bundle else None
@@ -1036,6 +1063,7 @@ def build_excel(dataset_path, output_path, mode="canonical"):
 
 def build_excel_with_maxcase_audit(
     dataset_path, output_path, mode="canonical", *,
+    source_manifest_path=None,
     maxcase_audit_path=None, maxcase_payloads_path=None,
     maxcase_audit_sha256=None, maxcase_payloads_sha256=None,
     maxcase_replay_path=None, maxcase_replay_sha256=None,
@@ -1043,6 +1071,7 @@ def build_excel_with_maxcase_audit(
     """Build a diagnostic artifact using digest-pinned audit and exact-replay inputs."""
     data = load_dataset(
         dataset_path, mode=mode,
+        source_manifest_path=source_manifest_path,
         maxcase_audit_path=maxcase_audit_path,
         maxcase_payloads_path=maxcase_payloads_path,
         maxcase_audit_sha256=maxcase_audit_sha256,
@@ -1079,6 +1108,7 @@ def _build_workbook_core(
     representatives_path,
     mode=None,
     *,
+    source_manifest_path=None,
     maxcase_audit_path=None,
     maxcase_payloads_path=None,
     maxcase_audit_sha256=None,
@@ -1093,6 +1123,7 @@ def _build_workbook_core(
         dataset_root,
         mode=resolved_mode,
         manifest_path=manifest_path,
+        source_manifest_path=source_manifest_path,
         representatives_path=representatives_path,
         maxcase_audit_path=maxcase_audit_path,
         maxcase_payloads_path=maxcase_payloads_path,
@@ -1113,6 +1144,7 @@ def build_workbook(dataset_root, output_path, manifest_path, representatives_pat
 
 def build_workbook_with_maxcase_audit(
     dataset_root, output_path, manifest_path, representatives_path, mode=None, *,
+    source_manifest_path=None,
     maxcase_audit_path=None, maxcase_payloads_path=None,
     maxcase_audit_sha256=None, maxcase_payloads_sha256=None,
     maxcase_replay_path=None, maxcase_replay_sha256=None,
@@ -1120,6 +1152,7 @@ def build_workbook_with_maxcase_audit(
     """Use verified audit/replay inputs without changing the legacy signature."""
     return _build_workbook_core(
         dataset_root, output_path, manifest_path, representatives_path, mode=mode,
+        source_manifest_path=source_manifest_path,
         maxcase_audit_path=maxcase_audit_path,
         maxcase_payloads_path=maxcase_payloads_path,
         maxcase_audit_sha256=maxcase_audit_sha256,
@@ -1175,6 +1208,7 @@ def main():
         default=None,
     )
     parser.add_argument("--manifest")
+    parser.add_argument("--source-manifest", help="Pinned Stage 9A source manifest, separate from the cohort manifest")
     parser.add_argument("--representatives")
     parser.add_argument("--maxcase-audit")
     parser.add_argument("--maxcase-payloads")
@@ -1192,6 +1226,8 @@ def main():
         args.maxcase_audit_sha256, args.maxcase_payloads_sha256,
         args.maxcase_replay, args.maxcase_replay_sha256,
     ))
+    if args.source_manifest and not has_maxcase_audit:
+        parser.error("--source-manifest requires the digest-pinned MaxCase audit/replay inputs")
     if args.manifest or args.representatives or args.dataset_root:
         build_fn = build_workbook_with_maxcase_audit if has_maxcase_audit else build_workbook
         build_kwargs = {}
@@ -1203,6 +1239,7 @@ def main():
                 "maxcase_payloads_sha256": args.maxcase_payloads_sha256,
                 "maxcase_replay_path": args.maxcase_replay,
                 "maxcase_replay_sha256": args.maxcase_replay_sha256,
+                "source_manifest_path": args.source_manifest,
             }
         result = build_fn(
             dataset,
@@ -1216,6 +1253,7 @@ def main():
         if has_maxcase_audit:
             result = build_excel_with_maxcase_audit(
                 dataset, args.output_path, mode=args.mode or "canonical",
+                source_manifest_path=args.source_manifest,
                 maxcase_audit_path=args.maxcase_audit,
                 maxcase_payloads_path=args.maxcase_payloads,
                 maxcase_audit_sha256=args.maxcase_audit_sha256,
