@@ -923,7 +923,7 @@ def test_diagnostic_readme_discloses_multi_run_cohort_and_does_not_claim_stage9a
 def test_adaptive_mode_rejects_rng_audit_map_tampering():
     data = adaptive_data()
     row = data["trials_by_scenario"]["C070_G100"][0]
-    row["rng_checksum"] += 1
+    row["rng_checksum"] += 100
     with pytest.raises(RuntimeError, match="ADAPTIVE_RNG_AUDIT_MAP_SHA_MISMATCH"):
         _validate_mode_and_identity(data, "adaptive")
 
