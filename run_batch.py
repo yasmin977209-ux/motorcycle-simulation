@@ -20,6 +20,7 @@ import constants
 from scripts.golden_reference_provider import (
     GoldenReferenceProvider,
     stage10_trial_result_sha256,
+    statistical_execution_status,
 )
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
@@ -42,6 +43,24 @@ STABILITY_FIELDS = (
     "partner1_final_entitlement",
     "partner2_final_entitlement",
 )
+
+
+def _require_statistical_execution_authorization() -> dict[str, Any]:
+    """Fail before state reads or trial calls unless the reviewed inference gate is accepted."""
+    contract_path = (
+        Path(__file__).resolve().parent
+        / "docs"
+        / "stage7"
+        / "statistical_execution_gate.json"
+    )
+    status = statistical_execution_status(contract_path)
+    if status.get("authorized") is not True:
+        blockers = status.get("blockers", [])
+        blocker_text = "; ".join(str(item) for item in blockers)
+        raise StateIntegrityError(
+            f"STATISTICAL_INFERENCE_BLOCKED: {blocker_text or status.get('status', 'UNAUTHORIZED')}"
+        )
+    return status
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -707,6 +726,10 @@ def run_batch(
     master_seed: int = constants.MASTER_SEED,
     source_sha: str | None = None,
 ) -> dict[str, Any]:
+    # This in-process guard is required even when GitHub Actions preflight is bypassed.
+    # It runs before source/seed checks, checkpoint reads, output writes, or trial execution.
+    _require_statistical_execution_authorization()
+
     if source_sha is None:
         source_sha = os.environ.get("SOURCE_SHA", "")
     if not source_sha:

@@ -217,3 +217,41 @@ def test_statistical_gate_cannot_be_cleared_by_status_string_alone(tmp_path: Pat
     result = statistical_execution_status(path)
     assert result["authorized"] is False
     assert any("IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING" in item for item in result["blockers"])
+
+def test_direct_run_batch_entrypoint_blocks_before_any_state_or_trial_side_effects(tmp_path, monkeypatch):
+    calls = []
+    output_dir = tmp_path / "blocked-output"
+
+    def blocked_status(path):
+        calls.append(("gate", Path(path)))
+        return {
+            "authorized": False,
+            "status": "STATISTICAL_INFERENCE_BLOCKED",
+            "blockers": ["K_SPEC_BLOCKED"],
+        }
+
+    monkeypatch.setattr(run_batch, "statistical_execution_status", blocked_status)
+    monkeypatch.setattr(
+        run_batch.monte_carlo,
+        "parse_scenario_id",
+        lambda scenario: calls.append(("parse_scenario", scenario)),
+    )
+    monkeypatch.setattr(
+        run_batch.monte_carlo,
+        "run_trials_sequentially",
+        lambda *args, **kwargs: calls.append(("run_trials_sequentially", args)),
+    )
+
+    with pytest.raises(run_batch.StateIntegrityError, match="STATISTICAL_INFERENCE_BLOCKED"):
+        run_batch.run_batch(
+            scenario="C070_G100",
+            trials=300,
+            output_dir=output_dir,
+        )
+
+    assert len(calls) == 1
+    assert calls[0][0] == "gate"
+    assert calls[0][1] == Path(run_batch.__file__).resolve().parent / "docs" / "stage7" / "statistical_execution_gate.json"
+    assert not output_dir.exists()
+
+
