@@ -851,11 +851,15 @@ def load_dataset(
     maxcase_payloads_sha256: str | None = None,
     maxcase_replay_path: str | Path | None = None,
     maxcase_replay_sha256: str | None = None,
+    maxcase_source_manifest_path: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Load immutable Parquet/JSON data; worksheet writing is delegated to Stage 13."""
+    """Load dataset rows while keeping the MaxCase source manifest separately pinned."""
     artifact_root, dataset_root, manifest_file = _root_layout(dataset_path, manifest_path)
     manifest = load_json(manifest_file)
     manifest_git_blob_sha = _git_blob_sha(Path(manifest_file).read_bytes())
+    source_manifest_file = Path(maxcase_source_manifest_path) if maxcase_source_manifest_path is not None else manifest_file
+    source_manifest = load_json(source_manifest_file)
+    source_manifest_git_blob_sha = _git_blob_sha(Path(source_manifest_file).read_bytes())
     audit_args = (
         maxcase_audit_path, maxcase_payloads_path,
         maxcase_audit_sha256, maxcase_payloads_sha256,
@@ -869,8 +873,8 @@ def load_dataset(
             maxcase_audit_path, maxcase_payloads_path,
             audit_sha256=maxcase_audit_sha256,
             payloads_sha256=maxcase_payloads_sha256,
-            manifest=manifest,
-            manifest_git_blob_sha=manifest_git_blob_sha,
+            manifest=source_manifest,
+            manifest_git_blob_sha=source_manifest_git_blob_sha,
         )
         if maxcase_audit_path is not None
         else None
@@ -884,8 +888,8 @@ def load_dataset(
         _read_maxcase_replay_bundle(
             maxcase_replay_path,
             replay_sha256=maxcase_replay_sha256,
-            manifest=manifest,
-            manifest_git_blob_sha=manifest_git_blob_sha,
+            manifest=source_manifest,
+            manifest_git_blob_sha=source_manifest_git_blob_sha,
             audit_bundle=maxcase_audit_bundle,
         )
         if maxcase_replay_path is not None
@@ -1039,6 +1043,7 @@ def build_excel_with_maxcase_audit(
     maxcase_audit_path=None, maxcase_payloads_path=None,
     maxcase_audit_sha256=None, maxcase_payloads_sha256=None,
     maxcase_replay_path=None, maxcase_replay_sha256=None,
+    maxcase_source_manifest_path=None,
 ):
     """Build a diagnostic artifact using digest-pinned audit and exact-replay inputs."""
     data = load_dataset(
@@ -1049,6 +1054,7 @@ def build_excel_with_maxcase_audit(
         maxcase_payloads_sha256=maxcase_payloads_sha256,
         maxcase_replay_path=maxcase_replay_path,
         maxcase_replay_sha256=maxcase_replay_sha256,
+        maxcase_source_manifest_path=maxcase_source_manifest_path,
     )
     return assemble_workbook(data, output_path, mode=mode)
 
@@ -1085,6 +1091,7 @@ def _build_workbook_core(
     maxcase_payloads_sha256=None,
     maxcase_replay_path=None,
     maxcase_replay_sha256=None,
+    maxcase_source_manifest_path=None,
 ):
     """Shared implementation for legacy and digest-pinned MaxCase entrypoints."""
     manifest = load_json(Path(manifest_path))
@@ -1100,6 +1107,7 @@ def _build_workbook_core(
         maxcase_payloads_sha256=maxcase_payloads_sha256,
         maxcase_replay_path=maxcase_replay_path,
         maxcase_replay_sha256=maxcase_replay_sha256,
+        maxcase_source_manifest_path=maxcase_source_manifest_path,
     )
     return assemble_workbook(data, output_path, mode=resolved_mode)
 
@@ -1116,6 +1124,7 @@ def build_workbook_with_maxcase_audit(
     maxcase_audit_path=None, maxcase_payloads_path=None,
     maxcase_audit_sha256=None, maxcase_payloads_sha256=None,
     maxcase_replay_path=None, maxcase_replay_sha256=None,
+    maxcase_source_manifest_path=None,
 ):
     """Use verified audit/replay inputs without changing the legacy signature."""
     return _build_workbook_core(
@@ -1126,6 +1135,7 @@ def build_workbook_with_maxcase_audit(
         maxcase_payloads_sha256=maxcase_payloads_sha256,
         maxcase_replay_path=maxcase_replay_path,
         maxcase_replay_sha256=maxcase_replay_sha256,
+        maxcase_source_manifest_path=maxcase_source_manifest_path,
     )
 
 
@@ -1182,6 +1192,7 @@ def main():
     parser.add_argument("--maxcase-payloads-sha256")
     parser.add_argument("--maxcase-replay")
     parser.add_argument("--maxcase-replay-sha256")
+    parser.add_argument("--maxcase-source-manifest")
     parser.add_argument("--require-final-acceptance", action="store_true")
     args = parser.parse_args()
     dataset = args.dataset_path or args.dataset_root
@@ -1203,6 +1214,7 @@ def main():
                 "maxcase_payloads_sha256": args.maxcase_payloads_sha256,
                 "maxcase_replay_path": args.maxcase_replay,
                 "maxcase_replay_sha256": args.maxcase_replay_sha256,
+                "maxcase_source_manifest_path": args.maxcase_source_manifest,
             }
         result = build_fn(
             dataset,
@@ -1222,6 +1234,7 @@ def main():
                 maxcase_payloads_sha256=args.maxcase_payloads_sha256,
                 maxcase_replay_path=args.maxcase_replay,
                 maxcase_replay_sha256=args.maxcase_replay_sha256,
+                maxcase_source_manifest_path=args.maxcase_source_manifest,
             )
         else:
             result = build_excel(dataset, args.output_path, mode=args.mode or "canonical")
