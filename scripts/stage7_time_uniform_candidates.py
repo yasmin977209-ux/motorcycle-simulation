@@ -108,21 +108,24 @@ def order_statistic_quantile_interval(
 
 
 def quantile_precision_pass(interval: dict[str, Any], margin: float) -> bool:
-    """Return True only when both finite confidence endpoints are strictly inside margin."""
+    """Fail closed unless this is a complete finite interval from the candidate method."""
     if isinstance(margin, bool) or not isinstance(margin, (int, float)):
         raise ValueError("margin must be a finite positive number")
     margin = float(margin)
     if not math.isfinite(margin) or margin <= 0:
         raise ValueError("margin must be a finite positive number")
-    estimate = interval.get("estimate")
-    lower = interval.get("lower")
-    upper = interval.get("upper")
-    if any(value is None for value in (estimate, lower, upper)):
+    if (
+        interval.get("method") != QUANTILE_METHOD_ID
+        or interval.get("finite_interval") is not True
+    ):
         return False
-    try:
-        estimate, lower, upper = float(estimate), float(lower), float(upper)
-    except (TypeError, ValueError):
+    raw = (interval.get("estimate"), interval.get("lower"), interval.get("upper"))
+    if any(
+        value is None or isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in raw
+    ):
         return False
+    estimate, lower, upper = (float(value) for value in raw)
     if not all(math.isfinite(value) for value in (estimate, lower, upper)):
         return False
     if lower > estimate or estimate > upper:
@@ -219,20 +222,43 @@ def beta_binomial_mixture_confidence_sequence(
 
 
 def bernoulli_precision_pass(interval: dict[str, Any], maximum_half_width: float) -> bool:
-    """Strictly enforce the approved half-width threshold; missing endpoints fail closed."""
+    """Fail closed unless bounds, estimate, method identity and reported width agree."""
     if isinstance(maximum_half_width, bool) or not isinstance(maximum_half_width, (int, float)):
         raise ValueError("maximum_half_width must be finite and positive")
     threshold = float(maximum_half_width)
     if not math.isfinite(threshold) or threshold <= 0:
         raise ValueError("maximum_half_width must be finite and positive")
-    half_width = interval.get("half_width")
-    if half_width is None:
+    if (
+        interval.get("method") != BERNOULLI_METHOD_ID
+        or interval.get("empty_confidence_set") is not False
+    ):
         return False
-    try:
-        value = float(half_width)
-    except (TypeError, ValueError):
+    n = interval.get("n")
+    successes = interval.get("successes")
+    if type(n) is not int or n < 1 or type(successes) is not int or not (0 <= successes <= n):
         return False
-    return math.isfinite(value) and value < threshold
+    raw = (
+        interval.get("estimate"),
+        interval.get("lower"),
+        interval.get("upper"),
+        interval.get("half_width"),
+    )
+    if any(
+        value is None or isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in raw
+    ):
+        return False
+    estimate, lower, upper, reported_half_width = (float(value) for value in raw)
+    if not all(math.isfinite(value) for value in raw):
+        return False
+    if not (0.0 <= lower <= estimate <= upper <= 1.0):
+        return False
+    if not math.isclose(estimate, successes / n, rel_tol=1e-12, abs_tol=1e-15):
+        return False
+    computed_half_width = (upper - lower) / 2.0
+    if not math.isclose(reported_half_width, computed_half_width, rel_tol=1e-10, abs_tol=1e-12):
+        return False
+    return computed_half_width < threshold
 
 
 def adjacent_probability_change_pass(
