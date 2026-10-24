@@ -144,7 +144,7 @@ def golden_authority_status(
                 "blockers": [f"GOLDEN_DECISION_LOG_UNREADABLE:{type(exc).__name__}"],
                 "decision_log_path": str(path)}
 
-    match = re.search(r"(?m)^## D-2026-10-24-01(?:\\s|$)", text)
+    match = re.search(r"(?m)^## D-2026-10-24-01(?:\s|$)", text)
     if match is None:
         return {
             "authorized": False,
