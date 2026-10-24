@@ -136,16 +136,16 @@ def test_provider_cache_rejects_wrong_schema_or_identity(tmp_path: Path) -> None
         GoldenReferenceProvider.from_verified_payload(path)
 
 
-def test_current_governance_record_does_not_authorize_candidate_golden_map() -> None:
+def test_current_governance_record_authorizes_only_the_explicit_bounded_golden_map() -> None:
     authority = golden_authority_status(Path("docs/governance/DECISIONS_LOG.md"))
-    assert authority["authorized"] is False
-    assert authority["status"] == "BLOCKED_GOVERNANCE_AUTHORITY"
-    blockers = " ".join(authority["blockers"])
-    assert "D-2026-10-14-01" in blockers
-    assert "D-2026-10-15-10" in blockers
+    assert authority["authorized"] is True
+    assert authority["status"] == "AUTHORIZED"
+    decision = authority["required_decisions"]["D-2026-10-24-01"]
+    assert decision["integrity"] == "PASS"
+    assert decision["scope"] == "exact pinned Golden map only; statistical execution remains separately blocked"
 
 
-def test_production_preflight_blocks_authority_and_statistics_before_state_inspection() -> None:
+def test_production_preflight_blocks_statistics_before_state_inspection() -> None:
     workflow = Path(".github/workflows/stage7-full-run.yml").read_text(encoding="utf-8")
     early_guard = workflow.index("Golden and statistical authority preflight")
     stage7_preflight = workflow.index("Stage 7-specific preflight")
@@ -167,25 +167,28 @@ def test_read_only_verifier_reports_authority_separately_from_map_integrity() ->
 
 def test_golden_authority_parser_accepts_complete_and_rejects_corrupt_records(tmp_path: Path) -> None:
     path = tmp_path / "DECISIONS_LOG.md"
-    d14 = (
-        "## D-2026-10-14-01 — extension_of_gate_a_golden_coverage\n"
-        "24,005 trial fingerprints; 38174743440; 38179919488; "
-        "C100 scenarios remain trial ID 1 only\n"
-    )
-    d15 = (
-        "## D-2026-10-15-10 — C030_G030 Gate A extension and N=2400 checkpoint\n"
-        "C030_G030; 1201..2400; 38662076725; 11940485523; "
-        "049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3; "
-        "0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65; "
-        "Preserve the historic N=300→N=600 FAIL\n"
-    )
-    path.write_text(d14 + "\n" + d15, encoding="utf-8")
+    decision = """## D-2026-10-24-01 — Explicit Gate A Golden provider authorization and bounded use
+**Status:** APPROVED — current explicit project-owner delegation dated 2026-10-24
+20270101; f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
+25,205 trial fingerprints; 24,005 fingerprints; IDs 1..1200; C100
+166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c
+7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44
+dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f
+eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3
+C030_G030; 1201..2400; 38662076725; 11940485523
+049af21733b59d753967f27f251cb88fec122b5e1ff4f99d77b9215114c9d3e3
+0c7679edfbee54797d64fc66e17116f0db617d1e0fa5f7ee21395fe98a628c65
+Preserve the previous C030_G030 N=300→600 failure record
+STATISTICAL_INFERENCE_BLOCKED; No production Monte Carlo, Trial, checkpoint
+does not reconstruct, replace, or claim recovery
+"""
+    path.write_text(decision, encoding="utf-8")
     assert golden_authority_status(path)["authorized"] is True
 
-    path.write_text(d14.replace("24,005", "NaNNaN") + "\n" + d15, encoding="utf-8")
+    path.write_text(decision.replace("25,205 trial fingerprints", "NaNNaN trial fingerprints"), encoding="utf-8")
     status = golden_authority_status(path)
     assert status["authorized"] is False
-    assert any("D-2026-10-14-01" in item for item in status["blockers"])
+    assert any("D-2026-10-24-01" in item for item in status["blockers"])
 
 
 def test_statistical_execution_contract_blocks_unimplemented_components() -> None:
