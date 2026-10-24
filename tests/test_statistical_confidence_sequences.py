@@ -123,7 +123,12 @@ def test_stopping_window_requires_four_points_and_three_passed_transitions():
     history = [_accepted_point(300, 100), _accepted_point(600, 101), _accepted_point(1200, 101), _accepted_point(2400, 101)]
     assert not evaluate_stopping_window(history[:3])["stable"]
     for i in range(1, len(history)):
-        history[i]["transition"] = {"status": "PASS", "p50_continuation_trigger": False}
+        history[i]["transition"] = {
+            "status": "PASS",
+            "previous_n": history[i - 1]["n"],
+            "current_n": history[i]["n"],
+            "p50_continuation_trigger": False,
+        }
     outcome = evaluate_stopping_window(history)
     assert outcome["stable"] is True
     assert outcome["window_n"] == [300, 600, 1200, 2400]
@@ -134,7 +139,12 @@ def test_stopping_window_requires_four_points_and_three_passed_transitions():
 def test_stopping_window_fails_closed_for_unaccepted_gate_or_missing_transition():
     history = [_accepted_point(300, 100), _accepted_point(600, 101), _accepted_point(1200, 101), _accepted_point(2400, 101)]
     for i in range(1, len(history)):
-        history[i]["transition"] = {"status": "PASS", "p50_continuation_trigger": False}
+        history[i]["transition"] = {
+            "status": "PASS",
+            "previous_n": history[i - 1]["n"],
+            "current_n": history[i]["n"],
+            "p50_continuation_trigger": False,
+        }
     history[-1]["statistical_inference"]["status"] = "BLOCKED"
     outcome = evaluate_stopping_window(history)
     assert outcome["stable"] is False
@@ -148,6 +158,40 @@ def test_p50_trigger_above_five_percent_requires_2400_without_erasing_history():
     assert transition["p50_continuation_trigger"] is True
     assert transition["minimum_required_n"] == 2400
     assert transition["status"] == "PASS"
+
+
+def test_stopping_window_rejects_transition_records_for_different_points():
+    history = [_accepted_point(300, 100), _accepted_point(600, 101), _accepted_point(1200, 101), _accepted_point(2400, 101)]
+    for i in range(1, len(history)):
+        history[i]["transition"] = {
+            "status": "PASS",
+            "previous_n": history[i - 1]["n"],
+            "current_n": history[i]["n"],
+            "p50_continuation_trigger": False,
+        }
+    history[2]["transition"]["previous_n"] = 599
+    outcome = evaluate_stopping_window(history)
+    assert outcome["stable"] is False
+    assert "TRANSITION_POINT_IDENTITIES_DO_NOT_MATCH_WINDOW" in outcome["blockers"]
+
+
+def test_p50_trigger_keeps_four_point_window_open_until_n2400():
+    history = [
+        _accepted_point(150, 99.0),
+        _accepted_point(300, 100.0),
+        _accepted_point(600, 106.0),
+        _accepted_point(1200, 107.0),
+    ]
+    for i in range(1, len(history)):
+        history[i]["transition"] = {
+            "status": "PASS",
+            "previous_n": history[i - 1]["n"],
+            "current_n": history[i]["n"],
+            "p50_continuation_trigger": i == 2,
+        }
+    outcome = evaluate_stopping_window(history)
+    assert outcome["stable"] is False
+    assert "P50_TRIGGER_REQUIRES_CONTINUATION_TO_N2400" in outcome["blockers"]
 
 
 def test_p50_trigger_is_strictly_greater_than_five_percent():

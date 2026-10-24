@@ -479,6 +479,12 @@ def evaluate_stopping_window(
         not isinstance(item, Mapping) or item.get("status") != "PASS" for item in transitions
     ):
         blockers.append("THREE_SUCCESSFUL_ADJACENT_TRANSITIONS_NOT_ESTABLISHED")
+    elif any(
+        transition.get("previous_n") != ns[index]
+        or transition.get("current_n") != ns[index + 1]
+        for index, transition in enumerate(transitions)
+    ):
+        blockers.append("TRANSITION_POINT_IDENTITIES_DO_NOT_MATCH_WINDOW")
     any_p50_trigger = any(
         bool((item.get("transition") or {}).get("p50_continuation_trigger"))
         for item in history if isinstance(item, Mapping) and isinstance(item.get("transition"), Mapping)
