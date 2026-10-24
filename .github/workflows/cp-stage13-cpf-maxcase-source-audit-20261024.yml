@@ -1,0 +1,66 @@
+name: Stage 13 CP-F MaxCase source audit (read-only)
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage13-current-main-integration-20261021"
+    paths:
+      - "scripts/stage13_maxcase_source_audit.py"
+      - "scripts/stage13_gatea_fingerprint_bridge.py"
+      - "tests/test_stage13_maxcase_pending_fields.py"
+      - ".github/workflows/cp-stage13-cpf-maxcase-source-audit-20261024.yml"
+      - "docs/stage9a/dataset_manifest.json"
+      - "docs/audits/stage9a_payload_inventory_20261020.json"
+      - "docs/audits/stage9a_payload_inventory_20261020.json"
+      - "docs/stage12/accounting_data_contract.json"
+      - "docs/stage12/roll_forward_validation.json"
+      - "docs/stage12/closure_settlement_validation.json"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-stage13-cpf-maxcase-audit-v2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-audit:
+    name: Reconcile existing CP-F MaxCase payloads with Stage 12
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Compile read-only source audit
+        run: python -m compileall -q scripts/stage13_maxcase_source_audit.py scripts/stage13_gatea_fingerprint_bridge.py
+      - name: Revalidate existing canonical and CP-F role artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/stage13_maxcase_source_audit.py 2>&1 | tee stage13_maxcase_audit.log
+      - name: Upload read-only source audit and daily role payloads
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage13-cpf-maxcase-source-audit-${{ github.run_id }}
+          path: |
+            stage13_maxcase_source_audit.json
+            stage13_maxcase_daily_payloads.json
+            stage13_maxcase_audit.log
+          if-no-files-found: warn
+          retention-days: 30
