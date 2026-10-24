@@ -46,7 +46,9 @@ jobs:
 
           cp = "CP-STAGE7-TIME-UNIFORM-CANDIDATE-METHODS-20261024"
           assert cp in state["cp_completed"]
-          assert state["sha"] == "c520a78497ffc08c6d042351e3abf5dccafbab52"
+          assert state["sha_semantics"] == "parent_state_commit_pointer"
+          assert isinstance(state["sha"], str) and len(state["sha"]) == 40
+          assert all(char in "0123456789abcdef" for char in state["sha"])
           assert state["head_sha"] == state["sha"]
           assert cp in continuity and "not wired into" in audit.lower()
           assert "BETA_BINOMIAL_MIXTURE_CS_V1" in methods
