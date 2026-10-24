@@ -88,6 +88,10 @@ jobs:
               "representatives/P90.json", "representatives/Loss.json",
               "trial_results.parquet", "trial_fingerprints.json", "scenario_metadata.json",
           }
+          expected_archive_members = {
+              f"{scenario}.tar.gz" if member == "scenario.tar.gz" else member
+              for member in expected_members
+          }
           downloaded = []
           for entry in inventory["artifacts"]:
               scenario = entry["scenario"]
@@ -113,13 +117,16 @@ jobs:
               target.mkdir(parents=True, exist_ok=True)
               with zipfile.ZipFile(archive) as zf:
                   names = zf.namelist()
-                  if len(names) != len(set(names)) or set(names) != expected_members:
+                  if len(names) != len(set(names)) or set(names) != expected_archive_members:
                       raise SystemExit(f"ARTIFACT_MEMBER_MISMATCH {scenario}: {names}")
                   for name in names:
                       path = Path(name)
                       if path.is_absolute() or ".." in path.parts or name.startswith("/"):
                           raise SystemExit(f"UNSAFE_ARCHIVE_MEMBER {scenario}: {name}")
-                      zf.extract(name, target)
+                      canonical_name = "scenario.tar.gz" if name == f"{scenario}.tar.gz" else name
+                      target_path = target / canonical_name
+                      target_path.parent.mkdir(parents=True, exist_ok=True)
+                      target_path.write_bytes(zf.read(name))
               downloaded.append({
                   "scenario": scenario, "artifact_id": artifact_id,
                   "run_id": int(entry["run_id"]), "zip_sha256": actual_sha,
