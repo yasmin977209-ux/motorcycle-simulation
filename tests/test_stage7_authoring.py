@@ -204,6 +204,30 @@ def _matching_golden_kwargs() -> dict[str, str]:
     }
 
 
+@pytest.mark.parametrize("bad_value", ["False", 0, 1, None])
+def test_gate_b_rejects_truthy_and_non_boolean_stable_values(bad_value) -> None:
+    metrics = _metrics((1000, 700, 300), stable=True)
+    metrics["final_net_project_equity"]["stable"] = bad_value
+    with pytest.raises(ValueError, match="GATE_B_STABLE_FIELD_NOT_BOOLEAN"):
+        evaluate_gate_b(metrics)
+
+
+def test_gate_b_rejects_missing_stable_value() -> None:
+    metrics = _metrics((1000, 700, 300), stable=True)
+    del metrics["partner2_final_entitlement"]["stable"]
+    with pytest.raises(ValueError, match="GATE_B_STABLE_FIELD_MISSING"):
+        evaluate_gate_b(metrics)
+
+
+def test_gate_b_preserves_exact_false_as_not_stable() -> None:
+    metrics = _metrics((1000, 700, 300), stable=True)
+    metrics["partner1_final_entitlement"]["stable"] = False
+    result = evaluate_gate_b(metrics)
+    assert result["checked"] is True
+    assert result["stable"] is False
+    assert result["metrics"]["partner1_final_entitlement"]["stable"] is False
+
+
 def test_gate_a_first_checkpoint_can_pass_only_with_exact_golden() -> None:
     current = _metrics((1000, 700, 300), stable=True)
     gate_a = evaluate_gate_a(
