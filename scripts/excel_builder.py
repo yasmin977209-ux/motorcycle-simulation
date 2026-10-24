@@ -588,7 +588,7 @@ def _read_maxcase_replay_bundle(
         or not isinstance(active_source_identity, dict)
         or active_source_identity != MAXCASE_EXPECTED_SOURCE_IDENTITY
         or any(replay_source_identity.get(key) != active_source_identity.get(key) for key in common_identity_fields)
-        or replay_source_identity.get("stage9a_manifest_git_blob") != "e796fa2443493b607f1f9c60b58eb63607959c26"
+        or replay_source_identity.get("stage9a_manifest_git_blob") != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]
         or active_source_identity.get("stage9a_manifest_git_blob") != manifest_git_blob_sha
         or manifest_git_blob_sha != MAXCASE_EXPECTED_SOURCE_IDENTITY["stage9a_manifest_git_blob"]
     ):
