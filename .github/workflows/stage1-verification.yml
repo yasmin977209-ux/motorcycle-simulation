@@ -38,6 +38,8 @@ jobs:
           assert constants.NON_C100_STATISTICAL_START_TRIALS == 300
           assert constants.ITERATION_ESCALATION_STEP == 50
           assert constants.STATISTICAL_CHECK_START_N == 300
+          assert constants.STATISTICAL_ESCALATION_MULTIPLIER == 2
+          # Legacy +50 remains reportable metadata, not the active checkpoint policy.
           assert constants.STATISTICAL_CHECK_STEP_N == 50
           assert constants.MINIMUM_STOP_N_FOR_NON_C100 == 400
           assert constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED == 3
@@ -112,9 +114,10 @@ jobs:
               "constants": {
                   "C100_STATISTICAL_START_TRIALS": constants.C100_STATISTICAL_START_TRIALS,
                   "NON_C100_STATISTICAL_START_TRIALS": constants.NON_C100_STATISTICAL_START_TRIALS,
-                  "ITERATION_ESCALATION_STEP": constants.ITERATION_ESCALATION_STEP,
+                  "ITERATION_ESCALATION_STEP_LEGACY_ONLY": constants.ITERATION_ESCALATION_STEP,
                   "STATISTICAL_CHECK_START_N": constants.STATISTICAL_CHECK_START_N,
-                  "STATISTICAL_CHECK_STEP_N": constants.STATISTICAL_CHECK_STEP_N,
+                  "STATISTICAL_ESCALATION_MULTIPLIER": constants.STATISTICAL_ESCALATION_MULTIPLIER,
+                  "STATISTICAL_CHECK_STEP_N_LEGACY_ONLY": constants.STATISTICAL_CHECK_STEP_N,
                   "MINIMUM_STOP_N_FOR_NON_C100": constants.MINIMUM_STOP_N_FOR_NON_C100,
                   "CI_ABSOLUTE_EPSILON": constants.CI_ABSOLUTE_EPSILON,
                   "scenario_count": len(constants.SCENARIO_IDS),

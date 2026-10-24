@@ -35,8 +35,8 @@
     "gate_b_financial_means": {
       "status": "K_SPEC_BLOCKED",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "Current pointwise Student-t intervals are not time-uniform under adaptive stopping; max(absolute, relative) threshold is not the approved near-zero branch",
-      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption, followed by a validated all-time-valid component procedure"
+      "implementation_gap": "Current pointwise Student-t intervals are not time-uniform under adaptive stopping. The near-zero absolute-vs-relative branch is implemented, but no approved finite-support/quantified-tail assumption or accepted time-uniform mean confidence sequence exists.",
+      "required_evidence": "Proof of finite numeric support or an explicitly approved quantitative tail/moment assumption; a validated all-time-valid mean procedure; and exact-source acceptance tests."
     },
     "section_2_5_quantiles": {
       "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
@@ -65,17 +65,28 @@
       ]
     },
     "stopping_window": {
-      "status": "IMPLEMENTATION_MISMATCH",
+      "status": "IMPLEMENTED_AND_UNIT_TESTED_NOT_END_TO_END_ACCEPTED",
       "required_points": 4,
       "required_successful_transitions": 3,
-      "current_main_code": "3 checkpoint records / 2 adjacent transitions"
+      "current_main_code": "run_batch calls the stopping helper with constants for 3 successful transitions and 4 cumulative points; the helper validates the full ordered checkpoint window and each adjacent Gate A previous/current N binding.",
+      "evidence": [
+        "tests/test_stage7_authoring.py::test_stability_requires_four_cumulative_points_for_three_adjacent_transitions",
+        "tests/test_stage7_authoring.py::test_stability_does_not_stop_after_only_three_points",
+        "tests/test_stage7_authoring.py::test_stability_rejects_non_doubling_or_misbound_transition"
+      ],
+      "blockers": [
+        "Production source-identity/completeness acceptance and historical failed-transition requalification remain open; unit tests do not waive the C030_G030 N=300 to N=600 P90_Final_Cash failure."
+      ]
     },
     "gate_b_implementation_guards": {
-      "status": "K_CODE_FAIL",
+      "status": "NONINFERENTIAL_GUARDS_VERIFIED_NOT_STATISTICALLY_ACCEPTED",
+      "evidence": [
+        "tests/test_run_batch.py::test_gate_b_requires_actual_boolean_stability_evidence",
+        "tests/test_run_batch.py::test_metric_summary_uses_absolute_limit_only_inside_near_zero",
+        "tests/test_run_batch.py::test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means"
+      ],
       "blockers": [
-        "Unsafe truthiness conversion of stable values",
-        "max(absolute, relative) threshold instead of the approved near-zero branch",
-        "No time-uniform financial-mean procedure"
+        "K_SPEC remains blocked: mean intervals are pointwise Student-t under adaptive stopping, with no accepted time-uniform financial-mean procedure or approved finite-support/quantified-tail assumption."
       ]
     },
     "c030_g030_historical_transition": {

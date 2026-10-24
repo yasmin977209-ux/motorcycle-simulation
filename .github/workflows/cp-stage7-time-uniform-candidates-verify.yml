@@ -1,0 +1,73 @@
+name: cp-stage7-time-uniform-candidates-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage7-time-uniform-candidates-20261024"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "constants.py"
+      - "scripts/stage7_stability.py"
+      - "scripts/stage7_time_uniform_candidates.py"
+      - "tests/test_stage1.py"
+      - "tests/test_stage7_authoring.py"
+      - "tests/test_run_batch.py"
+      - "tests/test_stage7_time_uniform_candidates.py"
+      - ".github/workflows/cp-stage7-time-uniform-candidates-verify.yml"
+      - ".github/workflows/stage1-verification.yml"
+      - "docs/audits/CP_STAGE7_TIME_UNIFORM_CANDIDATE_METHODS_2026-10-24.md"
+      - "docs/stage7/statistical_execution_gate.json"
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Parse touched Python modules
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          for name in (
+              "constants.py",
+              "scripts/stage7_stability.py",
+              "scripts/stage7_time_uniform_candidates.py",
+              "tests/test_stage1.py",
+              "tests/test_stage7_authoring.py",
+              "tests/test_run_batch.py",
+              "tests/test_stage7_time_uniform_candidates.py",
+          ):
+              ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
+          print("AST_PARSE_OK")
+          PY
+      - name: Candidate and regression tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q \
+            tests/test_stage1.py \
+            tests/test_run_batch.py \
+            tests/test_stage7_authoring.py \
+            tests/test_stage7_time_uniform_candidates.py
+      - name: Validate workflow YAML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in Path(".github/workflows").glob("*.yml"):
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+          print("WORKFLOW_YAML_OK")
+          PY
