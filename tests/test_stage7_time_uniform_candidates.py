@@ -55,12 +55,20 @@ def test_order_statistic_interval_fails_closed_on_mismatched_prefix_or_invalid_d
         order_statistic_quantile_interval(np.arange(400), 0.5, checkpoint_n=400, alpha=0.0025)
 
 
-def test_quantile_precision_requires_two_finite_endpoints_and_strict_margin() -> None:
-    interval = {"estimate": 10.0, "lower": 9.5, "upper": 10.5}
+def test_quantile_precision_requires_complete_candidate_interval_and_strict_margin() -> None:
+    interval = {
+        "method": "ORDER_STATISTIC_ALPHA_SPENDING_GRID_V1",
+        "finite_interval": True,
+        "estimate": 10.0,
+        "lower": 9.5,
+        "upper": 10.5,
+    }
     assert quantile_precision_pass(interval, 0.6) is True
     assert quantile_precision_pass(interval, 0.5) is False
-    assert quantile_precision_pass({"estimate": 10.0, "lower": None, "upper": 10.5}, 1.0) is False
-    assert quantile_precision_pass({"estimate": 10.0, "lower": 10.5, "upper": 9.5}, 1.0) is False
+    assert quantile_precision_pass({**interval, "lower": None}, 1.0) is False
+    assert quantile_precision_pass({**interval, "lower": 10.5, "upper": 9.5}, 1.0) is False
+    assert quantile_precision_pass({**interval, "finite_interval": False}, 1.0) is False
+    assert quantile_precision_pass({**interval, "method": "other"}, 1.0) is False
 
 
 def test_beta_binomial_mixture_sequence_handles_all_success_and_all_failure_edges() -> None:
@@ -83,10 +91,33 @@ def test_beta_binomial_mixture_sequence_contains_sample_estimate_and_has_valid_o
     assert interval["half_width"] == pytest.approx((interval["upper"] - interval["lower"]) / 2)
 
 
-def test_bernoulli_precision_gate_is_strict_and_missing_width_fails_closed() -> None:
-    assert bernoulli_precision_pass({"half_width": 0.00499}, 0.005) is True
-    assert bernoulli_precision_pass({"half_width": 0.005}, 0.005) is False
-    assert bernoulli_precision_pass({"half_width": None}, 0.005) is False
+def test_beta_mixture_confidence_endpoints_solve_the_likelihood_ratio_boundary() -> None:
+    from scipy.special import betaln
+
+    successes, n, alpha = 50, 100, 0.0025
+    interval = beta_binomial_mixture_confidence_sequence(successes, n, alpha=alpha)
+    log_marginal = float(betaln(successes + 1, n - successes + 1) - betaln(1, 1))
+    threshold = log_marginal + math.log(alpha)
+
+    def log_likelihood(p: float) -> float:
+        return successes * math.log(p) + (n - successes) * math.log1p(-p)
+
+    assert log_likelihood(interval["lower"]) == pytest.approx(threshold, abs=1e-10)
+    assert log_likelihood(interval["upper"]) == pytest.approx(threshold, abs=1e-10)
+
+
+def _valid_bernoulli_interval() -> dict[str, object]:
+    return beta_binomial_mixture_confidence_sequence(50, 100, alpha=0.0025)
+
+
+def test_bernoulli_precision_gate_validates_complete_interval_and_strict_width() -> None:
+    valid = _valid_bernoulli_interval()
+    assert bernoulli_precision_pass(valid, 0.5) is True
+    assert bernoulli_precision_pass(valid, valid["half_width"]) is False
+    assert bernoulli_precision_pass({**valid, "half_width": 0.0}, 0.005) is False
+    assert bernoulli_precision_pass({**valid, "lower": None}, 0.5) is False
+    assert bernoulli_precision_pass({**valid, "empty_confidence_set": True}, 0.5) is False
+    assert bernoulli_precision_pass({**valid, "method": "other"}, 0.5) is False
     assert bernoulli_precision_pass({}, 0.005) is False
 
 
@@ -111,3 +142,16 @@ def test_candidate_methods_do_not_open_the_production_execution_gate() -> None:
     assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
     assert gate["component_status"]["stopping_window"]["required_points"] == 4
     assert gate["component_status"]["stopping_window"]["required_successful_transitions"] == 3
+
+
+
+def test_quantile_precision_rejects_nonfinite_or_boolean_values() -> None:
+    valid = {
+        "method": "ORDER_STATISTIC_ALPHA_SPENDING_GRID_V1",
+        "finite_interval": True,
+        "estimate": 0.5,
+        "lower": 0.49,
+        "upper": 0.51,
+    }
+    assert quantile_precision_pass({**valid, "estimate": True}, 0.5) is False
+    assert quantile_precision_pass({**valid, "upper": math.inf}, 1.0) is False
