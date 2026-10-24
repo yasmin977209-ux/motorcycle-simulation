@@ -1,0 +1,65 @@
+name: cp-stage7-candidate-methods-state-reconcile-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage7-candidate-methods-state-reconcile-20261024"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "state.json"
+      - "docs/PROJECT_CONTINUITY.md"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "docs/audits/CP_STAGE7_TIME_UNIFORM_CANDIDATE_METHODS_2026-10-24.md"
+      - "scripts/stage7_time_uniform_candidates.py"
+      - ".github/workflows/cp-stage7-candidate-methods-state-reconcile-verify.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  state-gate-reconciliation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install YAML parser
+        run: python -m pip install pyyaml
+      - name: Validate state, continuity, candidate scope and fail-closed gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import yaml
+
+          state = json.loads(Path("state.json").read_text(encoding="utf-8"))
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          continuity = Path("docs/PROJECT_CONTINUITY.md").read_text(encoding="utf-8")
+          audit = Path("docs/audits/CP_STAGE7_TIME_UNIFORM_CANDIDATE_METHODS_2026-10-24.md").read_text(encoding="utf-8")
+          methods = Path("scripts/stage7_time_uniform_candidates.py").read_text(encoding="utf-8")
+
+          cp = "CP-STAGE7-TIME-UNIFORM-CANDIDATE-METHODS-20261024"
+          assert cp in state["cp_completed"]
+          assert state["sha"] == "c520a78497ffc08c6d042351e3abf5dccafbab52"
+          assert state["head_sha"] == state["sha"]
+          assert cp in continuity and "not wired into" in audit.lower()
+          assert "BETA_BINOMIAL_MIXTURE_CS_V1" in methods
+          assert "ORDER_STATISTIC_ALPHA_SPENDING_GRID_V1" in methods
+          assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+          authorization = gate["execution_authorization"]
+          assert authorization["production_trial_checkpoint_monte_carlo_allowed"] is False
+          assert authorization["scenario_stability_declaration_allowed"] is False
+          assert authorization["final_delivery_acceptance_allowed"] is False
+          assert gate["component_status"]["gate_b_financial_means"]["status"] == "K_SPEC_BLOCKED"
+          assert gate["component_status"]["section_2_5_quantiles"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
+          assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
+          for path in Path(".github/workflows").glob("*.yml"):
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+          print("STATE_CONTINUITY_GATE_OK")
+          PY
