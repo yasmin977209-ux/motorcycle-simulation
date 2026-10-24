@@ -26,10 +26,10 @@
   },
   "component_status": {
     "gate_a_exact_golden": {
-      "status": "BLOCKED_GOVERNANCE_AUTHORITY",
+      "status": "PROVIDER_AUTHORIZED_MAP_INTEGRITY_ONLY",
       "blockers": [
-        "D-2026-10-14-01 missing from effective main decision log and inspected candidate copy is corrupted",
-        "D-2026-10-15-10 absent from effective main decision log"
+        "D-2026-10-24-01 authorizes only the exact pinned Golden map as a read-only reference; this is not a production Gate A PASS",
+        "Actual production trial/checkpoint comparison remains blocked until the statistical execution contract is implemented and accepted"
       ]
     },
     "gate_b_financial_means": {
