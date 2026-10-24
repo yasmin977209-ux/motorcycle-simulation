@@ -211,7 +211,7 @@ def _bundle():
         "schema_version": "stage13-maxcase-source-audit-v1",
         "created_at_utc": now,
         "repository": "yasmin977209-ux/motorcycle-simulation",
-        "tested_head_sha": "c00b48912e10cc0334dfb0d7bb3c3741eb002315",
+        "tested_head_sha": "73934c2062e8dc7e1062b9a784cf07b6a16cce28",
         "runs": {
             "stage7": stage7_run,
             "stage10": stage10_run,
@@ -240,7 +240,7 @@ def _bundle():
         "schema_version": "stage13-maxcase-daily-payloads-v1",
         "created_at_utc": now,
         "repository": "yasmin977209-ux/motorcycle-simulation",
-        "tested_head_sha": "c00b48912e10cc0334dfb0d7bb3c3741eb002315",
+        "tested_head_sha": "73934c2062e8dc7e1062b9a784cf07b6a16cce28",
         "source_identity": MAXCASE_EXPECTED_SOURCE_IDENTITY,
         "stage12_run": stage12_run,
         "stage12_global_sha256": MAXCASE_EXPECTED_STAGE12_GLOBAL_SHA256,

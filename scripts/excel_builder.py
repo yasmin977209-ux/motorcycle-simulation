@@ -206,7 +206,7 @@ def _read_maxcase_audit_bundle(
         raise RuntimeError("MAXCASE_PAYLOADS_SCHEMA_MISMATCH")
     # Pin the source-audit execution head: this report's source reader/selector code
     # is itself part of the provenance chain, not interchangeable by schema alone.
-    if audit.get("tested_head_sha") != "c00b48912e10cc0334dfb0d7bb3c3741eb002315":
+    if audit.get("tested_head_sha") != "73934c2062e8dc7e1062b9a784cf07b6a16cce28":
         raise RuntimeError("MAXCASE_AUDIT_EXECUTION_HEAD_NOT_APPROVED")
     run_records = audit.get("runs")
     if not isinstance(run_records, dict):
