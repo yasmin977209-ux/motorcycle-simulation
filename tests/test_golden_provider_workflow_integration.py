@@ -171,7 +171,11 @@ def test_golden_authority_parser_accepts_complete_and_rejects_corrupt_records(tm
 **Status:** APPROVED — current explicit project-owner delegation dated 2026-10-24
 20270101; f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b
 25,205 trial fingerprints; 24,005 fingerprints; IDs 1..1200; C100
+24,005-fingerprint base Gate A map SHA-256 is
 166cae242d972c597f1a4466d184062f3d959649eb5e2440ad8de8b75663ff2c
+25,205-fingerprint combined extended Gate A map SHA-256 is
+0fbe3aa87a253f9527953c77b0a122871c9344f75ece6c8a49da99b2a85c1ce1
+11,005-fingerprint Stage 12 canonical map SHA-256 is
 7a5de15c78b862749bc3ff6e689fe44909827d903ba7cbc4b469ca126ff25d44
 dd537fe96c5a8736201441e9a620db148a0d16cadae518d2a777fbc723db395f
 eaf1f8f3060aac6967b064d3199c082d2a9b47027c865628986f56cbb23c1fc3
