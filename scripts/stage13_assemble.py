@@ -499,13 +499,44 @@ def write_generic(wb, title, sheet_name, items):
     style_sheet(ws)
 
 
-def write_scenario_detail(wb, scenario, payload):
-    write_daily_sheet(wb,scenario,payload)
-    write_assets_sheet(wb,scenario,payload)
-    write_acctg_sheet(wb,scenario,payload)
-    write_partner_sheet(wb,scenario,payload)
-    write_generic(wb,"","".join([scenario,"_GUARANTEE"]),payload.get("guarantee_claims",[]))
-    write_generic(wb,"","".join([scenario,"_CONTRACTS"]),payload.get("contracts",[]))
+def _write_diagnostic_source_unavailable_sheet(wb, scenario, suffix, section):
+    ws = wb.create_sheet(f"{scenario}{suffix}")
+    write_table(
+        ws,
+        ["status", "section", "message"],
+        [[
+            "SOURCE_NOT_AVAILABLE_IN_DIAGNOSTIC_COHORT",
+            section,
+            "Detailed source payload is not present in the pinned Stage 12 ledger or exact selected-role sources; no values were inferred or zero-filled.",
+        ]],
+    )
+    style_sheet(ws)
+
+
+def write_scenario_detail(wb, scenario, payload, diagnostic_only=False):
+    # The Stage 12 ledger supports the time-series page but not the complete
+    # transaction/asset/accounting/partner detail bundle used by Stage 9A.
+    # In diagnostic mode, mark those sections as unavailable rather than
+    # synthesizing accounting checks or claiming that absent records are zero.
+    if diagnostic_only and (
+        not isinstance(payload.get("accounting"), dict)
+        or not isinstance(payload.get("final_reconciliation"), dict)
+        or not isinstance(payload.get("partner_memo"), list)
+        or not isinstance(payload.get("final_inventory"), list)
+    ):
+        write_daily_sheet(wb, scenario, payload)
+        _write_diagnostic_source_unavailable_sheet(wb, scenario, "_ASSETS", "asset_inventory")
+        _write_diagnostic_source_unavailable_sheet(wb, scenario, "_ACCTG", "accounting_rollforwards")
+        _write_diagnostic_source_unavailable_sheet(wb, scenario, "_PARTNER", "partner_reinvestment_memo")
+        _write_diagnostic_source_unavailable_sheet(wb, scenario, "_GUARANTEE", "guarantee_claim_records")
+        _write_diagnostic_source_unavailable_sheet(wb, scenario, "_CONTRACTS", "contract_records")
+        return
+    write_daily_sheet(wb, scenario, payload)
+    write_assets_sheet(wb, scenario, payload)
+    write_acctg_sheet(wb, scenario, payload)
+    write_partner_sheet(wb, scenario, payload)
+    write_generic(wb, "", "".join([scenario, "_GUARANTEE"]), payload.get("guarantee_claims", []))
+    write_generic(wb, "", "".join([scenario, "_CONTRACTS"]), payload.get("contracts", []))
 
 
 def collect_excel_errors(path: Path):
@@ -1589,7 +1620,10 @@ def assemble_workbook(data, output_path, mode="canonical"):
         write_stats_sheet(workbook, scenario, rows, int(manifest["total_capital"]))
         p50_payload = representatives.get(scenario, {}).get("P50")
         if rows and p50_payload:
-            write_scenario_detail(workbook, scenario, p50_payload)
+            write_scenario_detail(
+                workbook, scenario, p50_payload,
+                diagnostic_only=manifest.get("diagnostic_only") is True,
+            )
         else:
             _write_empty_scenario_sheets(workbook, scenario)
     expected_names = _expected_sheet_names()

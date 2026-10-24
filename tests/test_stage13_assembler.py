@@ -823,3 +823,37 @@ def test_maxcase_partner_memo_balances_remain_pending_when_source_is_absent():
     assert representative_daily_value("Max Case", daily, "Partner1_Reinvestment_Balance") == "PENDING_DATA_SOURCE"
     assert representative_daily_value("Max Case", daily, "Partner2_Reinvestment_Balance") == "PENDING_DATA_SOURCE"
 
+
+
+def test_diagnostic_scenario_detail_marks_missing_source_sections_without_fabricating_values():
+    from openpyxl import Workbook
+    from scripts.stage13_assemble import write_scenario_detail
+
+    wb = Workbook()
+    payload = {
+        "summary": {"trial_id": 7},
+        "daily": [
+            {
+                "date": "2027-01-01",
+                "trial_id": 7,
+                "Cash": 120,
+                "Net_Equity": 135,
+                "Cumulative_Project_Profit": 15,
+                "Active_Bikes": 1,
+                "Owned_Transferred_Bikes": 0,
+                "Pending_Claims": 0,
+            }
+        ],
+    }
+    write_scenario_detail(wb, "C085_G070", payload, diagnostic_only=True)
+    assert set(wb.sheetnames) == {
+        "Sheet", "C085_G070_DAILY", "C085_G070_ASSETS", "C085_G070_ACCTG",
+        "C085_G070_PARTNER", "C085_G070_GUARANTEE", "C085_G070_CONTRACTS",
+    }
+    daily = wb["C085_G070_DAILY"]
+    assert daily["B2"].value == "2027-01-01"
+    for suffix in ("_ASSETS", "_ACCTG", "_PARTNER", "_GUARANTEE", "_CONTRACTS"):
+        ws = wb[f"C085_G070{suffix}"]
+        assert ws["A2"].value == "SOURCE_NOT_AVAILABLE_IN_DIAGNOSTIC_COHORT"
+        assert "no values were inferred or zero-filled" in ws["C2"].value
+    wb.close()
