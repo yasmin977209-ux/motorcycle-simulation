@@ -92,7 +92,7 @@ jobs:
 
       - name: Build exact 11005-trial diagnostic dataset from pinned artifacts
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           PYTHONPATH: .
         run: |
           set -euo pipefail
