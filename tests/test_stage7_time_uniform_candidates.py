@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -94,3 +96,18 @@ def test_adjacent_probability_change_is_strict_and_validates_inputs() -> None:
     assert adjacent_probability_change_pass(0.0, 1.0, 1.0) is False
     with pytest.raises(ValueError, match="between 0 and 1"):
         adjacent_probability_change_pass(-0.1, 0.5, 0.005)
+
+
+
+def test_candidate_methods_do_not_open_the_production_execution_gate() -> None:
+    contract_path = Path(__file__).resolve().parents[1] / "docs" / "stage7" / "statistical_execution_gate.json"
+    gate = json.loads(contract_path.read_text(encoding="utf-8"))
+    assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+    authorization = gate["execution_authorization"]
+    assert authorization["production_trial_checkpoint_monte_carlo_allowed"] is False
+    assert authorization["scenario_stability_declaration_allowed"] is False
+    assert authorization["final_delivery_acceptance_allowed"] is False
+    assert gate["component_status"]["section_2_5_quantiles"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
+    assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
+    assert gate["component_status"]["stopping_window"]["required_points"] == 4
+    assert gate["component_status"]["stopping_window"]["required_successful_transitions"] == 3

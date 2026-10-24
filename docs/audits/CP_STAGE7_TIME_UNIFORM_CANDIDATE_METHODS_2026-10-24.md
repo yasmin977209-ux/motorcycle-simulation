@@ -21,3 +21,10 @@ Accordingly, `docs/stage7/statistical_execution_gate.json` remains `BLOCKED_FOR_
 ## Verification plan
 
 The branch workflow runs Stage 1 contract tests, Stage 7 authoring contracts, Gate B unit tests, and the candidate-method unit tests, then parses the workflows. Its tests do not launch production simulation batches.
+
+
+## Gate contract component-status reconciliation — 2026-10-24
+
+Exact-main source review and the candidate workflow passed the tests listed above. The gate contract's previous `stopping_window` field said the code used only three points/two transitions, but `run_batch.py` calls the current helper with required values 3 transitions and 4 cumulative points, and dedicated tests reject a three-point history and malformed checkpoint binding. The previous `gate_b_implementation_guards` record likewise repeated two stale blockers: Gate B now rejects non-Boolean `stable` values, and `_metric_summary` implements the approved near-zero absolute epsilon branch. The JSON component statuses are updated to match those facts.
+
+This reconciliation is deliberately narrow: K_SPEC remains blocked; quantile and Bernoulli candidate methods remain unintegrated; P90_Held_Assets source/completeness remains unaccepted; historical C030_G030 P90_Final_Cash transition remains failed; overall status stays `BLOCKED_FOR_IMPLEMENTATION`; all production execution authorizations remain false. This is evidence normalization, not statistical acceptance.
