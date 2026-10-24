@@ -1,0 +1,62 @@
+name: cp-stage9c-scoped-status-reconciliation-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-stage9c-scoped-audit-current-main-20261024"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "docs/stage9c/STAGE9C_REPORT.md"
+      - "docs/CP-MEGA-CLOSURE-9ABC_FINAL_REPORT_AR.md"
+      - "docs/audits/R4_STAGE9C_STATUS_RECONCILIATION_CURRENT_MAIN_2026-10-24.md"
+      - "docs/PROJECT_CONTINUITY.md"
+      - ".github/workflows/cp-stage9c-scoped-status-reconciliation-verify-20261024.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  append-only-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify historical reports remain exact prefixes
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          paths = (
+              "docs/stage9c/STAGE9C_REPORT.md",
+              "docs/CP-MEGA-CLOSURE-9ABC_FINAL_REPORT_AR.md",
+          )
+          base = subprocess.check_output(
+              ["git", "merge-base", "HEAD", "origin/main"], text=True
+          ).strip()
+          for name in paths:
+              original = subprocess.check_output(
+                  ["git", "show", f"{base}:{name}"]
+              )
+              candidate = Path(name).read_bytes()
+              assert candidate.startswith(original), f"historical report changed: {name}"
+          state = json.loads(Path("state.json").read_text(encoding="utf-8"))
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          assert state["full_stage9c_status"] == "PASS"
+          assert state["stage9c_ledger_reaudit_20261012"]["status"] == "PASS_STAGE9C_C1_C6_EVIDENCE_REAUDIT"
+          assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+          assert gate["execution_authorization"]["final_delivery_acceptance_allowed"] is False
+          continuity = Path("docs/PROJECT_CONTINUITY.md").read_text(encoding="utf-8")
+          assert "CP-STAGE9C-SCOPED-AUDIT-CURRENT-MAIN-20261024" in continuity
+          print("STAGE9C_SCOPED_APPEND_ONLY_STATUS_OK")
+          PY
