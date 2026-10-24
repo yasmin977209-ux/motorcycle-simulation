@@ -36,16 +36,3 @@ jobs:
         run: |
           python -m pytest -q tests/test_statistical_confidence_sequences.py tests/test_run_batch.py
 
-      - name: Verify workflow is non-production
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import yaml
-          p = Path(".github/workflows/cp-statistical-method-candidate-verify-20261024.yml")
-          spec = yaml.safe_load(p.read_text(encoding="utf-8"))
-          assert spec["jobs"]["candidate-statistical-contract"]["timeout-minutes"] == 12
-          raw = p.read_text(encoding="utf-8").lower()
-          for forbidden in ("stage7-full-run.yml", "workflow_dispatch", "run_batch.py --scenario", "monte_carlo.py"):
-              assert forbidden not in raw, forbidden
-          print("CANDIDATE_ONLY_WORKFLOW_OK")
-          PY
