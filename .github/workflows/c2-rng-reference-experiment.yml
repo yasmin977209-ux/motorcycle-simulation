@@ -23,3 +23,73 @@ jobs:
         env:
           PYTHONPATH: .
         run: python -m pytest -q tests/test_stage1.py tests/test_acceptance_16_v2.py
+      - name: Compare one completed trial under old and reference RNG keys
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import signal
+          import rng
+          import monte_carlo
+
+          def deadline(_signum, _frame):
+              raise TimeoutError("single-trial diagnostic exceeded 150 seconds")
+
+          def legacy_derive_seed(master_seed, scenario_id, trial_id, bike_id, day, event_type):
+              key = f"{master_seed}|{scenario_id}|{trial_id}|{bike_id}|{day}|{event_type}"
+              return hashlib.sha256(key.encode("utf-8")).digest()
+
+          def snapshot(result):
+              return {
+                  "scenario_id": result.scenario_id,
+                  "trial_id": result.trial_id,
+                  "final_close_date": result.final_close_date,
+                  "final_net_project_equity": result.final_net_project_equity,
+                  "cumulative_project_profit": result.cumulative_project_profit,
+                  "operating_net_profit": result.operating_net_profit,
+                  "final_cash": result.final_cash,
+                  "termination_count": result.termination_count,
+                  "partner1_final_entitlement": result.partner1_final_entitlement,
+                  "partner2_final_entitlement": result.partner2_final_entitlement,
+              }
+
+          original_derive_seed = rng.derive_seed
+          signal.signal(signal.SIGALRM, deadline)
+          try:
+              signal.alarm(150)
+              rng.derive_seed = legacy_derive_seed
+              old_result, _ = monte_carlo.run_single_trial(
+                  "C085_G070", 1, master_seed=20270101
+              )
+              old = snapshot(old_result)
+              signal.alarm(150)
+              rng.derive_seed = original_derive_seed
+              new_result, _ = monte_carlo.run_single_trial(
+                  "C085_G070", 1, master_seed=20270101
+              )
+              new = snapshot(new_result)
+          except TimeoutError as exc:
+              print("C2_SINGLE_TRIAL_COMPARE=" + json.dumps({
+                  "status": "INCONCLUSIVE_TIMEOUT", "detail": str(exc)
+              }, sort_keys=True))
+              raise
+          finally:
+              signal.alarm(0)
+              rng.derive_seed = original_derive_seed
+
+          changed = {
+              field: {"old": old[field], "reference_key": new[field]}
+              for field in old if old[field] != new[field]
+          }
+          print("C2_SINGLE_TRIAL_COMPARE=" + json.dumps({
+              "status": "COMPLETED_ONE_TRIAL_PER_METHOD",
+              "scenario": "C085_G070",
+              "trial_id": 1,
+              "old": old,
+              "reference_key": new,
+              "changed_fields": changed,
+              "limitation": "One scenario/trial only; not a Monte Carlo acceptance run and cannot establish statistical stability."
+          }, sort_keys=True))
+          PY
