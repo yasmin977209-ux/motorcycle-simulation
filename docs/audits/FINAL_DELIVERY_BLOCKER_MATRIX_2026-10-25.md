@@ -58,3 +58,17 @@
 أُضيف إلى المرشح سجل مستقل لكل تكرار: `rng_checksum` يساوي مجموع القيم ذات 53 بتاً (من أعلى 53 بتاً للكتلة ذات 64 بتاً المستخدمة في الرمية) بترديد `2**64`، مع عداد سحوبات. لا تُسجَّل رمية عند الاحتمالين المحسومين 0% و100%. تظل بصمة النتائج المالية مستقلة عن حقول التدقيق، وتُنشأ بصمة منفصلة تربط تدقيق RNG بالمصدر والبذرة الرئيسية والسيناريو ومعرّف التكرار. فحص المرشح يرفض الحقول غير الصحيحة أو عدم وجود رميات في السيناريو العشوائي أو تكرار checksum غير صفري (`DUPLICATE_SEED_DETECTED`). تُشترط بصمة تدقيق متطابقة عند استئناف checkpoint.
 
 هذه الإضافة لا تغيّر `main` ولا البيانات التاريخية أو بصمات Golden؛ كما أنها تجعل أي checkpoint قديم بلا هوية تدقيق صريحة غير قابل للاستئناف بصمت. لم يُعلن القبول الإنتاجي؛ يلزم أن يجتاز التغيير اختبار CI كامل على رأسه الجديد، وأن تُعتمد هوية المصدر الجديدة وخطة Golden/البيانات المتوافقة.
+
+
+## RNG audit end-to-end contracts — candidate code path only
+
+The current candidate now separates the financial `fingerprint_sha256` from the RNG audit identity across these paths:
+
+- `run_batch.py` binds `rng_checksum_fingerprint_sha256`, the master seed, and the explicit audit schema in checkpoint identity; resume validation rejects missing/mismatched audit identities and duplicate nonzero checksums.
+- Stage 7's `scripts/stage7_run_trial_block.py` captures the checksum per logical trial, persists it to Parquet, and stores a separate checksum-map fingerprint and seed/schema in block metadata. The Stage 7 workflow validates restored blocks and binds the audit fingerprint into its state artifact identity.
+- Stage 10 benchmark trials capture the same checksum while preserving financial per-trial hashes, and write a source/seed-bound checksum fingerprint for canonical new blocks.
+- Stage 13 adaptive summaries now require the exact finance-plus-audit row schema and verify a separate ordered `rng_audit_map_sha256`. The financial `result_sha256` deliberately excludes audit columns; a checksum-map mismatch or repeated nonzero checksum fails closed. Synthetic-only regression tests cover map tampering and duplicate checksums.
+
+This is a code/schema integration change, not proof that the historical 11,005-trial cohort possesses valid checksums. Historical TrialResult blocks produced before this change cannot be backfilled with zero checksums or relabeled as audited. Any stochastic trial lacking the new audit fields remains blocked until independently generated under a newly reconciled source identity. No production trials, Golden extensions, or canonical dataset writes were run.
+
+The v2.1 reference hash reconciliation, K_SPEC/time-uniform inference, Gate A coverage, source/data provenance, realism calibration, PREP reachability, Stage 10 workload/fidelity, and P17/P18 acceptance blockers remain unchanged.
