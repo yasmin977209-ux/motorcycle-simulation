@@ -285,3 +285,26 @@ print(hashlib.sha256(key.encode("utf-8")).hexdigest())
     # The project seed is independent of Python's hash randomization.
     assert results[0][1] == results[1][1] == results[0][2]
     assert results[0][1] == "fc2a64164208aa0f3b4d08bb75f80e950dddb803a26535ad3e344c1a5f9b8601"
+
+
+
+def test_rng_collection_success_uses_exact_integer_comparison() -> None:
+    # Each byte string controls the 64-bit integer exactly; remaining digest
+    # bytes do not affect the specified decision.
+    below_half = ((1 << 63) - 1).to_bytes(8, "big") + bytes(24)
+    at_half = (1 << 63).to_bytes(8, "big") + bytes(24)
+    maximum = ((1 << 64) - 1).to_bytes(8, "big") + bytes(24)
+    zero = bytes(32)
+
+    assert rng.draw_success(below_half, 50) is True
+    assert rng.draw_success(at_half, 50) is False
+    assert rng.draw_success(zero, 0) is False
+    assert rng.draw_success(maximum, 100) is True
+    assert rng.deterministic_success(0.85, below_half) is True
+
+    try:
+        rng.deterministic_success(0.505, zero)
+    except ValueError as exc:
+        assert "whole integer percentage" in str(exc)
+    else:
+        raise AssertionError("noncanonical fractional percent must fail closed")

@@ -63,6 +63,7 @@ def derive_seed(
 
 
 def rng_draw(seed_bytes: bytes) -> float:
+    """Return a floating-point view for diagnostics only, never for decisions."""
     if len(seed_bytes) != SHA256_DIGEST_BYTES:
         raise ValueError(
             f"seed_bytes must contain exactly {SHA256_DIGEST_BYTES} bytes"
@@ -71,16 +72,40 @@ def rng_draw(seed_bytes: bytes) -> float:
     return value / RNG_DENOMINATOR
 
 
+def draw_success(seed_bytes: bytes, pct: int) -> bool:
+    """Compare the first 64 SHA-256 bits using exact integer arithmetic.
+
+    This implements reference §14.3 literally: u * 100 < pct * 2**64.
+    No float conversion is used in the probabilistic decision path.
+    """
+    if len(seed_bytes) != SHA256_DIGEST_BYTES:
+        raise ValueError(
+            f"seed_bytes must contain exactly {SHA256_DIGEST_BYTES} bytes"
+        )
+    if type(pct) is not int:
+        raise TypeError("pct must be an integer percentage")
+    if not 0 <= pct <= 100:
+        raise ValueError("pct must be in [0, 100]")
+    value = int.from_bytes(seed_bytes[:RNG_WORD_BYTES], "big")
+    return value * 100 < pct * RNG_DENOMINATOR
+
+
 def deterministic_success(
     collection_probability: float, seed_bytes: bytes
 ) -> bool:
-    if collection_probability == 1.0:
-        return True
-    if collection_probability == 0.0:
-        return False
-    if not 0.0 < collection_probability < 1.0:
+    """Apply a canonical integer-percent collection probability exactly."""
+    if isinstance(collection_probability, bool) or not isinstance(
+        collection_probability, (int, float)
+    ):
+        raise TypeError("collection_probability must be a numeric probability")
+    if not 0.0 <= collection_probability <= 1.0:
         raise ValueError("collection_probability must be in [0, 1]")
-    return rng_draw(seed_bytes) < collection_probability
+    pct = round(float(collection_probability) * 100)
+    if float(collection_probability) != pct / 100.0:
+        raise ValueError(
+            "collection_probability must correspond to a whole integer percentage"
+        )
+    return draw_success(seed_bytes, pct)
 
 
 def seed_hex(

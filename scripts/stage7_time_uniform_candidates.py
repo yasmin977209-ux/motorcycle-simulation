@@ -130,7 +130,7 @@ def quantile_precision_pass(interval: dict[str, Any], margin: float) -> bool:
         return False
     if lower > estimate or estimate > upper:
         return False
-    return max(estimate - lower, upper - estimate) < margin
+    return max(estimate - lower, upper - estimate) <= margin
 
 
 def beta_binomial_mixture_confidence_sequence(
@@ -258,7 +258,7 @@ def bernoulli_precision_pass(interval: dict[str, Any], maximum_half_width: float
     computed_half_width = (upper - lower) / 2.0
     if not math.isclose(reported_half_width, computed_half_width, rel_tol=1e-10, abs_tol=1e-12):
         return False
-    return computed_half_width < threshold
+    return computed_half_width <= threshold
 
 
 def adjacent_probability_change_pass(
