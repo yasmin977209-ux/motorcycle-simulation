@@ -13,7 +13,7 @@ from accounting import (
     assert_balance_sheet_balanced,
     record_daily_rollforwards,
 )
-from closure import execute_dynamic_closure
+from closure import execute_dynamic_closure, raise_if_stalled
 from entities import (
     Bike,
     BikeSource,
@@ -1056,36 +1056,6 @@ def run_day(
     trace_enabled = getattr(p, "_execution_trace_enabled", False)
     trace = []
 
-    stages = (
-        ("M1", lambda: None),
-        ("M2", lambda: _m2(p, current_date)),
-        ("M3", lambda: _m3(p, current_date)),
-        ("M4", lambda: None),
-        ("M5", lambda: _m5(p, current_date)),
-        ("M6", lambda: _m6(p, current_date, p._possession)),
-        ("M7", lambda: _m7(p, p._possession, current_date)),
-        (
-            "M8",
-            lambda: _m8(
-                p,
-                current_date,
-                collection_probability,
-                scenario_id,
-                trial_id,
-                master_seed,
-            ),
-        ),
-        ("M9", lambda: _m9(p)),
-        ("M10", lambda: None),
-        ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
-        ("M12", lambda: _m12(p, current_date)),
-        ("M13", lambda: _m13(p, current_date, recovery_rate_pct)),
-        ("M14", lambda: _m14(p, current_date)),
-        ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
-        ("M16", lambda: _m16(p, current_date)),
-        ("M17", lambda: _m17(p, current_date, opening)),
-    )
-
     p._possession = {}
     stages = (
         ("M1", lambda: None),
@@ -1110,7 +1080,7 @@ def run_day(
         ("M10", lambda: None),
         ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
         ("M12", lambda: _m12(p, current_date)),
-        ("M13", lambda: _m13(p, current_date)),
+        ("M13", lambda: _m13(p, current_date, recovery_rate_pct)),
         ("M14", lambda: _m14(p, current_date)),
         ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
         ("M16", lambda: _m16(p, current_date)),
@@ -1162,6 +1132,8 @@ def run_deterministic_trial(
         )
         if on_day_end is not None:
             on_day_end(project, current)
+        if not project.simulation_stopped:
+            raise_if_stalled(project, current)
         current += timedelta(days=1)
     return project
 

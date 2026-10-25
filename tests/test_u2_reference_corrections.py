@@ -261,3 +261,182 @@ def test_171_rng_stream_pairing_and_integer_success_threshold() -> None:
         assert result.partner2_final_entitlement == baseline_result.partner2_final_entitlement
         assert result.bad_debt == 0 and result.guarantee_recovered == 0
         assert rows == baseline_rows
+
+
+def test_pending_writeoff_today_is_consumed_by_m16() -> None:
+    project = daily_engine.create_initial_project()
+    bike = project.bikes[0]
+    for other in project.bikes[1:]:
+        other.current_state = BikeState.HELD_AS_ASSET
+    contract = daily_engine._new_contract(
+        project, bike, ContractType.PRIMARY, date(2029, 1, 2)
+    )
+    contract.maturity_date = date(2031, 1, 2)
+    contract.total_due = 0
+    contract.total_paid = 0
+    bike.current_state = BikeState.ACTIVE_PRIMARY
+    bike.current_contract_id = contract.contract_id
+    bike.current_tenant_id = contract.tenant_id
+
+    daily_engine._m12(project, contract.maturity_date)
+    assert bike.current_state is BikeState.OWNED_TRANSFERRED
+    assert bike.pending_writeoff_today is True
+
+    daily_engine._ensure_day_metrics(project, reset=True)
+    daily_engine._m16(project, contract.maturity_date)
+    assert bike.pending_writeoff_today is False
+    assert bike.net_book_value == 0
+    assert project.gross_bike_assets == (
+        daily_engine.constants.OPENING_BIKE_ASSETS - bike.gross_cost
+    )
+
+
+def test_m13_failure_claim_uses_recovery_rate_pct_in_daily_sequence() -> None:
+    import constants
+    import dateutils
+
+    project = daily_engine.create_initial_project()
+    bike = project.bikes[0]
+    for other in project.bikes[1:]:
+        other.current_state = BikeState.HELD_AS_ASSET
+        other.current_contract_id = None
+        other.current_tenant_id = None
+
+    contract = daily_engine._new_contract(
+        project, bike, ContractType.PRIMARY, date(2029, 1, 2)
+    )
+    contract.status = ContractStatus.MATURED
+    contract.maturity_date = date(2028, 1, 2)
+    amount = constants.SETTLEMENT_DAILY_RENT
+    contract.total_due = amount
+    contract.total_paid = 0
+    bike.current_state = BikeState.POST_MATURITY_SETTLEMENT
+    bike.current_contract_id = contract.contract_id
+    bike.current_tenant_id = contract.tenant_id
+    bike.settlement_legacy_debt_original = amount
+    bike.settlement_legacy_debt_remaining = amount
+    bike.settlement_business_days_elapsed = constants.SETTLEMENT_PERIOD_DAYS - 1
+
+    day30 = constants.EXPANSION_CUTOFF_DATE
+    assert dateutils.is_business_day(day30)
+    start = day30
+    prior_business_days = constants.SETTLEMENT_PERIOD_DAYS - 1
+    while prior_business_days:
+        start -= timedelta(days=1)
+        if dateutils.is_business_day(start):
+            prior_business_days -= 1
+    bike.settlement_start_date = start
+
+    receivable = daily_engine._new_receivable(project, bike, contract, amount)
+    receivable.created_date = start
+    project.accounts_receivable = amount
+    project.revenue_primary = amount
+
+    daily_engine.run_day(
+        project,
+        day30,
+        collection_probability=0.0,
+        scenario_id="C000_TEST",
+        trial_id=1,
+        recovery_rate_pct=30,
+    )
+
+    claim = project.guarantee_claims[-1]
+    assert claim.recovery_rate_pct == 30
+    assert claim.claim_amount == amount
+    assert bike.current_state is BikeState.AVAILABLE_FOR_SECONDARY
+    assert bike.active_settlement_receivable_id is None
+    assert project.simulation_stopped is False
+
+
+def test_m15_3_final_closure_receivable_uses_scenario_recovery_rate() -> None:
+    import constants
+
+    project = daily_engine.create_initial_project()
+    for bike in project.bikes:
+        bike.current_state = BikeState.HELD_AS_ASSET
+        bike.current_contract_id = None
+        bike.current_tenant_id = None
+    bike = project.bikes[0]
+    contract = daily_engine._new_contract(
+        project, bike, ContractType.PRIMARY, date(2029, 1, 2)
+    )
+    amount = constants.SETTLEMENT_DAILY_RENT
+    project.accounts_receivable = amount
+    project.revenue_primary = amount
+    receivable = daily_engine._new_receivable(project, bike, contract, amount)
+    receivable.created_date = date(2030, 12, 31)
+    daily_engine._ensure_day_metrics(project, reset=True)
+
+    daily_engine._m15(project, date(2031, 1, 1), recovery_rate_pct=70)
+
+    claim = project.guarantee_claims[-1]
+    assert claim.claim_source == constants.CLAIM_SOURCE_FINAL_CLOSURE
+    assert claim.recovery_rate_pct == 70
+    assert claim.recovered_amount == (amount * 70) // 100
+    assert claim.bad_debt_amount == amount - claim.recovered_amount
+    assert claim.status.value == "SETTLED"
+    assert project.accounts_receivable == 0
+    assert project.guarantee_claim_receivable == 0
+    assert project.project_cash == claim.recovered_amount
+    assert project.partner1_reinvestment_balance > 0
+    assert project.simulation_stopped is True
+
+
+def test_173_stall_detector_requires_all_reference_conditions() -> None:
+    import constants
+    import pytest
+    from closure import SimulationStall, raise_if_stalled, stall_detected
+    from entities import BikeState
+    from guarantee import create_guarantee_claim
+
+    def deadlocked_project():
+        project = daily_engine.create_initial_project()
+        for bike in project.bikes:
+            bike.current_state = BikeState.HELD_AS_ASSET
+            bike.current_contract_id = None
+            bike.current_tenant_id = None
+        bike = project.bikes[0]
+        bike.current_state = BikeState.PREP
+        bike.prep_paid = False
+        bike.customs_paid = False
+        bike.actual_ready_date = None
+        project.project_cash = 0
+        project.partner1_reinvestment_balance = 0
+        return project
+
+    deadlocked = deadlocked_project()
+    assert stall_detected(deadlocked) is True
+    with pytest.raises(SimulationStall, match="STALL_DETECTED"):
+        raise_if_stalled(deadlocked, date(2031, 1, 1))
+    assert deadlocked.error_log[-1]["error_code"] == "STALL_DETECTED"
+    assert "state_summary" in deadlocked.error_log[-1]
+
+    sufficiently_funded = deadlocked_project()
+    required = (
+        constants.PREP_OPERATING_EXPENSE_PER_BIKE
+        + constants.CUSTOMS_AND_REGISTRATION_COST
+    )
+    sufficiently_funded.project_cash = required
+    sufficiently_funded.partner1_reinvestment_balance = required
+    assert stall_detected(sufficiently_funded) is False
+
+    revenue_path_exists = deadlocked_project()
+    revenue_path_exists.bikes[1].current_state = BikeState.AVAILABLE_FOR_SECONDARY
+    assert stall_detected(revenue_path_exists) is False
+
+    future_cash_exists = deadlocked_project()
+    future_cash_exists.guarantee_claims.append(
+        create_guarantee_claim(
+            "CL00000001",
+            "BK0001",
+            "CT00000001",
+            "TN00000001",
+            "GR00000001",
+            constants.CLAIM_SOURCE_FINAL_CLOSURE,
+            constants.SETTLEMENT_DAILY_RENT,
+            date(2031, 1, 1),
+            100,
+        )
+    )
+    assert stall_detected(future_cash_exists) is False

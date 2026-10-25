@@ -8,7 +8,9 @@ from accounting import settle_guarantee_accounting
 from constants import (
     CLAIM_SOURCE_ADMINISTRATIVE_CLOSURE,
     CLAIM_SOURCE_FINAL_CLOSURE,
+    CUSTOMS_AND_REGISTRATION_COST,
     EXPANSION_CUTOFF_DATE,
+    PREP_OPERATING_EXPENSE_PER_BIKE,
 )
 from entities import (
     BikeState,
@@ -45,6 +47,99 @@ def closure_preconditions_met(project: Project, current_date: date) -> bool:
         and no_settlement_active
         and expansion_window_closed
     )
+
+
+
+def _remaining_prep_funding(bike) -> int:
+    return (
+        (0 if bike.prep_paid else PREP_OPERATING_EXPENSE_PER_BIKE)
+        + (0 if bike.customs_paid else CUSTOMS_AND_REGISTRATION_COST)
+    )
+
+
+def stall_detected(project: Project) -> bool:
+    """Detect only a provably state-based deadlock; never use elapsed time."""
+    underfunded = [
+        (bike, _remaining_prep_funding(bike))
+        for bike in project.bikes
+        if bike.current_state is BikeState.PREP
+        and _remaining_prep_funding(bike) > 0
+    ]
+    if not underfunded:
+        return False
+    if not any(
+        project.project_cash < remaining
+        or project.partner1_reinvestment_balance < remaining
+        for _, remaining in underfunded
+    ):
+        return False
+
+    cash_generating_or_reactivatable = {
+        BikeState.ACTIVE_PRIMARY,
+        BikeState.WAITING_PRIMARY,
+        BikeState.NOTICE_PRIMARY,
+        BikeState.GRACE_PRIMARY,
+        BikeState.POST_MATURITY_SETTLEMENT,
+        BikeState.ACTIVE_SECONDARY,
+        BikeState.NOTICE_SECONDARY,
+        BikeState.AVAILABLE_FOR_SECONDARY,
+    }
+    if any(
+        bike.current_state in cash_generating_or_reactivatable
+        for bike in project.bikes
+    ):
+        return False
+    if any(claim.status is ClaimStatus.PENDING for claim in project.guarantee_claims):
+        return False
+    return True
+
+
+def stall_state_summary(project: Project) -> dict[str, object]:
+    return {
+        "Cash": project.project_cash,
+        "Partner1_Reinvestment_Balance": project.partner1_reinvestment_balance,
+        "Partner2_Reinvestment_Balance": project.partner2_reinvestment_balance,
+        "bikes": [
+            {
+                "bike_id": bike.bike_id,
+                "current_state": bike.current_state.value,
+                "prep_paid": bike.prep_paid,
+                "customs_paid": bike.customs_paid,
+                "remaining_prep_funding": _remaining_prep_funding(bike),
+            }
+            for bike in project.bikes
+        ],
+        "claims": [
+            {
+                "claim_id": claim.claim_id,
+                "status": claim.status.value,
+                "claim_amount": claim.claim_amount,
+                "settlement_due_date": claim.settlement_due_date.isoformat(),
+            }
+            for claim in project.guarantee_claims
+        ],
+    }
+
+
+class SimulationStall(RuntimeError):
+    def __init__(self, state_summary: dict[str, object]):
+        self.error_code = "STALL_DETECTED"
+        self.state_summary = state_summary
+        super().__init__(f"STALL_DETECTED: {state_summary}")
+
+
+def raise_if_stalled(project: Project, current_date: date) -> None:
+    if not stall_detected(project):
+        return
+    summary = stall_state_summary(project)
+    project.error_log.append(
+        {
+            "date": current_date.isoformat(),
+            "error_code": "STALL_DETECTED",
+            "state_summary": summary,
+        }
+    )
+    raise SimulationStall(summary)
 
 
 def _metric(project: Project, key: str, amount: int) -> None:
@@ -202,4 +297,11 @@ def execute_dynamic_closure(
     return True
 
 
-__all__ = ["closure_preconditions_met", "execute_dynamic_closure"]
+__all__ = [
+    "closure_preconditions_met",
+    "execute_dynamic_closure",
+    "stall_detected",
+    "stall_state_summary",
+    "SimulationStall",
+    "raise_if_stalled",
+]
