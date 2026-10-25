@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Final, Union
 
 import constants
@@ -44,6 +45,20 @@ def rng_stream_id(scenario_or_stream_id: str) -> str:
 def collection_pct_from_scenario_id(scenario_or_stream_id: str) -> int:
     """Read the exact integer collection percentage encoded by Cxxx."""
     return int(_normalize_collection_stream_id(scenario_or_stream_id)[1:])
+
+
+def collection_pct_from_probability(collection_probability: object) -> int:
+    """Normalize a compatibility probability argument to integer pct once."""
+    try:
+        scaled = Decimal(str(collection_probability)) * 100
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        raise ValueError("collection_probability must map exactly to an integer percentage") from exc
+    if not scaled.is_finite() or scaled != scaled.to_integral_value():
+        raise ValueError("collection_probability must map exactly to an integer percentage")
+    pct = int(scaled)
+    if not 0 <= pct <= 100:
+        raise ValueError("collection_probability must be in [0, 1]")
+    return pct
 
 
 def derive_seed(

@@ -589,8 +589,8 @@ def _m8(
     if not dateutils.is_business_day(current_date):
         return
     project._current_date = current_date
-    rng_stream_id = rng.rng_stream_id(scenario_id)
-    collection_pct = rng.collection_pct_from_scenario_id(scenario_id)
+    collection_pct = rng.collection_pct_from_probability(collection_probability)
+    rng_stream_id = f"C{collection_pct:03d}"
 
     for bike in list(project.bikes):
         contract = contract_of(project, bike)
