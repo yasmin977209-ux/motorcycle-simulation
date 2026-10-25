@@ -309,7 +309,7 @@ def write_scenario_matrix(wb, summaries, manifest):
     ws = wb.create_sheet("SCENARIO_MATRIX")
     headers = [
         "scenario","actual_trials","stability","P10_Profit","P50_Profit","P90_Profit",
-        "P10_Final_Cash","P50_Final_Cash","P90_Final_Cash","Probability_of_Loss",
+        "P10_Final_Cash","P50_Final_Cash","P90_Final_Cash","Probability_of_Accounting_Loss",
         "P50_Terminations","P90_Terminations","Mean_Held_Assets","notes"
     ]
     rows = []
@@ -323,7 +323,7 @@ def write_scenario_matrix(wb, summaries, manifest):
     write_table(ws, headers, rows, number_formats={
         "P10_Profit":FINANCE_FMT,"P50_Profit":FINANCE_FMT,"P90_Profit":FINANCE_FMT,
         "P10_Final_Cash":FINANCE_FMT,"P50_Final_Cash":FINANCE_FMT,"P90_Final_Cash":FINANCE_FMT,
-        "Probability_of_Loss":PERCENT_FMT,
+        "Probability_of_Accounting_Loss":PERCENT_FMT,
         "Mean_Held_Assets":"0.0",
     })
     style_sheet(ws)

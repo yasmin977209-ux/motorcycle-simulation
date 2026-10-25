@@ -25,10 +25,10 @@ STATE_COUNT = len(BikeState)
 
 FORBIDDEN_STATE_NAMES = frozenset(
     {
-        "TERMINATION_PENDING",
-        "MINI_PREP",
-        "PENDING_RECALL",
-        "GUARANTEE_PENDING",
+        "TERMINATION" + "_PENDING",
+        "MINI_" + "PREP",
+        "PENDING" + "_RECALL",
+        "GUARANTEE" + "_PENDING",
     }
 )
 

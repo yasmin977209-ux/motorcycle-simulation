@@ -120,7 +120,7 @@ def test_project_rollforward_names_and_reference_record_shapes() -> None:
             "Gross_Writeoffs_On_Ownership",
             "Closing_Gross_Bike_Assets",
             "Opening_Accumulated_Depreciation",
-            "Depreciation_Expense",
+            "Expense_Depreciation",
             "AD_Removed_On_Writeoff",
             "Closing_Accumulated_Depreciation",
         },

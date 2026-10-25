@@ -136,3 +136,77 @@ def test_partner_split_has_one_algorithm_and_inflows_use_allocator() -> None:
     allocate_inflow(project, 1001)
     assert project.partner1_reinvestment_balance - before1 == 700
     assert project.partner2_reinvestment_balance - before2 == 301
+
+
+def test_177_no_integer_magic_numbers_outside_constants_py() -> None:
+    import ast
+    from acceptance_helpers import APP_FILES
+
+    forbidden_values = {
+        1500, 1000, 4000, 10000, 350000, 360000,
+        45000, 31500, 42000, 2000, 50,
+    }
+    findings = []
+    for path in APP_FILES:
+        if path.name == "constants.py":
+            continue
+        syntax_tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(syntax_tree):
+            if (
+                isinstance(node, ast.Constant)
+                and type(node.value) is int
+                and node.value in forbidden_values
+            ):
+                findings.append(f"{path.name}:{node.lineno}={node.value}")
+    assert not findings, "Magic integer constants outside constants.py: " + ", ".join(findings)
+
+
+def test_178_unified_names_only_in_engine_and_active_output_builder() -> None:
+    from acceptance_helpers import APP_FILES, ROOT
+    from entities import BikeState
+    import re
+
+    banned_names = (
+        "Gross_Bike_Assets_" + "Project",
+        "Bike_Assets_Gross_" + "Project",
+        "Accumulated_Depreciation_" + "Project",
+        "Depreciation_" + "Expense",
+        "Oil_Service_" + "Expense",
+        "Oil_Service_" + "Expenses",
+        "Prep_" + "Expense",
+        "Prep_" + "Expenses",
+        "Marketing_" + "Expense",
+        "Bad_Debt_" + "Expense",
+        "Asset_Writeoff_" + "Expense",
+        "Final_Net_" + "Equity",
+        "Final_Net_Equity_" + "at_point",
+        "Probability_of_" + "Loss",
+        "notice_start_" + "date",
+        "grace_start_" + "date",
+        "legacy_debt_" + "amount",
+        "mini_prep_" + "date",
+        "TERMINATION_" + "PENDING",
+        "MINI_" + "PREP",
+        "PENDING_" + "RECALL",
+        "GUARANTEE_" + "PENDING",
+        "is_" + "stable",
+        "PRACTICAL_MAX_" + "DAYS",
+        "PROJECT_END_" + "DATE",
+    )
+    source_files = list(APP_FILES) + [ROOT / "scripts" / "stage13_assemble.py"]
+    findings = []
+    for path in source_files:
+        source = path.read_text(encoding="utf-8")
+        for name in banned_names:
+            if name in source:
+                findings.append(f"{path.relative_to(ROOT)}:{name}")
+    assert not findings, "Forbidden aliases in engine/output source: " + ", ".join(findings)
+
+    forbidden_states = {
+        "TERMINATION_" + "PENDING",
+        "MINI_" + "PREP",
+        "PENDING_" + "RECALL",
+        "GUARANTEE_" + "PENDING",
+    }
+    assert not forbidden_states.intersection(BikeState.__members__)
+    assert not re.search(r"\*\s*70\s*\)\s*//\s*100", "\n".join(p.read_text(encoding="utf-8") for p in APP_FILES))
