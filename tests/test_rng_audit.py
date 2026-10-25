@@ -161,3 +161,16 @@ def test_stage10_baseline_requires_valid_source_bound_block_audit_fingerprint() 
             wrong_seed, [result], scenario="C085_G070",
             source_sha=source_sha, master_seed=master_seed
         )
+
+
+def test_stage10_write_json_emits_parseable_json_with_real_newline(tmp_path) -> None:
+    import json
+    from scripts.stage10_benchmark import write_json
+
+    target = tmp_path / "stage10.json"
+    payload = {"valid": True, "count": 3}
+    write_json(target, payload)
+    raw = target.read_text(encoding="utf-8")
+    assert raw.endswith("\n")
+    assert json.loads(raw) == payload
+    assert not raw.endswith("\\n")
