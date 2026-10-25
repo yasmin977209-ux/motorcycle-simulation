@@ -168,6 +168,7 @@ def _new_receivable(
     bike: Bike,
     contract: Contract,
     amount: int,
+    created_date: date | None = None,
 ) -> ReceivableEntry:
     receivable_id = f"RC{len(project.receivables) + 1:08d}"
     receivable = ReceivableEntry(
@@ -180,7 +181,7 @@ def _new_receivable(
         collected_amount=0,
         remaining_amount=amount,
         status=ReceivableStatus.OUTSTANDING,
-        created_date=None,
+        created_date=created_date,
     )
     project.receivables.append(receivable)
     bike.active_settlement_receivable_id = receivable_id
@@ -810,7 +811,9 @@ def _m12(project: Project, current_date: date) -> None:
             bike.settlement_legacy_debt_original = outstanding
             bike.settlement_legacy_debt_remaining = outstanding
             bike.settlement_start_date = dateutils.next_business_day(contract.maturity_date)
-            _new_receivable(project, bike, contract, outstanding)
+            _new_receivable(
+                project, bike, contract, outstanding, created_date=current_date
+            )
             _event(
                 project,
                 current_date,
