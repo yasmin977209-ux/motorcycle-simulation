@@ -18,9 +18,14 @@ def test_ch10_rollforward_equations_and_fixed_fields() -> None:
         assert set(cash) == {
             "Opening_Cash",
             "Inflows",
+            "Operating_Cash_Outflows",
+            "Investing_Cash_Outflows",
             "Outflows",
             "Closing_Cash",
         }
+        assert cash["Outflows"] == (
+            cash["Operating_Cash_Outflows"] + cash["Investing_Cash_Outflows"]
+        )
         assert (
             cash["Opening_Cash"] + cash["Inflows"] - cash["Outflows"]
             == cash["Closing_Cash"]

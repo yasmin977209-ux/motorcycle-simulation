@@ -214,6 +214,7 @@ def _ensure_day_metrics(project: Project, *, reset: bool = False) -> None:
     project._day_metrics = {
         "cash_inflows": 0,
         "cash_outflows": 0,
+        "investing_cash_outflows": 0,
         "ar_accruals": 0,
         "ar_collections": 0,
         "ar_transfers_to_guarantee": 0,
@@ -234,6 +235,12 @@ def _cash_out(project: Project, amount: int) -> None:
     _ensure_day_metrics(project)
     project.project_cash -= amount
     project._day_metrics["cash_outflows"] += amount
+
+
+def _investing_cash_out(project: Project, amount: int) -> None:
+    """Record an investing outflow while preserving the cash roll-forward."""
+    _cash_out(project, amount)
+    project._day_metrics["investing_cash_outflows"] += amount
 
 
 def _ar_collect(project: Project, amount: int) -> None:
@@ -311,7 +318,7 @@ def _m2(project: Project, current_date: date) -> None:
             and project.partner1_reinvestment_balance
             >= constants.CUSTOMS_AND_REGISTRATION_COST
         ):
-            _cash_out(project, constants.CUSTOMS_AND_REGISTRATION_COST)
+            _investing_cash_out(project, constants.CUSTOMS_AND_REGISTRATION_COST)
             consume_partner1_for_expansion(
                 project,
                 constants.CUSTOMS_AND_REGISTRATION_COST,
@@ -338,7 +345,7 @@ def _m2(project: Project, current_date: date) -> None:
             and project.partner1_reinvestment_balance
             >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
         ):
-            _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
+            _investing_cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
             consume_partner1_for_expansion(
                 project,
                 constants.BIKE_BASE_PURCHASE_COST,

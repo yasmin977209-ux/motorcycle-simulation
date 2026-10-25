@@ -11,6 +11,8 @@ ROLLFORWARD_FIELDS = {
     "cash": (
         "Opening_Cash",
         "Inflows",
+        "Operating_Cash_Outflows",
+        "Investing_Cash_Outflows",
         "Outflows",
         "Closing_Cash",
     ),
@@ -177,6 +179,10 @@ def record_daily_rollforwards(
             {
                 "Opening_Cash": opening["Opening_Cash"],
                 "Inflows": metrics["cash_inflows"],
+                "Operating_Cash_Outflows": (
+                    metrics["cash_outflows"] - metrics["investing_cash_outflows"]
+                ),
+                "Investing_Cash_Outflows": metrics["investing_cash_outflows"],
                 "Outflows": metrics["cash_outflows"],
                 "Closing_Cash": project.project_cash,
             },

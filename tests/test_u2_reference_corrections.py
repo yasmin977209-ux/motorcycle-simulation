@@ -100,3 +100,27 @@ def test_166_m2_purchases_at_most_one_expansion_bike_per_day() -> None:
     assert project.partner1_reinvestment_balance == (
         starting_cash - BIKE_BASE_PURCHASE_COST
     )
+
+def test_167_customs_are_in_investing_cash_outflows_and_cash_rollforward() -> None:
+    project = daily_engine.run_deterministic_trial(
+        recovery_rate_pct=100,
+        trial_id=1,
+        scenario_id="C100_G100",
+        master_seed=daily_engine.constants.MASTER_SEED,
+    )
+
+    investing_outflows = sum(
+        row["Investing_Cash_Outflows"] for row in project.cash_rollforward
+    )
+    capitalized_purchases_and_customs = sum(
+        row["Capitalized_Purchases_And_Customs"]
+        for row in project.asset_rollforward
+    )
+
+    assert investing_outflows > 0
+    assert investing_outflows == capitalized_purchases_and_customs
+    for cash in project.cash_rollforward:
+        assert cash["Outflows"] == (
+            cash["Operating_Cash_Outflows"] + cash["Investing_Cash_Outflows"]
+        )
+        assert cash["Opening_Cash"] + cash["Inflows"] - cash["Outflows"] == cash["Closing_Cash"]
