@@ -24,6 +24,7 @@ jobs:
       - name: Run affected tests in U2 item order
         shell: bash
         run: |
+          set +e
           set -uo pipefail
           LOG_FILE="$GITHUB_WORKSPACE/u2-validation.log"
           : > "$LOG_FILE"
@@ -73,7 +74,7 @@ jobs:
           run_group "U2-2 Settlement R8 / tests 46,47,54,164,165" \
             python -m pytest -q tests/test_acceptance_16_v2.py tests/test_u2_reference_corrections.py \
             -k "test_046_ or test_047_ or test_054_ or test_164_ or test_165_"
-          run_group "U2-2 M12 receivable origin date smoke" python /tmp/u2_m12_receivable_date_smoke.py
+          run_group "U2-2 M12 receivable origin date smoke" env PYTHONPATH="$GITHUB_WORKSPACE" python /tmp/u2_m12_receivable_date_smoke.py
 
           run_group "U2-3 M2 single expansion purchase / test 166" \
             python -m pytest -q tests/test_u2_reference_corrections.py::test_166_m2_purchases_at_most_one_expansion_bike_per_day
