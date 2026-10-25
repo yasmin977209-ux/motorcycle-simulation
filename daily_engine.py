@@ -447,6 +447,11 @@ def _m5(project: Project, current_date: date) -> None:
             accrue_rent(project, contract)
             project._day_metrics["ar_accruals"] += contract.daily_rate
         elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            if (
+                bike.settlement_start_date is None
+                or current_date < bike.settlement_start_date
+            ):
+                continue
             result = apply_settlement_rent(
                 current_date=current_date,
             )
@@ -612,6 +617,11 @@ def _m8(
                 "SECONDARY_COLLECTION",
             )
         elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            if (
+                bike.settlement_start_date is None
+                or current_date < bike.settlement_start_date
+            ):
+                continue
             remaining = bike.settlement_legacy_debt_remaining
             if remaining is None or remaining <= 0:
                 continue
@@ -789,7 +799,7 @@ def _m12(project: Project, current_date: date) -> None:
             contract.status = ContractStatus.MATURED
             bike.settlement_legacy_debt_original = outstanding
             bike.settlement_legacy_debt_remaining = outstanding
-            bike.settlement_start_date = None
+            bike.settlement_start_date = dateutils.next_business_day(contract.maturity_date)
             _new_receivable(project, bike, contract, outstanding)
             _event(
                 project,
@@ -827,21 +837,16 @@ def _m13(
             else None
         )
 
-        if bike.settlement_start_date is None:
-            if (
-                contract is None
-                or contract.maturity_date is None
-                or current_date <= contract.maturity_date
-                or not dateutils.is_business_day(current_date)
-            ):
-                continue
-            bike.settlement_start_date = current_date
-            receivable = _receivable_of(project, bike)
-            if receivable is not None:
-                receivable.created_date = current_date
-
+        if (
+            bike.settlement_start_date is None
+            or current_date < bike.settlement_start_date
+        ):
+            continue
         if not dateutils.is_business_day(current_date):
             continue
+        receivable = _receivable_of(project, bike)
+        if receivable is not None and receivable.created_date is None:
+            receivable.created_date = current_date
 
         bike.settlement_business_days_elapsed += 1
         if bike.settlement_legacy_debt_remaining == 0:
@@ -875,7 +880,7 @@ def _m13(
             )
         elif (
             bike.settlement_business_days_elapsed
-            > constants.SETTLEMENT_PERIOD_DAYS
+            >= constants.SETTLEMENT_PERIOD_DAYS
         ):
             remaining = bike.settlement_legacy_debt_remaining
             contract = (

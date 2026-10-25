@@ -47,6 +47,11 @@ def next_business_day_on_or_after(day: date) -> date:
     return current
 
 
+def next_business_day(day: date) -> date:
+    """Return the first business day strictly after day (7.1)."""
+    return next_business_day_on_or_after(day + timedelta(days=1))
+
+
 def scheduled_ready_date(purchase_date: date) -> date:
     """Reference: purchase_date + 6 calendar days."""
     return purchase_date + timedelta(days=BIKE_PREP_SCHEDULE_DAYS)

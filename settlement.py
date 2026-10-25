@@ -124,7 +124,7 @@ def _settlement_status(
     if settlement_business_days_elapsed(
         settlement_start_date,
         current_date,
-    ) >= SETTLEMENT_PERIOD_DAYS:
+    ) >= SETTLEMENT_PERIOD_DAYS - 1:
         return SettlementStatus.EXPIRED
     return SettlementStatus.ACTIVE
 
