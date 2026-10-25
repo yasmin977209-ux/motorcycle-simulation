@@ -82,3 +82,21 @@ def test_164_settlement_failure_occurs_on_business_day_30() -> None:
     assert project.guarantee_claims[-1].created_date == day30
     assert bike.active_settlement_receivable_id is None
     assert bike.settlement_business_days_elapsed == daily_engine.constants.SETTLEMENT_PERIOD_DAYS
+
+from constants import EXPANSION_PURCHASE_CASH_THRESHOLD, BIKE_BASE_PURCHASE_COST
+
+
+def test_166_m2_purchases_at_most_one_expansion_bike_per_day() -> None:
+    project = daily_engine.create_initial_project()
+    starting_count = len(project.bikes)
+    starting_cash = EXPANSION_PURCHASE_CASH_THRESHOLD * 2
+    project.project_cash = starting_cash
+    project.partner1_reinvestment_balance = starting_cash
+
+    daily_engine._m2(project, date(2027, 1, 2))
+
+    assert len(project.bikes) == starting_count + 1
+    assert project.project_cash == starting_cash - BIKE_BASE_PURCHASE_COST
+    assert project.partner1_reinvestment_balance == (
+        starting_cash - BIKE_BASE_PURCHASE_COST
+    )

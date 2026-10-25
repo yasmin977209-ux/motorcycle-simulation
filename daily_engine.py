@@ -333,7 +333,7 @@ def _m2(project: Project, current_date: date) -> None:
         current_date <= constants.EXPANSION_CUTOFF_DATE
         and not _has_prep_underfunded(project)
     ):
-        while (
+        if (
             project.project_cash >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
             and project.partner1_reinvestment_balance
             >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
