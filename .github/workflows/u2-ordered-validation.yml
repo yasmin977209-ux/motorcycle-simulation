@@ -1,0 +1,105 @@
+name: U2 ordered reference validation
+
+on:
+  push:
+    branches:
+      - u2/validation-20261025
+
+jobs:
+  validate-u2:
+    if: contains(github.event.head_commit.message, 'U2-VALIDATE-FINAL')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+      - name: Run affected tests in U2 item order
+        shell: bash
+        run: |
+          set -uo pipefail
+          LOG_FILE="$GITHUB_WORKSPACE/u2-validation.log"
+          : > "$LOG_FILE"
+          FAILED=0
+          run_group() {
+            label="$1"
+            shift
+            printf '\n===== %s =====\nCOMMAND:' "$label" | tee -a "$LOG_FILE"
+            printf ' %q' "$@" | tee -a "$LOG_FILE"
+            printf '\n' | tee -a "$LOG_FILE"
+            "$@" 2>&1 | tee -a "$LOG_FILE"
+            rc=${PIPESTATUS[0]}
+            printf 'EXIT_CODE=%s\n' "$rc" | tee -a "$LOG_FILE"
+            if [ "$rc" -ne 0 ]; then FAILED=1; fi
+          }
+
+          cat > /tmp/u2_m12_receivable_date_smoke.py <<'PY'
+          from datetime import date
+          import dateutils
+          import daily_engine
+          from entities import BikeState, ContractType
+
+          maturity = date(2031, 1, 2)
+          project = daily_engine.create_initial_project()
+          bike = project.bikes[0]
+          contract = daily_engine._new_contract(
+              project, bike, ContractType.PRIMARY, date(2029, 1, 2)
+          )
+          contract.maturity_date = maturity
+          contract.total_due = 1
+          contract.total_paid = 0
+          bike.current_contract_id = contract.contract_id
+          bike.current_tenant_id = contract.tenant_id
+          bike.current_state = BikeState.ACTIVE_PRIMARY
+          daily_engine._m12(project, maturity)
+          receivable = daily_engine._receivable_of(project, bike)
+          assert bike.settlement_start_date == dateutils.next_business_day(maturity)
+          assert receivable is not None
+          assert receivable.created_date == maturity, (receivable.created_date, maturity)
+          print("PASS: M12 sets settlement_start_date and receivable.created_date on maturity date")
+          PY
+
+          run_group "U2-1 Friday calendar 5.2 / tests 19-24 and 168" \
+            python -m pytest -q tests/test_acceptance_16_v2.py tests/test_u2_reference_corrections.py \
+            -k "test_019_ or test_020_ or test_021_ or test_022_ or test_023_ or test_024_ or test_168_"
+
+          run_group "U2-2 Settlement R8 / tests 46,47,54,164,165" \
+            python -m pytest -q tests/test_acceptance_16_v2.py tests/test_u2_reference_corrections.py \
+            -k "test_046_ or test_047_ or test_054_ or test_164_ or test_165_"
+          run_group "U2-2 M12 receivable origin date smoke" python /tmp/u2_m12_receivable_date_smoke.py
+
+          run_group "U2-3 M2 single expansion purchase / test 166" \
+            python -m pytest -q tests/test_u2_reference_corrections.py::test_166_m2_purchases_at_most_one_expansion_bike_per_day
+
+          run_group "U2-4 Customs investment outflows and cash roll-forward / test 167" \
+            python -m pytest -q tests/test_u2_reference_corrections.py::test_167_customs_are_in_investing_cash_outflows_and_cash_rollforward tests/test_stage3b_rollforward.py
+
+          run_group "U2-5 Partner allocation helpers only / split_70_30 and allocate_inflow" \
+            python -m pytest -q tests/test_u2_reference_corrections.py::test_partner_split_has_one_algorithm_and_inflows_use_allocator tests/test_stage3b_partner_equity.py
+
+          run_group "U2-6 Appendix B naming and integer constants / tests 177 and 178" \
+            python -m pytest -q tests/test_u2_reference_corrections.py::test_177_no_integer_magic_numbers_outside_constants_py tests/test_u2_reference_corrections.py::test_178_unified_names_only_in_engine_and_active_output_builder
+
+          run_group "U2-7 Collection-level RNG and integer draw / tests 128 and 171" \
+            python -m pytest -q tests/test_acceptance_16_v2.py tests/test_u2_reference_corrections.py \
+            -k "test_128_ or test_171_"
+
+          run_group "U2-8 Entity fields, M10/M15.3, stall detector / test 173" \
+            python -m pytest -q \
+              tests/test_u2_reference_corrections.py::test_pending_writeoff_today_is_consumed_by_m16 \
+              tests/test_u2_reference_corrections.py::test_m13_failure_claim_uses_recovery_rate_pct_in_daily_sequence \
+              tests/test_u2_reference_corrections.py::test_m15_3_final_closure_receivable_uses_scenario_recovery_rate \
+              tests/test_u2_reference_corrections.py::test_173_stall_detector_requires_all_reference_conditions \
+              tests/test_stage2_entities_additions.py tests/test_stage3b_closure.py tests/test_stage3b_m_order.py
+
+          printf '\n===== FINAL SUMMARY =====\n' | tee -a "$LOG_FILE"
+          printf 'FAILED_GROUPS=%s\n' "$FAILED" | tee -a "$LOG_FILE"
+          sha256sum "$LOG_FILE" | tee -a "$LOG_FILE"
+          if [ "$FAILED" -ne 0 ]; then exit 1; fi
