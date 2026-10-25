@@ -971,7 +971,7 @@ def test_adaptive_mode_rejects_duplicate_zero_checksum_if_draws_were_recorded():
     # Both rows carry positive draw counts. Recompute map identity so the
     # validator must reject the duplicate itself, not merely the stale digest.
     ordered = [
-        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\\n"
+        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\n"
         for scenario in EXPECTED_SCENARIOS
         for row in data["trials_by_scenario"][scenario]
     ]
