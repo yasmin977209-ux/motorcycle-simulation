@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import Enum
 
-from constants import SETTLEMENT_DAILY_RENT, SETTLEMENT_PERIOD_DAYS
+from constants import PRIMARY_DAILY_RENT, SETTLEMENT_DAILY_RENT, SETTLEMENT_PERIOD_DAYS
 from dateutils import is_business_day, is_friday
 
 
@@ -96,7 +96,7 @@ def apply_legacy_debt_collection(
             accounts_receivable_delta=0,
         )
 
-    payment = min(SETTLEMENT_DAILY_RENT, remaining_debt)
+    payment = min(PRIMARY_DAILY_RENT, remaining_debt)
     remaining_after = remaining_debt - payment
     return LegacyDebtCollectionResult(
         payment=payment,
