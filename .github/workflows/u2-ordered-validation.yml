@@ -102,5 +102,14 @@ jobs:
 
           printf '\n===== FINAL SUMMARY =====\n' | tee -a "$LOG_FILE"
           printf 'FAILED_GROUPS=%s\n' "$FAILED" | tee -a "$LOG_FILE"
-          sha256sum "$LOG_FILE" | tee -a "$LOG_FILE"
+          sha256sum "$LOG_FILE" | tee -a "$GITHUB_STEP_SUMMARY"
           if [ "$FAILED" -ne 0 ]; then exit 1; fi
+
+      - name: Preserve test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: u2-ordered-test-log
+          path: u2-validation.log
+          if-no-files-found: error
+          retention-days: 30
