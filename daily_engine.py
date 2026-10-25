@@ -37,9 +37,10 @@ from entities import (
 from collection import apply_ordinary_collection
 from guarantee import create_guarantee_claim
 from partner_equity import (
+    allocate_inflow,
     assert_memo_nonnegative,
     consume_partner1_for_expansion,
-    record_eligible_inflow,
+    final_entitlements,
 )
 from friday import apply_friday_fee_and_oil
 from settlement import (
@@ -468,7 +469,7 @@ def _m5(project: Project, current_date: date) -> None:
             if result.cash_delta > 0:
                 _cash_in(project, result.cash_delta)
             if result.collected > 0:
-                record_eligible_inflow(project, result.collected)
+                allocate_inflow(project, result.collected)
 
 
 def _m6(
@@ -499,7 +500,7 @@ def _m6(
         contract.friday_counter = result.friday_counter_after
         if result.revenue_friday_fee:
             _cash_in(project, result.revenue_friday_fee)
-            record_eligible_inflow(
+            allocate_inflow(
                 project,
                 result.revenue_friday_fee,
             )
@@ -574,7 +575,7 @@ def _collect_ordinary(
         _cash_in(project, result.cash_delta)
     if result.collected > 0:
         _ar_collect(project, result.collected)
-        record_eligible_inflow(project, result.collected)
+        allocate_inflow(project, result.collected)
 
 
 def _m8(
@@ -658,7 +659,7 @@ def _m8(
                 if receivable.remaining_amount == 0:
                     receivable.status = ReceivableStatus.SETTLED
             if result.payment > 0:
-                record_eligible_inflow(project, result.payment)
+                allocate_inflow(project, result.payment)
 
 
 def _m9(project: Project) -> None:
@@ -950,7 +951,7 @@ def _m14(
         _cash_in(project, recovered)
         project.guarantee_claim_receivable -= claim.claim_amount
         project.bad_debt_expense += bad_debt
-        record_eligible_inflow(project, recovered)
+        allocate_inflow(project, recovered)
         claim.recovered_amount = recovered
         claim.bad_debt_amount = bad_debt
         claim.settlement_date = current_date
@@ -1015,13 +1016,10 @@ def _m17(
             for bike in project.bikes
             if bike.current_state is BikeState.HELD_AS_ASSET
         )
-        project.partner1_final_entitlement = (
-            project.final_net_project_equity * 70
-        ) // 100
-        project.partner2_final_entitlement = (
-            project.final_net_project_equity
-            - project.partner1_final_entitlement
-        )
+        (
+            project.partner1_final_entitlement,
+            project.partner2_final_entitlement,
+        ) = final_entitlements(project)
 
     snapshot = assert_balance_sheet_balanced(project, current_date)
     project.daily_balance_checks.append(snapshot)

@@ -5,13 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from constants import (
-    FRIDAY_FEE,
-    OIL_SERVICE_COST,
-    PARTNER1_FINAL_SHARE_PCT,
-    PARTNER2_FINAL_SHARE_PCT,
-)
+from constants import FRIDAY_FEE, OIL_SERVICE_COST
 from dateutils import is_eligible_friday, is_friday
+from partner_equity import split_70_30
 
 
 @dataclass(frozen=True)
@@ -60,14 +56,15 @@ def apply_friday_fee_and_oil(
 
     counter_after = friday_counter + 1
     fee = FRIDAY_FEE
+    partner1_allocation, partner2_allocation = split_70_30(fee)
     oil = OIL_SERVICE_COST if counter_after % 2 == 0 else 0
     return FridayResult(
         eligible=True,
         revenue_friday_fee=fee,
         oil_service_expense=oil,
         cash_delta=fee - oil,
-        partner1_allocation=(fee * PARTNER1_FINAL_SHARE_PCT) // 100,
-        partner2_allocation=(fee * PARTNER2_FINAL_SHARE_PCT) // 100,
+        partner1_allocation=partner1_allocation,
+        partner2_allocation=partner2_allocation,
         friday_counter_after=counter_after,
     )
 

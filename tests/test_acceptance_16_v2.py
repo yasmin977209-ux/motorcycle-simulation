@@ -11,7 +11,7 @@ import pytest
 from constants import *
 from entities import Bike, Contract, GuaranteeClaim, Project, ContractType, BikeState
 from accounting import initialize_accounting, balance_sheet_snapshot, refresh_profit, accrue_rent, collect_from_ar, settle_guarantee_accounting
-from partner_equity import record_eligible_inflow, final_entitlements
+from partner_equity import allocate_inflow, final_entitlements
 from state_machine import derive_state_from_balance, TRANSITION_TABLE
 from friday import is_eligible_friday, apply_friday_fee_and_oil
 from dateutils import eligible_friday_number

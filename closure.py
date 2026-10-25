@@ -19,7 +19,7 @@ from entities import (
     ReceivableStatus,
 )
 from guarantee import create_guarantee_claim, settle_guarantee_claim
-from partner_equity import record_eligible_inflow
+from partner_equity import allocate_inflow
 
 
 def closure_preconditions_met(project: Project, current_date: date) -> bool:
@@ -91,7 +91,7 @@ def _force_settle(project: Project, claim, current_date: date) -> None:
         bad_debt,
     )
     _metric(project, "cash_inflows", recovered)
-    record_eligible_inflow(project, recovered)
+    allocate_inflow(project, recovered)
 
 
 def execute_dynamic_closure(

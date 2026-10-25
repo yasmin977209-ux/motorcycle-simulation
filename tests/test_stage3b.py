@@ -5,7 +5,7 @@ from accounting import assert_balance_sheet_balanced, balance_sheet_snapshot
 from closure import closure_preconditions_met
 from constants import EXPANSION_CUTOFF_DATE, OPENING_BIKE_ASSETS, OPENING_RETAINED_LOSS, TOTAL_CAPITAL
 from daily_engine import create_initial_project, run_day, run_deterministic_trial
-from partner_equity import record_eligible_inflow
+from partner_equity import allocate_inflow
 
 def test_ch10_opening_balance_sheet():
     p=create_initial_project()
@@ -15,7 +15,7 @@ def test_ch10_opening_balance_sheet():
 
 def test_ch11_partner_memo_off_balance_sheet():
     p=create_initial_project(); before=balance_sheet_snapshot(p)
-    assert record_eligible_inflow(p,1000)==(700,300)
+    assert allocate_inflow(p,1000)==(700,300)
     after=balance_sheet_snapshot(p)
     assert after["Total_Assets"]==before["Total_Assets"] and after["Total_Equity"]==before["Total_Equity"]
 

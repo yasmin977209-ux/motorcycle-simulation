@@ -124,3 +124,15 @@ def test_167_customs_are_in_investing_cash_outflows_and_cash_rollforward() -> No
             cash["Operating_Cash_Outflows"] + cash["Investing_Cash_Outflows"]
         )
         assert cash["Opening_Cash"] + cash["Inflows"] - cash["Outflows"] == cash["Closing_Cash"]
+
+
+
+def test_partner_split_has_one_algorithm_and_inflows_use_allocator() -> None:
+    from partner_equity import split_70_30, allocate_inflow
+    project = daily_engine.create_initial_project()
+    assert split_70_30(1001) == (700, 301)
+    before1 = project.partner1_reinvestment_balance
+    before2 = project.partner2_reinvestment_balance
+    allocate_inflow(project, 1001)
+    assert project.partner1_reinvestment_balance - before1 == 700
+    assert project.partner2_reinvestment_balance - before2 == 301
