@@ -287,7 +287,9 @@ def _validate_rng_audits(
             raise StateIntegrityError(
                 f"stochastic trial has no RNG draws at trial_id={result.trial_id}"
             )
-        if checksum != 0:
+        # A zero checksum is valid when draws occurred; only a zero-draw
+        # deterministic endpoint should be excluded from collision checks.
+        if draw_count > 0:
             prior = seen.get(checksum)
             if prior is not None and prior != result.trial_id:
                 raise StateIntegrityError(

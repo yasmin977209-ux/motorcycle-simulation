@@ -174,3 +174,26 @@ def test_stage10_write_json_emits_parseable_json_with_real_newline(tmp_path) -> 
     assert raw.endswith("\n")
     assert json.loads(raw) == payload
     assert not raw.endswith("\\n")
+
+
+def test_rng_audit_validation_does_not_skip_duplicate_zero_checksum_when_draws_occur() -> None:
+    records = [
+        SimpleNamespace(
+            scenario_id="C070_G100",
+            collection_probability=0.7,
+            recovery_rate_pct=100,
+            trial_id=1,
+            rng_checksum=0,
+            rng_draw_count=20,
+        ),
+        SimpleNamespace(
+            scenario_id="C070_G100",
+            collection_probability=0.7,
+            recovery_rate_pct=100,
+            trial_id=2,
+            rng_checksum=0,
+            rng_draw_count=25,
+        ),
+    ]
+    with pytest.raises(StateIntegrityError, match="DUPLICATE_SEED_DETECTED"):
+        run_batch._validate_rng_audits(records, expected_scenario="C070_G100")

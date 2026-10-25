@@ -961,3 +961,22 @@ def test_adaptive_mode_rejects_stochastic_trial_with_empty_rng_audit():
     ).hexdigest()
     with pytest.raises(RuntimeError, match="ADAPTIVE_STOCHASTIC_RNG_AUDIT_EMPTY"):
         _validate_mode_and_identity(data, "adaptive")
+
+
+def test_adaptive_mode_rejects_duplicate_zero_checksum_if_draws_were_recorded():
+    data = adaptive_data()
+    rows = data["trials_by_scenario"]["C070_G100"]
+    rows[0]["rng_checksum"] = 0
+    rows[1]["rng_checksum"] = 0
+    # Both rows carry positive draw counts. Recompute map identity so the
+    # validator must reject the duplicate itself, not merely the stale digest.
+    ordered = [
+        f"{scenario}|{row['trial_id']}|{row['rng_checksum']}|{row['rng_draw_count']}\\n"
+        for scenario in EXPECTED_SCENARIOS
+        for row in data["trials_by_scenario"][scenario]
+    ]
+    data["manifest"]["rng_audit_map_sha256"] = hashlib.sha256(
+        "".join(ordered).encode("utf-8")
+    ).hexdigest()
+    with pytest.raises(RuntimeError, match="DUPLICATE_SEED_DETECTED"):
+        _validate_mode_and_identity(data, "adaptive")
