@@ -11,7 +11,7 @@ from constants import (
     PARTNER1_FINAL_SHARE_PCT,
     PARTNER2_FINAL_SHARE_PCT,
 )
-from dateutils import is_eligible_friday
+from dateutils import is_eligible_friday, is_friday
 
 
 @dataclass(frozen=True)
@@ -32,15 +32,21 @@ def apply_friday_fee_and_oil(
     current_date: date,
     friday_counter: int,
     in_tenant_possession: bool,
+    first_eligible_friday_date: date | None = None,
 ) -> FridayResult:
     """Apply one eligible-Friday snapshot without touching daily-engine state."""
     if friday_counter < 0:
         raise ValueError("friday_counter must not be negative")
 
-    eligible = (
-        in_tenant_possession
-        and is_eligible_friday(delivery_date, current_date)
-    )
+    if first_eligible_friday_date is None:
+        eligible = in_tenant_possession and is_eligible_friday(delivery_date, current_date)
+    else:
+        eligible = (
+            in_tenant_possession
+            and is_friday(current_date)
+            and current_date >= first_eligible_friday_date
+            and (current_date - first_eligible_friday_date).days % 7 == 0
+        )
     if not eligible:
         return FridayResult(
             eligible=False,

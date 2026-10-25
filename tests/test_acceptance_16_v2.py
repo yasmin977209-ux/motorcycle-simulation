@@ -138,15 +138,15 @@ def test_018_عدم_التسليم_يوم_الجمعة():
     daily_engine._m3(p,date(2027,1,1)); assert b.current_state == 'PREP'
 
 
-def test_019_تسليم_السبت_اول_جمعة_بعد_7_ايام():
+def test_019_تسليم_السبت_اول_جمعة_بعد_6_ايام():
     d=date(2027,1,2); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 
-def test_020_تسليم_الاحد_اول_جمعة_بعد_6_ايام():
+def test_020_تسليم_الاحد_اول_جمعة_بعد_5_ايام():
     d=date(2027,1,3); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 
-def test_021_تسليم_الاثنين_اول_جمعة_بعد_5_ايام():
+def test_021_تسليم_الاثنين_اول_جمعة_بعد_4_ايام():
     d=date(2027,1,4); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 

@@ -106,6 +106,7 @@ def _new_contract(
             else constants.SECONDARY_DAILY_RENT
         ),
         start_date=current_date,
+        first_eligible_friday_date=dateutils.first_eligible_friday(current_date),
         maturity_date=(
             dateutils.primary_maturity_date(current_date)
             if contract_type is ContractType.PRIMARY
@@ -478,6 +479,7 @@ def _m6(
             current_date,
             contract.friday_counter,
             True,
+            first_eligible_friday_date=contract.first_eligible_friday_date,
         )
         if not result.eligible:
             continue

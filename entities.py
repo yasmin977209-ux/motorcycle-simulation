@@ -156,6 +156,7 @@ class Contract:
     total_due: int = 0
     total_paid: int = 0
     friday_counter: int = 0
+    first_eligible_friday_date: date | None = None
 
 
 @dataclass
