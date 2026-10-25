@@ -57,6 +57,10 @@ ADAPTIVE_TRIAL_RESULT_FIELDS = (
     "partner1_final_entitlement",
     "partner2_final_entitlement",
 )
+ADAPTIVE_TRIAL_AUDIT_FIELDS = ("rng_checksum", "rng_draw_count")
+ADAPTIVE_TRIAL_SCHEMA_FIELDS = (
+    ADAPTIVE_TRIAL_RESULT_FIELDS + ADAPTIVE_TRIAL_AUDIT_FIELDS
+)
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 EXPECTED_SCENARIOS = [
@@ -1094,8 +1098,8 @@ def _valid_sha256(value):
 
 
 def _adaptive_trial_result_sha256(row):
-    """Hash the exact source-defined TrialResult payload, excluding its sidecar digest."""
-    expected_fields = set(ADAPTIVE_TRIAL_RESULT_FIELDS) | {"result_sha256"}
+    """Hash financial TrialResult fields; RNG audit is verified in a separate map."""
+    expected_fields = set(ADAPTIVE_TRIAL_SCHEMA_FIELDS) | {"result_sha256"}
     if not isinstance(row, dict) or set(row) != expected_fields:
         actual_fields = set(row) if isinstance(row, dict) else set()
         missing = sorted(expected_fields - actual_fields)
@@ -1157,11 +1161,14 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
         raise RuntimeError("ADAPTIVE_RUN_HEAD_SHA_INVALID")
     if not _valid_sha256(manifest.get("ordered_trial_hash_map_sha256")):
         raise RuntimeError("ADAPTIVE_ORDERED_MAP_SHA_INVALID")
+    if not _valid_sha256(manifest.get("rng_audit_map_sha256")):
+        raise RuntimeError("ADAPTIVE_RNG_AUDIT_MAP_SHA_INVALID")
     if manifest.get("total_representatives") != len(EXPECTED_SCENARIOS) * 5:
         raise RuntimeError("ADAPTIVE_REPRESENTATIVE_COUNT_MISMATCH")
 
     expected_total = 0
     ordered_fingerprints = []
+    ordered_rng_audit = []
     required_scenario_meta = manifest.get("scenarios")
     if not isinstance(required_scenario_meta, dict) or set(required_scenario_meta) != set(EXPECTED_SCENARIOS):
         raise RuntimeError("MANIFEST_SCENARIO_IDENTITY_MISMATCH")
@@ -1191,6 +1198,7 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
         expected_total += stable_at_n
         expected_collection_probability = int(scenario[1:4]) / 100.0
         expected_recovery_rate_pct = int(scenario[6:9])
+        seen_rng_checksums = {}
         for row in rows:
             digest = row.get("result_sha256")
             if not _valid_sha256(digest):
@@ -1200,6 +1208,41 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
                 raise RuntimeError(
                     f"ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH: {scenario}:{row.get('trial_id')}"
                 )
+
+            checksum = row.get("rng_checksum")
+            draw_count = row.get("rng_draw_count")
+            if type(checksum) is not int or not 0 <= checksum < (1 << 64):
+                raise RuntimeError(
+                    f"ADAPTIVE_RNG_CHECKSUM_INVALID: {scenario}:{row.get('trial_id')}"
+                )
+            if type(draw_count) is not int or draw_count < 0:
+                raise RuntimeError(
+                    f"ADAPTIVE_RNG_DRAW_COUNT_INVALID: {scenario}:{row.get('trial_id')}"
+                )
+            if draw_count == 0 and checksum != 0:
+                raise RuntimeError(
+                    f"ADAPTIVE_RNG_CHECKSUM_WITHOUT_DRAWS: {scenario}:{row.get('trial_id')}"
+                )
+            if expected_collection_probability in (0.0, 1.0) and (
+                draw_count != 0 or checksum != 0
+            ):
+                raise RuntimeError(
+                    f"ADAPTIVE_DETERMINISTIC_RNG_AUDIT_NOT_EMPTY: {scenario}:{row.get('trial_id')}"
+                )
+            if expected_collection_probability not in (0.0, 1.0) and draw_count == 0:
+                raise RuntimeError(f"ADAPTIVE_STOCHASTIC_RNG_AUDIT_EMPTY: {scenario}:{row.get('trial_id')}")
+            # Zero is a valid checksum if at least one draw occurred.
+            # Deterministic endpoints have draw_count == 0 and are excluded.
+            if draw_count > 0:
+                previous_trial = seen_rng_checksums.get(checksum)
+                if previous_trial is not None:
+                    raise RuntimeError(
+                        f"DUPLICATE_SEED_DETECTED: {scenario}:{previous_trial},{_trial_id(row)}:{checksum}"
+                    )
+                seen_rng_checksums[checksum] = _trial_id(row)
+            ordered_rng_audit.append(
+                f"{scenario}|{_trial_id(row)}|{checksum}|{draw_count}\n"
+            )
 
             # A valid digest binds values together, but does not by itself prove
             # that the values belong to the scenario named by the cohort key.
@@ -1351,6 +1394,9 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
 
     if manifest.get("total_trials") != expected_total:
         raise RuntimeError("ADAPTIVE_TOTAL_TRIAL_COUNT_MISMATCH")
+    computed_rng_map_sha = hashlib.sha256("".join(ordered_rng_audit).encode("utf-8")).hexdigest()
+    if computed_rng_map_sha != manifest.get("rng_audit_map_sha256"):
+        raise RuntimeError("ADAPTIVE_RNG_AUDIT_MAP_SHA_MISMATCH")
     computed_map_sha = hashlib.sha256("".join(ordered_fingerprints).encode("utf-8")).hexdigest()
     if computed_map_sha != manifest.get("ordered_trial_hash_map_sha256"):
         raise RuntimeError("ADAPTIVE_ORDERED_MAP_SHA_MISMATCH")
