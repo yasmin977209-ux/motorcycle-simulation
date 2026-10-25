@@ -5,6 +5,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, daily_engine, monte_carlo, rng
+from run_batch import _validate_rng_audits
 
 def utc_now(): return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
 def canonical_json(v): return json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(",",":"),default=str).encode("utf-8")
@@ -12,6 +13,11 @@ def result_sha(x):
     payload=dataclasses.asdict(x)
     payload.pop("rng_checksum",None); payload.pop("rng_draw_count",None)
     return hashlib.sha256(canonical_json(payload)).hexdigest()
+def require_rng_audit_fields(row):
+    required = {"rng_checksum", "rng_draw_count"}
+    missing = sorted(required - set(row))
+    if missing:
+        raise RuntimeError(f"BASELINE_RNG_AUDIT_FIELDS_MISSING:{missing}")
 def dataset_fp(xs): return monte_carlo.fingerprint_trial_results(xs)
 def blob_sha(path): return subprocess.check_output(["git","rev-parse",f"HEAD:{path}"],text=True).strip()
 def percentile(vals,q):
@@ -51,8 +57,12 @@ def read_baseline(root,s,source,artifact_id,expected_run):
         if expected_fps.get(rg)!=d.get("fingerprint_sha256"): raise RuntimeError(f"BASELINE_BLOCK_FINGERPRINT_MISMATCH:{rg}")
         pp=mp.with_name(mp.name.replace("_metadata.json",".parquet"))
         if not pp.exists(): raise RuntimeError("BASELINE_PARQUET_MISSING")
-        rs += [monte_carlo.TrialResult(**row) for row in pq.read_table(pp).to_pylist()]
+        block_rows = pq.read_table(pp).to_pylist()
+        for row in block_rows:
+            require_rng_audit_fields(row)
+        rs += [monte_carlo.TrialResult(**row) for row in block_rows]
     rs.sort(key=lambda x:x.trial_id)
+    _validate_rng_audits(rs, expected_scenario=s)
     expected=1 if s.startswith("C100_") else 450
     if [x.trial_id for x in rs] != list(range(1,expected+1)): raise RuntimeError("BASELINE_TRIAL_SEQUENCE_MISMATCH")
     fp=dataset_fp(rs); st=load_state()
@@ -88,6 +98,7 @@ def main(argv):
         if end-start+1!=100 or start!=len(rs)+1: raise RuntimeError("CANONICAL_RANGE_MISMATCH")
         for tid in range(start,end+1):
             x,m=run_trial(s,tid,seed); new.append(x); measures.append(m)
+        _validate_rng_audits(new, expected_scenario=s)
         block=out/f"block_{start}_{end}.parquet"
         pq.write_table(pa.Table.from_pylist([dataclasses.asdict(x) for x in new]),block)
         combined=rs+new

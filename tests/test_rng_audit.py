@@ -119,3 +119,12 @@ def test_rng_audit_validation_accepts_deterministic_scenario_without_draws() -> 
         rng_draw_count=0,
     )
     run_batch._validate_rng_audits([record], expected_scenario="C100_G100")
+
+
+def test_stage10_baseline_audit_field_guard_rejects_legacy_rows_without_metadata() -> None:
+    from scripts.stage10_benchmark import require_rng_audit_fields
+
+    with pytest.raises(RuntimeError, match="BASELINE_RNG_AUDIT_FIELDS_MISSING"):
+        require_rng_audit_fields({"trial_id": 1, "final_cash": 100})
+
+    require_rng_audit_fields({"trial_id": 1, "rng_checksum": 0, "rng_draw_count": 0})
