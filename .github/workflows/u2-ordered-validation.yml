@@ -100,8 +100,15 @@ jobs:
               tests/test_u2_reference_corrections.py::test_173_stall_detector_requires_all_reference_conditions \
               tests/test_stage2_entities_additions.py tests/test_stage3b_closure.py tests/test_stage3b_m_order.py
 
+          printf '\n===== FULL SUITE REGRESSION CHECK =====\n' | tee -a "$LOG_FILE"
+          printf 'COMMAND: python -m pytest -q tests\n' | tee -a "$LOG_FILE"
+          python -m pytest -q tests 2>&1 | tee -a "$LOG_FILE"
+          FULL_SUITE_RC=${PIPESTATUS[0]}
+          printf 'FULL_SUITE_EXIT_CODE=%s\n' "$FULL_SUITE_RC" | tee -a "$LOG_FILE"
+
           printf '\n===== FINAL SUMMARY =====\n' | tee -a "$LOG_FILE"
-          printf 'FAILED_GROUPS=%s\n' "$FAILED" | tee -a "$LOG_FILE"
+          printf 'U2_TARGET_GROUP_FAILURES=%s\n' "$FAILED" | tee -a "$LOG_FILE"
+          printf 'FULL_SUITE_EXIT_CODE=%s\n' "$FULL_SUITE_RC" | tee -a "$LOG_FILE"
           sha256sum "$LOG_FILE" | tee -a "$GITHUB_STEP_SUMMARY"
           if [ "$FAILED" -ne 0 ]; then exit 1; fi
 
