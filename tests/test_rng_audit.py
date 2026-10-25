@@ -128,3 +128,36 @@ def test_stage10_baseline_audit_field_guard_rejects_legacy_rows_without_metadata
         require_rng_audit_fields({"trial_id": 1, "final_cash": 100})
 
     require_rng_audit_fields({"trial_id": 1, "rng_checksum": 0, "rng_draw_count": 0})
+
+
+def test_stage10_baseline_requires_valid_source_bound_block_audit_fingerprint() -> None:
+    from scripts.stage10_benchmark import validate_block_rng_audit
+
+    result = _trial(123, 8)
+    source_sha = "a" * 40
+    master_seed = 20270101
+    valid = {
+        "rng_audit_schema": rng.RNG_CHECKSUM_SCHEMA,
+        "master_seed": master_seed,
+        "rng_checksum_fingerprint_sha256": fingerprint_rng_audit(
+            [result], source_sha=source_sha, master_seed=master_seed
+        ),
+    }
+    validate_block_rng_audit(
+        valid, [result], scenario="C085_G070",
+        source_sha=source_sha, master_seed=master_seed
+    )
+
+    tampered = dict(valid, rng_checksum_fingerprint_sha256="b" * 64)
+    with pytest.raises(RuntimeError, match="BASELINE_BLOCK_RNG_AUDIT_FINGERPRINT_MISMATCH"):
+        validate_block_rng_audit(
+            tampered, [result], scenario="C085_G070",
+            source_sha=source_sha, master_seed=master_seed
+        )
+
+    wrong_seed = dict(valid, master_seed=7)
+    with pytest.raises(RuntimeError, match="BASELINE_RNG_AUDIT_MASTER_SEED_MISMATCH"):
+        validate_block_rng_audit(
+            wrong_seed, [result], scenario="C085_G070",
+            source_sha=source_sha, master_seed=master_seed
+        )

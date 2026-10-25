@@ -18,6 +18,19 @@ def require_rng_audit_fields(row):
     missing = sorted(required - set(row))
     if missing:
         raise RuntimeError(f"BASELINE_RNG_AUDIT_FIELDS_MISSING:{missing}")
+
+def validate_block_rng_audit(metadata, results, *, scenario, source_sha, master_seed):
+    if metadata.get("rng_audit_schema") != rng.RNG_CHECKSUM_SCHEMA:
+        raise RuntimeError("BASELINE_RNG_AUDIT_SCHEMA_MISMATCH")
+    if metadata.get("master_seed") != master_seed:
+        raise RuntimeError("BASELINE_RNG_AUDIT_MASTER_SEED_MISMATCH")
+    expected = monte_carlo.fingerprint_rng_audit(
+        results, source_sha=source_sha, master_seed=master_seed
+    )
+    if metadata.get("rng_checksum_fingerprint_sha256") != expected:
+        raise RuntimeError("BASELINE_BLOCK_RNG_AUDIT_FINGERPRINT_MISMATCH")
+    _validate_rng_audits(results, expected_scenario=scenario)
+
 def dataset_fp(xs): return monte_carlo.fingerprint_trial_results(xs)
 def blob_sha(path): return subprocess.check_output(["git","rev-parse",f"HEAD:{path}"],text=True).strip()
 def percentile(vals,q):
@@ -42,7 +55,7 @@ def verify_state(s, source):
     if int(d.get("completed_trials",-1))!=expected or int(d.get("next_trial_id",-1))!=expected+1: raise RuntimeError("BASELINE_STATE_TRIAL_COUNT_MISMATCH")
     return d
 
-def read_baseline(root,s,source,artifact_id,expected_run):
+def read_baseline(root,s,source,artifact_id,expected_run,master_seed):
     m=load_manifest()
     expected_artifact=int(m["artifact_manifest"]["official_block_artifacts"][s])
     if expected_artifact!=int(artifact_id): raise RuntimeError("BASELINE_ARTIFACT_ID_MISMATCH")
@@ -60,7 +73,18 @@ def read_baseline(root,s,source,artifact_id,expected_run):
         block_rows = pq.read_table(pp).to_pylist()
         for row in block_rows:
             require_rng_audit_fields(row)
-        rs += [monte_carlo.TrialResult(**row) for row in block_rows]
+        block_results = [monte_carlo.TrialResult(**row) for row in block_rows]
+        if (
+            not block_results
+            or min(item.trial_id for item in block_results) != int(d["trial_id_start"])
+            or max(item.trial_id for item in block_results) != int(d["trial_id_end"])
+            or len(block_results) != int(d.get("trial_count", -1))
+        ):
+            raise RuntimeError(f"BASELINE_BLOCK_RANGE_OR_COUNT_MISMATCH:{rg}")
+        validate_block_rng_audit(
+            d, block_results, scenario=s, source_sha=source, master_seed=master_seed
+        )
+        rs += block_results
     rs.sort(key=lambda x:x.trial_id)
     _validate_rng_audits(rs, expected_scenario=s)
     expected=1 if s.startswith("C100_") else 450
@@ -91,7 +115,7 @@ def main(argv):
     start=int(start); end=int(end); artifact_id=int(artifact_id); expected_run=int(expected_run); current_run=int(current_run); seed=int(seed)
     verify_source(source)
     if seed!=constants.MASTER_SEED: raise RuntimeError("MASTER_SEED_MISMATCH")
-    rs,basefp,st,baseline_root=read_baseline(Path(root),s,source,artifact_id,expected_run)
+    rs,basefp,st,baseline_root=read_baseline(Path(root),s,source,artifact_id,expected_run,seed)
     out=Path("stage10_output")/s; out.mkdir(parents=True,exist_ok=True)
     chunk_started=utc_now(); t0=time.perf_counter(); measures=[]; new=[]
     if mode=="canonical":
@@ -102,11 +126,11 @@ def main(argv):
         block=out/f"block_{start}_{end}.parquet"
         pq.write_table(pa.Table.from_pylist([dataclasses.asdict(x) for x in new]),block)
         combined=rs+new
-        meta={"scenario":s,"trial_id_start":start,"trial_id_end":end,"trial_count":100,"elapsed_seconds":sum(m["elapsed_seconds"] for m in measures),"max_rss_kb":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),"cpu_count":os.cpu_count(),"fingerprint_sha256":dataset_fp(new),"per_trial_sha256":[result_sha(x) for x in new],"log_events":False,"source_sha":source,"run_id":str(current_run),"baseline_fingerprint_sha256":basefp,"combined_fingerprint_sha256":dataset_fp(combined),"rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed)}
+        meta={"scenario":s,"trial_id_start":start,"trial_id_end":end,"trial_count":100,"elapsed_seconds":sum(m["elapsed_seconds"] for m in measures),"max_rss_kb":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),"cpu_count":os.cpu_count(),"fingerprint_sha256":dataset_fp(new),"per_trial_sha256":[result_sha(x) for x in new],"log_events":False,"rng_audit_schema":rng.RNG_CHECKSUM_SCHEMA,"master_seed":seed,"source_sha":source,"run_id":str(current_run),"baseline_fingerprint_sha256":basefp,"combined_fingerprint_sha256":dataset_fp(combined),"rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed),"combined_rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(combined,source_sha=source,master_seed=seed)}
         write_json(out/f"block_{start}_{end}_metadata.json",meta)
         for p in sorted(baseline_root.rglob("block_*.parquet")): shutil.copy2(p,out/p.name)
         for p in sorted(baseline_root.rglob("*_metadata.json")): shutil.copy2(p,out/p.name)
-        write_json(out/"resume_descriptor.json",{"schema_version":"stage10-resume-v1","scenario":s,"source_sha":source,"master_seed":seed,"baseline_trials":len(rs),"canonical_trials_added":100,"new_trial_range":[start,end],"next_trial_id":end+1,"baseline_fingerprint_sha256":basefp,"new_block_fingerprint_sha256":dataset_fp(new),"combined_dataset_fingerprint_sha256":dataset_fp(combined),"rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed),"baseline_state_sha":st.get("state_sha"),"baseline_final_status":st.get("final_status"),"baseline_stable_at_n":st.get("stable_at_n"),"baseline_next_check_n":st.get("next_check_n"),"baseline_stability_history":st.get("stability_history",[])})
+        write_json(out/"resume_descriptor.json",{"schema_version":"stage10-resume-v1","scenario":s,"source_sha":source,"master_seed":seed,"baseline_trials":len(rs),"canonical_trials_added":100,"new_trial_range":[start,end],"next_trial_id":end+1,"baseline_fingerprint_sha256":basefp,"new_block_fingerprint_sha256":dataset_fp(new),"combined_dataset_fingerprint_sha256":dataset_fp(combined),"rng_audit_schema":rng.RNG_CHECKSUM_SCHEMA,"new_block_rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(new,source_sha=source,master_seed=seed),"combined_rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit(combined,source_sha=source,master_seed=seed),"baseline_state_sha":st.get("state_sha"),"baseline_final_status":st.get("final_status"),"baseline_stable_at_n":st.get("stable_at_n"),"baseline_next_check_n":st.get("next_check_n"),"baseline_stability_history":st.get("stability_history",[])})
         canonical_added=100
     elif mode=="c100":
         if end-start+1!=20 or len(rs)!=1: raise RuntimeError("C100_CHUNK_RANGE_MISMATCH")
@@ -116,7 +140,7 @@ def main(argv):
             a=dataclasses.asdict(x); b=dataclasses.asdict(base); a.pop("trial_id",None); b.pop("trial_id",None)
             if a!=b: raise RuntimeError(f"C100_RESULT_MISMATCH:{sample}")
             measures.append(m)
-        raw=json.dumps({"schema_version":"stage10-c100-v1","scenario":s,"benchmark_sample_start":start,"benchmark_sample_end":end,"trial_id":1,"canonical_trials_added":0,"baseline_fingerprint_sha256":basefp,"measurements":measures},ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()
+        raw=json.dumps({"schema_version":"stage10-c100-v1","scenario":s,"rng_audit_schema":rng.RNG_CHECKSUM_SCHEMA,"master_seed":seed,"scenario_rng_checksum_fingerprint_sha256":monte_carlo.fingerprint_rng_audit([base],source_sha=source,master_seed=seed),"benchmark_sample_start":start,"benchmark_sample_end":end,"trial_id":1,"canonical_trials_added":0,"baseline_fingerprint_sha256":basefp,"measurements":measures},ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()
         (out/"benchmark_samples.json").write_bytes(raw)
         with gzip.open(out/"benchmark_samples.json.gz","wb",compresslevel=6) as fh: fh.write(raw)
         write_json(out/"resume_descriptor.json",{"schema_version":"stage10-resume-v1","scenario":s,"source_sha":source,"master_seed":seed,"baseline_trials":1,"canonical_trials_added":0,"benchmark_only":True,"benchmark_sample_range":[start,end],"baseline_fingerprint_sha256":basefp})
