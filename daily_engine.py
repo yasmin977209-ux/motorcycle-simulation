@@ -547,21 +547,21 @@ def _collect_ordinary(
     project: Project,
     bike: Bike,
     contract: Contract,
-    collection_probability: float,
-    scenario_id: str,
+    collection_pct: int,
+    rng_stream_id: str,
     trial_id: int,
     master_seed: int,
     event_type: str,
 ) -> None:
     seed = rng.derive_seed(
         master_seed,
-        scenario_id,
+        rng_stream_id,
         trial_id,
         bike.bike_id,
         project._current_date,
         event_type,
     )
-    if not rng.deterministic_success(collection_probability, seed):
+    if not rng.draw_success(seed, collection_pct):
         return
     result = apply_ordinary_collection(
         total_due=contract.total_due,
@@ -589,6 +589,8 @@ def _m8(
     if not dateutils.is_business_day(current_date):
         return
     project._current_date = current_date
+    rng_stream_id = rng.rng_stream_id(scenario_id)
+    collection_pct = rng.collection_pct_from_scenario_id(scenario_id)
 
     for bike in list(project.bikes):
         contract = contract_of(project, bike)
@@ -604,8 +606,8 @@ def _m8(
                 project,
                 bike,
                 contract,
-                collection_probability,
-                scenario_id,
+                collection_pct,
+                rng_stream_id,
                 trial_id,
                 master_seed,
                 "PRIMARY_COLLECTION",
@@ -618,8 +620,8 @@ def _m8(
                 project,
                 bike,
                 contract,
-                collection_probability,
-                scenario_id,
+                collection_pct,
+                rng_stream_id,
                 trial_id,
                 master_seed,
                 "SECONDARY_COLLECTION",
@@ -635,13 +637,13 @@ def _m8(
                 continue
             seed = rng.derive_seed(
                 master_seed,
-                scenario_id,
+                rng_stream_id,
                 trial_id,
                 bike.bike_id,
                 current_date,
                 "LEGACY_DEBT_COLLECTION",
             )
-            if not rng.deterministic_success(collection_probability, seed):
+            if not rng.draw_success(seed, collection_pct):
                 continue
             result = apply_legacy_debt_collection(
                 remaining_debt=remaining,

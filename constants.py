@@ -214,6 +214,7 @@ CLAIM_WAITING_PERIODS_DAYS: Final[Dict[str, int]] = {
 
 # [R6-1][Ref 2.5] Main deterministic RNG seed.
 MASTER_SEED: Final[int] = 20270101
+SEED_SCOPE: Final[str] = "COLLECTION_LEVEL"
 
 # [R6-3][Ref 2.5] Five collection-probability levels; this is a source collection for derived scenario structures.
 COLLECTION_PROBABILITIES: Final[Tuple[float, ...]] = (1.00, 0.85, 0.70, 0.50, 0.30)

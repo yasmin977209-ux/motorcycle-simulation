@@ -210,3 +210,54 @@ def test_178_unified_names_only_in_engine_and_active_output_builder() -> None:
     }
     assert not forbidden_states.intersection(BikeState.__members__)
     assert not re.search(r"\*\s*70\s*\)\s*//\s*100", "\n".join(p.read_text(encoding="utf-8") for p in APP_FILES))
+
+
+def test_171_rng_stream_pairing_and_integer_success_threshold() -> None:
+    import constants
+    import rng
+    from monte_carlo import run_single_trial
+
+    assert constants.SEED_SCOPE == "COLLECTION_LEVEL"
+    same_g_100 = rng.derive_seed(
+        constants.MASTER_SEED, "C085_G100", 1, "BK0001",
+        date(2027, 1, 2), "PRIMARY_COLLECTION"
+    )
+    same_g_000 = rng.derive_seed(
+        constants.MASTER_SEED, "C085_G000", 1, "BK0001",
+        date(2027, 1, 2), "PRIMARY_COLLECTION"
+    )
+    other_collection = rng.derive_seed(
+        constants.MASTER_SEED, "C070_G100", 1, "BK0001",
+        date(2027, 1, 2), "PRIMARY_COLLECTION"
+    )
+    assert rng.rng_stream_id("C085_G100") == "C085"
+    assert same_g_100 == same_g_000
+    assert same_g_100 != other_collection
+
+    zero_draw = bytes(32)
+    half_minus_one = ((1 << 63) - 1).to_bytes(8, "big") + bytes(24)
+    half = (1 << 63).to_bytes(8, "big") + bytes(24)
+    max_draw = ((1 << 64) - 1).to_bytes(8, "big") + bytes(24)
+    assert rng.draw_success(zero_draw, 0) is False
+    assert rng.draw_success(zero_draw, 100) is True
+    assert rng.draw_success(half_minus_one, 50) is True
+    assert rng.draw_success(half, 50) is False
+    assert rng.draw_success(max_draw, 99) is False
+    assert rng.draw_success(max_draw, 100) is True
+
+    paired = [
+        run_single_trial(f"C085_G{g:03d}", 1, master_seed=constants.MASTER_SEED)
+        for g in (100, 70, 50, 30, 0)
+    ]
+    baseline_result, baseline_rows = paired[0]
+    assert baseline_result.bad_debt == 0
+    assert baseline_result.guarantee_recovered == 0
+    for result, rows in paired[1:]:
+        assert result.final_close_date == baseline_result.final_close_date
+        assert result.final_net_project_equity == baseline_result.final_net_project_equity
+        assert result.final_cash == baseline_result.final_cash
+        assert result.cumulative_project_profit == baseline_result.cumulative_project_profit
+        assert result.partner1_final_entitlement == baseline_result.partner1_final_entitlement
+        assert result.partner2_final_entitlement == baseline_result.partner2_final_entitlement
+        assert result.bad_debt == 0 and result.guarantee_recovered == 0
+        assert rows == baseline_rows
