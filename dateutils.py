@@ -88,13 +88,15 @@ def first_following_friday(delivery_date: date) -> date:
     return delivery_date + timedelta(days=delta)
 
 
-def first_eligible_friday(delivery_date: date) -> date:
-    """First eligible Friday under the exact Chapter 5.2 written rule."""
-    first_friday = first_following_friday(delivery_date)
-    # Tuesday, Wednesday, Thursday deliveries exempt the first Friday.
-    if delivery_date.weekday() in (1, 2, 3):
-        return first_friday + timedelta(days=7)
-    return first_friday
+def first_eligible_friday(start_date: date) -> date:
+    """Apply the exact weekday table in reference 5.2."""
+    days_ahead = (FRIDAY_WEEKDAY - start_date.weekday()) % 7
+    if days_ahead == 0:
+        days_ahead = 7
+    first_friday_after = start_date + timedelta(days=days_ahead)
+    if start_date.weekday() in (5, 6, 0):
+        return first_friday_after
+    return first_friday_after + timedelta(days=7)
 
 
 def is_eligible_friday(delivery_date: date, current_date: date) -> bool:
