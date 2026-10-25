@@ -29,7 +29,7 @@ def _m12_settlement_fixture(maturity_date: date):
     project = daily_engine.create_initial_project()
     bike = project.bikes[0]
     contract = daily_engine._new_contract(
-        project, bike, ContractType.PRIMARY, maturity_date
+        project, bike, ContractType.PRIMARY, date(2029, 1, 2)
     )
     contract.maturity_date = maturity_date
     contract.total_due = 1
