@@ -5,13 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from constants import (
-    FRIDAY_FEE,
-    OIL_SERVICE_COST,
-    PARTNER1_FINAL_SHARE_PCT,
-    PARTNER2_FINAL_SHARE_PCT,
-)
-from dateutils import is_eligible_friday
+from constants import FRIDAY_FEE, OIL_SERVICE_COST
+from dateutils import is_eligible_friday, is_friday
+from partner_equity import split_70_30
 
 
 @dataclass(frozen=True)
@@ -32,15 +28,21 @@ def apply_friday_fee_and_oil(
     current_date: date,
     friday_counter: int,
     in_tenant_possession: bool,
+    first_eligible_friday_date: date | None = None,
 ) -> FridayResult:
     """Apply one eligible-Friday snapshot without touching daily-engine state."""
     if friday_counter < 0:
         raise ValueError("friday_counter must not be negative")
 
-    eligible = (
-        in_tenant_possession
-        and is_eligible_friday(delivery_date, current_date)
-    )
+    if first_eligible_friday_date is None:
+        eligible = in_tenant_possession and is_eligible_friday(delivery_date, current_date)
+    else:
+        eligible = (
+            in_tenant_possession
+            and is_friday(current_date)
+            and current_date >= first_eligible_friday_date
+            and (current_date - first_eligible_friday_date).days % 7 == 0
+        )
     if not eligible:
         return FridayResult(
             eligible=False,
@@ -54,14 +56,15 @@ def apply_friday_fee_and_oil(
 
     counter_after = friday_counter + 1
     fee = FRIDAY_FEE
+    partner1_allocation, partner2_allocation = split_70_30(fee)
     oil = OIL_SERVICE_COST if counter_after % 2 == 0 else 0
     return FridayResult(
         eligible=True,
         revenue_friday_fee=fee,
         oil_service_expense=oil,
         cash_delta=fee - oil,
-        partner1_allocation=(fee * PARTNER1_FINAL_SHARE_PCT) // 100,
-        partner2_allocation=(fee * PARTNER2_FINAL_SHARE_PCT) // 100,
+        partner1_allocation=partner1_allocation,
+        partner2_allocation=partner2_allocation,
         friday_counter_after=counter_after,
     )
 

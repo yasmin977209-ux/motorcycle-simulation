@@ -11,6 +11,8 @@ ROLLFORWARD_FIELDS = {
     "cash": (
         "Opening_Cash",
         "Inflows",
+        "Operating_Cash_Outflows",
+        "Investing_Cash_Outflows",
         "Outflows",
         "Closing_Cash",
     ),
@@ -27,7 +29,7 @@ ROLLFORWARD_FIELDS = {
         "Gross_Writeoffs_On_Ownership",
         "Closing_Gross_Bike_Assets",
         "Opening_Accumulated_Depreciation",
-        "Depreciation_Expense",
+        "Expense_Depreciation",
         "AD_Removed_On_Writeoff",
         "Closing_Accumulated_Depreciation",
     ),
@@ -177,6 +179,10 @@ def record_daily_rollforwards(
             {
                 "Opening_Cash": opening["Opening_Cash"],
                 "Inflows": metrics["cash_inflows"],
+                "Operating_Cash_Outflows": (
+                    metrics["cash_outflows"] - metrics["investing_cash_outflows"]
+                ),
+                "Investing_Cash_Outflows": metrics["investing_cash_outflows"],
                 "Outflows": metrics["cash_outflows"],
                 "Closing_Cash": project.project_cash,
             },
@@ -209,7 +215,7 @@ def record_daily_rollforwards(
                 "Opening_Accumulated_Depreciation": opening[
                     "Opening_Accumulated_Depreciation"
                 ],
-                "Depreciation_Expense": metrics["depreciation_expense"],
+                "Expense_Depreciation": metrics["depreciation_expense"],
                 "AD_Removed_On_Writeoff": metrics["ad_removed_on_writeoff"],
                 "Closing_Accumulated_Depreciation": (
                     project.accumulated_depreciation

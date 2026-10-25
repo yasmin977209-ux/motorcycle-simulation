@@ -1,16 +1,12 @@
-"""Deterministic RNG from Chapter 14.
-
-Every logical random event is independently keyed by:
-master_seed | scenario_id | trial_id | bike_id | date | event_type
-
-Python built-in hash() is never used for seed derivation.
-"""
+"""Deterministic, integer-threshold RNG governed by reference 14.3."""
 
 from __future__ import annotations
 
 import hashlib
 from datetime import date
 from typing import Final, Union
+
+import constants
 
 
 HASH_ALGORITHM: Final[str] = "sha256"
@@ -26,16 +22,42 @@ def scenario_id(collection_probability: float, recovery_rate_pct: int) -> str:
     if not isinstance(recovery_rate_pct, int) or isinstance(recovery_rate_pct, bool):
         raise TypeError("recovery_rate_pct must be an int")
     return f"C{int(collection_probability * 100):03d}_G{recovery_rate_pct:03d}"
+def _normalize_collection_stream_id(scenario_or_stream_id: str) -> str:
+    prefix = scenario_or_stream_id.split("_", 1)[0]
+    if (
+        len(prefix) != 4
+        or prefix[0] != "C"
+        or not prefix[1:].isdigit()
+        or not 0 <= int(prefix[1:]) <= 100
+    ):
+        raise ValueError("expected a collection stream id Cxxx or scenario id Cxxx_Gyyy")
+    if constants.SEED_SCOPE != "COLLECTION_LEVEL":
+        raise ValueError("unsupported SEED_SCOPE")
+    return prefix
+
+
+def rng_stream_id(scenario_or_stream_id: str) -> str:
+    """Normalize a scenario id to its COLLECTION_LEVEL stream id (Cxxx)."""
+    return _normalize_collection_stream_id(scenario_or_stream_id)
+
+
+def collection_pct_from_scenario_id(scenario_or_stream_id: str) -> int:
+    """Read the exact integer collection percentage encoded by Cxxx."""
+    return int(_normalize_collection_stream_id(scenario_or_stream_id)[1:])
+
+
 def derive_seed(
     master_seed: int,
-    scenario_id: str,
+    rng_stream_id: str,
     trial_id: Union[int, str],
     bike_id: str,
     day: date,
     event_type: str,
 ) -> bytes:
+    stream_id = _normalize_collection_stream_id(rng_stream_id)
     key = (
-        f"{master_seed}|{scenario_id}|{trial_id}|{bike_id}|{day}|{event_type}"
+        f"{master_seed}|{stream_id}|{trial_id}|{bike_id}|"
+        f"{day.isoformat()}|{event_type}"
     )
     return hashlib.sha256(key.encode("utf-8")).digest()
 
@@ -49,28 +71,41 @@ def rng_draw(seed_bytes: bytes) -> float:
     return value / RNG_DENOMINATOR
 
 
+def draw_success(seed_bytes: bytes, pct: int) -> bool:
+    """Compare a 64-bit draw against an integer percentage, without float."""
+    if len(seed_bytes) != SHA256_DIGEST_BYTES:
+        raise ValueError(
+            f"seed_bytes must contain exactly {SHA256_DIGEST_BYTES} bytes"
+        )
+    if not isinstance(pct, int) or isinstance(pct, bool):
+        raise TypeError("pct must be an integer percentage")
+    if not 0 <= pct <= 100:
+        raise ValueError("pct must be in [0, 100]")
+    u64 = int.from_bytes(seed_bytes[:RNG_WORD_BYTES], "big")
+    return u64 * 100 < pct * RNG_DENOMINATOR
+
+
 def deterministic_success(
     collection_probability: float, seed_bytes: bytes
 ) -> bool:
+    """Compatibility helper for endpoint checks; active engine uses draw_success."""
     if collection_probability == 1.0:
-        return True
+        return draw_success(seed_bytes, 100)
     if collection_probability == 0.0:
-        return False
-    if not 0.0 < collection_probability < 1.0:
-        raise ValueError("collection_probability must be in [0, 1]")
-    return rng_draw(seed_bytes) < collection_probability
+        return draw_success(seed_bytes, 0)
+    raise ValueError("use draw_success(seed_bytes, integer_pct) for active collection")
 
 
 def seed_hex(
     master_seed: int,
-    scenario_id: str,
+    rng_stream_id: str,
     trial_id: Union[int, str],
     bike_id: str,
     day: date,
     event_type: str,
 ) -> str:
     return derive_seed(
-        master_seed, scenario_id, trial_id, bike_id, day, event_type
+        master_seed, rng_stream_id, trial_id, bike_id, day, event_type
     ).hex()
 
 

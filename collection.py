@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from constants import PARTNER1_FINAL_SHARE_PCT, PARTNER2_FINAL_SHARE_PCT
 from dateutils import is_friday
+from partner_equity import split_70_30
 
 
 @dataclass(frozen=True)
@@ -60,6 +60,7 @@ def apply_ordinary_collection(
     total_paid_after = total_paid + collected
     outstanding_after = total_due - total_paid_after
 
+    partner1_allocation, partner2_allocation = split_70_30(collected)
     return CollectionResult(
         collected=collected,
         total_paid_after=total_paid_after,
@@ -69,8 +70,8 @@ def apply_ordinary_collection(
         arrears_payment=arrears_payment,
         cash_delta=collected,
         accounts_receivable_delta=-collected,
-        partner1_allocation=(collected * PARTNER1_FINAL_SHARE_PCT) // 100,
-        partner2_allocation=(collected * PARTNER2_FINAL_SHARE_PCT) // 100,
+        partner1_allocation=partner1_allocation,
+        partner2_allocation=partner2_allocation,
     )
 
 

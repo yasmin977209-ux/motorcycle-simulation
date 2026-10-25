@@ -11,7 +11,7 @@ import pytest
 from constants import *
 from entities import Bike, Contract, GuaranteeClaim, Project, ContractType, BikeState
 from accounting import initialize_accounting, balance_sheet_snapshot, refresh_profit, accrue_rent, collect_from_ar, settle_guarantee_accounting
-from partner_equity import record_eligible_inflow, final_entitlements
+from partner_equity import allocate_inflow, final_entitlements
 from state_machine import derive_state_from_balance, TRANSITION_TABLE
 from friday import is_eligible_friday, apply_friday_fee_and_oil
 from dateutils import eligible_friday_number
@@ -138,15 +138,15 @@ def test_018_عدم_التسليم_يوم_الجمعة():
     daily_engine._m3(p,date(2027,1,1)); assert b.current_state == 'PREP'
 
 
-def test_019_تسليم_السبت_اول_جمعة_بعد_7_ايام():
+def test_019_تسليم_السبت_اول_جمعة_بعد_6_ايام():
     d=date(2027,1,2); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 
-def test_020_تسليم_الاحد_اول_جمعة_بعد_6_ايام():
+def test_020_تسليم_الاحد_اول_جمعة_بعد_5_ايام():
     d=date(2027,1,3); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 
-def test_021_تسليم_الاثنين_اول_جمعة_بعد_5_ايام():
+def test_021_تسليم_الاثنين_اول_جمعة_بعد_4_ايام():
     d=date(2027,1,4); assert eligible_friday_number(d,date(2027,1,8)) == 1
 
 
@@ -270,10 +270,10 @@ def test_045_يوم_النضج_يستحق_ايجارا_عاديا():
     assert c.total_due >= 1500
 
 
-def test_046_يوم_النضج_ليس_اول_يوم_تسوية():
+def test_046_ضبط_بداية_التسوية_يتم_في_M12():
     p=_new_project(); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=7500,paid=0)
     daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
-    assert b.current_state == BikeState.POST_MATURITY_SETTLEMENT and b.settlement_start_date is None
+    assert b.current_state == BikeState.POST_MATURITY_SETTLEMENT and b.settlement_start_date == date(2031,1,4)
 
 
 def test_047_اول_يوم_عمل_بعد_النضج_هو_يوم_التسوية_الاول():
@@ -329,7 +329,7 @@ def test_053_اكتمال_السداد_في_اليوم_30():
     assert b.current_state == 'OWNED_TRANSFERRED'
 
 
-def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
+def test_054_فشل_التسوية_في_نهاية_اليوم_30():
     p=_new_project(); _mark_all_initial_owned(p); b,c=_add_active_contract(p,start=date(2029,1,2),state='ACTIVE_PRIMARY',maturity=date(2031,1,2),due=42000,paid=0); _add_active_contract(p,start=date(2031,1,2),state='ACTIVE_PRIMARY',due=1_000_000,paid=1_000_000)
     daily_engine.run_day(p,date(2031,1,2),collection_probability=0.0,scenario_id='C000_TEST',trial_id=1)
     d=date(2031,1,4)
@@ -339,6 +339,7 @@ def test_054_فشل_التسوية_بعد_تجاوز_اليوم_30():
             break
         d += timedelta(days=1)
     assert b.current_state == 'HELD_AS_ASSET' and any(cl.claim_source=='POST_MATURITY_SETTLEMENT_FAILURE' for cl in p.guarantee_claims) and any(e.event_type=='SETTLEMENT_FAILED' for e in p.event_log)
+    assert b.settlement_rent_collected_total == 30 * daily_engine.constants.SETTLEMENT_DAILY_RENT
 
 
 def test_055_سقوط_حق_التمليك_نهائيا_بعد_الفشل():

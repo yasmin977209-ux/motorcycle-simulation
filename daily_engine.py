@@ -13,7 +13,7 @@ from accounting import (
     assert_balance_sheet_balanced,
     record_daily_rollforwards,
 )
-from closure import execute_dynamic_closure
+from closure import execute_dynamic_closure, raise_if_stalled
 from entities import (
     Bike,
     BikeSource,
@@ -37,9 +37,10 @@ from entities import (
 from collection import apply_ordinary_collection
 from guarantee import create_guarantee_claim
 from partner_equity import (
+    allocate_inflow,
     assert_memo_nonnegative,
     consume_partner1_for_expansion,
-    record_eligible_inflow,
+    final_entitlements,
 )
 from friday import apply_friday_fee_and_oil
 from settlement import (
@@ -106,6 +107,7 @@ def _new_contract(
             else constants.SECONDARY_DAILY_RENT
         ),
         start_date=current_date,
+        first_eligible_friday_date=dateutils.first_eligible_friday(current_date),
         maturity_date=(
             dateutils.primary_maturity_date(current_date)
             if contract_type is ContractType.PRIMARY
@@ -213,6 +215,7 @@ def _ensure_day_metrics(project: Project, *, reset: bool = False) -> None:
     project._day_metrics = {
         "cash_inflows": 0,
         "cash_outflows": 0,
+        "investing_cash_outflows": 0,
         "ar_accruals": 0,
         "ar_collections": 0,
         "ar_transfers_to_guarantee": 0,
@@ -233,6 +236,12 @@ def _cash_out(project: Project, amount: int) -> None:
     _ensure_day_metrics(project)
     project.project_cash -= amount
     project._day_metrics["cash_outflows"] += amount
+
+
+def _investing_cash_out(project: Project, amount: int) -> None:
+    """Record an investing outflow while preserving the cash roll-forward."""
+    _cash_out(project, amount)
+    project._day_metrics["investing_cash_outflows"] += amount
 
 
 def _ar_collect(project: Project, amount: int) -> None:
@@ -310,7 +319,7 @@ def _m2(project: Project, current_date: date) -> None:
             and project.partner1_reinvestment_balance
             >= constants.CUSTOMS_AND_REGISTRATION_COST
         ):
-            _cash_out(project, constants.CUSTOMS_AND_REGISTRATION_COST)
+            _investing_cash_out(project, constants.CUSTOMS_AND_REGISTRATION_COST)
             consume_partner1_for_expansion(
                 project,
                 constants.CUSTOMS_AND_REGISTRATION_COST,
@@ -332,12 +341,12 @@ def _m2(project: Project, current_date: date) -> None:
         current_date <= constants.EXPANSION_CUTOFF_DATE
         and not _has_prep_underfunded(project)
     ):
-        while (
+        if (
             project.project_cash >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
             and project.partner1_reinvestment_balance
             >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
         ):
-            _cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
+            _investing_cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
             consume_partner1_for_expansion(
                 project,
                 constants.BIKE_BASE_PURCHASE_COST,
@@ -446,6 +455,11 @@ def _m5(project: Project, current_date: date) -> None:
             accrue_rent(project, contract)
             project._day_metrics["ar_accruals"] += contract.daily_rate
         elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            if (
+                bike.settlement_start_date is None
+                or current_date < bike.settlement_start_date
+            ):
+                continue
             result = apply_settlement_rent(
                 current_date=current_date,
             )
@@ -455,7 +469,7 @@ def _m5(project: Project, current_date: date) -> None:
             if result.cash_delta > 0:
                 _cash_in(project, result.cash_delta)
             if result.collected > 0:
-                record_eligible_inflow(project, result.collected)
+                allocate_inflow(project, result.collected)
 
 
 def _m6(
@@ -478,6 +492,7 @@ def _m6(
             current_date,
             contract.friday_counter,
             True,
+            first_eligible_friday_date=contract.first_eligible_friday_date,
         )
         if not result.eligible:
             continue
@@ -485,7 +500,7 @@ def _m6(
         contract.friday_counter = result.friday_counter_after
         if result.revenue_friday_fee:
             _cash_in(project, result.revenue_friday_fee)
-            record_eligible_inflow(
+            allocate_inflow(
                 project,
                 result.revenue_friday_fee,
             )
@@ -532,21 +547,21 @@ def _collect_ordinary(
     project: Project,
     bike: Bike,
     contract: Contract,
-    collection_probability: float,
-    scenario_id: str,
+    collection_pct: int,
+    rng_stream_id: str,
     trial_id: int,
     master_seed: int,
     event_type: str,
 ) -> None:
     seed = rng.derive_seed(
         master_seed,
-        scenario_id,
+        rng_stream_id,
         trial_id,
         bike.bike_id,
         project._current_date,
         event_type,
     )
-    if not rng.deterministic_success(collection_probability, seed):
+    if not rng.draw_success(seed, collection_pct):
         return
     result = apply_ordinary_collection(
         total_due=contract.total_due,
@@ -560,7 +575,7 @@ def _collect_ordinary(
         _cash_in(project, result.cash_delta)
     if result.collected > 0:
         _ar_collect(project, result.collected)
-        record_eligible_inflow(project, result.collected)
+        allocate_inflow(project, result.collected)
 
 
 def _m8(
@@ -574,6 +589,8 @@ def _m8(
     if not dateutils.is_business_day(current_date):
         return
     project._current_date = current_date
+    rng_stream_id = rng.rng_stream_id(scenario_id)
+    collection_pct = rng.collection_pct_from_scenario_id(scenario_id)
 
     for bike in list(project.bikes):
         contract = contract_of(project, bike)
@@ -589,8 +606,8 @@ def _m8(
                 project,
                 bike,
                 contract,
-                collection_probability,
-                scenario_id,
+                collection_pct,
+                rng_stream_id,
                 trial_id,
                 master_seed,
                 "PRIMARY_COLLECTION",
@@ -603,25 +620,30 @@ def _m8(
                 project,
                 bike,
                 contract,
-                collection_probability,
-                scenario_id,
+                collection_pct,
+                rng_stream_id,
                 trial_id,
                 master_seed,
                 "SECONDARY_COLLECTION",
             )
         elif bike.current_state is BikeState.POST_MATURITY_SETTLEMENT:
+            if (
+                bike.settlement_start_date is None
+                or current_date < bike.settlement_start_date
+            ):
+                continue
             remaining = bike.settlement_legacy_debt_remaining
             if remaining is None or remaining <= 0:
                 continue
             seed = rng.derive_seed(
                 master_seed,
-                scenario_id,
+                rng_stream_id,
                 trial_id,
                 bike.bike_id,
                 current_date,
                 "LEGACY_DEBT_COLLECTION",
             )
-            if not rng.deterministic_success(collection_probability, seed):
+            if not rng.draw_success(seed, collection_pct):
                 continue
             result = apply_legacy_debt_collection(
                 remaining_debt=remaining,
@@ -639,7 +661,7 @@ def _m8(
                 if receivable.remaining_amount == 0:
                     receivable.status = ReceivableStatus.SETTLED
             if result.payment > 0:
-                record_eligible_inflow(project, result.payment)
+                allocate_inflow(project, result.payment)
 
 
 def _m9(project: Project) -> None:
@@ -787,7 +809,7 @@ def _m12(project: Project, current_date: date) -> None:
             contract.status = ContractStatus.MATURED
             bike.settlement_legacy_debt_original = outstanding
             bike.settlement_legacy_debt_remaining = outstanding
-            bike.settlement_start_date = None
+            bike.settlement_start_date = dateutils.next_business_day(contract.maturity_date)
             _new_receivable(project, bike, contract, outstanding)
             _event(
                 project,
@@ -825,21 +847,16 @@ def _m13(
             else None
         )
 
-        if bike.settlement_start_date is None:
-            if (
-                contract is None
-                or contract.maturity_date is None
-                or current_date <= contract.maturity_date
-                or not dateutils.is_business_day(current_date)
-            ):
-                continue
-            bike.settlement_start_date = current_date
-            receivable = _receivable_of(project, bike)
-            if receivable is not None:
-                receivable.created_date = current_date
-
+        if (
+            bike.settlement_start_date is None
+            or current_date < bike.settlement_start_date
+        ):
+            continue
         if not dateutils.is_business_day(current_date):
             continue
+        receivable = _receivable_of(project, bike)
+        if receivable is not None and receivable.created_date is None:
+            receivable.created_date = current_date
 
         bike.settlement_business_days_elapsed += 1
         if bike.settlement_legacy_debt_remaining == 0:
@@ -873,7 +890,7 @@ def _m13(
             )
         elif (
             bike.settlement_business_days_elapsed
-            > constants.SETTLEMENT_PERIOD_DAYS
+            >= constants.SETTLEMENT_PERIOD_DAYS
         ):
             remaining = bike.settlement_legacy_debt_remaining
             contract = (
@@ -936,7 +953,7 @@ def _m14(
         _cash_in(project, recovered)
         project.guarantee_claim_receivable -= claim.claim_amount
         project.bad_debt_expense += bad_debt
-        record_eligible_inflow(project, recovered)
+        allocate_inflow(project, recovered)
         claim.recovered_amount = recovered
         claim.bad_debt_amount = bad_debt
         claim.settlement_date = current_date
@@ -1001,13 +1018,10 @@ def _m17(
             for bike in project.bikes
             if bike.current_state is BikeState.HELD_AS_ASSET
         )
-        project.partner1_final_entitlement = (
-            project.final_net_project_equity * 70
-        ) // 100
-        project.partner2_final_entitlement = (
-            project.final_net_project_equity
-            - project.partner1_final_entitlement
-        )
+        (
+            project.partner1_final_entitlement,
+            project.partner2_final_entitlement,
+        ) = final_entitlements(project)
 
     snapshot = assert_balance_sheet_balanced(project, current_date)
     project.daily_balance_checks.append(snapshot)
@@ -1042,36 +1056,6 @@ def run_day(
     trace_enabled = getattr(p, "_execution_trace_enabled", False)
     trace = []
 
-    stages = (
-        ("M1", lambda: None),
-        ("M2", lambda: _m2(p, current_date)),
-        ("M3", lambda: _m3(p, current_date)),
-        ("M4", lambda: None),
-        ("M5", lambda: _m5(p, current_date)),
-        ("M6", lambda: _m6(p, current_date, p._possession)),
-        ("M7", lambda: _m7(p, p._possession, current_date)),
-        (
-            "M8",
-            lambda: _m8(
-                p,
-                current_date,
-                collection_probability,
-                scenario_id,
-                trial_id,
-                master_seed,
-            ),
-        ),
-        ("M9", lambda: _m9(p)),
-        ("M10", lambda: None),
-        ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
-        ("M12", lambda: _m12(p, current_date)),
-        ("M13", lambda: _m13(p, current_date, recovery_rate_pct)),
-        ("M14", lambda: _m14(p, current_date)),
-        ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
-        ("M16", lambda: _m16(p, current_date)),
-        ("M17", lambda: _m17(p, current_date, opening)),
-    )
-
     p._possession = {}
     stages = (
         ("M1", lambda: None),
@@ -1096,7 +1080,7 @@ def run_day(
         ("M10", lambda: None),
         ("M11", lambda: _m11(p, current_date, recovery_rate_pct)),
         ("M12", lambda: _m12(p, current_date)),
-        ("M13", lambda: _m13(p, current_date)),
+        ("M13", lambda: _m13(p, current_date, recovery_rate_pct)),
         ("M14", lambda: _m14(p, current_date)),
         ("M15", lambda: _m15(p, current_date, recovery_rate_pct)),
         ("M16", lambda: _m16(p, current_date)),
@@ -1148,6 +1132,8 @@ def run_deterministic_trial(
         )
         if on_day_end is not None:
             on_day_end(project, current)
+        if not project.simulation_stopped:
+            raise_if_stalled(project, current)
         current += timedelta(days=1)
     return project
 

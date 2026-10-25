@@ -18,9 +18,14 @@ def test_ch10_rollforward_equations_and_fixed_fields() -> None:
         assert set(cash) == {
             "Opening_Cash",
             "Inflows",
+            "Operating_Cash_Outflows",
+            "Investing_Cash_Outflows",
             "Outflows",
             "Closing_Cash",
         }
+        assert cash["Outflows"] == (
+            cash["Operating_Cash_Outflows"] + cash["Investing_Cash_Outflows"]
+        )
         assert (
             cash["Opening_Cash"] + cash["Inflows"] - cash["Outflows"]
             == cash["Closing_Cash"]
@@ -49,7 +54,7 @@ def test_ch10_rollforward_equations_and_fixed_fields() -> None:
             "Gross_Writeoffs_On_Ownership",
             "Closing_Gross_Bike_Assets",
             "Opening_Accumulated_Depreciation",
-            "Depreciation_Expense",
+            "Expense_Depreciation",
             "AD_Removed_On_Writeoff",
             "Closing_Accumulated_Depreciation",
         }
@@ -61,7 +66,7 @@ def test_ch10_rollforward_equations_and_fixed_fields() -> None:
         )
         assert (
             asset["Opening_Accumulated_Depreciation"]
-            + asset["Depreciation_Expense"]
+            + asset["Expense_Depreciation"]
             - asset["AD_Removed_On_Writeoff"]
             == asset["Closing_Accumulated_Depreciation"]
         )

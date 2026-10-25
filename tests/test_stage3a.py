@@ -222,14 +222,14 @@ def test_ch7_4_full_legacy_payment_completes_immediately() -> None:
     assert result.completed
 
 
-def test_ch7_5_expiry_happens_after_the_thirtieth_working_day() -> None:
+def test_ch7_5_expiry_happens_at_the_end_of_the_thirtieth_working_day() -> None:
     start = _next_business_day()
     day30 = _nth_business_day(start, constants.SETTLEMENT_PERIOD_DAYS)
     day31 = _nth_business_day(day30 + timedelta(days=1), 1)
 
-    assert _settlement_status(start, day30, 1000) is SettlementStatus.ACTIVE
+    assert _settlement_status(start, day30, 1000) is SettlementStatus.EXPIRED
     assert _settlement_status(start, day31, 1000) is SettlementStatus.EXPIRED
-    assert _settlement_status(start, day31, 0) is SettlementStatus.COMPLETED
+    assert _settlement_status(start, day30, 0) is SettlementStatus.COMPLETED
 
 
 def test_ch7_6_friday_counter_and_depreciation_continue_during_settlement() -> None:
