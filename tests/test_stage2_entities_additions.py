@@ -104,6 +104,8 @@ def test_project_rollforward_names_and_reference_record_shapes() -> None:
         "cash_rollforward": {
             "Opening_Cash",
             "Inflows",
+            "Operating_Cash_Outflows",
+            "Investing_Cash_Outflows",
             "Outflows",
             "Closing_Cash",
         },
