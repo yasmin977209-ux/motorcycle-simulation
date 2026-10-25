@@ -1,0 +1,227 @@
+name: U3 v2.3 acceptance gate
+
+on:
+  push:
+    branches:
+      - "tmp/u3-acceptance-v23-20261025"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  u3-acceptance:
+    name: v2.3 full test and acceptance-register gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout exact candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Run complete pytest inventory once on this candidate SHA
+        shell: bash
+        run: |
+          set +e
+          python -m pytest -q tests --junitxml=/tmp/u3-junit.xml 2>&1 | tee /tmp/u3-full-suite.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "$rc" > /tmp/u3-exit-code
+          sha256sum /tmp/u3-full-suite.log /tmp/u3-junit.xml 2>&1 | tee /tmp/u3-hashes.txt
+          printf 'U3_PYTEST_EXIT_CODE=%s\n' "$rc" >> "$GITHUB_STEP_SUMMARY"
+          printf 'U3_TESTED_SHA=%s\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+
+      - name: Build 193-row acceptance report from JUnit evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/u3-junit.xml
+          mkdir -p u3_acceptance_evidence
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, os, re
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          import validation
+
+          root = ET.parse("/tmp/u3-junit.xml").getroot()
+          cases = list(root.iter("testcase"))
+          full_exit = int(Path("/tmp/u3-exit-code").read_text(encoding="utf-8").strip())
+          rows = validation.build_acceptance_registry()
+          case_status = {}
+          failures = []
+          for case in cases:
+              name = case.attrib.get("name", "")
+              match = re.search(r"test_(\d{3})_", name)
+              if not match:
+                  continue
+              test_id = int(match.group(1))
+              status = "PASS"
+              skipped = case.find("skipped")
+              failure = case.find("failure")
+              error = case.find("error")
+              if skipped is not None:
+                  reason = skipped.attrib.get("message", "") or (skipped.text or "")
+                  status = "ADJUDICATION" if "ADJUDICATION" in reason.upper() else "DEFERRED"
+              elif failure is not None or error is not None:
+                  status = "FAIL"
+                  node = failure if failure is not None else error
+                  failures.append({
+                      "id": test_id,
+                      "name": name,
+                      "message": ((node.attrib.get("message", "") + "\n" + (node.text or "")).strip())[-1200:],
+                  })
+              case_status[test_id] = status
+
+          for row in rows:
+              row["logic_status"] = case_status.get(row["id"], "NOT_EXECUTED")
+              if row["type"] == "DOC" and row["logic_status"] in {"PASS", "ADJUDICATION", "DEFERRED"}:
+                  row["logic_status"] = "ADJUDICATION"
+
+          unique = [row for row in rows if row["type"] == "UNIQUE"]
+          pass_unique = sum(row["logic_status"] == "PASS" for row in unique)
+          fail_unique = sum(row["logic_status"] == "FAIL" for row in unique)
+          missing_unique = sum(row["logic_status"] == "NOT_EXECUTED" for row in unique)
+          alias_pass = sum(row["type"] == "ALIAS" and row["logic_status"] == "PASS" for row in rows)
+          doc_count = sum(row["type"] == "DOC" for row in rows)
+          registry_missing = [row["id"] for row in rows if row["name"].startswith("DEFINITION_MISSING_")]
+          log_sha = hashlib.sha256(Path("/tmp/u3-full-suite.log").read_bytes()).hexdigest()
+          junit_sha = hashlib.sha256(Path("/tmp/u3-junit.xml").read_bytes()).hexdigest()
+          tested_sha = os.environ["GITHUB_SHA"]
+          run_id = os.environ["GITHUB_RUN_ID"]
+          run_url = f"https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/{run_id}"
+          gate = (
+              full_exit == 0 and pass_unique == 177 and fail_unique == 0
+              and missing_unique == 0 and not registry_missing and len(rows) == 193
+              and alias_pass == 15 and doc_count == 1
+          )
+          lines = [
+              "# U3 v2.3 Acceptance Report",
+              "",
+              f"Status: {'PASS_SCOPED' if gate else 'FAIL / BLOCKED'} for this tested candidate SHA; not production-release acceptance.",
+              f"Tested commit SHA: {tested_sha}",
+              f"GitHub Actions Run: {run_id} ({run_url})",
+              "Command: python -m pytest -q tests --junitxml=/tmp/u3-junit.xml",
+              f"Actual pytest exit code: {full_exit}",
+              f"Full-suite log SHA-256: {log_sha}",
+              f"JUnit XML SHA-256: {junit_sha}",
+              f"Register: {len(rows)} rows = {len(unique)} UNIQUE + 15 ALIAS + 1 DOC/K_TEST (Test 158)",
+              f"Logic results: {pass_unique} PASS from 177 UNIQUE; {fail_unique} FAIL; {missing_unique} NOT_EXECUTED; {alias_pass}/15 ALIAS pass; {doc_count} DOC",
+              f"Undefined test definitions: {registry_missing}",
+              "The historic U2 Run 40210753738 remains recorded as failed on its own tested SHA; it is not overwritten by this candidate result.",
+              "Production Gate A/Gate B, new-source Golden, cohort generation and actual S4-S9 output artifacts remain distinct gates.",
+              "",
+              "## Full mapping 1-193",
+              "",
+              "| ID | Type | Canonical pytest name | Test file | Alias target | Logic result | Production status | Stage / reason |",
+              "|---:|---|---|---|---:|---|---|---|",
+          ]
+          for row in rows:
+              stage = row["deferred_stage"] or ""
+              reason = row["deferred_reason"] or ""
+              stage_reason = (stage + ": " + reason) if stage else ""
+              lines.append(
+                  f"| {row['id']} | {row['type']} | {row['name']} | {row['file'] or 'MISSING'} | "
+                  f"{row['alias_of'] if row['alias_of'] is not None else ''} | {row['logic_status']} | "
+                  f"{row['production_status']} | {stage_reason} |"
+              )
+          lines += [
+              "",
+              "## Deferred production evidence",
+              "",
+              "A PASS in the logic column means only that the specified in-memory test ran. Artifact checks are DEFERRED only where production outputs have not been generated or approved; no production results files are fabricated.",
+              "",
+          ]
+          deferred = [row for row in rows if row["production_status"] == "DEFERRED"]
+          for stage in ("S4", "S5", "S6", "S7", "S8", "S9"):
+              stage_rows = [row for row in deferred if row["deferred_stage"] == stage]
+              if stage_rows:
+                  ids = ", ".join(str(row["id"]) for row in stage_rows)
+                  lines.append(f"- {stage}: Test IDs {ids}; the table above names each exact dependency.")
+          lines += [
+              "",
+              "## Gate judgement",
+              "",
+              f"Executable logic gate: {'PASS' if gate else 'NOT PASSED'}.",
+              "A bike-ID/RNG behavior change requires a new source identity, cohort and Golden. Historical data and Golden fingerprints were not rewritten.",
+              "C100 repetitions are DEGENERATE_DETERMINISTIC with N_unique_paths=1 when paths match; repeated paths are not independent observations.",
+              "Test 158 remains DOC/K_TEST / ADJUDICATION and is not counted in 177 UNIQUE tests.",
+              f"Pytest log digest: {log_sha}",
+              "",
+          ]
+          report = "\n".join(lines)
+          Path("docs/ACCEPTANCE_REPORT.md").write_text(report, encoding="utf-8")
+          summary = {
+              "tested_sha": tested_sha, "run_id": run_id, "run_url": run_url,
+              "pytest_exit_code": full_exit, "testcase_count": len(cases),
+              "registry_rows": len(rows), "unique_count": len(unique),
+              "unique_pass": pass_unique, "unique_fail": fail_unique,
+              "unique_not_executed": missing_unique, "alias_pass": alias_pass,
+              "doc_count": doc_count, "registry_missing": registry_missing,
+              "pytest_log_sha256": log_sha, "junit_sha256": junit_sha,
+              "gate": gate, "failures": failures, "registry": rows,
+          }
+          Path("u3_acceptance_evidence/acceptance_summary.json").write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          Path("u3_acceptance_evidence/ACCEPTANCE_REPORT.md").write_text(report + "\n", encoding="utf-8")
+          PY
+          cp /tmp/u3-full-suite.log u3_acceptance_evidence/full-suite.log
+          cp /tmp/u3-junit.xml u3_acceptance_evidence/junit.xml
+          cp /tmp/u3-exit-code u3_acceptance_evidence/pytest-exit-code.txt
+          cp /tmp/u3-hashes.txt u3_acceptance_evidence/pytest-hashes.txt
+          {
+            echo "U3_ACCEPTANCE_REPORT_BEGIN"
+            cat docs/ACCEPTANCE_REPORT.md
+            echo "U3_ACCEPTANCE_REPORT_END"
+          } | tee /tmp/u3-report-output.txt
+          cat docs/ACCEPTANCE_REPORT.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload exact test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: u3-v23-acceptance-${{ github.run_id }}
+          path: u3_acceptance_evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce executable acceptance gate
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("u3_acceptance_evidence/acceptance_summary.json").read_text(encoding="utf-8"))
+          if summary["pytest_exit_code"] != 0:
+              raise SystemExit(f"U3_ACCEPTANCE_FAIL: pytest exit code={summary['pytest_exit_code']}")
+          if summary["registry_rows"] != 193 or summary["unique_count"] != 177:
+              raise SystemExit("U3_ACCEPTANCE_FAIL: canonical registry size mismatch")
+          if summary["unique_pass"] != 177 or summary["unique_fail"] != 0 or summary["unique_not_executed"] != 0:
+              raise SystemExit(
+                  f"U3_ACCEPTANCE_FAIL: unique pass={summary['unique_pass']}/177 "
+                  f"fail={summary['unique_fail']} not_executed={summary['unique_not_executed']}"
+              )
+          if summary["alias_pass"] != 15 or summary["doc_count"] != 1:
+              raise SystemExit("U3_ACCEPTANCE_FAIL: ALIAS/DOC inventory mismatch")
+          if summary["registry_missing"]:
+              raise SystemExit(f"U3_ACCEPTANCE_FAIL: missing definitions {summary['registry_missing']}")
+          print("U3_ACCEPTANCE_GATE_PASS: 177/177 UNIQUE; 15 ALIAS; 1 DOC/K_TEST; full pytest exit 0")
+          PY

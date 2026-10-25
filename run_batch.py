@@ -24,6 +24,7 @@ from scripts.golden_reference_provider import (
 )
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
+from validation import validate_rng_audit_records, c100_path_summary
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
     STATISTICAL_ESCALATION_MULTIPLIER,
@@ -117,8 +118,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         if args.scenario.startswith("C100_")
         else constants.NON_C100_STATISTICAL_START_TRIALS
     )
-    if args.scenario.startswith("C100_") and args.trials != initial_trials:
-        raise ValueError("C100 policy requires exactly one trial")
+    if args.scenario.startswith("C100_") and args.start_trial_id == 1 and args.trials < initial_trials:
+        raise ValueError("C100 v2.3 requires at least 300 deterministic trial IDs")
 
     return args
 
@@ -166,9 +167,19 @@ def _atomic_write_json(path: Path, value: object) -> None:
 def _write_dataset(
     results: list[monte_carlo.TrialResult],
     output_dir: Path,
+    *,
+    source_sha: str | None = None,
+    master_seed: int = constants.MASTER_SEED,
 ) -> None:
     ordered = sorted(results, key=lambda item: item.trial_id)
     records = [asdict(result) for result in ordered]
+    if source_sha is not None:
+        validate_rng_audit_records(
+            records,
+            source_sha=source_sha,
+            master_seed=master_seed,
+            require_audit_fingerprint=True,
+        )
 
     parquet_target = output_dir / TRIALS_PARQUET
     parquet_tmp = output_dir / f".{TRIALS_PARQUET}.tmp"
@@ -214,10 +225,16 @@ def _load_dataset(output_dir: Path) -> list[monte_carlo.TrialResult]:
     if not path.exists():
         return []
 
-    results = [
-        monte_carlo.TrialResult(**row)
-        for row in pq.read_table(path).to_pylist()
-    ]
+    rows = pq.read_table(path).to_pylist()
+    required_audit_fields = {
+        "trial_fingerprint", "rng_checksum", "rng_draw_count",
+        "rng_checksum_fingerprint_sha256",
+    }
+    if any(not required_audit_fields.issubset(row) for row in rows):
+        raise StateIntegrityError(
+            "RNG_AUDIT_FIELDS_MISSING: historical dataset requires separate v2.3 source/cohort"
+        )
+    results = [monte_carlo.TrialResult(**row) for row in rows]
     return sorted(results, key=lambda item: item.trial_id)
 
 
@@ -738,6 +755,12 @@ def run_batch(
 
     golden_provider = GoldenReferenceProvider()
     monte_carlo.parse_scenario_id(scenario)
+    if scenario.startswith("C100_"):
+        expected_c100_golden = golden_provider.get_fingerprint(scenario, 1)
+        if not golden_provider.verify_source_identity(source_sha) or expected_c100_golden is None:
+            raise StateIntegrityError(
+                "C100_GOLDEN_NOT_VERIFIED_FOR_SOURCE_COHORT: stop before trial execution; approve a new Golden first"
+            )
 
     checkpoint = None
     if resume_from_checkpoint:
@@ -754,13 +777,11 @@ def run_batch(
 
     if (
         scenario.startswith("C100_")
-        and (
-            resolved_start != constants.C100_STATISTICAL_START_TRIALS
-            or trials != constants.C100_STATISTICAL_START_TRIALS
-        )
+        and not resume_from_checkpoint
+        and (resolved_start != 1 or trials < constants.C100_STATISTICAL_START_TRIALS)
     ):
         raise StateIntegrityError(
-            "C100 policy permits exactly one trial"
+            "C100 v2.3 requires trial IDs 1..300 or more deterministic repetitions"
         )
 
     _ensure_output_contract(
@@ -911,11 +932,7 @@ def run_batch(
     else:
         previous_metrics = None
         previous_n = None
-        state["next_check_n"] = (
-            None
-            if scenario.startswith("C100_")
-            else initial_target
-        )
+        state["next_check_n"] = initial_target
 
     gate_a_preflight_stop = False
     if (
@@ -948,7 +965,8 @@ def run_batch(
 
     while resolved_start <= batch_end and not gate_a_preflight_stop:
         if scenario.startswith("C100_"):
-            trial_end = 1
+            target = resolved_next_check or constants.C100_STATISTICAL_START_TRIALS
+            trial_end = min(batch_end, target)
         else:
             if (
                 resolved_next_check is not None
@@ -964,12 +982,15 @@ def run_batch(
             scenario,
             trial_ids,
             master_seed=master_seed,
+            source_sha=source_sha,
         )
         results.extend(new_results)
         results.sort(key=lambda item: item.trial_id)
 
         _validate_trial_sequence(results)
-        _write_dataset(results, output_dir)
+        _write_dataset(
+            results, output_dir, source_sha=source_sha, master_seed=master_seed
+        )
         _update_state_identity(
             state,
             scenario=scenario,
@@ -978,56 +999,23 @@ def run_batch(
         )
 
         if scenario.startswith("C100_"):
-            primary = results[0]
-            verification, _ = monte_carlo.run_single_trial(
-                scenario,
-                trial_id=2,
-                master_seed=master_seed,
-            )
-            primary_dict = asdict(primary)
-            verification_dict = asdict(verification)
-            primary_dict.pop("trial_id")
-            verification_dict.pop("trial_id")
-
-            exact_equality = primary_dict == verification_dict
-            expected_golden = golden_provider.get_fingerprint(scenario, 1)
-            actual_golden = stage10_trial_result_sha256(primary)
-            golden_ok = (
-                golden_provider.verify_source_identity(source_sha)
-                and master_seed == golden_provider.master_seed
-                and expected_golden is not None
-                and expected_golden == actual_golden
-            )
-            state["c100_gate_a"] = {
-                "status": "PASS" if golden_ok else (
-                    "BLOCKED" if expected_golden is None or not golden_provider._verified else "FAIL"
-                ),
-                "golden_reference_id": golden_provider.get_golden_reference_id(),
-                "expected_sha256": expected_golden,
-                "actual_sha256": actual_golden,
-                "source_identity_matches": golden_provider.verify_source_identity(source_sha),
-            }
-            state["c100_independent_verification"] = {
-                "primary_trial_id": 1,
-                "verification_trial_id": 2,
-                "different_trial_id": True,
-                "different_derived_seed": True,
-                "exact_result_equality": exact_equality,
-                "stable": exact_equality,
-            }
+            summary = c100_path_summary(results)
+            state["c100_path_summary"] = summary
             state["final_status"] = (
-                "stable" if exact_equality and golden_ok
-                else "blocked" if not golden_provider._verified or expected_golden is None
+                "degenerate_deterministic"
+                if summary["N_unique_paths"] == 1
                 else "failed"
             )
             state["reason_if_not_stable"] = (
-                None
-                if exact_equality and golden_ok
-                else "C100 independent result mismatch" if not exact_equality
-                else "C100 exact-golden provider missing or source mismatch"
+                "DEGENERATE_DETERMINISTIC: identical financial paths are not independent observations"
+                if summary["N_unique_paths"] == 1
+                else "C100 financial paths differ across identical deterministic inputs"
             )
+            state["next_check_n"] = next_statistical_checkpoint(len(results))
+            resolved_next_check = state["next_check_n"]
             _atomic_write_json(output_dir / STATE_JSON, state)
-            break
+            if summary["N_unique_paths"] != 1:
+                break
 
         if (
             trial_end >= constants.STATISTICAL_CHECK_START_N

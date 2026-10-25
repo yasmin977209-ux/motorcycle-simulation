@@ -71,6 +71,23 @@ CUSTOMS_AND_REGISTRATION_COST: Final[int] = CUSTOMS_COST + REGISTRATION_COST
 # [R6-2][Ref 2.2] Gross motorcycle asset cost = base purchase + customs/registration.
 BIKE_GROSS_ASSET_COST: Final[int] = BIKE_BASE_PURCHASE_COST + CUSTOMS_AND_REGISTRATION_COST
 
+# [Reference §2.7 v2.3] Canonical generated motorcycle IDs.
+BIKE_ID_PREFIX: Final[str] = "BK"
+BIKE_ID_WIDTH: Final[int] = 4
+BIKE_ID_SERIAL_START: Final[int] = 1
+BIKE_ID_SERIAL_MAX: Final[int] = (10 ** BIKE_ID_WIDTH) - 1
+
+# [Reference §14.3 and owner-approved §21.2] RNG audit schema.
+RNG_CHECKSUM_MODULUS: Final[int] = 1 << 64
+RNG_CHECKSUM_SHIFT_BITS: Final[int] = 11
+RNG_AUDIT_SCHEMA_VERSION: Final[str] = "v2.3-rng-audit-v1"
+
+# [Owner-approved Appendix E, §§14.11/21.3] Exact sequential alpha spending.
+STAT_ALPHA_PER_SCENARIO_NUMERATOR: Final[int] = 1
+STAT_ALPHA_PER_SCENARIO_DENOMINATOR: Final[int] = 400
+REPORT_DECIMAL_PRECISION: Final[int] = 50
+REPORT_DECIMAL_PLACES: Final[int] = 2
+
 # [R6-1][Ref 2.2] Preparation oil/fuel expense per expansion motorcycle.
 PREP_OIL_COST: Final[int] = 2_000
 
@@ -234,8 +251,8 @@ REFERENCE_EPSILON: Final[float] = 1e-6
 # [R6-1][Ref 2.5] Original reference Gate-(A) relative tolerance: <1% change.
 REFERENCE_STABILITY_RELATIVE_TOLERANCE: Final[float] = 0.01
 
-# [R6-1][User deviation from Ref 2.5/14.2] C100 starts at one trial; not the original 200.
-C100_STATISTICAL_START_TRIALS: Final[int] = 1
+# [Reference §2.5 v2.3] All collection levels start at N=300; C100 repetitions prove determinism only.
+C100_STATISTICAL_START_TRIALS: Final[int] = 300
 
 # [R6-1][User deviation from Ref 2.5/14.2] All non-C100 collection levels start at 300 trials.
 NON_C100_STATISTICAL_START_TRIALS: Final[int] = 300
@@ -252,8 +269,8 @@ STATISTICAL_ESCALATION_MULTIPLIER: Final[int] = 2
 # Historical compatibility value retained for old reports only. The active checkpoint scheduler does not add 50.
 STATISTICAL_CHECK_STEP_N: Final[int] = 50
 
-# [R6-1][User decision] Non-C100 cannot stop before completing n=400.
-MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 400
+# [Reference §2.5 v2.3] No stopping checkpoint precedes the initial N=300 checkpoint.
+MINIMUM_STOP_N_FOR_NON_C100: Final[int] = 300
 
 # [CP-IUT-2026-10-18][Owner-approved] Three successful adjacent transitions require four cumulative checkpoints.
 STABILITY_CONSECUTIVE_CHECKS_REQUIRED: Final[int] = 3

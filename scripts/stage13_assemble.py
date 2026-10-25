@@ -1060,19 +1060,11 @@ def select_representative_trial_ids(rows, scenario):
     ):
         selected[role] = closest_to_linear_quantile(q_num, q_den)
 
-    # Amendment-03 defines LossCase as the closest equity to zero, either sign.
     selected["Loss"] = _trial_id(
-        min(rows, key=lambda row: (abs(equity(row)), _trial_id(row)))
+        min(rows, key=lambda row: (equity(row), _trial_id(row)))
     )
-
-    positive = [row for row in rows if equity(row) > 0]
-    if not positive:
-        raise RuntimeError(
-            f"UNDEFINED_BUSINESS_RULE: MaxCase has no positive Final_Net_Project_Equity in {scenario}"
-        )
-    highest = max(equity(row) for row in positive)
-    selected["Max Case"] = min(
-        _trial_id(row) for row in positive if equity(row) == highest
+    selected["Max Case"] = _trial_id(
+        min(rows, key=lambda row: (-equity(row), _trial_id(row)))
     )
     return selected
 

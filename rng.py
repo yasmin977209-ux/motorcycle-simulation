@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Final, Union
@@ -77,6 +78,53 @@ def derive_seed(
     return hashlib.sha256(key.encode("utf-8")).digest()
 
 
+def rng_checksum_contribution(seed_bytes: bytes) -> int:
+    """Return the 53-bit contribution u64 >> 11 for one actual RNG draw."""
+    if len(seed_bytes) != SHA256_DIGEST_BYTES:
+        raise ValueError(
+            f"seed_bytes must contain exactly {SHA256_DIGEST_BYTES} bytes"
+        )
+    u64 = int.from_bytes(seed_bytes[:RNG_WORD_BYTES], "big")
+    return u64 >> constants.RNG_CHECKSUM_SHIFT_BITS
+
+
+def rng_audit_fingerprint(
+    *,
+    source_sha: str,
+    master_seed: int,
+    scenario_id: str,
+    trial_id: int,
+    rng_checksum: int,
+    rng_draw_count: int,
+    schema_version: str = constants.RNG_AUDIT_SCHEMA_VERSION,
+) -> str:
+    """SHA-256 RNG audit identity, separate from the financial trial fingerprint."""
+    import re
+    if not isinstance(source_sha, str) or re.fullmatch(r"[0-9a-f]{40}", source_sha) is None:
+        raise ValueError("RNG_AUDIT_SOURCE_SHA_INVALID")
+    if not isinstance(master_seed, int) or isinstance(master_seed, bool):
+        raise TypeError("RNG_AUDIT_MASTER_SEED_MUST_BE_INT")
+    if not isinstance(trial_id, int) or isinstance(trial_id, bool) or trial_id < 1:
+        raise ValueError("RNG_AUDIT_TRIAL_ID_INVALID")
+    if not isinstance(rng_checksum, int) or isinstance(rng_checksum, bool):
+        raise TypeError("RNG_CHECKSUM_MUST_BE_INT")
+    if not 0 <= rng_checksum < constants.RNG_CHECKSUM_MODULUS:
+        raise ValueError("RNG_CHECKSUM_OUT_OF_RANGE")
+    if not isinstance(rng_draw_count, int) or isinstance(rng_draw_count, bool) or rng_draw_count < 0:
+        raise ValueError("RNG_DRAW_COUNT_INVALID")
+    payload = {
+        "source_sha": source_sha,
+        "master_seed": master_seed,
+        "scenario_id": scenario_id,
+        "trial_id": trial_id,
+        "rng_checksum": rng_checksum,
+        "rng_draw_count": rng_draw_count,
+        "schema_version": schema_version,
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 def rng_draw(seed_bytes: bytes) -> float:
     if len(seed_bytes) != SHA256_DIGEST_BYTES:
         raise ValueError(
@@ -96,6 +144,10 @@ def draw_success(seed_bytes: bytes, pct: int) -> bool:
         raise TypeError("pct must be an integer percentage")
     if not 0 <= pct <= 100:
         raise ValueError("pct must be in [0, 100]")
+    if pct == 0:
+        return False
+    if pct == 100:
+        return True
     u64 = int.from_bytes(seed_bytes[:RNG_WORD_BYTES], "big")
     return u64 * 100 < pct * RNG_DENOMINATOR
 

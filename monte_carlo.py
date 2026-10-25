@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
+from fractions import Fraction
 import numpy as np
 import hashlib
 import json
@@ -67,6 +68,10 @@ class TrialResult:
     guarantee_recovered: int
     partner1_final_entitlement: int
     partner2_final_entitlement: int
+    trial_fingerprint: str = ""
+    rng_checksum: int = 0
+    rng_draw_count: int = 0
+    rng_checksum_fingerprint_sha256: str | None = None
 
 
 def _daily_snapshot(
@@ -78,6 +83,8 @@ def _daily_snapshot(
         "date": current_date.isoformat(),
         "trial_id": trial_id,
         "Cash": project.project_cash,
+        "Partner1_Reinvestment_Balance": project.partner1_reinvestment_balance,
+        "Partner2_Reinvestment_Balance": project.partner2_reinvestment_balance,
         "Capital": project.capital,
         "Retained_Earnings": project.retained_earnings,
         "Net_Equity": project.capital + project.retained_earnings,
@@ -111,6 +118,8 @@ def _trial_result_from_project(
     collection_probability: float,
     recovery_rate_pct: int,
     trial_id: int,
+    master_seed: int,
+    source_sha: str | None,
 ) -> TrialResult:
     if project.final_net_project_equity is None:
         raise AssertionError(
@@ -125,7 +134,7 @@ def _trial_result_from_project(
             "simulation finished without partner2_final_entitlement"
         )
 
-    return TrialResult(
+    result = TrialResult(
         scenario_id=scenario_id,
         collection_probability=collection_probability,
         recovery_rate_pct=recovery_rate_pct,
@@ -163,7 +172,22 @@ def _trial_result_from_project(
         ),
         partner1_final_entitlement=project.partner1_final_entitlement,
         partner2_final_entitlement=project.partner2_final_entitlement,
+        rng_checksum=project.rng_checksum,
+        rng_draw_count=project.rng_draw_count,
+        rng_checksum_fingerprint_sha256=(
+            rng.rng_audit_fingerprint(
+                source_sha=source_sha,
+                master_seed=master_seed,
+                scenario_id=scenario_id,
+                trial_id=trial_id,
+                rng_checksum=project.rng_checksum,
+                rng_draw_count=project.rng_draw_count,
+            )
+            if source_sha is not None
+            else None
+        ),
     )
+    return replace(result, trial_fingerprint=trial_fingerprint(result))
 
 
 def run_single_trial(
@@ -171,6 +195,7 @@ def run_single_trial(
     trial_id: int,
     *,
     master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
 ) -> tuple[TrialResult, list[dict[str, object]]]:
     collection_probability, recovery_rate_pct = parse_scenario_id(
         scenario_id
@@ -198,6 +223,8 @@ def run_single_trial(
         collection_probability=collection_probability,
         recovery_rate_pct=recovery_rate_pct,
         trial_id=trial_id,
+        master_seed=master_seed,
+        source_sha=source_sha,
     )
 
     return result, daily_rows
@@ -208,6 +235,7 @@ def run_trials_sequentially(
     trial_ids: tuple[int, ...] | list[int],
     *,
     master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
 ) -> tuple[list[TrialResult], dict[int, list[dict[str, object]]]]:
     results: list[TrialResult] = []
     daily_rows_by_trial: dict[int, list[dict[str, object]]] = {}
@@ -217,6 +245,7 @@ def run_trials_sequentially(
             scenario_id,
             trial_id,
             master_seed=master_seed,
+            source_sha=source_sha,
         )
         results.append(result)
         daily_rows_by_trial[trial_id] = daily_rows
@@ -229,11 +258,13 @@ def _run_single_trial_worker(
     scenario_id: str,
     trial_id: int,
     master_seed: int,
+    source_sha: str | None = None,
 ) -> tuple[TrialResult, list[dict[str, object]]]:
     return run_single_trial(
         scenario_id,
         trial_id,
         master_seed=master_seed,
+        source_sha=source_sha,
     )
 
 
@@ -243,10 +274,11 @@ def run_trials_parallel(
     n_workers: int,
     *,
     master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
 ) -> tuple[list[TrialResult], dict[int, list[dict[str, object]]]]:
     if n_workers < 1:
         raise ValueError("n_workers must be >= 1")
-    jobs = [(scenario_id, int(trial_id), master_seed) for trial_id in trial_ids]
+    jobs = [(scenario_id, int(trial_id), master_seed, source_sha) for trial_id in trial_ids]
     ctx = multiprocessing.get_context("spawn")
     with ctx.Pool(processes=n_workers) as pool:
         outputs = pool.starmap(_run_single_trial_worker, jobs)
@@ -285,9 +317,39 @@ def _fingerprint_json_lines(records: list[object]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def _financial_trial_record(
+    result: TrialResult, *, include_trial_id: bool
+) -> dict[str, object]:
+    record = asdict(result)
+    for field_name in (
+        "trial_fingerprint",
+        "rng_checksum",
+        "rng_draw_count",
+        "rng_checksum_fingerprint_sha256",
+    ):
+        record.pop(field_name, None)
+    if not include_trial_id:
+        record.pop("trial_id", None)
+    return record
+
+
+def trial_fingerprint(result: TrialResult) -> str:
+    """Financial result fingerprint; excludes all RNG audit fields and itself."""
+    return _fingerprint_json_lines([
+        _financial_trial_record(result, include_trial_id=True)
+    ])
+
+
+def financial_path_fingerprint(result: TrialResult) -> str:
+    """Financial path identity; excludes trial_id and RNG audit metadata."""
+    return _fingerprint_json_lines([
+        _financial_trial_record(result, include_trial_id=False)
+    ])
+
+
 def fingerprint_trial_results(results: list[TrialResult]) -> str:
     records = [
-        asdict(result)
+        _financial_trial_record(result, include_trial_id=True)
         for result in sorted(results, key=lambda item: item.trial_id)
     ]
     return _fingerprint_json_lines(records)
@@ -423,6 +485,10 @@ class RepresentativeSelection(dict[str, int]):
     def loss_case_trial_id(self) -> int:
         return self["loss_case_trial_id"]
 
+    @property
+    def max_case_trial_id(self) -> int:
+        return self["max_case_trial_id"]
+
 
 def select_representative_trials(
     results: list[TrialResult],
@@ -433,35 +499,33 @@ def select_representative_trials(
     if tuple(quantiles) != (0.10, 0.50, 0.90):
         raise ValueError("quantiles must be exactly (0.10, 0.50, 0.90)")
 
-    equities = np.asarray(
-        [result.final_net_project_equity for result in results],
-        dtype=np.float64,
-    )
+    equities = sorted(result.final_net_project_equity for result in results)
 
-    def nearest_trial(target_quantile: float) -> int:
-        target = np.quantile(
-            equities,
-            target_quantile,
-            method="linear",
-        )
+    def nearest_trial(q: Fraction) -> int:
+        position = (len(equities) - 1) * q
+        lower_index = position.numerator // position.denominator
+        remainder = position - lower_index
+        upper_index = min(lower_index + 1, len(equities) - 1)
+        target = Fraction(equities[lower_index]) * (1 - remainder) + Fraction(equities[upper_index]) * remainder
         return min(
             results,
             key=lambda result: (
-                abs(result.final_net_project_equity - target),
+                abs(Fraction(result.final_net_project_equity) - target),
                 result.trial_id,
             ),
         ).trial_id
 
     return RepresentativeSelection(
-        p50_trial_id=nearest_trial(0.50),
-        p10_trial_id=nearest_trial(0.10),
-        p90_trial_id=nearest_trial(0.90),
+        p50_trial_id=nearest_trial(Fraction(1, 2)),
+        p10_trial_id=nearest_trial(Fraction(1, 10)),
+        p90_trial_id=nearest_trial(Fraction(9, 10)),
         loss_case_trial_id=min(
             results,
-            key=lambda result: (
-                result.final_net_project_equity,
-                result.trial_id,
-            ),
+            key=lambda result: (result.final_net_project_equity, result.trial_id),
+        ).trial_id,
+        max_case_trial_id=min(
+            results,
+            key=lambda result: (-result.final_net_project_equity, result.trial_id),
         ).trial_id,
     )
 
@@ -473,6 +537,8 @@ __all__ = [
     "run_trials_sequentially",
     "run_trials_parallel",
     "fingerprint_trial_results",
+    "trial_fingerprint",
+    "financial_path_fingerprint",
     "fingerprint_daily_distribution",
     "fingerprint_per_trial_slices",
     "build_daily_distribution",

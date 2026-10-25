@@ -33,7 +33,7 @@ def _add_active_contract(
     paid: int = 0,
 ) -> tuple[Bike, Contract]:
     bike = Bike(
-        bike_id=f"T{len(project.bikes)+1:06d}",
+        bike_id=daily_engine.format_bike_id(len(project.bikes) + 1),
         source=BikeSource.INITIAL,
         purchase_date=date(2026, 12, 26),
         scheduled_ready_date=start,

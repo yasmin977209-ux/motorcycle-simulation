@@ -32,6 +32,7 @@ from entities import (
     Tenant,
     TenantType,
     add_contract,
+    format_bike_id,
     contract_of,
 )
 from collection import apply_ordinary_collection
@@ -68,7 +69,7 @@ def create_initial_project(recovery_rate_pct: int = 100) -> Project:
     for index in range(1, constants.INITIAL_FLEET_SIZE + 1):
         project.bikes.append(
             Bike(
-                bike_id=f"BK{index:04d}",
+                bike_id=format_bike_id(index),
                 source=BikeSource.INITIAL,
                 purchase_date=constants.INITIAL_FLEET_PURCHASE_DATE,
                 scheduled_ready_date=constants.INITIAL_FLEET_READY_DATE,
@@ -346,6 +347,8 @@ def _m2(project: Project, current_date: date) -> None:
             and project.partner1_reinvestment_balance
             >= constants.EXPANSION_PURCHASE_CASH_THRESHOLD
         ):
+            next_number = len(project.bikes) + 1
+            generated_bike_id = format_bike_id(next_number)
             _investing_cash_out(project, constants.BIKE_BASE_PURCHASE_COST)
             consume_partner1_for_expansion(
                 project,
@@ -355,10 +358,9 @@ def _m2(project: Project, current_date: date) -> None:
                 project,
                 constants.BIKE_BASE_PURCHASE_COST,
             )
-            next_number = len(project.bikes) + 1
             project.bikes.append(
                 Bike(
-                    bike_id=f"BK{next_number:04d}",
+                    bike_id=generated_bike_id,
                     source=BikeSource.EXPANSION,
                     purchase_date=current_date,
                     scheduled_ready_date=dateutils.scheduled_ready_date(
@@ -543,6 +545,16 @@ def _m7(
         )
 
 
+def _draw_success(project: Project, seed: bytes, collection_pct: int) -> bool:
+    """Count/checksum only real draws; 0% and 100% are handled deterministically."""
+    if 0 < collection_pct < 100:
+        project.rng_checksum = (
+            project.rng_checksum + rng.rng_checksum_contribution(seed)
+        ) % constants.RNG_CHECKSUM_MODULUS
+        project.rng_draw_count += 1
+    return rng.draw_success(seed, collection_pct)
+
+
 def _collect_ordinary(
     project: Project,
     bike: Bike,
@@ -561,7 +573,7 @@ def _collect_ordinary(
         project._current_date,
         event_type,
     )
-    if not rng.draw_success(seed, collection_pct):
+    if not _draw_success(project, seed, collection_pct):
         return
     result = apply_ordinary_collection(
         total_due=contract.total_due,
@@ -643,7 +655,7 @@ def _m8(
                 current_date,
                 "LEGACY_DEBT_COLLECTION",
             )
-            if not rng.draw_success(seed, collection_pct):
+            if not _draw_success(project, seed, collection_pct):
                 continue
             result = apply_legacy_debt_collection(
                 remaining_debt=remaining,

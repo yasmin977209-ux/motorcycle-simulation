@@ -196,22 +196,21 @@ def test_stage8_source_sha_is_literal_in_workflow() -> None:
     )
     assert "${{ env.SOURCE_SHA }}" not in text
 
-def test_run_batch_c100_checkpoint_skips_escalation_check() -> None:
-    """C100 does not have an escalation step; next_check_n
-    validation must be skipped."""
+def test_run_batch_c100_checkpoint_uses_v23_doubling_schedule() -> None:
+    """C100 has no random CI gate, but still starts at 300 trial IDs and doubles."""
     checkpoint = {
         "stage": "7",
         "scenario": "C100_G100",
         "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
-        "completed_trials": 1,
-        "next_trial_id": 2,
-        "next_check_n": 1,
+        "completed_trials": 300,
+        "next_trial_id": 301,
+        "next_check_n": 600,
         "final_fingerprint": "abc",
         "artifact_identity": {
             "scenario": "C100_G100",
             "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
             "trial_id_start": 1,
-            "trial_id_end": 1,
+            "trial_id_end": 300,
             "fingerprint_sha256": "abc",
         },
     }

@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
+import re
+
+import constants
 from enum import Enum
 
 from constants import (
@@ -261,6 +264,8 @@ class Project:
     partner1_final_entitlement: int | None = None
     partner2_final_entitlement: int | None = None
     simulation_stopped: bool = False
+    rng_checksum: int = 0
+    rng_draw_count: int = 0
     bikes: list[Bike] = field(default_factory=list)
     contracts: dict[str, Contract] = field(default_factory=dict)
     tenants: list[Tenant] = field(default_factory=list)
@@ -290,6 +295,27 @@ class Project:
             opening_loss=OPENING_RETAINED_LOSS,
             expense_marketing=OPENING_MARKETING_EXPENSE,
         )
+
+
+def format_bike_id(serial: int) -> str:
+    """Format the sole canonical generated bike identifier (Reference §2.7)."""
+    if not isinstance(serial, int) or isinstance(serial, bool):
+        raise TypeError("BIKE_ID_SERIAL_MUST_BE_INT")
+    if serial < constants.BIKE_ID_SERIAL_START:
+        raise ValueError("BIKE_ID_SERIAL_INVALID")
+    if serial > constants.BIKE_ID_SERIAL_MAX:
+        raise ValueError("BIKE_ID_SERIAL_WIDTH_EXCEEDED")
+    return f"{constants.BIKE_ID_PREFIX}{serial:0{constants.BIKE_ID_WIDTH}d}"
+
+
+def is_canonical_bike_id(bike_id: str) -> bool:
+    return bool(
+        isinstance(bike_id, str)
+        and re.fullmatch(
+            rf"{re.escape(constants.BIKE_ID_PREFIX)}[0-9]{{{constants.BIKE_ID_WIDTH}}}",
+            bike_id,
+        )
+    )
 
 
 def add_contract(project: Project, contract: Contract) -> None:
@@ -330,4 +356,5 @@ __all__ = [
     "add_contract",
     "contract_of",
     "opening_fleet_size",
-]
+    "format_bike_id",
+    "is_canonical_bike_id",]

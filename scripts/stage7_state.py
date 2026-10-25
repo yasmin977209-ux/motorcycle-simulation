@@ -174,9 +174,7 @@ class StateStore:
         return f"git/ref/heads/{branch}"
 
     def _initial_state(self) -> dict[str, object]:
-        initial_next_check_n = (
-            1 if self.scenario.startswith("C100_") else 300
-        )
+        initial_next_check_n = 300
         return {
             "stage": "7",
             "scenario": self.scenario,

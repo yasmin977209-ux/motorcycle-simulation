@@ -12,6 +12,8 @@ def assert_same_except_trial_id(a, b):
     b_dict = dataclasses.asdict(b)
     a_dict.pop("trial_id")
     b_dict.pop("trial_id")
+    a_dict.pop("trial_fingerprint")
+    b_dict.pop("trial_fingerprint")
     assert a_dict == b_dict
 
 
@@ -43,6 +45,7 @@ def test_c100_representative_selection_has_four_equal_keys() -> None:
         "p10_trial_id",
         "p90_trial_id",
         "loss_case_trial_id",
+        "max_case_trial_id",
     }
     assert len(set(selected.values())) == 1
 
@@ -74,6 +77,10 @@ def test_c070_selection_depends_only_on_final_project_equity() -> None:
                 result.final_net_project_equity,
                 result.trial_id,
             ),
+        ).trial_id,
+        "max_case_trial_id": min(
+            results,
+            key=lambda result: (-result.final_net_project_equity, result.trial_id),
         ).trial_id,
     }
 
