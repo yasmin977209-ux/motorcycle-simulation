@@ -57,6 +57,19 @@ def _metrics(means: tuple[float, float, float], stable: bool = True) -> dict[str
     return {key: {"mean": value, "stable": stable} for key, value in zip(keys, means)}
 
 
+def _indicator_metrics(stable: bool = True) -> dict[str, dict[str, dict[str, bool]]]:
+    names = (
+        "P10_Cumulative_Project_Profit",
+        "P50_Cumulative_Project_Profit",
+        "P90_Cumulative_Project_Profit",
+        "P90_Final_Cash",
+        "Probability_of_Accounting_Loss",
+        "P90_Termination_Count",
+        "P90_Held_Assets",
+    )
+    return {"indicators": {name: {"stable": stable} for name in names}}
+
+
 def test_requirements_include_pyyaml() -> None:
     requirements = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
     assert "pyyaml" in requirements.lower()
@@ -225,7 +238,7 @@ def test_gate_a_missing_golden_is_blocked_even_when_metrics_are_close() -> None:
         current_metrics=current, escalation_multiplier=2,
         relative_epsilon=0.01, absolute_epsilon=1,
     )
-    gate_b = evaluate_gate_b(current)
+    gate_b = evaluate_gate_b(current, indicator_metrics=_indicator_metrics())
     assert gate_a["checked"] is False
     assert gate_a["stable"] is False
     assert gate_a["status"] == "BLOCKED"
@@ -242,7 +255,7 @@ def test_gate_a_exact_fingerprint_pass_gate_b_fail_is_not_stable() -> None:
         relative_epsilon=0.01, absolute_epsilon=1,
         **_matching_golden_kwargs(),
     )
-    gate_b = evaluate_gate_b(current)
+    gate_b = evaluate_gate_b(current, indicator_metrics=_indicator_metrics())
     assert gate_a["status"] == "PASS"
     assert gate_a["stable"] is True
     assert gate_b["stable"] is False
@@ -262,7 +275,7 @@ def test_gate_a_fingerprint_mismatch_gate_b_pass_is_not_stable() -> None:
         relative_epsilon=0.01, absolute_epsilon=1,
         **wrong_actual,
     )
-    gate_b = evaluate_gate_b(current)
+    gate_b = evaluate_gate_b(current, indicator_metrics=_indicator_metrics())
     assert gate_a["checked"] is True
     assert gate_a["status"] == "FAIL"
     assert gate_a["stable"] is False
@@ -283,7 +296,7 @@ def test_gate_a_fingerprint_mismatch_gate_b_fail_is_not_stable() -> None:
         relative_epsilon=0.01, absolute_epsilon=1,
         **wrong_actual,
     )
-    gate_b = evaluate_gate_b(current)
+    gate_b = evaluate_gate_b(current, indicator_metrics=_indicator_metrics())
     assert gate_a["status"] == "FAIL"
     assert gate_a["stable"] is False
     assert gate_b["stable"] is False
@@ -308,7 +321,7 @@ def test_gate_a_exact_golden_and_gate_b_pass_requires_three_consecutive_points()
             escalation_multiplier=2, relative_epsilon=0.01,
             absolute_epsilon=1, **_matching_golden_kwargs(),
         )
-        gate_b = evaluate_gate_b(current_metrics)
+        gate_b = evaluate_gate_b(current_metrics, indicator_metrics=_indicator_metrics())
         checks.append(gate_a["stable"] and gate_b["stable"])
     assert checks == [True, True, True]
 
@@ -892,12 +905,22 @@ def test_stage7_statistical_policy_is_the_approved_doubling_policy() -> None:
 
 def test_stage7_gate_b_requires_actual_boolean_stability_evidence() -> None:
     valid = _metrics((1000.0, 700.0, 300.0), stable=True)
-    result = evaluate_gate_b(valid)
+    missing_evidence = evaluate_gate_b(valid)
+    assert missing_evidence["checked"] is True
+    assert missing_evidence["stable"] is False
+    assert missing_evidence["status"] == "MISSING_EVIDENCE"
+
+    result = evaluate_gate_b(valid, indicator_metrics=_indicator_metrics())
     assert result["checked"] is True
     assert result["stable"] is True
 
     explicit_false = _metrics((1000.0, 700.0, 300.0), stable=False)
-    assert evaluate_gate_b(explicit_false)["stable"] is False
+    assert evaluate_gate_b(
+        explicit_false, indicator_metrics=_indicator_metrics()
+    )["stable"] is False
+    assert evaluate_gate_b(
+        valid, indicator_metrics=_indicator_metrics(stable=False)
+    )["stable"] is False
 
     invalid_values = ("False", "true", 0, 1, None, [], {}, float("nan"))
     for field_name in ("final_net_project_equity", "partner1_final_entitlement", "partner2_final_entitlement"):
@@ -905,18 +928,18 @@ def test_stage7_gate_b_requires_actual_boolean_stability_evidence() -> None:
             malformed = _metrics((1000.0, 700.0, 300.0), stable=True)
             malformed[field_name]["stable"] = invalid
             with pytest.raises(ValueError, match="must be a Boolean"):
-                evaluate_gate_b(malformed)
+                evaluate_gate_b(malformed, indicator_metrics=_indicator_metrics())
 
     missing_stability = _metrics((1000.0, 700.0, 300.0), stable=True)
     missing_stability["final_net_project_equity"].pop("stable")
     with pytest.raises(ValueError, match="must be a Boolean"):
-        evaluate_gate_b(missing_stability)
+        evaluate_gate_b(missing_stability, indicator_metrics=_indicator_metrics())
 
     missing_metric = _metrics((1000.0, 700.0, 300.0), stable=True)
     missing_metric.pop("partner2_final_entitlement")
     with pytest.raises(ValueError, match="must be a mapping"):
-        evaluate_gate_b(missing_metric)
+        evaluate_gate_b(missing_metric, indicator_metrics=_indicator_metrics())
 
     for malformed_top_level in (None, [], "not-a-mapping"):
         with pytest.raises(ValueError, match="current metrics must be a mapping"):
-            evaluate_gate_b(malformed_top_level)  # type: ignore[arg-type]
+            evaluate_gate_b(malformed_top_level, indicator_metrics=_indicator_metrics())  # type: ignore[arg-type]

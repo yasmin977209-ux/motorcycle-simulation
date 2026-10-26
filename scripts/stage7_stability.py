@@ -212,28 +212,74 @@ def evaluate_gate_a(
     }
 
 
-def evaluate_gate_b(current_metrics: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """Fail closed if the production Stage 7 caller supplies malformed Gate B evidence."""
+GATE_B_INDICATOR_NAMES = (
+    "P10_Cumulative_Project_Profit",
+    "P50_Cumulative_Project_Profit",
+    "P90_Cumulative_Project_Profit",
+    "P90_Final_Cash",
+    "Probability_of_Accounting_Loss",
+    "P90_Termination_Count",
+    "P90_Held_Assets",
+)
+
+
+def evaluate_gate_b(
+    current_metrics: dict[str, dict[str, Any]],
+    *,
+    indicator_metrics: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Fail closed until all v2.3 mean and seven time-uniform indicator intervals exist."""
     if not isinstance(current_metrics, dict):
         raise ValueError("Gate B current metrics must be a mapping")
 
-    metric_payload = {}
+    metric_payload: dict[str, dict[str, bool]] = {}
     for name in STABILITY_METRICS:
         metric = current_metrics.get(name)
         if not isinstance(metric, dict):
-            raise ValueError(
-                f"Gate B metric evidence for {name!r} must be a mapping"
-            )
+            raise ValueError(f"Gate B metric evidence for {name!r} must be a mapping")
         raw_stable = metric.get("stable")
         if type(raw_stable) is not bool:
-            raise ValueError(
-                f"Gate B stable field for {name!r} must be a Boolean"
-            )
+            raise ValueError(f"Gate B stable field for {name!r} must be a Boolean")
         metric_payload[name] = {"stable": raw_stable}
 
+    means_stable = all(item["stable"] for item in metric_payload.values())
+    if indicator_metrics is None:
+        return {
+            "checked": True,
+            "stable": False,
+            "status": "MISSING_EVIDENCE",
+            "reason": "all seven Appendix E time-uniform indicator intervals are required",
+            "metrics": metric_payload,
+            "time_uniform_indicators": {},
+        }
+    if not isinstance(indicator_metrics, dict):
+        raise ValueError("Gate B indicator evidence must be a mapping")
+    raw_indicators = indicator_metrics.get("indicators")
+    if not isinstance(raw_indicators, dict) or set(raw_indicators) != set(GATE_B_INDICATOR_NAMES):
+        raise ValueError("Gate B must include all seven time-uniform indicator intervals")
+
+    indicator_payload: dict[str, dict[str, bool]] = {}
+    for name in GATE_B_INDICATOR_NAMES:
+        item = raw_indicators[name]
+        if not isinstance(item, dict):
+            raise ValueError(f"Gate B indicator evidence for {name!r} must be a mapping")
+        raw_stable = item.get("stable")
+        if type(raw_stable) is not bool:
+            raise ValueError(f"Gate B indicator stable field for {name!r} must be a Boolean")
+        indicator_payload[name] = {"stable": raw_stable}
+
+    indicators_stable = all(item["stable"] for item in indicator_payload.values())
+    approved = constants.TIME_UNIFORM_METHOD_APPROVED is True
+    stable = approved and means_stable and indicators_stable
     return {
         "checked": True,
-        "stable": all(item["stable"] for item in metric_payload.values()),
+        "stable": stable,
+        "status": (
+            "K_SPEC / BLOCKED" if not approved
+            else "PASS" if stable
+            else "FAIL"
+        ),
+        "time_uniform_indicators": indicator_payload,
         "metrics": metric_payload,
     }
 
