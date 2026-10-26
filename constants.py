@@ -96,6 +96,8 @@ TIME_UNIFORM_METHOD_APPROVED: Final[bool] = True
 TIME_UNIFORM_METHOD_ID: Final[str] = "V2.3_APPENDIX_E_ALPHA_SPENDING_V1"
 REPORT_DECIMAL_PRECISION: Final[int] = 50
 REPORT_DECIMAL_PLACES: Final[int] = 2
+NANOSECONDS_PER_SECOND: Final[int] = 1_000_000_000
+TIMING_REPORT_DECIMAL_PLACES: Final[int] = 3
 
 # [Owner-approved Appendix D / Stage 5 reporting] Exact daily percentile definitions.
 REPORT_PERCENT_DENOMINATOR: Final[int] = 100
