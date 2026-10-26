@@ -101,7 +101,7 @@ def test_s5_daily_distribution_exact_active_and_carry_forward() -> None:
     assert carry_day_two["population_count"] == 2
     assert carry_day_two["active_trial_count"] == 1
     assert carry_day_two["closed_trial_count"] == 1
-    assert carry_day_two["Cash"] == "150.5"
+    assert carry_day_two["Cash"] == "150.50"  # Appendix D: two decimals, ROUND_HALF_EVEN
     assert carry_day_two["Cash_exact_numerator"] == 301
     assert carry_day_two["Cash_exact_denominator"] == 2
     assert carry_day_two_p25["Cash"] == "125.75"

@@ -180,7 +180,7 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
     }
     loss = indicator_summary["indicators"]["Probability_of_Accounting_Loss"]
     assert loss["current_n"]["descriptive_3_over_n"] == "1/200"
-    assert loss["current_n"]["upper_bound"] > 3 / 600
+    assert Decimal(str(loss["current_n"]["upper_bound"])) > (Decimal(3) / Decimal(600))
     assert loss["half_n"]["n"] == 300
     assert loss["half_n"]["spending_index"] == 1
     assert loss["stable"] is False

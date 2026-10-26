@@ -199,8 +199,13 @@ def test_statistical_execution_contract_blocks_unimplemented_components() -> Non
     status = statistical_execution_status(Path("docs/stage7/statistical_execution_gate.json"))
     assert status["authorized"] is False
     assert status["status"] == "STATISTICAL_INFERENCE_BLOCKED"
-    assert any("K_SPEC_BLOCKED" in item for item in status["blockers"])
+    assert any("STATISTICAL_COMPONENT_NOT_ACCEPTED:gate_b_financial_means" in item for item in status["blockers"])
     assert any("P90_Held_Assets" in item for item in status["blockers"])
+    contract = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+    assert contract["status"] == "AUTHORIZED_FOR_V2.3_EXECUTION"
+    assert contract["execution_authorization"]["production_trial_checkpoint_monte_carlo_allowed"] is False
+    assert contract["execution_authorization"]["scenario_stability_declaration_allowed"] is False
+    assert contract["execution_authorization"]["final_delivery_acceptance_allowed"] is False
 
 
 def test_statistical_gate_cannot_be_cleared_by_status_string_alone(tmp_path: Path) -> None:
