@@ -122,4 +122,4 @@ def test_s5_summary_parquet_preserves_full_uint64_rng_checksum() -> None:
 
     assert table.schema.field("rng_checksum").type == pa.uint64()
     assert table.column("rng_checksum").to_pylist() == [maximum_uint64]
-    assert not any(field.type.is_floating for field in table.schema)
+    assert not any(pa.types.is_floating(field.type) for field in table.schema)
