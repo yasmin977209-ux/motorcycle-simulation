@@ -209,3 +209,18 @@ This authorization is tied to the provider implementation constants and runtime 
 - **Disposition:** `STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY`; keep Stage 10 metadata drift and runtime-risk blockers explicitly open.
 
 References: `docs/stage11/dataset_identity.json`; `docs/stage11/global_manifest_11005_reconciled.json`; `docs/stage11/R4_manifest_reconciliation.md`; `docs/stage10/STAGE10_METRICS.json`; `docs/PROJECT_CONTINUITY.md` and the five supplied references.
+
+
+### Owner decision — P50 relative-change guard with a zero baseline (2026-10-26)
+
+**Authority:** explicit owner decision in the S4 execution request; supersedes the former `UNDEFINED_BUSINESS_RULE: P50_CHANGE_FROM_ZERO` handling only for §§2.5 and 21.3.
+
+The strict 5% guard is defined for all Fraction values by exact cross-multiplication:
+
+`abs(new_p50 - old_p50) * 100 > 5 * abs(old_p50)`
+
+- `old_p50 == 0` and `new_p50 == 0`: false; no guard trigger.
+- `old_p50 == 0` and `new_p50 != 0`: true; record `PRELIMINARY_STABLE` when the prescribed 300/600/1200 Gate A/Gate B prerequisites hold, and continue the mandatory doubling path at `N=2400`. It is not `UNDEFINED_BUSINESS_RULE`.
+- Use integer or `fractions.Fraction` arithmetic only; do not divide by `old_p50`, use float, or add a special denominator rule.
+
+Implemented on S4 branch `tmp/s4-c100-golden-v23-20261026` in `stats_integrity.py`; explicit unit coverage is added in `tests/test_v23_acceptance.py`. This decision does not rewrite historical results or authorize a new cohort/Golden by itself; the separate S4 run must establish the new source identity and artifacts.
