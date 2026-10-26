@@ -487,6 +487,28 @@ def test_192_owner_approved_appendix_e_alpha_spending_is_applied_to_gate_b(monke
     assert blocked["status"] == "K_SPEC / BLOCKED"
 
 
+def test_s5_deterministic_support_bounds_are_finite_and_fail_closed() -> None:
+    bounds = stats_integrity.compute_deterministic_support_bounds()
+    assert bounds["finite"] is True
+    assert bounds["bound_id"] == "V2.3_DETERMINISTIC_SUPPORT_ENVELOPE_V1"
+    assert date.fromisoformat(bounds["maximum_close_date"]) > constants.EXPANSION_CUTOFF_DATE
+    assert bounds["maximum_fleet_size"] >= constants.INITIAL_FLEET_SIZE
+    assert bounds["maximum_simulation_days"] > 0
+    for metric_bounds in bounds["metric_bounds"].values():
+        assert type(metric_bounds["lower"]) is int
+        assert type(metric_bounds["upper"]) is int
+        assert metric_bounds["lower"] <= metric_bounds["upper"]
+    assert stats_integrity.validate_values_within_deterministic_support(
+        [0, 1], "final_cash"
+    ) == 2
+    upper = bounds["metric_bounds"]["final_cash"]["upper"]
+    with pytest.raises(RuntimeError, match="STAT_OBSERVATION_OUTSIDE_DETERMINISTIC_SUPPORT"):
+        stats_integrity.validate_values_within_deterministic_support(
+            [upper + 1], "final_cash"
+        )
+    assert stats_integrity.sequential_alpha_fraction(2) == Fraction(1, 2400)
+
+
 def test_193_historical_and_new_rng_cohorts_cannot_be_mixed() -> None:
     new_records = [
         {"source_sha": SOURCE_SHA, "cohort_id": "u3-new", "schema_version": "v2.3"},
