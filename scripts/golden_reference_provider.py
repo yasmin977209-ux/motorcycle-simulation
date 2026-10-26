@@ -239,10 +239,20 @@ def statistical_execution_status(
         }
 
     blockers: list[str] = []
-    if contract.get("status") != "ACCEPTED_FOR_PRODUCTION":
-        blockers.append(f"STATISTICAL_GATE_STATUS:{contract.get('status', 'MISSING')}")
+    status = contract.get("status")
     execution = contract.get("execution_authorization", {})
-    if (
+    work_branch_authorized = (
+        status == "AUTHORIZED_FOR_V2.3_EXECUTION"
+        and isinstance(execution, dict)
+        and execution.get("owner_authorized_v23_execution") is True
+        and execution.get("production_trial_checkpoint_monte_carlo_allowed") is True
+        and execution.get("scenario_stability_declaration_allowed") is False
+        and execution.get("final_delivery_acceptance_allowed") is False
+    )
+    production_accepted = status == "ACCEPTED_FOR_PRODUCTION"
+    if not work_branch_authorized and not production_accepted:
+        blockers.append(f"STATISTICAL_GATE_STATUS:{status or 'MISSING'}")
+    if production_accepted and (
         not isinstance(execution, dict)
         or execution.get("production_trial_checkpoint_monte_carlo_allowed") is not True
         or execution.get("scenario_stability_declaration_allowed") is not True
@@ -255,7 +265,10 @@ def statistical_execution_status(
         not isinstance(approval, dict)
         or approval.get("reviewed_approval_id") in (None, "")
         or approval.get("owner_approved") is not True
-        or COMMIT_SHA_RE.fullmatch(str(approval.get("validated_source_head_sha", ""))) is None
+    ):
+        blockers.append("STATISTICAL_OWNER_EXECUTION_APPROVAL_MISSING")
+    if production_accepted and (
+        COMMIT_SHA_RE.fullmatch(str(approval.get("validated_source_head_sha", ""))) is None
         or SHA256_RE.fullmatch(str(approval.get("evidence_sha256", ""))) is None
     ):
         blockers.append("STATISTICAL_IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING")
@@ -269,6 +282,7 @@ def statistical_execution_status(
         or policy.get("decision_framework") != "intersection_union_test"
         or policy.get("required_successful_adjacent_transitions") != 3
         or policy.get("required_cumulative_checkpoint_points") != 4
+        or policy.get("checkpoint_schedule") != [300, 600, 1200, 2400]
     ):
         blockers.append("STATISTICAL_POLICY_CONTRACT_MISMATCH")
 
@@ -283,28 +297,36 @@ def statistical_execution_status(
         "gate_b_implementation_guards",
         "c030_g030_historical_transition",
     )
-    if not isinstance(components, dict):
-        blockers.append("STATISTICAL_COMPONENT_STATUS_MISSING")
-    else:
-        for name in required_components:
-            value = components.get(name)
-            if not isinstance(value, dict) or value.get("status") not in (
-                "PASS",
-                "PASS_REQUALIFIED",
-                "IMPLEMENTED_AND_VALIDATED",
-            ):
-                state = value.get("status", "MISSING") if isinstance(value, dict) else "MISSING"
-                if name == "p90_held_assets":
-                    blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:P90_Held_Assets:{state}")
-                else:
-                    blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
+    if production_accepted:
+        if not isinstance(components, dict):
+            blockers.append("STATISTICAL_COMPONENT_STATUS_MISSING")
+        else:
+            for name in required_components:
+                value = components.get(name)
+                if not isinstance(value, dict) or value.get("status") not in (
+                    "PASS",
+                    "PASS_REQUALIFIED",
+                    "IMPLEMENTED_AND_VALIDATED",
+                ):
+                    state = value.get("status", "MISSING") if isinstance(value, dict) else "MISSING"
+                    if name == "p90_held_assets":
+                        blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:P90_Held_Assets:{state}")
+                    else:
+                        blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
 
     return {
         "authorized": not blockers,
         "status": "AUTHORIZED" if not blockers else "STATISTICAL_INFERENCE_BLOCKED",
         "contract_path": str(path),
         "contract_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        "declared_contract_status": contract.get("status"),
+        "declared_contract_status": status,
+        "execution_scope": (
+            "OWNER_AUTHORIZED_WORK_BRANCH_ONLY"
+            if work_branch_authorized and not blockers
+            else "PRODUCTION_ACCEPTANCE"
+            if production_accepted and not blockers
+            else "BLOCKED"
+        ),
         "component_status": {
             key: value.get("status") if isinstance(value, dict) else "MISSING"
             for key, value in components.items()
