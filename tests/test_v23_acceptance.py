@@ -196,7 +196,11 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
 
     assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(106))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(105))
-    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
+    with pytest.raises(
+        RuntimeError,
+        match=r"UNDEFINED_BUSINESS_RULE.*2\.5.*14\.11",
+    ):
+        stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(0))
     assert "P50_Cumulative_Project_Profit" in indicator_summary["indicators"]
 

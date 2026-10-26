@@ -224,11 +224,17 @@ def mean_confidence_summary_at_n_and_half(
 
 
 def p50_relative_change_exceeds_guard(previous: Fraction, current: Fraction) -> bool:
-    """Exact adjacent P50 5% rule, with the approved near-zero absolute branch."""
+    """Apply strict >5% exactly; fail closed when a nonzero change has zero denominator."""
     if not isinstance(previous, Fraction) or not isinstance(current, Fraction):
         raise TypeError("P50_GUARD_VALUES_MUST_BE_FRACTION")
-    # Cross-multiplication encodes the strict >5% inequality without float division.
     difference = abs(current - previous)
+    if previous == 0:
+        if current == 0:
+            return False
+        raise RuntimeError(
+            "UNDEFINED_BUSINESS_RULE: P50_CHANGE_FROM_ZERO; clauses=2.5,14.11"
+        )
+    # Cross-multiplication encodes the strict >5% inequality without float division.
     return (
         difference * constants.STAT_P50_CHANGE_GUARD_DENOMINATOR
         > abs(previous) * constants.STAT_P50_CHANGE_GUARD_NUMERATOR
