@@ -97,6 +97,20 @@ TIME_UNIFORM_METHOD_ID: Final[str] = "V2.3_APPENDIX_E_ALPHA_SPENDING_V1"
 REPORT_DECIMAL_PRECISION: Final[int] = 50
 REPORT_DECIMAL_PLACES: Final[int] = 2
 
+# [Owner-approved Appendix D / Stage 5 reporting] Exact daily percentile definitions.
+REPORT_PERCENT_DENOMINATOR: Final[int] = 100
+DAILY_DISTRIBUTION_PERCENTILES: Final[Tuple[Tuple[str, int], ...]] = (
+    ("P10", 10),
+    ("P25", 25),
+    ("P50", 50),
+    ("P75", 75),
+    ("P90", 90),
+)
+DAILY_DISTRIBUTION_POPULATION_MODES: Final[Tuple[str, ...]] = (
+    "ACTIVE_ONLY",
+    "ALL_TRIALS_CARRY_FORWARD",
+)
+
 
 # [R6-1][Ref 2.2] Preparation oil/fuel expense per expansion motorcycle.
 PREP_OIL_COST: Final[int] = 2_000
