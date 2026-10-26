@@ -173,7 +173,32 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
     loss = indicator_summary["indicators"]["Probability_of_Accounting_Loss"]
     assert loss["current_n"]["descriptive_3_over_n"] == "1/200"
     assert loss["current_n"]["upper_bound"] > 3 / 600
+    assert loss["half_n"]["n"] == 300
+    assert loss["half_n"]["spending_index"] == 1
     assert loss["stable"] is False
+
+    # Three means must also evaluate accuracy at N and N/2.
+    three_hundred = [
+        SimpleNamespace(
+            final_net_project_equity=i,
+            partner1_final_entitlement=i,
+            partner2_final_entitlement=i,
+        )
+        for i in range(1, 301)
+    ]
+    mean_at_n_and_half = run_batch._metric_summary(three_hundred, spending_index=1)
+    for metric in mean_at_n_and_half.values():
+        assert metric["half_n"]["n"] == 150
+        assert metric["half_n"]["spending_index"] == 1
+        assert metric["stable"] == (
+            metric["stable_at_n"] and metric["stable_at_half_n"]
+        )
+
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(106))
+    assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(105))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
+    assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(0))
+    assert "P50_Cumulative_Project_Profit" in indicator_summary["indicators"]
 
 
 def test_174_financial_fingerprint_is_identical_after_sharding_and_merge() -> None:

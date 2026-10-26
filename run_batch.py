@@ -5,6 +5,7 @@ import gzip
 import hashlib
 import json
 import math
+from fractions import Fraction
 import os
 import tempfile
 from dataclasses import asdict
@@ -25,7 +26,6 @@ from scripts.golden_reference_provider import (
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
 from validation import validate_rng_audit_records, c100_path_summary
-import stats_integrity
 import stats_integrity
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
@@ -269,7 +269,9 @@ def _metric_summary(
     for field_name in STABILITY_FIELDS:
         values = [getattr(result, field_name) for result in results]
         if all(isinstance(value, int) and not isinstance(value, bool) for value in values):
-            exact = stats_integrity.mean_confidence_summary(values, k=spending_index)
+            exact = stats_integrity.mean_confidence_summary_at_n_and_half(
+                values, k=spending_index
+            )
             summary[field_name] = {
                 **exact,
                 # Preserve the historical report key for the descriptive fixed-N 95% width.
@@ -308,6 +310,50 @@ def _metric_summary(
             "alpha_s_k_denominator": alpha_s_k.denominator,
         }
     return summary
+
+
+def evaluate_gate_a(
+    *,
+    previous_metrics: dict[str, dict[str, Any]] | None,
+    previous_n: int | None,
+    current_metrics: dict[str, dict[str, Any]],
+    current_n: int,
+    expected_golden_fingerprint_sha256: str | None = None,
+    actual_fingerprint_sha256: str | None = None,
+    golden_reference_id: str | None = None,
+    expected_source_sha: str | None = None,
+    actual_source_sha: str | None = None,
+) -> dict[str, Any]:
+    """Public wrapper kept for callers; Gate A remains implemented by Stage 7."""
+    return evaluate_stage7_gate_a(
+        previous_n=previous_n,
+        previous_metrics=previous_metrics,
+        current_n=current_n,
+        current_metrics=current_metrics,
+        escalation_multiplier=STATISTICAL_ESCALATION_MULTIPLIER,
+        relative_epsilon=constants.CI_RELATIVE_TOLERANCE,
+        absolute_epsilon=constants.CI_ABSOLUTE_EPSILON,
+        expected_golden_fingerprint_sha256=expected_golden_fingerprint_sha256,
+        actual_fingerprint_sha256=actual_fingerprint_sha256,
+        golden_reference_id=golden_reference_id,
+        expected_source_sha=expected_source_sha,
+        actual_source_sha=actual_source_sha,
+    )
+
+
+def _p50_cumulative_profit_payload(
+    results: list[monte_carlo.TrialResult],
+) -> dict[str, int | str]:
+    estimate = stats_integrity.linear_quantile_fraction(
+        [result.cumulative_project_profit for result in results],
+        Fraction(1, 2),
+    )
+    displayed = stats_integrity.fraction_to_report_value(estimate)
+    return {
+        "estimate_exact_numerator": estimate.numerator,
+        "estimate_exact_denominator": estimate.denominator,
+        "estimate_display": str(displayed),
+    }
 
 
 def _gate_a_trial_map_sha256(
@@ -494,15 +540,21 @@ def evaluate_gate_b(
 
     approved = method_status["approved"] is True
     mean_stable = all(item["stable"] for item in metric_payload.values())
-    indicators_stable = all(item["stable"] for item in indicator_payload.values()) if indicator_metrics is not None else True
+    indicators_stable = (
+        all(item["stable"] for item in indicator_payload.values())
+        if indicator_metrics is not None else False
+    )
+    missing_indicators = indicator_metrics is None
     return {
         "checked": True,
-        "stable": approved and mean_stable and indicators_stable,
+        "stable": approved and mean_stable and indicators_stable and not missing_indicators,
         "status": (
             "K_SPEC / BLOCKED" if not approved
+            else "MISSING_EVIDENCE" if missing_indicators
             else "PASS" if mean_stable and indicators_stable
             else "FAIL"
         ),
+        "reason": "all seven time-uniform indicator intervals are required" if missing_indicators else None,
         "time_uniform_inference": method_status,
         "metrics": metric_payload,
         "time_uniform_indicators": indicator_payload,
@@ -892,10 +944,15 @@ def run_batch(
                     baseline_results,
                     spending_index=stats_integrity.statistical_checkpoint_index(len(baseline_results)),
                 )
+                baseline_indicator_metrics = stats_integrity.time_uniform_indicator_summary(
+                    baseline_results,
+                    k=stats_integrity.statistical_checkpoint_index(len(baseline_results)),
+                )
                 history.insert(
                     0,
                     {
                         "n": constants.STATISTICAL_CHECK_START_N,
+                        "p50_cumulative_project_profit": _p50_cumulative_profit_payload(baseline_results),
                         "gate_a": _evaluate_gate_a_with_provider(
                             provider=golden_provider,
                             scenario_id=scenario,
@@ -907,7 +964,10 @@ def run_batch(
                             current_metrics=baseline_metrics,
                             current_n=constants.STATISTICAL_CHECK_START_N,
                         ),
-                        "gate_b": evaluate_gate_b(baseline_metrics),
+                        "gate_b": evaluate_gate_b(
+                            baseline_metrics,
+                            indicator_metrics=baseline_indicator_metrics,
+                        ),
                         "metrics": baseline_metrics,
                         "reconstructed_from_identity_verified_rows": True,
                     },
@@ -1048,7 +1108,8 @@ def run_batch(
                 break
 
         if (
-            trial_end >= constants.STATISTICAL_CHECK_START_N
+            not scenario.startswith("C100_")
+            and trial_end >= constants.STATISTICAL_CHECK_START_N
             and trial_end == resolved_next_check
         ):
             metrics = _metric_summary(
@@ -1073,19 +1134,70 @@ def run_batch(
             gate_b = evaluate_gate_b(metrics, indicator_metrics=indicator_metrics)
             inference_gate = stats_integrity.time_uniform_inference_status()
 
-            state["stability_history"].append(
-                {
-                    "n": len(results),
-                    "gate_a": gate_a,
-                    "gate_b": gate_b,
-                    "metrics": metrics,
+            current_checkpoint = {
+                "n": len(results),
+                "p50_cumulative_project_profit": _p50_cumulative_profit_payload(results),
+                "gate_a": gate_a,
+                "gate_b": gate_b,
+                "metrics": metrics,
+            }
+            p50_guard_triggered = False
+            if len(results) == 1200:
+                expected_guard_ns = (300, 600, 1200)
+                history_by_n = {
+                    point.get("n"): point for point in state["stability_history"]
                 }
-            )
+                guard_points = [
+                    history_by_n.get(300),
+                    history_by_n.get(600),
+                    current_checkpoint,
+                ]
+                guard_points_valid = (
+                    [point.get("n") for point in guard_points] == list(expected_guard_ns)
+                    and all(
+                        point.get("gate_a", {}).get("status") == "PASS"
+                        and point.get("gate_a", {}).get("checked") is True
+                        and point.get("gate_a", {}).get("stable") is True
+                        and point.get("gate_b", {}).get("stable") is True
+                        for point in guard_points
+                    )
+                )
+                if guard_points_valid:
+                    p50_values = []
+                    for point in guard_points:
+                        p50 = point.get("p50_cumulative_project_profit")
+                        if (
+                            not isinstance(p50, dict)
+                            or not isinstance(p50.get("estimate_exact_numerator"), int)
+                            or not isinstance(p50.get("estimate_exact_denominator"), int)
+                            or p50["estimate_exact_denominator"] <= 0
+                        ):
+                            p50_values = []
+                            break
+                        p50_values.append(Fraction(
+                            p50["estimate_exact_numerator"],
+                            p50["estimate_exact_denominator"],
+                        ))
+                    if len(p50_values) == 3:
+                        p50_guard_triggered = any(
+                            stats_integrity.p50_relative_change_exceeds_guard(left, right)
+                            for left, right in zip(p50_values, p50_values[1:])
+                        )
+
+            state["stability_history"].append(current_checkpoint)
+            if p50_guard_triggered:
+                state["p50_guard"] = {
+                    "status": "PRELIMINARY_STABLE",
+                    "points": [point["n"] for point in guard_points],
+                    "change_guard_numerator": constants.STAT_P50_CHANGE_GUARD_NUMERATOR,
+                    "change_guard_denominator": constants.STAT_P50_CHANGE_GUARD_DENOMINATOR,
+                }
 
             gate_a_status = gate_a.get("status", "BLOCKED")
             gate_a_stop = gate_a_status != "PASS"
             stable_now = (
-                inference_gate["approved"]
+                not p50_guard_triggered
+                and inference_gate["approved"]
                 and gate_b["stable"]
                 and not gate_a_stop
                 and has_successful_adjacent_transition_window(
@@ -1103,9 +1215,19 @@ def run_batch(
                     f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
                     "execution stopped before the next checkpoint"
                 )
+            elif p50_guard_triggered:
+                state["final_status"] = "preliminary_stable"
+                state["reason_if_not_stable"] = (
+                    "PRELIMINARY_STABLE: P50 cumulative profit changed by more than 5% "
+                    "across the last three successful checkpoints; continue to the next "
+                    "doubling checkpoint without declaring convergence"
+                )
             elif not inference_gate["approved"]:
                 state["final_status"] = "blocked"
                 state["reason_if_not_stable"] = inference_gate["reason"]
+            elif gate_b.get("status") == "MISSING_EVIDENCE":
+                state["final_status"] = "blocked"
+                state["reason_if_not_stable"] = gate_b.get("reason")
             else:
                 state["final_status"] = "running"
                 state["reason_if_not_stable"] = "dual stability gates not yet satisfied"

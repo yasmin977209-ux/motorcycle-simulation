@@ -267,17 +267,41 @@ def test_statistical_history_rejects_non_integer_checkpoint_n() -> None:
 
 
 def test_gate_b_requires_actual_boolean_stability_evidence() -> None:
+    indicator_names = {
+        "P10_Cumulative_Project_Profit",
+        "P50_Cumulative_Project_Profit",
+        "P90_Cumulative_Project_Profit",
+        "P90_Final_Cash",
+        "Probability_of_Accounting_Loss",
+        "P90_Termination_Count",
+        "P90_Held_Assets",
+    }
+    passing_indicators = {
+        "indicators": {name: {"stable": True} for name in indicator_names}
+    }
+    failing_indicators = {
+        "indicators": {name: {"stable": False} for name in indicator_names}
+    }
     valid = {
         field_name: {"mean": 10.0, "stable": True}
         for field_name in run_batch.STABILITY_FIELDS
     }
-    assert run_batch.evaluate_gate_b(valid)["stable"] is True
+    assert run_batch.evaluate_gate_b(valid)["status"] == "MISSING_EVIDENCE"
+    assert run_batch.evaluate_gate_b(valid)["stable"] is False
+    assert run_batch.evaluate_gate_b(
+        valid, indicator_metrics=passing_indicators
+    )["stable"] is True
 
     false_metrics = {
         field_name: {"mean": 10.0, "stable": False}
         for field_name in run_batch.STABILITY_FIELDS
     }
-    assert run_batch.evaluate_gate_b(false_metrics)["stable"] is False
+    assert run_batch.evaluate_gate_b(
+        false_metrics, indicator_metrics=passing_indicators
+    )["stable"] is False
+    assert run_batch.evaluate_gate_b(
+        valid, indicator_metrics=failing_indicators
+    )["stable"] is False
 
     for invalid_value in ("False", 0, 1, None):
         for field_name in run_batch.STABILITY_FIELDS:
@@ -287,7 +311,9 @@ def test_gate_b_requires_actual_boolean_stability_evidence() -> None:
             }
             malformed[field_name]["stable"] = invalid_value
             with pytest.raises(ValueError, match="must be a Boolean"):
-                run_batch.evaluate_gate_b(malformed)
+                run_batch.evaluate_gate_b(
+                    malformed, indicator_metrics=passing_indicators
+                )
 
 
 def _metric_summary_rows(values: tuple[float, float]) -> list[object]:

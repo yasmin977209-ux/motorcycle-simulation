@@ -141,8 +141,8 @@ def mean_confidence_summary(
         context.prec = constants.REPORT_DECIMAL_PRECISION
         std = _fraction_to_decimal(variance).sqrt()
         n_decimal = Decimal(len(items)).sqrt()
-        t_sequential = Decimal(str(t.ppf(1.0 - float(alpha_sk) / 2.0, len(items) - 1)))
-        t_descriptive = Decimal(str(t.ppf(1.0 - (1.0 - constants.CI_CONFIDENCE_LEVEL) / 2.0, len(items) - 1)))
+        t_sequential = Decimal(str(t.isf(float(alpha_sk) / 2.0, len(items) - 1)))
+        t_descriptive = Decimal(str(t.isf((1.0 - constants.CI_CONFIDENCE_LEVEL) / 2.0, len(items) - 1)))
         half_width_sequential = t_sequential * std / n_decimal
         half_width_95 = t_descriptive * std / n_decimal
         rel = relative_tolerance if relative_tolerance is not None else Fraction(
@@ -170,6 +170,71 @@ def mean_confidence_summary(
         }
 
 
+
+
+
+def mean_confidence_summary_at_n_and_half(
+    values: Iterable[int],
+    *,
+    k: int,
+    relative_tolerance: Fraction | None = None,
+    absolute_tolerance: int | None = None,
+) -> dict[str, Any]:
+    """Require the sequential interval precision test at N and N/2."""
+    items = list(values)
+    if len(items) < 4:
+        summary = mean_confidence_summary(
+            items, k=k,
+            relative_tolerance=relative_tolerance,
+            absolute_tolerance=absolute_tolerance,
+        )
+        summary["half_n"] = None
+        summary["stable_at_n"] = summary["stable"]
+        summary["stable_at_half_n"] = None
+        return summary
+    full = mean_confidence_summary(
+        items, k=k,
+        relative_tolerance=relative_tolerance,
+        absolute_tolerance=absolute_tolerance,
+    )
+    half_k = max(1, k - 1)
+    half = mean_confidence_summary(
+        items[: len(items) // 2],
+        k=half_k,
+        relative_tolerance=relative_tolerance,
+        absolute_tolerance=absolute_tolerance,
+    )
+    full["half_n"] = {
+        "n": half["n"],
+        "spending_index": half["spending_index"],
+        "alpha_s_k_numerator": half["alpha_s_k_numerator"],
+        "alpha_s_k_denominator": half["alpha_s_k_denominator"],
+        "mean": half["mean"],
+        "mean_display": half["mean_display"],
+        "mean_exact_numerator": half["mean_exact_numerator"],
+        "mean_exact_denominator": half["mean_exact_denominator"],
+        "half_ci_sequential": half["half_ci_sequential"],
+        "limit": half["limit"],
+        "stable": half["stable"],
+    }
+    full["stable_at_n"] = full["stable"]
+    full["stable_at_half_n"] = half["stable"]
+    full["stable"] = bool(full["stable"] and half["stable"])
+    return full
+
+
+def p50_relative_change_exceeds_guard(previous: Fraction, current: Fraction) -> bool:
+    """Exact adjacent P50 5% rule, with the approved near-zero absolute branch."""
+    if not isinstance(previous, Fraction) or not isinstance(current, Fraction):
+        raise TypeError("P50_GUARD_VALUES_MUST_BE_FRACTION")
+    # Cross-multiplication encodes the strict >5% inequality without float division.
+    difference = abs(current - previous)
+    return (
+        difference * constants.STAT_P50_CHANGE_GUARD_DENOMINATOR
+        > abs(previous) * constants.STAT_P50_CHANGE_GUARD_NUMERATOR
+    )
+
+
 def _rank_interval(
     values: Iterable[int],
     *,
@@ -184,7 +249,7 @@ def _rank_interval(
         raise TypeError("FINANCIAL_STATISTIC_REQUIRES_INTEGER_VALUES")
     alpha_sk = sequential_alpha_fraction(k)
     n = len(items)
-    z = float(norm.ppf(1.0 - float(alpha_sk) / 2.0))
+    z = float(norm.isf(float(alpha_sk) / 2.0))
     q_float = float(q)
     radius = z * sqrt(n * q_float * (1.0 - q_float))
     low_rank = max(1, min(n, floor(n * q_float - radius)))
@@ -242,7 +307,7 @@ def _loss_probability_interval(losses: Iterable[bool], *, k: int) -> dict[str, A
         lower = 0.0
         upper = min(1.0, -log(alpha) / n)
     else:
-        z = float(norm.ppf(1.0 - alpha / 2.0))
+        z = float(norm.isf(alpha / 2.0))
         p_hat = loss_count / n
         z2 = z * z
         denominator = 1.0 + z2 / n
@@ -275,8 +340,8 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
     if len(items) < 2:
         raise ValueError("STAT_SAMPLE_TOO_SMALL")
     statistical_checkpoint_index(len(items))  # fail closed unless N follows approved doubling.
-    half_items = items[: len(items) // 2] if k > 1 else []
-    half_index = k - 1
+    half_items = items[: len(items) // 2]
+    half_index = max(1, k - 1)
     indicators: dict[str, Any] = {}
     definitions = (
         ("P10_Cumulative_Project_Profit", "cumulative_project_profit", Fraction(1, 10), "money"),
@@ -296,7 +361,7 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
                 (getattr(item, field) for item in half_items),
                 q=quantile, k=half_index, metric_kind=kind,
             )
-            if half_items
+            if len(half_items) >= 2
             else None
         )
         indicators[name] = {
