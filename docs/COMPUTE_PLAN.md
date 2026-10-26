@@ -56,7 +56,7 @@ All timing values above are actual `time.perf_counter_ns` measurements from Run 
 | S5 parallel equivalence (Test 127) | 100 trial rows across 20 scenarios, exact serial/2-worker/4-worker result and daily-slice equality | **PASS — `worker_equivalence_manifest.json`, `exact_all=true`** |
 | S5 representative selection/replay (Tests 159/160/174/181) | 100 role rows; 60 unique second-pass replays; full records, financial fingerprints and daily slices match; daily partner balances are integers | **PASS — `representative_replay_manifest.json`** |
 | S5 report precision (Test 182) and daily distribution (Test 161) | Parquet and JSON output contracts, exact numerator/denominator retention, both §14.7 populations and fields, verified SHA256 manifests | **PASS — real output artifact inspected** |
-| S6 Gate A preparer logic | Pinned SOURCE_SHA, independent seed-key recomputation, daily balance/roll-forward checks, RNG checksum checks, serial/parallel exact compare, non-production gate flags | **PASS — verification Run 40387707179, 8 passed; compileall success** |
+| S6 Gate A preparer and updated gate contract | Pinned SOURCE_SHA, independent seed-key recomputation, daily balance/roll-forward checks, RNG checksum rules, serial/parallel exact compare, refreshed scoped statistical gate contract | **PASS — latest verification Run 40388966534: 12 passed, 34 deselected; compileall success, exit 0** |
 | S6 N=300 stochastic Golden execution | Explicit workflow dispatch, 20 scenario artifact set, full trial coverage and merged Golden/audit SHA256 manifest | **PREPARED, NOT DISPATCHED** |
 | Production Gate A/B, convergence and release | Full authorized checkpoint evidence, independent gates and requalification of existing blockers | **BLOCKED_PENDING_EVIDENCE** |
 
