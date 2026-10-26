@@ -148,7 +148,7 @@ def check_final_values(project: Any, expected: dict[str, Any], scenario: str, tr
         "partner1_final_entitlement": project.partner1_final_entitlement,
         "partner2_final_entitlement": project.partner2_final_entitlement,
         "bikes": len(project.bikes),
-        "held_assets": sum(1 for bike in project.bikes if enum_is(bike.current_state, BikeState.HELD_ASSET) or enum_is(bike.current_state, BikeState.HELD_AS_ASSET)),
+        "held_assets": sum(1 for bike in project.bikes if enum_is(bike.current_state, BikeState.HELD_AS_ASSET)),
         "pending_claims": sum(1 for claim in project.guarantee_claims if enum_is(claim.status, "PENDING")),
         "cumulative_project_profit": project.cumulative_project_profit,
         "operating_net_profit": project.operating_net_profit,
