@@ -102,3 +102,24 @@ def test_s5_daily_distribution_exact_active_and_carry_forward() -> None:
     assert carry_day_two_p25["Cash_exact_denominator"] == 4
     assert not _contains_float(active)
     assert not _contains_float(carry)
+
+
+def test_s5_summary_parquet_preserves_full_uint64_rng_checksum() -> None:
+    import pyarrow as pa
+    from scripts.s5_stage5_validation import _table_from_summary_records
+
+    maximum_uint64 = (1 << 64) - 1
+    table = _table_from_summary_records([
+        {
+            "scenario_id": "C085_G100",
+            "trial_id": 1,
+            "rng_checksum": maximum_uint64,
+            "rng_draw_count": 1,
+            "trial_fingerprint": "f" * 64,
+            "rng_checksum_fingerprint_sha256": "a" * 64,
+        }
+    ])
+
+    assert table.schema.field("rng_checksum").type == pa.uint64()
+    assert table.column("rng_checksum").to_pylist() == [maximum_uint64]
+    assert not any(field.type.is_floating for field in table.schema)

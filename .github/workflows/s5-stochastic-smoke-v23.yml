@@ -54,6 +54,11 @@ jobs:
             echo "COMMAND=python scripts/s5_stage5_validation.py"
           } | tee s5_evidence/run_identity.txt
 
+      - name: Run full v2.3 pytest inventory on this S5 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests --junitxml=s5_evidence/full-suite-junit.xml 2>&1 | tee s5_evidence/full-suite.log
       - name: Build the isolated stochastic smoke artifacts
         shell: bash
         run: |
@@ -67,7 +72,7 @@ jobs:
           python -m pytest -q \
             tests/test_acceptance_16_v2.py \
             tests/test_s5_stage5_output_contract.py \
-            -k "test_127 or test_159 or test_160 or test_161 or test_s5_daily_distribution_exact_active_and_carry_forward" \
+            -k "test_127 or test_159 or test_160 or test_161 or test_s5_daily_distribution_exact_active_and_carry_forward or test_s5_summary_parquet_preserves_full_uint64_rng_checksum" \
             --junitxml=s5_evidence/targeted-junit.xml 2>&1 | tee s5_evidence/targeted-tests.log
 
       - name: Hash S5 execution logs

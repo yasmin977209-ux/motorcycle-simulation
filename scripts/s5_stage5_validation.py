@@ -177,6 +177,30 @@ def _assert_no_float_schema(schema: pa.Schema, *, artifact: str) -> None:
             )
 
 
+
+def _table_from_summary_records(records: list[dict[str, Any]]) -> pa.Table:
+    """Build the summary with rng_checksum as UInt64, preserving all 64 bits.
+
+    Arrow otherwise infers a signed int64 from Python integers and rejects valid
+    checksums in the upper half of the unsigned 64-bit range.
+    """
+    if not records:
+        raise ValueError("TRIALS_SUMMARY_RECORDS_EMPTY")
+    field_names = list(records[0])
+    expected_fields = set(field_names)
+    if any(set(record) != expected_fields for record in records):
+        raise ValueError("TRIALS_SUMMARY_SCHEMA_DRIFT")
+    fields = []
+    for name in field_names:
+        values = [record[name] for record in records]
+        if name == "rng_checksum":
+            if any(type(value) is not int or not 0 <= value < constants.RNG_CHECKSUM_MODULUS for value in values):
+                raise ValueError("RNG_CHECKSUM_OUT_OF_UINT64_RANGE")
+            fields.append(pa.field(name, pa.uint64(), nullable=False))
+        else:
+            fields.append(pa.field(name, pa.array(values).type))
+    return pa.Table.from_pylist(records, schema=pa.schema(fields))
+
 def main() -> int:
     source_sha = os.environ.get("GITHUB_SHA", "")
     run_id = os.environ.get("GITHUB_RUN_ID", "LOCAL_NOT_GITHUB")
@@ -317,7 +341,7 @@ def main() -> int:
             summary_records.append(record)
     summary_records.sort(key=lambda row: (row["scenario_id"], row["trial_id"]))
     trials_summary_path = OUTPUT / "trials_summary.parquet"
-    summary_table = pa.Table.from_pylist(summary_records)
+    summary_table = _table_from_summary_records(summary_records)
     _assert_no_float_schema(summary_table.schema, artifact=trials_summary_path.name)
     pq.write_table(summary_table, trials_summary_path, compression="zstd")
 
