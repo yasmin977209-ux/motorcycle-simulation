@@ -425,7 +425,7 @@ def main() -> int:
                 registry_entries.append(stats_integrity.number_registry_entry(
                     f"{scenario_id}.mini_estimate.{field}",
                     exact,
-                    source=f"s5_evidence/trials_summary.parquet:{scenario_id}:N={len(seq_results)};mini-only",
+                    source=f"results_stage5/trials_summary.parquet:{scenario_id}:N={len(seq_results)};mini-only",
                 ))
 
             daily_distribution_rows.extend(build_exact_daily_distribution(
@@ -618,7 +618,7 @@ def main() -> int:
         "tested_commit_sha": args.tested_commit,
         "cohort_id": cohort_id,
         "status": "PASS_S5_MINI_EVIDENCE" if (
-            len(summary_rows) == 100
+            len(summary_rows) == expected_trial_rows
             and len(selection_rows) == 100
             and len(worker_manifest_rows) == 100
             and role_count == 100
@@ -649,8 +649,8 @@ def main() -> int:
             "number_registry_entries": len(registry_entries),
         },
         "c100_reuse": c100_reuse,
-        "runtime_benchmark_path": "s5_evidence/runtime_benchmark.json",
-        "stability_history_path": "s5_evidence/stability_history.json",
+        "runtime_benchmark_path": "results_stage5/runtime_benchmark.json",
+        "stability_history_path": "results_stage5/stability_history.json",
     }
     ensure_no_float(acceptance)
     write_json(out_dir / "s5_acceptance.json", acceptance)
