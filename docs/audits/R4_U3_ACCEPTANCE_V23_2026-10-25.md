@@ -82,3 +82,13 @@ This addendum supersedes the earlier Test 192 row above where it calls the seque
 | Run 40257509499 | Tested SHA `b904aa3fae92cda939e6383158b57300675f2a3c`; `553 passed, 1 skipped, 1 warning`; full-suite log SHA-256 `7927ec9c61f3a04aed37a9a68341067f447370788ffa6bfa2f09358b8df73f91`; JUnit SHA-256 `10cd754949b19ca0675afc3645d92615ac9f5bf499b118e46c3a53b2969a460c`; artifact ID `12622499323` | https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40257509499 | `VERIFIED PASS` for that exact SHA and then-current scope/registry; not evidence for the newer shared-helper change |
 | Run 40257929292 | Tested SHA `7206ce568de40ff464b2f02d61a96b5917cf29dd`; live Actions API reports `in_progress` during this addendum; no exit code or final count is inferred | https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40257929292 | `RUNNING / NO RESULT CLAIM` |
 | Protected state | Candidate branch only. `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`; PR #46 remains open/draft/unmerged. No Monte Carlo production trial, cohort, Golden, historical Parquet, workbook, release or main-branch change was made. | Project §§24–25 and no-fabrication rules | `UNCHANGED` |
+
+
+## R4 addendum — exact-zero P50 guard denominator — 2026-10-26
+
+| Element | Source wording / current code | Judgment and safe handling |
+|---|---|---|
+| P50 relative-change guard when previous P50 is zero | v2.3 §2.5 requires P50_Cumulative_Project_Profit changes between 300/600/1200 to be checked against a strict >5% threshold. §14.11 governs repeated checks/acceptance. Neither clause defines the relative-change denominator when the previous P50 is exactly zero. The present helper's cross-multiplication would classify every nonzero change from zero as >5%, which adds an unapproved edge-case rule. | UNDEFINED_BUSINESS_RULE / PENDING_APPROVAL — clause IDs §2.5 and §14.11. The minimal safe implementation is to raise UNDEFINED_BUSINESS_RULE: P50_CHANGE_FROM_ZERO when previous P50 is zero and current P50 is nonzero; zero-to-zero is no observed change and does not trigger the guard. This does not change any historical P50 value or execute production trials. |
+| Independent paths | All other test inventory, RNG/checksum, bike-ID, Fraction/report formatting and Stage13 checks are independent of this undefined denominator edge case. | Continue those tests and implementation; do not generate new cohort/Golden data or run Monte Carlo to resolve this rule. |
+| Current Actions | Run 40257929292 is still recorded as in progress on exact SHA 7206ce568de40ff464b2f02d61a96b5917cf29dd at the time of this note. | RUNNING / NO RESULT CLAIM; this R4 documentation-only commit does not affect the SHA under test. |
+
