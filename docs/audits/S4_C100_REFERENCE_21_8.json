@@ -1,0 +1,167 @@
+{
+  "schema_version": "s4-c100-reference-snapshots-v1",
+  "authority": "المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md §21.8",
+  "purpose": "Immutable comparison oracle transcribed from historical §21.8; not a new-source Golden and not Gate A evidence.",
+  "historical_comparison_only": true,
+  "snapshots": [
+    {
+      "date": "2027-01-02",
+      "cash": 15000,
+      "partner1_reinvestment_balance": 10500,
+      "partner2_reinvestment_balance": 4500,
+      "bikes": 10,
+      "prep": 0,
+      "active_primary_contracts": 10,
+      "owned_transferred_bikes": 0,
+      "net_equity": 3614500
+    },
+    {
+      "date": "2027-01-08",
+      "cash": 100000,
+      "partner1_reinvestment_balance": 70000,
+      "partner2_reinvestment_balance": 30000,
+      "bikes": 10,
+      "prep": 0,
+      "active_primary_contracts": 10,
+      "owned_transferred_bikes": 0,
+      "net_equity": 3696500
+    },
+    {
+      "date": "2027-01-15",
+      "cash": 180000,
+      "partner1_reinvestment_balance": 140000,
+      "partner2_reinvestment_balance": 60000,
+      "bikes": 10,
+      "prep": 0,
+      "active_primary_contracts": 10,
+      "owned_transferred_bikes": 0,
+      "net_equity": 3773000
+    },
+    {
+      "date": "2027-01-31",
+      "cash": 390000,
+      "partner1_reinvestment_balance": 301000,
+      "partner2_reinvestment_balance": 129000,
+      "bikes": 10,
+      "prep": 0,
+      "active_primary_contracts": 10,
+      "owned_transferred_bikes": 0,
+      "net_equity": 3975000
+    },
+    {
+      "date": "2027-12-31",
+      "cash": 2013000,
+      "partner1_reinvestment_balance": 345100,
+      "partner2_reinvestment_balance": 2487900,
+      "bikes": 25,
+      "prep": 0,
+      "active_primary_contracts": 25,
+      "owned_transferred_bikes": 0,
+      "net_equity": 10722600
+    },
+    {
+      "date": "2028-12-31",
+      "cash": 6484000,
+      "partner1_reinvestment_balance": 309400,
+      "partner2_reinvestment_balance": 9180600,
+      "bikes": 68,
+      "prep": 1,
+      "active_primary_contracts": 67,
+      "owned_transferred_bikes": 0,
+      "net_equity": 29892650
+    },
+    {
+      "date": "2029-12-31",
+      "cash": 15979500,
+      "partner1_reinvestment_balance": 342650,
+      "partner2_reinvestment_balance": 23234850,
+      "bikes": 158,
+      "prep": 2,
+      "active_primary_contracts": 131,
+      "owned_transferred_bikes": 25,
+      "net_equity": 62063250
+    },
+    {
+      "date": "2030-12-31",
+      "cash": 37206000,
+      "partner1_reinvestment_balance": 583800,
+      "partner2_reinvestment_balance": 54376200,
+      "bikes": 357,
+      "prep": 4,
+      "active_primary_contracts": 286,
+      "owned_transferred_bikes": 67,
+      "net_equity": 137701350
+    },
+    {
+      "date": "2031-12-31",
+      "cash": 155220500,
+      "partner1_reinvestment_balance": 92375150,
+      "partner2_reinvestment_balance": 93721350,
+      "bikes": 357,
+      "prep": 0,
+      "active_primary_contracts": 201,
+      "owned_transferred_bikes": 156,
+      "net_equity": 222348900
+    },
+    {
+      "date": "2032-12-31",
+      "cash": 209642500,
+      "partner1_reinvestment_balance": 134817550,
+      "partner2_reinvestment_balance": 111910950,
+      "bikes": 357,
+      "prep": 0,
+      "active_primary_contracts": 4,
+      "owned_transferred_bikes": 353,
+      "net_equity": 210937050
+    },
+    {
+      "date": "2033-01-06",
+      "cash": 209671000,
+      "partner1_reinvestment_balance": 134837500,
+      "partner2_reinvestment_balance": 111919500,
+      "bikes": 357,
+      "prep": 0,
+      "active_primary_contracts": 0,
+      "owned_transferred_bikes": 357,
+      "net_equity": 209671000,
+      "final_close_date": "2033-01-06",
+      "final_net_project_equity": 209671000,
+      "final_cash": 209671000,
+      "partner1_final_entitlement": 146769700,
+      "partner2_final_entitlement": 62901300
+    }
+  ],
+  "final_values": {
+    "final_close_date": "2033-01-06",
+    "bikes": 357,
+    "held_assets": 0,
+    "pending_claims": 0,
+    "final_net_project_equity": 209671000,
+    "final_cash": 209671000,
+    "cumulative_project_profit": 205971000,
+    "operating_net_profit": 206071000,
+    "partner1_final_entitlement": 146769700,
+    "partner2_final_entitlement": 62901300
+  },
+  "first_expansion_bikes": [
+    {
+      "bike_id": "BK0011",
+      "purchase_date": "2027-02-06",
+      "actual_ready_date": "2027-02-12",
+      "delivery_date": "2027-02-13"
+    },
+    {
+      "bike_id": "BK0012",
+      "purchase_date": "2027-03-13",
+      "actual_ready_date": "2027-03-19",
+      "delivery_date": "2027-03-20"
+    },
+    {
+      "bike_id": "BK0013",
+      "purchase_date": "2027-04-12",
+      "actual_ready_date": "2027-04-18",
+      "delivery_date": "2027-04-18"
+    }
+  ],
+  "canonical_expansion_id_note": "Use BK0011 rather than the historical typo BK011; the reference table is retained unchanged."
+}
