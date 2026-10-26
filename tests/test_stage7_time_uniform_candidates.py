@@ -130,18 +130,16 @@ def test_adjacent_probability_change_is_strict_and_validates_inputs() -> None:
 
 
 
-def test_candidate_methods_do_not_open_the_production_execution_gate() -> None:
+def test_owner_authorized_work_branch_execution_does_not_claim_stability_or_final_acceptance() -> None:
     contract_path = Path(__file__).resolve().parents[1] / "docs" / "stage7" / "statistical_execution_gate.json"
     gate = json.loads(contract_path.read_text(encoding="utf-8"))
-    assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+    assert gate["status"] == "AUTHORIZED_FOR_V2.3_EXECUTION"
     authorization = gate["execution_authorization"]
-    assert authorization["production_trial_checkpoint_monte_carlo_allowed"] is False
+    assert authorization["production_trial_checkpoint_monte_carlo_allowed"] is True
     assert authorization["scenario_stability_declaration_allowed"] is False
     assert authorization["final_delivery_acceptance_allowed"] is False
-    assert gate["component_status"]["section_2_5_quantiles"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
-    assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "CANDIDATE_METHOD_NOT_IMPLEMENTED"
-    assert gate["component_status"]["stopping_window"]["required_points"] == 4
-    assert gate["component_status"]["stopping_window"]["required_successful_transitions"] == 3
+    assert gate["approved_policy"]["checkpoint_schedule"] == [300, 600, 1200, 2400]
+    assert gate["approved_policy"]["required_successful_adjacent_transitions"] == 3
 
 
 
