@@ -27,6 +27,7 @@ jobs:
     env:
       PYTHONPATH: .
       PYTHONDONTWRITEBYTECODE: "1"
+      S5_MODEL_SOURCE_SHA: "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
     steps:
       - name: Checkout exact S5 candidate
         uses: actions/checkout@v4
@@ -49,11 +50,27 @@ jobs:
           test "${GITHUB_REF_NAME}" = "tmp/s4-c100-golden-v23-20261026"
           test "${GITHUB_REF_NAME}" != "main"
           test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          test "${S5_MODEL_SOURCE_SHA}" = "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
+          git cat-file -e "${S5_MODEL_SOURCE_SHA}^{commit}"
+          MODEL_FILES=(
+            constants.py dateutils.py rng.py entities.py state_machine.py
+            daily_engine.py accounting.py collection.py guarantee.py friday.py
+            settlement.py closure.py partner_equity.py monte_carlo.py stats_integrity.py
+          )
+          for path in "${MODEL_FILES[@]}"; do
+            git cat-file -e "${S5_MODEL_SOURCE_SHA}:${path}"
+          done
+          if ! git diff --quiet "${S5_MODEL_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "S5_SOURCE_IDENTITY_DRIFT: model files differ from pinned SOURCE_SHA" >&2
+            git diff --name-status "${S5_MODEL_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
           python -m compileall -q constants.py monte_carlo.py stats_integrity.py scripts/s5_stage5_validation.py tests/test_s5_stage5_output_contract.py
           mkdir -p s5_evidence
           {
             echo "RUN_ID=${GITHUB_RUN_ID}"
-            echo "SOURCE_SHA=${GITHUB_SHA}"
+            echo "SOURCE_SHA=${S5_MODEL_SOURCE_SHA}"
+            echo "TESTED_COMMIT_SHA=${GITHUB_SHA}"
             echo "BRANCH=${GITHUB_REF_NAME}"
             echo "COMMAND=python scripts/s5_stage5_validation.py"
           } | tee s5_evidence/run_identity.txt

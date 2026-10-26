@@ -130,3 +130,14 @@ def test_s5_summary_parquet_preserves_full_uint64_rng_checksum() -> None:
     assert table.schema.field("rng_checksum").type == pa.uint64()
     assert table.column("rng_checksum").to_pylist() == [maximum_uint64]
     assert not any(pa.types.is_floating(field.type) for field in table.schema)
+
+def test_s5_model_source_sha_is_separate_from_tested_commit_sha(monkeypatch) -> None:
+    from scripts.s5_stage5_validation import _resolve_source_identities
+
+    monkeypatch.setenv("S5_MODEL_SOURCE_SHA", "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99")
+    monkeypatch.setenv("GITHUB_SHA", "a" * 40)
+
+    source_sha, tested_sha = _resolve_source_identities()
+    assert source_sha == "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
+    assert tested_sha == "a" * 40
+    assert source_sha != tested_sha

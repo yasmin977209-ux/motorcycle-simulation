@@ -204,11 +204,20 @@ def _table_from_summary_records(records: list[dict[str, Any]]) -> pa.Table:
             fields.append(pa.field(name, pa.array(values).type))
     return pa.Table.from_pylist(records, schema=pa.schema(fields))
 
-def main() -> int:
-    source_sha = os.environ.get("GITHUB_SHA", "")
-    run_id = os.environ.get("GITHUB_RUN_ID", "LOCAL_NOT_GITHUB")
+def _resolve_source_identities() -> tuple[str, str]:
+    """Keep the pinned engine SOURCE_SHA distinct from the tested Git commit."""
+    source_sha = os.environ.get("S5_MODEL_SOURCE_SHA", "")
+    tested_commit_sha = os.environ.get("GITHUB_SHA", "")
     if re.fullmatch(r"[0-9a-f]{40}", source_sha) is None:
-        raise RuntimeError("S5_SOURCE_SHA_MISSING_OR_INVALID")
+        raise RuntimeError("S5_MODEL_SOURCE_SHA_MISSING_OR_INVALID")
+    if re.fullmatch(r"[0-9a-f]{40}", tested_commit_sha) is None:
+        raise RuntimeError("S5_TESTED_COMMIT_SHA_MISSING_OR_INVALID")
+    return source_sha, tested_commit_sha
+
+
+def main() -> int:
+    source_sha, tested_commit_sha = _resolve_source_identities()
+    run_id = os.environ.get("GITHUB_RUN_ID", "LOCAL_NOT_GITHUB")
     if OUTPUT.exists() and any(OUTPUT.iterdir()):
         raise RuntimeError("S5_OUTPUT_DIRECTORY_NOT_EMPTY; refusing to overwrite existing evidence")
     OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -229,6 +238,7 @@ def main() -> int:
     timing: dict[str, Any] = {
         "run_id": run_id,
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "scope": "S5_MINI_VALIDATION_ONLY",
         "n_scenarios": len(scenarios),
         "trial_ids_per_scenario": trial_ids,
@@ -289,6 +299,7 @@ def main() -> int:
                 "scenario_id": scenario_id,
                 "trial_id": trial_id,
                 "source_sha": source_sha,
+                "tested_commit_sha": tested_commit_sha,
                 "trial_fingerprint_sequential": seq_result.trial_fingerprint,
                 "trial_record_sha256_sequential": seq_record_hash,
                 "daily_slice_sha256_sequential": seq_daily_hash,
@@ -340,6 +351,7 @@ def main() -> int:
             record.pop("collection_probability", None)
             record["collection_pct"] = int(scenario_id.split("_", maxsplit=1)[0][1:])
             record["source_sha"] = source_sha
+            record["tested_commit_sha"] = tested_commit_sha
             _assert_no_float(record, path=f"trials_summary.{scenario_id}.{trial_id}")
             summary_records.append(record)
     summary_records.sort(key=lambda row: (row["scenario_id"], row["trial_id"]))
@@ -385,6 +397,7 @@ def main() -> int:
                 "final_net_project_equity": result.final_net_project_equity,
                 "trial_fingerprint": result.trial_fingerprint,
                 "source_sha": source_sha,
+                "tested_commit_sha": tested_commit_sha,
             })
 
         replay_by_id: dict[int, tuple[monte_carlo.TrialResult, list[dict[str, object]]]] = {}
@@ -416,6 +429,7 @@ def main() -> int:
                 "trial_id": trial_id,
                 "selection_roles": sorted(roles),
                 "source_sha": source_sha,
+                "tested_commit_sha": tested_commit_sha,
                 "first_pass_trial_fingerprint": original.trial_fingerprint,
                 "second_pass_trial_fingerprint": replay_result.trial_fingerprint,
                 "trial_fingerprint_match": original.trial_fingerprint == replay_result.trial_fingerprint,
@@ -434,6 +448,7 @@ def main() -> int:
                         "scenario_id": scenario_id,
                         "selection_role": role,
                         "source_sha": source_sha,
+                        "tested_commit_sha": tested_commit_sha,
                         **daily_row,
                     })
 
@@ -504,6 +519,7 @@ def main() -> int:
     worker_manifest_payload = {
         "schema_version": "s5-worker-equivalence-v1",
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "run_id": run_id,
         "cohort_id": f"s5-v23-smoke-{source_sha[:12]}",
         "scenarios": scenarios,
@@ -521,6 +537,7 @@ def main() -> int:
     _write_json(OUTPUT / "representative_replay_manifest.json", {
         "schema_version": "s5-representative-replay-v1",
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "run_id": run_id,
         "scenario_count": len(scenarios),
         "role_count": len(selection_records),
@@ -535,6 +552,7 @@ def main() -> int:
     stability_history = {
         "schema_version": "s5-stability-smoke-v1",
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "run_id": run_id,
         "cohort_id": f"s5-v23-smoke-{source_sha[:12]}",
         "sample_kind": "FUNCTIONAL_SMOKE_ONLY",
@@ -583,6 +601,7 @@ def main() -> int:
         "scope": "S5 smoke evidence; not N=300 Gate A/B or convergence acceptance",
         "run_id": run_id,
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "branch": os.environ.get("GITHUB_REF_NAME", "LOCAL"),
         "cohort_id": f"s5-v23-smoke-{source_sha[:12]}",
         "stochastic_scenario_count": len(scenarios),
@@ -634,6 +653,7 @@ def main() -> int:
         "status": evidence["status"],
         "run_id": run_id,
         "source_sha": source_sha,
+        "tested_commit_sha": tested_commit_sha,
         "scenarios": len(scenarios),
         "trials_per_scenario": len(trial_ids),
         "worker_manifest_rows": len(worker_manifest),
