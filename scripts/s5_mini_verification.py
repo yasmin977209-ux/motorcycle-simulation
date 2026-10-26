@@ -424,16 +424,6 @@ def main() -> int:
         audit_rows, source_sha=source_sha, master_seed=constants.MASTER_SEED
     )
     validation.validate_worker_equivalence_manifest({"trials": worker_manifest_rows})
-    all_daily_rows = [
-        row
-        for scenario_id in (
-            f"C{c:03d}_G{g:03d}"
-            for c in SCENARIO_COLLECTIONS
-            for g in SCENARIO_RECOVERY_RATES
-        )
-        for trial_id in TRIAL_IDS
-        for row in []  # Per-representative daily files are validated below.
-    ]
     if not daily_distribution_rows:
         raise RuntimeError("S5_DAILY_DISTRIBUTION_NOT_GENERATED")
     validation.validate_daily_distribution_dates(daily_distribution_rows)
@@ -574,7 +564,7 @@ def main() -> int:
             "161_daily_distribution_parquet": True,
             "174_sequential_parallel_and_replay_fingerprints": True,
             "181_new_cohort_daily_partner_balance_integer_evidence": True,
-            "182_exact_fraction_and_half_even_number_registry": True,
+            "182_exact_fraction_and_half_even_number_registry": "PASS_S5_REGISTRY; S8_WORKBOOK_REPORT_RECONCILIATION_REMAINS_OPEN",
             "historical_v2_2_representative_balance_gap": "PRESERVED_NOT_REWRITTEN",
             "workbook_and_report_reconciliation": "S8_SCOPE_NOT_CLOSED_BY_S5",
         },
