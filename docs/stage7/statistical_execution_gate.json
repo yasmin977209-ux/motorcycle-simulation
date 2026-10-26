@@ -1,11 +1,23 @@
 {
   "schema_version": "stage7-statistical-execution-gate-v1",
-  "reviewed_at": "2026-10-24",
-  "status": "BLOCKED_FOR_IMPLEMENTATION",
+  "reviewed_at": "2026-10-26",
+  "status": "AUTHORIZED_FOR_V2.3_EXECUTION",
   "source_basis": {
     "owner_approved_iut_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
     "owner_approved_iut_record_blob": "1a69a1f4cf8c87b8e2575a800b92fc80bcd6677e",
-    "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+    "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+    "owner_execution_authorization": {
+      "granted_in_project_session": "2026-10-26",
+      "scope": "S5 candidate-branch implementation and preparation for S6 Gate A Golden on the twenty stochastic scenarios; main and historical data are excluded.",
+      "normative_basis": [
+        "§0.3 and §14.12 / normative Appendix D exact report-statistics format",
+        "§14.11 and §21.3 / normative Appendix D sequential alpha spending and time-uniform procedure",
+        "§21.2 and Tests 170/184 RNG checksum decision",
+        "S4 Run 40263424595 and successful S4 workflow Run 40348652976"
+      ],
+      "explicit_boundary": "This execution authorization does not mean production Gate A/B passed, scenario stability was declared, or final delivery was accepted."
+    },
+    "normative_reference_sha256": "2c0b7211f7aa8b1ebe1d8dc497aaee452a2a24659daa0aa7f77ee3338e29dab9"
   },
   "approved_policy": {
     "familywise_false_stability_target": 0.05,
@@ -33,14 +45,14 @@
       ]
     },
     "gate_b_financial_means": {
-      "status": "K_SPEC_BLOCKED",
+      "status": "OWNER_APPROVED_METHOD_IMPLEMENTED; S5_END_TO_END_VALIDATION_PENDING",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "Source review: daily_engine.run_deterministic_trial loops until simulation_stopped with no max_days guard; FINAL_CLOSE_DATE is None; closure_preconditions_met rejects any PREP bike; and daily_engine._m2 leaves a PREP bike unfunded whenever project_cash or partner1_reinvestment_balance stays below the preparation/customs thresholds. An adversarial synthetic state confirms that no local progress/closure occurs without funding inflows. Reachability of that synthetic state from create_initial_project has not been proved or disproved, so no deterministic finite bound or valid moment/tail bound is established. Current pointwise Student-t intervals are not time-uniform under adaptive stopping.",
-      "required_evidence": "Either prove a deterministic bound/invariant that excludes all non-terminating underfunded-PREP paths from the canonical initialization, or record a separately reviewed quantitative tail/moment and event-dependence assumption grounded in the RNG/model; then validate an all-time-valid mean procedure and exact-source acceptance tests."
+      "implementation_gap": "The normative Appendix D owner-approved alpha-spending procedure and its exact-source helpers are now present in stats_integrity.py; the previous gate text describing the method as unapproved is stale. The S5 real-artifact validation and full N=300 production checkpoint acceptance have not yet been evidenced.",
+      "required_evidence": "Run and validate S5 real worker-equivalence, representative-replay, exact-statistics and no-float artifacts on the exact candidate source. Then require production checkpoint evidence at N=300 and the approved doubling sequence; do not declare stability solely from the five-trial smoke sample."
     },
     "section_2_5_quantiles": {
-      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
-      "candidate": "Distribution-free time-uniform fixed-quantile confidence sequence based on order statistics; beta-binomial mixture variant is primary candidate",
+      "status": "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION",
+      "candidate": "The owner-approved Appendix D order-statistic/rank interval method is implemented in stats_integrity.py; exact point quantiles use Fraction. S5 source-identity and output-artifact validation remains pending.",
       "margins": {
         "P10_Cumulative_Project_Profit": 18500,
         "P50_Cumulative_Project_Profit": 18500,
@@ -51,8 +63,8 @@
       }
     },
     "probability_of_accounting_loss": {
-      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
-      "candidate": "Time-uniform Bernoulli mean confidence sequence / beta-binomial mixture e-process",
+      "status": "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION",
+      "candidate": "The owner-approved Appendix D Bernoulli Wilson interval with sequential alpha spending and the zero-loss upper bound -ln(alpha_s,k)/N is implemented in stats_integrity.py. S5 source-identity and output-artifact validation remains pending.",
       "maximum_half_width": 0.005,
       "maximum_adjacent_change": 0.005
     },
@@ -87,7 +99,7 @@
         "tests/test_run_batch.py::test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means"
       ],
       "blockers": [
-        "K_SPEC remains blocked: the financial-mean interval is pointwise Student-t under adaptive stopping, with no accepted time-uniform procedure or approved finite-support/quantified-tail assumption. This strict-Boolean fix establishes input-type safety only, not Gate B statistical acceptance."
+        "Exact-source S5 artifact validation and end-to-end production checkpoint acceptance remain pending; the strict-Boolean guards prove input-type safety, not Gate B statistical acceptance."
       ]
     },
     "c030_g030_historical_transition": {
@@ -102,7 +114,9 @@
     "production_trial_checkpoint_monte_carlo_allowed": false,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "allowed_next_work": "Resolve statistical method assumptions, implement/test valid component procedures and four-point/three-transition stopping; separately restore intact Golden authority text"
+    "allowed_next_work": "Complete S5 exact-source smoke artifact validation and runtime measurement; if accepted, prepare S6 Gate A Golden for the twenty stochastic scenarios at N=300 without rerunning C100. Full production checkpoint acceptance, stability declaration, and final delivery remain blocked until their own evidence and the historical transition/P90_Held_Assets issues are resolved.",
+    "s5_isolated_smoke_validation_allowed": true,
+    "s6_gate_a_golden_preparation_allowed": true
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
@@ -117,9 +131,9 @@
   },
   "implementation_approval": {
     "reviewed_approval_id": null,
-    "owner_approved": false,
+    "owner_approved": true,
     "validated_source_head_sha": null,
     "evidence_sha256": null,
-    "note": "Must be supplied by a separately reviewed implementation/acceptance record; changing status alone is not sufficient."
+    "note": "Owner explicitly authorized S5 candidate-branch work and S6 Gate A Golden preparation in the project session dated 2026-10-26. The exact tested candidate head and evidence digest must be filled only from the completed S5 run; this authorization is not a production PASS."
   }
 }
