@@ -8,6 +8,7 @@ on:
       - ".github/workflows/s5-mini-verification-v23.yml"
       - "stats_integrity.py"
       - "scripts/s5_mini_verification.py"
+      - "requirements.txt"
       - "tests/**"
       - "monte_carlo.py"
       - "validation.py"
