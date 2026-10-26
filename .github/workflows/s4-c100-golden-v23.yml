@@ -101,14 +101,14 @@ jobs:
 
       - name: Run the five C100 scenarios for trial IDs 1 through 300
         id: s4_run
-        if: ${{ steps.unit_tests.outcome }} == 'success'
+        if: ${{ steps.unit_tests.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
           python scripts/s4_c100_golden.py
 
       - name: Commit only the S4 output or explicit failure record
-        if: always() && ${{ steps.unit_tests.outcome }} == 'success' && ${{ steps.s4_run.outcome }} != 'skipped'
+        if: ${{ always() && steps.unit_tests.outcome == 'success' && steps.s4_run.outcome != 'skipped' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -140,7 +140,7 @@ jobs:
             s4_evidence/
             docs/golden/v2.3/C100_GOLDEN_${{ env.S4_SOURCE_SHA }}.json
             docs/audits/S4_C100_GOLDEN_MANIFEST_${{ env.S4_SOURCE_SHA }}.json
-            docs/audits/S4_C100_GOLDEN_REPORT_${{ env.S4_SOURCE_SHA }.md
+            docs/audits/S4_C100_GOLDEN_REPORT_${{ env.S4_SOURCE_SHA }}.md
             docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ env.S4_SOURCE_SHA }}.json
             docs/audits/S4_EXECUTION_FAILURE_C100_${{ env.S4_SOURCE_SHA }}.json
             docs/audits/R4_S4_C100_P50_GOLDEN_2026-10-26.md
