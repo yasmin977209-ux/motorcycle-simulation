@@ -95,7 +95,11 @@ def _scenario_ids() -> tuple[str, ...]:
         for collection in constants.STAGE5_STOCHASTIC_COLLECTION_PERCENTAGES
         for recovery in constants.GUARANTEE_RECOVERY_RATES
     )
-    if len(scenarios) != constants.STAGE5_STOCHASTIC_SCENARIO_COUNT:
+    expected_count = (
+        len(constants.STAGE5_STOCHASTIC_COLLECTION_PERCENTAGES)
+        * len(constants.GUARANTEE_RECOVERY_RATES)
+    )
+    if len(scenarios) != expected_count:
         raise AssertionError("S6_STOCHASTIC_SCENARIO_COUNT_MISMATCH")
     if any(scenario.startswith("C100_") for scenario in scenarios):
         raise AssertionError("S6_MUST_REUSE_C100_NOT_RUN_IT")
@@ -334,6 +338,7 @@ def _run_scenario(
         (scenario_id, trial_id, source_sha, constants.MASTER_SEED)
         for trial_id in trial_ids
     ]
+    execution_started_at = datetime.now(timezone.utc).isoformat()
     started_ns = time.perf_counter_ns()
     serial_start_ns = time.perf_counter_ns()
     serial_records = [_run_trial_task(task) for task in tasks]
@@ -413,7 +418,8 @@ def _run_scenario(
         "source_sha": source_sha,
         "tested_commit_sha": tested_commit_sha,
         "run_id": run_id,
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "execution_started_at": execution_started_at,
+        "evidence_written_at": datetime.now(timezone.utc).isoformat(),
         "command": " ".join(sys.argv),
         "python_version": sys.version.split()[0],
         "scenario_id": scenario_id,
@@ -507,6 +513,12 @@ def _merge_scenarios(
         raise RuntimeError("S6_SCENARIO_GOLDEN_COVERAGE_MISMATCH")
     if set(audit_by_scenario) != set(expected_scenarios):
         raise RuntimeError("S6_SCENARIO_AUDIT_COVERAGE_MISMATCH")
+
+    for path in golden_paths + audit_paths:
+        destination = output_dir / path.name
+        if destination.exists():
+            raise RuntimeError(f"S6_DUPLICATE_MERGED_OUTPUT:{destination.name}")
+        shutil.copyfile(path, destination)
 
     for collection_pct in constants.STAGE5_STOCHASTIC_COLLECTION_PERCENTAGES:
         scenario_group = [
@@ -663,7 +675,6 @@ def main() -> int:
 
     if args.scenario is None:
         raise SystemExit("S6_SCENARIO_REQUIRED_UNLESS_MERGING")
-    started_at = datetime.now(timezone.utc).isoformat()
     golden_path, audit_path = _run_scenario(
         scenario_id=args.scenario,
         n=args.n,
@@ -679,7 +690,6 @@ def main() -> int:
         "tested_commit_sha": tested_commit_sha,
         "run_id": run_id,
         "checkpoint_n": args.n,
-        "started_at": started_at,
         "golden_file": str(golden_path),
         "golden_sha256": _sha256_file(golden_path),
         "audit_file": str(audit_path),
