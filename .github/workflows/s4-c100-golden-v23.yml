@@ -47,19 +47,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "${{GITHUB_REF_NAME}" = "tmp/s4-c100-golden-v23-20261026"
-          test "${{GITHUB_REF_NAME}" != "main"
-          git cat-file -e "${{S4_SOURCE_SHA}^{commit}"
-          git cat-file -e "${{S4_SOURCE_SHA}:stats_integrity.py"
-          git cat-file -e "${{S4_SOURCE_SHA}:monte_carlo.py"
+          test "${GITHUB_REF_NAME}" = "tmp/s4-c100-golden-v23-20261026"
+          test "${GITHUB_REF_NAME}" != "main"
+          git cat-file -e "${S4_SOURCE_SHA}^{commit}"
+          git cat-file -e "${S4_SOURCE_SHA}:stats_integrity.py"
+          git cat-file -e "${S4_SOURCE_SHA}:monte_carlo.py"
           MODEL_FILES=(
             constants.py dateutils.py rng.py entities.py state_machine.py
             daily_engine.py accounting.py collection.py guarantee.py friday.py
             settlement.py closure.py partner_equity.py monte_carlo.py stats_integrity.py
           )
-          if ! git diff --quiet "${{S4_SOURCE_SHA}" HEAD -- "${{MODEL_FILES[@]}"; then
+          if ! git diff --quiet "${S4_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
             echo "S4_SOURCE_IDENTITY_DRIFT: model source differs from declared SOURCE_SHA" >&2
-            git diff --name-status "${{S4_SOURCE_SHA}" HEAD -- "${{MODEL_FILES[@]}"
+            git diff --name-status "${S4_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
             exit 1
           fi
           python - <<'PY'
@@ -93,22 +93,22 @@ jobs:
           mkdir -p s4_evidence
           set +e
           python -m pytest -q tests --junitxml=s4_evidence/junit.xml 2>&1 | tee s4_evidence/full-suite.log
-          rc=${{PIPESTATUS[0]}
-          printf '%s\n' "${{rc}" > s4_evidence/pytest-exit-code.txt
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "${rc}" > s4_evidence/pytest-exit-code.txt
           sha256sum s4_evidence/full-suite.log s4_evidence/junit.xml 2>&1 | tee s4_evidence/pytest-hashes.txt
-          echo "S4_PYTEST_EXIT_CODE=${{rc}" >> "${{GITHUB_STEP_SUMMARY}"
-          exit "${{rc}"
+          echo "S4_PYTEST_EXIT_CODE=${rc}" >> "${GITHUB_STEP_SUMMARY}"
+          exit "${rc}"
 
       - name: Run the five C100 scenarios for trial IDs 1 through 300
         id: s4_run
-        if: ${{ steps.unit_tests.outcome } == 'success'
+        if: ${{ steps.unit_tests.outcome }} == 'success'
         shell: bash
         run: |
           set -euo pipefail
           python scripts/s4_c100_golden.py
 
       - name: Commit only the S4 output or explicit failure record
-        if: always() && ${{ steps.unit_tests.outcome } == 'success' && ${{ steps.s4_run.outcome } != 'skipped'
+        if: always() && ${{ steps.unit_tests.outcome }} == 'success' && ${{ steps.s4_run.outcome }} != 'skipped'
         shell: bash
         run: |
           set -euo pipefail
@@ -116,16 +116,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/audits/R4_S4_C100_P50_GOLDEN_2026-10-26.md
           for path in \
-            "docs/golden/v2.3/C100_GOLDEN_${{S4_SOURCE_SHA}.json" \
-            "docs/audits/S4_C100_GOLDEN_MANIFEST_${{S4_SOURCE_SHA}.json" \
-            "docs/audits/S4_C100_GOLDEN_REPORT_${{S4_SOURCE_SHA}.md" \
-            "docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{S4_SOURCE_SHA}.json" \
-            "docs/audits/S4_EXECUTION_FAILURE_C100_${{S4_SOURCE_SHA}.json"; do
-            if test -f "${{path}"; then git add "${{path}"; fi
+            "docs/golden/v2.3/C100_GOLDEN_${S4_SOURCE_SHA}.json" \
+            "docs/audits/S4_C100_GOLDEN_MANIFEST_${S4_SOURCE_SHA}.json" \
+            "docs/audits/S4_C100_GOLDEN_REPORT_${S4_SOURCE_SHA}.md" \
+            "docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${S4_SOURCE_SHA}.json" \
+            "docs/audits/S4_EXECUTION_FAILURE_C100_${S4_SOURCE_SHA}.json"; do
+            if test -f "${path}"; then git add "${path}"; fi
           done
           if ! git diff --cached --quiet; then
             git commit -m "S4: record exact C100 v2.3 run evidence"
-            git push origin "HEAD:${{GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           else
             echo "S4_OUTPUT_COMMIT=NO_CHANGES"
           fi
@@ -134,15 +134,15 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: s4-c100-v23-${{ github.run_id }
+          name: s4-c100-v23-${{ github.run_id }}
           if-no-files-found: warn
           path: |
             s4_evidence/
-            docs/golden/v2.3/C100_GOLDEN_${{ env.S4_SOURCE_SHA }.json
-            docs/audits/S4_C100_GOLDEN_MANIFEST_${{ env.S4_SOURCE_SHA }.json
+            docs/golden/v2.3/C100_GOLDEN_${{ env.S4_SOURCE_SHA }}.json
+            docs/audits/S4_C100_GOLDEN_MANIFEST_${{ env.S4_SOURCE_SHA }}.json
             docs/audits/S4_C100_GOLDEN_REPORT_${{ env.S4_SOURCE_SHA }.md
-            docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ env.S4_SOURCE_SHA }.json
-            docs/audits/S4_EXECUTION_FAILURE_C100_${{ env.S4_SOURCE_SHA }.json
+            docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ env.S4_SOURCE_SHA }}.json
+            docs/audits/S4_EXECUTION_FAILURE_C100_${{ env.S4_SOURCE_SHA }}.json
             docs/audits/R4_S4_C100_P50_GOLDEN_2026-10-26.md
 
       - name: Enforce S4 executable gate
@@ -150,13 +150,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if test "${{ steps.unit_tests.outcome }" != "success"; then
+          if test "${{ steps.unit_tests.outcome }}" != "success"; then
             echo "S4_GATE_FAIL: full test inventory failed; C100 was not started." >&2
             exit 1
           fi
-          if test "${{ steps.s4_run.outcome }" != "success"; then
+          if test "${{ steps.s4_run.outcome }}" != "success"; then
             echo "S4_GATE_FAIL: C100 run did not pass; inspect the uploaded evidence and failure record." >&2
             exit 1
           fi
-          test -f "docs/golden/v2.3/C100_GOLDEN_${{S4_SOURCE_SHA}.json"
+          test -f "docs/golden/v2.3/C100_GOLDEN_${S4_SOURCE_SHA}.json"
           echo "S4_GATE_PASS: 177 UNIQUE tests plus C100 1500-trial deterministic Golden."
