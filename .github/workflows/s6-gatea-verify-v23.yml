@@ -7,6 +7,10 @@ on:
     paths:
       - "scripts/s6_gate_a_golden.py"
       - "tests/test_s6_gate_a_golden.py"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "tests/test_stage7_time_uniform_candidates.py"
+      - "tests/test_golden_provider_workflow_integration.py"
+      - "tests/test_s5_stage5_output_contract.py"
   workflow_dispatch:
 
 concurrency:
@@ -43,4 +47,4 @@ jobs:
         run: python -m compileall -q scripts/s6_gate_a_golden.py tests/test_s6_gate_a_golden.py
 
       - name: Run non-simulation contract tests
-        run: python -m pytest -q tests/test_s6_gate_a_golden.py --junitxml=s6-gatea-verification-junit.xml
+        run: python -m pytest -q tests/test_s6_gate_a_golden.py tests/test_stage7_time_uniform_candidates.py tests/test_golden_provider_workflow_integration.py tests/test_s5_stage5_output_contract.py -k "test_s6_ or test_candidate_methods_do_not_open_the_production_execution_gate or test_statistical_execution_contract_blocks_unimplemented_components or test_s5_daily_distribution_exact_active_and_carry_forward or test_s5_summary_parquet_preserves_full_uint64_rng_checksum" --junitxml=s6-gatea-verification-junit.xml

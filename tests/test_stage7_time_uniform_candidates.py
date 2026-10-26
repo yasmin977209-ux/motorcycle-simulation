@@ -138,8 +138,8 @@ def test_candidate_methods_do_not_open_the_production_execution_gate() -> None:
     assert authorization["production_trial_checkpoint_monte_carlo_allowed"] is False
     assert authorization["scenario_stability_declaration_allowed"] is False
     assert authorization["final_delivery_acceptance_allowed"] is False
-    assert gate["component_status"]["section_2_5_quantiles"]["status"] == "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION"
-    assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION"
+    assert gate["component_status"]["section_2_5_quantiles"]["status"] == "IMPLEMENTED_METHOD; S5_SMOKE_VALIDATED; PRODUCTION_CHECKPOINT_PENDING"
+    assert gate["component_status"]["probability_of_accounting_loss"]["status"] == "IMPLEMENTED_METHOD; S5_SMOKE_VALIDATED; PRODUCTION_CHECKPOINT_PENDING"
     assert gate["component_status"]["stopping_window"]["required_points"] == 4
     assert gate["component_status"]["stopping_window"]["required_successful_transitions"] == 3
 

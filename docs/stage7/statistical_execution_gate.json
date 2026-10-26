@@ -45,14 +45,14 @@
       ]
     },
     "gate_b_financial_means": {
-      "status": "OWNER_APPROVED_METHOD_IMPLEMENTED; S5_END_TO_END_VALIDATION_PENDING",
+      "status": "OWNER_APPROVED_METHOD; S5_SMOKE_VALIDATED; PRODUCTION_CHECKPOINT_PENDING",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "The normative Appendix D owner-approved alpha-spending procedure and its exact-source helpers are now present in stats_integrity.py; the previous gate text describing the method as unapproved is stale. The S5 real-artifact validation and full N=300 production checkpoint acceptance have not yet been evidenced.",
-      "required_evidence": "Run and validate S5 real worker-equivalence, representative-replay, exact-statistics and no-float artifacts on the exact candidate source. Then require production checkpoint evidence at N=300 and the approved doubling sequence; do not declare stability solely from the five-trial smoke sample."
+      "implementation_gap": "The owner-approved Appendix D procedure is implemented and the isolated S5 smoke artifact was validated in Run 40383552605. This is N=5 functional evidence only; production N=300 checkpoint acceptance, independent Gate A/B acceptance, P90_Held_Assets qualification, and historical-transition requalification remain pending.",
+      "required_evidence": "S5 worker equivalence, representative replay, exact statistics, no-float schemas and artifact SHA256 manifests passed in Run 40383552605. Next require reviewed production checkpoint evidence at N=300 and approved doubling checkpoints; do not declare stability from smoke."
     },
     "section_2_5_quantiles": {
-      "status": "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION",
-      "candidate": "The owner-approved Appendix D order-statistic/rank interval method is implemented in stats_integrity.py; exact point quantiles use Fraction. S5 source-identity and output-artifact validation remains pending.",
+      "status": "IMPLEMENTED_METHOD; S5_SMOKE_VALIDATED; PRODUCTION_CHECKPOINT_PENDING",
+      "candidate": "The owner-approved Appendix D order-statistic/rank interval method and exact Fraction point quantiles are implemented. S5 smoke validated both population reports and exact fraction persistence; full production N=300 checkpoint acceptance remains pending.",
       "margins": {
         "P10_Cumulative_Project_Profit": 18500,
         "P50_Cumulative_Project_Profit": 18500,
@@ -63,8 +63,8 @@
       }
     },
     "probability_of_accounting_loss": {
-      "status": "IMPLEMENTED_METHOD_PENDING_S5_ARTIFACT_VALIDATION",
-      "candidate": "The owner-approved Appendix D Bernoulli Wilson interval with sequential alpha spending and the zero-loss upper bound -ln(alpha_s,k)/N is implemented in stats_integrity.py. S5 source-identity and output-artifact validation remains pending.",
+      "status": "IMPLEMENTED_METHOD; S5_SMOKE_VALIDATED; PRODUCTION_CHECKPOINT_PENDING",
+      "candidate": "The owner-approved Appendix D Bernoulli Wilson interval, sequential alpha spending, and exact zero-loss upper-bound method are implemented. S5 report precision and RNG audit outputs were validated; the production N=300 checkpoint and full inference acceptance remain pending.",
       "maximum_half_width": 0.005,
       "maximum_adjacent_change": 0.005
     },
@@ -114,7 +114,7 @@
     "production_trial_checkpoint_monte_carlo_allowed": false,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "allowed_next_work": "Complete S5 exact-source smoke artifact validation and runtime measurement; if accepted, prepare S6 Gate A Golden for the twenty stochastic scenarios at N=300 without rerunning C100. Full production checkpoint acceptance, stability declaration, and final delivery remain blocked until their own evidence and the historical transition/P90_Held_Assets issues are resolved.",
+    "allowed_next_work": "S5 isolated smoke validation is complete with a verified real artifact. Prepare and, when initiating S6, explicitly dispatch the scoped Gate A Golden workflow for the twenty stochastic scenarios at N=300 without rerunning C100. The Golden artifact remains PREPARED_PENDING_REVIEW until its source identity, merged completeness and independent review are accepted. Production Gate A/B acceptance, scenario stability/convergence, and final delivery remain blocked until their own evidence exists and P90_Held_Assets plus the historical C030_G030 transition are resolved.",
     "s5_isolated_smoke_validation_allowed": true,
     "s6_gate_a_golden_preparation_allowed": true
   },
@@ -134,6 +134,95 @@
     "owner_approved": true,
     "validated_source_head_sha": null,
     "evidence_sha256": null,
-    "note": "Owner explicitly authorized S5 candidate-branch work and S6 Gate A Golden preparation in the project session dated 2026-10-26. The exact tested candidate head and evidence digest must be filled only from the completed S5 run; this authorization is not a production PASS."
+    "note": "Owner explicitly authorized S5 candidate-branch work and S6 Gate A Golden preparation in the project session dated 2026-10-26. S5 Run 40383552605 passed as PASS_MINI_INTEGRITY_ONLY on tested commit 8df6392192df45a81727239ce9b319d9a4991b82 with pinned SOURCE_SHA 9fd34c2c4cf7250653ea6d86e33e1f939e6fba99; artifact digest is recorded in s5_smoke_validation. This smoke evidence is not production acceptance; validated_source_head_sha and evidence_sha256 remain null until separate production acceptance is completed."
+  },
+  "s5_smoke_validation": {
+    "status": "PASS_MINI_INTEGRITY_ONLY",
+    "run_id": "40383552605",
+    "tested_commit_sha": "8df6392192df45a81727239ce9b319d9a4991b82",
+    "source_sha": "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99",
+    "full_pytest": {
+      "command": "python -m pytest -q tests --junitxml=s5_evidence/full-suite-junit.xml",
+      "exit_code": 0,
+      "passed": 558,
+      "skipped": 1,
+      "warnings": 1,
+      "elapsed_seconds_display": "374.28",
+      "log_sha256": "788996c6bc5b8c62caa8eb8a685c8c9a82478e397d4ab134f54c5cff57dde896",
+      "junit_sha256": "69e2bc010bf2aeb11927d075af91d800e7e53c8fcf4c273e68e468e5b7e02495"
+    },
+    "focused_pytest": {
+      "exit_code": 0,
+      "passed": 6,
+      "deselected": 160,
+      "elapsed_seconds_display": "0.79"
+    },
+    "artifact": {
+      "id": "12680198562",
+      "name": "s5-stochastic-smoke-v23-40383552605",
+      "size_bytes": 25068927,
+      "zip_sha256": "05f1640386bfd6f1dc8fff32959f2d31abd9d93b66cb556ab7e45abddede280f",
+      "results_manifest_entries": 10,
+      "results_manifest_all_match": true,
+      "evidence_manifest_entries": 6,
+      "evidence_manifest_all_match": true
+    },
+    "worker_equivalence": {
+      "manifest_sha256": "fd775e4fd7ad6df621ffc2b186d20dc9f1ee1ed1cd21bb186978cfc397498c78",
+      "row_count": 100,
+      "exact_all": true,
+      "worker_counts": [
+        2,
+        4
+      ],
+      "trial_ids": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "representative_replay": {
+      "manifest_sha256": "b133577a635cfc8c73a94dd1cb9a195bed52813522689767655319b24ca1625e",
+      "role_rows": 100,
+      "unique_replay_count": 60,
+      "all_trial_fingerprints_match": true,
+      "all_full_trial_records_match": true,
+      "all_daily_slices_match": true,
+      "all_partner_balances_are_integer": true
+    },
+    "daily_distribution": {
+      "rows": 410950,
+      "populations": [
+        "ACTIVE_ONLY",
+        "ALL_TRIALS_CARRY_FORWARD"
+      ],
+      "sha256": "769e6f333fd6e04fcf8a60ca32d19fdcf6c8bed8f9c918e76d94b4b3de02d63a"
+    },
+    "trial_summary": {
+      "sha256": "2ea2c3984b6b3093cd44248b1aa78d71914726ff6b7daac574b6d189a8d3eb55",
+      "rng_checksum_storage": "uint64"
+    },
+    "number_registry": {
+      "sha256": "81f2dc768d7cb6f76fa3d34c562bfe695331cd35a959c04ddcdf14d825eeeb17",
+      "record_count": 2055310,
+      "float_value_count": 0
+    },
+    "benchmark": {
+      "sha256": "a58b82700d13b1b7e659fe0c83747f630917c3fa0daf57bf8f208f72356a71ae",
+      "serial_mean_ns_per_trial": 3184678365,
+      "parallel_mean_ns_per_trial_by_worker_count": {
+        "2": 2009705680,
+        "4": 1948993457
+      },
+      "representative_replay_elapsed_ns": 195319823196,
+      "total_elapsed_ns": 966945258005
+    },
+    "no_float_json": true,
+    "no_float_parquet_columns": true,
+    "c100_rerun": false,
+    "formal_stability_declared": false,
+    "final_delivery_accepted": false
   }
 }
