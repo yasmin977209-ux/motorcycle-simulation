@@ -529,3 +529,5 @@ def test_acceptance_registry_has_the_normative_193_rows_and_exact_class_counts()
     for test_id in (159, 160, 161):
         assert registry[test_id - 1]["production_status"] == "DEFERRED"
         assert registry[test_id - 1]["deferred_stage"] == "S5"
+
+# S5-B rerun trigger: verify the complete suite against the current authorized work-branch contract.
