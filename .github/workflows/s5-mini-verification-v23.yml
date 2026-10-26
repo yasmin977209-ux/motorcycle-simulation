@@ -34,6 +34,7 @@ jobs:
     env:
       PYTHONPATH: .
       PYTHONDONTWRITEBYTECODE: "1"
+      S5_TRIAL_COUNT: "50"
     steps:
       - name: Checkout exact pushed source
         uses: actions/checkout@v4
@@ -83,7 +84,7 @@ jobs:
           import os
           from pathlib import Path
 
-          benchmark = json.loads(Path("s5_evidence/runtime_benchmark.json").read_text(encoding="utf-8"))
+          benchmark = json.loads(Path("results_stage5/runtime_benchmark.json").read_text(encoding="utf-8"))
           path = Path("docs/COMPUTE_PLAN.md")
           content = path.read_text(encoding="utf-8")
           begin = "<!-- S5_RUNTIME_BEGIN -->"
@@ -132,13 +133,13 @@ jobs:
             echo "S5_GATE_FAIL: stochastic mini evidence generation or validation failed." >&2
             exit 1
           fi
-          test -s s5_evidence/s5_manifest.json
-          test -s s5_evidence/s5_acceptance.json
-          test -s s5_evidence/worker_equivalence_manifest.json
-          test -s s5_evidence/trials_summary.parquet
-          test -s s5_evidence/selection.parquet
-          test -s s5_evidence/daily_distribution.parquet
-          echo "S5_GATE_PASS: mini evidence exists; formal scenario stability remains unevaluated at N=5."
+          test -s results_stage5/s5_manifest.json
+          test -s results_stage5/s5_acceptance.json
+          test -s results_stage5/worker_equivalence_manifest.json
+          test -s results_stage5/trials_summary.parquet
+          test -s results_stage5/selection.parquet
+          test -s results_stage5/daily_distribution.parquet
+          echo "S5_GATE_PASS: N=50 per stochastic scenario, second-pass representative fingerprints and OPT-1 sample evidence validated; formal scenario stability remains unevaluated below N=300."
 
       - name: Upload complete S5 evidence
         if: always()
@@ -148,4 +149,5 @@ jobs:
           if-no-files-found: warn
           path: |
             s5_evidence/
+            results_stage5/
             docs/COMPUTE_PLAN.md

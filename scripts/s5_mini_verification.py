@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from fractions import Fraction
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import time
 from typing import Any
@@ -28,7 +29,10 @@ EXPECTED_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d03
 EXPECTED_C100_MANIFEST_SHA256 = "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
 SCENARIO_COLLECTIONS = (85, 70, 50, 30)
 SCENARIO_RECOVERY_RATES = (100, 70, 50, 30, 0)
-TRIAL_IDS = (1, 2, 3, 4, 5)
+TRIAL_COUNT = int(os.environ.get("S5_TRIAL_COUNT", "5"))
+if TRIAL_COUNT < 5:
+    raise ValueError("S5_TRIAL_COUNT_MUST_BE_AT_LEAST_FIVE")
+TRIAL_IDS = tuple(range(1, TRIAL_COUNT + 1))
 QUANTILES = (
     ("P10", Fraction(1, 10)),
     ("P25", Fraction(1, 4)),
@@ -253,7 +257,7 @@ def main() -> int:
         raise ValueError("SOURCE_SHA_MUST_MATCH_EXACT_TESTED_COMMIT")
     source_sha = args.source_sha.lower()
     cohort_id = f"s5-mini-v23-20261026-{source_sha[:8]}"
-    out_dir = Path("s5_evidence")
+    out_dir = Path("results_stage5")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if not GOLDEN_PATH.is_file() or digest(GOLDEN_PATH) != EXPECTED_GOLDEN_SHA256:
@@ -283,6 +287,9 @@ def main() -> int:
     cohort_rows: list[dict[str, Any]] = []
     registry_entries: list[dict[str, Any]] = []
     role_count = 0
+    results_by_scenario: dict[str, list[monte_carlo.TrialResult]] = {}
+    slices_by_scenario: dict[str, dict[int, list[dict[str, object]]]] = {}
+    opt1_validation_rows: list[dict[str, Any]] = []
 
     for collection_pct in SCENARIO_COLLECTIONS:
         for recovery_pct in SCENARIO_RECOVERY_RATES:
@@ -306,6 +313,9 @@ def main() -> int:
                 master_seed=constants.MASTER_SEED, source_sha=source_sha,
             )
             worker4_seconds += time.perf_counter() - t0
+
+            results_by_scenario[scenario_id] = seq_results
+            slices_by_scenario[scenario_id] = seq_slices
 
             worker_manifest_rows.extend(compare_result_sets(
                 seq_results, par2_results, par4_results,
@@ -342,7 +352,7 @@ def main() -> int:
                     registry_entries.append(stats_integrity.number_registry_entry(
                         f"{scenario_id}.trial{trial.trial_id}.{field}",
                         Fraction(value, 1),
-                        source=f"s5_evidence/trials_summary.parquet:{scenario_id}:{trial.trial_id}",
+                        source=f"results_stage5/trials_summary.parquet:{scenario_id}:{trial.trial_id}",
                     ))
 
             selected = monte_carlo.select_representative_trials(seq_results)
@@ -353,13 +363,24 @@ def main() -> int:
                 ("LossCase", selected.loss_case_trial_id),
                 ("MaxCase", selected.max_case_trial_id),
             )
+            replay_ids = sorted({trial_id for _, trial_id in role_trial_ids})
+            replay_results, replay_slices = monte_carlo.run_trials_sequentially(
+                scenario_id, replay_ids, master_seed=constants.MASTER_SEED, source_sha=source_sha
+            )
+            first_by_id = {item.trial_id: item for item in seq_results}
+            replay_by_id = {item.trial_id: item for item in replay_results}
+            for replay_id in replay_ids:
+                if monte_carlo.trial_fingerprint(first_by_id[replay_id]) != monte_carlo.trial_fingerprint(replay_by_id[replay_id]):
+                    raise RuntimeError(f"SECOND_PASS_TRIAL_FINGERPRINT_MISMATCH:{scenario_id}:{replay_id}")
+                if seq_slices[replay_id] != replay_slices[replay_id]:
+                    raise RuntimeError(f"SECOND_PASS_DAILY_FINGERPRINT_MISMATCH:{scenario_id}:{replay_id}")
             result_by_id = {item.trial_id: item for item in seq_results}
             representative_dir = out_dir / "representative_daily" / scenario_id
             representative_dir.mkdir(parents=True, exist_ok=True)
             for role, trial_id in role_trial_ids:
                 trial = result_by_id[trial_id]
                 daily_path = representative_dir / f"{role}_trial{trial_id}.csv"
-                daily_rows = seq_slices[trial_id]
+                daily_rows = replay_slices[trial_id]
                 if not daily_rows:
                     raise RuntimeError(f"REPRESENTATIVE_DAILY_EMPTY:{scenario_id}:{role}")
                 validation.validate_partner_daily_balances(daily_rows)
@@ -373,6 +394,8 @@ def main() -> int:
                     "trial_id": trial_id,
                     "final_net_project_equity": trial.final_net_project_equity,
                     "trial_fingerprint": monte_carlo.trial_fingerprint(trial),
+                    "second_pass_trial_fingerprint": monte_carlo.trial_fingerprint(replay_by_id[trial_id]),
+                    "first_second_pass_match": True,
                     "daily_path": str(daily_path),
                 })
 
@@ -384,7 +407,7 @@ def main() -> int:
                 registry_entries.append(stats_integrity.number_registry_entry(
                     f"{scenario_id}.mean.{field}",
                     stats_integrity.mean_fraction(values),
-                    source=f"s5_evidence/trials_summary.parquet:{scenario_id}:N={len(values)}",
+                    source=f"results_stage5/trials_summary.parquet:{scenario_id}:N={len(values)}",
                 ))
             for field, attr in (
                 ("P10_Cumulative_Project_Profit", "cumulative_project_profit"),
@@ -409,12 +432,56 @@ def main() -> int:
                 seq_results, seq_slices, scenario_id, cohort_id, source_sha
             ))
 
+    # OPT-1 candidate test: for every collection level and sampled trial, compare G100 with all lower G values only when G100 created no claims.
+    for collection_pct in SCENARIO_COLLECTIONS:
+        g100_id = f"C{collection_pct:03d}_G100"
+        g100_by_id = {item.trial_id: item for item in results_by_scenario[g100_id]}
+        eligible_count = 0
+        for trial_id in TRIAL_IDS:
+            base = g100_by_id[trial_id]
+            if base.claims_created != 0:
+                continue
+            eligible_count += 1
+            base_fp = monte_carlo.trial_fingerprint(base)
+            base_daily = slices_by_scenario[g100_id][trial_id]
+            for recovery_pct in (70, 50, 30, 0):
+                scenario_id = f"C{collection_pct:03d}_G{recovery_pct:03d}"
+                candidate = {item.trial_id: item for item in results_by_scenario[scenario_id]}[trial_id]
+                candidate_fp = monte_carlo.trial_fingerprint(candidate)
+                exact_daily = base_daily == slices_by_scenario[scenario_id][trial_id]
+                if base_fp != candidate_fp or not exact_daily:
+                    raise RuntimeError(f"OPT1_BIT_EXACT_MISMATCH:{g100_id}:trial={trial_id}:{scenario_id}")
+                opt1_validation_rows.append({
+                    "collection_scenario": f"C{collection_pct:03d}",
+                    "trial_id": trial_id,
+                    "claims_created": 0,
+                    "base_scenario": g100_id,
+                    "candidate_scenario": scenario_id,
+                    "base_trial_fingerprint": base_fp,
+                    "candidate_trial_fingerprint": candidate_fp,
+                    "daily_rows_bit_exact": True,
+                    "eligible_for_derived_copy": True,
+                    "derived_from_tag": f"{g100_id}",
+                })
+        if eligible_count == 0:
+            raise RuntimeError(f"OPT1_NO_ELIGIBLE_CLAIMS_ZERO_SAMPLE:{g100_id}:N={len(TRIAL_IDS)}")
+    write_json(out_dir / "opt1_sample_validation.json", {
+        "schema_version": "opt1-bit-exact-sample-v1",
+        "sample_trials_per_collection_level": len(TRIAL_IDS),
+        "minimum_required_trials_per_collection_level": 50,
+        "status": "PASS" if len(TRIAL_IDS) >= 50 else "INSUFFICIENT_SAMPLE_FOR_ACTIVATION",
+        "opt1_enabled_for_s6": len(TRIAL_IDS) >= 50,
+        "eligible_comparisons": len(opt1_validation_rows),
+        "collection_levels": [f"C{c:03d}" for c in SCENARIO_COLLECTIONS],
+        "comparisons": opt1_validation_rows,
+    })
     elapsed_total = time.perf_counter() - started_all
-    if len(summary_rows) != 100 or len(selection_rows) != 100:
+    expected_trial_rows = len(SCENARIO_COLLECTIONS) * len(SCENARIO_RECOVERY_RATES) * len(TRIAL_IDS)
+    if len(summary_rows) != expected_trial_rows or len(selection_rows) != 100:
         raise RuntimeError("S5_SAMPLE_ROW_COUNT_MISMATCH")
     if role_count != 100:
         raise RuntimeError("S5_REPRESENTATIVE_ROLE_COUNT_MISMATCH")
-    if len(worker_manifest_rows) != 100:
+    if len(worker_manifest_rows) != expected_trial_rows:
         raise RuntimeError("S5_WORKER_EQUIVALENCE_ROW_COUNT_MISMATCH")
 
     # Check cohort/audit and daily evidence with the shared validators.
@@ -471,6 +538,7 @@ def main() -> int:
         "trial_ids": list(TRIAL_IDS),
         "workers_compared": [1, 2, 4],
         "trial_count": len(worker_manifest_rows),
+        "trial_ids_per_scenario": len(TRIAL_IDS),
         "exact_result_and_daily_equivalence": True,
         "trials": worker_manifest_rows,
     }
@@ -519,9 +587,9 @@ def main() -> int:
         "sample": {
             "scenario_count": 20,
             "trial_ids_per_scenario": list(TRIAL_IDS),
-            "unique_trial_paths": 100,
+            "unique_trial_paths": 20 * len(TRIAL_IDS),
             "executions_per_path": 3,
-            "actual_trial_executions": 300,
+            "actual_trial_executions": 60 * len(TRIAL_IDS),
         },
         "elapsed_seconds": {key: f"{value:.6f}" for key, value in denominator.items()},
         "end_to_end_script_seconds": f"{elapsed_total:.6f}",
@@ -559,6 +627,8 @@ def main() -> int:
         "formal_gate_status": "NOT_EVALUATED_BY_N5_MINI_SAMPLE",
         "checks": {
             "127_worker_equivalence_manifest": True,
+            "opt1_bit_exact_sample": "PASS" if len(TRIAL_IDS) >= 50 else "INSUFFICIENT_SAMPLE_FOR_ACTIVATION",
+            "second_pass_role_fingerprints": True,
             "159_trial_summary_parquet": True,
             "160_selection_and_representative_daily_outputs": True,
             "161_daily_distribution_parquet": True,
@@ -570,6 +640,7 @@ def main() -> int:
         },
         "counts": {
             "trial_summary_rows": len(summary_rows),
+            "opt1_comparison_rows": len(opt1_validation_rows),
             "selection_rows": len(selection_rows),
             "worker_equivalence_rows": len(worker_manifest_rows),
             "daily_distribution_rows": len(daily_distribution_rows),
@@ -622,6 +693,7 @@ def main() -> int:
         "source_sha": source_sha,
         "cohort_id": cohort_id,
         "summary_rows": len(summary_rows),
+        "opt1_sample_validation": str(out_dir / "opt1_sample_validation.json"),
         "selection_rows": len(selection_rows),
         "worker_equivalence_rows": len(worker_manifest_rows),
         "daily_distribution_rows": len(daily_distribution_rows),

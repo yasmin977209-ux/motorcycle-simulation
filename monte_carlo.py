@@ -72,6 +72,7 @@ class TrialResult:
     rng_checksum: int = 0
     rng_draw_count: int = 0
     rng_checksum_fingerprint_sha256: str | None = None
+    claims_created: int = 0
 
 
 def _daily_snapshot(
@@ -170,6 +171,7 @@ def _trial_result_from_project(
             claim.recovered_amount or 0
             for claim in project.guarantee_claims
         ),
+        claims_created=len(project.guarantee_claims),
         partner1_final_entitlement=project.partner1_final_entitlement,
         partner2_final_entitlement=project.partner2_final_entitlement,
         rng_checksum=project.rng_checksum,
