@@ -1,7 +1,7 @@
 {
   "schema_version": "stage7-statistical-execution-gate-v1",
-  "reviewed_at": "2026-10-24",
-  "status": "BLOCKED_FOR_IMPLEMENTATION",
+  "reviewed_at": "2026-10-26",
+  "status": "AUTHORIZED_FOR_V2.3_EXECUTION",
   "source_basis": {
     "owner_approved_iut_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
     "owner_approved_iut_record_blob": "1a69a1f4cf8c87b8e2575a800b92fc80bcd6677e",
@@ -22,24 +22,39 @@
       1200,
       2400
     ],
-    "c100_path": "DETERMINISM_VERIFIED_SEPARATE_FROM_STOCHASTIC_FAMILY"
+    "c100_path": "DETERMINISM_VERIFIED_SEPARATE_FROM_STOCHASTIC_FAMILY",
+    "deterministic_support_envelope": {
+      "method_id": "V2.3_DETERMINISTIC_SUPPORT_ENVELOPE_V1",
+      "source_function": "stats_integrity.compute_deterministic_support_bounds",
+      "status": "IMPLEMENTED_PENDING_CI_VALIDATION",
+      "principle": "derive finite conservative bounds from cutoff-limited expansion, the model lifecycle/settlement limits and bounded fleet; bounds are support limits, not observed maxima",
+      "inference_note": "the bound implementation must pass the dedicated S5 unit tests and actual CI before being counted as validated"
+    }
   },
   "component_status": {
     "gate_a_exact_golden": {
-      "status": "PROVIDER_AUTHORIZED_MAP_INTEGRITY_ONLY",
+      "status": "AUTHORIZED_FOR_S5_COHORT_INTEGRITY_CHECKS",
       "blockers": [
-        "D-2026-10-24-01 authorizes only the exact pinned Golden map as a read-only reference; this is not a production Gate A PASS",
-        "Actual production trial/checkpoint comparison remains blocked until the statistical execution contract is implemented and accepted"
-      ]
+        "The S4 C100 Golden may be reused only as its separate deterministic cohort; its tested SOURCE_SHA/cohort must remain recorded.",
+        "S5's stochastic mini cohort is not a production Gate A Golden map and cannot establish Gate A production PASS."
+      ],
+      "c100_reuse": {
+        "run_id": "40263424595",
+        "cohort_id": "c100-v23-s4-20261026-965281d5",
+        "golden_path": "docs/golden/v2.3/C100_GOLDEN_965281d52441cd0d4b744e211c9f68ee4cdc3753.json",
+        "golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+        "manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04",
+        "rerun_authorized": false
+      }
     },
     "gate_b_financial_means": {
-      "status": "K_SPEC_BLOCKED",
+      "status": "OWNER_AUTHORIZED_METHOD_IMPLEMENTED_PENDING_CI_VALIDATION",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "Source review: daily_engine.run_deterministic_trial loops until simulation_stopped with no max_days guard; FINAL_CLOSE_DATE is None; closure_preconditions_met rejects any PREP bike; and daily_engine._m2 leaves a PREP bike unfunded whenever project_cash or partner1_reinvestment_balance stays below the preparation/customs thresholds. An adversarial synthetic state confirms that no local progress/closure occurs without funding inflows. Reachability of that synthetic state from create_initial_project has not been proved or disproved, so no deterministic finite bound or valid moment/tail bound is established. Current pointwise Student-t intervals are not time-uniform under adaptive stopping.",
-      "required_evidence": "Either prove a deterministic bound/invariant that excludes all non-terminating underfunded-PREP paths from the canonical initialization, or record a separately reviewed quantitative tail/moment and event-dependence assumption grounded in the RNG/model; then validate an all-time-valid mean procedure and exact-source acceptance tests."
+      "implementation_gap": "The approved alpha-spending policy is implemented by stats_integrity.py: exact Fraction alpha_s,k=1/[400*k*(k+1)], Student-t limits for the three means, checks at N and N/2, and the approved finite deterministic support envelope. Actual S5 CI evidence and later full N=300+ checkpoints are still required before any observed stability result.",
+      "required_evidence": "Pass the dedicated support-bound tests and S5 workflow at the exact tested source. Apply the approved policy to each full checkpoint, with three adjacent successful transitions across 300->600->1200->2400 and the exact P50 cross-multiplication guard."
     },
     "section_2_5_quantiles": {
-      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
+      "status": "APPROVED_ORDER_STATISTIC_METHOD_IMPLEMENTED_PENDING_S5_CI",
       "candidate": "Distribution-free time-uniform fixed-quantile confidence sequence based on order statistics; beta-binomial mixture variant is primary candidate",
       "margins": {
         "P10_Cumulative_Project_Profit": 18500,
@@ -48,20 +63,27 @@
         "P90_Final_Cash": 18500,
         "P90_Termination_Count": 1,
         "P90_Held_Assets": 1
-      }
+      },
+      "method": "integer/Fraction type-7 quantile point estimate plus rank interval indexed by z_k=Phi^-1(1-alpha_s,k/2), at N and N/2, with the approved money/count tolerances",
+      "blockers": [
+        "S5 mini results (N=5) are diagnostic only; production criterion remains unaccepted until evaluated on a valid checkpoint."
+      ]
     },
     "probability_of_accounting_loss": {
-      "status": "CANDIDATE_METHOD_NOT_IMPLEMENTED",
+      "status": "APPROVED_WILSON_METHOD_IMPLEMENTED_PENDING_S5_CI",
       "candidate": "Time-uniform Bernoulli mean confidence sequence / beta-binomial mixture e-process",
       "maximum_half_width": 0.005,
-      "maximum_adjacent_change": 0.005
+      "maximum_adjacent_change": 0.005,
+      "method": "Wilson interval using z_k=Phi^-1(1-alpha_s,k/2); at zero losses upper bound is min(1,-ln(alpha_s,k)/N)",
+      "blockers": [
+        "S5 mini results (N=5) are diagnostic only; production criterion remains unaccepted until evaluated on a valid checkpoint."
+      ]
     },
     "p90_held_assets": {
       "status": "PRODUCTION_ACCEPTANCE_MISSING",
       "margin": 1,
       "blockers": [
-        "Production data-identity/completeness path is not proven",
-        "No integrated fail-closed acceptance test in production decision path"
+        "S5 mini output includes held-assets fields and schema evidence, but full production data-identity/completeness and the integrated fail-closed acceptance path still require validation."
       ]
     },
     "stopping_window": {
@@ -99,10 +121,12 @@
     }
   },
   "execution_authorization": {
-    "production_trial_checkpoint_monte_carlo_allowed": false,
+    "owner_authorized_v23_execution": true,
+    "production_trial_checkpoint_monte_carlo_allowed": true,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "allowed_next_work": "Resolve statistical method assumptions, implement/test valid component procedures and four-point/three-transition stopping; separately restore intact Golden authority text"
+    "permitted_work_branch": "tmp/s5-statistical-gate-v23-20261026",
+    "permitted_next_work": "Execute S5 mini validation and record tested SHA, exit code, logs, runtime, artifact IDs and SHA-256; proceed to S6 only on measured evidence and reuse existing C100 output without rerunning it."
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
@@ -116,10 +140,21 @@
     ]
   },
   "implementation_approval": {
-    "reviewed_approval_id": null,
-    "owner_approved": false,
+    "reviewed_approval_id": "OWNER-CHAT-S5-2026-10-26",
+    "owner_approved": true,
     "validated_source_head_sha": null,
     "evidence_sha256": null,
-    "note": "Must be supplied by a separately reviewed implementation/acceptance record; changing status alone is not sufficient."
+    "note": "Owner authorization to execute is explicit; exact source validation and production acceptance are separate and must be recorded from the completed S5 workflow."
+  },
+  "authorization_semantics": {
+    "meaning": "Owner-authorized v2.3 work-branch execution; this status is not Gate A PASS, Gate B PASS, scenario convergence, or final-delivery acceptance.",
+    "authority": "Project_Instructions owner override as communicated 2026-10-26",
+    "permitted_scope": [
+      "S5 bounded stochastic mini-validation",
+      "reusable C100 Golden identity verification without rerun",
+      "sequential/parallel worker-equivalence evidence",
+      "S6 planning and authorized work-branch simulation"
+    ],
+    "production_acceptance_requires_actual_run_evidence": true
   }
 }
