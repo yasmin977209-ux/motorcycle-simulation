@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import rng
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -56,6 +57,12 @@ ADAPTIVE_TRIAL_RESULT_FIELDS = (
     "guarantee_recovered",
     "partner1_final_entitlement",
     "partner2_final_entitlement",
+)
+ADAPTIVE_TRIAL_AUDIT_FIELDS = (
+    "trial_fingerprint",
+    "rng_checksum",
+    "rng_draw_count",
+    "rng_checksum_fingerprint_sha256",
 )
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -1085,9 +1092,15 @@ def _valid_sha256(value):
     return isinstance(value, str) and SHA256_RE.fullmatch(value) is not None
 
 
-def _adaptive_trial_result_sha256(row):
-    """Hash the exact source-defined TrialResult payload, excluding its sidecar digest."""
-    expected_fields = set(ADAPTIVE_TRIAL_RESULT_FIELDS) | {"result_sha256"}
+def _adaptive_trial_result_sha256(
+    row, *, source_sha: str, master_seed: int
+):
+    """Validate the financial result fingerprint separately from RNG audit identity."""
+    expected_fields = (
+        set(ADAPTIVE_TRIAL_RESULT_FIELDS)
+        | set(ADAPTIVE_TRIAL_AUDIT_FIELDS)
+        | {"result_sha256"}
+    )
     if not isinstance(row, dict) or set(row) != expected_fields:
         actual_fields = set(row) if isinstance(row, dict) else set()
         missing = sorted(expected_fields - actual_fields)
@@ -1096,15 +1109,35 @@ def _adaptive_trial_result_sha256(row):
             "ADAPTIVE_TRIAL_RESULT_SCHEMA_MISMATCH: "
             f"missing={missing}; extra={extra}"
         )
-    trial_result = {field: row[field] for field in ADAPTIVE_TRIAL_RESULT_FIELDS}
-    raw = json.dumps(
-        trial_result,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        default=str,
-    ).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
+    financial_result = monte_carlo.TrialResult(
+        **{field: row[field] for field in ADAPTIVE_TRIAL_RESULT_FIELDS}
+    )
+    expected_financial_fingerprint = monte_carlo.trial_fingerprint(financial_result)
+    if row["trial_fingerprint"] != expected_financial_fingerprint:
+        raise RuntimeError("ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH")
+    if row["result_sha256"] != expected_financial_fingerprint:
+        raise RuntimeError("ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH")
+    checksum = row["rng_checksum"]
+    draw_count = row["rng_draw_count"]
+    if isinstance(checksum, bool) or not isinstance(checksum, int):
+        raise RuntimeError("RNG_CHECKSUM_MUST_BE_INT")
+    if not 0 <= checksum < (1 << 64):
+        raise RuntimeError("RNG_CHECKSUM_OUT_OF_RANGE")
+    if isinstance(draw_count, bool) or not isinstance(draw_count, int) or draw_count < 0:
+        raise RuntimeError("RNG_DRAW_COUNT_INVALID")
+    if draw_count == 0 and checksum != 0:
+        raise RuntimeError("RNG_CHECKSUM_NONZERO_WITHOUT_DRAWS")
+    expected_audit_fingerprint = rng.rng_audit_fingerprint(
+        source_sha=source_sha,
+        master_seed=master_seed,
+        scenario_id=str(row["scenario_id"]),
+        trial_id=row["trial_id"],
+        rng_checksum=checksum,
+        rng_draw_count=draw_count,
+    )
+    if row["rng_checksum_fingerprint_sha256"] != expected_audit_fingerprint:
+        raise RuntimeError("RNG_AUDIT_FINGERPRINT_MISMATCH")
+    return expected_financial_fingerprint
 
 
 def _required_nonempty_string(mapping, key, error_code):
@@ -1154,6 +1187,7 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
 
     expected_total = 0
     ordered_fingerprints = []
+    seen_rng_checksums: dict[tuple[str, int], int] = {}
     required_scenario_meta = manifest.get("scenarios")
     if not isinstance(required_scenario_meta, dict) or set(required_scenario_meta) != set(EXPECTED_SCENARIOS):
         raise RuntimeError("MANIFEST_SCENARIO_IDENTITY_MISMATCH")
@@ -1187,11 +1221,23 @@ def _validate_adaptive_cohort(manifest, rows_by_scenario):
             digest = row.get("result_sha256")
             if not _valid_sha256(digest):
                 raise RuntimeError(f"ADAPTIVE_TRIAL_FINGERPRINT_INVALID: {scenario}:{row.get('trial_id')}")
-            computed_digest = _adaptive_trial_result_sha256(row)
+            computed_digest = _adaptive_trial_result_sha256(
+                row,
+                source_sha=manifest["source_sha"],
+                master_seed=manifest["master_seed"],
+            )
             if digest != computed_digest:
                 raise RuntimeError(
                     f"ADAPTIVE_TRIAL_FINGERPRINT_MISMATCH: {scenario}:{row.get('trial_id')}"
                 )
+            if row["rng_draw_count"] > 0:
+                checksum_key = (scenario, row["rng_checksum"])
+                if checksum_key in seen_rng_checksums:
+                    raise RuntimeError(
+                        "DUPLICATE_RNG_CHECKSUM_DETECTED: "
+                        f"{scenario}:{seen_rng_checksums[checksum_key]},{row['trial_id']}"
+                    )
+                seen_rng_checksums[checksum_key] = row["trial_id"]
 
             # A valid digest binds values together, but does not by itself prove
             # that the values belong to the scenario named by the cohort key.

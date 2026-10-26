@@ -119,7 +119,7 @@ def test_170_checksum_uniqueness_uses_draw_count_and_allows_zero() -> None:
         )
 
 
-def test_172_sequential_alpha_spending_is_exact_fraction() -> None:
+def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() -> None:
     expected = (
         Fraction(1, 800),
         Fraction(1, 2400),
@@ -130,6 +130,50 @@ def test_172_sequential_alpha_spending_is_exact_fraction() -> None:
     assert actual == expected
     assert all(type(value) is Fraction for value in actual)
     assert sum(actual) < Fraction(1, 400)
+
+    from types import SimpleNamespace
+    import run_batch
+    mean_rows = [
+        SimpleNamespace(**{field: value for field in run_batch.STABILITY_FIELDS})
+        for value in (100, 102)
+    ]
+    mean_summary = run_batch._metric_summary(mean_rows, spending_index=3)
+    expected_k3 = stats_integrity.sequential_alpha_fraction(3)
+    assert all(
+        metric["alpha_s_k_numerator"] == expected_k3.numerator
+        and metric["alpha_s_k_denominator"] == expected_k3.denominator
+        for metric in mean_summary.values()
+    )
+
+    # 600 observations have an N/2=300 check; at k=2 and k=1, respectively.
+    # With zero losses, the valid upper bound -ln(alpha_s,k)/N exceeds the
+    # descriptive 3/N bound; the descriptive bound alone must not PASS Gate B.
+    indicator_rows = [
+        SimpleNamespace(
+            trial_id=i,
+            cumulative_project_profit=i,
+            final_cash=10000 + i,
+            termination_count=i % 4,
+            held_assets=i % 3,
+        )
+        for i in range(1, 601)
+    ]
+    indicator_summary = stats_integrity.time_uniform_indicator_summary(
+        indicator_rows, k=2
+    )
+    assert set(indicator_summary["indicators"]) == {
+        "P10_Cumulative_Project_Profit",
+        "P50_Cumulative_Project_Profit",
+        "P90_Cumulative_Project_Profit",
+        "P90_Final_Cash",
+        "Probability_of_Accounting_Loss",
+        "P90_Termination_Count",
+        "P90_Held_Assets",
+    }
+    loss = indicator_summary["indicators"]["Probability_of_Accounting_Loss"]
+    assert loss["current_n"]["descriptive_3_over_n"] == "1/200"
+    assert loss["current_n"]["upper_bound"] > 3 / 600
+    assert loss["stable"] is False
 
 
 def test_174_financial_fingerprint_is_identical_after_sharding_and_merge() -> None:
@@ -343,11 +387,30 @@ def test_191_five_representative_roles_use_equity_extrema_and_trial_id_ties() ->
     assert selected.max_case_trial_id == 7
 
 
-def test_192_sequential_alpha_formula_is_used_without_float() -> None:
+def test_192_approved_time_uniform_method_is_required_for_gate_b_acceptance(monkeypatch) -> None:
     for k in range(1, 9):
         assert stats_integrity.sequential_alpha_fraction(k) == Fraction(1, 400 * k * (k + 1))
     assert stats_integrity.cumulative_alpha_fraction(4) == Fraction(1, 500)
     assert type(stats_integrity.cumulative_alpha_fraction(4)) is Fraction
+    method = stats_integrity.time_uniform_inference_status()
+    assert method["approved"] is True
+    assert method["method_id"] == constants.TIME_UNIFORM_METHOD_ID
+
+    import run_batch
+    mean_metrics = {name: {"stable": True} for name in run_batch.STABILITY_FIELDS}
+    indicator_names = {
+        "P10_Cumulative_Project_Profit", "P50_Cumulative_Project_Profit",
+        "P90_Cumulative_Project_Profit", "P90_Final_Cash",
+        "Probability_of_Accounting_Loss", "P90_Termination_Count", "P90_Held_Assets",
+    }
+    indicators = {"indicators": {name: {"stable": True} for name in indicator_names}}
+    assert run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)["stable"] is True
+
+    # The same gate must fail closed if the approval is absent.
+    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", False)
+    blocked = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
+    assert blocked["stable"] is False
+    assert blocked["status"] == "K_SPEC / BLOCKED"
 
 
 def test_193_historical_and_new_rng_cohorts_cannot_be_mixed() -> None:

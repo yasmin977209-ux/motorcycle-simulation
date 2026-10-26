@@ -41,7 +41,8 @@ DEFERRED_PRODUCTION_TESTS = {
     183: ("S6", "production cohort identity manifest has not been generated"),
     184: ("S5", "production RNG audit records have not been generated for the new cohort"),
     186: ("S8", "the seven production deliverables and eight-member archive have not been generated"),
-    191: ("S5", "representative roles must be reselected on the approved production cohort"),
+    191: ("S5", "production representative roles must be reselected on the approved cohort"),
+    192: ("S5", "production Gate B interval coverage and stability need the approved full cohort; logic method is tested in memory"),
     193: ("S6", "new source/cohort/Golden evidence requires separately approved production work"),
 }
 

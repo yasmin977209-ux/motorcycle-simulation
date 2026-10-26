@@ -25,6 +25,8 @@ from scripts.golden_reference_provider import (
 import monte_carlo
 from scripts.stage7_state import StateIntegrityError, StateStore
 from validation import validate_rng_audit_records, c100_path_summary
+import stats_integrity
+import stats_integrity
 from scripts.stage7_stability import (
     STATISTICAL_ESCALATION_POLICY_ID,
     STATISTICAL_ESCALATION_MULTIPLIER,
@@ -255,67 +257,58 @@ def _validate_trial_sequence(
 
 def _metric_summary(
     results: list[monte_carlo.TrialResult],
-) -> dict[str, dict[str, float | int | bool]]:
+    *,
+    spending_index: int = 1,
+) -> dict[str, dict[str, Any]]:
+    """Use exact integer/Fraction financial statistics plus the approved sequential t interval."""
     if len(results) < 2:
         raise ValueError("At least two observations are required for CI evaluation")
-
+    alpha_s_k = stats_integrity.sequential_alpha_fraction(spending_index)
     n = len(results)
-    tail_probability = (1.0 - constants.CI_CONFIDENCE_LEVEL) / 2.0
-    t_critical = float(t.ppf(1.0 - tail_probability, n - 1))
-
-    summary: dict[str, dict[str, float | int | bool]] = {}
+    summary: dict[str, dict[str, Any]] = {}
     for field_name in STABILITY_FIELDS:
-        sample = np.asarray(
-            [getattr(result, field_name) for result in results],
-            dtype=np.float64,
-        )
+        values = [getattr(result, field_name) for result in results]
+        if all(isinstance(value, int) and not isinstance(value, bool) for value in values):
+            exact = stats_integrity.mean_confidence_summary(values, k=spending_index)
+            summary[field_name] = {
+                **exact,
+                # Preserve the historical report key for the descriptive fixed-N 95% width.
+                "half_ci_95": exact["half_ci_95_descriptive"],
+                "half_ci_sequential": exact["half_ci_sequential"],
+                "spending_index": spending_index,
+                "alpha_s_k_numerator": alpha_s_k.numerator,
+                "alpha_s_k_denominator": alpha_s_k.denominator,
+            }
+            continue
+
+        # Float-valued rows are supported only for narrow legacy test fixtures.
+        # The engine emits integer financial observations and takes the exact path above.
+        tail_probability = float(alpha_s_k) / 2.0
+        t_critical = float(t.ppf(1.0 - tail_probability, n - 1))
+        sample = np.asarray(values, dtype=np.float64)
         mean = float(sample.mean())
         sample_std = float(sample.std(ddof=1))
         half_ci = float(t_critical * sample_std / math.sqrt(n))
-        if abs(mean) < constants.REFERENCE_EPSILON:
-            limit = constants.CI_ABSOLUTE_EPSILON
-        else:
-            limit = constants.CI_RELATIVE_TOLERANCE * abs(mean)
+        limit = (
+            constants.CI_ABSOLUTE_EPSILON
+            if abs(mean) < constants.REFERENCE_EPSILON
+            else constants.CI_RELATIVE_TOLERANCE * abs(mean)
+        )
         summary[field_name] = {
             "n": n,
             "mean": mean,
             "sample_std": sample_std,
             "t_critical": t_critical,
             "half_ci_95": half_ci,
+            "half_ci_sequential": half_ci,
             "limit": limit,
             "stable": half_ci < limit,
+            "spending_index": spending_index,
+            "alpha_s_k_numerator": alpha_s_k.numerator,
+            "alpha_s_k_denominator": alpha_s_k.denominator,
         }
-
     return summary
 
-
-def evaluate_gate_a(
-    *,
-    previous_metrics: dict[str, dict[str, Any]] | None,
-    previous_n: int | None,
-    current_metrics: dict[str, dict[str, Any]],
-    current_n: int,
-    expected_golden_fingerprint_sha256: str | None = None,
-    actual_fingerprint_sha256: str | None = None,
-    golden_reference_id: str | None = None,
-    expected_source_sha: str | None = None,
-    actual_source_sha: str | None = None,
-) -> dict[str, Any]:
-    """Apply Gate A's exact-golden contract; missing evidence fails closed."""
-    return evaluate_stage7_gate_a(
-        previous_n=previous_n,
-        previous_metrics=previous_metrics,
-        current_n=current_n,
-        current_metrics=current_metrics,
-        escalation_multiplier=STATISTICAL_ESCALATION_MULTIPLIER,
-        relative_epsilon=constants.CI_RELATIVE_TOLERANCE,
-        absolute_epsilon=constants.CI_ABSOLUTE_EPSILON,
-        expected_golden_fingerprint_sha256=expected_golden_fingerprint_sha256,
-        actual_fingerprint_sha256=actual_fingerprint_sha256,
-        golden_reference_id=golden_reference_id,
-        expected_source_sha=expected_source_sha,
-        actual_source_sha=actual_source_sha,
-    )
 
 def _gate_a_trial_map_sha256(
     scenario_id: str,
@@ -465,8 +458,12 @@ def _gate_a_target_is_covered(
 
 def evaluate_gate_b(
     current_metrics: dict[str, dict[str, Any]],
+    *,
+    indicator_metrics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    metric_payload = {}
+    """Gate B uses all three mean intervals and all seven approved time-uniform indicators."""
+    method_status = stats_integrity.time_uniform_inference_status()
+    metric_payload: dict[str, Any] = {}
     for field_name in STABILITY_FIELDS:
         raw_stable = current_metrics[field_name]["stable"]
         if type(raw_stable) is not bool:
@@ -474,12 +471,41 @@ def evaluate_gate_b(
                 f"Gate B stable field for {field_name!r} must be a Boolean"
             )
         metric_payload[field_name] = {"stable": raw_stable}
+
+    indicator_payload: dict[str, Any] = {}
+    if indicator_metrics is not None:
+        raw_indicators = indicator_metrics.get("indicators")
+        expected_indicator_names = {
+            "P10_Cumulative_Project_Profit",
+            "P50_Cumulative_Project_Profit",
+            "P90_Cumulative_Project_Profit",
+            "P90_Final_Cash",
+            "Probability_of_Accounting_Loss",
+            "P90_Termination_Count",
+            "P90_Held_Assets",
+        }
+        if not isinstance(raw_indicators, dict) or set(raw_indicators) != expected_indicator_names:
+            raise ValueError("Gate B must include all seven time-uniform indicator intervals")
+        for name, payload in raw_indicators.items():
+            stable = payload.get("stable")
+            if type(stable) is not bool:
+                raise ValueError(f"Gate B indicator stable field for {name!r} must be Boolean")
+            indicator_payload[name] = {"stable": stable}
+
+    approved = method_status["approved"] is True
+    mean_stable = all(item["stable"] for item in metric_payload.values())
+    indicators_stable = all(item["stable"] for item in indicator_payload.values()) if indicator_metrics is not None else True
     return {
         "checked": True,
-        "stable": all(
-            item["stable"] for item in metric_payload.values()
+        "stable": approved and mean_stable and indicators_stable,
+        "status": (
+            "K_SPEC / BLOCKED" if not approved
+            else "PASS" if mean_stable and indicators_stable
+            else "FAIL"
         ),
+        "time_uniform_inference": method_status,
         "metrics": metric_payload,
+        "time_uniform_indicators": indicator_payload,
     }
 
 
@@ -823,6 +849,7 @@ def run_batch(
         "consecutive_checks": constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
         "cumulative_checkpoints_required": constants.STABILITY_CUMULATIVE_CHECKPOINTS_REQUIRED,
         "ci_confidence_level": constants.CI_CONFIDENCE_LEVEL,
+        "ci_alpha_spending_rule": "0.0025/(k*(k+1))",
         "ci_relative_tolerance": constants.CI_RELATIVE_TOLERANCE,
         "ci_absolute_epsilon": constants.CI_ABSOLUTE_EPSILON,
     }
@@ -861,7 +888,10 @@ def run_batch(
                 for item in history
             ):
                 baseline_results = results[:constants.STATISTICAL_CHECK_START_N]
-                baseline_metrics = _metric_summary(baseline_results)
+                    baseline_metrics = _metric_summary(
+                    baseline_results,
+                    spending_index=stats_integrity.statistical_checkpoint_index(len(baseline_results)),
+                )
                 history.insert(
                     0,
                     {
@@ -1021,7 +1051,10 @@ def run_batch(
             trial_end >= constants.STATISTICAL_CHECK_START_N
             and trial_end == resolved_next_check
         ):
-            metrics = _metric_summary(results)
+            metrics = _metric_summary(
+                results,
+                spending_index=stats_integrity.statistical_checkpoint_index(len(results)),
+            )
             gate_a = _evaluate_gate_a_with_provider(
                 provider=golden_provider,
                 scenario_id=scenario,
@@ -1033,7 +1066,12 @@ def run_batch(
                 current_metrics=metrics,
                 current_n=len(results),
             )
-            gate_b = evaluate_gate_b(metrics)
+            checkpoint_index = stats_integrity.statistical_checkpoint_index(len(results))
+            indicator_metrics = stats_integrity.time_uniform_indicator_summary(
+                results, k=checkpoint_index
+            )
+            gate_b = evaluate_gate_b(metrics, indicator_metrics=indicator_metrics)
+            inference_gate = stats_integrity.time_uniform_inference_status()
 
             state["stability_history"].append(
                 {
@@ -1047,7 +1085,9 @@ def run_batch(
             gate_a_status = gate_a.get("status", "BLOCKED")
             gate_a_stop = gate_a_status != "PASS"
             stable_now = (
-                not gate_a_stop
+                inference_gate["approved"]
+                and gate_b["stable"]
+                and not gate_a_stop
                 and has_successful_adjacent_transition_window(
                     state["stability_history"],
                     required_transitions=constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED,
@@ -1063,6 +1103,9 @@ def run_batch(
                     f"Gate A {gate_a_status}: {gate_a.get('reason')}; "
                     "execution stopped before the next checkpoint"
                 )
+            elif not inference_gate["approved"]:
+                state["final_status"] = "blocked"
+                state["reason_if_not_stable"] = inference_gate["reason"]
             else:
                 state["final_status"] = "running"
                 state["reason_if_not_stable"] = "dual stability gates not yet satisfied"
@@ -1074,7 +1117,7 @@ def run_batch(
 
             _atomic_write_json(output_dir / STATE_JSON, state)
 
-            if gate_a_stop or stable_now:
+            if gate_a_stop or stable_now or not inference_gate["approved"]:
                 break
         else:
             if (

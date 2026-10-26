@@ -7,11 +7,14 @@ import hashlib
 import json
 
 import monte_carlo
+import constants
+import rng
 import pytest
 from openpyxl import load_workbook
 
 from scripts.stage13_maxcase_source_audit import inventory_identity_mismatches, select_maxcase
 from scripts.stage13_assemble import (
+    ADAPTIVE_TRIAL_RESULT_FIELDS,
     ADAPTIVE_CHECKPOINT_METRICS, EXPECTED_ADAPTIVE_COHORT_ID,
     EXPECTED_REFERENCE_SHA256, EXPECTED_SCENARIOS, EXPECTED_SOURCE_SHA,
     EXPECTED_ADAPTIVE_SOURCE_COMMIT, _canonical_scenario_fingerprint,
@@ -27,16 +30,19 @@ END_DATE = date(2027, 1, 2)
 
 def trial_result_sha256(row):
     trial_result = monte_carlo.TrialResult(
-        **{key: value for key, value in row.items() if key != "result_sha256"}
+        **{key: row[key] for key in ADAPTIVE_TRIAL_RESULT_FIELDS}
     )
-    raw = json.dumps(
-        asdict(trial_result),
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        default=str,
-    ).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
+    financial_fingerprint = monte_carlo.trial_fingerprint(trial_result)
+    row["trial_fingerprint"] = financial_fingerprint
+    row["rng_checksum_fingerprint_sha256"] = rng.rng_audit_fingerprint(
+        source_sha=EXPECTED_SOURCE_SHA,
+        master_seed=constants.MASTER_SEED,
+        scenario_id=str(row["scenario_id"]),
+        trial_id=int(row["trial_id"]),
+        rng_checksum=int(row["rng_checksum"]),
+        rng_draw_count=int(row["rng_draw_count"]),
+    )
+    return financial_fingerprint
 
 
 def trial_row(scenario, trial_id, offset):
@@ -54,6 +60,10 @@ def trial_row(scenario, trial_id, offset):
         "bad_debt": trial_id * 2, "guarantee_recovered": trial_id,
         "partner1_final_entitlement": equity * 7 // 10,
         "partner2_final_entitlement": equity - equity * 7 // 10,
+        "trial_fingerprint": "",
+        "rng_checksum": 0,
+        "rng_draw_count": 0,
+        "rng_checksum_fingerprint_sha256": "",
     }
 
 
@@ -276,12 +286,13 @@ def test_loss_and_max_case_selection_matches_normative_decision():
     assert selected["Max Case"] == 10
 
 
-def test_max_case_without_positive_equity_is_undefined_business_rule():
+def test_max_case_without_positive_equity_uses_observed_argmax_per_reference_14_6():
     rows = [trial_row("C100_G100", i, 0) for i in range(1, 4)]
     for row in rows:
         row["final_net_project_equity"] = -abs(row["final_net_project_equity"])
-    with pytest.raises(RuntimeError, match="UNDEFINED_BUSINESS_RULE: MaxCase has no positive"):
-        select_representative_trial_ids(rows, "C100_G100")
+    selected = select_representative_trial_ids(rows, "C100_G100")
+    assert selected["Loss"] == 3
+    assert selected["Max Case"] == 1
 
 
 def test_incorrect_recorded_representative_trial_id_is_rejected():

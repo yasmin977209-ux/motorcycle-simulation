@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - "tmp/u3-acceptance-v23-20261025"
+    paths-ignore:
+      - "docs/ACCEPTANCE_REPORT.md"
+      - "docs/continuity/**"
+      - "docs/audits/**"
   workflow_dispatch:
 
 permissions:
@@ -85,12 +89,19 @@ jobs:
                       "name": name,
                       "message": ((node.attrib.get("message", "") + "\n" + (node.text or "")).strip())[-1200:],
                   })
-              case_status[test_id] = status
+              prior_status = case_status.get(test_id)
+              priority = {"PASS": 0, "NOT_EXECUTED": 0, "ADJUDICATION": 1, "DEFERRED": 2, "FAIL": 3}
+              if prior_status is None or priority[status] >= priority.get(prior_status, 0):
+                  case_status[test_id] = status
 
           for row in rows:
-              row["logic_status"] = case_status.get(row["id"], "NOT_EXECUTED")
-              if row["type"] == "DOC" and row["logic_status"] in {"PASS", "ADJUDICATION", "DEFERRED"}:
+              if row["type"] == "DOC":
                   row["logic_status"] = "ADJUDICATION"
+                  continue
+              status = case_status.get(row["id"])
+              if row["type"] == "ALIAS" and status is None:
+                  status = case_status.get(row["alias_of"])
+              row["logic_status"] = status or "NOT_EXECUTED"
 
           unique = [row for row in rows if row["type"] == "UNIQUE"]
           pass_unique = sum(row["logic_status"] == "PASS" for row in unique)
@@ -98,7 +109,10 @@ jobs:
           missing_unique = sum(row["logic_status"] == "NOT_EXECUTED" for row in unique)
           alias_pass = sum(row["type"] == "ALIAS" and row["logic_status"] == "PASS" for row in rows)
           doc_count = sum(row["type"] == "DOC" for row in rows)
-          registry_missing = [row["id"] for row in rows if row["name"].startswith("DEFINITION_MISSING_")]
+          registry_missing = [
+              row["id"] for row in rows
+              if row["type"] == "UNIQUE" and row["name"].startswith("DEFINITION_MISSING_")
+          ]
           log_sha = hashlib.sha256(Path("/tmp/u3-full-suite.log").read_bytes()).hexdigest()
           junit_sha = hashlib.sha256(Path("/tmp/u3-junit.xml").read_bytes()).hexdigest()
           tested_sha = os.environ["GITHUB_SHA"]

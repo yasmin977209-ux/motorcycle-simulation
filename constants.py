@@ -85,8 +85,16 @@ RNG_AUDIT_SCHEMA_VERSION: Final[str] = "v2.3-rng-audit-v1"
 # [Owner-approved Appendix E, §§14.11/21.3] Exact sequential alpha spending.
 STAT_ALPHA_PER_SCENARIO_NUMERATOR: Final[int] = 1
 STAT_ALPHA_PER_SCENARIO_DENOMINATOR: Final[int] = 400
+STAT_REL_TOL_NUMERATOR: Final[int] = 1
+STAT_REL_TOL_DENOMINATOR: Final[int] = 100
+STAT_PROB_ABS_TOL_NUMERATOR: Final[int] = 5
+STAT_PROB_ABS_TOL_DENOMINATOR: Final[int] = 1000
+STAT_COUNT_TOL: Final[int] = 1
+TIME_UNIFORM_METHOD_APPROVED: Final[bool] = True
+TIME_UNIFORM_METHOD_ID: Final[str] = "V2.3_APPENDIX_E_ALPHA_SPENDING_V1"
 REPORT_DECIMAL_PRECISION: Final[int] = 50
 REPORT_DECIMAL_PLACES: Final[int] = 2
+
 
 # [R6-1][Ref 2.2] Preparation oil/fuel expense per expansion motorcycle.
 PREP_OIL_COST: Final[int] = 2_000

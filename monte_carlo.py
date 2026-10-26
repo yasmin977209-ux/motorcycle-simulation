@@ -118,8 +118,8 @@ def _trial_result_from_project(
     collection_probability: float,
     recovery_rate_pct: int,
     trial_id: int,
-    master_seed: int,
-    source_sha: str | None,
+    master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
 ) -> TrialResult:
     if project.final_net_project_equity is None:
         raise AssertionError(
