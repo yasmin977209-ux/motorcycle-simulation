@@ -1,0 +1,179 @@
+name: S6 stochastic Gate A Golden v2.3
+
+on:
+  workflow_dispatch:
+    inputs:
+      checkpoint_n:
+        description: "Approved cumulative checkpoint (300, 600, 1200, 2400, ...)"
+        required: true
+        default: "300"
+        type: string
+
+concurrency:
+  group: s6-gatea-v23-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  gate-a-scenario:
+    name: "Gate A Golden ${{ matrix.scenario }} N=${{ inputs.checkpoint_n }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        scenario:
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+      S6_MODEL_SOURCE_SHA: "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
+      SCENARIO_ID: ${{ matrix.scenario }}
+      CHECKPOINT_N: ${{ inputs.checkpoint_n }}
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Fail-closed source identity and owner authorization preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/s4-c100-golden-v23-20261026"
+          test "${GITHUB_REF_NAME}" != "main"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          test "${S6_MODEL_SOURCE_SHA}" = "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
+          git cat-file -e "${S6_MODEL_SOURCE_SHA}^{commit}"
+          MODEL_FILES=(
+            constants.py dateutils.py rng.py entities.py state_machine.py
+            daily_engine.py accounting.py collection.py guarantee.py friday.py
+            settlement.py closure.py partner_equity.py monte_carlo.py stats_integrity.py
+          )
+          for path in "${MODEL_FILES[@]}"; do
+            git cat-file -e "${S6_MODEL_SOURCE_SHA}:${path}"
+          done
+          if ! git diff --quiet "${S6_MODEL_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"; then
+            echo "S6_SOURCE_IDENTITY_DRIFT: model files differ from pinned SOURCE_SHA" >&2
+            git diff --name-status "${S6_MODEL_SOURCE_SHA}" HEAD -- "${MODEL_FILES[@]}"
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          assert gate.get("status") == "AUTHORIZED_FOR_V2.3_EXECUTION"
+          auth = gate.get("execution_authorization", {})
+          assert auth.get("s6_gate_a_golden_preparation_allowed") is True
+          assert auth.get("production_trial_checkpoint_monte_carlo_allowed") is False
+          assert auth.get("scenario_stability_declaration_allowed") is False
+          assert auth.get("final_delivery_acceptance_allowed") is False
+          PY
+          python -m compileall -q constants.py monte_carlo.py stats_integrity.py scripts/s6_gate_a_golden.py
+          mkdir -p s6_evidence
+          {
+            echo "RUN_ID=${GITHUB_RUN_ID}"
+            echo "SOURCE_SHA=${S6_MODEL_SOURCE_SHA}"
+            echo "TESTED_COMMIT_SHA=${GITHUB_SHA}"
+            echo "SCENARIO=${SCENARIO_ID}"
+            echo "CHECKPOINT_N=${CHECKPOINT_N}"
+            echo "COMMAND=python scripts/s6_gate_a_golden.py --scenario ${SCENARIO_ID} --n ${CHECKPOINT_N} --output-dir results_s6"
+          } | tee s6_evidence/run_identity.txt
+
+      - name: Generate audited scenario Golden and serial/parallel equivalence
+        run: python scripts/s6_gate_a_golden.py --scenario "${SCENARIO_ID}" --n "${CHECKPOINT_N}" --output-dir results_s6
+
+      - name: Hash scenario evidence
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          find results_s6 s6_evidence -type f ! -name "SHA256SUMS.txt" -print0 | sort -z | xargs -0 -r sha256sum > s6_evidence/SHA256SUMS.txt
+          cat s6_evidence/SHA256SUMS.txt
+
+      - name: Upload immutable scenario Golden and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-gatea-${{ matrix.scenario }}-${{ inputs.checkpoint_n }}-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            results_s6/*.golden.json
+            results_s6/*.audit.json
+            s6_evidence/
+
+  merge-golden:
+    name: Merge and verify complete stochastic Golden map
+    needs: gate-a-scenario
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+      S6_MODEL_SOURCE_SHA: "9fd34c2c4cf7250653ea6d86e33e1f939e6fba99"
+      CHECKPOINT_N: ${{ inputs.checkpoint_n }}
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download all twenty scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-gatea-*-${{ inputs.checkpoint_n }}-${{ github.run_id }}
+          path: s6_parts
+          merge-multiple: true
+
+      - name: Merge, hash, and fail closed on incomplete Gate A map
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/s4-c100-golden-v23-20261026"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          python scripts/s6_gate_a_golden.py --merge-dir s6_parts --n "${CHECKPOINT_N}" --output-dir results_s6/merged
+          python -m compileall -q scripts/s6_gate_a_golden.py
+
+      - name: Upload combined map and SHA256 manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-gatea-combined-${{ inputs.checkpoint_n }}-${{ github.run_id }}
+          path: results_s6/merged/
