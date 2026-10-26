@@ -1707,3 +1707,13 @@ This append is considered persisted only after the GitHub API reports the result
 - Append-only output-register entry `NEW-CHAT-EXECUTION-PROMPT-2026-10-22` was added after the previous final-handoff record. The register is now expected to contain 90 JSONL lines; verify live after this commit.
 - This is a prompt/documentation addition only. It does not apply Project Instructions in ChatGPT, accept delivery, clear Gate A, make Stage 13 production-ready, authorize merges, or authorize a Release.
 
+
+ 
+## U3 v2.3 executable acceptance checkpoint — 2026-10-26
+ 
+- **Candidate branch:** `tmp/u3-acceptance-v23-20261025`; tested commit `adbb528f5f44e21425ce6210148eac41ff4401fb`. Exact Actions run: [`40260476507`](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40260476507), completed `success`.
+- **Command/result:** `python -m pytest -q tests --junitxml=/tmp/u3-junit.xml`, exit code `0`; `177 PASS / 177 UNIQUE`, `0 FAIL`, `0 NOT_EXECUTED`, `15/15 ALIAS PASS`, `1 DOC/K_TEST`; the exact numbered register contains 193 rows.
+- **Committed acceptance report:** [`docs/ACCEPTANCE_REPORT.md`](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/u3-acceptance-v23-20261025/docs/ACCEPTANCE_REPORT.md), report commit `df72b175503a85d31fb896322115de67bf41ecc0`, Git blob `dca897daf21c40edddea65b03ec6a0ec396ab056`. Full-suite log SHA-256 `d7df9a44f43cb3a7a5317792f88c7d00c368a555b2ce9dea2e81d4a97c4f8758`; JUnit SHA-256 `9e5957c459f0e0425bb4cf2a9e644c24dc668df15cd2d1b33f9688a2487b5c97`; evidence artifact `12624478387`, ZIP SHA-256 `667c4b7e8f41db93423f05acee87c4c2a570f0608dfc94bf3c44ea38e69c2279`.
+- **Scope boundary:** `PASS_SCOPED` only. The prior U2 run `40210753738` remains a failure on its separate SHA. No production Monte Carlo/new cohort/Golden or S4–S9 production artifacts were generated. Production Gate A/B, `CONVERGED`, and final delivery/release remain blocked. Main and its `state.json` are unchanged.
+- **Open rule:** previous P50 exactly zero and current P50 nonzero remains `UNDEFINED_BUSINESS_RULE` pending owner decision under §§2.5 and 14.11.
+- **Continuity/repository boundary:** this entry is append-only. PR #46 remains `OPEN/DRAFT/UNMERGED`; no merge or release action was taken.
