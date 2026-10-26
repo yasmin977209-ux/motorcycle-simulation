@@ -111,6 +111,12 @@ DAILY_DISTRIBUTION_POPULATION_MODES: Final[Tuple[str, ...]] = (
     "ALL_TRIALS_CARRY_FORWARD",
 )
 
+# [S5 smoke execution only; these do not alter the production checkpoint schedule.]
+STAGE5_STOCHASTIC_COLLECTION_PERCENTAGES: Final[Tuple[int, ...]] = (85, 70, 50, 30)
+STAGE5_SMOKE_TRIAL_IDS: Final[Tuple[int, ...]] = (1, 2, 3, 4, 5)
+STAGE5_PARALLEL_WORKER_COUNTS: Final[Tuple[int, ...]] = (2, 4)
+
+
 
 # [R6-1][Ref 2.2] Preparation oil/fuel expense per expansion motorcycle.
 PREP_OIL_COST: Final[int] = 2_000
