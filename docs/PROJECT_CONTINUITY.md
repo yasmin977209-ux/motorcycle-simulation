@@ -1469,3 +1469,34 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **PR #60/#61 stale branches:** closure-reconciliation comments were added. #60's scoped Stage 9C evidence is already appended to current main while its historic PARTIAL/broad-pytest evidence remains preserved. #61's original standalone daily extraction is superseded by the separate exact-Trial replay adapter used by PR #74. Neither closed PR establishes final acceptance.
 - **Next:** do not label the diagnostic workbook a final deliverable. Resolve the registered statistical K_SPEC, Golden coverage, historical failed transition, P90_Held_Assets, Stage10 metadata/fidelity, G2 runtime, and P17/P18 release blockers before assembling and accepting the final seven-file AR/EN package plus manifest.json.
 
+
+
+## S4 — owner P50 zero-baseline decision and C100 v2.3 Golden (2026-10-26)
+
+**Status:** `PASS_S4_C100_NEW_SOURCE_GOLDEN`. This is the successful S4 deterministic Golden stage only; it does not close statistical production Gate A/B for the non-C100 stochastic scenarios or the final release gates.
+
+### Decision and exact tested identity
+- Owner decision implemented: §§2.5/21.3 guard is `abs(new_p50-old_p50)*100 > 5*abs(old_p50)`, computed exactly with `Fraction`; `0→0=False`, `0→nonzero=True`, no `UNDEFINED_BUSINESS_RULE` for the zero baseline.
+- Source identity: `965281d52441cd0d4b744e211c9f68ee4cdc3753`; v2.3 cohort ID: `c100-v23-s4-20261026-965281d5`.
+- Workflow tested HEAD: `24050f15bc7eb3097e20f76785a45c5d177643dd`.
+- GitHub Actions Run: `40263424595`, completed/success: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40263424595.
+- Test command: `python -m pytest -q tests --junitxml=s4_evidence/junit.xml`; exit code `0`; JUnit inventory `556 tests = 555 passed + 1 skipped, 0 failures, 0 errors`.
+- Explicit JUnit testcase evidence: Test 169, Test 190, Test 193, new `test_p50_guard_zero_baseline_uses_owner_cross_multiplication`, and the requested daily balance/Roll-forward unit tests are present and pass.
+- Test log SHA-256: `ac4e224613f0050711e077e69bedc1b7d93633b43576af6f36ff18c98701df48`; JUnit SHA-256: `9a9d69be342d6bd3c1c5d0e19ec4c917a2ec4233da3f69142e0cf471613fc996`.
+
+### Executed C100 cohort
+- Five scenarios `C100_G100`, `C100_G070`, `C100_G050`, `C100_G030`, `C100_G000`; IDs `1..300` per scenario; 1,500 full trial executions.
+- One financial trial fingerprint across all IDs and G values: `f39cc9744157f97246c41a4a493be84b6a1ab30ab04200be1479b560065b7ef4`. One financial path fingerprint: `f3cfd9b1f1bcaec11b3d9e9f3cefaa40f8c166517e26b484c1b06a06cff9f393`.
+- All rows have `rng_draw_count=0`, `rng_checksum=0`; each scenario has `DEGENERATE_DETERMINISTIC`, `N_unique_paths=1`, `G_INERT`.
+- All-day financial checks from 2027-01-01 through closure 2033-01-06: 3,297,000 daily balance checks; 16,485,000 daily Roll-forward equation checks (cash, AR, gross assets, depreciation, equity); maximum `abs(Assets-Equity)=0`.
+- All 11 §21.8 snapshot dates and expected values passed. Final results: 357 bikes; closure `2033-01-06`; `Final_Net_Project_Equity=Final_Cash=209671000`; Partner 1 `146769700`; Partner 2 `62901300`. Expansion identifiers checked canonically as `BK0011`, `BK0012`, `BK0013`.
+
+### New isolated Golden and artifact hashes
+- Golden: `docs/golden/v2.3/C100_GOLDEN_965281d52441cd0d4b744e211c9f68ee4cdc3753.json`; 6,787,666 bytes; SHA-256 `39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327`.
+- Manifest: `docs/audits/S4_C100_GOLDEN_MANIFEST_965281d52441cd0d4b744e211c9f68ee4cdc3753.json`; SHA-256 `2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04`.
+- Report: `docs/audits/S4_C100_GOLDEN_REPORT_965281d52441cd0d4b744e211c9f68ee4cdc3753.md`; SHA-256 `f39460eefcdea4a57ebc64fb36974061cefc78de6060f105c2b8496017aa2acf`.
+- Actions artifact `12630457193`, `s4-c100-v23-40263424595`; ZIP SHA-256 `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`.
+- Historical Golden/results were not modified or mixed into the new cohort; `main` remained at `c6e54349a5e94f65d5aa9f83141f225d777bb474` at the verification point.
+- R4 and detailed §21.8 comparison: `docs/audits/R4_S4_C100_P50_GOLDEN_2026-10-26.md` and `docs/audits/S4_C100_GOLDEN_REPORT_965281d52441cd0d4b744e211c9f68ee4cdc3753.md`.
+
+**Next:** maintain S4 as an isolated evidence branch; do not infer project-wide final acceptance from deterministic C100 success. The separate statistical Gate A/B and P17/P18 release blockers remain in force.
