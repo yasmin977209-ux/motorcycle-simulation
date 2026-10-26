@@ -1,12 +1,15 @@
 """Exact report-statistics helpers from owner-approved v2.3 Appendix E."""
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
+from functools import lru_cache
 from fractions import Fraction
 from math import ceil, floor, log, sqrt
 from typing import Iterable, Any
 
 from scipy.stats import norm, t
+from dateutil.relativedelta import relativedelta
 
 import constants
 
@@ -39,6 +42,157 @@ def cumulative_alpha_fraction(k: int) -> Fraction:
         constants.STAT_ALPHA_PER_SCENARIO_NUMERATOR,
         constants.STAT_ALPHA_PER_SCENARIO_DENOMINATOR,
     )
+
+
+
+@lru_cache(maxsize=1)
+def compute_deterministic_support_bounds() -> dict[str, Any]:
+    """Return a finite, conservative support envelope derived from v2.3 model constants.
+
+    Expansion purchases are bounded by the one-purchase-per-day rule and the
+    inclusive EXPANSION_CUTOFF_DATE. Contract length is bounded by the longest
+    calendar duration of PRIMARY_CONTRACT_MONTHS over eligible purchase dates.
+    The envelope reserves one bounded lifecycle slot per possible fleet member,
+    plus a closure lifecycle, and uses worst-case per-bike daily flows. It is a
+    conservative inference support envelope, not a simulation result.
+    """
+    start = constants.PROJECT_START_DATE
+    cutoff = constants.EXPANSION_CUTOFF_DATE
+    purchase_date_count = max(0, (cutoff - start).days + 1)
+    max_fleet_size = constants.INITIAL_FLEET_SIZE + purchase_date_count
+
+    longest_primary_contract_days = 0
+    candidate = start
+    while candidate <= cutoff:
+        contract_end = candidate + relativedelta(
+            months=constants.PRIMARY_CONTRACT_MONTHS
+        )
+        longest_primary_contract_days = max(
+            longest_primary_contract_days, (contract_end - candidate).days
+        )
+        candidate += timedelta(days=1)
+
+    maximum_claim_wait_days = max(
+        constants.CLAIM_WAITING_PERIODS_DAYS.values(), default=0
+    )
+    settlement_calendar_days = constants.SETTLEMENT_PERIOD_DAYS * 2
+    lifecycle_days = (
+        constants.BIKE_PREP_SCHEDULE_DAYS
+        + longest_primary_contract_days
+        + maximum_claim_wait_days
+        + settlement_calendar_days
+    )
+    bounded_lifecycle_slots = max_fleet_size + 1
+    maximum_duration_days = lifecycle_days * bounded_lifecycle_slots
+    maximum_close_date = cutoff + timedelta(days=maximum_duration_days)
+    maximum_simulation_days = (maximum_close_date - start).days + 1
+
+    maximum_daily_rent = max(
+        constants.PRIMARY_DAILY_RENT,
+        constants.SECONDARY_DAILY_RENT,
+        constants.SETTLEMENT_DAILY_RENT,
+    )
+    maximum_daily_inflow = max_fleet_size * (
+        maximum_daily_rent + constants.FRIDAY_FEE
+    )
+    # The second inflow factor conservatively reserves for recovery of
+    # previously unpaid receivables without treating it as a new contract.
+    maximum_cumulative_inflow = (
+        maximum_simulation_days * maximum_daily_inflow * 2
+    )
+    maximum_acquisition_and_prep_cost = (
+        max_fleet_size * constants.BIKE_TOTAL_CASH_FLOW_COST
+    )
+    maximum_daily_operating_cost = (
+        constants.OIL_SERVICE_COST
+        + constants.PREP_OPERATING_EXPENSE_PER_BIKE
+    )
+    maximum_operating_cost = (
+        maximum_simulation_days
+        * max_fleet_size
+        * maximum_daily_operating_cost
+    )
+    maximum_gross_assets = max_fleet_size * constants.BIKE_GROSS_ASSET_COST
+    maximum_abs_financial_value = (
+        abs(constants.TOTAL_CAPITAL)
+        + maximum_cumulative_inflow
+        + maximum_acquisition_and_prep_cost
+        + maximum_operating_cost
+        + maximum_gross_assets
+        + constants.OPENING_MARKETING_EXPENSE
+        + constants.OPENING_PREP_EXPENSE
+    )
+    maximum_final_cash = constants.OPENING_CASH + maximum_cumulative_inflow
+    maximum_event_count = max_fleet_size * maximum_simulation_days
+
+    metric_bounds: dict[str, dict[str, int]] = {
+        "final_net_project_equity": {
+            "lower": -maximum_abs_financial_value,
+            "upper": maximum_abs_financial_value,
+        },
+        "partner1_final_entitlement": {
+            "lower": -maximum_abs_financial_value,
+            "upper": maximum_abs_financial_value,
+        },
+        "partner2_final_entitlement": {
+            "lower": -maximum_abs_financial_value,
+            "upper": maximum_abs_financial_value,
+        },
+        "cumulative_project_profit": {
+            "lower": -maximum_abs_financial_value,
+            "upper": maximum_abs_financial_value,
+        },
+        "operating_net_profit": {
+            "lower": -maximum_abs_financial_value,
+            "upper": maximum_abs_financial_value,
+        },
+        "final_cash": {"lower": 0, "upper": maximum_final_cash},
+        "termination_count": {"lower": 0, "upper": maximum_event_count},
+        "secondary_cycle_count": {"lower": 0, "upper": maximum_event_count},
+        "held_assets": {"lower": 0, "upper": max_fleet_size},
+    }
+    return {
+        "bound_id": "V2.3_DETERMINISTIC_SUPPORT_ENVELOPE_V1",
+        "finite": True,
+        "purchase_date_count_upper_bound": purchase_date_count,
+        "maximum_fleet_size": max_fleet_size,
+        "longest_primary_contract_days": longest_primary_contract_days,
+        "maximum_claim_wait_days": maximum_claim_wait_days,
+        "settlement_calendar_days_upper_bound": settlement_calendar_days,
+        "bounded_lifecycle_slots": bounded_lifecycle_slots,
+        "maximum_duration_days": maximum_duration_days,
+        "maximum_close_date": maximum_close_date.isoformat(),
+        "maximum_simulation_days": maximum_simulation_days,
+        "maximum_cumulative_inflow": maximum_cumulative_inflow,
+        "maximum_abs_financial_value": maximum_abs_financial_value,
+        "maximum_final_cash": maximum_final_cash,
+        "maximum_event_count": maximum_event_count,
+        "metric_bounds": metric_bounds,
+        "note": (
+            "Finite conservative envelope derived from the v2.3 constants and "
+            "one-primary-lifecycle-per-bike execution contract; it is not an "
+            "observed maximum and does not by itself certify scenario stability."
+        ),
+    }
+
+
+def validate_values_within_deterministic_support(
+    values: Iterable[int],
+    metric_name: str,
+) -> int:
+    """Fail closed when integer observations exceed the approved finite envelope."""
+    items = list(values)
+    bounds = compute_deterministic_support_bounds()["metric_bounds"].get(metric_name)
+    if bounds is None:
+        raise ValueError(f"DETERMINISTIC_SUPPORT_METRIC_UNKNOWN:{metric_name}")
+    for value in items:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError("DETERMINISTIC_SUPPORT_REQUIRES_INTEGER_VALUES")
+        if value < bounds["lower"] or value > bounds["upper"]:
+            raise RuntimeError(
+                f"STAT_OBSERVATION_OUTSIDE_DETERMINISTIC_SUPPORT:{metric_name}:{value}"
+            )
+    return len(items)
 
 
 def mean_fraction(values: Iterable[int]) -> Fraction:
@@ -110,11 +264,15 @@ def _fraction_to_decimal(value: Fraction) -> Decimal:
 def time_uniform_inference_status() -> dict[str, Any]:
     """Report whether the owner-approved Appendix E procedure is enabled."""
     approved = constants.TIME_UNIFORM_METHOD_APPROVED is True
+    support = compute_deterministic_support_bounds()
     return {
         "approved": approved,
         "method_id": constants.TIME_UNIFORM_METHOD_ID,
-        "status": "APPROVED" if approved else "K_SPEC / BLOCKED",
+        "status": "APPROVED" if approved else "NOT_AUTHORIZED",
         "reason": None if approved else "No approved time-uniform inference method",
+        "support_bounds_id": support["bound_id"],
+        "finite_support_bounds": support["finite"],
+        "maximum_close_date": support["maximum_close_date"],
     }
 
 
@@ -131,6 +289,10 @@ def mean_confidence_summary(
         raise ValueError("STAT_SAMPLE_TOO_SMALL")
     if any(isinstance(value, bool) or not isinstance(value, int) for value in items):
         raise TypeError("FINANCIAL_STATISTIC_REQUIRES_INTEGER_VALUES")
+    support = compute_deterministic_support_bounds()
+    max_abs_support = support["maximum_abs_financial_value"]
+    if any(abs(value) > max_abs_support for value in items):
+        raise RuntimeError("STAT_OBSERVATION_OUTSIDE_DETERMINISTIC_SUPPORT:financial_mean")
     alpha_sk = sequential_alpha_fraction(k)
     mean = mean_fraction(items)
     variance = Fraction(
@@ -342,7 +504,9 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
     items = sorted(list(results), key=lambda item: item.trial_id)
     if len(items) < 2:
         raise ValueError("STAT_SAMPLE_TOO_SMALL")
-    statistical_checkpoint_index(len(items))  # fail closed unless N follows approved doubling.
+    checkpoint_index = statistical_checkpoint_index(len(items))
+    if checkpoint_index != k:
+        raise ValueError("SEQUENTIAL_ALPHA_CHECKPOINT_INDEX_MISMATCH")
     half_items = items[: len(items) // 2]
     half_index = max(1, k - 1)
     indicators: dict[str, Any] = {}
@@ -354,7 +518,17 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
         ("P90_Termination_Count", "termination_count", Fraction(9, 10), "count"),
         ("P90_Held_Assets", "held_assets", Fraction(9, 10), "count"),
     )
+    support_metric_for_field = {
+        "cumulative_project_profit": "cumulative_project_profit",
+        "final_cash": "final_cash",
+        "termination_count": "termination_count",
+        "held_assets": "held_assets",
+    }
     for name, field, quantile, kind in definitions:
+        validate_values_within_deterministic_support(
+            (getattr(item, field) for item in items),
+            support_metric_for_field[field],
+        )
         full = _rank_interval(
             (getattr(item, field) for item in items),
             q=quantile, k=k, metric_kind=kind,
@@ -389,8 +563,10 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
     }
     return {
         "method_id": constants.TIME_UNIFORM_METHOD_ID,
-        "status": "APPROVED" if constants.TIME_UNIFORM_METHOD_APPROVED else "K_SPEC / BLOCKED",
+        "status": "APPROVED" if constants.TIME_UNIFORM_METHOD_APPROVED else "NOT_AUTHORIZED",
         "interpretation": "APPROVED_VALID_TIME_INTERVALS" if constants.TIME_UNIFORM_METHOD_APPROVED else "CANDIDATE_DIAGNOSTIC_ONLY",
+        "support_bounds_id": compute_deterministic_support_bounds()["bound_id"],
+        "finite_support_bounds": compute_deterministic_support_bounds()["finite"],
         "formal_acceptance_allowed": constants.TIME_UNIFORM_METHOD_APPROVED is True,
         "n": len(items),
         "spending_index": k,
