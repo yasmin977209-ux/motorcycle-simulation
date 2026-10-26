@@ -10,7 +10,7 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from multiprocessing import get_context
 from pathlib import Path
 from typing import Any, Iterable
@@ -190,6 +190,57 @@ def _check_day(
     )
 
 
+def _install_seed_key_audit(
+    *,
+    scenario_id: str,
+    expected_trial_id: int,
+    master_seed: int,
+) -> tuple[Any, dict[str, Any]]:
+    """Independently re-hash every legal §14.3 seed key invoked by the engine."""
+    original_derive_seed = rng.derive_seed
+    expected_stream_id = scenario_id.split("_", maxsplit=1)[0]
+    audit = {"count": 0, "sha256": hashlib.sha256()}
+
+    def audited_derive_seed(
+        actual_master_seed: int,
+        stream_id: str,
+        trial_id: int | str,
+        bike_id: str,
+        day: date,
+        event_type: str,
+    ) -> bytes:
+        if type(actual_master_seed) is not int or actual_master_seed != master_seed:
+            raise RuntimeError("S6_RNG_MASTER_SEED_SCOPE_MISMATCH")
+        if stream_id != expected_stream_id or re.fullmatch(r"C\d{3}", stream_id) is None:
+            raise RuntimeError("S6_RNG_STREAM_ID_NOT_COLLECTION_LEVEL")
+        if type(trial_id) is not int or trial_id != expected_trial_id:
+            raise RuntimeError("S6_RNG_TRIAL_ID_MISMATCH")
+        if not is_canonical_bike_id(bike_id):
+            raise RuntimeError("S6_RNG_BIKE_ID_NOT_CANONICAL")
+        if not isinstance(day, date):
+            raise RuntimeError("S6_RNG_DATE_TYPE_INVALID")
+        if not isinstance(event_type, str) or not event_type:
+            raise RuntimeError("S6_RNG_EVENT_TYPE_INVALID")
+
+        key = (
+            f"{master_seed}|{expected_stream_id}|{expected_trial_id}|"
+            f"{bike_id}|{day.isoformat()}|{event_type}"
+        )
+        independently_derived = hashlib.sha256(key.encode("utf-8")).digest()
+        engine_derived = original_derive_seed(
+            actual_master_seed, stream_id, trial_id, bike_id, day, event_type
+        )
+        if engine_derived != independently_derived:
+            raise RuntimeError("S6_RNG_LEGAL_SEED_KEY_MISMATCH")
+        audit["sha256"].update(key.encode("utf-8"))
+        audit["sha256"].update(b"\n")
+        audit["count"] += 1
+        return engine_derived
+
+    rng.derive_seed = audited_derive_seed
+    return original_derive_seed, audit
+
+
 def _run_trial_task(task: tuple[str, int, str, int]) -> dict[str, Any]:
     scenario_id, trial_id, source_sha, master_seed = task
     collection_probability, recovery_rate_pct = monte_carlo.parse_scenario_id(
@@ -206,15 +257,23 @@ def _run_trial_task(task: tuple[str, int, str, int]) -> dict[str, Any]:
     def capture_day(project: Any, current_date: Any) -> None:
         _check_day(project, current_date, trial_id, daily_hasher, counters)
 
-    project = daily_engine.run_deterministic_trial(
-        recovery_rate_pct=recovery_rate_pct,
-        trial_id=trial_id,
+    original_derive_seed, seed_key_audit = _install_seed_key_audit(
         scenario_id=scenario_id,
+        expected_trial_id=trial_id,
         master_seed=master_seed,
-        collection_probability=collection_probability,
-        on_day_end=capture_day,
-        log_events=False,
     )
+    try:
+        project = daily_engine.run_deterministic_trial(
+            recovery_rate_pct=recovery_rate_pct,
+            trial_id=trial_id,
+            scenario_id=scenario_id,
+            master_seed=master_seed,
+            collection_probability=collection_probability,
+            on_day_end=capture_day,
+            log_events=False,
+        )
+    finally:
+        rng.derive_seed = original_derive_seed
     if not project.simulation_stopped or project.final_close_date is None:
         raise RuntimeError(f"S6_TRIAL_DID_NOT_CLOSE:{scenario_id}:{trial_id}")
     if counters["daily_row_count"] == 0:
@@ -284,6 +343,8 @@ def _run_trial_task(task: tuple[str, int, str, int]) -> dict[str, Any]:
         "rng_checksum": result.rng_checksum,
         "rng_draw_count": result.rng_draw_count,
         "rng_checksum_fingerprint_sha256": result.rng_checksum_fingerprint_sha256,
+        "rng_seed_derivations_checked": seed_key_audit["count"],
+        "rng_seed_key_audit_sha256": seed_key_audit["sha256"].hexdigest(),
         **counters,
         "canonical_bike_ids_valid": True,
     }
