@@ -1527,3 +1527,12 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - The manual workflow .github/workflows/s6-gatea-run-v23.yml is prepared but has not been dispatched. No N=300 stochastic Gate A Golden map is claimed to exist. The approved schedule is 300 → 600 → 1200 → 2400 → ...; C100 remains a separate immutable S4 reference.
 - Statistical gate JSON status remains AUTHORIZED_FOR_V2.3_EXECUTION for the scoped candidate work only. production_trial_checkpoint_monte_carlo_allowed, scenario_stability_declaration_allowed, and final_delivery_acceptance_allowed remain false. P90_Held_Assets production acceptance and the historical C030_G030 N=300→600 transition remain unresolved; S5 is not a production Gate A/B PASS or convergence declaration.
 - Current pointers: docs/COMPUTE_PLAN.md records measured timings and S6 launch shape; docs/audits/S5_REUSE_R4_2026-10-26.md records R4 dispositions, run IDs and artifact evidence. Keep this note append-only.
+
+
+## CP-S5-GATE-EVIDENCE-REFRESH-20261026
+
+- The refreshed docs/stage7/statistical_execution_gate.json includes an evidence-backed s5_smoke_validation object for Run 40383552605; the top-level status remains AUTHORIZED_FOR_V2.3_EXECUTION only for scoped candidate work.
+- Gate components now distinguish implemented/S5-smoke-validated quantile and loss methods from the still-pending production checkpoint; production trial/checkpoint, stability/convergence and final acceptance flags remain false.
+- Run 40388966534 on tested commit 08669a91aed4eb05fab07123652751fdba5231aa revalidated the scoped gate contract and S6 preparer without simulation: compileall succeeded; 12 passed, 34 deselected; exit code 0.
+- docs/COMPUTE_PLAN.md now points to Run 40388966534 as the latest scoped verification. docs/audits/S5_REUSE_R4_2026-10-26.md contains the addendum and exact S5 artifact/benchmark hashes.
+- No N=300 S6 workflow dispatch was performed. Keep the workflow manual-only until beginning the approved stochastic checkpoint, and do not claim a completed Gate A Golden or production PASS.
