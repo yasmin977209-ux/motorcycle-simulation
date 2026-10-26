@@ -7,7 +7,7 @@
 
 ## Evidence and timing
 
-The S5 smoke driver was committed as 18ca260ae9d71ff83a7c9a47cbe5a494fcd5f6e1 and is configured to emit benchmark.json, worker_equivalence_manifest.json, Parquet samples, replay evidence, number_registry.json, and SHA256SUMS.txt. The workflow-run ID, terminal outcome, benchmark payload, and uploaded artifact digest were not retrievable through the available GitHub run/status interface during this plan write.
+The S5 driver now pins the simulation/model SOURCE_SHA separately from the tested Git commit. Model SOURCE_SHA for the current candidate is `9fd34c2c4cf7250653ea6d86e33e1f939e6fba99`; the most recent code-and-test candidate commit is `8df6392192df45a81727239ce9b319d9a4991b82`. The pinned C100 reference remains the separate S4 cohort on SOURCE_SHA `965281d52441cd0d4b744e211c9f68ee4cdc3753`; S5 excludes all C100 scenarios. Runs `40381756114`, `40382013569`, and `40382155854` failed at the full pytest gate (four or five failures each) and did not run the S5 stochastic smoke driver. Their artifact digests are diagnostic only. Run `40383314937` on tested commit `e722de8f456defba0d0dd58ce199e3496eb6524b` was still in the full pytest step at the last verified read; Run `40383552605` on `8df6392192df45a81727239ce9b319d9a4991b82` was pending behind the branch-scoped concurrency group. Therefore, no successful S5 runtime or output artifact has been verified yet.
 
 | Measurement | Evidence value | Decision |
 |---|---|---|
@@ -15,7 +15,7 @@ The S5 smoke driver was committed as 18ca260ae9d71ff83a7c9a47cbe5a494fcd5f6e1 an
 | Two-worker elapsed time / trial | NOT_VERIFIED — same artifact | Use only if measured exact equivalence is true |
 | Four-worker elapsed time / trial | NOT_VERIFIED — same artifact | Use only if measured exact equivalence is true |
 | Representative replay time | NOT_VERIFIED — same artifact | Keep replay as a separate workload |
-| Source SHA / Run ID / artifact SHA-256 | SOURCE_SHA=18ca260ae9d71ff83a7c9a47cbe5a494fcd5f6e1; Run ID and artifact digest NOT_VERIFIED | No performance claim until evidence is retrieved |
+| Model SOURCE_SHA / tested commit / Run ID / artifact SHA-256 | Model SOURCE_SHA=9fd34c2c4cf7250653ea6d86e33e1f939e6fba99; latest candidate commit=8df6392192df45a81727239ce9b319d9a4991b82; successful S5 Run ID and artifact digest NOT_VERIFIED | No performance claim until the canonical run succeeds and the artifacts are verified |
 
 No ETA or throughput extrapolation is asserted without those measured values. This document is structurally ready for the S6 plan but is **not a release authorization** until the missing S5 evidence is reconciled.
 
@@ -35,11 +35,11 @@ No ETA or throughput extrapolation is asserted without those measured values. Th
 
 | Gate | Required evidence | Status |
 |---|---|---|
-| S5 execution | Successful completed GitHub Actions run, exit code zero, source identity, real artifact, SHA-256 manifest | NOT_VERIFIED |
-| S5 parallel equivalence | All 100 trial rows in the real manifest have exact serial/parallel result and daily-slice equality | NOT_VERIFIED |
-| S5 second pass | Five representative roles per scenario; first/second financial fingerprints and daily slices match; partner memo balances are integers | NOT_VERIFIED |
-| S5 report precision | Parquet schemas contain no floating types; JSON reports contain no float values; exact fractions retained | NOT_VERIFIED |
+| S5 execution | Successful completed GitHub Actions run, exit code zero, pinned model SOURCE_SHA separate from tested commit, real artifact, verified SHA-256 manifest | NOT_VERIFIED — Runs 40381756114 / 40382013569 / 40382155854 failed full pytest; Run 40383314937 was in progress and Run 40383552605 was pending at last live read |
+| S5 parallel equivalence | All 100 trial rows (20 stochastic scenarios × trial IDs 1..5) in the real manifest have exact serial / 2-worker / 4-worker result and daily-slice equality | NOT_VERIFIED — no successful S5 manifest exists yet |
+| S5 second pass | Five representative roles per scenario; first/second financial fingerprints and daily slices match; partner memo balances are integers | NOT_VERIFIED — driver not reached because prior runs failed pytest |
+| S5 report precision | Parquet schemas contain no floating types; JSON reports contain no float values; exact fractions retained, RNG checksum stored as UInt64, and §14.7 population columns present | NOT_VERIFIED — fixes committed; final run must execute and verify outputs |
 | S6 performance configuration | Select shard count and worker concurrency from the completed measured benchmark.json, not from an estimate | PENDING_S5_TIMING |
 | Production Gate A/B and release | Full checkpoint evidence and independent release gates; no inference from C100 or from S5 smoke | BLOCKED_PENDING_EVIDENCE |
 
-**Next required action:** retrieve the completed S5 workflow run and its artifact, verify the artifact SHA-256 against the workflow evidence, then replace the NOT_VERIFIED timing cells with the exact integer nanoseconds and string-formatted measured seconds from benchmark.json. If no successful artifact exists, keep the plan blocked and repair from the logged failure rather than estimating.
+**Next required action:** finish and verify Run 40383552605 on the exact candidate head, or repair any remaining failing tests before another run. Only after the full pytest step, S5 driver, focused contract tests, and artifact/hash checks all succeed may the timing cells be replaced with exact integer nanoseconds and string-formatted seconds from the actual benchmark.json. If no successful artifact exists, keep the plan blocked and repair from the logged failure rather than estimating.
