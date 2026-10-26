@@ -70,3 +70,12 @@ At every new chat, treat PR #46 and `tmp/cp-session-continuity-20261017` as disc
 ## Latest handoff snapshot — 2026-10-20
 
 For a new chat, first re-verify this branch and PR #46 live, then read `docs/continuity/HANDOFF_2026-10-20_CHAT_MIGRATION.md`, the latest appended section in `docs/PROJECT_CONTINUITY.md` headed `CP-CHAT-MIGRATION-HANDOFF-2026-10-20`, and the last record in `docs/continuity/SESSION_OUTPUTS.jsonl`. The handoff is a detailed snapshot of the user's supplied prior conversation and the latest live checks, not a replacement for live verification. Current delivery status remains `NOT_ACCEPTED`; Release remains blocked. Do not copy, reveal, or duplicate any independent cross-chat acceptance marker reserved in this document.
+
+ 
+## Latest engineering checkpoint — U3 v2.3 (2026-10-26)
+ 
+- Read the committed exact-SHA acceptance report in the U3 candidate branch: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/u3-acceptance-v23-20261025/docs/ACCEPTANCE_REPORT.md.
+- Candidate SHA tested: `adbb528f5f44e21425ce6210148eac41ff4401fb`; completed run: [40260476507](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40260476507); pytest exit code `0`; `177/177 UNIQUE PASS`, `0 FAIL`, `0 NOT_EXECUTED`, `15 ALIAS`, `1 DOC/K_TEST`.
+- This is `PASS_SCOPED`, not final project acceptance. Production source/cohort/Golden, Gate A/B convergence, output artifacts and delivery/release gates remain separate.
+- The main branch and `state.json` were not modified. PR #46 remains Draft/unmerged. Preserve the historical U2 Run 40210753738 failure on its original SHA.
+- Check the latest append-only event in `docs/continuity/SESSION_OUTPUTS.jsonl` and the matching entry in `docs/PROJECT_CONTINUITY.md` before any next-stage action.
