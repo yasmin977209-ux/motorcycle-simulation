@@ -119,6 +119,14 @@ def test_170_checksum_uniqueness_uses_draw_count_and_allows_zero() -> None:
         )
 
 
+def test_p50_guard_zero_baseline_uses_owner_cross_multiplication() -> None:
+    assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(0))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(-1))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(-100), Fraction(-106))
+    assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(-100), Fraction(-105))
+
+
 def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() -> None:
     expected = (
         Fraction(1, 800),
@@ -196,13 +204,36 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
 
     assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(106))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(105))
-    with pytest.raises(
-        RuntimeError,
-        match=r"UNDEFINED_BUSINESS_RULE.*2\.5.*14\.11",
-    ):
-        stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(1))
+    assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(-1))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(0), Fraction(0))
     assert "P50_Cumulative_Project_Profit" in indicator_summary["indicators"]
+
+
+def test_financial_trial_fingerprint_ignores_trial_and_scenario_context() -> None:
+    baseline = _trial(1, 123456, checksum=0, draws=0)
+    variants = (
+        baseline,
+        replace(
+            baseline,
+            trial_id=2,
+            scenario_id="C100_G070",
+            collection_probability=1.0,
+            recovery_rate_pct=70,
+        ),
+        replace(
+            baseline,
+            trial_id=300,
+            scenario_id="C100_G000",
+            collection_probability=1.0,
+            recovery_rate_pct=0,
+            rng_checksum=987654,
+            rng_draw_count=9,
+        ),
+    )
+    assert len({monte_carlo.trial_fingerprint(item) for item in variants}) == 1
+    assert len({monte_carlo.financial_path_fingerprint(item) for item in variants}) == 1
+    assert len({monte_carlo.fingerprint_trial_results([item]) for item in variants}) == 3
 
 
 def test_174_financial_fingerprint_is_identical_after_sharding_and_merge() -> None:
