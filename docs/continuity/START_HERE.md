@@ -79,3 +79,14 @@ For a new chat, first re-verify this branch and PR #46 live, then read `docs/con
 - This is `PASS_SCOPED`, not final project acceptance. Production source/cohort/Golden, Gate A/B convergence, output artifacts and delivery/release gates remain separate.
 - The main branch and `state.json` were not modified. PR #46 remains Draft/unmerged. Preserve the historical U2 Run 40210753738 failure on its original SHA.
 - Check the latest append-only event in `docs/continuity/SESSION_OUTPUTS.jsonl` and the matching entry in `docs/PROJECT_CONTINUITY.md` before any next-stage action.
+
+
+## Latest execution — S4 C100 v2.3 Golden (2026-10-26)
+
+- Owner P50 zero-baseline decision is resolved and implemented: exact rule `abs(new_p50-old_p50)*100 > 5*abs(old_p50)`; unit test `test_p50_guard_zero_baseline_uses_owner_cross_multiplication` passed. Do not reopen the former zero-baseline business-rule question.
+- S4 Run [40263424595](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40263424595) completed `success` on tested workflow HEAD `24050f15bc7eb3097e20f76785a45c5d177643dd`; pytest exit code `0`: 555 passed, 1 skipped, 0 failed/errors.
+- New C100 cohort source SHA `965281d52441cd0d4b744e211c9f68ee4cdc3753`; cohort `c100-v23-s4-20261026-965281d5`; five C100 G levels × 300 trial IDs = 1,500 full runs. All fingerprints match; `rng_draw_count=0`, `rng_checksum=0`, `N_unique_paths=1`, `DEGENERATE_DETERMINISTIC`, `G_INERT`.
+- New Golden `docs/golden/v2.3/C100_GOLDEN_965281d52441cd0d4b744e211c9f68ee4cdc3753.json`, SHA-256 `39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327`; report `docs/audits/S4_C100_GOLDEN_REPORT_965281d52441cd0d4b744e211c9f68ee4cdc3753.md`; manifest `docs/audits/S4_C100_GOLDEN_MANIFEST_965281d52441cd0d4b744e211c9f68ee4cdc3753.json`.
+- The matching append-only record is `S4-C100-GOLDEN-RUN-40263424595-2026-10-26` in `docs/continuity/SESSION_OUTPUTS.jsonl`; read it before starting another stage.
+- S4 is scoped to deterministic C100 verification only. Do not call the whole project CONVERGED or FINAL_ACCEPTED: non-C100 statistical Gate A/B and P17/P18 release blockers remain separate.
+- Evidence branch `tmp/s4-c100-golden-v23-20261026`; do not merge to `main` without a separate, explicit authorization.
