@@ -333,18 +333,40 @@ def _financial_trial_record(
     return record
 
 
+_FINANCIAL_RESULT_FIELDS = (
+    "final_close_date",
+    "final_net_project_equity",
+    "final_cash",
+    "cumulative_project_profit",
+    "operating_net_profit",
+    "termination_count",
+    "secondary_cycle_count",
+    "owned_bikes",
+    "held_assets",
+    "total_operating_revenue",
+    "bad_debt",
+    "guarantee_recovered",
+    "partner1_final_entitlement",
+    "partner2_final_entitlement",
+)
+
+
+def _financial_outcome_record(result: TrialResult) -> dict[str, object]:
+    """Select outcome fields only, excluding scenario/trial identity and RNG audit."""
+    return {
+        field_name: getattr(result, field_name)
+        for field_name in _FINANCIAL_RESULT_FIELDS
+    }
+
+
 def trial_fingerprint(result: TrialResult) -> str:
-    """Financial result fingerprint; excludes all RNG audit fields and itself."""
-    return _fingerprint_json_lines([
-        _financial_trial_record(result, include_trial_id=True)
-    ])
+    """SHA-256 of financial outcomes only; not trial/scenario identity or RNG audit."""
+    return _fingerprint_json_lines([_financial_outcome_record(result)])
 
 
 def financial_path_fingerprint(result: TrialResult) -> str:
-    """Financial path identity; excludes trial_id and RNG audit metadata."""
-    return _fingerprint_json_lines([
-        _financial_trial_record(result, include_trial_id=False)
-    ])
+    """Compatibility name for the exact same financial-outcome identity."""
+    return trial_fingerprint(result)
 
 
 def fingerprint_trial_results(results: list[TrialResult]) -> str:
