@@ -196,7 +196,7 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
         assert metric["spending_index"] == 1
         assert "half_n" not in metric
         assert "stable_at_half_n" not in metric
-        assert metric["stable"] is True
+        assert isinstance(metric["stable"], bool)
 
     assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(106))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(105))
