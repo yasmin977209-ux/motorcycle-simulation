@@ -888,7 +888,7 @@ def run_batch(
                 for item in history
             ):
                 baseline_results = results[:constants.STATISTICAL_CHECK_START_N]
-                    baseline_metrics = _metric_summary(
+                baseline_metrics = _metric_summary(
                     baseline_results,
                     spending_index=stats_integrity.statistical_checkpoint_index(len(baseline_results)),
                 )
