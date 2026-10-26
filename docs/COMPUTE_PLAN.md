@@ -43,3 +43,10 @@ No ETA or throughput extrapolation is asserted without those measured values. Th
 | Production Gate A/B and release | Full checkpoint evidence and independent release gates; no inference from C100 or from S5 smoke | BLOCKED_PENDING_EVIDENCE |
 
 **Next required action:** finish and verify Run 40383552605 on the exact candidate head, or repair any remaining failing tests before another run. Only after the full pytest step, S5 driver, focused contract tests, and artifact/hash checks all succeed may the timing cells be replaced with exact integer nanoseconds and string-formatted seconds from the actual benchmark.json. If no successful artifact exists, keep the plan blocked and repair from the logged failure rather than estimating.
+
+### Live update — 2026-10-26, Run 40383552605
+
+- Tested commit: `8df6392192df45a81727239ce9b319d9a4991b82`; pinned model `SOURCE_SHA=9fd34c2c4cf7250653ea6d86e33e1f939e6fba99`.
+- GitHub Actions status read: the full `python -m pytest -q tests --junitxml=s5_evidence/full-suite-junit.xml` step is `completed/success`; the S5 smoke driver has started and is still `in_progress`.
+- The full-suite summary counts, S5 driver exit status, output hashes and benchmark measurements are not yet readable from the running job. Therefore this is **not** a full Run PASS and all benchmark values remain `NOT_VERIFIED` until the run completes and the artifact is inspected.
+- The latest branch-only documentation commit does not alter model files; the running job stays pinned to its exact tested commit.
