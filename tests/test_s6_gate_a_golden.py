@@ -78,3 +78,58 @@ def test_s6_source_sha_is_separate_from_the_tested_commit(monkeypatch) -> None:
     assert source_sha != tested_sha
     assert run_id == "123456789"
 
+
+def test_s6_seed_key_audit_recomputes_the_normative_sha256_key() -> None:
+    import hashlib
+    from datetime import date
+
+    import rng
+    from scripts.s6_gate_a_golden import _install_seed_key_audit
+
+    original, audit = _install_seed_key_audit(
+        scenario_id="C085_G070",
+        expected_trial_id=1,
+        master_seed=constants.MASTER_SEED,
+    )
+    try:
+        seed = rng.derive_seed(
+            constants.MASTER_SEED,
+            "C085",
+            1,
+            "BK0001",
+            date(2027, 1, 2),
+            "PRIMARY_COLLECTION",
+        )
+    finally:
+        rng.derive_seed = original
+
+    key = "20270101|C085|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
+    assert seed == hashlib.sha256(key.encode("utf-8")).digest()
+    assert audit["count"] == 1
+    assert audit["sha256"].hexdigest() == hashlib.sha256((key + "\n").encode("utf-8")).hexdigest()
+
+
+def test_s6_seed_key_audit_rejects_scenario_id_as_rng_stream() -> None:
+    from datetime import date
+
+    import rng
+    from scripts.s6_gate_a_golden import _install_seed_key_audit
+
+    original, _ = _install_seed_key_audit(
+        scenario_id="C085_G070",
+        expected_trial_id=1,
+        master_seed=constants.MASTER_SEED,
+    )
+    try:
+        with pytest.raises(RuntimeError, match="S6_RNG_STREAM_ID_NOT_COLLECTION_LEVEL"):
+            rng.derive_seed(
+                constants.MASTER_SEED,
+                "C085_G070",
+                1,
+                "BK0001",
+                date(2027, 1, 2),
+                "PRIMARY_COLLECTION",
+            )
+    finally:
+        rng.derive_seed = original
+
