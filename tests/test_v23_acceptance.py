@@ -146,8 +146,8 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
     )
 
     # 600 observations have an N/2=300 check; at k=2 and k=1, respectively.
-    # With zero losses, the valid upper bound -ln(alpha_s,k)/N exceeds the
-    # descriptive 3/N bound; the descriptive bound alone must not PASS Gate B.
+    # Candidate zero-loss upper bound -ln(alpha_s,k)/N exceeds descriptive 3/N;
+    # neither bound is accepted as formally time-uniform while §14.11.4 is K_SPEC.
     indicator_rows = [
         SimpleNamespace(
             trial_id=i,
@@ -426,14 +426,16 @@ def test_191_five_representative_roles_use_equity_extrema_and_trial_id_ties() ->
     assert selected.max_case_trial_id == 7
 
 
-def test_192_approved_time_uniform_method_is_required_for_gate_b_acceptance(monkeypatch) -> None:
+def test_192_alpha_spending_is_exact_and_production_gate_b_remains_k_spec_blocked(monkeypatch) -> None:
     for k in range(1, 9):
         assert stats_integrity.sequential_alpha_fraction(k) == Fraction(1, 400 * k * (k + 1))
     assert stats_integrity.cumulative_alpha_fraction(4) == Fraction(1, 500)
     assert type(stats_integrity.cumulative_alpha_fraction(4)) is Fraction
     method = stats_integrity.time_uniform_inference_status()
-    assert method["approved"] is True
+    assert method["approved"] is False
+    assert method["status"] == "K_SPEC / BLOCKED"
     assert method["method_id"] == constants.TIME_UNIFORM_METHOD_ID
+    assert constants.TIME_UNIFORM_METHOD_APPROVED is False
 
     import run_batch
     mean_metrics = {name: {"stable": True} for name in run_batch.STABILITY_FIELDS}
@@ -443,13 +445,17 @@ def test_192_approved_time_uniform_method_is_required_for_gate_b_acceptance(monk
         "Probability_of_Accounting_Loss", "P90_Termination_Count", "P90_Held_Assets",
     }
     indicators = {"indicators": {name: {"stable": True} for name in indicator_names}}
-    assert run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)["stable"] is True
-
-    # The same gate must fail closed if the approval is absent.
-    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", False)
     blocked = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
     assert blocked["stable"] is False
     assert blocked["status"] == "K_SPEC / BLOCKED"
+
+    # Unit-test only: a separately authorized configuration would enable evaluation.
+    # This monkeypatch is not production approval and does not alter constants.py.
+    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", True)
+    candidate = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
+    assert candidate["stable"] is True
+    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", False)
+    assert run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)["stable"] is False
 
 
 def test_193_historical_and_new_rng_cohorts_cannot_be_mixed() -> None:
@@ -471,8 +477,8 @@ def test_acceptance_registry_has_the_normative_193_rows_and_exact_class_counts()
     assert sum(row["type"] == "DOC" for row in registry) == 1
     assert registry[157]["id"] == 158 and registry[157]["type"] == "DOC"
     assert registry[192]["id"] == 193 and registry[192]["type"] == "UNIQUE"
-    # These three existing numbered tests are in-memory logic checks, not absent
-    # production Parquet checks; production artifacts have their own deferred rows.
+    # Tests 159-161 execute in-memory logic; absent production outputs are separately
+    # tagged DEFERRED to S5 and are not fabricated.
     for test_id in (159, 160, 161):
-        assert registry[test_id - 1]["logic_status"] == "NOT_RUN"
-        assert registry[test_id - 1]["production_status"] == "NOT_REQUIRED"
+        assert registry[test_id - 1]["production_status"] == "DEFERRED"
+        assert registry[test_id - 1]["deferred_stage"] == "S5"

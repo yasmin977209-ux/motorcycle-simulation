@@ -108,7 +108,7 @@ def _fraction_to_decimal(value: Fraction) -> Decimal:
 
 
 def time_uniform_inference_status() -> dict[str, Any]:
-    """Return the explicitly approved v2.3 Appendix E time-uniform method status."""
+    """Report the method status; candidate remains blocked by normative §14.11.4."""
     approved = constants.TIME_UNIFORM_METHOD_APPROVED is True
     return {
         "approved": approved,
@@ -341,7 +341,7 @@ def _loss_probability_interval(losses: Iterable[bool], *, k: int) -> dict[str, A
 
 
 def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[str, Any]:
-    """Compute all seven appendix-E indicator CIs at N and, when defined, N/2."""
+    """Compute candidate diagnostics at N and N/2; not approved valid-time intervals."""
     items = sorted(list(results), key=lambda item: item.trial_id)
     if len(items) < 2:
         raise ValueError("STAT_SAMPLE_TOO_SMALL")
@@ -393,6 +393,8 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
     return {
         "method_id": constants.TIME_UNIFORM_METHOD_ID,
         "status": "APPROVED" if constants.TIME_UNIFORM_METHOD_APPROVED else "K_SPEC / BLOCKED",
+        "interpretation": "APPROVED_VALID_TIME_INTERVALS" if constants.TIME_UNIFORM_METHOD_APPROVED else "CANDIDATE_DIAGNOSTIC_ONLY",
+        "formal_acceptance_allowed": constants.TIME_UNIFORM_METHOD_APPROVED is True,
         "n": len(items),
         "spending_index": k,
         "alpha_s_k_numerator": sequential_alpha_fraction(k).numerator,

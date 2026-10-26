@@ -92,3 +92,13 @@ This addendum supersedes the earlier Test 192 row above where it calls the seque
 | Independent paths | All other test inventory, RNG/checksum, bike-ID, Fraction/report formatting and Stage13 checks are independent of this undefined denominator edge case. | Continue those tests and implementation; do not generate new cohort/Golden data or run Monte Carlo to resolve this rule. |
 | Current Actions | Run 40257929292 is still recorded as in progress on exact SHA 7206ce568de40ff464b2f02d61a96b5917cf29dd at the time of this note. | RUNNING / NO RESULT CLAIM; this R4 documentation-only commit does not affect the SHA under test. |
 
+
+
+## R4 addendum — §14.11.4 statistical K_SPEC and acceptance-register production deferment — 2026-10-26
+
+| Element | Current value / evidence | Governing reference and live-state cross-check | Judgment |
+|---|---|---|---|
+| Sequential alpha-spending implementation | Exact Fraction rule alpha_s,k = 0.0025/(k*(k+1)) is covered by unit tests; candidate intervals and N/N/2 calculations have formula-level coverage | v2.3 §§14.11.1–14.11.4 and §21.3; Appendix E decision memo | PASS for executable formula tests only. |
+| Statistical approval / Gate B | state.json on main remains stage=12-CLOSED and explicitly says statistical K_SPEC remains blocked due to absent verified time-uniform method/assumptions; §14.11.4 independently states pointwise Student-t, Wilson and ordinary rank intervals are not accepted as valid-time guarantees | v2.3 §14.11.4; current main state blob 6d94e0699e5380b4ecc184203d0c5ad6a4a8fb66 | K_SPEC / BLOCKED. Keep TIME_UNIFORM_METHOD_APPROVED=False, prevent Gate B/CONVERGED/FINAL_ACCEPTED, and treat coded interval calculations as candidate diagnostics only until an approved method with assumptions and coverage tests is evidenced. |
+| Tests 159–161 | In-memory logic tests pass, but production trials_summary.parquet, selection/representative DAILY files, and daily_distribution.parquet are absent | v2.3 §16.18 and acceptance-report scope | Production status DEFERRED / S5; no synthetic production files are created. |
+| P50 previous estimate equals zero and current differs | Relative-change denominator is undefined for a percentage calculation from zero; R4 records this as UNDEFINED_BUSINESS_RULE and code fails closed | v2.3 §§2.5 and 14.11.4 | Only the affected P50 guard path is blocked; no arbitrary threshold or denominator is introduced. |
