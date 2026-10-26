@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          find s5_evidence -type f -print0 | sort -z | xargs -0 -r sha256sum > s5_evidence/SHA256SUMS.txt
+          find s5_evidence -type f ! -name "SHA256SUMS.txt" -print0 | sort -z | xargs -0 -r sha256sum > s5_evidence/SHA256SUMS.txt
           cat s5_evidence/SHA256SUMS.txt
 
       - name: Upload real S5 outputs and run evidence
