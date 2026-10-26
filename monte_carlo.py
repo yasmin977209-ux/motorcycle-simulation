@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from dataclasses import asdict, dataclass, replace
+from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from fractions import Fraction
-import numpy as np
 import hashlib
 import json
 import multiprocessing
@@ -403,12 +403,48 @@ def fingerprint_per_trial_slices(
 
 
 
+def _daily_fraction_display(value: Fraction) -> str:
+    """Return the normative display string; exact numerator/denominator stay alongside it."""
+    if value.denominator == 1:
+        return str(value.numerator)
+    with localcontext() as context:
+        context.prec = constants.REPORT_DECIMAL_PRECISION
+        decimal_value = Decimal(value.numerator) / Decimal(value.denominator)
+        places = Decimal(1).scaleb(-constants.REPORT_DECIMAL_PLACES)
+        return str(decimal_value.quantize(places, rounding=ROUND_HALF_EVEN))
+
+
+def _linear_quantile_fraction(values: list[int], q: Fraction) -> Fraction:
+    """Exact linear/type-7 percentile over integer observations."""
+    if not values:
+        raise ValueError("DAILY_DISTRIBUTION_SAMPLE_EMPTY")
+    if any(type(value) is not int for value in values):
+        raise TypeError("DAILY_DISTRIBUTION_REQUIRES_INTEGER_VALUES")
+    ordered = sorted(values)
+    position = Fraction(len(ordered) - 1) * q
+    lower_index = position.numerator // position.denominator
+    remainder = position - lower_index
+    upper_index = min(lower_index + 1, len(ordered) - 1)
+    return (
+        Fraction(ordered[lower_index]) * (1 - remainder)
+        + Fraction(ordered[upper_index]) * remainder
+    )
+
+
 def build_daily_distribution(
     results_list: list[TrialResult],
     slices_by_trial: dict[int, list[dict[str, object]]],
+    *,
+    population_mode: str = "ACTIVE_ONLY",
 ) -> list[dict[str, object]]:
-    quantile_names = ("P10", "P25", "P50", "P75", "P90")
-    quantiles = (0.10, 0.25, 0.50, 0.75, 0.90)
+    """Build daily percentile rows with exact Fractions and an explicit population rule.
+
+    ACTIVE_ONLY excludes trials after their recorded close date. The
+    ALL_TRIALS_CARRY_FORWARD population retains all trials and carries the last
+    recorded daily state forward after each trial closes.
+    """
+    if population_mode not in constants.DAILY_DISTRIBUTION_POPULATION_MODES:
+        raise ValueError("DAILY_DISTRIBUTION_POPULATION_MODE_INVALID")
     metric_names = (
         "Cash",
         "Net_Equity",
@@ -417,28 +453,33 @@ def build_daily_distribution(
         "Pending_Claims",
     )
     trial_by_id = {result.trial_id: result for result in results_list}
-    if set(trial_by_id) != set(slices_by_trial):
+    if not trial_by_id or set(trial_by_id) != set(slices_by_trial):
         raise ValueError("results_list and slices_by_trial trial_ids differ")
 
     rows_by_trial_date = {
-        trial_id: {row["date"]: row for row in rows}
+        trial_id: {str(row["date"]): row for row in rows}
         for trial_id, rows in slices_by_trial.items()
     }
-    all_dates = sorted(
-        {
-            row["date"]
-            for rows in slices_by_trial.values()
-            for row in rows
-        }
-    )
+    last_row_by_trial = {}
+    for trial_id, rows in rows_by_trial_date.items():
+        if not rows:
+            raise ValueError("DAILY_DISTRIBUTION_TRIAL_HAS_NO_DAILY_ROWS")
+        last_date = max(rows)
+        last_row_by_trial[trial_id] = (last_date, rows[last_date])
+
+    all_dates = sorted({
+        str(row["date"])
+        for rows in slices_by_trial.values()
+        for row in rows
+    })
     if not all_dates:
         return []
 
-    start = date.fromisoformat(all_dates[0])
-    end = date.fromisoformat(all_dates[-1])
+    start_date = date.fromisoformat(all_dates[0])
+    end_date = date.fromisoformat(all_dates[-1])
     expected_dates = [
-        (start + timedelta(days=index)).isoformat()
-        for index in range((end - start).days + 1)
+        (start_date + timedelta(days=index)).isoformat()
+        for index in range((end_date - start_date).days + 1)
     ]
     if all_dates != expected_dates:
         raise AssertionError("DAILY_DISTRIBUTION contains date gaps")
@@ -451,43 +492,55 @@ def build_daily_distribution(
             if result.final_close_date is None
             or result.final_close_date >= current_date
         ]
+        selected_trial_ids = (
+            active_trial_ids
+            if population_mode == "ACTIVE_ONLY"
+            else sorted(trial_by_id)
+        )
+        if not selected_trial_ids:
+            raise AssertionError("DAILY_DISTRIBUTION has no active trials")
+
         day_rows = []
-        for trial_id in active_trial_ids:
+        for trial_id in sorted(selected_trial_ids):
             row = rows_by_trial_date[trial_id].get(current_date)
+            if row is None and population_mode == "ALL_TRIALS_CARRY_FORWARD":
+                result = trial_by_id[trial_id]
+                last_date, last_row = last_row_by_trial[trial_id]
+                if (
+                    result.final_close_date is not None
+                    and result.final_close_date < current_date
+                    and last_date < current_date
+                ):
+                    row = last_row
             if row is None:
                 raise AssertionError(
-                    f"missing active daily slice: trial_id={trial_id} date={current_date}"
+                    f"missing daily slice: trial_id={trial_id} date={current_date} "
+                    f"population_mode={population_mode}"
                 )
             day_rows.append(row)
 
-        if not day_rows:
-            raise AssertionError(f"no active trials on {current_date}")
-
-        payloads = {
-            metric: np.asarray([row[metric] for row in day_rows])
-            for metric in metric_names
-        }
-        active_trial_count = len(day_rows)
-        for quantile_name, quantile in zip(quantile_names, quantiles):
-            record = {
+        for quantile_name, quantile_pct in constants.DAILY_DISTRIBUTION_PERCENTILES:
+            quantile = Fraction(quantile_pct, constants.REPORT_PERCENT_DENOMINATOR)
+            record: dict[str, object] = {
+                "scenario_id": next(iter(trial_by_id.values())).scenario_id,
                 "date": current_date,
                 "quantile_name": quantile_name,
-                "active_trial_count": active_trial_count,
+                "population_mode": population_mode,
+                "population_count": len(day_rows),
+                "active_trial_count": len(active_trial_ids),
             }
-            record.update(
-                {
-                    metric: np.quantile(
-                        values,
-                        quantile,
-                        method="linear",
-                    ).item()
-                    for metric, values in payloads.items()
-                }
-            )
+            for metric in metric_names:
+                exact_value = _linear_quantile_fraction(
+                    [row[metric] for row in day_rows], quantile
+                )
+                # String display plus integer numerator/denominator columns makes
+                # Parquet schema stable without converting fractional statistics to float.
+                record[metric] = _daily_fraction_display(exact_value)
+                record[f"{metric}_exact_numerator"] = exact_value.numerator
+                record[f"{metric}_exact_denominator"] = exact_value.denominator
             distribution.append(record)
 
     return distribution
-
 
 
 class RepresentativeSelection(dict[str, int]):
