@@ -426,16 +426,16 @@ def test_191_five_representative_roles_use_equity_extrema_and_trial_id_ties() ->
     assert selected.max_case_trial_id == 7
 
 
-def test_192_alpha_spending_is_exact_and_production_gate_b_remains_k_spec_blocked(monkeypatch) -> None:
+def test_192_owner_approved_appendix_e_alpha_spending_is_applied_to_gate_b(monkeypatch) -> None:
     for k in range(1, 9):
         assert stats_integrity.sequential_alpha_fraction(k) == Fraction(1, 400 * k * (k + 1))
     assert stats_integrity.cumulative_alpha_fraction(4) == Fraction(1, 500)
     assert type(stats_integrity.cumulative_alpha_fraction(4)) is Fraction
     method = stats_integrity.time_uniform_inference_status()
-    assert method["approved"] is False
-    assert method["status"] == "K_SPEC / BLOCKED"
+    assert method["approved"] is True
+    assert method["status"] == "APPROVED"
     assert method["method_id"] == constants.TIME_UNIFORM_METHOD_ID
-    assert constants.TIME_UNIFORM_METHOD_APPROVED is False
+    assert constants.TIME_UNIFORM_METHOD_APPROVED is True
 
     import run_batch
     mean_metrics = {name: {"stable": True} for name in run_batch.STABILITY_FIELDS}
@@ -445,17 +445,15 @@ def test_192_alpha_spending_is_exact_and_production_gate_b_remains_k_spec_blocke
         "Probability_of_Accounting_Loss", "P90_Termination_Count", "P90_Held_Assets",
     }
     indicators = {"indicators": {name: {"stable": True} for name in indicator_names}}
+    accepted_by_logic = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
+    assert accepted_by_logic["stable"] is True
+    assert accepted_by_logic["status"] == "PASS"
+
+    # Gate B must fail closed if the normative Appendix E authorization is absent.
+    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", False)
     blocked = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
     assert blocked["stable"] is False
     assert blocked["status"] == "K_SPEC / BLOCKED"
-
-    # Unit-test only: a separately authorized configuration would enable evaluation.
-    # This monkeypatch is not production approval and does not alter constants.py.
-    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", True)
-    candidate = run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)
-    assert candidate["stable"] is True
-    monkeypatch.setattr(constants, "TIME_UNIFORM_METHOD_APPROVED", False)
-    assert run_batch.evaluate_gate_b(mean_metrics, indicator_metrics=indicators)["stable"] is False
 
 
 def test_193_historical_and_new_rng_cohorts_cannot_be_mixed() -> None:
