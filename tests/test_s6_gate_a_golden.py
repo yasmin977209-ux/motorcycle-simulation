@@ -63,3 +63,18 @@ def test_s6_golden_payload_rejects_float_values() -> None:
     _assert_no_float({"money": 10, "exact": {"numerator": 1, "denominator": 2}})
     with pytest.raises(AssertionError, match="FLOAT_LEAK_DETECTED"):
         _assert_no_float({"money": 10.5})
+
+
+def test_s6_source_sha_is_separate_from_the_tested_commit(monkeypatch) -> None:
+    from scripts.s6_gate_a_golden import _resolve_identities
+
+    monkeypatch.setenv("S6_MODEL_SOURCE_SHA", "a" * 40)
+    monkeypatch.setenv("GITHUB_SHA", "b" * 40)
+    monkeypatch.setenv("GITHUB_RUN_ID", "123456789")
+
+    source_sha, tested_sha, run_id = _resolve_identities()
+    assert source_sha == "a" * 40
+    assert tested_sha == "b" * 40
+    assert source_sha != tested_sha
+    assert run_id == "123456789"
+
