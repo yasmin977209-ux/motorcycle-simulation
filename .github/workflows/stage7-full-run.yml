@@ -2,6 +2,9 @@ name: stage7-full-run
 
 on:
   push:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
     branches:
       - "tmp/stage7-full-run-20261004"
 

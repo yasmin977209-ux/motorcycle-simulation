@@ -1,0 +1,71 @@
+{
+  "alpha_spending": {
+    "formula": "0.0025 / (k * (k + 1))",
+    "per_scenario": "0.0025",
+    "values": [
+      {
+        "alpha_denominator": 800,
+        "alpha_numerator": 1,
+        "k": 1,
+        "n": 300
+      },
+      {
+        "alpha_denominator": 2400,
+        "alpha_numerator": 1,
+        "k": 2,
+        "n": 600
+      },
+      {
+        "alpha_denominator": 4800,
+        "alpha_numerator": 1,
+        "k": 3,
+        "n": 1200
+      },
+      {
+        "alpha_denominator": 8000,
+        "alpha_numerator": 1,
+        "k": 4,
+        "n": 2400
+      }
+    ]
+  },
+  "checkpoint_schedule": [
+    300,
+    600,
+    1200,
+    2400
+  ],
+  "coverage_method": "two-sided Student-t mean interval at each N_k using alpha_s,k; familywise event is any miss over 20 scenarios and all four looks",
+  "familywise_failures": 435,
+  "familywise_fwer_denominator": 10000,
+  "familywise_fwer_numerator": 435,
+  "familywise_target": "0.05",
+  "master_seed": 20270101,
+  "observed_fwer": "0.0435",
+  "pass": true,
+  "per_checkpoint_miss_counts": [
+    291,
+    112,
+    41,
+    35
+  ],
+  "replications": 10000,
+  "scenario_count": 20,
+  "schema_version": "test192-coverage-proof-v1",
+  "synthetic_distribution": {
+    "family": "lognormal",
+    "finite_moments": true,
+    "mu_range": [
+      "-0.2",
+      "0.7"
+    ],
+    "nested_checkpoints": true,
+    "parameterization": "known mu and sigma; mean = exp(mu + sigma^2 / 2)",
+    "sigma_range": [
+      "0.1",
+      "0.55"
+    ],
+    "skewed": true
+  },
+  "test_id": 192
+}

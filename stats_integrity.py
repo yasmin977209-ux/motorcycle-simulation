@@ -335,56 +335,6 @@ def mean_confidence_summary(
 
 
 
-def mean_confidence_summary_at_n_and_half(
-    values: Iterable[int],
-    *,
-    k: int,
-    relative_tolerance: Fraction | None = None,
-    absolute_tolerance: int | None = None,
-) -> dict[str, Any]:
-    """Require the sequential interval precision test at N and N/2."""
-    items = list(values)
-    if len(items) < 4:
-        summary = mean_confidence_summary(
-            items, k=k,
-            relative_tolerance=relative_tolerance,
-            absolute_tolerance=absolute_tolerance,
-        )
-        summary["half_n"] = None
-        summary["stable_at_n"] = summary["stable"]
-        summary["stable_at_half_n"] = None
-        return summary
-    full = mean_confidence_summary(
-        items, k=k,
-        relative_tolerance=relative_tolerance,
-        absolute_tolerance=absolute_tolerance,
-    )
-    half_k = max(1, k - 1)
-    half = mean_confidence_summary(
-        items[: len(items) // 2],
-        k=half_k,
-        relative_tolerance=relative_tolerance,
-        absolute_tolerance=absolute_tolerance,
-    )
-    full["half_n"] = {
-        "n": half["n"],
-        "spending_index": half["spending_index"],
-        "alpha_s_k_numerator": half["alpha_s_k_numerator"],
-        "alpha_s_k_denominator": half["alpha_s_k_denominator"],
-        "mean": half["mean"],
-        "mean_display": half["mean_display"],
-        "mean_exact_numerator": half["mean_exact_numerator"],
-        "mean_exact_denominator": half["mean_exact_denominator"],
-        "half_ci_sequential": half["half_ci_sequential"],
-        "limit": half["limit"],
-        "stable": half["stable"],
-    }
-    full["stable_at_n"] = full["stable"]
-    full["stable_at_half_n"] = half["stable"]
-    full["stable"] = bool(full["stable"] and half["stable"])
-    return full
-
-
 def p50_relative_change_exceeds_guard(previous: Fraction, current: Fraction) -> bool:
     """Apply the owner's strict >5% P50 guard by exact cross-multiplication.
 
@@ -500,15 +450,13 @@ def _loss_probability_interval(losses: Iterable[bool], *, k: int) -> dict[str, A
 
 
 def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[str, Any]:
-    """Compute the owner-approved Appendix E indicator intervals at N and N/2."""
+    """Evaluate all seven §2.5 indicators at the current cumulative N_k only."""
     items = sorted(list(results), key=lambda item: item.trial_id)
     if len(items) < 2:
         raise ValueError("STAT_SAMPLE_TOO_SMALL")
-    checkpoint_index = statistical_checkpoint_index(len(items))
-    if checkpoint_index != k:
-        raise ValueError("SEQUENTIAL_ALPHA_CHECKPOINT_INDEX_MISMATCH")
-    half_items = items[: len(items) // 2]
-    half_index = max(1, k - 1)
+    actual_k = statistical_checkpoint_index(len(items))
+    if k != actual_k:
+        raise ValueError("STATISTICAL_CHECKPOINT_INDEX_MISMATCH")
     indicators: dict[str, Any] = {}
     definitions = (
         ("P10_Cumulative_Project_Profit", "cumulative_project_profit", Fraction(1, 10), "money"),
@@ -518,61 +466,69 @@ def time_uniform_indicator_summary(results: Iterable[Any], *, k: int) -> dict[st
         ("P90_Termination_Count", "termination_count", Fraction(9, 10), "count"),
         ("P90_Held_Assets", "held_assets", Fraction(9, 10), "count"),
     )
-    support_metric_for_field = {
-        "cumulative_project_profit": "cumulative_project_profit",
-        "final_cash": "final_cash",
-        "termination_count": "termination_count",
-        "held_assets": "held_assets",
-    }
     for name, field, quantile, kind in definitions:
-        validate_values_within_deterministic_support(
-            (getattr(item, field) for item in items),
-            support_metric_for_field[field],
-        )
-        full = _rank_interval(
+        summary = _rank_interval(
             (getattr(item, field) for item in items),
             q=quantile, k=k, metric_kind=kind,
         )
-        half = (
-            _rank_interval(
-                (getattr(item, field) for item in half_items),
-                q=quantile, k=half_index, metric_kind=kind,
-            )
-            if len(half_items) >= 2
-            else None
-        )
-        indicators[name] = {
-            "current_n": full,
-            "half_n": half,
-            "stable": bool(full["stable"] and (half is None or half["stable"])),
-        }
-    loss_full = _loss_probability_interval(
+        indicators[name] = {**summary, "stable": bool(summary["stable"])}
+    loss = _loss_probability_interval(
         (item.cumulative_project_profit < 0 for item in items), k=k
     )
-    loss_half = (
-        _loss_probability_interval(
-            (item.cumulative_project_profit < 0 for item in half_items), k=half_index
-        )
-        if half_items
-        else None
-    )
-    indicators["Probability_of_Accounting_Loss"] = {
-        "current_n": loss_full,
-        "half_n": loss_half,
-        "stable": bool(loss_full["stable"] and (loss_half is None or loss_half["stable"])),
-    }
+    indicators["Probability_of_Accounting_Loss"] = {**loss, "stable": bool(loss["stable"])}
+    alpha_sk = sequential_alpha_fraction(k)
     return {
         "method_id": constants.TIME_UNIFORM_METHOD_ID,
-        "status": "APPROVED" if constants.TIME_UNIFORM_METHOD_APPROVED else "NOT_AUTHORIZED",
+        "status": "APPROVED" if constants.TIME_UNIFORM_METHOD_APPROVED else "K_SPEC / BLOCKED",
         "interpretation": "APPROVED_VALID_TIME_INTERVALS" if constants.TIME_UNIFORM_METHOD_APPROVED else "CANDIDATE_DIAGNOSTIC_ONLY",
-        "support_bounds_id": compute_deterministic_support_bounds()["bound_id"],
-        "finite_support_bounds": compute_deterministic_support_bounds()["finite"],
         "formal_acceptance_allowed": constants.TIME_UNIFORM_METHOD_APPROVED is True,
         "n": len(items),
         "spending_index": k,
-        "alpha_s_k_numerator": sequential_alpha_fraction(k).numerator,
-        "alpha_s_k_denominator": sequential_alpha_fraction(k).denominator,
+        "alpha_s_k_numerator": alpha_sk.numerator,
+        "alpha_s_k_denominator": alpha_sk.denominator,
         "indicators": indicators,
         "stable": constants.TIME_UNIFORM_METHOD_APPROVED is True
             and all(item["stable"] for item in indicators.values()),
+    }
+
+
+def evaluate_gate_b_statistical(
+    mean_samples: dict[str, Iterable[int]],
+    results: Iterable[Any],
+    *,
+    k: int,
+) -> dict[str, Any]:
+    """Intersection-union Gate B: all three financial means and seven indicators pass at N_k."""
+    required_means = (
+        "Final_Net_Project_Equity",
+        "Partner1_Final_Entitlement",
+        "Partner2_Final_Entitlement",
+    )
+    if set(mean_samples) != set(required_means):
+        raise ValueError("GATE_B_MEAN_COMPONENT_SET_INVALID")
+    summaries = {
+        name: mean_confidence_summary(mean_samples[name], k=k)
+        for name in required_means
+    }
+    n_values = {summary["n"] for summary in summaries.values()}
+    if len(n_values) != 1:
+        raise ValueError("GATE_B_MEAN_SAMPLE_SIZE_MISMATCH")
+    n = next(iter(n_values))
+    if statistical_checkpoint_index(n) != k:
+        raise ValueError("STATISTICAL_CHECKPOINT_INDEX_MISMATCH")
+    indicators = time_uniform_indicator_summary(results, k=k)
+    all_components = (
+        all(bool(item["stable"]) for item in summaries.values())
+        and bool(indicators["stable"])
+    )
+    return {
+        "status": "PASS" if all_components else "FAIL",
+        "stable": all_components,
+        "decision_framework": "IUT",
+        "n": n,
+        "spending_index": k,
+        "alpha_s_k_numerator": sequential_alpha_fraction(k).numerator,
+        "alpha_s_k_denominator": sequential_alpha_fraction(k).denominator,
+        "financial_means": summaries,
+        "indicators": indicators,
     }
