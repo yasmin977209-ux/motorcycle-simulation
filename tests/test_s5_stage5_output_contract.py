@@ -88,12 +88,19 @@ def test_s5_daily_distribution_exact_active_and_carry_forward() -> None:
         if row["date"] == "2027-01-02" and row["quantile_name"] == "P25"
     )
 
+    assert active_day_two["population"] == "ACTIVE_ONLY"
     assert active_day_two["population_mode"] == "ACTIVE_ONLY"
+    assert active_day_two["total_trials"] == 2
     assert active_day_two["population_count"] == 1
+    assert active_day_two["active_trial_count"] == 1
+    assert active_day_two["closed_trial_count"] == 1
     assert active_day_two["Cash"] == "200"
+    assert carry_day_two["population"] == "ALL_TRIALS_CARRY_FORWARD"
     assert carry_day_two["population_mode"] == "ALL_TRIALS_CARRY_FORWARD"
+    assert carry_day_two["total_trials"] == 2
     assert carry_day_two["population_count"] == 2
     assert carry_day_two["active_trial_count"] == 1
+    assert carry_day_two["closed_trial_count"] == 1
     assert carry_day_two["Cash"] == "150.5"
     assert carry_day_two["Cash_exact_numerator"] == 301
     assert carry_day_two["Cash_exact_denominator"] == 2

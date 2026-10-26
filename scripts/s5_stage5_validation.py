@@ -154,9 +154,12 @@ def _distribution_schema() -> pa.Schema:
         pa.field("scenario_id", pa.string()),
         pa.field("date", pa.string()),
         pa.field("quantile_name", pa.string()),
+        pa.field("population", pa.string()),
         pa.field("population_mode", pa.string()),
+        pa.field("total_trials", pa.int64()),
         pa.field("population_count", pa.int64()),
         pa.field("active_trial_count", pa.int64()),
+        pa.field("closed_trial_count", pa.int64()),
     ]
     for metric in METRIC_NAMES:
         fields.extend(

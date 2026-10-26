@@ -525,9 +525,12 @@ def build_daily_distribution(
                 "scenario_id": next(iter(trial_by_id.values())).scenario_id,
                 "date": current_date,
                 "quantile_name": quantile_name,
+                "population": population_mode,
                 "population_mode": population_mode,
+                "total_trials": len(trial_by_id),
                 "population_count": len(day_rows),
                 "active_trial_count": len(active_trial_ids),
+                "closed_trial_count": len(trial_by_id) - len(active_trial_ids),
             }
             for metric in metric_names:
                 exact_value = _linear_quantile_fraction(
