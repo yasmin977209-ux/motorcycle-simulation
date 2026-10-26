@@ -153,9 +153,7 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
         for metric in mean_summary.values()
     )
 
-    # 600 observations have an N/2=300 check; at k=2 and k=1, respectively.
-    # Candidate zero-loss upper bound -ln(alpha_s,k)/N exceeds descriptive 3/N;
-    # neither bound is accepted as formally time-uniform while §14.11.4 is K_SPEC.
+    # Evaluate the current cumulative checkpoint only; the legacy N-versus-N/2 gate is removed.
     indicator_rows = [
         SimpleNamespace(
             trial_id=i,
@@ -179,13 +177,11 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
         "P90_Held_Assets",
     }
     loss = indicator_summary["indicators"]["Probability_of_Accounting_Loss"]
-    assert loss["current_n"]["descriptive_3_over_n"] == "1/200"
-    assert loss["current_n"]["upper_bound"] > 3 / 600
-    assert loss["half_n"]["n"] == 300
-    assert loss["half_n"]["spending_index"] == 1
+    assert loss["descriptive_3_over_n"] == "1/200"
+    assert "half_n" not in loss
     assert loss["stable"] is False
 
-    # Three means must also evaluate accuracy at N and N/2.
+    # Three means are evaluated at the current N only.
     three_hundred = [
         SimpleNamespace(
             final_net_project_equity=i,
@@ -194,13 +190,13 @@ def test_172_sequential_alpha_spending_is_exact_and_applied_to_gate_intervals() 
         )
         for i in range(1, 301)
     ]
-    mean_at_n_and_half = run_batch._metric_summary(three_hundred, spending_index=1)
-    for metric in mean_at_n_and_half.values():
-        assert metric["half_n"]["n"] == 150
-        assert metric["half_n"]["spending_index"] == 1
-        assert metric["stable"] == (
-            metric["stable_at_n"] and metric["stable_at_half_n"]
-        )
+    mean_at_n = run_batch._metric_summary(three_hundred, spending_index=1)
+    for metric in mean_at_n.values():
+        assert metric["n"] == 300
+        assert metric["spending_index"] == 1
+        assert "half_n" not in metric
+        assert "stable_at_half_n" not in metric
+        assert metric["stable"] is True
 
     assert stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(106))
     assert not stats_integrity.p50_relative_change_exceeds_guard(Fraction(100), Fraction(105))

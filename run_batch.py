@@ -269,7 +269,7 @@ def _metric_summary(
     for field_name in STABILITY_FIELDS:
         values = [getattr(result, field_name) for result in results]
         if all(isinstance(value, int) and not isinstance(value, bool) for value in values):
-            exact = stats_integrity.mean_confidence_summary_at_n_and_half(
+            exact = stats_integrity.mean_confidence_summary(
                 values, k=spending_index
             )
             summary[field_name] = {
