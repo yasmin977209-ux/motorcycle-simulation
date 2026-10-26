@@ -359,6 +359,16 @@ def test_187_bike_ids_are_strictly_four_decimal_digits() -> None:
     with pytest.raises(ValueError, match="BIKE_ID_SERIAL_WIDTH_EXCEEDED"):
         format_bike_id(10000)
 
+    initial = daily_engine.create_initial_project()
+    assert [bike.bike_id for bike in initial.bikes] == [
+        format_bike_id(serial) for serial in range(1, 11)
+    ]
+    initial.project_cash = constants.EXPANSION_PURCHASE_CASH_THRESHOLD
+    initial.partner1_reinvestment_balance = constants.EXPANSION_PURCHASE_CASH_THRESHOLD
+    daily_engine._m2(initial, constants.EXPANSION_CUTOFF_DATE)
+    expansion = [bike for bike in initial.bikes if bike.source == "EXPANSION"]
+    assert [bike.bike_id for bike in expansion] == ["BK0011"]
+
 
 def test_188_canonical_rng_key_vector_matches_sha256_u64_checksum_and_threshold() -> None:
     key = "20270101|C085|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
@@ -457,3 +467,8 @@ def test_acceptance_registry_has_the_normative_193_rows_and_exact_class_counts()
     assert sum(row["type"] == "DOC" for row in registry) == 1
     assert registry[157]["id"] == 158 and registry[157]["type"] == "DOC"
     assert registry[192]["id"] == 193 and registry[192]["type"] == "UNIQUE"
+    # These three existing numbered tests are in-memory logic checks, not absent
+    # production Parquet checks; production artifacts have their own deferred rows.
+    for test_id in (159, 160, 161):
+        assert registry[test_id - 1]["logic_status"] == "NOT_RUN"
+        assert registry[test_id - 1]["production_status"] == "NOT_REQUIRED"
