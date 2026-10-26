@@ -329,9 +329,10 @@ def _loss_probability_interval(losses: Iterable[bool], *, k: int) -> dict[str, A
         "estimate_exact_numerator": estimate.numerator,
         "estimate_exact_denominator": estimate.denominator,
         "estimate_display": str(fraction_to_report_value(estimate)),
-        "lower_bound": lower,
-        "upper_bound": upper,
-        "half_width": half_width,
+        # Store interval approximations as round-trippable text, never JSON floats.
+        "lower_bound": repr(lower),
+        "upper_bound": repr(upper),
+        "half_width": repr(half_width),
         "descriptive_3_over_n": str(Fraction(3, n)),
         "stable": half_width < tolerance,
     }
