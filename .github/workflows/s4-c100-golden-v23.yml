@@ -1,14 +1,6 @@
 name: S4 C100 v2.3 new-source Golden
 
 on:
-  push:
-    branches:
-      - "tmp/s4-c100-golden-v23-20261026"
-    paths-ignore:
-      - "docs/golden/**"
-      - "docs/audits/**"
-      - "docs/continuity/**"
-      - "s4_evidence/**"
   workflow_dispatch:
 
 permissions:
