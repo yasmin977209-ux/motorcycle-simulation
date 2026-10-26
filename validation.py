@@ -25,6 +25,9 @@ ALIAS_TO_CANONICAL = {
 DOC_TEST_IDS = {158}
 DEFERRED_PRODUCTION_TESTS = {
     127: ("S5", "production worker-equivalence manifest has not been generated"),
+    159: ("S5", "production trials_summary.parquet has not been generated; the selector is tested on in-memory data"),
+    160: ("S5", "production selection.parquet and representative DAILY files have not been generated; the selection contract is tested in memory"),
+    161: ("S5", "production daily_distribution.parquet has not been generated; the calendar-date gap validator is tested in memory"),
     169: ("S4", "a reviewed C100 Golden for this new source/cohort is not yet approved"),
     170: ("S5", "production checksum uniqueness requires the authorized cohort"),
     172: ("S5", "production inference coverage is separate from the pure alpha-spending rule"),
