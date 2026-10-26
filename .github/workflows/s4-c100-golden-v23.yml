@@ -8,6 +8,7 @@ on:
       - "docs/golden/**"
       - "docs/audits/**"
       - "docs/continuity/**"
+      - "docs/**"
       - "s4_evidence/**"
   workflow_dispatch:
 
