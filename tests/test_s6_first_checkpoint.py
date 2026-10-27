@@ -15,15 +15,19 @@ def test_time_uniform_method_identifier_tracks_normative_v23_clause():
     assert "APPENDIX_E" not in s6.constants.TIME_UNIFORM_METHOD_ID
 
 
-def test_n_unique_paths_remains_undefined_for_stochastic_path_identity():
+def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     from stats_integrity import resolve_n_unique_paths
-    assert resolve_n_unique_paths("C070_G100", [1, 2, 3], 3) is None
+    source_sha = "a" * 40
+    cohort_id = f"s6-v23-{source_sha[:8]}"
+    assert resolve_n_unique_paths("C070_G100", [1, 2, 3], 3) == 3
     assert resolve_n_unique_paths("C100_G100", [0, 0, 0], 1) == 1
-    assert s6.reported_unique_path_evidence({}, 3, 3) == (None, "UNDEFINED_BUSINESS_RULE")
+    legacy_manifest = {"scenario_id": "C070_G100", "source_sha": source_sha,
+                       "cohort_id": cohort_id, "n_unique_paths": 1}
     assert s6.reported_unique_path_evidence(
-        {"scenario_id": "C070_G100", "n_unique_paths": 3, "unique_daily_paths": 3,
-         "n_unique_paths_status": "COMPUTED_UNIQUE_DAILY_PATHS"}, None, 3
-    ) == (None, "UNDEFINED_BUSINESS_RULE")
+        legacy_manifest, 3, 3, source_sha, cohort_id
+    ) == (3, "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT")
+    with pytest.raises(RuntimeError, match="S6_N_UNIQUE_PATHS_SOURCE_OR_COHORT_MISMATCH"):
+        s6.reported_unique_path_evidence(legacy_manifest, 3, 3, "b" * 40, cohort_id)
     with pytest.raises(RuntimeError, match="STOCHASTIC_RNG_DRAWS_REQUIRED"):
         resolve_n_unique_paths("C085_G100", [1, 0], 2)
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
@@ -218,13 +222,13 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     assert result["c100_reuse"]["source_sha"]=="965281d52441cd0d4b744e211c9f68ee4cdc3753"
     assert all(not row["scenario_id"].startswith("C100_") for row in result["scenario_summaries"])
     diagnostic=next(row for row in result["scenario_summaries"] if row["scenario_id"]=="C070_G100")
-    assert diagnostic["n_unique_paths"] is None
-    assert diagnostic["n_unique_paths_status"]=="UNDEFINED_BUSINESS_RULE"
+    assert diagnostic["n_unique_paths"]==checkpoint_n
+    assert diagnostic["n_unique_paths_status"]=="OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
     assert diagnostic["unique_daily_paths"]==checkpoint_n
     assert diagnostic["unique_terminal_fingerprints"]==299
     assert diagnostic["n_unique_financial_outcomes"]==299
     assert diagnostic["n_unique_daily_paths_diagnostic"]==checkpoint_n
-    assert result["acceptance_status"]["n_unique_paths"]=="UNDEFINED_BUSINESS_RULE"
+    assert result["acceptance_status"]["n_unique_paths"]=="COMPUTED_FROM_UNIQUE_DAILY_PATHS"
     assert result["opt1_audit"]["status"]=="PASS"
     assert result["opt1_audit"]["derived_trial_rows"]==8*checkpoint_n
     assert result["opt1_audit"]["full_run_scenario_rows"]==12*checkpoint_n
