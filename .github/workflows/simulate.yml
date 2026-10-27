@@ -201,7 +201,7 @@ jobs:
       - name: Download all stochastic scenario artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: s6-n300-*-G*-${{ github.run_id }}
+          pattern: s6-n300-*-${{ github.run_id }}
           path: results_stage7_s6/artifacts
           merge-multiple: false
       - name: Validate coverage, identities, and file digests; merge outputs
