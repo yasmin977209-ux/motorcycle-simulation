@@ -239,6 +239,12 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         ensure_ascii=False,sort_keys=True))
     return manifest
 
+def stochastic_scenario_ids() -> set[str]:
+    """Return only the 20 scenarios executed under the current stochastic SOURCE_SHA."""
+    return {f"C{collection:03d}_G{recovery:03d}"
+            for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS}
+
+
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
     checkpoint_n = args.trials
@@ -257,7 +263,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         by_scenario[scenario]=(base,m)
     # C100 is a separate, immutable S4 cohort. It is verified and referenced above,
     # never merged into the new stochastic SOURCE_SHA/cohort or counted as independent samples.
-    expected={f"C{collection:03d}_G{recovery:03d}" for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS}
+    expected=stochastic_scenario_ids()
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
     all_trials=[]; all_daily=[]; summaries=[]
