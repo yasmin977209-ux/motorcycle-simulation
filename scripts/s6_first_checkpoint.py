@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, json, os, platform, sys, time
+import argparse, hashlib, json, os, platform, subprocess, sys, time
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
@@ -35,7 +35,10 @@ def utc_now() -> str:
 
 
 def current_git_commit(source_sha: str) -> str:
-    commit = os.environ.get("GITHUB_SHA", source_sha)
+    commit = os.environ.get("GITHUB_SHA")
+    if not commit:
+        result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
+        commit = result.stdout.strip()
     require_source_sha(commit)
     return commit
 
