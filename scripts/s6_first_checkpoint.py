@@ -136,6 +136,12 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("S6_PREVIOUS_CHECKPOINT_DIR_REQUIRED")
     if not previous_n and args.previous_dir:
         raise ValueError("S6_PREVIOUS_CHECKPOINT_DIR_FORBIDDEN_AT_N300")
+    trial_start = args.trial_start if args.trial_start is not None else (previous_n + 1 if previous_n else 1)
+    trial_end = args.trial_end if args.trial_end is not None else args.trials
+    if trial_start != (previous_n + 1 if previous_n else 1) or trial_end != args.trials:
+        raise ValueError("S6_INCREMENTAL_RANGE_MUST_EXTEND_PREVIOUS_CHECKPOINT_TO_TARGET_N")
+    if trial_start < 1 or trial_end < trial_start:
+        raise ValueError("S6_INCREMENTAL_TRIAL_RANGE_INVALID")
     c100_reuse=verify_c100_reuse()
     # Parse canonical scenario percentages as integers; parse_scenario_id returns a float probability.
     monte_carlo.parse_scenario_id(args.scenario)  # validates canonical scenario syntax and supported values
@@ -145,7 +151,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if collection_pct not in COLLECTION_LEVELS or recovery_pct not in RECOVERY_LEVELS: raise ValueError("S6_SCENARIO_OUTSIDE_FIRST_STOCHASTIC_FAMILY")
     cohort_id=f"s6-v23-{args.source_sha[:8]}"
     trial_ids=list(range(1,args.trials+1))
-    new_trial_ids=list(range(previous_n+1,args.trials+1))
+    new_trial_ids=list(range(trial_start,trial_end+1))
     started=time.monotonic()
     out_dir=Path(args.output_dir); out_dir.mkdir(parents=True,exist_ok=True)
     if previous_n:
@@ -287,6 +293,8 @@ def main() -> int:
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
     p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N: 300, 600, 1200, 2400, ...")
+    p.add_argument("--trial-start",type=int,default=None,help="First incremental trial ID; defaults to previous checkpoint N + 1 (or 1 at N=300)")
+    p.add_argument("--trial-end",type=int,default=None,help="Last incremental trial ID; defaults to --trials")
     p.add_argument("--workers",type=int,default=2)
     p.add_argument("--output-dir",default="results_stage7_s6/scenario")
     p.add_argument("--base-dir")
