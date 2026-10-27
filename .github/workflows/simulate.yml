@@ -4,17 +4,9 @@ on:
   push:
     branches:
       - "tmp/s5-statistical-gate-v23-20261026"
-    paths:
-      - ".github/workflows/simulate.yml"
-      - "scripts/s6_first_checkpoint.py"
-      - "tests/test_s6_first_checkpoint.py"
-      - "monte_carlo.py"
-      - "daily_engine.py"
-      - "rng.py"
-      - "validation.py"
-      - "constants.py"
-      - "stats_integrity.py"
-      - "scripts/s5_mini_verification.py"
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   workflow_dispatch:
 
 permissions:
@@ -179,7 +171,7 @@ jobs:
             --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
             --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
             --trials "$S6_TRIAL_COUNT" --workers "$S6_WORKERS" \
-            --output-dir "results_stage7_s6/$SCENARIO" "\${ARGS[@]}"
+            --output-dir "results_stage7_s6/$SCENARIO" "${ARGS[@]}"
           test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
       - name: Upload scenario results
         uses: actions/upload-artifact@v4
