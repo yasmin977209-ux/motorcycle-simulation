@@ -5,6 +5,9 @@ from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+import tempfile, zipfile
 import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, monte_carlo, rng, validation
@@ -52,21 +55,22 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int | None,
-                                  diagnostic_count: int) -> tuple[int | None, str]:
-    """Keep stochastic path identity unresolved; preserve the full-path count as diagnostic only."""
-    if "unique_daily_paths" not in manifest:
-        return None, "UNDEFINED_BUSINESS_RULE"
-    if manifest.get("unique_daily_paths") != diagnostic_count:
+def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
+                                  diagnostic_count: int, expected_source_sha: str,
+                                  expected_cohort_id: str) -> tuple[int, str]:
+    """Apply the owner-approved unique-daily-path contract only to the pinned cohort."""
+    if manifest.get("source_sha") != expected_source_sha or manifest.get("cohort_id") != expected_cohort_id:
+        raise RuntimeError("S6_N_UNIQUE_PATHS_SOURCE_OR_COHORT_MISMATCH")
+    if "unique_daily_paths" in manifest and manifest.get("unique_daily_paths") != diagnostic_count:
         raise RuntimeError("S6_SCENARIO_UNIQUE_DAILY_PATHS_DIAGNOSTIC_MISMATCH")
     scenario = str(manifest.get("scenario_id", ""))
     if scenario.startswith("C100_"):
-        if computed_count != 1 or manifest.get("n_unique_paths") != 1:
+        if computed_count != 1 or diagnostic_count != 1:
             raise RuntimeError("S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH")
         return 1, "DEGENERATE_DETERMINISTIC"
-    # §§21.2 and 14.12 require N_unique_paths but do not define stochastic path equality.
-    # Never promote unique_daily_paths or financial/RNG fingerprints by inference.
-    return None, "UNDEFINED_BUSINESS_RULE"
+    if computed_count != diagnostic_count:
+        raise RuntimeError("S6_N_UNIQUE_PATHS_DAILY_PATH_COUNT_MISMATCH")
+    return computed_count, "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
 
 
 def current_git_commit(source_sha: str) -> str:
@@ -177,6 +181,102 @@ def previous_checkpoint_n(target_n: int) -> int:
     if target_n % start or ratio & (ratio - 1):
         raise ValueError("S6_CHECKPOINT_N_NOT_APPROVED_DOUBLING_POINT")
     return 0 if target_n == start else target_n // 2
+
+def _s6_action_checkpoint_config() -> dict[str, Any] | None:
+    """Load owner-pinned resume config only on Actions, never under pytest."""
+    if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or "PYTEST_CURRENT_TEST" in os.environ:
+        return None
+    path = Path("scripts/s6_checkpoint_config.json")
+    if not path.is_file():
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_MISSING")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
+    if target not in (600, 1200, 2400) or start != target // 2 + 1 or end != target or target != 2 * (start - 1):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    require_source_sha(str(config["source_sha"]))
+    if config.get("cohort_id") != f"s6-v23-{config['source_sha'][:8]}":
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_INVALID")
+    return config
+
+
+def _safe_extract_zip(zip_path: Path, destination: Path) -> None:
+    destination.mkdir(parents=True, exist_ok=True)
+    root = destination.resolve()
+    with zipfile.ZipFile(zip_path) as archive:
+        for member in archive.infolist():
+            target = (destination / member.filename).resolve()
+            if target != root and root not in target.parents:
+                raise RuntimeError("S6_PREVIOUS_ARTIFACT_ZIP_PATH_TRAVERSAL")
+        archive.extractall(destination)
+
+
+def download_previous_scenario_artifact(run_id: int, scenario_id: str, destination: Path) -> Path:
+    """Download one artifact by exact name from the pinned GitHub Actions run."""
+    repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not repo or not token:
+        raise RuntimeError("S6_PREVIOUS_ARTIFACT_DOWNLOAD_REQUIRES_GITHUB_REPOSITORY_AND_TOKEN")
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28"}
+    api = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+    try:
+        with urlopen(Request(api, headers=headers), timeout=60) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_LIST_FAILED:{type(exc).__name__}") from exc
+    expected_names = {f"s6-n600-{scenario_id}-{run_id}", f"s6-n600-{scenario_id.replace('_G', '-G')}-{run_id}"}
+    matches = [a for a in payload.get("artifacts", []) if a.get("name") in expected_names and not a.get("expired")]
+    if len(matches) != 1:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_NOT_UNIQUE:{scenario_id}:{len(matches)}")
+    archive_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{int(matches[0]['id'])}/zip"
+    try:
+        with urlopen(Request(archive_url, headers=headers), timeout=300) as response:
+            data = response.read()
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_DOWNLOAD_FAILED:{scenario_id}:{type(exc).__name__}") from exc
+    destination.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(prefix="s6-prev-", suffix=".zip", delete=False) as tmp:
+        tmp.write(data); archive_path = Path(tmp.name)
+    try:
+        _safe_extract_zip(archive_path, destination)
+    finally:
+        archive_path.unlink(missing_ok=True)
+    manifests = list(destination.rglob("scenario_manifest.json"))
+    if len(manifests) != 1:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_MANIFEST_CARDINALITY:{scenario_id}:{len(manifests)}")
+    return manifests[0].parent
+
+
+def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
+    config = _s6_action_checkpoint_config()
+    if config is None:
+        return None
+    args.source_sha = str(config["source_sha"])
+    args.trials = int(config["active_target_trials"])
+    args.trial_start = int(config["trial_start"])
+    args.trial_end = int(config["trial_end"])
+    if args.mode == "scenario":
+        scenario = str(args.scenario)
+        previous_dir = Path("/tmp/s6_prev_n600") / scenario
+        if not previous_dir.exists():
+            extracted = download_previous_scenario_artifact(int(config["previous_run_id"]), scenario, previous_dir)
+            if extracted != previous_dir:
+                import shutil
+                staged = previous_dir.with_name(previous_dir.name + "_verified")
+                if staged.exists(): shutil.rmtree(staged)
+                shutil.copytree(extracted, staged)
+                shutil.rmtree(previous_dir)
+                staged.rename(previous_dir)
+        manifest_path = previous_dir / "scenario_manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_MANIFEST_MISSING:{scenario}")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest.get("source_sha") != args.source_sha or manifest.get("cohort_id") != config["cohort_id"]:
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_OR_COHORT_MISMATCH:{scenario}")
+        if manifest.get("trial_count") != int(config["active_target_trials"]) // 2:
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_TRIAL_COUNT_MISMATCH:{scenario}")
+        args.previous_dir = str(previous_dir)
+    return config
+
 
 def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str,
                            cohort_id: str, expected_n: int):
@@ -316,7 +416,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
         "trial_count":len(ordered),"n_unique_paths":n_unique_paths,
         "rng_audit_validation":{"status":"PASS","records_verified":rng_audit_records_verified,"scope":"cumulative scenario trial IDs 1..N"},
-        "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if all(int(getattr(x, "rng_draw_count", 0)) == 0 for x in ordered) else "UNDEFINED_BUSINESS_RULE",
+        "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if args.scenario.startswith("C100_") else "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT",
         "unique_daily_paths":n_unique_daily_paths,
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
         "n_unique_financial_outcomes":n_unique_financial_outcomes,
@@ -423,7 +523,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         # Legacy N300/N600 manifests did not record the v2.3 unique_daily_paths contract.
         # Keep the recomputed count diagnostic-only until the source artifact carries that contract.
         reported_n_unique_paths, reported_n_unique_paths_status = reported_unique_path_evidence(
-            m, n_unique_paths, n_unique_daily_paths
+            m, n_unique_paths, n_unique_daily_paths, args.source_sha,
+            f"s6-v23-{args.source_sha[:8]}"
         )
         if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
             raise RuntimeError(f"S6_SCENARIO_UNIQUE_TERMINAL_FINGERPRINTS_MISMATCH:{scenario}")
@@ -583,6 +684,7 @@ def main() -> int:
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
     args=p.parse_args()
+    apply_action_checkpoint_config(args)
     if args.mode=="scenario":
         if not args.scenario: p.error("--scenario is required in scenario mode")
         run_scenario(args)
