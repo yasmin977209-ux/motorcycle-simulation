@@ -14,6 +14,13 @@ def test_s6_opt1_is_enabled_only_for_c085_and_c070():
     assert s6.OPT1_ENABLED_COLLECTIONS==frozenset({85,70})
     assert 50 not in s6.OPT1_ENABLED_COLLECTIONS and 30 not in s6.OPT1_ENABLED_COLLECTIONS
 
+
+def test_s6_aggregate_reconstructs_opt1_command_only_for_eligible_lower_g():
+    eligible=s6.reconstructed_scenario_command("C085_G070","a"*40,"40574326793",1,300,2)
+    ineligible=s6.reconstructed_scenario_command("C050_G070","a"*40,"40574326793",1,300,2)
+    assert eligible[-2:]==["--base-dir","results_stage7_s6/base"]
+    assert "--base-dir" not in ineligible
+
 def test_s6_c100_reuse_is_hash_verified_and_read_only(monkeypatch,tmp_path):
     golden=tmp_path/"golden.json"; manifest=tmp_path/"manifest.json"
     golden.write_text("golden")
