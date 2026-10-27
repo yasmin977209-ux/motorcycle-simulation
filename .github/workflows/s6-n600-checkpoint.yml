@@ -233,7 +233,7 @@ jobs:
             "checkpoint_n":m["checkpoint_n"],"scenario_count":m["scenario_count"],
             "trial_rows":sum(x["n_total"] for x in m["scenario_summaries"]),
             "gate_a":m["acceptance_status"]["gate_a"],"gate_b":m["acceptance_status"]["gate_b"],
-            "n_unique_paths":"UNDEFINED_BUSINESS_RULE"},ensure_ascii=False,sort_keys=True))
+            "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS"},ensure_ascii=False,sort_keys=True))
           PY
           sha256sum results_stage7_s6/aggregate/*
       - uses: actions/upload-artifact@v4
