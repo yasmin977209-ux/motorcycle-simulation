@@ -52,6 +52,16 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
+                                  diagnostic_count: int) -> tuple[int | None, str]:
+    """Do not promote a recomputed diagnostic to a normative metric for legacy artifacts."""
+    if "unique_daily_paths" not in manifest:
+        return None, "UNDEFINED_BUSINESS_RULE"
+    if manifest.get("n_unique_paths") != computed_count or manifest.get("unique_daily_paths") != diagnostic_count:
+        raise RuntimeError("S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH")
+    return computed_count, str(manifest.get("n_unique_paths_status", "COMPUTED_UNIQUE_DAILY_PATHS"))
+
+
 def current_git_commit(source_sha: str) -> str:
     commit = os.environ.get("GITHUB_SHA")
     if not commit:
@@ -386,14 +396,11 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         rng_draw_counts=[int(row.get("rng_draw_count", 0)) for row in rows]
         n_unique_paths=resolve_n_unique_paths(scenario, rng_draw_counts, n_unique_daily_paths)
-        # Legacy N300/N600 manifests stored terminal-fingerprint counts in n_unique_paths.
-        # Recompute them from daily paths; enforce stored values only for manifests that
-        # explicitly carry the new v2.3 unique_daily_paths field.
-        if "unique_daily_paths" in m and (
-            m.get("n_unique_paths") != n_unique_paths
-            or m.get("unique_daily_paths") != n_unique_daily_paths
-        ):
-            raise RuntimeError(f"S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH:{scenario}")
+        # Legacy N300/N600 manifests did not record the v2.3 unique_daily_paths contract.
+        # Keep the recomputed count diagnostic-only until the source artifact carries that contract.
+        reported_n_unique_paths, reported_n_unique_paths_status = reported_unique_path_evidence(
+            m, n_unique_paths, n_unique_daily_paths
+        )
         if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
             raise RuntimeError(f"S6_SCENARIO_UNIQUE_TERMINAL_FINGERPRINTS_MISMATCH:{scenario}")
         provenance_path=base/"opt1_provenance.json"
@@ -410,7 +417,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         srcmeta=source_metadata.get("scenarios",{}).get(scenario,{})
         summaries.append({"scenario_id":scenario,"status":m.get("status"),
             "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
-            "n_unique_paths":n_unique_paths,"n_unique_paths_status":m.get("n_unique_paths_status","COMPUTED_UNIQUE_DAILY_PATHS"),
+            "n_unique_paths":reported_n_unique_paths,"n_unique_paths_status":reported_n_unique_paths_status,
             "unique_daily_paths":n_unique_daily_paths,
             "unique_terminal_fingerprints":n_unique_financial_outcomes,
             "n_unique_financial_outcomes":n_unique_financial_outcomes,
@@ -519,7 +526,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
             "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
             "stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
-            "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS"},
+            "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS" if all(row["n_unique_paths"] is not None for row in summaries) else "UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
