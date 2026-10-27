@@ -288,7 +288,6 @@ def main() -> int:
     p.add_argument("--base-dir")
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
-    p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N to aggregate")
     args=p.parse_args()
     if args.mode=="scenario":
         if not args.scenario: p.error("--scenario is required in scenario mode")
