@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "tmp/s5-statistical-gate-v23-20261026"
+      - "tmp/s6-integrated-fix-20261027"
     paths-ignore:
       - "docs/**"
       - "*.md"
