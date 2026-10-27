@@ -386,7 +386,13 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         rng_draw_counts=[int(row.get("rng_draw_count", 0)) for row in rows]
         n_unique_paths=resolve_n_unique_paths(scenario, rng_draw_counts, n_unique_daily_paths)
-        if m.get("n_unique_paths_status") not in ("UNDEFINED_BUSINESS_RULE", None) and m.get("n_unique_paths") != n_unique_paths:
+        # Legacy N300/N600 manifests stored terminal-fingerprint counts in n_unique_paths.
+        # Recompute them from daily paths; enforce stored values only for manifests that
+        # explicitly carry the new v2.3 unique_daily_paths field.
+        if "unique_daily_paths" in m and (
+            m.get("n_unique_paths") != n_unique_paths
+            or m.get("unique_daily_paths") != n_unique_daily_paths
+        ):
             raise RuntimeError(f"S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH:{scenario}")
         if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
             raise RuntimeError(f"S6_SCENARIO_UNIQUE_TERMINAL_FINGERPRINTS_MISMATCH:{scenario}")
