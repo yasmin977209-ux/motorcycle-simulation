@@ -1,4 +1,4 @@
-"""Exact report-statistics helpers from owner-approved v2.3 Appendix E."""
+"""Exact report-statistics helpers implementing v2.3 §§2.5, 14.11.4, 14.12, and 21.3."""
 from __future__ import annotations
 
 from datetime import timedelta
