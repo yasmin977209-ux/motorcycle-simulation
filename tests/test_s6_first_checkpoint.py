@@ -14,6 +14,11 @@ def test_n_unique_paths_uses_daily_paths_not_terminal_fingerprints():
     from stats_integrity import resolve_n_unique_paths
     assert resolve_n_unique_paths("C070_G100", [1, 2, 3], 3) == 3
     assert resolve_n_unique_paths("C100_G100", [0, 0, 0], 1) == 1
+    assert s6.reported_unique_path_evidence({}, 3, 3) == (None, "UNDEFINED_BUSINESS_RULE")
+    assert s6.reported_unique_path_evidence(
+        {"n_unique_paths": 3, "unique_daily_paths": 3,
+         "n_unique_paths_status": "COMPUTED_UNIQUE_DAILY_PATHS"}, 3, 3
+    ) == (3, "COMPUTED_UNIQUE_DAILY_PATHS")
     with pytest.raises(RuntimeError, match="STOCHASTIC_RNG_DRAWS_REQUIRED"):
         resolve_n_unique_paths("C085_G100", [1, 0], 2)
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
