@@ -136,9 +136,24 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
           "workers":2,"files":files
         }))
 
+    package_versions={"numpy":"2.4.6","scipy":"1.17.1","pyarrow":"26.0.0","pandas":"3.1.0","python-dateutil":"2.9.0.post0"}
+    source_metadata={"schema_version":"s6-source-run-metadata-v1","source_run_id":source_run_id,
+      "source_run_attempt":1,"source_sha":source_sha,"git_commit":source_sha,
+      "workflow_run_url":"https://example.invalid/test-fixture","scenario_count":len(s6.stochastic_scenario_ids()),
+      "scenarios":{}}
+    for index,scenario in enumerate(sorted(s6.stochastic_scenario_ids()),start=1):
+        source_metadata["scenarios"][scenario]={"job_id":index,"job_name":f"TEST {scenario}",
+          "conclusion":"success","started_at_utc":"2026-10-27T20:23:07Z",
+          "finished_at_utc":"2026-10-27T20:23:46Z","exit_code":0,"git_commit":source_sha,
+          "python_version":"3.11.17","package_versions":package_versions,
+          "command_argv":["python","scripts/s6_first_checkpoint.py","--scenario",scenario],
+          "job_log_sha256":"b"*64,"source_run_id":source_run_id,"source_run_attempt":1}
+    source_metadata_path=tmp_path/"source_run_metadata.json"
+    source_metadata_path.write_text(json.dumps(source_metadata))
     aggregate_run_id="99999"
     result=s6.aggregate(SimpleNamespace(source_sha=source_sha,run_id=aggregate_run_id,
       run_attempt=1,source_run_id=source_run_id,source_run_attempt=1,
+      source_run_metadata_json=str(source_metadata_path),
       trials=checkpoint_n,input_root=str(artifacts),output_dir=str(tmp_path/"out")))
     assert result["run_id"]==aggregate_run_id
     assert result["source_run_id"]==source_run_id
