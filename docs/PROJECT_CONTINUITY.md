@@ -1469,3 +1469,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **PR #60/#61 stale branches:** closure-reconciliation comments were added. #60's scoped Stage 9C evidence is already appended to current main while its historic PARTIAL/broad-pytest evidence remains preserved. #61's original standalone daily extraction is superseded by the separate exact-Trial replay adapter used by PR #74. Neither closed PR establishes final acceptance.
 - **Next:** do not label the diagnostic workbook a final deliverable. Resolve the registered statistical K_SPEC, Golden coverage, historical failed transition, P90_Held_Assets, Stage10 metadata/fidelity, G2 runtime, and P17/P18 release blockers before assembling and accepting the final seven-file AR/EN package plus manifest.json.
 
+
+
+## CP-R4-STATISTICAL-GATE-FAIL-CLOSED-20261027 — R4 recorded and minimal production guard added
+
+- **Baseline verified:** `main` HEAD `c6e54349a5e94f65d5aa9f83141f225d777bb474`; `state.json` blob `6d94e0699e5380b4ecc184203d0c5ad6a4a8fb66`; `state.sha=0577ff769018546226bf501bcd419e94020b5310` with `parent_state_commit_pointer` semantics. `docs/STATE_SHA_SEMANTICS.md` blob `134363f0f2834f8087760b3148910a1a3d3af38b`.
+- **R4 before repair:** Run `40531094349`, job `122283775598`, tested SHA `d08e2e7843a23c8ebea00080e8e2b362b97d6787`. Actual command `python -m pytest -q tests`, exit code `1`; result `1 failed, 572 passed, 1 skipped, 1 warning`. Failure: `tests/test_golden_provider_workflow_integration.py::test_statistical_gate_cannot_be_cleared_by_status_string_alone`; the test changed the top-level status, three authorization booleans, and component status labels, and the function returned `authorized=True`. S6 matrix/aggregate jobs skipped; no artifact.
+- **Pre-repair record:** `docs/audits/R4_statistical_gate_fail_closed_2026-10-27.md`, commit `5440ef74edf687f5c445faeca400a2efc26a7a33`, created before the production source edit.
+- **Minimal production edit:** `scripts/golden_reference_provider.py` now requires each required component to retain an explicit empty `blockers` list and no non-empty `implementation_gap`; a status label cannot override unresolved component evidence. The failing test itself was not edited.
+- **Current CP branch:** `tmp/cp-r4-statistical-gate-fail-closed-20261027`, based on verified main HEAD. Production edit commit `486adf6e08e8924853479e6a4138eacbdae4b960`; updated provider blob `83c9d7d9dbbc5e8ac62830a4d11ba06fd28c16b1`.
+- **Validation status:** focused and full tests have not yet run against this repair. No S6 or production Monte Carlo is authorized by this CP; the statistical execution gate remains `BLOCKED_FOR_IMPLEMENTATION`. The prior R4 failure is preserved unchanged.
+- **Reference clauses read:** `0.20`, `0.25`, `2.5`, `14.2`, `14.11`, `21.2`, `21.3`, `21.5`, `23.5`, `25.6`. Reference SHA-256 verified: `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
