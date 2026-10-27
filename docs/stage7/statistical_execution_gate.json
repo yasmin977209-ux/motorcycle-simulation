@@ -131,6 +131,17 @@
       "cohort_scope": "historical source cohort; preserved unchanged",
       "applies_to_current_cohort": false,
       "note": "Preserve the original failure record. Current SOURCE_SHA/cohort must have its own transition history; do not copy historical pass/fail state across cohort identities."
+    },
+    "n_unique_paths_definition": {
+      "status": "UNDEFINED_BUSINESS_RULE",
+      "normative_clauses": [
+        "21.2",
+        "14.12"
+      ],
+      "finding": "The reference requires N_unique_paths and explicitly separates financial trial fingerprints from RNG audit fingerprints, but does not define the equality key for stochastic path identity. unique_daily_paths is preserved as a diagnostic only; it is not promoted to normative N_unique_paths.",
+      "handling": "N_unique_paths=null and status UNDEFINED_BUSINESS_RULE for stochastic scenarios until the owner resolves the definition. C100 remains governed by its explicit deterministic N_unique_paths=1 rule.",
+      "owner_question": "For stochastic scenarios, should N_unique_paths count distinct complete daily trajectories (daily_snapshots), or is another exact path-identity rule intended?",
+      "impact": "Blocks final acceptance and any claim that the stochastic N_unique_paths field is accepted; does not block independent S6 data collection or RNG audit validation."
     }
   },
   "execution_authorization": {
@@ -139,7 +150,7 @@
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
     "permitted_work_branch": "tmp/s6-aggregate-contract-fix-20261027",
-    "permitted_next_work": "Continue the owner-authorized S6 cumulative checkpoint sequence using verified immutable prior artifacts: N=1200 next, then N=2400. Preserve all historical failures and source identities. Do not declare CONVERGED, Gate A/B PASS, or final delivery acceptance until the v2.3 gates and three consecutive transitions are evidenced."
+    "permitted_next_work": "Continue authorized S6 data collection at N=1200 then N=2400 using immutable prior artifacts. Keep stochastic N_unique_paths unresolved and daily-path counts diagnostic-only until the owner resolves the exact rule. Do not declare Gate A/B PASS or CONVERGED before the full required evidence exists."
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
@@ -150,7 +161,8 @@
       "Four cumulative checkpoint points and three successful adjacent transitions, with exact P50 guard and preserved failure history",
       "P90_Held_Assets source, identity, completeness, and threshold verified as part of all seven Gate B indicators",
       "Test 192 coverage proof verified and the approved v2.3 alpha-spending/IUT method applied to the current cohort",
-      "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified"
+      "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified",
+      "Resolve the stochastic N_unique_paths identity rule under §§21.2/14.12, then validate the resulting metric without rewriting historical artifacts."
     ]
   },
   "implementation_approval": {
