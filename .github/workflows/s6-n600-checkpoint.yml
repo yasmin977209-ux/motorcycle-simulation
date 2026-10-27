@@ -5,7 +5,7 @@ on:
     branches:
       - "tmp/s6-aggregate-contract-fix-20261027"
     paths:
-      - ".github/workflows/s6-n1200-checkpoint.yml"
+      - ".github/workflows/s6-n600-checkpoint.yml"
 
 permissions:
   contents: read
@@ -55,7 +55,7 @@ jobs:
           assert previous_checkpoint_n(1200)==600
           c100=verify_c100_reuse()
           assert c100["run_id"]==40263424595 and c100["rerun"] is False
-          print(json.dumps({"status":"S6_N1200_PREFLIGHT_PASS","previous_n":300,
+          print(json.dumps({"status":"S6_N1200_PREFLIGHT_PASS","previous_n":600,
             "target_n":1200,"incremental_trial_ids":[601,1200],
             "c100_reuse":"READ_ONLY","convergence_claim":"PROHIBITED"},sort_keys=True))
           PY
@@ -213,7 +213,7 @@ jobs:
             --mode aggregate --source-sha "$SOURCE_SHA" \
             --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
             --source-run-id "$RUN_ID" --source-run-attempt "$RUN_ATTEMPT" \
-            --trials 600 --input-root results_stage7_s6/artifacts \
+            --trials 1200 --input-root results_stage7_s6/artifacts \
             --output-dir results_stage7_s6/aggregate
           python - <<'PY'
           import json
