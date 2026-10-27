@@ -291,6 +291,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
+    source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
+    source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
     checkpoint_n = args.trials
     previous_checkpoint_n(checkpoint_n)
     root=Path(args.input_root); manifests=sorted(root.rglob("scenario_manifest.json")); by_scenario={}
@@ -298,7 +300,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
         if scenario in by_scenario: raise RuntimeError(f"S6_DUPLICATE_SCENARIO_ARTIFACT:{scenario}")
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
-        if str(m.get("run_id"))!=str(args.run_id) or int(m.get("run_attempt",-1))!=args.run_attempt:
+        if str(m.get("run_id"))!=source_run_id or int(m.get("run_attempt",-1))!=source_run_attempt:
             raise RuntimeError(f"S6_RUN_IDENTITY_MISMATCH:{scenario}")
         if m.get("cohort_id")!=f"s6-v23-{args.source_sha[:8]}":
             raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
@@ -332,7 +334,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "run_id":m.get("run_id"),"run_attempt":m.get("run_attempt"),
             "started_at_utc":m.get("started_at_utc"),"finished_at_utc":m.get("finished_at_utc"),
             "command_argv":m.get("command_argv") or reconstructed_scenario_command(
-                scenario,args.source_sha,args.run_id,args.run_attempt,checkpoint_n,int(m.get("workers",2))),
+                scenario,args.source_sha,source_run_id,source_run_attempt,checkpoint_n,int(m.get("workers",2))),
             "exit_code":m.get("exit_code",0),"python_version":m.get("python_version"),
             "package_versions":m.get("package_versions"),"elapsed_seconds":m.get("elapsed_seconds"),
             "files":m.get("files",{}),"artifact_files_verified":True,
@@ -345,8 +347,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in [out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
         "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
-        "run_id":args.run_id,"run_attempt":args.run_attempt,"started_at_utc":started_at_utc,
-        "finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
+        "run_id":args.run_id,"run_attempt":args.run_attempt,
+        "source_run_id":source_run_id,"source_run_attempt":source_run_attempt,
+        "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),
+        "command_argv":command_argv(),"exit_code":0,
         "python_version":platform.python_version(),"package_versions":package_versions(),
         "elapsed_seconds":time.monotonic()-started,
         "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
@@ -374,6 +378,8 @@ def main() -> int:
     p.add_argument("--source-sha",required=True)
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
+    p.add_argument("--source-run-id")
+    p.add_argument("--source-run-attempt",type=int)
     p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N: 300, 600, 1200, 2400, ...")
     p.add_argument("--trial-start",type=int,default=None,help="First incremental trial ID; defaults to previous checkpoint N + 1 (or 1 at N=300)")
     p.add_argument("--trial-end",type=int,default=None,help="Last incremental trial ID; defaults to --trials")
