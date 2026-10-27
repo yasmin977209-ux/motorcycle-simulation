@@ -1,0 +1,40 @@
+name: S6 aggregate contract regression
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - "scripts/s6_first_checkpoint.py"
+      - "tests/test_s6_first_checkpoint.py"
+      - ".github/workflows/s6-aggregate-contract-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Validate S6 aggregate and C100 cohort separation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout exact tested source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile S6 entry point and validate CLI
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_first_checkpoint.py
+          python scripts/s6_first_checkpoint.py --help
+      - name: Run focused S6 regression tests
+        run: python -m pytest -q tests/test_s6_first_checkpoint.py
