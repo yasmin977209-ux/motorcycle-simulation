@@ -1656,3 +1656,19 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - RNG audit passed for all 6,000 cumulative scenario records, including checksum uniqueness over records with `rng_draw_count > 0` and exact per-record audit fingerprint verification. `N_unique_paths` is now explicitly `null / UNDEFINED_BUSINESS_RULE` for stochastic scenarios; `unique_daily_paths` remains diagnostic only. C100 is still reused separately.
 - Evidence file: `docs/evidence/s6_n300_rng_audit_aggregate_run_40598509351.json`. This is the controlling corrected N300 aggregate evidence; Run `40597631374` remains preserved as an earlier executed audit artifact, but its path-count interpretation is superseded by the fail-closed definition handling.
 - The full repository regression on the exact code/gate head is still running at the time of this note; record the final run result and source hashes before treating the head as fully verified.
+
+
+## Exact-head full regression after S6 audit corrections — 2026-10-28
+
+- Run `40598541372`, job `122520526400`, tested commit `7432503804f04284d5a345cd2c16c04dc6fcc17f`, conclusion `success`; command `python -m pytest -q tests`, exit code `0`; result: `579 passed, 1 skipped, 1 warning in 258.12s`.
+- Job log SHA-256: `a87dc901f2710f7bf8349a999f8cf56bfab40199c0dc982061b28ded59b12194`.
+- SHA-256 values emitted by the executed `sha256sum` step on that exact tested head:
+  - `scripts/s6_first_checkpoint.py`: `309cbbc948257924e6a324b79a2c35928ee609aefcddb15caebbe855ddcb5090`
+  - `tests/test_s6_first_checkpoint.py`: `1d9a818eb007d8db3ea56a34bf9666f5d7310e7fd4d7b30a910fa3abdc0bf9ba`
+  - `stats_integrity.py`: `eccb40a86b5fdeff151152e6a04b5c4ba072420b56083185e0793ca8ecb24628`
+  - `constants.py`: `62a93f4ed45b2622a89bc9beb8e9b7cf21f18d844469281d768efc98e5932a7a`
+  - `docs/stage7/statistical_execution_gate.json`: `bc8e03d8265d78433f809f9504815e2124b1dca2429131e6defc10b710fb0d97`
+  - `docs/stage7/test192_coverage_proof.json`: `f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b`
+  - `.github/workflows/s6-n600-checkpoint.yml`: `11a4157e8a33c981bdcec60ba40659ebe2686d02872e93a627500d0b08f0ee1f`
+  - `.github/workflows/s6-aggregate-contract-tests.yml`: `9b523d51879adbd6d3e68160b6f3d7e9afeb7fa1d3cc5d2f23deef0f3cbb1d13`
+- The tested code head contains the cumulative RNG-audit validator, the v2.3 §14.11.4 method identifier, and fail-closed stochastic `N_unique_paths` handling. Later edits to continuity documentation do not change the tested code or policy files listed above.
