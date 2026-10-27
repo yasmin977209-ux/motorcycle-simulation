@@ -142,6 +142,20 @@ def load_base_artifact(base_dir: Path, collection_pct: int, source_sha: str, coh
     if set(slices)!=expected: raise RuntimeError("S6_OPT1_BASE_DAILY_TRIAL_COVERAGE_MISMATCH")
     return results,slices
 
+def validate_cumulative_rng_audit(records: list[dict[str, Any]], source_sha: str) -> int:
+    """Validate RNG audit fingerprints and checksum uniqueness across the full cumulative cohort."""
+    normalized = []
+    for raw in records:
+        row = dict(raw)
+        for key in ("trial_id", "rng_checksum", "rng_draw_count"):
+            row[key] = int(row[key])
+        normalized.append(row)
+    return validation.validate_rng_audit_records(
+        normalized, source_sha=source_sha, master_seed=constants.MASTER_SEED,
+        require_audit_fingerprint=True,
+    )
+
+
 def run_full_trials(scenario_id: str, trial_ids: list[int], source_sha: str, workers: int):
     if not trial_ids: return {},{}
     results,daily=monte_carlo.run_trials_parallel(scenario_id,trial_ids,workers,master_seed=constants.MASTER_SEED,source_sha=source_sha)
@@ -255,6 +269,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if set(results)!=expected or set(slices)!=expected: raise RuntimeError(f"S6_SCENARIO_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
     ordered=[results[tid] for tid in trial_ids]
     if any(x.scenario_id!=args.scenario for x in ordered): raise RuntimeError("S6_SCENARIO_IDENTITY_MISMATCH")
+    rng_audit_records_verified = validate_cumulative_rng_audit([asdict(x) for x in ordered], args.source_sha)
     trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived.get(tid)) for tid in trial_ids]
     daily_rows=[snapshot_record(row,args.scenario,args.source_sha,cohort_id) for tid in trial_ids for row in sorted(slices[tid],key=lambda x:str(x["date"]))]
     path_fingerprints=daily_path_fingerprints(daily_rows)
@@ -293,6 +308,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL",
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
         "trial_count":len(ordered),"n_unique_paths":n_unique_paths,
+        "rng_audit_validation":{"status":"PASS","records_verified":rng_audit_records_verified,"scope":"cumulative scenario trial IDs 1..N"},
         "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if all(int(getattr(x, "rng_draw_count", 0)) == 0 for x in ordered) else "COMPUTED_UNIQUE_DAILY_PATHS",
         "unique_daily_paths":n_unique_daily_paths,
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
@@ -394,6 +410,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
         n_unique_daily_paths=len(set(path_fingerprints.values()))
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
+        rng_audit_records_verified = validate_cumulative_rng_audit(rows, args.source_sha)
         rng_draw_counts=[int(row.get("rng_draw_count", 0)) for row in rows]
         n_unique_paths=resolve_n_unique_paths(scenario, rng_draw_counts, n_unique_daily_paths)
         # Legacy N300/N600 manifests did not record the v2.3 unique_daily_paths contract.
@@ -421,6 +438,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "unique_daily_paths":n_unique_daily_paths,
             "unique_terminal_fingerprints":n_unique_financial_outcomes,
             "n_unique_financial_outcomes":n_unique_financial_outcomes,
+            "rng_audit_validation_status":"PASS","rng_audit_records_verified":rng_audit_records_verified,
             "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
             "opt1_policy":m["opt1_policy"],
             "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
@@ -515,6 +533,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "elapsed_seconds":time.monotonic()-started,
         "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
         "scenario_count":len(expected),"stochastic_scenario_count":len(expected),
+        "rng_audit_validation":{"status":"PASS","records_verified":sum(x["rng_audit_records_verified"] for x in summaries),"scope":"all cumulative trial IDs per scenario; checksum uniqueness only where rng_draw_count > 0"},
         "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
