@@ -157,6 +157,11 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
       trials=checkpoint_n,input_root=str(artifacts),output_dir=str(tmp_path/"out")))
     assert result["run_id"]==aggregate_run_id
     assert result["source_run_id"]==source_run_id
+    assert result["source_run_metadata"]["status"]=="VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS"
+    assert result["source_run_metadata"]["scenario_count"]==20
+    assert result["source_run_metadata"]["sha256"]==hashlib.sha256(source_metadata_path.read_bytes()).hexdigest()
+    assert all(row["execution_metadata_source"]=="source_run_job_api_and_logs" for row in result["scenario_summaries"])
+    assert all(row["started_at_utc"] and row["finished_at_utc"] and row["python_version"]=="3.11.17" and row["package_versions"]==package_versions for row in result["scenario_summaries"])
     assert result["scenario_summaries"][0]["run_id"]==source_run_id
     assert result["scenario_count"]==len(s6.stochastic_scenario_ids())
     assert result["total_scenario_combinations"]==result["scenario_count"]+result["c100_reused_scenario_count"]
