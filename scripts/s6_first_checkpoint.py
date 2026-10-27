@@ -21,6 +21,23 @@ SCHEMA_VERSION = "v2.3"
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
+
+def daily_path_fingerprints(rows: list[dict[str, Any]]) -> dict[int, str]:
+    """Hash complete daily trajectories without conflating them with financial or RNG fingerprints."""
+    grouped: dict[int, list[dict[str, Any]]] = {}
+    for row in rows:
+        trial_id = int(row["trial_id"])
+        clean = {key: value for key, value in row.items()
+                 if key not in {"trial_id", "scenario_id", "source_sha", "cohort_id", "schema_version"}}
+        grouped.setdefault(trial_id, []).append(clean)
+    fingerprints: dict[int, str] = {}
+    for trial_id, path_rows in grouped.items():
+        path_rows.sort(key=lambda row: str(row["date"]))
+        payload = "\\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"), default=str) for row in path_rows)
+        fingerprints[trial_id] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return fingerprints
+
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -229,6 +246,11 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if any(x.scenario_id!=args.scenario for x in ordered): raise RuntimeError("S6_SCENARIO_IDENTITY_MISMATCH")
     trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived.get(tid)) for tid in trial_ids]
     daily_rows=[snapshot_record(row,args.scenario,args.source_sha,cohort_id) for tid in trial_ids for row in sorted(slices[tid],key=lambda x:str(x["date"]))]
+    path_fingerprints=daily_path_fingerprints(daily_rows)
+    if set(path_fingerprints)!=set(trial_ids):
+        raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
+    n_unique_daily_paths=len(set(path_fingerprints.values()))
+    n_unique_financial_outcomes=len({monte_carlo.trial_fingerprint(x) for x in ordered})
     os.environ["S5_TRIAL_COUNT"]=str(args.trials)
     from scripts.s5_mini_verification import build_exact_daily_distribution
     distribution=build_exact_daily_distribution(ordered,slices,args.scenario,cohort_id,args.source_sha)
@@ -254,7 +276,10 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "collection_level":collection_pct,"recovery_level":recovery_pct,"source_sha":args.source_sha,
         "cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL",
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
-        "trial_count":len(ordered),"n_unique_paths":len({monte_carlo.trial_fingerprint(x) for x in ordered}),
+        "trial_count":len(ordered),"n_unique_paths":None,
+        "n_unique_paths_status":"UNDEFINED_BUSINESS_RULE","n_unique_paths_clause_ids":["21.2","14.12"],
+        "n_unique_financial_outcomes":n_unique_financial_outcomes,
+        "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
         "git_commit":current_git_commit(args.source_sha),"run_id":args.run_id,"run_attempt":args.run_attempt,
         "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
         "python_version":platform.python_version(),"package_versions":package_versions(),
@@ -327,10 +352,21 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if ids!=list(range(1,checkpoint_n+1)): raise RuntimeError(f"S6_TRIAL_ID_SEQUENCE_MISMATCH:{scenario}")
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
+        snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
+        path_fingerprints=daily_path_fingerprints(snapshots)
+        if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):
+            raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
+        n_unique_daily_paths=len(set(path_fingerprints.values()))
+        n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         all_trials.extend(rows); all_daily.extend(daily)
         summaries.append({"scenario_id":scenario,"status":m.get("status"),
             "n_total":len(rows),"n_closed":sum(1 for row in rows if row.get("final_close_date") is not None),
-            "n_unique_paths":m["n_unique_paths"],"opt1_policy":m["opt1_policy"],
+            "n_unique_paths":None,"n_unique_paths_status":"UNDEFINED_BUSINESS_RULE",
+            "n_unique_paths_clause_ids":["21.2","14.12"],
+            "source_manifest_n_unique_paths":m.get("n_unique_paths"),
+            "n_unique_financial_outcomes":n_unique_financial_outcomes,
+            "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
+            "opt1_policy":m["opt1_policy"],
             "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
             "git_commit":m.get("git_commit",m["source_sha"]),
             "execution_metadata_source":"scenario_manifest" if m.get("git_commit") else "pinned_workflow_and_source_sha",
@@ -362,7 +398,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
-        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE"},
+        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE","n_unique_paths":"UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
