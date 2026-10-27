@@ -1,6 +1,7 @@
 from dataclasses import replace
 from types import SimpleNamespace
 import hashlib
+import subprocess
 import json
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -125,6 +126,12 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     assert all(not row["scenario_id"].startswith("C100_") for row in result["scenario_summaries"])
     assert result["acceptance_status"]["gate_a"]!="PASS"
     assert result["acceptance_status"]["gate_b"]!="PASS"
+
+def test_s6_current_git_commit_uses_checked_out_commit_outside_actions(monkeypatch):
+    monkeypatch.delenv("GITHUB_SHA",raising=False)
+    expected=subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True,check=True).stdout.strip()
+    assert s6.current_git_commit("a"*40)==expected
+
 
 def test_s6_source_sha_validation_rejects_non_commit_identity():
     with pytest.raises(ValueError,match="S6_SOURCE_SHA_INVALID"): s6.require_source_sha("not-a-commit")
