@@ -69,7 +69,7 @@ def test_s6_opt1_derived_result_keeps_financial_fingerprint():
 def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(monkeypatch,tmp_path):
     source_sha="a"*40
     source_run_id="40574326793"
-    checkpoint_n=constants.STATISTICAL_CHECK_START_N if hasattr(s6.constants,"STATISTICAL_CHECK_START_N") else 300
+    checkpoint_n=s6.constants.STATISTICAL_CHECK_START_N
     artifacts=tmp_path/"artifacts"
     artifacts.mkdir()
     golden=tmp_path/"c100_golden.json"
