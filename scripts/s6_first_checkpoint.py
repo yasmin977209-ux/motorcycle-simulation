@@ -246,6 +246,28 @@ def download_previous_scenario_artifact(run_id: int, scenario_id: str, destinati
     return manifests[0].parent
 
 
+def require_latest_branch_commit() -> None:
+    """Prevent queued pushes from launching duplicate Monte Carlo work."""
+    if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or "PYTEST_CURRENT_TEST" in os.environ:
+        return
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    ref = os.environ.get("GITHUB_REF", "")
+    current = os.environ.get("GITHUB_SHA", "")
+    prefix = "refs/heads/"
+    if not repo or not ref.startswith(prefix) or not current:
+        raise RuntimeError("S6_LATEST_COMMIT_GUARD_CONTEXT_MISSING")
+    branch = ref[len(prefix):]
+    from urllib.parse import quote
+    url = f"https://api.github.com/repos/{repo}/branches/{quote(branch, safe='')}"
+    try:
+        with urlopen(Request(url, headers={"Accept": "application/vnd.github+json"}), timeout=30) as response:
+            latest = json.loads(response.read().decode("utf-8"))["commit"]["sha"]
+    except Exception as exc:
+        raise RuntimeError(f"S6_LATEST_COMMIT_LOOKUP_FAILED:{type(exc).__name__}") from exc
+    if latest != current:
+        raise RuntimeError("S6_STALE_WORKFLOW_COMMIT_NO_MONTE_CARLO")
+
+
 def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
     config = _s6_action_checkpoint_config()
     if config is None:
@@ -684,6 +706,7 @@ def main() -> int:
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
     args=p.parse_args()
+    require_latest_branch_commit()
     apply_action_checkpoint_config(args)
     if args.mode=="scenario":
         if not args.scenario: p.error("--scenario is required in scenario mode")
