@@ -273,6 +273,72 @@ def statistical_execution_status(
     ):
         blockers.append("STATISTICAL_IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING")
 
+    # A production status string and PASS labels are not cryptographic evidence.
+    # Keep S6 work-branch execution separate from final production-gate acceptance.
+    if production_accepted:
+        required_file_proofs = (
+            (
+                Path("docs/stage7/test192_coverage_proof.json"),
+                "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+                "TEST192_COVERAGE_PROOF",
+            ),
+            (
+                Path("docs/golden/v2.3/C100_GOLDEN_965281d52441cd0d4b744e211c9f68ee4cdc3753.json"),
+                "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+                "C100_GOLDEN",
+            ),
+            (
+                Path("docs/audits/S4_C100_GOLDEN_MANIFEST_965281d52441cd0d4b744e211c9f68ee4cdc3753.json"),
+                "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04",
+                "C100_MANIFEST",
+            ),
+        )
+        for evidence_path, expected_sha256, evidence_name in required_file_proofs:
+            if (
+                not evidence_path.is_file()
+                or hashlib.sha256(evidence_path.read_bytes()).hexdigest() != expected_sha256
+            ):
+                blockers.append(f"STATISTICAL_CRYPTOGRAPHIC_EVIDENCE_MISSING_OR_MISMATCH:{evidence_name}")
+
+        production_evidence = contract.get("production_cohort_evidence")
+        if not isinstance(production_evidence, dict):
+            blockers.append("STATISTICAL_IMPLEMENTATION_APPROVAL_OR_EVIDENCE_MISSING")
+        else:
+            manifest_value = production_evidence.get("manifest_path")
+            manifest_sha256 = production_evidence.get("manifest_sha256")
+            manifest_path = Path(manifest_value) if isinstance(manifest_value, str) and manifest_value else None
+            manifest_valid = (
+                manifest_path is not None
+                and manifest_path.is_file()
+                and isinstance(manifest_sha256, str)
+                and SHA256_RE.fullmatch(manifest_sha256) is not None
+                and hashlib.sha256(manifest_path.read_bytes()).hexdigest() == manifest_sha256
+            )
+            if not manifest_valid:
+                blockers.append("STATISTICAL_PRODUCTION_COHORT_MANIFEST_MISSING_OR_MISMATCH")
+            else:
+                try:
+                    production_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                except Exception:
+                    production_manifest = None
+                if not isinstance(production_manifest, dict):
+                    blockers.append("STATISTICAL_PRODUCTION_COHORT_MANIFEST_INVALID")
+                else:
+                    required_production_evidence = {
+                        "source_sha": approval.get("validated_source_head_sha"),
+                        "completed_checkpoint_points": [300, 600, 1200, 2400],
+                        "successful_adjacent_transitions": 3,
+                        "stochastic_scenario_count": 20,
+                        "gate_a_pass": True,
+                        "gate_b_pass": True,
+                        "trial_id_coverage_verified": True,
+                        "ordered_merge_verified": True,
+                        "representative_trials_verified": True,
+                    }
+                    for key, expected_value in required_production_evidence.items():
+                        if production_manifest.get(key) != expected_value:
+                            blockers.append(f"STATISTICAL_PRODUCTION_COHORT_EVIDENCE_MISMATCH:{key}")
+
     policy = contract.get("approved_policy", {})
     if (
         not isinstance(policy, dict)
@@ -314,9 +380,13 @@ def statistical_execution_status(
                     else:
                         blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
 
+    s6_execution_authorized = work_branch_authorized and not blockers
+    final_production_gate_cleared = production_accepted and not blockers
     return {
-        "authorized": not blockers,
-        "status": "AUTHORIZED" if not blockers else "STATISTICAL_INFERENCE_BLOCKED",
+        "authorized": s6_execution_authorized or final_production_gate_cleared,
+        "s6_execution_authorized": s6_execution_authorized,
+        "final_production_gate_cleared": final_production_gate_cleared,
+        "status": "AUTHORIZED" if (s6_execution_authorized or final_production_gate_cleared) else "STATISTICAL_INFERENCE_BLOCKED",
         "contract_path": str(path),
         "contract_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "declared_contract_status": status,
