@@ -93,6 +93,9 @@ jobs:
               assert x["n_unique_paths_status"] == "UNDEFINED_BUSINESS_RULE"
               assert x["n_unique_daily_paths_diagnostic"] >= 1
           assert m["acceptance_status"]["n_unique_paths"] == "UNDEFINED_BUSINESS_RULE"
+          assert m["opt1_audit"]["status"] == "PASS"
+          assert m["opt1_audit"]["scenario_count"] == 20
+          assert all(x["n_total"] == x["n_closed"] + x["n_censored"] for x in m["scenario_summaries"])
           print(json.dumps({"status":"CORRECTED_N300_AGGREGATE_EVIDENCE_VALIDATED_NOT_CONVERGED",
             "git_commit":m["git_commit"],"source_sha":m["source_sha"],"source_run_id":m["source_run_id"],
             "scenario_count":m["scenario_count"],"checkpoint_n":m["checkpoint_n"],
