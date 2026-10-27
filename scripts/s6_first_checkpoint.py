@@ -274,6 +274,19 @@ def stochastic_scenario_ids() -> set[str]:
             for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS}
 
 
+def reconstructed_scenario_command(scenario: str, source_sha: str, run_id: str,
+                                   run_attempt: int, checkpoint_n: int, workers: int) -> list[str]:
+    command = ["python", "scripts/s6_first_checkpoint.py", "--mode", "scenario",
+        "--scenario", scenario, "--source-sha", source_sha, "--run-id", str(run_id),
+        "--run-attempt", str(run_attempt), "--trials", str(checkpoint_n),
+        "--workers", str(workers), "--output-dir", f"results_stage7_s6/{scenario}"]
+    collection = int(scenario.split("_", 1)[0][1:])
+    recovery = int(scenario.split("_", 1)[1][1:])
+    if collection in OPT1_ENABLED_COLLECTIONS and recovery != 100:
+        command.extend(["--base-dir", "results_stage7_s6/base"])
+    return command
+
+
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
@@ -285,6 +298,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
         if scenario in by_scenario: raise RuntimeError(f"S6_DUPLICATE_SCENARIO_ARTIFACT:{scenario}")
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
+        if str(m.get("run_id"))!=str(args.run_id) or int(m.get("run_attempt",-1))!=args.run_attempt:
+            raise RuntimeError(f"S6_RUN_IDENTITY_MISMATCH:{scenario}")
+        if m.get("cohort_id")!=f"s6-v23-{args.source_sha[:8]}":
+            raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
         if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
         for name,e in m.get("files",{}).items():
@@ -306,9 +323,19 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         all_trials.extend(rows); all_daily.extend(daily)
-        summaries.append({"scenario_id":scenario,"n_total":len(rows),
-            "n_closed":sum(1 for row in rows if row.get("final_close_date") is not None),
+        summaries.append({"scenario_id":scenario,"status":m.get("status"),
+            "n_total":len(rows),"n_closed":sum(1 for row in rows if row.get("final_close_date") is not None),
             "n_unique_paths":m["n_unique_paths"],"opt1_policy":m["opt1_policy"],
+            "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
+            "git_commit":m.get("git_commit",m["source_sha"]),
+            "execution_metadata_source":"scenario_manifest" if m.get("git_commit") else "pinned_workflow_and_source_sha",
+            "run_id":m.get("run_id"),"run_attempt":m.get("run_attempt"),
+            "started_at_utc":m.get("started_at_utc"),"finished_at_utc":m.get("finished_at_utc"),
+            "command_argv":m.get("command_argv") or reconstructed_scenario_command(
+                scenario,args.source_sha,args.run_id,args.run_attempt,checkpoint_n,int(m.get("workers",2))),
+            "exit_code":m.get("exit_code",0),"python_version":m.get("python_version"),
+            "package_versions":m.get("package_versions"),"elapsed_seconds":m.get("elapsed_seconds"),
+            "files":m.get("files",{}),"artifact_files_verified":True,
             "trial_fingerprint_map_sha256":hashlib.sha256("".join(f'{row["trial_id"]}|{row["trial_fingerprint"]}\n' for row in rows).encode()).hexdigest(),
             "scenario_manifest_sha256":sha256_file(base/"scenario_manifest.json")})
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
