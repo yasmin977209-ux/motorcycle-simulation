@@ -9,6 +9,16 @@ from monte_carlo import TrialResult
 import pytest
 from scripts import s6_first_checkpoint as s6
 
+
+def test_n_unique_paths_uses_daily_paths_not_terminal_fingerprints():
+    from stats_integrity import resolve_n_unique_paths
+    assert resolve_n_unique_paths("C070_G100", [1, 2, 3], 3) == 3
+    assert resolve_n_unique_paths("C100_G100", [0, 0, 0], 1) == 1
+    with pytest.raises(RuntimeError, match="STOCHASTIC_RNG_DRAWS_REQUIRED"):
+        resolve_n_unique_paths("C085_G100", [1, 0], 2)
+    with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
+        resolve_n_unique_paths("C100_G100", [0, 0], 2)
+
 def test_s6_first_checkpoint_has_twenty_stochastic_scenarios_and_excludes_c100():
     scenarios=s6.stochastic_scenario_ids()
     assert len(scenarios)==20
