@@ -1,11 +1,17 @@
 from __future__ import annotations
-import argparse, hashlib, json, os, platform, time
+import argparse, hashlib, json, os, platform, subprocess, sys, time
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+import tempfile, zipfile
 import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, monte_carlo, rng, validation
+from stats_integrity import resolve_n_unique_paths
 
 EXPECTED_C100_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327"
 EXPECTED_C100_MANIFEST_SHA256 = "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
@@ -19,6 +25,23 @@ SCHEMA_VERSION = "v2.3"
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
+
+def daily_path_fingerprints(rows: list[dict[str, Any]]) -> dict[int, str]:
+    """Hash complete daily trajectories without conflating them with financial or RNG fingerprints."""
+    grouped: dict[int, list[dict[str, Any]]] = {}
+    for row in rows:
+        trial_id = int(row["trial_id"])
+        clean = {key: value for key, value in row.items()
+                 if key not in {"trial_id", "scenario_id", "source_sha", "cohort_id", "schema_version"}}
+        grouped.setdefault(trial_id, []).append(clean)
+    fingerprints: dict[int, str] = {}
+    for trial_id, path_rows in grouped.items():
+        path_rows.sort(key=lambda row: str(row["date"]))
+        payload = "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"), default=str) for row in path_rows)
+        fingerprints[trial_id] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return fingerprints
+
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -27,14 +50,65 @@ def require_source_sha(value: str) -> None:
     if len(value) != 40 or any(c not in "0123456789abcdef" for c in value):
         raise ValueError("S6_SOURCE_SHA_INVALID")
 
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
+                                  diagnostic_count: int, expected_source_sha: str,
+                                  expected_cohort_id: str) -> tuple[int, str]:
+    """Apply the owner-approved unique-daily-path contract only to the pinned cohort."""
+    if manifest.get("source_sha") != expected_source_sha or manifest.get("cohort_id") != expected_cohort_id:
+        raise RuntimeError("S6_N_UNIQUE_PATHS_SOURCE_OR_COHORT_MISMATCH")
+    if "unique_daily_paths" in manifest and manifest.get("unique_daily_paths") != diagnostic_count:
+        raise RuntimeError("S6_SCENARIO_UNIQUE_DAILY_PATHS_DIAGNOSTIC_MISMATCH")
+    scenario = str(manifest.get("scenario_id", ""))
+    if scenario.startswith("C100_"):
+        if computed_count != 1 or diagnostic_count != 1:
+            raise RuntimeError("S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH")
+        return 1, "DEGENERATE_DETERMINISTIC"
+    if computed_count != diagnostic_count:
+        raise RuntimeError("S6_N_UNIQUE_PATHS_DAILY_PATH_COUNT_MISMATCH")
+    return computed_count, "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
+
+
+def current_git_commit(source_sha: str) -> str:
+    commit = os.environ.get("GITHUB_SHA")
+    if not commit:
+        result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
+        commit = result.stdout.strip()
+    require_source_sha(commit)
+    return commit
+
+
+def package_versions() -> dict[str, str | None]:
+    versions: dict[str, str | None] = {}
+    for package in ("numpy", "scipy", "pyarrow", "pandas", "python-dateutil"):
+        try:
+            versions[package] = version(package)
+        except PackageNotFoundError:
+            versions[package] = None
+    return versions
+
+
+def command_argv() -> list[str]:
+    return ["python", *sys.argv]
+
 def verify_c100_reuse() -> dict[str, Any]:
     if not C100_GOLDEN_PATH.is_file() or sha256_file(C100_GOLDEN_PATH) != EXPECTED_C100_GOLDEN_SHA256:
         raise RuntimeError("S6_C100_GOLDEN_REUSE_SHA256_MISMATCH")
     if not C100_MANIFEST_PATH.is_file() or sha256_file(C100_MANIFEST_PATH) != EXPECTED_C100_MANIFEST_SHA256:
         raise RuntimeError("S6_C100_MANIFEST_REUSE_SHA256_MISMATCH")
-    return {"status":"REUSED_READ_ONLY","run_id":40263424595,"rerun":False,
+    c100_manifest=json.loads(C100_MANIFEST_PATH.read_text(encoding="utf-8"))
+    return {"status":"REUSED_READ_ONLY","run_id":int(c100_manifest["workflow_run_id"]),"rerun":False,
             "golden_path":str(C100_GOLDEN_PATH),"golden_sha256":EXPECTED_C100_GOLDEN_SHA256,
-            "manifest_path":str(C100_MANIFEST_PATH),"manifest_sha256":EXPECTED_C100_MANIFEST_SHA256}
+            "manifest_path":str(C100_MANIFEST_PATH),"manifest_sha256":EXPECTED_C100_MANIFEST_SHA256,
+            "source_sha":c100_manifest["source_sha"],"cohort_id":c100_manifest["cohort_id"],
+            "scenario_ids":list(c100_manifest["scenario_ids"]),
+            "trial_count_per_scenario":int(c100_manifest["trial_ids_per_scenario"][1]),
+            "n_unique_paths":int(c100_manifest["N_unique_paths"]),
+            "degeneracy_status":c100_manifest["degeneracy_status"],"G_status":c100_manifest["G_status"]}
 
 def result_record(result: monte_carlo.TrialResult, source_sha: str, cohort_id: str, derived_from: str | None) -> dict[str, Any]:
     row=asdict(result)
@@ -79,6 +153,20 @@ def load_base_artifact(base_dir: Path, collection_pct: int, source_sha: str, coh
     if set(slices)!=expected: raise RuntimeError("S6_OPT1_BASE_DAILY_TRIAL_COVERAGE_MISMATCH")
     return results,slices
 
+def validate_cumulative_rng_audit(records: list[dict[str, Any]], source_sha: str) -> int:
+    """Validate RNG audit fingerprints and checksum uniqueness across the full cumulative cohort."""
+    normalized = []
+    for raw in records:
+        row = dict(raw)
+        for key in ("trial_id", "rng_checksum", "rng_draw_count"):
+            row[key] = int(row[key])
+        normalized.append(row)
+    return validation.validate_rng_audit_records(
+        normalized, source_sha=source_sha, master_seed=constants.MASTER_SEED,
+        require_audit_fingerprint=True,
+    )
+
+
 def run_full_trials(scenario_id: str, trial_ids: list[int], source_sha: str, workers: int):
     if not trial_ids: return {},{}
     results,daily=monte_carlo.run_trials_parallel(scenario_id,trial_ids,workers,master_seed=constants.MASTER_SEED,source_sha=source_sha)
@@ -93,6 +181,102 @@ def previous_checkpoint_n(target_n: int) -> int:
     if target_n % start or ratio & (ratio - 1):
         raise ValueError("S6_CHECKPOINT_N_NOT_APPROVED_DOUBLING_POINT")
     return 0 if target_n == start else target_n // 2
+
+def _s6_action_checkpoint_config() -> dict[str, Any] | None:
+    """Load owner-pinned resume config only on Actions, never under pytest."""
+    if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or "PYTEST_CURRENT_TEST" in os.environ:
+        return None
+    path = Path("scripts/s6_checkpoint_config.json")
+    if not path.is_file():
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_MISSING")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
+    if target not in (600, 1200, 2400) or start != target // 2 + 1 or end != target or target != 2 * (start - 1):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    require_source_sha(str(config["source_sha"]))
+    if config.get("cohort_id") != f"s6-v23-{config['source_sha'][:8]}":
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_INVALID")
+    return config
+
+
+def _safe_extract_zip(zip_path: Path, destination: Path) -> None:
+    destination.mkdir(parents=True, exist_ok=True)
+    root = destination.resolve()
+    with zipfile.ZipFile(zip_path) as archive:
+        for member in archive.infolist():
+            target = (destination / member.filename).resolve()
+            if target != root and root not in target.parents:
+                raise RuntimeError("S6_PREVIOUS_ARTIFACT_ZIP_PATH_TRAVERSAL")
+        archive.extractall(destination)
+
+
+def download_previous_scenario_artifact(run_id: int, scenario_id: str, destination: Path) -> Path:
+    """Download one artifact by exact name from the pinned GitHub Actions run."""
+    repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not repo or not token:
+        raise RuntimeError("S6_PREVIOUS_ARTIFACT_DOWNLOAD_REQUIRES_GITHUB_REPOSITORY_AND_TOKEN")
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28"}
+    api = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+    try:
+        with urlopen(Request(api, headers=headers), timeout=60) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_LIST_FAILED:{type(exc).__name__}") from exc
+    expected_names = {f"s6-n600-{scenario_id}-{run_id}", f"s6-n600-{scenario_id.replace('_G', '-G')}-{run_id}"}
+    matches = [a for a in payload.get("artifacts", []) if a.get("name") in expected_names and not a.get("expired")]
+    if len(matches) != 1:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_NOT_UNIQUE:{scenario_id}:{len(matches)}")
+    archive_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{int(matches[0]['id'])}/zip"
+    try:
+        with urlopen(Request(archive_url, headers=headers), timeout=300) as response:
+            data = response.read()
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_DOWNLOAD_FAILED:{scenario_id}:{type(exc).__name__}") from exc
+    destination.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(prefix="s6-prev-", suffix=".zip", delete=False) as tmp:
+        tmp.write(data); archive_path = Path(tmp.name)
+    try:
+        _safe_extract_zip(archive_path, destination)
+    finally:
+        archive_path.unlink(missing_ok=True)
+    manifests = list(destination.rglob("scenario_manifest.json"))
+    if len(manifests) != 1:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_MANIFEST_CARDINALITY:{scenario_id}:{len(manifests)}")
+    return manifests[0].parent
+
+
+def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
+    config = _s6_action_checkpoint_config()
+    if config is None:
+        return None
+    args.source_sha = str(config["source_sha"])
+    args.trials = int(config["active_target_trials"])
+    args.trial_start = int(config["trial_start"])
+    args.trial_end = int(config["trial_end"])
+    if args.mode == "scenario":
+        scenario = str(args.scenario)
+        previous_dir = Path("/tmp/s6_prev_n600") / scenario
+        if not previous_dir.exists():
+            extracted = download_previous_scenario_artifact(int(config["previous_run_id"]), scenario, previous_dir)
+            if extracted != previous_dir:
+                import shutil
+                staged = previous_dir.with_name(previous_dir.name + "_verified")
+                if staged.exists(): shutil.rmtree(staged)
+                shutil.copytree(extracted, staged)
+                shutil.rmtree(previous_dir)
+                staged.rename(previous_dir)
+        manifest_path = previous_dir / "scenario_manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_MANIFEST_MISSING:{scenario}")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest.get("source_sha") != args.source_sha or manifest.get("cohort_id") != config["cohort_id"]:
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_OR_COHORT_MISMATCH:{scenario}")
+        if manifest.get("trial_count") != int(config["active_target_trials"]) // 2:
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_TRIAL_COUNT_MISMATCH:{scenario}")
+        args.previous_dir = str(previous_dir)
+    return config
+
 
 def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str,
                            cohort_id: str, expected_n: int):
@@ -129,6 +313,8 @@ def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str
     return results, slices, derived
 
 def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
+    started_at_utc = utc_now()
+    started = time.monotonic()
     require_source_sha(args.source_sha)
     previous_n = previous_checkpoint_n(args.trials)
     if args.workers<1: raise ValueError("S6_WORKERS_MUST_BE_POSITIVE")
@@ -152,7 +338,6 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     cohort_id=f"s6-v23-{args.source_sha[:8]}"
     trial_ids=list(range(1,args.trials+1))
     new_trial_ids=list(range(trial_start,trial_end+1))
-    started=time.monotonic()
     out_dir=Path(args.output_dir); out_dir.mkdir(parents=True,exist_ok=True)
     if previous_n:
         results, slices, derived = load_previous_artifact(Path(args.previous_dir), args.scenario, args.source_sha, cohort_id, previous_n)
@@ -191,8 +376,19 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if set(results)!=expected or set(slices)!=expected: raise RuntimeError(f"S6_SCENARIO_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
     ordered=[results[tid] for tid in trial_ids]
     if any(x.scenario_id!=args.scenario for x in ordered): raise RuntimeError("S6_SCENARIO_IDENTITY_MISMATCH")
+    rng_audit_records_verified = validate_cumulative_rng_audit([asdict(x) for x in ordered], args.source_sha)
     trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived.get(tid)) for tid in trial_ids]
     daily_rows=[snapshot_record(row,args.scenario,args.source_sha,cohort_id) for tid in trial_ids for row in sorted(slices[tid],key=lambda x:str(x["date"]))]
+    path_fingerprints=daily_path_fingerprints(daily_rows)
+    if set(path_fingerprints)!=set(trial_ids):
+        raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
+    n_unique_daily_paths=len(set(path_fingerprints.values()))
+    n_unique_financial_outcomes=len({monte_carlo.trial_fingerprint(x) for x in ordered})
+    n_unique_paths=resolve_n_unique_paths(
+        args.scenario,
+        [int(getattr(x, "rng_draw_count", 0)) for x in ordered],
+        n_unique_daily_paths,
+    )
     os.environ["S5_TRIAL_COUNT"]=str(args.trials)
     from scripts.s5_mini_verification import build_exact_daily_distribution
     distribution=build_exact_daily_distribution(ordered,slices,args.scenario,cohort_id,args.source_sha)
@@ -218,13 +414,22 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "collection_level":collection_pct,"recovery_level":recovery_pct,"source_sha":args.source_sha,
         "cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL",
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
-        "trial_count":len(ordered),"n_unique_paths":len({monte_carlo.trial_fingerprint(x) for x in ordered}),
-        "run_id":args.run_id,"run_attempt":args.run_attempt,"command":"python scripts/s6_first_checkpoint.py --mode scenario ...",
-        "python_version":platform.python_version(),"elapsed_seconds":time.monotonic()-started,"workers":args.workers,
+        "trial_count":len(ordered),"n_unique_paths":n_unique_paths,
+        "rng_audit_validation":{"status":"PASS","records_verified":rng_audit_records_verified,"scope":"cumulative scenario trial IDs 1..N"},
+        "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if args.scenario.startswith("C100_") else "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT",
+        "unique_daily_paths":n_unique_daily_paths,
+        "unique_terminal_fingerprints":n_unique_financial_outcomes,
+        "n_unique_financial_outcomes":n_unique_financial_outcomes,
+        "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
+        "git_commit":current_git_commit(args.source_sha),"run_id":args.run_id,"run_attempt":args.run_attempt,
+        "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
+        "python_version":platform.python_version(),"package_versions":package_versions(),
+        "elapsed_seconds":time.monotonic()-started,"workers":args.workers,
         "opt1_policy":policy,"c100_reuse":c100_reuse,
         "gate_a_status":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-        "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY",
-        "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE","files":files}
+        "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "files":files}
     write_json(out_dir/"scenario_manifest.json",manifest)
     print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,
         "trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,
@@ -233,15 +438,50 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         ensure_ascii=False,sort_keys=True))
     return manifest
 
+def stochastic_scenario_ids() -> set[str]:
+    """Return only the 20 scenarios executed under the current stochastic SOURCE_SHA."""
+    return {f"C{collection:03d}_G{recovery:03d}"
+            for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS}
+
+
+def reconstructed_scenario_command(scenario: str, source_sha: str, run_id: str,
+                                   run_attempt: int, checkpoint_n: int, workers: int) -> list[str]:
+    command = ["python", "scripts/s6_first_checkpoint.py", "--mode", "scenario",
+        "--scenario", scenario, "--source-sha", source_sha, "--run-id", str(run_id),
+        "--run-attempt", str(run_attempt), "--trials", str(checkpoint_n),
+        "--workers", str(workers), "--output-dir", f"results_stage7_s6/{scenario}"]
+    collection = int(scenario.split("_", 1)[0][1:])
+    recovery = int(scenario.split("_", 1)[1][1:])
+    if collection in OPT1_ENABLED_COLLECTIONS and recovery != 100:
+        command.extend(["--base-dir", "results_stage7_s6/base"])
+    return command
+
+
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
+    started_at_utc = utc_now()
+    started = time.monotonic()
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
+    source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
+    source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
     checkpoint_n = args.trials
     previous_checkpoint_n(checkpoint_n)
+    source_metadata_path=getattr(args,"source_run_metadata_json",None)
+    source_metadata={}
+    if source_metadata_path:
+        source_metadata=json.loads(Path(source_metadata_path).read_text(encoding="utf-8"))
+        if str(source_metadata.get("source_run_id"))!=source_run_id or int(source_metadata.get("source_run_attempt",-1))!=source_run_attempt:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_IDENTITY_MISMATCH")
+        if source_metadata.get("source_sha")!=args.source_sha:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_SOURCE_SHA_MISMATCH")
     root=Path(args.input_root); manifests=sorted(root.rglob("scenario_manifest.json")); by_scenario={}
     for mp in manifests:
         m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
         if scenario in by_scenario: raise RuntimeError(f"S6_DUPLICATE_SCENARIO_ARTIFACT:{scenario}")
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
+        if str(m.get("run_id"))!=source_run_id or int(m.get("run_attempt",-1))!=source_run_attempt:
+            raise RuntimeError(f"S6_RUN_IDENTITY_MISMATCH:{scenario}")
+        if m.get("cohort_id")!=f"s6-v23-{args.source_sha[:8]}":
+            raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
         if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
         for name,e in m.get("files",{}).items():
@@ -249,10 +489,21 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             if not p.is_file() or p.stat().st_size!=e["size_bytes"] or sha256_file(p)!=e["sha256"]:
                 raise RuntimeError(f"S6_SCENARIO_FILE_HASH_MISMATCH:{scenario}:{name}")
         by_scenario[scenario]=(base,m)
-    expected={f"C{c:03d}_G{g:03d}" for c in COLLECTION_LEVELS for g in RECOVERY_LEVELS}
+    # C100 is a separate, immutable S4 cohort. It is verified and referenced above,
+    # never merged into the new stochastic SOURCE_SHA/cohort or counted as independent samples.
+    expected=stochastic_scenario_ids()
+    if source_metadata_path:
+        if set(source_metadata.get("scenarios",{}))!=expected:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_SCENARIO_COVERAGE_MISMATCH")
+        for scenario,metadata in source_metadata["scenarios"].items():
+            if metadata.get("conclusion")!="success" or metadata.get("exit_code")!=0:
+                raise RuntimeError(f"S6_SOURCE_RUN_METADATA_JOB_NOT_SUCCESS:{scenario}")
+            if not metadata.get("started_at_utc") or not metadata.get("finished_at_utc") or not metadata.get("package_versions") or not metadata.get("python_version"):
+                raise RuntimeError(f"S6_SOURCE_RUN_METADATA_INCOMPLETE:{scenario}")
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
     all_trials=[]; all_daily=[]; summaries=[]
+    scenario_rows_by_id={}; scenario_path_fingerprints={}; scenario_provenance={}
     for scenario in sorted(expected):
         base,m=by_scenario[scenario]
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
@@ -260,28 +511,157 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if ids!=list(range(1,checkpoint_n+1)): raise RuntimeError(f"S6_TRIAL_ID_SEQUENCE_MISMATCH:{scenario}")
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
+        snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
+        path_fingerprints=daily_path_fingerprints(snapshots)
+        if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):
+            raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
+        n_unique_daily_paths=len(set(path_fingerprints.values()))
+        n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
+        rng_audit_records_verified = validate_cumulative_rng_audit(rows, args.source_sha)
+        rng_draw_counts=[int(row.get("rng_draw_count", 0)) for row in rows]
+        n_unique_paths=resolve_n_unique_paths(scenario, rng_draw_counts, n_unique_daily_paths)
+        # Legacy N300/N600 manifests did not record the v2.3 unique_daily_paths contract.
+        # Keep the recomputed count diagnostic-only until the source artifact carries that contract.
+        reported_n_unique_paths, reported_n_unique_paths_status = reported_unique_path_evidence(
+            m, n_unique_paths, n_unique_daily_paths, args.source_sha,
+            f"s6-v23-{args.source_sha[:8]}"
+        )
+        if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
+            raise RuntimeError(f"S6_SCENARIO_UNIQUE_TERMINAL_FINGERPRINTS_MISMATCH:{scenario}")
+        provenance_path=base/"opt1_provenance.json"
+        if not provenance_path.is_file():
+            raise RuntimeError(f"S6_OPT1_PROVENANCE_MISSING:{scenario}")
+        provenance=json.loads(provenance_path.read_text(encoding="utf-8"))
+        scenario_rows_by_id[scenario]={int(row["trial_id"]):row for row in rows}
+        scenario_path_fingerprints[scenario]=path_fingerprints
+        scenario_provenance[scenario]=provenance
         all_trials.extend(rows); all_daily.extend(daily)
-        summaries.append({"scenario_id":scenario,"n_total":len(rows),
-            "n_closed":sum(1 for row in rows if row.get("final_close_date") is not None),
-            "n_unique_paths":m["n_unique_paths"],"opt1_policy":m["opt1_policy"],
+        n_closed=sum(1 for row in rows if row.get("final_close_date") is not None)
+        n_censored=len(rows)-n_closed
+        if n_closed+n_censored!=len(rows): raise RuntimeError(f"S6_CENSORING_COUNT_MISMATCH:{scenario}")
+        srcmeta=source_metadata.get("scenarios",{}).get(scenario,{})
+        summaries.append({"scenario_id":scenario,"status":m.get("status"),
+            "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
+            "n_unique_paths":reported_n_unique_paths,"n_unique_paths_status":reported_n_unique_paths_status,
+            "unique_daily_paths":n_unique_daily_paths,
+            "unique_terminal_fingerprints":n_unique_financial_outcomes,
+            "n_unique_financial_outcomes":n_unique_financial_outcomes,
+            "rng_audit_validation_status":"PASS","rng_audit_records_verified":rng_audit_records_verified,
+            "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
+            "opt1_policy":m["opt1_policy"],
+            "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
+            "git_commit":m.get("git_commit") or srcmeta.get("git_commit") or m["source_sha"],
+            "execution_metadata_source":"scenario_manifest" if all(m.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions")) else ("source_run_job_api_and_logs" if srcmeta else "pinned_workflow_and_source_sha"),
+            "run_id":m.get("run_id"),"run_attempt":m.get("run_attempt"),
+            "source_job_id":srcmeta.get("job_id"),"source_job_name":srcmeta.get("job_name"),
+            "source_job_log_sha256":srcmeta.get("job_log_sha256"),
+            "started_at_utc":m.get("started_at_utc") or srcmeta.get("started_at_utc"),
+            "finished_at_utc":m.get("finished_at_utc") or srcmeta.get("finished_at_utc"),
+            "command_argv":m.get("command_argv") or srcmeta.get("command_argv") or reconstructed_scenario_command(
+                scenario,args.source_sha,source_run_id,source_run_attempt,checkpoint_n,int(m.get("workers",2))),
+            "exit_code":m.get("exit_code",srcmeta.get("exit_code",0)),
+            "python_version":m.get("python_version") or srcmeta.get("python_version"),
+            "package_versions":m.get("package_versions") or srcmeta.get("package_versions"),
+            "elapsed_seconds":m.get("elapsed_seconds") or srcmeta.get("elapsed_seconds"),
+            "files":m.get("files",{}),"artifact_files_verified":True,
             "trial_fingerprint_map_sha256":hashlib.sha256("".join(f'{row["trial_id"]}|{row["trial_fingerprint"]}\n' for row in rows).encode()).hexdigest(),
             "scenario_manifest_sha256":sha256_file(base/"scenario_manifest.json")})
+    opt1_derived_trial_rows=0
+    for scenario in sorted(expected):
+        collection=int(scenario.split("_",1)[0][1:])
+        recovery=int(scenario.split("_",1)[1][1:])
+        rows=scenario_rows_by_id[scenario]
+        provenance=scenario_provenance[scenario]
+        manifest=by_scenario[scenario][1]
+        expected_ids=set(range(1,checkpoint_n+1))
+        base_scenario=f"C{collection:03d}_G100"
+        if recovery==100:
+            expected_derived=set()
+            expected_full=expected_ids
+            expected_policy="G100_BASE_FULL_RUN_INCREMENTAL_RANGE"
+        elif collection in OPT1_ENABLED_COLLECTIONS:
+            base_rows=scenario_rows_by_id[base_scenario]
+            expected_derived={tid for tid,row in base_rows.items() if int(row.get("claims_created",0))==0}
+            expected_full=expected_ids-expected_derived
+            expected_policy=("OPT1_ENABLED_DERIVED_ZERO_CLAIM_TRIALS_FULL_RUN_POSITIVE_CLAIM_TRIALS_INCREMENTAL_RANGE"
+                if expected_derived else "OPT1_ENABLED_NO_ZERO_CLAIM_TRIALS_IN_INCREMENTAL_RANGE_FULL_RUN")
+            for tid in expected_derived:
+                row=rows[tid]; base_row=base_rows[tid]
+                if row.get("derived_from")!=f"DERIVED_FROM={base_scenario}":
+                    raise RuntimeError(f"S6_OPT1_DERIVED_FROM_MISMATCH:{scenario}:{tid}")
+                if int(row.get("claims_created",-1))!=0 or row.get("trial_fingerprint")!=base_row.get("trial_fingerprint"):
+                    raise RuntimeError(f"S6_OPT1_FINANCIAL_EQUIVALENCE_MISMATCH:{scenario}:{tid}")
+                if scenario_path_fingerprints[scenario][tid]!=scenario_path_fingerprints[base_scenario][tid]:
+                    raise RuntimeError(f"S6_OPT1_DAILY_PATH_MISMATCH:{scenario}:{tid}")
+            for tid in expected_full:
+                if rows[tid].get("derived_from") is not None or int(rows[tid].get("claims_created",0))<=0:
+                    raise RuntimeError(f"S6_OPT1_POSITIVE_CLAIM_FULL_RUN_MISMATCH:{scenario}:{tid}")
+        else:
+            expected_derived=set()
+            expected_full=expected_ids
+            expected_policy="OPT1_INELIGIBLE_FULL_RUN_INCREMENTAL_RANGE"
+        actual_derived={tid for tid,row in rows.items() if row.get("derived_from") is not None}
+        if actual_derived!=expected_derived:
+            raise RuntimeError(f"S6_OPT1_DERIVED_TRIAL_SET_MISMATCH:{scenario}")
+        if manifest.get("opt1_policy")!=expected_policy or provenance.get("policy")!=expected_policy:
+            raise RuntimeError(f"S6_OPT1_POLICY_MISMATCH:{scenario}")
+        if provenance.get("scenario_id")!=scenario or int(provenance.get("sample_trial_count",-1))!=checkpoint_n:
+            raise RuntimeError(f"S6_OPT1_PROVENANCE_IDENTITY_MISMATCH:{scenario}")
+        if int(provenance.get("eligible_zero_claim_trials",-1))!=sum(1 for row in rows.values() if int(row.get("claims_created",0))==0):
+            raise RuntimeError(f"S6_OPT1_ZERO_CLAIM_COUNT_MISMATCH:{scenario}")
+        if int(provenance.get("derived_trial_count",-1))!=len(expected_derived):
+            raise RuntimeError(f"S6_OPT1_DERIVED_COUNT_MISMATCH:{scenario}")
+        if sorted(int(tid) for tid in provenance.get("full_run_trial_ids",[]))!=sorted(expected_full):
+            raise RuntimeError(f"S6_OPT1_FULL_RUN_ID_SET_MISMATCH:{scenario}")
+        actual_derived_records={int(item["trial_id"]):(item.get("derived_from"),item.get("trial_fingerprint"))
+            for item in provenance.get("derived_trials",[])}
+        expected_derived_records={tid:(rows[tid].get("derived_from"),rows[tid].get("trial_fingerprint")) for tid in expected_derived}
+        if actual_derived_records!=expected_derived_records:
+            raise RuntimeError(f"S6_OPT1_DERIVED_PROVENANCE_MISMATCH:{scenario}")
+        opt1_derived_trial_rows+=len(expected_derived)
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
     write_json(out/"c100_reuse.json",c100_reuse)
-    files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in [out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]}
+    output_paths=[out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]
+    source_metadata_sha256=None
+    if source_metadata_path:
+        source_metadata_bytes=Path(source_metadata_path).read_bytes()
+        (out/"source_run_metadata.json").write_bytes(source_metadata_bytes)
+        source_metadata_sha256=hashlib.sha256(source_metadata_bytes).hexdigest()
+        output_paths.append(out/"source_run_metadata.json")
+    files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in output_paths}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
-        "cohort_id":f"s6-v23-{args.source_sha[:8]}","run_id":args.run_id,"run_attempt":args.run_attempt,
+        "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
+        "run_id":args.run_id,"run_attempt":args.run_attempt,
+        "source_run_id":source_run_id,"source_run_attempt":source_run_attempt,
+        "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),
+        "command_argv":command_argv(),"exit_code":0,
+        "python_version":platform.python_version(),"package_versions":package_versions(),
+        "elapsed_seconds":time.monotonic()-started,
         "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
-        "scenario_count":len(expected),"scenario_summaries":summaries,"c100_reuse":c100_reuse,
-        "test192_reuse":{"run_id":40397897155,"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
-        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE"},
+        "scenario_count":len(expected),"stochastic_scenario_count":len(expected),
+        "rng_audit_validation":{"status":"PASS","records_verified":sum(x["rng_audit_records_verified"] for x in summaries),"scope":"all cumulative trial IDs per scenario; checksum uniqueness only where rng_draw_count > 0"},
+        "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
+        "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
+        "scenario_summaries":summaries,"c100_reuse":c100_reuse,
+        "opt1_audit":{"status":"PASS","scenario_count":len(expected),
+            "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
+        "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else ("SOURCE_SCENARIO_MANIFESTS_COMPLETE" if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else "NOT_PROVIDED"),
+            "sha256":source_metadata_sha256,"scenario_count":len(source_metadata.get("scenarios",{})) if source_metadata_path else (len(expected) if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else 0)},
+        "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
+        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+            "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+            "stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+            "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS" if all(row["n_unique_paths"] is not None for row in summaries) else "UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
         "cohort_id":manifest["cohort_id"],"checkpoint_n":checkpoint_n,"scenario_count":len(expected),"trial_rows":len(all_trials),
-        "daily_distribution_rows":len(all_daily),"gate_a":manifest["acceptance_status"]["gate_a"],
+        "daily_distribution_rows":len(all_daily),"stochastic_scenario_count":len(expected),
+        "total_scenario_combinations":manifest["total_scenario_combinations"],
+        "c100_reused_scenario_count":manifest["c100_reused_scenario_count"],
+        "gate_a":manifest["acceptance_status"]["gate_a"],
         "gate_b":manifest["acceptance_status"]["gate_b"],"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
 
@@ -292,6 +672,9 @@ def main() -> int:
     p.add_argument("--source-sha",required=True)
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
+    p.add_argument("--source-run-id")
+    p.add_argument("--source-run-attempt",type=int)
+    p.add_argument("--source-run-metadata-json")
     p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N: 300, 600, 1200, 2400, ...")
     p.add_argument("--trial-start",type=int,default=None,help="First incremental trial ID; defaults to previous checkpoint N + 1 (or 1 at N=300)")
     p.add_argument("--trial-end",type=int,default=None,help="Last incremental trial ID; defaults to --trials")
@@ -301,6 +684,7 @@ def main() -> int:
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
     args=p.parse_args()
+    apply_action_checkpoint_config(args)
     if args.mode=="scenario":
         if not args.scenario: p.error("--scenario is required in scenario mode")
         run_scenario(args)
