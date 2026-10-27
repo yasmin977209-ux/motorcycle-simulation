@@ -73,8 +73,8 @@ jobs:
           package_names=("et-xmlfile","iniconfig","numpy","openpyxl","packaging","pandas","pluggy","pyarrow","pygments","pytest","python-dateutil","pyyaml","scipy","six")
           for job in jobs:
               name=job["name"]
-              base_match=re.fullmatch(r"S6 G100 base — C(\\d+) N=300",name)
-              lower_match=re.fullmatch(r"S6 (C\\d{3}_G\\d{3}) N=300",name)
+              base_match=re.fullmatch(r"S6 G100 base — C(\d+) N=300",name)
+              lower_match=re.fullmatch(r"S6 (C\d{3}_G\d{3}) N=300",name)
               if base_match:
                   scenario=f"C{int(base_match.group(1)):03d}_G100"
               elif lower_match:
@@ -86,19 +86,19 @@ jobs:
               raw_log=curl_bytes(f"https://api.github.com/repos/{repo}/actions/jobs/{job['id']}/logs")
               log_sha=hashlib.sha256(raw_log).hexdigest()
               with zipfile.ZipFile(io.BytesIO(raw_log)) as z:
-                  log_text="\\n".join(z.read(n).decode("utf-8","replace") for n in z.namelist() if n.endswith(".txt"))
+                  log_text="\n".join(z.read(n).decode("utf-8","replace") for n in z.namelist() if n.endswith(".txt"))
               install=next((line for line in log_text.splitlines() if "Successfully installed " in line),None)
               py_line=next((line for line in log_text.splitlines() if "Successfully set up CPython (" in line),None)
               if not install or not py_line:
                   raise RuntimeError(f"S6_SOURCE_JOB_ENVIRONMENT_NOT_CAPTURED:{scenario}")
               package_versions={}
               for package in package_names:
-                  match=re.search(r"(?:^|\\s)"+re.escape(package)+r"-([^\\s]+)",install)
+                  match=re.search(r"(?:^|\s)"+re.escape(package)+r"-([^\s]+)",install)
                   if match: package_versions[package]=match.group(1)
               required={"numpy","scipy","pyarrow","pandas","python-dateutil"}
               if not required.issubset(package_versions):
                   raise RuntimeError(f"S6_SOURCE_PACKAGE_VERSION_MISSING:{scenario}")
-              python_match=re.search(r"Successfully set up CPython \\(([^)]+)\\)",py_line)
+              python_match=re.search(r"Successfully set up CPython \(([^)]+)\)",py_line)
               if not python_match: raise RuntimeError(f"S6_SOURCE_PYTHON_VERSION_MISSING:{scenario}")
               collection=int(scenario.split("_",1)[0][1:])
               recovery=int(scenario.split("_",1)[1][1:])
@@ -120,7 +120,7 @@ jobs:
             "workflow_run_url":run["html_url"],"scenario_count":len(scenarios),"scenarios":scenarios}
           out=Path("results_stage7_s6/source_run_metadata.json")
           out.parent.mkdir(parents=True,exist_ok=True)
-          out.write_text(json.dumps(metadata,ensure_ascii=False,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
+          out.write_text(json.dumps(metadata,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
           print(json.dumps({"status":"S6_SOURCE_RUN_METADATA_VERIFIED","scenario_count":len(scenarios),
             "source_sha":source_sha,"git_commit":run["head_sha"],
             "distinct_package_sets":len({json.dumps(v["package_versions"],sort_keys=True) for v in scenarios.values()})},
