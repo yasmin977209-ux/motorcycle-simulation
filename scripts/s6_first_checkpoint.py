@@ -185,7 +185,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if set(results)!=expected or set(slices)!=expected: raise RuntimeError(f"S6_SCENARIO_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
     ordered=[results[tid] for tid in trial_ids]
     if any(x.scenario_id!=args.scenario for x in ordered): raise RuntimeError("S6_SCENARIO_IDENTITY_MISMATCH")
-    trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived[tid]) for tid in trial_ids]
+    trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived.get(tid)) for tid in trial_ids]
     daily_rows=[snapshot_record(row,args.scenario,args.source_sha,cohort_id) for tid in trial_ids for row in sorted(slices[tid],key=lambda x:str(x["date"]))]
     os.environ["S5_TRIAL_COUNT"]=str(args.trials)
     from scripts.s5_mini_verification import build_exact_daily_distribution
@@ -201,8 +201,8 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "policy":policy,"sample_trial_count":args.trials,
         "eligible_zero_claim_trials":sum(1 for x in ordered if x.claims_created==0),
         "derived_trial_count":sum(1 for v in derived.values() if v is not None),
-        "full_run_trial_ids":[tid for tid in trial_ids if derived[tid] is None],
-        "derived_trials":[{"trial_id":tid,"derived_from":derived[tid],"trial_fingerprint":results[tid].trial_fingerprint} for tid in trial_ids if derived[tid] is not None],
+        "full_run_trial_ids":[tid for tid in trial_ids if derived.get(tid) is None],
+        "derived_trials":[{"trial_id":tid,"derived_from":derived.get(tid),"trial_fingerprint":results[tid].trial_fingerprint} for tid in trial_ids if derived[tid] is not None],
         "status":"EXECUTED"}
     write_json(out_dir/"opt1_provenance.json",provenance)
     names=[*targets.keys(),"opt1_provenance.json"]
