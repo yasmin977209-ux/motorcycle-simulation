@@ -1,0 +1,112 @@
+name: S6 corrected N300 aggregate from immutable source artifacts
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-real-artifact-aggregate.yml"
+      - "scripts/s6_first_checkpoint.py"
+      - "tests/test_s6_first_checkpoint.py"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-corrected-aggregate-40574326793
+  cancel-in-progress: false
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  SOURCE_RUN_ID: "40574326793"
+  SOURCE_RUN_ATTEMPT: "1"
+  SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  MASTER_SEED: "20270101"
+
+jobs:
+  aggregate:
+    name: Re-aggregate all pinned N300 artifacts without rerunning trials
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout the exact corrected aggregation code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download immutable artifacts from the completed source run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n300-*-${{ env.SOURCE_RUN_ID }}
+          path: results_stage7_s6/artifacts
+          merge-multiple: false
+      - name: Verify downloaded artifact inventory and run corrected aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          find results_stage7_s6/artifacts -name scenario_manifest.json -print | sort
+          test "$(find results_stage7_s6/artifacts -name scenario_manifest.json | wc -l)" -eq 20
+          python -m py_compile scripts/s6_first_checkpoint.py
+          python -m pytest -q tests/test_s6_first_checkpoint.py
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \
+            --trials 300 --input-root results_stage7_s6/artifacts \
+            --output-dir results_stage7_s6/aggregate
+      - name: Validate manifest provenance, exact scenario coverage, and fail-closed gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("results_stage7_s6/aggregate/manifest.json").read_text(encoding="utf-8"))
+          expected={f"C{c:03d}_G{g:03d}" for c in (30,50,70,85) for g in (0,30,50,70,100)}
+          actual={x["scenario_id"] for x in m["scenario_summaries"]}
+          assert actual == expected, (sorted(expected-actual),sorted(actual-expected))
+          assert m["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+          assert m["source_run_id"] == "40574326793" and m["source_run_attempt"] == 1
+          assert m["scenario_count"] == 20 and m["checkpoint_n"] == 300
+          assert m["c100_reused_scenario_count"] == 5
+          assert m["test192_reuse"]["run_ids"] == [40531095239,40546712685]
+          assert m["test192_reuse"]["proof_sha256"] == "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b"
+          assert m["acceptance_status"]["gate_a"] != "PASS"
+          assert m["acceptance_status"]["gate_b"] != "PASS"
+          assert m["acceptance_status"]["stability"] == "NOT_CONVERGED_CHECKPOINT_N300_BASELINE"
+          required={"git_commit","run_id","run_attempt","source_run_id","source_run_attempt","started_at_utc","finished_at_utc","command_argv","exit_code","python_version","package_versions","master_seed","scenario_summaries","files"}
+          assert required <= set(m), sorted(required-set(m))
+          for x in m["scenario_summaries"]:
+              assert x["n_total"] == 300 and x["artifact_files_verified"] is True
+              assert x["command_argv"] and x["run_id"] == "40574326793"
+          print(json.dumps({"status":"CORRECTED_N300_AGGREGATE_EVIDENCE_VALIDATED_NOT_CONVERGED",
+            "git_commit":m["git_commit"],"source_sha":m["source_sha"],"source_run_id":m["source_run_id"],
+            "scenario_count":m["scenario_count"],"checkpoint_n":m["checkpoint_n"],
+            "trial_rows":sum(x["n_total"] for x in m["scenario_summaries"]),
+            "c100_reused_scenario_count":m["c100_reused_scenario_count"],
+            "gate_a":m["acceptance_status"]["gate_a"],"gate_b":m["acceptance_status"]["gate_b"]},
+            ensure_ascii=False,sort_keys=True))
+          PY
+      - name: Record hashes and upload corrected aggregate evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum results_stage7_s6/aggregate/*
+          cat results_stage7_s6/aggregate/manifest.json
+      - name: Upload corrected aggregate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n300-corrected-aggregate-${{ github.run_id }}
+          path: results_stage7_s6/aggregate/
+          if-no-files-found: error
+          retention-days: 30
