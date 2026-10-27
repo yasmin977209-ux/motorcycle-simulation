@@ -50,6 +50,82 @@ jobs:
           pattern: s6-n300-*-${{ env.SOURCE_RUN_ID }}
           path: results_stage7_s6/artifacts
           merge-multiple: false
+      - name: Collect immutable source-job times, package versions, commands, and log hashes
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, io, json, os, re, subprocess, zipfile
+          from pathlib import Path
+          repo=os.environ["GITHUB_REPOSITORY"]
+          token=os.environ["GITHUB_TOKEN"]
+          run_id=os.environ["SOURCE_RUN_ID"]
+          run_attempt=int(os.environ["SOURCE_RUN_ATTEMPT"])
+          source_sha=os.environ["SOURCE_SHA"]
+          def curl_bytes(url):
+              return subprocess.run(["curl","-fsSL","-H",f"Authorization: Bearer {token}",
+                "-H","Accept: application/vnd.github+json",url],capture_output=True,check=True).stdout
+          run=json.loads(curl_bytes(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}"))
+          jobs=json.loads(curl_bytes(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100"))["jobs"]
+          scenarios={}
+          package_names=("et-xmlfile","iniconfig","numpy","openpyxl","packaging","pandas","pluggy","pyarrow","pygments","pytest","python-dateutil","pyyaml","scipy","six")
+          for job in jobs:
+              name=job["name"]
+              base_match=re.fullmatch(r"S6 G100 base — C(\\d+) N=300",name)
+              lower_match=re.fullmatch(r"S6 (C\\d{3}_G\\d{3}) N=300",name)
+              if base_match:
+                  scenario=f"C{int(base_match.group(1)):03d}_G100"
+              elif lower_match:
+                  scenario=lower_match.group(1)
+              else:
+                  continue
+              if job.get("conclusion")!="success" or not job.get("started_at") or not job.get("completed_at"):
+                  raise RuntimeError(f"S6_SOURCE_JOB_NOT_SUCCESS_OR_TIMED:{scenario}")
+              raw_log=curl_bytes(f"https://api.github.com/repos/{repo}/actions/jobs/{job['id']}/logs")
+              log_sha=hashlib.sha256(raw_log).hexdigest()
+              with zipfile.ZipFile(io.BytesIO(raw_log)) as z:
+                  log_text="\\n".join(z.read(n).decode("utf-8","replace") for n in z.namelist() if n.endswith(".txt"))
+              install=next((line for line in log_text.splitlines() if "Successfully installed " in line),None)
+              py_line=next((line for line in log_text.splitlines() if "Successfully set up CPython (" in line),None)
+              if not install or not py_line:
+                  raise RuntimeError(f"S6_SOURCE_JOB_ENVIRONMENT_NOT_CAPTURED:{scenario}")
+              package_versions={}
+              for package in package_names:
+                  match=re.search(r"(?:^|\\s)"+re.escape(package)+r"-([^\\s]+)",install)
+                  if match: package_versions[package]=match.group(1)
+              required={"numpy","scipy","pyarrow","pandas","python-dateutil"}
+              if not required.issubset(package_versions):
+                  raise RuntimeError(f"S6_SOURCE_PACKAGE_VERSION_MISSING:{scenario}")
+              python_match=re.search(r"Successfully set up CPython \\(([^)]+)\\)",py_line)
+              if not python_match: raise RuntimeError(f"S6_SOURCE_PYTHON_VERSION_MISSING:{scenario}")
+              collection=int(scenario.split("_",1)[0][1:])
+              recovery=int(scenario.split("_",1)[1][1:])
+              argv=["python","scripts/s6_first_checkpoint.py","--mode","scenario","--scenario",scenario,
+                "--source-sha",source_sha,"--run-id",str(run_id),"--run-attempt",str(run_attempt),
+                "--trials","300","--workers","2","--output-dir",f"results_stage7_s6/{scenario}"]
+              if collection in {70,85} and recovery!=100:
+                  argv.extend(["--base-dir","results_stage7_s6/base"])
+              scenarios[scenario]={"job_id":job["id"],"job_name":name,"conclusion":job["conclusion"],
+                "started_at_utc":job["started_at"],"finished_at_utc":job["completed_at"],
+                "exit_code":0,"git_commit":run["head_sha"],"python_version":python_match.group(1),
+                "package_versions":package_versions,"command_argv":argv,"job_log_sha256":log_sha,
+                "source_run_id":str(run_id),"source_run_attempt":run_attempt}
+          expected={f"C{c:03d}_G{g:03d}" for c in (30,50,70,85) for g in (0,30,50,70,100)}
+          if set(scenarios)!=expected:
+              raise RuntimeError(f"S6_SOURCE_JOB_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(scenarios))}:extra={sorted(set(scenarios)-expected)}")
+          metadata={"schema_version":"s6-source-run-metadata-v1","source_run_id":str(run_id),
+            "source_run_attempt":run_attempt,"source_sha":source_sha,"git_commit":run["head_sha"],
+            "workflow_run_url":run["html_url"],"scenario_count":len(scenarios),"scenarios":scenarios}
+          out=Path("results_stage7_s6/source_run_metadata.json")
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text(json.dumps(metadata,ensure_ascii=False,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
+          print(json.dumps({"status":"S6_SOURCE_RUN_METADATA_VERIFIED","scenario_count":len(scenarios),
+            "source_sha":source_sha,"git_commit":run["head_sha"],
+            "distinct_package_sets":len({json.dumps(v["package_versions"],sort_keys=True) for v in scenarios.values()})},
+            ensure_ascii=False,sort_keys=True))
+          PY
       - name: Verify downloaded artifact inventory and run corrected aggregate
         shell: bash
         run: |
@@ -62,6 +138,7 @@ jobs:
             --mode aggregate --source-sha "$SOURCE_SHA" \
             --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" \
             --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \
+            --source-run-metadata-json results_stage7_s6/source_run_metadata.json \
             --trials 300 --input-root results_stage7_s6/artifacts \
             --output-dir results_stage7_s6/aggregate
       - name: Validate manifest provenance, exact scenario coverage, and fail-closed gates
@@ -95,7 +172,10 @@ jobs:
           assert m["acceptance_status"]["n_unique_paths"] == "UNDEFINED_BUSINESS_RULE"
           assert m["opt1_audit"]["status"] == "PASS"
           assert m["opt1_audit"]["scenario_count"] == 20
+          assert m["source_run_metadata"]["status"] == "VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS"
+          assert m["source_run_metadata"]["scenario_count"] == 20
           assert all(x["n_total"] == x["n_closed"] + x["n_censored"] for x in m["scenario_summaries"])
+          assert all(x["started_at_utc"] and x["finished_at_utc"] and x["python_version"] and x["package_versions"] for x in m["scenario_summaries"])
           print(json.dumps({"status":"CORRECTED_N300_AGGREGATE_EVIDENCE_VALIDATED_NOT_CONVERGED",
             "git_commit":m["git_commit"],"source_sha":m["source_sha"],"source_run_id":m["source_run_id"],
             "scenario_count":m["scenario_count"],"checkpoint_n":m["checkpoint_n"],
