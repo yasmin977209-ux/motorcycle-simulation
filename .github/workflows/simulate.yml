@@ -111,8 +111,8 @@ jobs:
       - name: Upload G100 base and daily paths
         uses: actions/upload-artifact@v4
         with:
-          name: s6-n300-C${{ matrix.collection }}-G100-${{ github.run_id }}
-          path: results_stage7_s6/C${{ matrix.collection }}_G100/
+          name: s6-n300-C0${{ matrix.collection }}-G100-${{ github.run_id }}
+          path: results_stage7_s6/C0${{ matrix.collection }}_G100/
           if-no-files-found: error
           retention-days: 14
 
