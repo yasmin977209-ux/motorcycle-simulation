@@ -92,13 +92,18 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     for scenario in sorted(s6.stochastic_scenario_ids()):
         base=artifacts/f"s6-n300-{scenario}-{source_run_id}"
         base.mkdir()
-        trial_rows=[{"trial_id":tid,"final_close_date":None,
-          "trial_fingerprint":hashlib.sha256(f"{scenario}|{tid}".encode()).hexdigest()}
-          for tid in range(1,checkpoint_n+1)]
+        trial_rows=[]
+        for tid in range(1,checkpoint_n+1):
+            fp=hashlib.sha256(f"{scenario}|{tid}".encode()).hexdigest()
+            if scenario=="C070_G100" and tid==2:
+                fp=hashlib.sha256(f"{scenario}|1".encode()).hexdigest()
+            trial_rows.append({"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp})
         pq.write_table(pa.Table.from_pylist(trial_rows),base/"trials_summary.parquet")
         pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","scenario_id":scenario,
           "quantile_name":"P50","metric":"Cash","value":0}]),base/"daily_distribution.parquet")
-        pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","trial_id":1}]),base/"daily_snapshots.parquet")
+        snapshot_rows=[{"date":"2027-01-01","scenario_id":scenario,"trial_id":tid,"Cash":tid}
+          for tid in range(1,checkpoint_n+1)]
+        pq.write_table(pa.Table.from_pylist(snapshot_rows),base/"daily_snapshots.parquet")
         (base/"opt1_provenance.json").write_text('{"status":"TEST_FIXTURE"}')
         files={}
         for name in ("trials_summary.parquet","daily_distribution.parquet","daily_snapshots.parquet","opt1_provenance.json"):
@@ -108,7 +113,7 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
           "schema_version":"s6-first-checkpoint-v1","status":"EXECUTED","scenario_id":scenario,
           "source_sha":source_sha,"cohort_id":f"s6-v23-{source_sha[:8]}",
           "run_id":source_run_id,"run_attempt":1,"trial_id_start":1,"trial_id_end":checkpoint_n,
-          "trial_count":checkpoint_n,"n_unique_paths":checkpoint_n,"opt1_policy":"TEST_FIXTURE",
+          "trial_count":checkpoint_n,"n_unique_paths":len({row["trial_fingerprint"] for row in trial_rows}),"opt1_policy":"TEST_FIXTURE",
           "workers":2,"files":files
         }))
 
@@ -124,6 +129,13 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     assert result["c100_reused_scenario_count"]==len(result["c100_reuse"]["scenario_ids"])
     assert result["c100_reuse"]["source_sha"]=="965281d52441cd0d4b744e211c9f68ee4cdc3753"
     assert all(not row["scenario_id"].startswith("C100_") for row in result["scenario_summaries"])
+    diagnostic=next(row for row in result["scenario_summaries"] if row["scenario_id"]=="C070_G100")
+    assert diagnostic["n_unique_paths"] is None
+    assert diagnostic["n_unique_paths_status"]=="UNDEFINED_BUSINESS_RULE"
+    assert diagnostic["source_manifest_n_unique_paths"]==299
+    assert diagnostic["n_unique_financial_outcomes"]==299
+    assert diagnostic["n_unique_daily_paths_diagnostic"]==checkpoint_n
+    assert result["acceptance_status"]["n_unique_paths"]=="UNDEFINED_BUSINESS_RULE"
     assert result["acceptance_status"]["gate_a"]!="PASS"
     assert result["acceptance_status"]["gate_b"]!="PASS"
 
