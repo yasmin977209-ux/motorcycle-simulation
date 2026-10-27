@@ -1,11 +1,23 @@
 {
   "schema_version": "stage7-statistical-execution-gate-v1",
-  "reviewed_at": "2026-10-26",
+  "reviewed_at": "2026-10-28",
   "status": "AUTHORIZED_FOR_V2.3_EXECUTION",
   "source_basis": {
-    "owner_approved_iut_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
-    "owner_approved_iut_record_blob": "1a69a1f4cf8c87b8e2575a800b92fc80bcd6677e",
-    "reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479"
+    "normative_reference_file": "المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md",
+    "reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+    "normative_clauses": [
+      "0.3",
+      "2.5",
+      "2.7",
+      "14.3",
+      "14.11.4",
+      "14.12",
+      "21.2",
+      "21.3"
+    ],
+    "historical_approval_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
+    "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "active_cohort_id": "s6-v23-da1a9ea9"
   },
   "approved_policy": {
     "familywise_false_stability_target": 0.05,
@@ -26,17 +38,36 @@
     "deterministic_support_envelope": {
       "method_id": "V2.3_DETERMINISTIC_SUPPORT_ENVELOPE_V1",
       "source_function": "stats_integrity.compute_deterministic_support_bounds",
-      "status": "IMPLEMENTED_PENDING_CI_VALIDATION",
-      "principle": "derive finite conservative bounds from cutoff-limited expansion, the model lifecycle/settlement limits and bounded fleet; bounds are support limits, not observed maxima",
-      "inference_note": "the bound implementation must pass the dedicated S5 unit tests and actual CI before being counted as validated"
+      "status": "NOT_A_GATE_REQUIREMENT_UNDER_V2.3_ALPHA_SPENDING",
+      "principle": "Retained for traceability only; production acceptance follows the approved v2.3 sequential alpha-spending policy and its required Test 192 coverage evidence.",
+      "inference_note": "This historical candidate does not block authorized S6 checkpoint execution."
+    },
+    "sequential_alpha_spending": {
+      "formula": "alpha_s,k = 0.0025 / (k*(k+1))",
+      "per_scenario_alpha": 0.0025,
+      "familywise_alpha": 0.05,
+      "checkpoint_indices": [
+        1,
+        2,
+        3
+      ],
+      "checkpoints": [
+        300,
+        600,
+        1200,
+        2400
+      ],
+      "decision_framework": "intersection_union_test",
+      "mean_components": 3,
+      "indicator_components": 7
     }
   },
   "component_status": {
     "gate_a_exact_golden": {
-      "status": "AUTHORIZED_FOR_S5_COHORT_INTEGRITY_CHECKS",
+      "status": "CURRENT_COHORT_GOLDEN_COVERAGE_PENDING",
       "blockers": [
-        "The S4 C100 Golden may be reused only as its separate deterministic cohort; its tested SOURCE_SHA/cohort must remain recorded.",
-        "S5's stochastic mini cohort is not a production Gate A Golden map and cannot establish Gate A production PASS."
+        "The reused C100 Golden remains a separate deterministic cohort and is read-only.",
+        "The current stochastic cohort SOURCE_SHA da1a9ea9b5cd789c944de3f07b08395bb67c49e7 requires an independently prepared and reviewed same-source Golden map before Gate A can pass; the prior f3af historical map is not interchangeable."
       ],
       "c100_reuse": {
         "run_id": "40263424595",
@@ -48,13 +79,13 @@
       }
     },
     "gate_b_financial_means": {
-      "status": "OWNER_AUTHORIZED_METHOD_IMPLEMENTED_PENDING_CI_VALIDATION",
-      "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "The approved alpha-spending policy is implemented by stats_integrity.py: exact Fraction alpha_s,k=1/[400*k*(k+1)], Student-t limits for the three means, checks at N and N/2, and the approved finite deterministic support envelope. Actual S5 CI evidence and later full N=300+ checkpoints are still required before any observed stability result.",
-      "required_evidence": "Pass the dedicated support-bound tests and S5 workflow at the exact tested source. Apply the approved policy to each full checkpoint, with three adjacent successful transitions across 300->600->1200->2400 and the exact P50 cross-multiplication guard."
+      "status": "OWNER_AUTHORIZED_METHOD_IMPLEMENTED_TEST192_PASS_PRODUCTION_CHECKPOINTS_PENDING",
+      "criterion": "At each approved checkpoint N_k, the alpha-spending interval half-width must be strictly < max(STAT_REL_TOL * abs(mean), CI_ABSOLUTE_EPSILON) for each of Final_Net_Project_Equity, Partner1_Final_Entitlement, and Partner2_Final_Entitlement. The fixed-95% interval is descriptive only.",
+      "implementation_gap": "The v2.3 sequential alpha-spending policy is implemented in stats_integrity.py with exact Fraction alpha_s,k=1/[400*k*(k+1)] and approved per-checkpoint intervals at N_k. No N/2 check is part of the v2.3 contract. Test 192 coverage passed with 10,000 synthetic repetitions and observed family-wise error 0.0435 <= 0.05 (Runs 40531095239 and 40546712685; proof SHA-256 f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b). Production Gate A/B and the three-successive-transition requirement remain unevaluated until the full cumulative checkpoint sequence and independent same-source Golden are assessed.",
+      "required_evidence": "Evaluate the approved alpha-spending mean intervals at each cumulative checkpoint N_k for the current source cohort; retain exact N_k identity and all three means. Test 192 coverage evidence is already available and reusable; production Gate A/B and the three successive transitions remain to be evaluated."
     },
     "section_2_5_quantiles": {
-      "status": "APPROVED_ORDER_STATISTIC_METHOD_IMPLEMENTED_PENDING_S5_CI",
+      "status": "APPROVED_ALPHA_SPENDING_RANK_METHOD_IMPLEMENTED_PRODUCTION_CHECKPOINT_EVALUATION_PENDING",
       "candidate": "Distribution-free time-uniform fixed-quantile confidence sequence based on order statistics; beta-binomial mixture variant is primary candidate",
       "margins": {
         "P10_Cumulative_Project_Profit": 18500,
@@ -64,26 +95,25 @@
         "P90_Termination_Count": 1,
         "P90_Held_Assets": 1
       },
-      "method": "integer/Fraction type-7 quantile point estimate plus rank interval indexed by z_k=Phi^-1(1-alpha_s,k/2), at N and N/2, with the approved money/count tolerances",
+      "method": "Linear type-7 quantile point estimate using exact integer/Fraction arithmetic; rank interval at each approved cumulative checkpoint N_k using z_k=Phi^-1(1-alpha_s,k/2) and alpha_s,k=0.0025/[k(k+1)]. Evaluate at N_k only; do not apply an N/2 check.",
       "blockers": [
-        "S5 mini results (N=5) are diagnostic only; production criterion remains unaccepted until evaluated on a valid checkpoint."
+        "Production Gate B acceptance remains pending until all seven indicators are evaluated on the current cumulative checkpoint cohort and every required component passes."
       ]
     },
     "probability_of_accounting_loss": {
-      "status": "APPROVED_WILSON_METHOD_IMPLEMENTED_PENDING_S5_CI",
+      "status": "APPROVED_ALPHA_SPENDING_WILSON_METHOD_IMPLEMENTED_PRODUCTION_CHECKPOINT_EVALUATION_PENDING",
       "candidate": "Time-uniform Bernoulli mean confidence sequence / beta-binomial mixture e-process",
       "maximum_half_width": 0.005,
       "maximum_adjacent_change": 0.005,
-      "method": "Wilson interval using z_k=Phi^-1(1-alpha_s,k/2); at zero losses upper bound is min(1,-ln(alpha_s,k)/N)",
+      "method": "Wilson interval at the approved checkpoint-specific z_k with alpha_s,k=0.0025/[k(k+1)]; when losses are zero, the time-adjusted upper bound is min(1,-ln(alpha_s,k)/N_k), alongside descriptive 3/N_k.",
       "blockers": [
-        "S5 mini results (N=5) are diagnostic only; production criterion remains unaccepted until evaluated on a valid checkpoint."
+        "Production Gate B acceptance remains pending until the probability-of-loss indicator is evaluated on the current cohort at each required checkpoint."
       ]
     },
     "p90_held_assets": {
-      "status": "PRODUCTION_ACCEPTANCE_MISSING",
-      "margin": 1,
+      "status": "OWNER_APPROVED_METHOD_AND_TEST192_PASS_PRODUCTION_CHECKPOINT_EVALUATION_PENDING",
       "blockers": [
-        "S5 mini output includes held-assets fields and schema evidence, but full production data-identity/completeness and the integrated fail-closed acceptance path still require validation."
+        "P90_Held_Assets is included in the seven-indicator IUT and Test 192 coverage evidence; production Gate B still requires evaluation on the current cohort at every required checkpoint."
       ]
     },
     "stopping_window": {
@@ -97,11 +127,12 @@
         "tests/test_stage7_authoring.py::test_stability_rejects_non_doubling_or_misbound_transition"
       ],
       "blockers": [
-        "Production source-identity/completeness acceptance and historical failed-transition requalification remain open; unit tests do not waive the C030_G030 N=300 to N=600 P90_Final_Cash failure."
+        "Current-cohort source identity/completeness, production Gate A/B results, and the full four-point sequence remain pending.",
+        "The historical C030_G030 P90_Final_Cash failure is retained in its original cohort record. It must not be erased, but it is not silently imported into the new SOURCE_SHA cohort; the new cohort must build its own consecutive-transition history."
       ]
     },
     "gate_b_implementation_guards": {
-      "status": "NONINFERENTIAL_GUARDS_VERIFIED_NOT_STATISTICALLY_ACCEPTED",
+      "status": "V2.3_METHOD_AND_TEST192_VALIDATED_PRODUCTION_GATE_NOT_YET_ACCEPTED",
       "evidence": [
         "tests/test_run_batch.py::test_gate_b_requires_actual_boolean_stability_evidence",
         "tests/test_stage7_authoring.py::test_stage7_gate_b_requires_actual_boolean_stability_evidence (covers the direct helper imported by .github/workflows/stage7-full-run.yml)",
@@ -109,7 +140,7 @@
         "tests/test_run_batch.py::test_metric_summary_does_not_apply_absolute_epsilon_to_regular_means"
       ],
       "blockers": [
-        "K_SPEC remains blocked: the financial-mean interval is pointwise Student-t under adaptive stopping, with no accepted time-uniform procedure or approved finite-support/quantified-tail assumption. This strict-Boolean fix establishes input-type safety only, not Gate B statistical acceptance."
+        "K_SPEC is closed by the approved v2.3 sequential alpha-spending rule in §14.11.4, and Test 192 coverage passed. This does not itself establish production Gate B PASS: all three means, all seven indicators, Gate A, checkpoint identity/completeness, and the required three consecutive successful transitions must still pass on the current cohort."
       ]
     },
     "c030_g030_historical_transition": {
@@ -117,7 +148,27 @@
       "metric": "P90_Final_Cash",
       "transition": "N=300 to N=600",
       "relative_change_percent": 1.5715059334983579,
-      "next_step_authorized": "Golden reference preparation for N=2400 only; this is not a completed checkpoint and does not by itself establish stability"
+      "next_step_authorized": "Historical decision scope only: Golden preparation at N=2400 for the historical cohort. This does not replace the current owner-authorized S6 schedule, does not transfer the old cohort's transition status, and does not itself establish Gate A or convergence.",
+      "cohort_scope": "historical source cohort; preserved unchanged",
+      "applies_to_current_cohort": false,
+      "note": "Preserve the original failure record. Current SOURCE_SHA/cohort must have its own transition history; do not copy historical pass/fail state across cohort identities."
+    },
+    "n_unique_paths_definition": {
+      "status": "OWNER_RESOLVED_FOR_PINNED_S6_COHORT",
+      "decision": "N_unique_paths equals the count of distinct complete daily paths computed from the persisted daily snapshots",
+      "scope": {
+        "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "n300_aggregate_run_id": 40588234012,
+        "n600_aggregate_run_id": 40582501871
+      },
+      "validation_requirements": [
+        "Verify SOURCE_SHA and cohort_id",
+        "Verify artifact file SHA-256 and byte sizes",
+        "Verify trial IDs 1..N and daily snapshot coverage",
+        "Recompute unique_daily_paths from persisted daily snapshots"
+      ],
+      "status_note": "Historical manifests lacking the text field are interpreted under this owner-approved cohort contract; no historical source files are rewritten."
     }
   },
   "execution_authorization": {
@@ -125,19 +176,37 @@
     "production_trial_checkpoint_monte_carlo_allowed": true,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "permitted_work_branch": "tmp/s5-statistical-gate-v23-20261026",
-    "permitted_next_work": "S5-B and S5-C evidence recorded from completed execution. Proceed to the next authorized work-branch stage only with measured artifacts, preserve the historical failed transition, and reuse accepted C100 evidence read-only without rerunning it."
+    "permitted_work_branch": [
+      "tmp/s5-statistical-gate-v23-20261026",
+      "tmp/s6-aggregate-contract-fix-20261027"
+    ],
+    "permitted_next_work": "Execute the N=1200 cumulative checkpoint by reusing verified N=600 scenario artifacts and running only trial IDs 601..1200; then independently validate all 20 scenarios and all Gate B components. Continue to N=2400 only after validating the N=1200 evidence.",
+    "s6_execution_authorized": true,
+    "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "active_cohort_id": "s6-v23-da1a9ea9",
+    "final_production_gate_cleared": false
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
     "requirements": [
       "Explicit reviewed approval record and exact tested source identity",
       "All component_status entries marked implemented and independently validated",
-      "Gate A authority records are complete, intact, and present in effective governance",
-      "Four cumulative checkpoint points and three successful adjacent transitions are implemented and tested",
-      "P90_Held_Assets source, identity, completeness, and threshold are verified",
-      "Pointwise-versus-time-uniform distinctions and family-wise IUT assumptions are explicitly validated"
-    ]
+      "Independently prepared, reviewed, same-SOURCE_SHA Gate A Golden coverage for every required scenario and checkpoint",
+      "Four cumulative checkpoint points and three successful adjacent transitions, with exact P50 guard and preserved failure history",
+      "P90_Held_Assets source, identity, completeness, and threshold verified as part of all seven Gate B indicators",
+      "Test 192 coverage proof verified and the approved v2.3 alpha-spending/IUT method applied to the current cohort",
+      "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified",
+      "Resolve the stochastic N_unique_paths identity rule under §§21.2/14.12, then validate the resulting metric without rewriting historical artifacts."
+    ],
+    "required_checkpoint_sequence": [
+      300,
+      600,
+      1200,
+      2400
+    ],
+    "required_successful_adjacent_transitions": 3,
+    "final_production_gate_cleared": false,
+    "scenario_stability_declaration_allowed": false
   },
   "implementation_approval": {
     "reviewed_approval_id": "OWNER-CHAT-S5-2026-10-26",
@@ -598,5 +667,19 @@
       "compute_plan_path": "docs/COMPUTE_PLAN.md",
       "formal_gate_conclusion": "S5-B/S5-C execution evidence passed; this does not assert production Gate A/B acceptance or scenario convergence."
     }
+  },
+  "reconciled_at": "2026-10-28",
+  "test192_evidence": {
+    "status": "PASS",
+    "synthetic_repetitions": 10000,
+    "observed_familywise_error_rate": 0.0435,
+    "required_maximum": 0.05,
+    "run_ids": [
+      40531095239,
+      40546712685
+    ],
+    "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+    "includes_all_seven_indicators": true,
+    "production_gate_pass_implied": false
   }
 }
