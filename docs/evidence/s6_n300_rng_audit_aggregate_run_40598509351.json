@@ -1,0 +1,73 @@
+{
+  "schema_version": "s6-n300-rng-audit-aggregate-evidence-v1",
+  "run_id": 40598509351,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40598509351",
+  "job_id": 122520578630,
+  "job_log_sha256": "3ce10a05554de8337816005b1ea65070d9c4b55e98ad01c430cdac7ee21838f1",
+  "git_commit": "0190941f24a567cec2eea2a7b0161b512df027a7",
+  "command_argv": [
+    "python",
+    "scripts/s6_first_checkpoint.py",
+    "--mode",
+    "aggregate",
+    "--source-sha",
+    "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "--run-id",
+    "40598509351",
+    "--run-attempt",
+    "1",
+    "--source-run-id",
+    "40574326793",
+    "--source-run-attempt",
+    "1",
+    "--source-run-metadata-json",
+    "results_stage7_s6/source_run_metadata.json",
+    "--trials",
+    "300",
+    "--input-root",
+    "results_stage7_s6/artifacts",
+    "--output-dir",
+    "results_stage7_s6/aggregate"
+  ],
+  "exit_code": 0,
+  "status": "EXECUTED",
+  "source_run_id": 40574326793,
+  "source_run_attempt": 1,
+  "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+  "cohort_id": "s6-v23-da1a9ea9",
+  "checkpoint_n": 300,
+  "stochastic_scenario_count": 20,
+  "total_scenario_combinations": 25,
+  "trial_rows": 6000,
+  "rng_audit_validation": {
+    "status": "PASS",
+    "records_verified": 6000,
+    "scope": "all cumulative trial IDs per scenario; checksum uniqueness only where rng_draw_count > 0"
+  },
+  "n_unique_paths": {
+    "status": "UNDEFINED_BUSINESS_RULE",
+    "value": null,
+    "unique_daily_paths_is_diagnostic_only": true,
+    "normative_clauses": [
+      "21.2",
+      "14.12"
+    ]
+  },
+  "c100_reuse_run_id": 40263424595,
+  "c100_golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+  "test192_reuse_run_ids": [
+    40531095239,
+    40546712685
+  ],
+  "test192_proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+  "gate_a": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+  "gate_b": "NOT_EVALUATED_FIRST_CHECKPOINT_ONLY",
+  "stability": "NOT_CONVERGED_CHECKPOINT_N300_BASELINE",
+  "manifest_sha256": "563f90ae771f51a9a5dd5ac4fc8d3a8416361bb728698e3aaf4d73fed3de287d",
+  "artifact_id": 12777378780,
+  "artifact_name": "s6-n300-corrected-aggregate-40598509351",
+  "artifact_size_bytes": 5325536,
+  "artifact_zip_sha256": "c4cf0912cfedd075555ed345d5f288497906d857bbdb614b6ff575d0e62653ae",
+  "note": "Corrected aggregation and cumulative RNG audit only; no trials rerun. Stochastic N_unique_paths remains unresolved; no Gate A/B PASS or convergence claim."
+}
