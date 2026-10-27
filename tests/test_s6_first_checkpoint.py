@@ -109,7 +109,7 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
             if collection==70 and tid==2:
                 fp=hashlib.sha256("C070_G100|1".encode()).hexdigest()
             trial_rows.append({"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp,
-              "claims_created":0,"derived_from":derived_from})
+              "claims_created":0,"derived_from":derived_from,"rng_draw_count":1,"rng_checksum":tid})
         pq.write_table(pa.Table.from_pylist(trial_rows),base/"trials_summary.parquet")
         pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","scenario_id":scenario,
           "quantile_name":"P50","metric":"Cash","value":0}]),base/"daily_distribution.parquet")
@@ -132,7 +132,9 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
           "schema_version":"s6-first-checkpoint-v1","status":"EXECUTED","scenario_id":scenario,
           "source_sha":source_sha,"cohort_id":f"s6-v23-{source_sha[:8]}",
           "run_id":source_run_id,"run_attempt":1,"trial_id_start":1,"trial_id_end":checkpoint_n,
-          "trial_count":checkpoint_n,"n_unique_paths":len({row["trial_fingerprint"] for row in trial_rows}),"opt1_policy":policy,
+          "trial_count":checkpoint_n,"n_unique_paths":checkpoint_n,"unique_daily_paths":checkpoint_n,
+          "unique_terminal_fingerprints":len({row["trial_fingerprint"] for row in trial_rows}),
+          "n_unique_paths_status":"COMPUTED_UNIQUE_DAILY_PATHS","opt1_policy":policy,
           "workers":2,"files":files
         }))
 
@@ -169,12 +171,13 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     assert result["c100_reuse"]["source_sha"]=="965281d52441cd0d4b744e211c9f68ee4cdc3753"
     assert all(not row["scenario_id"].startswith("C100_") for row in result["scenario_summaries"])
     diagnostic=next(row for row in result["scenario_summaries"] if row["scenario_id"]=="C070_G100")
-    assert diagnostic["n_unique_paths"] is None
-    assert diagnostic["n_unique_paths_status"]=="UNDEFINED_BUSINESS_RULE"
-    assert diagnostic["source_manifest_n_unique_paths"]==299
+    assert diagnostic["n_unique_paths"]==checkpoint_n
+    assert diagnostic["n_unique_paths_status"]=="COMPUTED_UNIQUE_DAILY_PATHS"
+    assert diagnostic["unique_daily_paths"]==checkpoint_n
+    assert diagnostic["unique_terminal_fingerprints"]==299
     assert diagnostic["n_unique_financial_outcomes"]==299
     assert diagnostic["n_unique_daily_paths_diagnostic"]==checkpoint_n
-    assert result["acceptance_status"]["n_unique_paths"]=="UNDEFINED_BUSINESS_RULE"
+    assert result["acceptance_status"]["n_unique_paths"]=="COMPUTED_FROM_UNIQUE_DAILY_PATHS"
     assert result["opt1_audit"]["status"]=="PASS"
     assert result["opt1_audit"]["derived_trial_rows"]==8*checkpoint_n
     assert result["opt1_audit"]["full_run_scenario_rows"]==12*checkpoint_n
