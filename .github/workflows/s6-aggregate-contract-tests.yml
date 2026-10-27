@@ -8,6 +8,8 @@ on:
       - "scripts/s6_first_checkpoint.py"
       - "tests/test_s6_first_checkpoint.py"
       - ".github/workflows/s6-aggregate-contract-tests.yml"
+      - ".github/workflows/s6-n600-checkpoint.yml"
+      - "docs/stage7/statistical_execution_gate.json"
 
 permissions:
   contents: read
