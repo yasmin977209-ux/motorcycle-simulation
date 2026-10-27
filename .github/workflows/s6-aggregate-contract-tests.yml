@@ -37,15 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sha256sum \\
-            scripts/s6_first_checkpoint.py \\
-            tests/test_s6_first_checkpoint.py \\
-            stats_integrity.py \\
-            constants.py \\
-            docs/stage7/statistical_execution_gate.json \\
-            docs/stage7/test192_coverage_proof.json \\
-            .github/workflows/s6-n600-checkpoint.yml \\
-            .github/workflows/s6-aggregate-contract-tests.yml
+          sha256sum scripts/s6_first_checkpoint.py tests/test_s6_first_checkpoint.py stats_integrity.py constants.py docs/stage7/statistical_execution_gate.json docs/stage7/test192_coverage_proof.json .github/workflows/s6-n600-checkpoint.yml .github/workflows/s6-aggregate-contract-tests.yml
       - name: Compile S6 entry point and validate CLI
         run: |
           set -euo pipefail
