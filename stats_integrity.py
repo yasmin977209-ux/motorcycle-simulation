@@ -1,4 +1,4 @@
-"""Exact report-statistics helpers from owner-approved v2.3 Appendix E."""
+"""Exact report-statistics helpers implementing v2.3 §§2.5, 14.11.4, 14.12, and 21.3."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,6 +12,31 @@ from scipy.stats import norm, t
 from dateutil.relativedelta import relativedelta
 
 import constants
+
+
+
+def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int:
+    """Resolve N_unique_paths from the owner-approved daily-path contract.
+
+    For the current S6 v2.3 cohort, N_unique_paths is the number of distinct
+    complete daily paths persisted in the scenario artifact. The caller must
+    verify SOURCE_SHA/cohort identity and the daily snapshot file digests before
+    relying on this value. C100 remains a separate deterministic cohort.
+    """
+    counts = list(rng_draw_counts)
+    if not scenario_id or not counts:
+        raise ValueError("N_UNIQUE_PATHS_AUDIT_INPUT_EMPTY")
+    if isinstance(unique_daily_paths, bool) or not isinstance(unique_daily_paths, int) or unique_daily_paths < 1:
+        raise ValueError("N_UNIQUE_DAILY_PATHS_INVALID")
+    if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in counts):
+        raise TypeError("RNG_DRAW_COUNT_MUST_BE_NONNEGATIVE_INTEGER")
+    if scenario_id.startswith("C100_"):
+        if any(value != 0 for value in counts) or unique_daily_paths != 1:
+            raise RuntimeError("C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION")
+        return 1
+    if any(value <= 0 for value in counts):
+        raise RuntimeError(f"STOCHASTIC_RNG_DRAWS_REQUIRED:{scenario_id}")
+    return unique_daily_paths
 
 
 def statistical_checkpoint_index(n: int) -> int:
@@ -262,7 +287,7 @@ def _fraction_to_decimal(value: Fraction) -> Decimal:
 
 
 def time_uniform_inference_status() -> dict[str, Any]:
-    """Report whether the owner-approved Appendix E procedure is enabled."""
+    """Report whether the v2.3 §14.11.4 alpha-spending procedure is enabled."""
     approved = constants.TIME_UNIFORM_METHOD_APPROVED is True
     support = compute_deterministic_support_bounds()
     return {
