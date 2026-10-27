@@ -1,0 +1,77 @@
+name: S6 N300 unique-path metric audit
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-path-uniqueness-audit.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Download C070 and C085 G100 artifacts from original N300 run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40574326793
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n300-C0*-G100-40574326793
+          path: results_stage7_s6/path_audit
+          merge-multiple: false
+      - name: Compare financial fingerprints, RNG audit fingerprints, and full daily paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          root=Path("results_stage7_s6/path_audit")
+          output=[]
+          for manifest_path in sorted(root.rglob("scenario_manifest.json")):
+              m=json.loads(manifest_path.read_text(encoding="utf-8"))
+              if m["scenario_id"] not in {"C070_G100","C085_G100"}:
+                  continue
+              base=manifest_path.parent
+              trials=pq.read_table(base/"trials_summary.parquet").to_pylist()
+              snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
+              by_trial={}
+              for row in snapshots:
+                  tid=int(row["trial_id"])
+                  clean={k:v for k,v in row.items() if k not in {"trial_id","scenario_id","source_sha","cohort_id","schema_version"}}
+                  by_trial.setdefault(tid,[]).append(clean)
+              path_hashes={}
+              for tid,rows in by_trial.items():
+                  rows.sort(key=lambda r:str(r["date"]))
+                  payload="\n".join(json.dumps(r,sort_keys=True,separators=(",",":"),ensure_ascii=False,default=str) for r in rows)
+                  path_hashes[tid]=hashlib.sha256(payload.encode()).hexdigest()
+              financial={r["trial_id"]:r["trial_fingerprint"] for r in trials}
+              rng_audit={r["trial_id"]:r.get("rng_checksum_fingerprint_sha256") for r in trials if int(r.get("rng_draw_count",0))>0}
+              assert set(financial)==set(range(1,301)), f"trial coverage: {m['scenario_id']}"
+              assert set(path_hashes)==set(range(1,301)), f"daily path coverage: {m['scenario_id']}"
+              output.append({"scenario_id":m["scenario_id"],"n_total":len(trials),
+                "source_manifest_n_unique_paths":m.get("n_unique_paths"),
+                "unique_financial_fingerprints":len(set(financial.values())),
+                "unique_full_daily_paths":len(set(path_hashes.values())),
+                "unique_rng_audit_fingerprints_nonzero_draws":len(set(rng_audit.values())),
+                "daily_paths_with_rows":len(path_hashes),
+                "same_financial_fingerprint_different_daily_path_groups":sum(
+                    1 for fp in set(financial.values())
+                    if len({path_hashes[tid] for tid,v in financial.items() if v==fp})>1)})
+          assert len(output)==2, output
+          print(json.dumps({"status":"EXECUTED_PATH_IDENTITY_DIAGNOSTIC_ONLY_NOT_A_GATE",
+            "results":output},ensure_ascii=False,sort_keys=True))
+          PY
