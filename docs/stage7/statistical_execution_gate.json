@@ -58,7 +58,7 @@
     },
     "gate_b_financial_means": {
       "status": "OWNER_AUTHORIZED_METHOD_IMPLEMENTED_TEST192_PASS_PRODUCTION_CHECKPOINTS_PENDING",
-      "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
+      "criterion": "At each approved checkpoint N_k, the alpha-spending interval half-width must be strictly < max(STAT_REL_TOL * abs(mean), CI_ABSOLUTE_EPSILON) for each of Final_Net_Project_Equity, Partner1_Final_Entitlement, and Partner2_Final_Entitlement. The fixed-95% interval is descriptive only.",
       "implementation_gap": "The v2.3 sequential alpha-spending policy is implemented in stats_integrity.py with exact Fraction alpha_s,k=1/[400*k*(k+1)] and approved per-checkpoint intervals at N_k. No N/2 check is part of the v2.3 contract. Test 192 coverage passed with 10,000 synthetic repetitions and observed family-wise error 0.0435 <= 0.05 (Runs 40531095239 and 40546712685; proof SHA-256 f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b). Production Gate A/B and the three-successive-transition requirement remain unevaluated until the full cumulative checkpoint sequence and independent same-source Golden are assessed.",
       "required_evidence": "Evaluate the approved alpha-spending mean intervals at each cumulative checkpoint N_k for the current source cohort; retain exact N_k identity and all three means. Test 192 coverage evidence is already available and reusable; production Gate A/B and the three successive transitions remain to be evaluated."
     },
@@ -127,7 +127,7 @@
       "metric": "P90_Final_Cash",
       "transition": "N=300 to N=600",
       "relative_change_percent": 1.5715059334983579,
-      "next_step_authorized": "Golden reference preparation for N=2400 only; this is not a completed checkpoint and does not by itself establish stability",
+      "next_step_authorized": "Historical decision scope only: Golden preparation at N=2400 for the historical cohort. This does not replace the current owner-authorized S6 schedule, does not transfer the old cohort's transition status, and does not itself establish Gate A or convergence.",
       "cohort_scope": "historical source cohort; preserved unchanged",
       "applies_to_current_cohort": false,
       "note": "Preserve the original failure record. Current SOURCE_SHA/cohort must have its own transition history; do not copy historical pass/fail state across cohort identities."
