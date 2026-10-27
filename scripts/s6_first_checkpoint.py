@@ -85,26 +85,79 @@ def run_full_trials(scenario_id: str, trial_ids: list[int], source_sha: str, wor
     validation.validate_rng_audit_records([asdict(x) for x in results],source_sha=source_sha,master_seed=constants.MASTER_SEED,require_audit_fingerprint=True)
     return {x.trial_id:x for x in results},daily
 
+def previous_checkpoint_n(target_n: int) -> int:
+    start = constants.STATISTICAL_CHECK_START_N
+    if target_n < start:
+        raise ValueError("S6_CHECKPOINT_N_BELOW_APPROVED_START")
+    ratio = target_n // start
+    if target_n % start or ratio & (ratio - 1):
+        raise ValueError("S6_CHECKPOINT_N_NOT_APPROVED_DOUBLING_POINT")
+    return 0 if target_n == start else target_n // 2
+
+def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str,
+                           cohort_id: str, expected_n: int):
+    manifest_path = previous_dir / "scenario_manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_MANIFEST_MISSING")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("scenario_id") != scenario_id:
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_SCENARIO_MISMATCH")
+    if manifest.get("source_sha") != source_sha or manifest.get("cohort_id") != cohort_id:
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_SOURCE_OR_COHORT_MISMATCH")
+    if manifest.get("trial_count") != expected_n or manifest.get("trial_id_start") != 1 or manifest.get("trial_id_end") != expected_n:
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_RANGE_MISMATCH")
+    for name, entry in manifest.get("files", {}).items():
+        path = previous_dir / name
+        if not path.is_file() or path.stat().st_size != entry["size_bytes"] or sha256_file(path) != entry["sha256"]:
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_FILE_HASH_MISMATCH:{name}")
+    rows = pq.read_table(previous_dir / "trials_summary.parquet").to_pylist()
+    ids = [int(row["trial_id"]) for row in rows]
+    if ids != list(range(1, expected_n + 1)):
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_TRIAL_ID_COVERAGE_MISMATCH")
+    results = {int(row["trial_id"]): result_from_record(row) for row in rows}
+    derived = {int(row["trial_id"]): row.get("derived_from") for row in rows}
+    daily_rows = pq.read_table(previous_dir / "daily_snapshots.parquet").to_pylist()
+    slices = {}
+    for row in daily_rows:
+        tid = int(row["trial_id"])
+        clean = {k:v for k,v in row.items() if k not in {"scenario_id","source_sha","cohort_id","schema_version"}}
+        slices.setdefault(tid, []).append(clean)
+    for tid in slices:
+        slices[tid].sort(key=lambda x: str(x["date"]))
+    if set(slices) != set(range(1, expected_n + 1)):
+        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_DAILY_COVERAGE_MISMATCH")
+    return results, slices, derived
+
 def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     require_source_sha(args.source_sha)
-    if args.trials != constants.STATISTICAL_CHECK_START_N: raise ValueError("S6_FIRST_CHECKPOINT_MUST_EQUAL_APPROVED_START_N")
+    previous_n = previous_checkpoint_n(args.trials)
     if args.workers<1: raise ValueError("S6_WORKERS_MUST_BE_POSITIVE")
+    if previous_n and not args.previous_dir:
+        raise ValueError("S6_PREVIOUS_CHECKPOINT_DIR_REQUIRED")
+    if not previous_n and args.previous_dir:
+        raise ValueError("S6_PREVIOUS_CHECKPOINT_DIR_FORBIDDEN_AT_N300")
     c100_reuse=verify_c100_reuse()
     collection_pct,recovery_pct=monte_carlo.parse_scenario_id(args.scenario)
     if collection_pct not in COLLECTION_LEVELS or recovery_pct not in RECOVERY_LEVELS: raise ValueError("S6_SCENARIO_OUTSIDE_FIRST_STOCHASTIC_FAMILY")
-    cohort_id=f"s6-v23-n300-{args.source_sha[:8]}"
-    trial_ids=list(range(1,args.trials+1)); started=time.monotonic()
+    cohort_id=f"s6-v23-{args.source_sha[:8]}"
+    trial_ids=list(range(1,args.trials+1))
+    new_trial_ids=list(range(previous_n+1,args.trials+1))
+    started=time.monotonic()
     out_dir=Path(args.output_dir); out_dir.mkdir(parents=True,exist_ok=True)
-    results={}; slices={}; derived={tid:None for tid in trial_ids}
+    if previous_n:
+        results, slices, derived = load_previous_artifact(Path(args.previous_dir), args.scenario, args.source_sha, cohort_id, previous_n)
+    else:
+        results, slices, derived = {}, {}, {}
     base_scenario=f"C{collection_pct:03d}_G100"
     if recovery_pct==100:
-        results,slices=run_full_trials(args.scenario,trial_ids,args.source_sha,args.workers)
-        policy="G100_BASE_FULL_RUN"
+        new_results,new_slices=run_full_trials(args.scenario,new_trial_ids,args.source_sha,args.workers)
+        results.update(new_results); slices.update(new_slices)
+        policy="G100_BASE_FULL_RUN_INCREMENTAL_RANGE"
     elif collection_pct in OPT1_ENABLED_COLLECTIONS:
         if not args.base_dir: raise ValueError("S6_OPT1_BASE_DIR_REQUIRED_FOR_C085_C070_LOWER_G")
         base_results,base_slices=load_base_artifact(Path(args.base_dir),collection_pct,args.source_sha,cohort_id,args.trials)
-        eligible=[tid for tid in trial_ids if base_results[tid].claims_created==0]
-        full_ids=[tid for tid in trial_ids if base_results[tid].claims_created>0]
+        eligible=[tid for tid in new_trial_ids if base_results[tid].claims_created==0]
+        full_ids=[tid for tid in new_trial_ids if base_results[tid].claims_created>0]
         full_results,full_slices=run_full_trials(args.scenario,full_ids,args.source_sha,args.workers)
         results.update(full_results); slices.update(full_slices)
         for tid in eligible:
@@ -118,11 +171,12 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
                 raise RuntimeError(f"S6_OPT1_FINANCIAL_FINGERPRINT_MISMATCH:{args.scenario}:{tid}")
             results[tid]=candidate; slices[tid]=[dict(row) for row in base_slices[tid]]
             derived[tid]=f"DERIVED_FROM={base_scenario}"
-        policy=("OPT1_ENABLED_DERIVED_ZERO_CLAIM_TRIALS_FULL_RUN_POSITIVE_CLAIM_TRIALS" if eligible
-                else "OPT1_ENABLED_BUT_NO_ELIGIBLE_TRIALS_AT_N300_ALL_TRIALS_FULL_RUN")
+        policy=("OPT1_ENABLED_DERIVED_ZERO_CLAIM_TRIALS_FULL_RUN_POSITIVE_CLAIM_TRIALS_INCREMENTAL_RANGE"
+                if eligible else "OPT1_ENABLED_NO_ZERO_CLAIM_TRIALS_IN_INCREMENTAL_RANGE_FULL_RUN")
     else:
-        results,slices=run_full_trials(args.scenario,trial_ids,args.source_sha,args.workers)
-        policy="OPT1_INELIGIBLE_FULL_RUN_REQUIRED"
+        new_results,new_slices=run_full_trials(args.scenario,new_trial_ids,args.source_sha,args.workers)
+        results.update(new_results); slices.update(new_slices)
+        policy="OPT1_INELIGIBLE_FULL_RUN_INCREMENTAL_RANGE"
     expected=set(trial_ids)
     if set(results)!=expected or set(slices)!=expected: raise RuntimeError(f"S6_SCENARIO_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
     ordered=[results[tid] for tid in trial_ids]
@@ -171,12 +225,14 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
 
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
+    checkpoint_n = args.trials
+    previous_checkpoint_n(checkpoint_n)
     root=Path(args.input_root); manifests=sorted(root.rglob("scenario_manifest.json")); by_scenario={}
     for mp in manifests:
         m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
         if scenario in by_scenario: raise RuntimeError(f"S6_DUPLICATE_SCENARIO_ARTIFACT:{scenario}")
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
-        if m.get("trial_count")!=constants.STATISTICAL_CHECK_START_N: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
+        if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
         for name,e in m.get("files",{}).items():
             p=base/name
@@ -191,7 +247,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         base,m=by_scenario[scenario]
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
         ids=[int(row["trial_id"]) for row in rows]
-        if ids!=list(range(1,constants.STATISTICAL_CHECK_START_N+1)): raise RuntimeError(f"S6_TRIAL_ID_SEQUENCE_MISMATCH:{scenario}")
+        if ids!=list(range(1,checkpoint_n+1)): raise RuntimeError(f"S6_TRIAL_ID_SEQUENCE_MISMATCH:{scenario}")
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         all_trials.extend(rows); all_daily.extend(daily)
@@ -205,16 +261,16 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
     write_json(out/"c100_reuse.json",c100_reuse)
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in [out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]}
-    manifest={"schema_version":"s6-n300-aggregate-v1","status":"EXECUTED","source_sha":args.source_sha,
-        "cohort_id":f"s6-v23-n300-{args.source_sha[:8]}","run_id":args.run_id,"run_attempt":args.run_attempt,
-        "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":constants.STATISTICAL_CHECK_START_N,
+    manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
+        "cohort_id":f"s6-v23-{args.source_sha[:8]}","run_id":args.run_id,"run_attempt":args.run_attempt,
+        "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
         "scenario_count":len(expected),"scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "test192_reuse":{"run_id":40397897155,"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
-    print(json.dumps({"status":"S6_N300_FIRST_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
-        "cohort_id":manifest["cohort_id"],"scenario_count":len(expected),"trial_rows":len(all_trials),
+    print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
+        "cohort_id":manifest["cohort_id"],"checkpoint_n":checkpoint_n,"scenario_count":len(expected),"trial_rows":len(all_trials),
         "daily_distribution_rows":len(all_daily),"gate_a":manifest["acceptance_status"]["gate_a"],
         "gate_b":manifest["acceptance_status"]["gate_b"],"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
@@ -226,11 +282,13 @@ def main() -> int:
     p.add_argument("--source-sha",required=True)
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
-    p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N)
+    p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N: 300, 600, 1200, 2400, ...")
     p.add_argument("--workers",type=int,default=2)
     p.add_argument("--output-dir",default="results_stage7_s6/scenario")
     p.add_argument("--base-dir")
+    p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
+    p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N to aggregate")
     args=p.parse_args()
     if args.mode=="scenario":
         if not args.scenario: p.error("--scenario is required in scenario mode")
