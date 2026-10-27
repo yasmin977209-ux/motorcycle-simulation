@@ -24,6 +24,29 @@ def test_n_unique_paths_uses_daily_paths_not_terminal_fingerprints():
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
+def test_cumulative_rng_audit_checks_cross_checkpoint_duplicates_and_exempts_zero_draws():
+    source_sha = "a" * 40
+    def record(scenario, trial_id, checksum, draws):
+        return {
+            "scenario_id": scenario,
+            "trial_id": trial_id,
+            "rng_checksum": checksum,
+            "rng_draw_count": draws,
+            "rng_checksum_fingerprint_sha256": s6.rng.rng_audit_fingerprint(
+                source_sha=source_sha, master_seed=s6.constants.MASTER_SEED,
+                scenario_id=scenario, trial_id=trial_id,
+                rng_checksum=checksum, rng_draw_count=draws,
+            ),
+        }
+    assert s6.validate_cumulative_rng_audit(
+        [record("C100_G100", 1, 0, 0), record("C100_G100", 2, 0, 0)], source_sha
+    ) == 2
+    with pytest.raises(RuntimeError, match="DUPLICATE_RNG_CHECKSUM_DETECTED"):
+        s6.validate_cumulative_rng_audit(
+            [record("C030_G000", 1, 0, 1), record("C030_G000", 2, 0, 1)], source_sha
+        )
+
+
 def test_s6_first_checkpoint_has_twenty_stochastic_scenarios_and_excludes_c100():
     scenarios=s6.stochastic_scenario_ids()
     assert len(scenarios)==20
@@ -123,8 +146,12 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
             fp=hashlib.sha256(f"{fingerprint_scenario}|{tid}".encode()).hexdigest()
             if collection==70 and tid==2:
                 fp=hashlib.sha256("C070_G100|1".encode()).hexdigest()
-            trial_rows.append({"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp,
-              "claims_created":0,"derived_from":derived_from,"rng_draw_count":1,"rng_checksum":tid})
+            audit_fingerprint=s6.rng.rng_audit_fingerprint(source_sha=source_sha,
+              master_seed=s6.constants.MASTER_SEED,scenario_id=scenario,trial_id=tid,
+              rng_checksum=tid,rng_draw_count=1)
+            trial_rows.append({"scenario_id":scenario,"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp,
+              "claims_created":0,"derived_from":derived_from,"rng_draw_count":1,"rng_checksum":tid,
+              "rng_checksum_fingerprint_sha256":audit_fingerprint})
         pq.write_table(pa.Table.from_pylist(trial_rows),base/"trials_summary.parquet")
         pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","scenario_id":scenario,
           "quantile_name":"P50","metric":"Cash","value":0}]),base/"daily_distribution.parquet")
