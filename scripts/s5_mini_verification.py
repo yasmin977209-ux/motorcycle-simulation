@@ -179,7 +179,7 @@ def verify_opt1_full_g_coverage(
     return verified
 
 
-def result_row(def result_row(result: monte_carlo.TrialResult, cohort_id: str, source_sha: str) -> dict[str, Any]:
+def result_row(result: monte_carlo.TrialResult, cohort_id: str, source_sha: str) -> dict[str, Any]:
     row = asdict(result)
     # Keep only canonical scenario IDs, never the float collection_probability.
     row.pop("collection_probability", None)
