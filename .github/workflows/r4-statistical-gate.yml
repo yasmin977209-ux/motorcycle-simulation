@@ -1,0 +1,41 @@
+name: R4 statistical gate fail-closed validation
+
+on:
+  push:
+    branches:
+      - "tmp/cp-r4-statistical-gate-fail-closed-20261027"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/golden_reference_provider.py"
+      - "tests/test_golden_provider_workflow_integration.py"
+      - ".github/workflows/r4-statistical-gate.yml"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  r4-tests:
+    name: Focused R4 regression then full test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact candidate source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Focused R4 regression test
+        run: python -m pytest -q tests/test_golden_provider_workflow_integration.py::test_statistical_gate_cannot_be_cleared_by_status_string_alone
+      - name: Full repository test suite (only after focused test passes)
+        if: success()
+        run: python -m pytest -q tests
