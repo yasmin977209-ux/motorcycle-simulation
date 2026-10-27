@@ -1530,3 +1530,11 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - `main`, the S4 Golden, and historical artifacts remain untouched.
 
 **Next permitted action:** wait for Run `40574326793` to finish its pinned-source execution; run targeted tests for the aggregate correction and review their logs; then enable the correction branch for the next checkpoint run only after CI validates the patch. Do not reuse its current-source scenario outputs across the changed `SOURCE_SHA`.
+
+### S6 preflight result update — Run 40574326793
+
+- Exact tested HEAD: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; workflow run https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40574326793.
+- Executed commands from the CI log: `sha256sum scripts/s6_first_checkpoint.py` (exit 0; output SHA-256 `a254989d02422e432c18989df5f5ad31e3c6a51d9a6f69fd433f50842b5ff9ac`); `python scripts/s6_first_checkpoint.py --help` (exit 0); `python -m pytest -q tests` (exit 0); then the C100 reuse and execution-authorization assertions (exit 0, `S6_PREFLIGHT_PASS`).
+- Actual full pytest result: `573 passed, 1 skipped, 1 warning in 509.75s`; warning is the existing `DeprecationWarning: invalid escape sequence '\\ '` at `scripts/stage13_assemble.py:354`. This is the repository pytest suite count, not a claim that the 177 normative UNIQUE acceptance tests have each been separately mapped and reported.
+- The preflight reused C100 read-only from Run `40263424595`, Golden SHA-256 `39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327`, manifest SHA-256 `2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04`. It explicitly confirmed that Gate A/Gate B final acceptance and convergence claims are prohibited at first checkpoint.
+- Current job state at the last poll: the four G100 base jobs C030, C050, C070, C085 were `IN_PROGRESS`; lower-G jobs and aggregate had not started. No scenario completion, artifact hash, aggregate result or Gate PASS is claimed yet.
