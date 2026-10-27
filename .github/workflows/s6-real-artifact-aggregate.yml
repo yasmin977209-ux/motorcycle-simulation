@@ -8,6 +8,7 @@ on:
       - ".github/workflows/s6-real-artifact-aggregate.yml"
       - "scripts/s6_first_checkpoint.py"
       - "tests/test_s6_first_checkpoint.py"
+      - "docs/evidence/s6_n300_source_run_metadata.json"
 
 permissions:
   contents: read
