@@ -52,14 +52,21 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
+def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int | None,
                                   diagnostic_count: int) -> tuple[int | None, str]:
-    """Do not promote a recomputed diagnostic to a normative metric for legacy artifacts."""
+    """Keep stochastic path identity unresolved; preserve the full-path count as diagnostic only."""
     if "unique_daily_paths" not in manifest:
         return None, "UNDEFINED_BUSINESS_RULE"
-    if manifest.get("n_unique_paths") != computed_count or manifest.get("unique_daily_paths") != diagnostic_count:
-        raise RuntimeError("S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH")
-    return computed_count, str(manifest.get("n_unique_paths_status", "COMPUTED_UNIQUE_DAILY_PATHS"))
+    if manifest.get("unique_daily_paths") != diagnostic_count:
+        raise RuntimeError("S6_SCENARIO_UNIQUE_DAILY_PATHS_DIAGNOSTIC_MISMATCH")
+    scenario = str(manifest.get("scenario_id", ""))
+    if scenario.startswith("C100_"):
+        if computed_count != 1 or manifest.get("n_unique_paths") != 1:
+            raise RuntimeError("S6_SCENARIO_N_UNIQUE_PATHS_MISMATCH")
+        return 1, "DEGENERATE_DETERMINISTIC"
+    # §§21.2 and 14.12 require N_unique_paths but do not define stochastic path equality.
+    # Never promote unique_daily_paths or financial/RNG fingerprints by inference.
+    return None, "UNDEFINED_BUSINESS_RULE"
 
 
 def current_git_commit(source_sha: str) -> str:
@@ -309,7 +316,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
         "trial_count":len(ordered),"n_unique_paths":n_unique_paths,
         "rng_audit_validation":{"status":"PASS","records_verified":rng_audit_records_verified,"scope":"cumulative scenario trial IDs 1..N"},
-        "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if all(int(getattr(x, "rng_draw_count", 0)) == 0 for x in ordered) else "COMPUTED_UNIQUE_DAILY_PATHS",
+        "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if all(int(getattr(x, "rng_draw_count", 0)) == 0 for x in ordered) else "UNDEFINED_BUSINESS_RULE",
         "unique_daily_paths":n_unique_daily_paths,
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
         "n_unique_financial_outcomes":n_unique_financial_outcomes,
