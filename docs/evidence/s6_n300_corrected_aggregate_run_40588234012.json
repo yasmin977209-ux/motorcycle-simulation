@@ -1,0 +1,40 @@
+{
+  "schema_version": "s6-corrected-n300-aggregate-evidence-v1",
+  "run_id": "40588234012",
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40588234012",
+  "git_commit": "61407e3729544052144b88955938bd74decb32da",
+  "source_run_id": "40574326793",
+  "source_run_attempt": 1,
+  "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+  "cohort_id": "s6-v23-da1a9ea9",
+  "checkpoint_n": 300,
+  "stochastic_scenario_count": 20,
+  "total_scenario_combinations": 25,
+  "c100_reused_scenario_count": 5,
+  "trial_rows": 6000,
+  "daily_distribution_rows": 2075950,
+  "gate_a": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+  "gate_b": "NOT_EVALUATED_FIRST_CHECKPOINT_ONLY",
+  "stability": "NOT_CONVERGED_CHECKPOINT_N300_BASELINE",
+  "n_unique_paths": "UNDEFINED_BUSINESS_RULE",
+  "c100_reuse_run_id": "40263424595",
+  "c100_golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+  "c100_manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04",
+  "test192_reuse_run_ids": [
+    "40531095239",
+    "40546712685"
+  ],
+  "test192_proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+  "aggregate_files": {
+    "daily_distribution.parquet": "745fec9cb47fe539cad01e24ee54e0109287805ba10d1ff8feccd3477c8605ee",
+    "manifest.json": "6b340a349837273b5cd588e288b47d4c16c59132de7964389866bbd773e5d9f8",
+    "trials_summary.parquet": "88807fb73afb56ec9133773fb3e43ee08f0ad9eec395e4b81ea363de283634b4"
+  },
+  "artifact_id": 12773435043,
+  "artifact_name": "s6-n300-corrected-aggregate-40588234012",
+  "artifact_size_bytes": 5325406,
+  "artifact_zip_sha256": "0016c69de4e3afc8560b5c95518cf310296bce6e6ec416ce64c13eff8178b20c",
+  "workflow_conclusion": "success",
+  "note": "This is a checkpoint aggregate only. It does not establish Gate A, Gate B, convergence, or final acceptance."
+}
