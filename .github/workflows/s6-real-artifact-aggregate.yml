@@ -68,6 +68,8 @@ jobs:
               return subprocess.run(["curl","-fsSL","-H",f"Authorization: Bearer {token}",
                 "-H","Accept: application/vnd.github+json",url],capture_output=True,check=True).stdout
           run=json.loads(curl_bytes(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}"))
+          if run.get("head_sha")!=source_sha or int(run.get("run_attempt",-1))!=run_attempt:
+              raise RuntimeError("S6_SOURCE_RUN_HEAD_OR_ATTEMPT_MISMATCH")
           jobs=json.loads(curl_bytes(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/jobs?per_page=100"))["jobs"]
           scenarios={}
           package_names=("et-xmlfile","iniconfig","numpy","openpyxl","packaging","pandas","pluggy","pyarrow","pygments","pytest","python-dateutil","pyyaml","scipy","six")
@@ -175,7 +177,8 @@ jobs:
           assert m["source_run_metadata"]["status"] == "VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS"
           assert m["source_run_metadata"]["scenario_count"] == 20
           assert all(x["n_total"] == x["n_closed"] + x["n_censored"] for x in m["scenario_summaries"])
-          assert all(x["started_at_utc"] and x["finished_at_utc"] and x["python_version"] and x["package_versions"] for x in m["scenario_summaries"])
+          assert all(x["started_at_utc"] and x["finished_at_utc"] and x["python_version"] and x["package_versions"] and x["source_job_log_sha256"] for x in m["scenario_summaries"])
+          assert all(x["execution_metadata_source"] == "source_run_job_api_and_logs" for x in m["scenario_summaries"])
           print(json.dumps({"status":"CORRECTED_N300_AGGREGATE_EVIDENCE_VALIDATED_NOT_CONVERGED",
             "git_commit":m["git_commit"],"source_sha":m["source_sha"],"source_run_id":m["source_run_id"],
             "scenario_count":m["scenario_count"],"checkpoint_n":m["checkpoint_n"],
