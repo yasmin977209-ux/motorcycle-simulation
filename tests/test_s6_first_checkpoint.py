@@ -111,8 +111,13 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
           "workers":2,"files":files
         }))
 
-    result=s6.aggregate(SimpleNamespace(source_sha=source_sha,run_id=source_run_id,
-      run_attempt=1,trials=checkpoint_n,input_root=str(artifacts),output_dir=str(tmp_path/"out")))
+    aggregate_run_id="99999"
+    result=s6.aggregate(SimpleNamespace(source_sha=source_sha,run_id=aggregate_run_id,
+      run_attempt=1,source_run_id=source_run_id,source_run_attempt=1,
+      trials=checkpoint_n,input_root=str(artifacts),output_dir=str(tmp_path/"out")))
+    assert result["run_id"]==aggregate_run_id
+    assert result["source_run_id"]==source_run_id
+    assert result["scenario_summaries"][0]["run_id"]==source_run_id
     assert result["scenario_count"]==len(s6.stochastic_scenario_ids())
     assert result["total_scenario_combinations"]==result["scenario_count"]+result["c100_reused_scenario_count"]
     assert result["c100_reused_scenario_count"]==len(result["c100_reuse"]["scenario_ids"])
