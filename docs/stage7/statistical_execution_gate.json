@@ -42,10 +42,10 @@
   },
   "component_status": {
     "gate_a_exact_golden": {
-      "status": "AUTHORIZED_FOR_S5_COHORT_INTEGRITY_CHECKS",
+      "status": "CURRENT_COHORT_GOLDEN_COVERAGE_PENDING",
       "blockers": [
-        "The S4 C100 Golden may be reused only as its separate deterministic cohort; its tested SOURCE_SHA/cohort must remain recorded.",
-        "S5's stochastic mini cohort is not a production Gate A Golden map and cannot establish Gate A production PASS."
+        "The reused C100 Golden remains a separate deterministic cohort and is read-only.",
+        "The current stochastic cohort SOURCE_SHA da1a9ea9b5cd789c944de3f07b08395bb67c49e7 requires an independently prepared and reviewed same-source Golden map before Gate A can pass; the prior f3af historical map is not interchangeable."
       ],
       "c100_reuse": {
         "run_id": "40263424595",
@@ -59,8 +59,8 @@
     "gate_b_financial_means": {
       "status": "OWNER_AUTHORIZED_METHOD_IMPLEMENTED_TEST192_PASS_PRODUCTION_CHECKPOINTS_PENDING",
       "criterion": "95% CI half-width strictly < 1% of abs(mean); absolute tolerance 1 currency unit on approved near-zero branch",
-      "implementation_gap": "The v2.3 sequential alpha-spending policy is implemented in stats_integrity.py with exact Fraction alpha_s,k=1/[400*k*(k+1)] and the approved per-checkpoint mean intervals at N_k. No N/2 check is part of the v2.3 checkpoint contract. Test 192 coverage passed with 10,000 synthetic repetitions and observed family-wise error 0.0435 <= 0.05 (Runs 40531095239 and 40546712685; proof SHA-256 f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b). Production Gate A/B and the three-successive-transition requirement remain unevaluated until the full cumulative checkpoint sequence is assessed.",
-      "required_evidence": "Pass the dedicated support-bound tests and S5 workflow at the exact tested source. Apply the approved policy to each full checkpoint, with three adjacent successful transitions across 300->600->1200->2400 and the exact P50 cross-multiplication guard."
+      "implementation_gap": "The v2.3 sequential alpha-spending policy is implemented in stats_integrity.py with exact Fraction alpha_s,k=1/[400*k*(k+1)] and approved per-checkpoint intervals at N_k. No N/2 check is part of the v2.3 contract. Test 192 coverage passed with 10,000 synthetic repetitions and observed family-wise error 0.0435 <= 0.05 (Runs 40531095239 and 40546712685; proof SHA-256 f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b). Production Gate A/B and the three-successive-transition requirement remain unevaluated until the full cumulative checkpoint sequence and independent same-source Golden are assessed.",
+      "required_evidence": "Evaluate the approved alpha-spending mean intervals at each cumulative checkpoint N_k for the current source cohort; retain exact N_k identity and all three means. Test 192 coverage evidence is already available and reusable; production Gate A/B and the three successive transitions remain to be evaluated."
     },
     "section_2_5_quantiles": {
       "status": "APPROVED_ALPHA_SPENDING_RANK_METHOD_IMPLEMENTED_PRODUCTION_CHECKPOINT_EVALUATION_PENDING",
@@ -106,7 +106,8 @@
         "tests/test_stage7_authoring.py::test_stability_rejects_non_doubling_or_misbound_transition"
       ],
       "blockers": [
-        "Production source-identity/completeness acceptance and historical failed-transition requalification remain open; unit tests do not waive the C030_G030 N=300 to N=600 P90_Final_Cash failure."
+        "Current-cohort source identity/completeness, production Gate A/B results, and the full four-point sequence remain pending.",
+        "The historical C030_G030 P90_Final_Cash failure is retained in its original cohort record. It must not be erased, but it is not silently imported into the new SOURCE_SHA cohort; the new cohort must build its own consecutive-transition history."
       ]
     },
     "gate_b_implementation_guards": {
@@ -126,7 +127,10 @@
       "metric": "P90_Final_Cash",
       "transition": "N=300 to N=600",
       "relative_change_percent": 1.5715059334983579,
-      "next_step_authorized": "Golden reference preparation for N=2400 only; this is not a completed checkpoint and does not by itself establish stability"
+      "next_step_authorized": "Golden reference preparation for N=2400 only; this is not a completed checkpoint and does not by itself establish stability",
+      "cohort_scope": "historical source cohort; preserved unchanged",
+      "applies_to_current_cohort": false,
+      "note": "Preserve the original failure record. Current SOURCE_SHA/cohort must have its own transition history; do not copy historical pass/fail state across cohort identities."
     }
   },
   "execution_authorization": {
@@ -142,10 +146,11 @@
     "requirements": [
       "Explicit reviewed approval record and exact tested source identity",
       "All component_status entries marked implemented and independently validated",
-      "Gate A authority records are complete, intact, and present in effective governance",
-      "Four cumulative checkpoint points and three successful adjacent transitions are implemented and tested",
-      "P90_Held_Assets source, identity, completeness, and threshold are verified",
-      "Pointwise-versus-time-uniform distinctions and family-wise IUT assumptions are explicitly validated"
+      "Independently prepared, reviewed, same-SOURCE_SHA Gate A Golden coverage for every required scenario and checkpoint",
+      "Four cumulative checkpoint points and three successful adjacent transitions, with exact P50 guard and preserved failure history",
+      "P90_Held_Assets source, identity, completeness, and threshold verified as part of all seven Gate B indicators",
+      "Test 192 coverage proof verified and the approved v2.3 alpha-spending/IUT method applied to the current cohort",
+      "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified"
     ]
   },
   "implementation_approval": {
