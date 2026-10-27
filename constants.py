@@ -82,7 +82,7 @@ RNG_CHECKSUM_MODULUS: Final[int] = 1 << 64
 RNG_CHECKSUM_SHIFT_BITS: Final[int] = 11
 RNG_AUDIT_SCHEMA_VERSION: Final[str] = "v2.3-rng-audit-v1"
 
-# [Owner-approved Appendix E, §§14.11/21.3] Exact sequential alpha spending.
+# [v2.3 §§2.5, 14.11.4, 21.3] Exact sequential alpha spending.
 STAT_ALPHA_PER_SCENARIO_NUMERATOR: Final[int] = 1
 STAT_ALPHA_PER_SCENARIO_DENOMINATOR: Final[int] = 400
 STAT_REL_TOL_NUMERATOR: Final[int] = 1
