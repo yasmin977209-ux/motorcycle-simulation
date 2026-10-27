@@ -1550,3 +1550,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
   - `trials_summary.parquet`: `09054155d3bf98330905d451e49c3c7df015f72d7b1b5cead832573900864534`, 49,164 bytes.
 - The artifact's old per-scenario manifest predates the execution-provenance metadata correction; the correction branch now records `git_commit`, timestamps, exact command argv, exit code, Python/dependency versions and elapsed time in newly produced manifests. Do not mutate the already-produced artifact. The corrected aggregate manifest will explicitly identify its own build commit and retain the original trial `SOURCE_SHA`.
 - At last poll, C030 was `SUCCESS`; C050, C070 and C085 G100 base jobs remained `IN_PROGRESS`. Lower-G jobs and aggregate were not yet complete. This is one valid scenario artifact only, not an accepted N=300 checkpoint and not Gate A/B PASS.
+
+### S6 follow-up validation — 2026-10-27
+
+- Latest focused regression Run `40577104008` passed on exact tested HEAD `3f405289b0e6ba0243566b325bfe011a62120fba`: compile and CLI checks passed; `python -m pytest -q tests/test_s6_first_checkpoint.py` exit 0, `7 passed in 0.13s`. URL: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40577104008.
+- Scenario `C070_G100` completed in Run `40574326793`, job `122441296932`: 300 trial IDs, `eligible_zero_claim_trials=300`, `derived_trial_count=0` (this is the G100 base, not a lower-G derivation), elapsed `445.151479223s`; status `S6_SCENARIO_CHECKPOINT_EXECUTED`, no Gate A/B or convergence claim.
+- C070_G100 output file hashes from the actual run log:
+  - `daily_distribution.parquet`: SHA-256 `89958012294ed3b62d9d2e01b4ffe0c345dbe4b577adccfbf148eb6f7d812cf9`, 386,932 bytes.
+  - `daily_snapshots.parquet`: SHA-256 `56fe96e352bc397b10e833f348a4f736ad32cece7ae1208e58aa26608ad3b4f0`, 11,134,412 bytes.
+  - `opt1_provenance.json`: SHA-256 `89ecbdf10c7083e3d2ebc0f9a2948ddeedc7021f1e24c4fdd331a8e3c9d01668`, 2,900 bytes.
+  - `trials_summary.parquet`: SHA-256 `ef89fd6d1501199e2486128be9c6f35ebf0f54ab17b6488e6235379d50f10aaa`, 42,054 bytes.
+- At the last poll, C030 and C070 G100 jobs succeeded; C050 and C085 G100 jobs remained in progress. The old run is pinned to `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; the corrected aggregation candidate is separate and has not yet consumed these artifacts.
