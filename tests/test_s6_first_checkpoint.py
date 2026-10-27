@@ -92,19 +92,38 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     for scenario in sorted(s6.stochastic_scenario_ids()):
         base=artifacts/f"s6-n300-{scenario}-{source_run_id}"
         base.mkdir()
+        collection=int(scenario.split("_",1)[0][1:])
+        recovery=int(scenario.split("_",1)[1][1:])
+        base_scenario=f"C{collection:03d}_G100"
+        derived_from=f"DERIVED_FROM={base_scenario}" if collection in {70,85} and recovery!=100 else None
+        if recovery==100:
+            policy="G100_BASE_FULL_RUN_INCREMENTAL_RANGE"
+        elif collection in {70,85}:
+            policy="OPT1_ENABLED_DERIVED_ZERO_CLAIM_TRIALS_FULL_RUN_POSITIVE_CLAIM_TRIALS_INCREMENTAL_RANGE"
+        else:
+            policy="OPT1_INELIGIBLE_FULL_RUN_INCREMENTAL_RANGE"
         trial_rows=[]
         for tid in range(1,checkpoint_n+1):
-            fp=hashlib.sha256(f"{scenario}|{tid}".encode()).hexdigest()
-            if scenario=="C070_G100" and tid==2:
-                fp=hashlib.sha256(f"{scenario}|1".encode()).hexdigest()
-            trial_rows.append({"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp})
+            fingerprint_scenario=base_scenario if derived_from else scenario
+            fp=hashlib.sha256(f"{fingerprint_scenario}|{tid}".encode()).hexdigest()
+            if collection==70 and tid==2:
+                fp=hashlib.sha256("C070_G100|1".encode()).hexdigest()
+            trial_rows.append({"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp,
+              "claims_created":0,"derived_from":derived_from})
         pq.write_table(pa.Table.from_pylist(trial_rows),base/"trials_summary.parquet")
         pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","scenario_id":scenario,
           "quantile_name":"P50","metric":"Cash","value":0}]),base/"daily_distribution.parquet")
         snapshot_rows=[{"date":"2027-01-01","scenario_id":scenario,"trial_id":tid,"Cash":tid}
           for tid in range(1,checkpoint_n+1)]
         pq.write_table(pa.Table.from_pylist(snapshot_rows),base/"daily_snapshots.parquet")
-        (base/"opt1_provenance.json").write_text('{"status":"TEST_FIXTURE"}')
+        derived_trials=[{"trial_id":row["trial_id"],"derived_from":row["derived_from"],
+          "trial_fingerprint":row["trial_fingerprint"]} for row in trial_rows if row["derived_from"] is not None]
+        full_run_ids=[row["trial_id"] for row in trial_rows if row["derived_from"] is None]
+        (base/"opt1_provenance.json").write_text(json.dumps({
+          "scenario_id":scenario,"collection_level":collection,"recovery_level":recovery,
+          "policy":policy,"sample_trial_count":checkpoint_n,"eligible_zero_claim_trials":checkpoint_n,
+          "derived_trial_count":len(derived_trials),"full_run_trial_ids":full_run_ids,
+          "derived_trials":derived_trials,"status":"EXECUTED"}))
         files={}
         for name in ("trials_summary.parquet","daily_distribution.parquet","daily_snapshots.parquet","opt1_provenance.json"):
             path=base/name
@@ -113,7 +132,7 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
           "schema_version":"s6-first-checkpoint-v1","status":"EXECUTED","scenario_id":scenario,
           "source_sha":source_sha,"cohort_id":f"s6-v23-{source_sha[:8]}",
           "run_id":source_run_id,"run_attempt":1,"trial_id_start":1,"trial_id_end":checkpoint_n,
-          "trial_count":checkpoint_n,"n_unique_paths":len({row["trial_fingerprint"] for row in trial_rows}),"opt1_policy":"TEST_FIXTURE",
+          "trial_count":checkpoint_n,"n_unique_paths":len({row["trial_fingerprint"] for row in trial_rows}),"opt1_policy":policy,
           "workers":2,"files":files
         }))
 
@@ -136,6 +155,10 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
     assert diagnostic["n_unique_financial_outcomes"]==299
     assert diagnostic["n_unique_daily_paths_diagnostic"]==checkpoint_n
     assert result["acceptance_status"]["n_unique_paths"]=="UNDEFINED_BUSINESS_RULE"
+    assert result["opt1_audit"]["status"]=="PASS"
+    assert result["opt1_audit"]["derived_trial_rows"]==8*checkpoint_n
+    assert result["opt1_audit"]["full_run_scenario_rows"]==12*checkpoint_n
+    assert all(row["n_total"]==row["n_closed"]+row["n_censored"] for row in result["scenario_summaries"])
     assert result["acceptance_status"]["gate_a"]!="PASS"
     assert result["acceptance_status"]["gate_b"]!="PASS"
 
