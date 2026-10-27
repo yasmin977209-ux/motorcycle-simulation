@@ -10,6 +10,11 @@ import pytest
 from scripts import s6_first_checkpoint as s6
 
 
+def test_time_uniform_method_identifier_tracks_normative_v23_clause():
+    assert s6.constants.TIME_UNIFORM_METHOD_ID == "V2.3_14_11_4_ALPHA_SPENDING_V1"
+    assert "APPENDIX_E" not in s6.constants.TIME_UNIFORM_METHOD_ID
+
+
 def test_n_unique_paths_uses_daily_paths_not_terminal_fingerprints():
     from stats_integrity import resolve_n_unique_paths
     assert resolve_n_unique_paths("C070_G100", [1, 2, 3], 3) == 3
