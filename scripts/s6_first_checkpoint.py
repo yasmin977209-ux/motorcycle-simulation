@@ -324,6 +324,14 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
     checkpoint_n = args.trials
     previous_checkpoint_n(checkpoint_n)
+    source_metadata_path=getattr(args,"source_run_metadata_json",None)
+    source_metadata={}
+    if source_metadata_path:
+        source_metadata=json.loads(Path(source_metadata_path).read_text(encoding="utf-8"))
+        if str(source_metadata.get("source_run_id"))!=source_run_id or int(source_metadata.get("source_run_attempt",-1))!=source_run_attempt:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_IDENTITY_MISMATCH")
+        if source_metadata.get("source_sha")!=args.source_sha:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_SOURCE_SHA_MISMATCH")
     root=Path(args.input_root); manifests=sorted(root.rglob("scenario_manifest.json")); by_scenario={}
     for mp in manifests:
         m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
@@ -343,6 +351,14 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     # C100 is a separate, immutable S4 cohort. It is verified and referenced above,
     # never merged into the new stochastic SOURCE_SHA/cohort or counted as independent samples.
     expected=stochastic_scenario_ids()
+    if source_metadata_path:
+        if set(source_metadata.get("scenarios",{}))!=expected:
+            raise RuntimeError("S6_SOURCE_RUN_METADATA_SCENARIO_COVERAGE_MISMATCH")
+        for scenario,metadata in source_metadata["scenarios"].items():
+            if metadata.get("conclusion")!="success" or metadata.get("exit_code")!=0:
+                raise RuntimeError(f"S6_SOURCE_RUN_METADATA_JOB_NOT_SUCCESS:{scenario}")
+            if not metadata.get("started_at_utc") or not metadata.get("finished_at_utc") or not metadata.get("package_versions") or not metadata.get("python_version"):
+                raise RuntimeError(f"S6_SOURCE_RUN_METADATA_INCOMPLETE:{scenario}")
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
     all_trials=[]; all_daily=[]; summaries=[]
@@ -371,6 +387,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         n_closed=sum(1 for row in rows if row.get("final_close_date") is not None)
         n_censored=len(rows)-n_closed
         if n_closed+n_censored!=len(rows): raise RuntimeError(f"S6_CENSORING_COUNT_MISMATCH:{scenario}")
+        srcmeta=source_metadata.get("scenarios",{}).get(scenario,{})
         summaries.append({"scenario_id":scenario,"status":m.get("status"),
             "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
             "n_unique_paths":None,"n_unique_paths_status":"UNDEFINED_BUSINESS_RULE",
@@ -380,14 +397,19 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
             "opt1_policy":m["opt1_policy"],
             "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
-            "git_commit":m.get("git_commit",m["source_sha"]),
-            "execution_metadata_source":"scenario_manifest" if m.get("git_commit") else "pinned_workflow_and_source_sha",
+            "git_commit":m.get("git_commit") or srcmeta.get("git_commit") or m["source_sha"],
+            "execution_metadata_source":"scenario_manifest" if all(m.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions")) else ("source_run_job_api_and_logs" if srcmeta else "pinned_workflow_and_source_sha"),
             "run_id":m.get("run_id"),"run_attempt":m.get("run_attempt"),
-            "started_at_utc":m.get("started_at_utc"),"finished_at_utc":m.get("finished_at_utc"),
-            "command_argv":m.get("command_argv") or reconstructed_scenario_command(
+            "source_job_id":srcmeta.get("job_id"),"source_job_name":srcmeta.get("job_name"),
+            "source_job_log_sha256":srcmeta.get("job_log_sha256"),
+            "started_at_utc":m.get("started_at_utc") or srcmeta.get("started_at_utc"),
+            "finished_at_utc":m.get("finished_at_utc") or srcmeta.get("finished_at_utc"),
+            "command_argv":m.get("command_argv") or srcmeta.get("command_argv") or reconstructed_scenario_command(
                 scenario,args.source_sha,source_run_id,source_run_attempt,checkpoint_n,int(m.get("workers",2))),
-            "exit_code":m.get("exit_code",0),"python_version":m.get("python_version"),
-            "package_versions":m.get("package_versions"),"elapsed_seconds":m.get("elapsed_seconds"),
+            "exit_code":m.get("exit_code",srcmeta.get("exit_code",0)),
+            "python_version":m.get("python_version") or srcmeta.get("python_version"),
+            "package_versions":m.get("package_versions") or srcmeta.get("package_versions"),
+            "elapsed_seconds":m.get("elapsed_seconds") or srcmeta.get("elapsed_seconds"),
             "files":m.get("files",{}),"artifact_files_verified":True,
             "trial_fingerprint_map_sha256":hashlib.sha256("".join(f'{row["trial_id"]}|{row["trial_fingerprint"]}\n' for row in rows).encode()).hexdigest(),
             "scenario_manifest_sha256":sha256_file(base/"scenario_manifest.json")})
@@ -448,7 +470,14 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
     write_json(out/"c100_reuse.json",c100_reuse)
-    files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in [out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]}
+    output_paths=[out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]
+    source_metadata_sha256=None
+    if source_metadata_path:
+        source_metadata_bytes=Path(source_metadata_path).read_bytes()
+        (out/"source_run_metadata.json").write_bytes(source_metadata_bytes)
+        source_metadata_sha256=hashlib.sha256(source_metadata_bytes).hexdigest()
+        output_paths.append(out/"source_run_metadata.json")
+    files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in output_paths}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
         "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
         "run_id":args.run_id,"run_attempt":args.run_attempt,
@@ -464,6 +493,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "opt1_audit":{"status":"PASS","scenario_count":len(expected),
             "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
+        "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else "NOT_PROVIDED",
+            "sha256":source_metadata_sha256,"scenario_count":len(source_metadata.get("scenarios",{})) if source_metadata_path else 0},
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
             "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
@@ -489,6 +520,7 @@ def main() -> int:
     p.add_argument("--run-attempt",type=int,required=True)
     p.add_argument("--source-run-id")
     p.add_argument("--source-run-attempt",type=int)
+    p.add_argument("--source-run-metadata-json")
     p.add_argument("--trials",type=int,default=constants.STATISTICAL_CHECK_START_N, help="Cumulative checkpoint N: 300, 600, 1200, 2400, ...")
     p.add_argument("--trial-start",type=int,default=None,help="First incremental trial ID; defaults to previous checkpoint N + 1 (or 1 at N=300)")
     p.add_argument("--trial-end",type=int,default=None,help="Last incremental trial ID; defaults to --trials")
