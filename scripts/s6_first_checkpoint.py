@@ -1,5 +1,7 @@
 from __future__ import annotations
-import argparse, hashlib, json, os, platform, time
+import argparse, hashlib, json, os, platform, sys, time
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
@@ -26,6 +28,30 @@ def write_json(path: Path, value: Any) -> None:
 def require_source_sha(value: str) -> None:
     if len(value) != 40 or any(c not in "0123456789abcdef" for c in value):
         raise ValueError("S6_SOURCE_SHA_INVALID")
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def current_git_commit(source_sha: str) -> str:
+    commit = os.environ.get("GITHUB_SHA", source_sha)
+    require_source_sha(commit)
+    return commit
+
+
+def package_versions() -> dict[str, str | None]:
+    versions: dict[str, str | None] = {}
+    for package in ("numpy", "scipy", "pyarrow", "pandas", "python-dateutil"):
+        try:
+            versions[package] = version(package)
+        except PackageNotFoundError:
+            versions[package] = None
+    return versions
+
+
+def command_argv() -> list[str]:
+    return ["python", *sys.argv]
 
 def verify_c100_reuse() -> dict[str, Any]:
     if not C100_GOLDEN_PATH.is_file() or sha256_file(C100_GOLDEN_PATH) != EXPECTED_C100_GOLDEN_SHA256:
@@ -135,6 +161,8 @@ def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str
     return results, slices, derived
 
 def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
+    started_at_utc = utc_now()
+    started = time.monotonic()
     require_source_sha(args.source_sha)
     previous_n = previous_checkpoint_n(args.trials)
     if args.workers<1: raise ValueError("S6_WORKERS_MUST_BE_POSITIVE")
@@ -158,7 +186,6 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     cohort_id=f"s6-v23-{args.source_sha[:8]}"
     trial_ids=list(range(1,args.trials+1))
     new_trial_ids=list(range(trial_start,trial_end+1))
-    started=time.monotonic()
     out_dir=Path(args.output_dir); out_dir.mkdir(parents=True,exist_ok=True)
     if previous_n:
         results, slices, derived = load_previous_artifact(Path(args.previous_dir), args.scenario, args.source_sha, cohort_id, previous_n)
@@ -225,8 +252,10 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL",
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
         "trial_count":len(ordered),"n_unique_paths":len({monte_carlo.trial_fingerprint(x) for x in ordered}),
-        "run_id":args.run_id,"run_attempt":args.run_attempt,"command":"python scripts/s6_first_checkpoint.py --mode scenario ...",
-        "python_version":platform.python_version(),"elapsed_seconds":time.monotonic()-started,"workers":args.workers,
+        "git_commit":current_git_commit(args.source_sha),"run_id":args.run_id,"run_attempt":args.run_attempt,
+        "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
+        "python_version":platform.python_version(),"package_versions":package_versions(),
+        "elapsed_seconds":time.monotonic()-started,"workers":args.workers,
         "opt1_policy":policy,"c100_reuse":c100_reuse,
         "gate_a_status":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
         "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY",
@@ -246,6 +275,8 @@ def stochastic_scenario_ids() -> set[str]:
 
 
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
+    started_at_utc = utc_now()
+    started = time.monotonic()
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
     checkpoint_n = args.trials
     previous_checkpoint_n(checkpoint_n)
@@ -286,7 +317,11 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     write_json(out/"c100_reuse.json",c100_reuse)
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in [out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
-        "cohort_id":f"s6-v23-{args.source_sha[:8]}","run_id":args.run_id,"run_attempt":args.run_attempt,
+        "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
+        "run_id":args.run_id,"run_attempt":args.run_attempt,"started_at_utc":started_at_utc,
+        "finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
+        "python_version":platform.python_version(),"package_versions":package_versions(),
+        "elapsed_seconds":time.monotonic()-started,
         "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
         "scenario_count":len(expected),"stochastic_scenario_count":len(expected),
         "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
