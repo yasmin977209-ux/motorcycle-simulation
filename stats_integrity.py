@@ -281,7 +281,7 @@ def _fraction_to_decimal(value: Fraction) -> Decimal:
 
 
 def time_uniform_inference_status() -> dict[str, Any]:
-    """Report whether the owner-approved Appendix E procedure is enabled."""
+    """Report whether the v2.3 §14.11.4 alpha-spending procedure is enabled."""
     approved = constants.TIME_UNIFORM_METHOD_APPROVED is True
     support = compute_deterministic_support_bounds()
     return {
