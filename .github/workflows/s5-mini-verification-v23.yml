@@ -6,6 +6,7 @@ on:
       - "tmp/s5-statistical-gate-v23-20261026"
     paths:
       - ".github/workflows/s5-mini-verification-v23.yml"
+      - "scripts/s5_finalize_docs.py"
       - "stats_integrity.py"
       - "scripts/s5_mini_verification.py"
       - "requirements.txt"
@@ -70,8 +71,9 @@ jobs:
             --source-sha "${GITHUB_SHA}" \
             --tested-commit "${GITHUB_SHA}"
 
-      - name: Replace compute-plan runtime placeholder with measured results
-        if: steps.s5_run.outcome == 'success'
+      - name: S5-C finalize gate and compute plan after successful S5-B
+        id: s5_c
+        if: steps.unit_tests.outcome == 'success' && steps.s5_run.outcome == 'success'
         shell: bash
         env:
           S5_TESTED_SHA: ${{ github.sha }}
@@ -79,41 +81,23 @@ jobs:
           S5_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
+          python scripts/s5_finalize_docs.py \
+            --source-sha "${S5_TESTED_SHA}" \
+            --tested-commit "${S5_TESTED_SHA}" \
+            --run-id "${S5_RUN_ID}" \
+            --run-attempt "${S5_RUN_ATTEMPT}"
 
-          benchmark = json.loads(Path("results_stage5/runtime_benchmark.json").read_text(encoding="utf-8"))
-          path = Path("docs/COMPUTE_PLAN.md")
-          content = path.read_text(encoding="utf-8")
-          begin = "<!-- S5_RUNTIME_BEGIN -->"
-          end = "<!-- S5_RUNTIME_END -->"
-          if content.count(begin) != 1 or content.count(end) != 1:
-              raise SystemExit("S5_RUNTIME_MARKERS_INVALID")
-          elapsed = benchmark["elapsed_seconds"]
-          throughput = benchmark["throughput_trials_per_second"]
-          speedups = benchmark["speedup_vs_sequential"]
-          exact = "\n".join([
-              f"Actual workflow Run: {os.environ['S5_RUN_ID']} (attempt {os.environ['S5_RUN_ATTEMPT']}); tested source SHA: {os.environ['S5_TESTED_SHA']}.",
-              f"Measured mini workload: {benchmark['sample']['actual_trial_executions']} executions, {benchmark['sample']['unique_trial_paths']} unique scenario/trial paths, 20 stochastic scenarios, N=5 each.",
-              f"- Sequential total: {elapsed['sequential_seconds']} s; throughput: {throughput['sequential_seconds']} trial/s.",
-              f"- Parallel 2 workers total: {elapsed['parallel_2_workers_seconds']} s; throughput: {throughput['parallel_2_workers_seconds']} trial/s; speed-up: {speedups['parallel_2_workers']}x.",
-              f"- Parallel 4 workers total: {elapsed['parallel_4_workers_seconds']} s; throughput: {throughput['parallel_4_workers_seconds']} trial/s; speed-up: {speedups['parallel_4_workers']}x.",
-              f"- Total measured script elapsed: {benchmark['end_to_end_script_seconds']} s.",
-              "S6 estimates are linear extrapolations from this small N=5 cohort, explicitly unmeasured; use them for worker sizing only, then revise with N=300 timings.",
-              "C100 was hash-verified and reused from S4 Run 40263424595; it was not rerun."
-          ])
-          replacement = begin + "\n" + exact + "\n" + end
-          left = content.index(begin)
-          right = content.index(end, left) + len(end)
-          path.write_text(content[:left] + replacement + content[right:], encoding="utf-8")
-          PY
-          git add docs/COMPUTE_PLAN.md
+      - name: Commit S5-C execution gate and compute plan
+        id: s5_c_commit
+        if: steps.s5_c.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/stage7/statistical_execution_gate.json docs/COMPUTE_PLAN.md
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "S5: record measured runtime and S6 compute plan"
+            git commit -m "S5-C: record successful S5-B evidence and OPT-1 policy"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -123,6 +107,8 @@ jobs:
         env:
           TEST_OUTCOME: ${{ steps.unit_tests.outcome }}
           S5_OUTCOME: ${{ steps.s5_run.outcome }}
+          S5C_OUTCOME: ${{ steps.s5_c.outcome }}
+          S5C_COMMIT_OUTCOME: ${{ steps.s5_c_commit.outcome }}
         run: |
           set -euo pipefail
           if test "$TEST_OUTCOME" != "success"; then
@@ -131,6 +117,10 @@ jobs:
           fi
           if test "$S5_OUTCOME" != "success"; then
             echo "S5_GATE_FAIL: stochastic mini evidence generation or validation failed." >&2
+            exit 1
+          fi
+          if test "$S5C_OUTCOME" != "success" || test "$S5C_COMMIT_OUTCOME" != "success"; then
+            echo "S5_GATE_FAIL: S5-C finalization or documentation commit failed." >&2
             exit 1
           fi
           test -s results_stage5/s5_manifest.json
@@ -151,3 +141,4 @@ jobs:
             s5_evidence/
             results_stage5/
             docs/COMPUTE_PLAN.md
+            docs/stage7/statistical_execution_gate.json

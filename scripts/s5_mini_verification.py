@@ -88,7 +88,98 @@ def ensure_no_float(value: Any, path: str = "$") -> None:
             ensure_no_float(nested, f"{path}[{index}]")
 
 
-def result_row(result: monte_carlo.TrialResult, cohort_id: str, source_sha: str) -> dict[str, Any]:
+
+def opt1_should_derive(claims_created: int) -> bool:
+    """OPT-1 is eligible only when G100 created no guarantee claims."""
+    if isinstance(claims_created, bool) or not isinstance(claims_created, int) or claims_created < 0:
+        raise ValueError("OPT1_CLAIMS_CREATED_MUST_BE_NONNEGATIVE_INT")
+    return claims_created == 0
+
+
+def opt1_derived_from_tag(collection_pct: int) -> str:
+    if collection_pct not in (100, *SCENARIO_COLLECTIONS):
+        raise ValueError(f"OPT1_UNKNOWN_COLLECTION_LEVEL:{collection_pct}")
+    return f"C{collection_pct:03d}_G100"
+
+
+def opt1_compare_candidate(
+    base: monte_carlo.TrialResult,
+    candidate: monte_carlo.TrialResult,
+    base_daily: list[dict[str, object]],
+    candidate_daily: list[dict[str, object]],
+    collection_pct: int,
+    trial_id: int,
+    candidate_scenario_id: str,
+) -> dict[str, Any]:
+    """Prove financial fingerprint and daily-path identity before recording derivation eligibility."""
+    if not opt1_should_derive(base.claims_created):
+        raise RuntimeError(
+            f"OPT1_DERIVATION_FORBIDDEN_CLAIMS_PRESENT:C{collection_pct:03d}:trial={trial_id}"
+        )
+    base_fp = monte_carlo.trial_fingerprint(base)
+    candidate_fp = monte_carlo.trial_fingerprint(candidate)
+    if base_fp != candidate_fp or base_daily != candidate_daily:
+        raise RuntimeError(
+            f"OPT1_BIT_EXACT_MISMATCH:{opt1_derived_from_tag(collection_pct)}:"
+            f"trial={trial_id}:{candidate_scenario_id}"
+        )
+    return {
+        "collection_scenario": f"C{collection_pct:03d}",
+        "trial_id": trial_id,
+        "claims_created": 0,
+        "base_scenario": opt1_derived_from_tag(collection_pct),
+        "candidate_scenario": candidate_scenario_id,
+        "base_trial_fingerprint": base_fp,
+        "candidate_trial_fingerprint": candidate_fp,
+        "daily_rows_bit_exact": True,
+        "eligible_for_derived_copy": True,
+        "derived_from_tag": opt1_derived_from_tag(collection_pct),
+    }
+
+
+def opt1_level_status(eligible_zero_claim_trials: int, verified_full_g_scenarios: int) -> str:
+    if (
+        isinstance(eligible_zero_claim_trials, bool)
+        or not isinstance(eligible_zero_claim_trials, int)
+        or eligible_zero_claim_trials < 0
+    ):
+        raise ValueError("OPT1_ELIGIBLE_TRIAL_COUNT_INVALID")
+    if verified_full_g_scenarios != len(SCENARIO_RECOVERY_RATES):
+        raise RuntimeError("OPT1_FULL_G_RUNS_NOT_VERIFIED")
+    if eligible_zero_claim_trials == 0:
+        return "OPT1_INELIGIBLE_FULL_RUN_REQUIRED"
+    return "OPT1_ENABLED_VERIFIED_FOR_ELIGIBLE_TRIALS"
+
+
+def verify_opt1_full_g_coverage(
+    collection_pct: int,
+    trial_ids: tuple[int, ...],
+    results_by_scenario: dict[str, list[monte_carlo.TrialResult]],
+    slices_by_scenario: dict[str, dict[int, list[dict[str, object]]]],
+    completed_full_run_scenarios: set[str],
+) -> list[dict[str, Any]]:
+    """Fail closed unless all five G levels completed independently for every sampled trial."""
+    expected_ids = set(trial_ids)
+    verified: list[dict[str, Any]] = []
+    for recovery_pct in SCENARIO_RECOVERY_RATES:
+        scenario_id = f"C{collection_pct:03d}_G{recovery_pct:03d}"
+        if scenario_id not in completed_full_run_scenarios:
+            raise RuntimeError(f"OPT1_FULL_RUN_EXECUTION_MISSING:{scenario_id}")
+        results = results_by_scenario.get(scenario_id)
+        if results is None or {item.trial_id for item in results} != expected_ids:
+            raise RuntimeError(f"OPT1_FULL_RUN_TRIAL_COVERAGE_MISMATCH:{scenario_id}")
+        slices = slices_by_scenario.get(scenario_id)
+        if slices is None or set(slices) != expected_ids:
+            raise RuntimeError(f"OPT1_FULL_RUN_DAILY_COVERAGE_MISMATCH:{scenario_id}")
+        verified.append({
+            "scenario_id": scenario_id,
+            "trial_count": len(expected_ids),
+            "full_run_verified": True,
+        })
+    return verified
+
+
+def result_row(def result_row(result: monte_carlo.TrialResult, cohort_id: str, source_sha: str) -> dict[str, Any]:
     row = asdict(result)
     # Keep only canonical scenario IDs, never the float collection_probability.
     row.pop("collection_probability", None)
@@ -289,6 +380,7 @@ def main() -> int:
     role_count = 0
     results_by_scenario: dict[str, list[monte_carlo.TrialResult]] = {}
     slices_by_scenario: dict[str, dict[int, list[dict[str, object]]]] = {}
+    completed_full_run_scenarios: set[str] = set()
     opt1_validation_rows: list[dict[str, Any]] = []
 
     for collection_pct in SCENARIO_COLLECTIONS:
@@ -431,48 +523,127 @@ def main() -> int:
             daily_distribution_rows.extend(build_exact_daily_distribution(
                 seq_results, seq_slices, scenario_id, cohort_id, source_sha
             ))
+            completed_full_run_scenarios.add(scenario_id)
 
-    # OPT-1 candidate test: for every collection level and sampled trial, compare G100 with all lower G values only when G100 created no claims.
+    opt1_level_statuses: list[dict[str, Any]] = [
+        {
+            "collection_scenario": "C100",
+            "status": "OPT1_REUSED_ACCEPTED_C100_S4_EVIDENCE",
+            "opt1_enabled": None,
+            "eligible_zero_claim_trials": None,
+            "full_run_required": False,
+            "full_run_scenarios_verified": [],
+            "run_id": c100_reuse["run_id"],
+            "cohort_id": c100_reuse["cohort_id"],
+            "rerun": False,
+            "note": "Accepted deterministic C100 cohort reused read-only; no C100 simulation was rerun in S5-B.",
+        }
+    ]
     for collection_pct in SCENARIO_COLLECTIONS:
         g100_id = f"C{collection_pct:03d}_G100"
         g100_by_id = {item.trial_id: item for item in results_by_scenario[g100_id]}
-        eligible_count = 0
+        if set(g100_by_id) != set(TRIAL_IDS):
+            raise RuntimeError(f"OPT1_G100_TRIAL_ID_SET_MISMATCH:{g100_id}")
+
+        full_run_coverage = verify_opt1_full_g_coverage(
+            collection_pct,
+            TRIAL_IDS,
+            results_by_scenario,
+            slices_by_scenario,
+            completed_full_run_scenarios,
+        )
+        eligible_trial_ids: list[int] = []
+        full_run_required_trial_ids: list[int] = []
         for trial_id in TRIAL_IDS:
             base = g100_by_id[trial_id]
-            if base.claims_created != 0:
+            if not opt1_should_derive(base.claims_created):
+                # Positive claims prohibit derivation. All five G scenarios have already
+                # been executed independently and their exact trial/daily coverage is checked above.
+                full_run_required_trial_ids.append(trial_id)
                 continue
-            eligible_count += 1
-            base_fp = monte_carlo.trial_fingerprint(base)
+            eligible_trial_ids.append(trial_id)
             base_daily = slices_by_scenario[g100_id][trial_id]
             for recovery_pct in (70, 50, 30, 0):
                 scenario_id = f"C{collection_pct:03d}_G{recovery_pct:03d}"
-                candidate = {item.trial_id: item for item in results_by_scenario[scenario_id]}[trial_id]
-                candidate_fp = monte_carlo.trial_fingerprint(candidate)
-                exact_daily = base_daily == slices_by_scenario[scenario_id][trial_id]
-                if base_fp != candidate_fp or not exact_daily:
-                    raise RuntimeError(f"OPT1_BIT_EXACT_MISMATCH:{g100_id}:trial={trial_id}:{scenario_id}")
-                opt1_validation_rows.append({
-                    "collection_scenario": f"C{collection_pct:03d}",
-                    "trial_id": trial_id,
-                    "claims_created": 0,
-                    "base_scenario": g100_id,
-                    "candidate_scenario": scenario_id,
-                    "base_trial_fingerprint": base_fp,
-                    "candidate_trial_fingerprint": candidate_fp,
-                    "daily_rows_bit_exact": True,
-                    "eligible_for_derived_copy": True,
-                    "derived_from_tag": f"{g100_id}",
-                })
-        if eligible_count == 0:
-            raise RuntimeError(f"OPT1_NO_ELIGIBLE_CLAIMS_ZERO_SAMPLE:{g100_id}:N={len(TRIAL_IDS)}")
+                candidate = {
+                    item.trial_id: item for item in results_by_scenario[scenario_id]
+                }[trial_id]
+                opt1_validation_rows.append(
+                    opt1_compare_candidate(
+                        base,
+                        candidate,
+                        base_daily,
+                        slices_by_scenario[scenario_id][trial_id],
+                        collection_pct,
+                        trial_id,
+                        scenario_id,
+                    )
+                )
+
+        level_status = opt1_level_status(len(eligible_trial_ids), len(full_run_coverage))
+        if len(TRIAL_IDS) < 50 and level_status == "OPT1_ENABLED_VERIFIED_FOR_ELIGIBLE_TRIALS":
+            level_status = "OPT1_SAMPLE_INSUFFICIENT_FOR_ACTIVATION"
+        opt1_level_statuses.append({
+            "collection_scenario": f"C{collection_pct:03d}",
+            "status": level_status,
+            "opt1_enabled": level_status == "OPT1_ENABLED_VERIFIED_FOR_ELIGIBLE_TRIALS",
+            "eligible_zero_claim_trials": len(eligible_trial_ids),
+            "eligible_trial_ids": eligible_trial_ids,
+            "full_run_required_trial_ids": full_run_required_trial_ids,
+            "full_run_required": (
+                level_status == "OPT1_INELIGIBLE_FULL_RUN_REQUIRED"
+                or bool(full_run_required_trial_ids)
+            ),
+            "full_run_scenarios_verified": full_run_coverage,
+            "full_run_independent_modes": [
+                "sequential",
+                "parallel_2_workers",
+                "parallel_4_workers",
+            ],
+            "exact_candidate_comparisons": sum(
+                1 for row in opt1_validation_rows
+                if row["collection_scenario"] == f"C{collection_pct:03d}"
+            ),
+            "rerun": True,
+        })
+
+    opt1_enabled_levels = [
+        row["collection_scenario"]
+        for row in opt1_level_statuses
+        if row["opt1_enabled"] is True
+    ]
+    full_run_required_levels = [
+        row["collection_scenario"]
+        for row in opt1_level_statuses
+        if row["status"] == "OPT1_INELIGIBLE_FULL_RUN_REQUIRED"
+    ]
+    opt1_sample_status = (
+        "PASS" if len(TRIAL_IDS) >= 50
+        and all(
+            item["full_run_scenarios_verified"]
+            for item in opt1_level_statuses
+            if item["collection_scenario"] != "C100"
+        )
+        else "INSUFFICIENT_SAMPLE_FOR_ACTIVATION"
+    )
     write_json(out_dir / "opt1_sample_validation.json", {
-        "schema_version": "opt1-bit-exact-sample-v1",
-        "sample_trials_per_collection_level": len(TRIAL_IDS),
+        "schema_version": "opt1-owner-decision-v1",
+        "owner_decision_clause": "21.7",
+        "owner_rule": (
+            "If G100 claims_created == 0, compare its financial trial_fingerprint and daily path "
+            "to every lower-G full run before permitting DERIVED_FROM=Cxxx_G100; otherwise run "
+            "all five G levels independently and do not raise an eligibility RuntimeError."
+        ),
+        "sample_trials_per_stochastic_collection_level": len(TRIAL_IDS),
         "minimum_required_trials_per_collection_level": 50,
-        "status": "PASS" if len(TRIAL_IDS) >= 50 else "INSUFFICIENT_SAMPLE_FOR_ACTIVATION",
-        "opt1_enabled_for_s6": len(TRIAL_IDS) >= 50,
+        "status": opt1_sample_status,
+        "opt1_enabled_for_s6": bool(opt1_enabled_levels) and len(TRIAL_IDS) >= 50,
+        "opt1_enabled_levels": opt1_enabled_levels,
+        "full_run_required_levels": full_run_required_levels,
         "eligible_comparisons": len(opt1_validation_rows),
-        "collection_levels": [f"C{c:03d}" for c in SCENARIO_COLLECTIONS],
+        "collection_levels": [row["collection_scenario"] for row in opt1_level_statuses],
+        "level_statuses": opt1_level_statuses,
+        "c100_reuse": c100_reuse,
         "comparisons": opt1_validation_rows,
     })
     elapsed_total = time.perf_counter() - started_all
@@ -620,14 +791,14 @@ def main() -> int:
         "status": "PASS_S5_MINI_EVIDENCE" if (
             len(summary_rows) == expected_trial_rows
             and len(selection_rows) == 100
-            and len(worker_manifest_rows) == 100
+            and len(worker_manifest_rows) == expected_trial_rows
             and role_count == 100
             and len(daily_distribution_rows) > 0
         ) else "FAIL",
         "formal_gate_status": "NOT_EVALUATED_BY_N5_MINI_SAMPLE",
         "checks": {
             "127_worker_equivalence_manifest": True,
-            "opt1_bit_exact_sample": "PASS" if len(TRIAL_IDS) >= 50 else "INSUFFICIENT_SAMPLE_FOR_ACTIVATION",
+            "opt1_bit_exact_sample": opt1_sample_status,
             "second_pass_role_fingerprints": True,
             "159_trial_summary_parquet": True,
             "160_selection_and_representative_daily_outputs": True,
@@ -649,6 +820,8 @@ def main() -> int:
             "number_registry_entries": len(registry_entries),
         },
         "c100_reuse": c100_reuse,
+        "opt1_level_statuses": opt1_level_statuses,
+        "opt1_validation_path": "results_stage5/opt1_sample_validation.json",
         "runtime_benchmark_path": "results_stage5/runtime_benchmark.json",
         "stability_history_path": "results_stage5/stability_history.json",
     }

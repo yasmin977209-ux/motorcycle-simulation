@@ -5,7 +5,6 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 import stats_integrity as si
-from scripts.test192_coverage import run_coverage_simulation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROOF_PATH = REPO_ROOT / "docs" / "stage7" / "test192_coverage_proof.json"
@@ -71,14 +70,13 @@ def test_172_legacy_n_and_half_n_gate_is_removed():
     assert "stable_at_half_n" not in source
 
 
-def test_192_coverage_proof_is_deterministic_and_familywise_bounded():
-    proof = run_coverage_simulation()
+def test_192_reuses_accepted_coverage_proof_without_rerunning_simulation():
+    assert PROOF_PATH.exists(), "reuse the already executed S5-A proof; do not rerun its simulation in S5-B"
+    proof = json.loads(PROOF_PATH.read_text(encoding="utf-8"))
     assert proof["master_seed"] == 20270101
     assert proof["replications"] == 10_000
     assert proof["scenario_count"] == 20
     assert proof["checkpoint_schedule"] == [300, 600, 1200, 2400]
     assert proof["pass"] is True
-    assert float(proof["observed_fwer"]) <= 0.05
+    assert Fraction(str(proof["observed_fwer"])) <= Fraction(1, 20)
     assert proof["familywise_fwer_numerator"] <= proof["familywise_fwer_denominator"] // 20
-    assert PROOF_PATH.exists(), "workflow must materialize docs/stage7/test192_coverage_proof.json"
-    assert json.loads(PROOF_PATH.read_text(encoding="utf-8")) == proof

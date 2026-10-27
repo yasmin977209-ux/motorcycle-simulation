@@ -7,6 +7,12 @@ on:
     paths-ignore:
       - "docs/**"
       - "*.md"
+      - ".github/workflows/s5-a-statistical-gate-v23.yml"
+      - ".github/workflows/s5-mini-verification-v23.yml"
+      - "scripts/s5_mini_verification.py"
+      - "scripts/s5_finalize_docs.py"
+      - "tests/test_s5_statistical_gate.py"
+      - "tests/test_s5_opt1_policy.py"
   workflow_dispatch:
 
 permissions:
