@@ -1646,3 +1646,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - N1200 workflow Run `40596643263` is still executing the incremental block `trial_id=601..1200` from immutable N600 artifacts (source run `40582501871`); its output is not yet accepted as corrected aggregate evidence.
 - A new cumulative audit helper now validates RNG checksum uniqueness and RNG audit fingerprints over all rows `1..N`, not only the newly executed block. N300 aggregate evidence passes this check. The N1200 artifacts from the older in-progress workflow must be re-aggregated with the corrected code before use as the N2400 base.
 - The current work remains on `tmp/s6-aggregate-contract-fix-20261027`; `main` remains unchanged. Do not declare Gate A/B PASS or `CONVERGED` until current-cohort Golden coverage, all required statistical gates, the exact path-count rule, and the three consecutive successful transitions are evidenced.
+
+
+## Superseding N300 audit aggregate — 2026-10-28
+
+- Corrected re-aggregation Run `40598509351` (job `122520578630`) ran against the immutable source artifacts from Run `40574326793`; no simulation trials were rerun. Code commit: `0190941f24a567cec2eea2a7b0161b512df027a7`; exit code `0`.
+- Command: `python scripts/s6_first_checkpoint.py --mode aggregate --source-sha da1a9ea9b5cd789c944de3f07b08395bb67c49e7 --run-id 40598509351 --run-attempt 1 --source-run-id 40574326793 --source-run-attempt 1 --source-run-metadata-json results_stage7_s6/source_run_metadata.json --trials 300 --input-root results_stage7_s6/artifacts --output-dir results_stage7_s6/aggregate`.
+- Job log SHA-256: `3ce10a05554de8337816005b1ea65070d9c4b55e98ad01c430cdac7ee21838f1`; manifest SHA-256: `563f90ae771f51a9a5dd5ac4fc8d3a8416361bb728698e3aaf4d73fed3de287d`; artifact ID `12777378780`; artifact ZIP SHA-256 `c4cf0912cfedd075555ed345d5f288497906d857bbdb614b6ff575d0e62653ae`.
+- RNG audit passed for all 6,000 cumulative scenario records, including checksum uniqueness over records with `rng_draw_count > 0` and exact per-record audit fingerprint verification. `N_unique_paths` is now explicitly `null / UNDEFINED_BUSINESS_RULE` for stochastic scenarios; `unique_daily_paths` remains diagnostic only. C100 is still reused separately.
+- Evidence file: `docs/evidence/s6_n300_rng_audit_aggregate_run_40598509351.json`. This is the controlling corrected N300 aggregate evidence; Run `40597631374` remains preserved as an earlier executed audit artifact, but its path-count interpretation is superseded by the fail-closed definition handling.
+- The full repository regression on the exact code/gate head is still running at the time of this note; record the final run result and source hashes before treating the head as fully verified.
