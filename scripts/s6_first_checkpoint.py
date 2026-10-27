@@ -137,7 +137,11 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     if not previous_n and args.previous_dir:
         raise ValueError("S6_PREVIOUS_CHECKPOINT_DIR_FORBIDDEN_AT_N300")
     c100_reuse=verify_c100_reuse()
-    collection_pct,recovery_pct=monte_carlo.parse_scenario_id(args.scenario)
+    # Parse canonical scenario percentages as integers; parse_scenario_id returns a float probability.
+    monte_carlo.parse_scenario_id(args.scenario)  # validates canonical scenario syntax and supported values
+    collection_part, recovery_part = args.scenario.split("_", 1)
+    collection_pct = int(collection_part[1:])
+    recovery_pct = int(recovery_part[1:])
     if collection_pct not in COLLECTION_LEVELS or recovery_pct not in RECOVERY_LEVELS: raise ValueError("S6_SCENARIO_OUTSIDE_FIRST_STOCHASTIC_FAMILY")
     cohort_id=f"s6-v23-{args.source_sha[:8]}"
     trial_ids=list(range(1,args.trials+1))
