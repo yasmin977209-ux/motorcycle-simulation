@@ -33,7 +33,7 @@ def daily_path_fingerprints(rows: list[dict[str, Any]]) -> dict[int, str]:
     fingerprints: dict[int, str] = {}
     for trial_id, path_rows in grouped.items():
         path_rows.sort(key=lambda row: str(row["date"]))
-        payload = "\\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True,
+        payload = "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True,
             separators=(",", ":"), default=str) for row in path_rows)
         fingerprints[trial_id] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
     return fingerprints
