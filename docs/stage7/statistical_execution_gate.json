@@ -1,11 +1,12 @@
 {
   "schema_version": "stage7-statistical-execution-gate-v1",
-  "reviewed_at": "2026-10-26",
+  "reviewed_at": "2026-10-28",
   "status": "AUTHORIZED_FOR_V2.3_EXECUTION",
   "source_basis": {
     "normative_reference_file": "المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md",
     "reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
     "normative_clauses": [
+      "0.3",
       "2.5",
       "2.7",
       "14.3",
@@ -14,7 +15,9 @@
       "21.2",
       "21.3"
     ],
-    "historical_approval_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION"
+    "historical_approval_record": "docs/PROJECT_CONTINUITY.md#CP-IUT-DECISION-RECONCILIATION",
+    "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "active_cohort_id": "s6-v23-da1a9ea9"
   },
   "approved_policy": {
     "familywise_false_stability_target": 0.05,
@@ -38,6 +41,25 @@
       "status": "NOT_A_GATE_REQUIREMENT_UNDER_V2.3_ALPHA_SPENDING",
       "principle": "Retained for traceability only; production acceptance follows the approved v2.3 sequential alpha-spending policy and its required Test 192 coverage evidence.",
       "inference_note": "This historical candidate does not block authorized S6 checkpoint execution."
+    },
+    "sequential_alpha_spending": {
+      "formula": "alpha_s,k = 0.0025 / (k*(k+1))",
+      "per_scenario_alpha": 0.0025,
+      "familywise_alpha": 0.05,
+      "checkpoint_indices": [
+        1,
+        2,
+        3
+      ],
+      "checkpoints": [
+        300,
+        600,
+        1200,
+        2400
+      ],
+      "decision_framework": "intersection_union_test",
+      "mean_components": 3,
+      "indicator_components": 7
     }
   },
   "component_status": {
@@ -89,10 +111,9 @@
       ]
     },
     "p90_held_assets": {
-      "status": "PRODUCTION_ACCEPTANCE_MISSING",
-      "margin": 1,
+      "status": "OWNER_APPROVED_METHOD_AND_TEST192_PASS_PRODUCTION_CHECKPOINT_EVALUATION_PENDING",
       "blockers": [
-        "The current S6 cumulative checkpoint aggregate has not yet supplied production Gate B acceptance evidence for P90_Held_Assets; the metric must be computed and bound into the seven-indicator IUT before Gate B can pass."
+        "P90_Held_Assets is included in the seven-indicator IUT and Test 192 coverage evidence; production Gate B still requires evaluation on the current cohort at every required checkpoint."
       ]
     },
     "stopping_window": {
@@ -133,15 +154,21 @@
       "note": "Preserve the original failure record. Current SOURCE_SHA/cohort must have its own transition history; do not copy historical pass/fail state across cohort identities."
     },
     "n_unique_paths_definition": {
-      "status": "UNDEFINED_BUSINESS_RULE",
-      "normative_clauses": [
-        "21.2",
-        "14.12"
+      "status": "OWNER_RESOLVED_FOR_PINNED_S6_COHORT",
+      "decision": "N_unique_paths equals the count of distinct complete daily paths computed from the persisted daily snapshots",
+      "scope": {
+        "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "n300_aggregate_run_id": 40588234012,
+        "n600_aggregate_run_id": 40582501871
+      },
+      "validation_requirements": [
+        "Verify SOURCE_SHA and cohort_id",
+        "Verify artifact file SHA-256 and byte sizes",
+        "Verify trial IDs 1..N and daily snapshot coverage",
+        "Recompute unique_daily_paths from persisted daily snapshots"
       ],
-      "finding": "The reference requires N_unique_paths and explicitly separates financial trial fingerprints from RNG audit fingerprints, but does not define the equality key for stochastic path identity. unique_daily_paths is preserved as a diagnostic only; it is not promoted to normative N_unique_paths.",
-      "handling": "N_unique_paths=null and status UNDEFINED_BUSINESS_RULE for stochastic scenarios until the owner resolves the definition. C100 remains governed by its explicit deterministic N_unique_paths=1 rule.",
-      "owner_question": "For stochastic scenarios, should N_unique_paths count distinct complete daily trajectories (daily_snapshots), or is another exact path-identity rule intended?",
-      "impact": "Blocks final acceptance and any claim that the stochastic N_unique_paths field is accepted; does not block independent S6 data collection or RNG audit validation."
+      "status_note": "Historical manifests lacking the text field are interpreted under this owner-approved cohort contract; no historical source files are rewritten."
     }
   },
   "execution_authorization": {
@@ -149,8 +176,15 @@
     "production_trial_checkpoint_monte_carlo_allowed": true,
     "scenario_stability_declaration_allowed": false,
     "final_delivery_acceptance_allowed": false,
-    "permitted_work_branch": "tmp/s6-aggregate-contract-fix-20261027",
-    "permitted_next_work": "Continue authorized S6 data collection at N=1200 then N=2400 using immutable prior artifacts. Keep stochastic N_unique_paths unresolved and daily-path counts diagnostic-only until the owner resolves the exact rule. Do not declare Gate A/B PASS or CONVERGED before the full required evidence exists."
+    "permitted_work_branch": [
+      "tmp/s5-statistical-gate-v23-20261026",
+      "tmp/s6-aggregate-contract-fix-20261027"
+    ],
+    "permitted_next_work": "Execute the N=1200 cumulative checkpoint by reusing verified N=600 scenario artifacts and running only trial IDs 601..1200; then independently validate all 20 scenarios and all Gate B components. Continue to N=2400 only after validating the N=1200 evidence.",
+    "s6_execution_authorized": true,
+    "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "active_cohort_id": "s6-v23-da1a9ea9",
+    "final_production_gate_cleared": false
   },
   "acceptance_to_clear_gate": {
     "required_status": "ACCEPTED_FOR_PRODUCTION",
@@ -163,7 +197,16 @@
       "Test 192 coverage proof verified and the approved v2.3 alpha-spending/IUT method applied to the current cohort",
       "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified",
       "Resolve the stochastic N_unique_paths identity rule under §§21.2/14.12, then validate the resulting metric without rewriting historical artifacts."
-    ]
+    ],
+    "required_checkpoint_sequence": [
+      300,
+      600,
+      1200,
+      2400
+    ],
+    "required_successful_adjacent_transitions": 3,
+    "final_production_gate_cleared": false,
+    "scenario_stability_declaration_allowed": false
   },
   "implementation_approval": {
     "reviewed_approval_id": "OWNER-CHAT-S5-2026-10-26",
@@ -625,5 +668,18 @@
       "formal_gate_conclusion": "S5-B/S5-C execution evidence passed; this does not assert production Gate A/B acceptance or scenario convergence."
     }
   },
-  "reconciled_at": "2026-10-28"
+  "reconciled_at": "2026-10-28",
+  "test192_evidence": {
+    "status": "PASS",
+    "synthetic_repetitions": 10000,
+    "observed_familywise_error_rate": 0.0435,
+    "required_maximum": 0.05,
+    "run_ids": [
+      40531095239,
+      40546712685
+    ],
+    "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+    "includes_all_seven_indicators": true,
+    "production_gate_pass_implied": false
+  }
 }
