@@ -56,7 +56,8 @@
       "job_log_text_sha256": "449f91ceb5bd18e5a0d7ad76b7ba8667e85eaa683db72880801d8648051f07e0",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "449f91ceb5bd18e5a0d7ad76b7ba8667e85eaa683db72880801d8648051f07e0"
     },
     "C085_G100": {
       "job_id": 122441296906,
@@ -106,7 +107,8 @@
       "job_log_text_sha256": "f8628711d0a8a2092979df8cfdc8cc3d555f4a7f30b42def6cd6a90765578970",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "f8628711d0a8a2092979df8cfdc8cc3d555f4a7f30b42def6cd6a90765578970"
     },
     "C070_G100": {
       "job_id": 122441296932,
@@ -156,7 +158,8 @@
       "job_log_text_sha256": "4f5f0146cab343ffc358fccce6a7ebf3aadeacea8c9b11f51c524b7c42b482dd",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "4f5f0146cab343ffc358fccce6a7ebf3aadeacea8c9b11f51c524b7c42b482dd"
     },
     "C050_G100": {
       "job_id": 122441296937,
@@ -206,7 +209,8 @@
       "job_log_text_sha256": "9534adc93478f81ece8c6e594fd0be0bd9d31a3ff8e8fd1324b7d7798b901015",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "9534adc93478f81ece8c6e594fd0be0bd9d31a3ff8e8fd1324b7d7798b901015"
     },
     "C085_G000": {
       "job_id": 122447917080,
@@ -258,7 +262,8 @@
       "job_log_text_sha256": "52b34f54035636c0847ee5e1b42fb951d296637d3f18dbbcd5410f731eca99ba",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "52b34f54035636c0847ee5e1b42fb951d296637d3f18dbbcd5410f731eca99ba"
     },
     "C070_G030": {
       "job_id": 122447917085,
@@ -310,7 +315,8 @@
       "job_log_text_sha256": "67ab61b347353dbd36cf5f8f279c6519b64f3f8acce51ee98161b7c676169d3f",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "67ab61b347353dbd36cf5f8f279c6519b64f3f8acce51ee98161b7c676169d3f"
     },
     "C085_G050": {
       "job_id": 122447917126,
@@ -362,7 +368,8 @@
       "job_log_text_sha256": "4bb331e3fb7c2adb53cc0db4e23eac0ccccbe46ea2bcd9e7047641767ef7a526",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "4bb331e3fb7c2adb53cc0db4e23eac0ccccbe46ea2bcd9e7047641767ef7a526"
     },
     "C085_G030": {
       "job_id": 122447917163,
@@ -414,7 +421,8 @@
       "job_log_text_sha256": "b5df71da804ed9d50af1785c89e3e7cbcb86d685d635a22c77631847c8084aac",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "b5df71da804ed9d50af1785c89e3e7cbcb86d685d635a22c77631847c8084aac"
     },
     "C070_G070": {
       "job_id": 122447917173,
@@ -466,7 +474,8 @@
       "job_log_text_sha256": "c4c32bd6f1d4ba1e67ed232d0546fad27e55622decf9faeec947e609526e2be4",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "c4c32bd6f1d4ba1e67ed232d0546fad27e55622decf9faeec947e609526e2be4"
     },
     "C050_G000": {
       "job_id": 122447917186,
@@ -516,7 +525,8 @@
       "job_log_text_sha256": "68834aa3a5853a5f4c57dd41a1c14d19a0ec9506ab981e12056c7d7da4e3f1d1",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "68834aa3a5853a5f4c57dd41a1c14d19a0ec9506ab981e12056c7d7da4e3f1d1"
     },
     "C070_G000": {
       "job_id": 122447917206,
@@ -568,7 +578,8 @@
       "job_log_text_sha256": "8bd916e6ce9dc4784f21741fd77809e8726d0661959c63a915e2e499a8180ffa",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "8bd916e6ce9dc4784f21741fd77809e8726d0661959c63a915e2e499a8180ffa"
     },
     "C050_G070": {
       "job_id": 122447917219,
@@ -618,7 +629,8 @@
       "job_log_text_sha256": "c5dfc11c14dc4653c610a29ad7017f092c585ac5fc2b8adaa66e09b092891438",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "c5dfc11c14dc4653c610a29ad7017f092c585ac5fc2b8adaa66e09b092891438"
     },
     "C050_G030": {
       "job_id": 122447917228,
@@ -668,7 +680,8 @@
       "job_log_text_sha256": "6a251f97f56515353409678e85ca9d499355ebf6ac36456a1ef6dcdd0b2fee64",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "6a251f97f56515353409678e85ca9d499355ebf6ac36456a1ef6dcdd0b2fee64"
     },
     "C050_G050": {
       "job_id": 122447917234,
@@ -718,7 +731,8 @@
       "job_log_text_sha256": "2b3ce5474e5bf47c19a02d493b30243cdb57913f8dda90e00c40c4dbca1a1f15",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "2b3ce5474e5bf47c19a02d493b30243cdb57913f8dda90e00c40c4dbca1a1f15"
     },
     "C030_G050": {
       "job_id": 122447917238,
@@ -768,7 +782,8 @@
       "job_log_text_sha256": "5dacf736de47e6949f503281c0af00e9f5987ec4bf745f92d62e07f2abe13619",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "5dacf736de47e6949f503281c0af00e9f5987ec4bf745f92d62e07f2abe13619"
     },
     "C030_G000": {
       "job_id": 122447917241,
@@ -818,7 +833,8 @@
       "job_log_text_sha256": "2b18c232afc7c5712cbb8afd369d35cd1093e46c9fbf8233691881d2f5c430e5",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "2b18c232afc7c5712cbb8afd369d35cd1093e46c9fbf8233691881d2f5c430e5"
     },
     "C085_G070": {
       "job_id": 122447917274,
@@ -870,7 +886,8 @@
       "job_log_text_sha256": "a0aa47635cca6b1ea4dd270e5c1ea729f1fe6473077264cf7fd29c540197a17d",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "a0aa47635cca6b1ea4dd270e5c1ea729f1fe6473077264cf7fd29c540197a17d"
     },
     "C070_G050": {
       "job_id": 122447917347,
@@ -922,7 +939,8 @@
       "job_log_text_sha256": "4946a5444748339cb7d4d615872aefd2ee87b54b39b36e47bd386d2851ed7523",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "4946a5444748339cb7d4d615872aefd2ee87b54b39b36e47bd386d2851ed7523"
     },
     "C030_G070": {
       "job_id": 122447917414,
@@ -972,7 +990,8 @@
       "job_log_text_sha256": "386d7020b02ef8ae495039f878cf9132469cd61917c7843f92a814efadf84e93",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "386d7020b02ef8ae495039f878cf9132469cd61917c7843f92a814efadf84e93"
     },
     "C030_G030": {
       "job_id": 122447917641,
@@ -1022,7 +1041,8 @@
       "job_log_text_sha256": "b3be35c6d0e8ddb8aee77687d49b79b6b253b87322fcc1fb4cbfab8ca2cfbb70",
       "log_hash_basis": "SHA-256 of the exact log text returned by GitHub job-log retrieval; not the ZIP archive bytes",
       "source_run_id": "40574326793",
-      "source_run_attempt": 1
+      "source_run_attempt": 1,
+      "job_log_sha256": "b3be35c6d0e8ddb8aee77687d49b79b6b253b87322fcc1fb4cbfab8ca2cfbb70"
     }
   }
 }
