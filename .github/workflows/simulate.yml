@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: s6-n300-\${{ github.ref }}
+  group: s6-n300-${{ github.ref }}
   cancel-in-progress: false
   queue: max
 
@@ -41,7 +41,7 @@ jobs:
       - name: Checkout exact tested source
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -54,7 +54,7 @@ jobs:
       - name: Verify approved first-checkpoint contract and C100 reuse
         shell: bash
         env:
-          SOURCE_SHA: \${{ github.sha }}
+          SOURCE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -74,7 +74,7 @@ jobs:
           PY
 
   g100-base:
-    name: S6 G100 base — C\${{ matrix.collection }} N=300
+    name: S6 G100 base — C${{ matrix.collection }} N=300
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -87,7 +87,7 @@ jobs:
       - name: Checkout exact tested source
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -98,10 +98,10 @@ jobs:
       - name: Run G100 base scenario for this collection level
         shell: bash
         env:
-          COLLECTION: \${{ matrix.collection }}
-          SOURCE_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
-          RUN_ATTEMPT: \${{ github.run_attempt }}
+          COLLECTION: ${{ matrix.collection }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
           SCENARIO="C$(printf '%03d' "$COLLECTION")_G100"
@@ -114,13 +114,13 @@ jobs:
       - name: Upload G100 base and daily paths
         uses: actions/upload-artifact@v4
         with:
-          name: s6-n300-C\${{ matrix.collection }}-G100-\${{ github.run_id }}
-          path: results_stage7_s6/C\${{ matrix.collection }}_G100/
+          name: s6-n300-C${{ matrix.collection }}-G100-${{ github.run_id }}
+          path: results_stage7_s6/C${{ matrix.collection }}_G100/
           if-no-files-found: error
           retention-days: 14
 
   lower-g:
-    name: S6 \${{ matrix.scenario }} N=300
+    name: S6 ${{ matrix.scenario }} N=300
     needs: [preflight, g100-base]
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -149,7 +149,7 @@ jobs:
       - name: Checkout exact tested source
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -161,15 +161,15 @@ jobs:
         if: startsWith(matrix.scenario, 'C085_') || startsWith(matrix.scenario, 'C070_')
         uses: actions/download-artifact@v4
         with:
-          name: s6-n300-\${{ startsWith(matrix.scenario, 'C085_') && 'C085' || 'C070' }}-G100-\${{ github.run_id }}
+          name: s6-n300-${{ startsWith(matrix.scenario, 'C085_') && 'C085' || 'C070' }}-G100-${{ github.run_id }}
           path: results_stage7_s6/base
       - name: Run lower-G scenario with owner-approved OPT-1 rules
         shell: bash
         env:
-          SCENARIO: \${{ matrix.scenario }}
-          SOURCE_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
-          RUN_ATTEMPT: \${{ github.run_attempt }}
+          SCENARIO: ${{ matrix.scenario }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
           BASE_DIR: results_stage7_s6/base
         run: |
           set -euo pipefail
@@ -184,8 +184,8 @@ jobs:
       - name: Upload scenario results
         uses: actions/upload-artifact@v4
         with:
-          name: s6-n300-\${{ matrix.scenario }}-\${{ github.run_id }}
-          path: results_stage7_s6/\${{ matrix.scenario }}/
+          name: s6-n300-${{ matrix.scenario }}-${{ github.run_id }}
+          path: results_stage7_s6/${{ matrix.scenario }}/
           if-no-files-found: error
           retention-days: 14
 
@@ -198,7 +198,7 @@ jobs:
       - name: Checkout exact tested source
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -209,15 +209,15 @@ jobs:
       - name: Download all stochastic scenario artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: s6-n300-*-G*-\${{ github.run_id }}
+          pattern: s6-n300-*-G*-${{ github.run_id }}
           path: results_stage7_s6/artifacts
           merge-multiple: false
       - name: Validate coverage, identities, and file digests; merge outputs
         shell: bash
         env:
-          SOURCE_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
-          RUN_ATTEMPT: \${{ github.run_attempt }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
           python scripts/s6_first_checkpoint.py \
@@ -231,7 +231,7 @@ jobs:
       - name: Upload merged first-checkpoint evidence
         uses: actions/upload-artifact@v4
         with:
-          name: s6-n300-aggregate-\${{ github.run_id }}
+          name: s6-n300-aggregate-${{ github.run_id }}
           path: results_stage7_s6/aggregate/
           if-no-files-found: error
           retention-days: 30
