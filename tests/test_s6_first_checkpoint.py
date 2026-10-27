@@ -1,12 +1,14 @@
 from dataclasses import replace
+import json
 from monte_carlo import TrialResult
 import pytest
 from scripts import s6_first_checkpoint as s6
 
 def test_s6_first_checkpoint_has_twenty_stochastic_scenarios_and_excludes_c100():
-    scenarios={f"C{c:03d}_G{g:03d}" for c in s6.COLLECTION_LEVELS for g in s6.RECOVERY_LEVELS}
+    scenarios=s6.stochastic_scenario_ids()
     assert len(scenarios)==20
     assert all(not s.startswith("C100_") for s in scenarios)
+    assert "C100_G100" not in scenarios
 
 def test_s6_opt1_is_enabled_only_for_c085_and_c070():
     assert s6.OPT1_ENABLED_COLLECTIONS==frozenset({85,70})
@@ -14,12 +16,24 @@ def test_s6_opt1_is_enabled_only_for_c085_and_c070():
 
 def test_s6_c100_reuse_is_hash_verified_and_read_only(monkeypatch,tmp_path):
     golden=tmp_path/"golden.json"; manifest=tmp_path/"manifest.json"
-    golden.write_text("golden"); manifest.write_text("manifest")
+    golden.write_text("golden")
+    manifest.write_text(json.dumps({
+      "workflow_run_id":"40263424595","source_sha":"965281d52441cd0d4b744e211c9f68ee4cdc3753",
+      "cohort_id":"c100-v23-s4-20261026-965281d5",
+      "scenario_ids":["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000"],
+      "trial_ids_per_scenario":[1,300],"N_unique_paths":1,
+      "degeneracy_status":"DEGENERATE_DETERMINISTIC","G_status":"G_INERT"
+    }))
     monkeypatch.setattr(s6,"C100_GOLDEN_PATH",golden)
     monkeypatch.setattr(s6,"C100_MANIFEST_PATH",manifest)
     monkeypatch.setattr(s6,"EXPECTED_C100_GOLDEN_SHA256",s6.sha256_file(golden))
     monkeypatch.setattr(s6,"EXPECTED_C100_MANIFEST_SHA256",s6.sha256_file(manifest))
-    assert s6.verify_c100_reuse()["rerun"] is False
+    reused=s6.verify_c100_reuse()
+    assert reused["rerun"] is False
+    assert reused["scenario_ids"]==["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000"]
+    assert reused["trial_count_per_scenario"]==300
+    assert reused["cohort_id"]=="c100-v23-s4-20261026-965281d5"
+    assert reused["n_unique_paths"]==1
 
 def test_s6_c100_reuse_rejects_hash_mismatch(monkeypatch,tmp_path):
     golden=tmp_path/"golden.json"; manifest=tmp_path/"manifest.json"
