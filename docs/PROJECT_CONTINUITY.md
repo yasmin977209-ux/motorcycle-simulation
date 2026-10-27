@@ -1561,3 +1561,13 @@ Next: continue independent non-protected work. Do not accept this candidate or m
   - `opt1_provenance.json`: SHA-256 `89ecbdf10c7083e3d2ebc0f9a2948ddeedc7021f1e24c4fdd331a8e3c9d01668`, 2,900 bytes.
   - `trials_summary.parquet`: SHA-256 `ef89fd6d1501199e2486128be9c6f35ebf0f54ab17b6488e6235379d50f10aaa`, 42,054 bytes.
 - At the last poll, C030 and C070 G100 jobs succeeded; C050 and C085 G100 jobs remained in progress. The old run is pinned to `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; the corrected aggregation candidate is separate and has not yet consumed these artifacts.
+
+### Aggregate fixture integration test and failure preservation — 2026-10-27
+
+- Run `40578008441` failed on intermediate test commit `5913fae271932f6462e2d7a6aa791236d6cca12c` because the new fixture referred to an undefined test variable `constants` (NameError in `tests/test_s6_first_checkpoint.py`). The failure was preserved in GitHub Actions; it was not suppressed.
+- Corrected fixture commit `0764598be1811f2240284b0b3966497e6c997c48` passed Run `40578035830`: `8 passed in 0.56s`.
+- Added explicit separation between the aggregation run identity and the original scenario source run identity in commit `830ddb2ae15b461e5e4ad240ec8236bb30e534c4`; regression Run `40578402167` passed on HEAD `56e05aecfe0265133542f006f142958cafae4491`: `8 passed in 0.67s`. This validates aggregate run ID vs source scenario run ID, the 20-scenario stochastic inventory, separate immutable C100 reuse, and reconstructed OPT-1 command evidence on synthetic fixtures only.
+- The aggregate-only reconciliation workflow creation was not accepted by the available integration, so no real-artifact aggregate execution has been claimed. The required command after the source run's 20 scenario artifacts are complete is:
+  `python scripts/s6_first_checkpoint.py --mode aggregate --source-sha da1a9ea9b5cd789c944de3f07b08395bb67c49e7 --run-id <AGGREGATE_RUN_ID> --run-attempt <AGGREGATE_RUN_ATTEMPT> --source-run-id 40574326793 --source-run-attempt 1 --trials 300 --input-root results_stage7_s6/artifacts --output-dir results_stage7_s6/aggregate`.
+  Download the exact artifacts first with `gh run download 40574326793 --dir results_stage7_s6/artifacts`. The aggregate must verify all 20 scenario manifests/files and keep the 5 C100 scenarios as a separate S4 cohort; no trial rerun is needed for this aggregation-only command.
+- At last poll Run `40574326793` had 16 of 20 scenario artifacts uploaded; the four C050 lower-G full-run jobs were still `IN_PROGRESS`. The current workflow's aggregate job has not run yet.
