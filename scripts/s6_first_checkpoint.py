@@ -346,6 +346,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
     all_trials=[]; all_daily=[]; summaries=[]
+    scenario_rows_by_id={}; scenario_path_fingerprints={}; scenario_provenance={}
     for scenario in sorted(expected):
         base,m=by_scenario[scenario]
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
@@ -359,9 +360,19 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
         n_unique_daily_paths=len(set(path_fingerprints.values()))
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
+        provenance_path=base/"opt1_provenance.json"
+        if not provenance_path.is_file():
+            raise RuntimeError(f"S6_OPT1_PROVENANCE_MISSING:{scenario}")
+        provenance=json.loads(provenance_path.read_text(encoding="utf-8"))
+        scenario_rows_by_id[scenario]={int(row["trial_id"]):row for row in rows}
+        scenario_path_fingerprints[scenario]=path_fingerprints
+        scenario_provenance[scenario]=provenance
         all_trials.extend(rows); all_daily.extend(daily)
+        n_closed=sum(1 for row in rows if row.get("final_close_date") is not None)
+        n_censored=len(rows)-n_closed
+        if n_closed+n_censored!=len(rows): raise RuntimeError(f"S6_CENSORING_COUNT_MISMATCH:{scenario}")
         summaries.append({"scenario_id":scenario,"status":m.get("status"),
-            "n_total":len(rows),"n_closed":sum(1 for row in rows if row.get("final_close_date") is not None),
+            "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
             "n_unique_paths":None,"n_unique_paths_status":"UNDEFINED_BUSINESS_RULE",
             "n_unique_paths_clause_ids":["21.2","14.12"],
             "source_manifest_n_unique_paths":m.get("n_unique_paths"),
@@ -380,6 +391,59 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "files":m.get("files",{}),"artifact_files_verified":True,
             "trial_fingerprint_map_sha256":hashlib.sha256("".join(f'{row["trial_id"]}|{row["trial_fingerprint"]}\n' for row in rows).encode()).hexdigest(),
             "scenario_manifest_sha256":sha256_file(base/"scenario_manifest.json")})
+    opt1_derived_trial_rows=0
+    for scenario in sorted(expected):
+        collection=int(scenario.split("_",1)[0][1:])
+        recovery=int(scenario.split("_",1)[1][1:])
+        rows=scenario_rows_by_id[scenario]
+        provenance=scenario_provenance[scenario]
+        manifest=by_scenario[scenario][1]
+        expected_ids=set(range(1,checkpoint_n+1))
+        base_scenario=f"C{collection:03d}_G100"
+        if recovery==100:
+            expected_derived=set()
+            expected_full=expected_ids
+            expected_policy="G100_BASE_FULL_RUN_INCREMENTAL_RANGE"
+        elif collection in OPT1_ENABLED_COLLECTIONS:
+            base_rows=scenario_rows_by_id[base_scenario]
+            expected_derived={tid for tid,row in base_rows.items() if int(row.get("claims_created",0))==0}
+            expected_full=expected_ids-expected_derived
+            expected_policy=("OPT1_ENABLED_DERIVED_ZERO_CLAIM_TRIALS_FULL_RUN_POSITIVE_CLAIM_TRIALS_INCREMENTAL_RANGE"
+                if expected_derived else "OPT1_ENABLED_NO_ZERO_CLAIM_TRIALS_IN_INCREMENTAL_RANGE_FULL_RUN")
+            for tid in expected_derived:
+                row=rows[tid]; base_row=base_rows[tid]
+                if row.get("derived_from")!=f"DERIVED_FROM={base_scenario}":
+                    raise RuntimeError(f"S6_OPT1_DERIVED_FROM_MISMATCH:{scenario}:{tid}")
+                if int(row.get("claims_created",-1))!=0 or row.get("trial_fingerprint")!=base_row.get("trial_fingerprint"):
+                    raise RuntimeError(f"S6_OPT1_FINANCIAL_EQUIVALENCE_MISMATCH:{scenario}:{tid}")
+                if scenario_path_fingerprints[scenario][tid]!=scenario_path_fingerprints[base_scenario][tid]:
+                    raise RuntimeError(f"S6_OPT1_DAILY_PATH_MISMATCH:{scenario}:{tid}")
+            for tid in expected_full:
+                if rows[tid].get("derived_from") is not None or int(rows[tid].get("claims_created",0))<=0:
+                    raise RuntimeError(f"S6_OPT1_POSITIVE_CLAIM_FULL_RUN_MISMATCH:{scenario}:{tid}")
+        else:
+            expected_derived=set()
+            expected_full=expected_ids
+            expected_policy="OPT1_INELIGIBLE_FULL_RUN_INCREMENTAL_RANGE"
+        actual_derived={tid for tid,row in rows.items() if row.get("derived_from") is not None}
+        if actual_derived!=expected_derived:
+            raise RuntimeError(f"S6_OPT1_DERIVED_TRIAL_SET_MISMATCH:{scenario}")
+        if manifest.get("opt1_policy")!=expected_policy or provenance.get("policy")!=expected_policy:
+            raise RuntimeError(f"S6_OPT1_POLICY_MISMATCH:{scenario}")
+        if provenance.get("scenario_id")!=scenario or int(provenance.get("sample_trial_count",-1))!=checkpoint_n:
+            raise RuntimeError(f"S6_OPT1_PROVENANCE_IDENTITY_MISMATCH:{scenario}")
+        if int(provenance.get("eligible_zero_claim_trials",-1))!=sum(1 for row in rows.values() if int(row.get("claims_created",0))==0):
+            raise RuntimeError(f"S6_OPT1_ZERO_CLAIM_COUNT_MISMATCH:{scenario}")
+        if int(provenance.get("derived_trial_count",-1))!=len(expected_derived):
+            raise RuntimeError(f"S6_OPT1_DERIVED_COUNT_MISMATCH:{scenario}")
+        if sorted(int(tid) for tid in provenance.get("full_run_trial_ids",[]))!=sorted(expected_full):
+            raise RuntimeError(f"S6_OPT1_FULL_RUN_ID_SET_MISMATCH:{scenario}")
+        actual_derived_records={int(item["trial_id"]):(item.get("derived_from"),item.get("trial_fingerprint"))
+            for item in provenance.get("derived_trials",[])}
+        expected_derived_records={tid:(rows[tid].get("derived_from"),rows[tid].get("trial_fingerprint")) for tid in expected_derived}
+        if actual_derived_records!=expected_derived_records:
+            raise RuntimeError(f"S6_OPT1_DERIVED_PROVENANCE_MISMATCH:{scenario}")
+        opt1_derived_trial_rows+=len(expected_derived)
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
@@ -398,6 +462,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
+        "opt1_audit":{"status":"PASS","scenario_count":len(expected),
+            "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
             "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
