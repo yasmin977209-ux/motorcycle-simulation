@@ -1,0 +1,237 @@
+name: S6 v2.3 first stochastic checkpoint N=300
+
+on:
+  push:
+    branches:
+      - "tmp/s5-statistical-gate-v23-20261026"
+    paths:
+      - ".github/workflows/simulate.yml"
+      - "scripts/s6_first_checkpoint.py"
+      - "tests/test_s6_first_checkpoint.py"
+      - "monte_carlo.py"
+      - "daily_engine.py"
+      - "rng.py"
+      - "validation.py"
+      - "constants.py"
+      - "stats_integrity.py"
+      - "scripts/s5_mini_verification.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s6-n300-\${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  S6_TRIAL_COUNT: "300"
+  S6_WORKERS: "2"
+  MASTER_SEED: "20270101"
+
+jobs:
+  preflight:
+    name: Verify S6 policy, C100 reuse, and full repository tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact tested source
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run full repository test inventory
+        run: python -m pytest -q tests
+      - name: Verify approved first-checkpoint contract and C100 reuse
+        shell: bash
+        env:
+          SOURCE_SHA: \${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from scripts.s6_first_checkpoint import verify_c100_reuse, require_source_sha
+          require_source_sha(os.environ["SOURCE_SHA"])
+          reused = verify_c100_reuse()
+          assert reused["rerun"] is False and reused["run_id"] == 40263424595
+          gate = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+          assert gate["execution_authorization"]["owner_authorized_v23_execution"] is True
+          assert gate["execution_authorization"]["production_trial_checkpoint_monte_carlo_allowed"] is True
+          assert gate["execution_authorization"]["scenario_stability_declaration_allowed"] is False
+          print(json.dumps({"status":"S6_PREFLIGHT_PASS","source_sha":os.environ["SOURCE_SHA"],
+            "checkpoint_n":300,"stochastic_scenarios":20,"c100_reuse":reused,
+            "gate_a_gate_b_convergence_claims":"PROHIBITED_AT_FIRST_CHECKPOINT"},ensure_ascii=False,sort_keys=True))
+          PY
+
+  g100-base:
+    name: S6 G100 base — C\${{ matrix.collection }} N=300
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        collection: [85, 70, 50, 30]
+    steps:
+      - name: Checkout exact tested source
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run G100 base scenario for this collection level
+        shell: bash
+        env:
+          COLLECTION: \${{ matrix.collection }}
+          SOURCE_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+          RUN_ATTEMPT: \${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          SCENARIO="C$(printf '%03d' "$COLLECTION")_G100"
+          python scripts/s6_first_checkpoint.py \
+            --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --trials "$S6_TRIAL_COUNT" --workers "$S6_WORKERS" \
+            --output-dir "results_stage7_s6/$SCENARIO"
+          test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
+      - name: Upload G100 base and daily paths
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n300-C\${{ matrix.collection }}-G100-\${{ github.run_id }}
+          path: results_stage7_s6/C\${{ matrix.collection }}_G100/
+          if-no-files-found: error
+          retention-days: 14
+
+  lower-g:
+    name: S6 \${{ matrix.scenario }} N=300
+    needs: [preflight, g100-base]
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        scenario:
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    steps:
+      - name: Checkout exact tested source
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download matching G100 base for OPT-1 eligible levels
+        if: startsWith(matrix.scenario, 'C085_') || startsWith(matrix.scenario, 'C070_')
+        uses: actions/download-artifact@v4
+        with:
+          name: s6-n300-\${{ startsWith(matrix.scenario, 'C085_') && 'C085' || 'C070' }}-G100-\${{ github.run_id }}
+          path: results_stage7_s6/base
+      - name: Run lower-G scenario with owner-approved OPT-1 rules
+        shell: bash
+        env:
+          SCENARIO: \${{ matrix.scenario }}
+          SOURCE_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+          RUN_ATTEMPT: \${{ github.run_attempt }}
+          BASE_DIR: results_stage7_s6/base
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [[ "$SCENARIO" == C085_* || "$SCENARIO" == C070_* ]]; then ARGS+=(--base-dir "$BASE_DIR"); fi
+          python scripts/s6_first_checkpoint.py \
+            --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --trials "$S6_TRIAL_COUNT" --workers "$S6_WORKERS" \
+            --output-dir "results_stage7_s6/$SCENARIO" "\${ARGS[@]}"
+          test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
+      - name: Upload scenario results
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n300-\${{ matrix.scenario }}-\${{ github.run_id }}
+          path: results_stage7_s6/\${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    name: Validate and merge S6 N=300 cohort
+    needs: [preflight, g100-base, lower-g]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact tested source
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all stochastic scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-n300-*-G*-\${{ github.run_id }}
+          path: results_stage7_s6/artifacts
+          merge-multiple: false
+      - name: Validate coverage, identities, and file digests; merge outputs
+        shell: bash
+        env:
+          SOURCE_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+          RUN_ATTEMPT: \${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" --run-id "$RUN_ID" \
+            --run-attempt "$RUN_ATTEMPT" --input-root results_stage7_s6/artifacts \
+            --output-dir results_stage7_s6/aggregate
+          test -s results_stage7_s6/aggregate/manifest.json
+          test -s results_stage7_s6/aggregate/trials_summary.parquet
+          test -s results_stage7_s6/aggregate/daily_distribution.parquet
+          echo "S6_N300_CHECKPOINT_EXECUTED_NOT_CONVERGED"
+      - name: Upload merged first-checkpoint evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n300-aggregate-\${{ github.run_id }}
+          path: results_stage7_s6/aggregate/
+          if-no-files-found: error
+          retention-days: 30
