@@ -286,8 +286,9 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "elapsed_seconds":time.monotonic()-started,"workers":args.workers,
         "opt1_policy":policy,"c100_reuse":c100_reuse,
         "gate_a_status":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-        "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY",
-        "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE","files":files}
+        "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "files":files}
     write_json(out_dir/"scenario_manifest.json",manifest)
     print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,
         "trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,
@@ -398,7 +399,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
-        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE","n_unique_paths":"UNDEFINED_BUSINESS_RULE"},
+        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+            "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+            "stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+            "n_unique_paths":"UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
