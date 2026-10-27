@@ -1624,3 +1624,25 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **Open normative issue:** §21.2 requires `N_unique_paths` and distinguishes financial fingerprints from RNG audit fingerprints, but does not explicitly define the canonical equality rule for path identity (e.g. complete daily trajectory vs RNG audit fingerprint). Under §0.1 this is recorded as `UNDEFINED_BUSINESS_RULE` for §§21.2 and 14.12. Ask the owner: **“ما التعريف القانوني المعتمد لـ`N_unique_paths`: تطابق المسار اليومي الكامل (`daily_snapshots`) أم تطابق بصمة تدقيق RNG؟”** Do not infer it from `trial_fingerprint`.
 - Until this is resolved, keep Gate A/Gate B and `CONVERGED` blocked. N600 trial execution is operationally separable, but its `N_unique_paths` field must not be represented as accepted evidence until the owner definition is applied and verified.
 - Do not mutate the original N300 artifacts or source run. `main` remains untouched.
+
+
+## S6 cumulative RNG audit correction and stochastic path-count fail-closed status — 2026-10-28
+
+**Normative reference rechecked:** `المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md`, SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`. Clauses read for this stage: `0.3`, `0.20`, `0.25`, `2.5`, `2.7`, `14.3`, `14.11`, `14.12`, `21.2`, `21.3`, `21.5`, `25.8`.
+
+### N300 aggregate — executed, RNG audit validated
+- Corrected aggregate run `40597631374`, job `122517476080`, code commit `a12d767c9c10276b4603776951aa370693132f59`, source run `40574326793`, source SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`.
+- Command: `python scripts/s6_first_checkpoint.py --mode aggregate --source-sha da1a9ea9b5cd789c944de3f07b08395bb67c49e7 --run-id 40597631374 --run-attempt 1 --source-run-id 40574326793 --source-run-attempt 1 --source-run-metadata-json results_stage7_s6/source_run_metadata.json --trials 300 --input-root results_stage7_s6/artifacts --output-dir results_stage7_s6/aggregate`; exit code 0.
+- Log SHA-256 `44b9782460c938e2deb6eb0663b02c8b3ce640a33eb2b4a98d80fce19116782c`; manifest SHA-256 `767421ef830f556535e6aef54afba97f7c1b57813b206416f9c71694ffcff71d`; artifact ZIP SHA-256 `9041ff929dd95dcadc231f52c4ce60470d5ca92ea6f7a751ac7a25d46e08f655`, artifact ID `12777187742`.
+- RNG audit verified all 6,000 cumulative scenario records; per-scenario checksum uniqueness was checked only for records with `rng_draw_count > 0`, and every RNG audit fingerprint matched. This aggregate reused all 20 pinned N300 scenario artifacts and C100 Golden from Run `40263424595`; no trials were rerun.
+- Evidence file: `docs/evidence/s6_n300_rng_audit_aggregate_run_40597631374.json`. Gate A remains `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`; Gate B remains `NOT_EVALUATED_FIRST_CHECKPOINT_ONLY`; stability remains `NOT_CONVERGED_CHECKPOINT_N300_BASELINE`.
+
+### Stochastic N_unique_paths — fail closed pending exact owner definition
+- The preceding historical section's description of the current implementation as counting financial fingerprints is superseded. Current code no longer uses `trial_fingerprint` as `N_unique_paths`; it preserves full daily-path counts as diagnostics and leaves stochastic `N_unique_paths=null`, status `UNDEFINED_BUSINESS_RULE`.
+- Reason: v2.3 §§21.2 and 14.12 require `N_unique_paths` and separate financial and RNG fingerprints, but do not specify the exact equality key for stochastic path identity. The deterministic C100 rule remains explicit: `N_unique_paths=1` when all paths are identical.
+- Exact owner question: **For stochastic scenarios, should `N_unique_paths` count distinct complete daily trajectories (`daily_snapshots`), or is another exact path-identity rule intended?** Until resolved, no report or gate may treat the daily-path diagnostic as the normative `N_unique_paths` value. Independent simulation and RNG-audit work may continue.
+
+### Current S6 state
+- N1200 workflow Run `40596643263` is still executing the incremental block `trial_id=601..1200` from immutable N600 artifacts (source run `40582501871`); its output is not yet accepted as corrected aggregate evidence.
+- A new cumulative audit helper now validates RNG checksum uniqueness and RNG audit fingerprints over all rows `1..N`, not only the newly executed block. N300 aggregate evidence passes this check. The N1200 artifacts from the older in-progress workflow must be re-aggregated with the corrected code before use as the N2400 base.
+- The current work remains on `tmp/s6-aggregate-contract-fix-20261027`; `main` remains unchanged. Do not declare Gate A/B PASS or `CONVERGED` until current-cohort Golden coverage, all required statistical gates, the exact path-count rule, and the three consecutive successful transitions are evidenced.
