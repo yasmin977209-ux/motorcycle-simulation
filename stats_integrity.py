@@ -14,6 +14,25 @@ from dateutil.relativedelta import relativedelta
 import constants
 
 
+
+def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int:
+    """Resolve the v2.3 path-count policy without conflating terminal outcomes with trajectories."""
+    counts = list(rng_draw_counts)
+    if not scenario_id or not counts:
+        raise ValueError("N_UNIQUE_PATHS_AUDIT_INPUT_EMPTY")
+    if isinstance(unique_daily_paths, bool) or not isinstance(unique_daily_paths, int) or unique_daily_paths < 1:
+        raise ValueError("N_UNIQUE_DAILY_PATHS_INVALID")
+    if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in counts):
+        raise TypeError("RNG_DRAW_COUNT_MUST_BE_NONNEGATIVE_INTEGER")
+    if scenario_id.startswith("C100_"):
+        if any(value != 0 for value in counts) or unique_daily_paths != 1:
+            raise RuntimeError("C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION")
+        return 1
+    if any(value <= 0 for value in counts):
+        raise RuntimeError(f"STOCHASTIC_RNG_DRAWS_REQUIRED:{scenario_id}")
+    return unique_daily_paths
+
+
 def statistical_checkpoint_index(n: int) -> int:
     """Map approved N=300*2**(k-1) checkpoints to their 1-based spending index."""
     if not isinstance(n, int) or isinstance(n, bool) or n < 300 or n % 300:
