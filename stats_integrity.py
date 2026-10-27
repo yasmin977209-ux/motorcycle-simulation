@@ -15,13 +15,13 @@ import constants
 
 
 
-def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int | None:
-    """Resolve only the path-count cases explicitly defined by v2.3.
+def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int:
+    """Resolve N_unique_paths from the owner-approved daily-path contract.
 
-    C100 has an explicit deterministic N_unique_paths=1 rule. For stochastic
-    scenarios, v2.3 §§21.2/14.12 require the field but do not specify the exact
-    path-equality key; retain unique_daily_paths as diagnostic and fail closed
-    rather than promoting it to the normative N_unique_paths value.
+    For the current S6 v2.3 cohort, N_unique_paths is the number of distinct
+    complete daily paths persisted in the scenario artifact. The caller must
+    verify SOURCE_SHA/cohort identity and the daily snapshot file digests before
+    relying on this value. C100 remains a separate deterministic cohort.
     """
     counts = list(rng_draw_counts)
     if not scenario_id or not counts:
@@ -36,7 +36,7 @@ def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], uni
         return 1
     if any(value <= 0 for value in counts):
         raise RuntimeError(f"STOCHASTIC_RNG_DRAWS_REQUIRED:{scenario_id}")
-    return None
+    return unique_daily_paths
 
 
 def statistical_checkpoint_index(n: int) -> int:
