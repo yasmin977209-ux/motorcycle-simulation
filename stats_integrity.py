@@ -15,8 +15,14 @@ import constants
 
 
 
-def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int:
-    """Resolve the v2.3 path-count policy without conflating terminal outcomes with trajectories."""
+def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], unique_daily_paths: int) -> int | None:
+    """Resolve only the path-count cases explicitly defined by v2.3.
+
+    C100 has an explicit deterministic N_unique_paths=1 rule. For stochastic
+    scenarios, v2.3 §§21.2/14.12 require the field but do not specify the exact
+    path-equality key; retain unique_daily_paths as diagnostic and fail closed
+    rather than promoting it to the normative N_unique_paths value.
+    """
     counts = list(rng_draw_counts)
     if not scenario_id or not counts:
         raise ValueError("N_UNIQUE_PATHS_AUDIT_INPUT_EMPTY")
@@ -30,7 +36,7 @@ def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], uni
         return 1
     if any(value <= 0 for value in counts):
         raise RuntimeError(f"STOCHASTIC_RNG_DRAWS_REQUIRED:{scenario_id}")
-    return unique_daily_paths
+    return None
 
 
 def statistical_checkpoint_index(n: int) -> int:
