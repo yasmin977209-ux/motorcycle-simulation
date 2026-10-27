@@ -1500,3 +1500,19 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - R4 and detailed §21.8 comparison: `docs/audits/R4_S4_C100_P50_GOLDEN_2026-10-26.md` and `docs/audits/S4_C100_GOLDEN_REPORT_965281d52441cd0d4b744e211c9f68ee4cdc3753.md`.
 
 **Next:** maintain S4 as an isolated evidence branch; do not infer project-wide final acceptance from deterministic C100 success. The separate statistical Gate A/B and P17/P18 release blockers remain in force.
+
+## S6 — isolated integrated candidate run started (2026-10-27)
+
+**Status:** `IN_PROGRESS / NO CHECKPOINT ACCEPTANCE CLAIM`.
+
+- Normative reference read directly from the project upload: `المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md`; SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
+- Clauses read before this execution: 0.1, 0.3, 2.5, 2.7, 14.2, 14.3, 14.11, 14.12, 21.2, 21.3, 21.5, 21.7, 25.6, 25.7, 25.8, 25.9.
+- Isolated candidate branch: `tmp/s6-integrated-fix-20261027`, based on tested S6 candidate `19d40ef9a847f53b2d8a39f0027ab70b4302eef4`. The candidate includes the canonical padded G100 artifact path and the current single `--trials` parser option. Workflow change in this branch only adds the isolated branch to the S6 push trigger; it does not change simulation or statistical acceptance logic.
+- Workflow commit / tested HEAD: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`.
+- GitHub Actions run: `40574326793` — https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40574326793. At record time the preflight job was `IN_PROGRESS`; no trial artifact, checkpoint PASS, Gate A PASS, Gate B PASS, or convergence result is asserted.
+- Preflight steps observed completed: checkout exact SHA, Python 3.11 setup, dependency installation. Step `Hash S6 CLI, validate --help, and run full repository tests` was still running; the policy/C100 reuse assertion had not yet run.
+- Older run `40567784572` remains incomplete on the prior candidate and has confirmed G100 artifact-upload failures for C030 and C050 because the artifact path was unpadded. Its outputs are not reused or accepted. Run `40573354098` remained pending behind that run's concurrency group at the last check; no results inferred from it.
+- Execution is limited to the authorized first stochastic checkpoint `N=300` across the 20 stochastic scenarios, with read-only C100 reuse. This checkpoint is diagnostic and cannot declare final Gate A/B or `CONVERGED`. Required cumulative doubling and three-successive-transition proof remain outstanding.
+- `main` and historical artifacts remain untouched.
+
+**Next permitted action:** poll Run `40574326793`; capture actual exit codes, test inventory and artifact hashes; only after successful preflight assess the per-scenario jobs and preserve every failure. Do not start N=600 or declare stability from this run.
