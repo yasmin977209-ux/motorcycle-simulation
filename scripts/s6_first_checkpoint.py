@@ -32,9 +32,15 @@ def verify_c100_reuse() -> dict[str, Any]:
         raise RuntimeError("S6_C100_GOLDEN_REUSE_SHA256_MISMATCH")
     if not C100_MANIFEST_PATH.is_file() or sha256_file(C100_MANIFEST_PATH) != EXPECTED_C100_MANIFEST_SHA256:
         raise RuntimeError("S6_C100_MANIFEST_REUSE_SHA256_MISMATCH")
-    return {"status":"REUSED_READ_ONLY","run_id":40263424595,"rerun":False,
+    c100_manifest=json.loads(C100_MANIFEST_PATH.read_text(encoding="utf-8"))
+    return {"status":"REUSED_READ_ONLY","run_id":int(c100_manifest["workflow_run_id"]),"rerun":False,
             "golden_path":str(C100_GOLDEN_PATH),"golden_sha256":EXPECTED_C100_GOLDEN_SHA256,
-            "manifest_path":str(C100_MANIFEST_PATH),"manifest_sha256":EXPECTED_C100_MANIFEST_SHA256}
+            "manifest_path":str(C100_MANIFEST_PATH),"manifest_sha256":EXPECTED_C100_MANIFEST_SHA256,
+            "source_sha":c100_manifest["source_sha"],"cohort_id":c100_manifest["cohort_id"],
+            "scenario_ids":list(c100_manifest["scenario_ids"]),
+            "trial_count_per_scenario":int(c100_manifest["trial_ids_per_scenario"][1]),
+            "n_unique_paths":int(c100_manifest["N_unique_paths"]),
+            "degeneracy_status":c100_manifest["degeneracy_status"],"G_status":c100_manifest["G_status"]}
 
 def result_record(result: monte_carlo.TrialResult, source_sha: str, cohort_id: str, derived_from: str | None) -> dict[str, Any]:
     row=asdict(result)
@@ -249,7 +255,9 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             if not p.is_file() or p.stat().st_size!=e["size_bytes"] or sha256_file(p)!=e["sha256"]:
                 raise RuntimeError(f"S6_SCENARIO_FILE_HASH_MISMATCH:{scenario}:{name}")
         by_scenario[scenario]=(base,m)
-    expected={f"C{c:03d}_G{g:03d}" for c in COLLECTION_LEVELS for g in RECOVERY_LEVELS}
+    # C100 is a separate, immutable S4 cohort. It is verified and referenced above,
+    # never merged into the new stochastic SOURCE_SHA/cohort or counted as independent samples.
+    expected={f"C{collection:03d}_G{recovery:03d}" for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS}
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
     all_trials=[]; all_daily=[]; summaries=[]
@@ -274,14 +282,20 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
         "cohort_id":f"s6-v23-{args.source_sha[:8]}","run_id":args.run_id,"run_attempt":args.run_attempt,
         "master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL","checkpoint_n":checkpoint_n,
-        "scenario_count":len(expected),"scenario_summaries":summaries,"c100_reuse":c100_reuse,
-        "test192_reuse":{"run_id":40397897155,"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
+        "scenario_count":len(expected),"stochastic_scenario_count":len(expected),
+        "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
+        "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
+        "scenario_summaries":summaries,"c100_reuse":c100_reuse,
+        "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN","gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY","stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
         "cohort_id":manifest["cohort_id"],"checkpoint_n":checkpoint_n,"scenario_count":len(expected),"trial_rows":len(all_trials),
-        "daily_distribution_rows":len(all_daily),"gate_a":manifest["acceptance_status"]["gate_a"],
+        "daily_distribution_rows":len(all_daily),"stochastic_scenario_count":len(expected),
+        "total_scenario_combinations":manifest["total_scenario_combinations"],
+        "c100_reused_scenario_count":manifest["c100_reused_scenario_count"],
+        "gate_a":manifest["acceptance_status"]["gate_a"],
         "gate_b":manifest["acceptance_status"]["gate_b"],"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
 
