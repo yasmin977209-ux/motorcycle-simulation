@@ -202,7 +202,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "eligible_zero_claim_trials":sum(1 for x in ordered if x.claims_created==0),
         "derived_trial_count":sum(1 for v in derived.values() if v is not None),
         "full_run_trial_ids":[tid for tid in trial_ids if derived.get(tid) is None],
-        "derived_trials":[{"trial_id":tid,"derived_from":derived.get(tid),"trial_fingerprint":results[tid].trial_fingerprint} for tid in trial_ids if derived[tid] is not None],
+        "derived_trials":[{"trial_id":tid,"derived_from":derived.get(tid),"trial_fingerprint":results[tid].trial_fingerprint} for tid in trial_ids if derived.get(tid) is not None],
         "status":"EXECUTED"}
     write_json(out_dir/"opt1_provenance.json",provenance)
     names=[*targets.keys(),"opt1_provenance.json"]
