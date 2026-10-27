@@ -1571,3 +1571,35 @@ Next: continue independent non-protected work. Do not accept this candidate or m
   `python scripts/s6_first_checkpoint.py --mode aggregate --source-sha da1a9ea9b5cd789c944de3f07b08395bb67c49e7 --run-id <AGGREGATE_RUN_ID> --run-attempt <AGGREGATE_RUN_ATTEMPT> --source-run-id 40574326793 --source-run-attempt 1 --trials 300 --input-root results_stage7_s6/artifacts --output-dir results_stage7_s6/aggregate`.
   Download the exact artifacts first with `gh run download 40574326793 --dir results_stage7_s6/artifacts`. The aggregate must verify all 20 scenario manifests/files and keep the 5 C100 scenarios as a separate S4 cohort; no trial rerun is needed for this aggregation-only command.
 - At last poll Run `40574326793` had 16 of 20 scenario artifacts uploaded; the four C050 lower-G full-run jobs were still `IN_PROGRESS`. The current workflow's aggregate job has not run yet.
+
+## S6 N=300 run completion and authoritative correction — 2026-10-27
+
+**Status:** `SCENARIO_EXECUTION_AND_ORIGINAL_AGGREGATE_EXECUTED / CORRECTED_EVIDENCE_AGGREGATE_NOT_EXECUTED`.
+
+- Source run `40574326793` completed `success` on pinned head `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`. Preflight ran `sha256sum scripts/s6_first_checkpoint.py`, `python scripts/s6_first_checkpoint.py --help`, `python -m pytest -q tests`; full suite result was `573 passed, 1 skipped, 1 warning in 509.75s`. All 20 stochastic scenario jobs and the original aggregate job `122454027057` completed successfully.
+- Original aggregate artifact ID `12769096239`, name `s6-n300-aggregate-40574326793`, ZIP SHA-256 `4bf12b17243db39fe2842e00060a010cfe2360722be8f8e10a3ffc91ae448e82`. Internal file SHA-256 values:
+  - `manifest.json`: `5a17bee21c8cdd45ad0fdebfb3d93889f2866f5433c5dccf9539d0de20462bd3` (9,906 bytes)
+  - `trials_summary.parquet`: `88807fb73afb56ec9133773fb3e43ee08f0ad9eec395e4b81ea363de283634b4` (573,216 bytes)
+  - `daily_distribution.parquet`: `745fec9cb47fe539cad01e24ee54e0109287805ba10d1ff8feccd3477c8605ee` (5,010,446 bytes)
+  - `c100_reuse.json`: `df4a2f751ee5b7512ef34efde0e558953f2e7272695f9c2b4f5d9ba12f99e275` (453 bytes)
+- Actual aggregate summary from the CI log: `scenario_count=20`, `trial_rows=6000`, `daily_distribution_rows=2075950`, `checkpoint_n=300`, source `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`. All 20 expected stochastic scenario IDs are present.
+- C100 remained separate and read-only: S4 Run `40263424595`, Golden SHA-256 `39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327`, manifest SHA-256 `2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04`.
+- Acceptance is **not** complete: Gate A `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`; Gate B `NOT_EVALUATED_FIRST_CHECKPOINT_ONLY`; stability `NOT_CONVERGED_CHECKPOINT_N300_BASELINE`. This N=300 result does not authorize N=600 or `CONVERGED`.
+- **Correction to the earlier aggregate audit note:** the original `aggregate` code already expected only the 20 stochastic scenarios; C100 was already separate. The earlier claim that it expected 25 manifests was a misread and is superseded. The original aggregate job succeeded.
+- **Real manifest defect still blocks acceptance:** the original `manifest.json` records `test192_reuse.run_id=40397897155`, while the owner-approved evidence runs are `40531095239` and `40546712685`. It also lacks the full execution provenance now added on the correction branch. Do not overwrite or mutate the original artifact.
+- Correction branch `tmp/s6-aggregate-contract-fix-20261027`, HEAD `c4ce039826ab318e470b2049dc16d8c9b661f3ca`, has a corrected aggregate implementation: separate aggregate/source run IDs; source/run-attempt/cohort validation; explicit 20 stochastic + 5 separately reused C100 scenario accounting; approved Test 192 run IDs; per-scenario file evidence and command reconstruction; `git_commit`, timestamps, command argv, exit code and package versions. Focused regression Run `40579179343` passed: `9 passed in 0.70s`. The integration test uses synthetic fixture data, not the real 20 production artifacts.
+- **Corrected real-artifact aggregation status: `NOT_EXECUTED`.** The corrected code has not yet been run against the real artifacts. Do not treat its synthetic integration test as a production aggregate. To create a new corrected aggregate without rerunning trials, on a checkout of the correction branch with GitHub CLI authenticated:
+  ```bash
+  gh run download 40574326793 --dir results_stage7_s6/artifacts
+  python -m pip install -r requirements.txt
+  AGGREGATE_RUN_ID="LOCAL-AGGREGATE-$(date -u +%Y%m%dT%H%M%SZ)"
+  python scripts/s6_first_checkpoint.py --mode aggregate \
+    --source-sha da1a9ea9b5cd789c944de3f07b08395bb67c49e7 \
+    --run-id "$AGGREGATE_RUN_ID" --run-attempt 1 \
+    --source-run-id 40574326793 --source-run-attempt 1 --trials 300 \
+    --input-root results_stage7_s6/artifacts \
+    --output-dir results_stage7_s6/aggregate
+  sha256sum results_stage7_s6/aggregate/*
+  ```
+  This command only re-aggregates existing artifacts; it must not rerun any trials or modify the original ZIP. Capture its actual exit code, full log, new manifest SHA-256 and output file hashes before accepting the corrected manifest.
+- `main` remains untouched. The failed intermediate focused test Run `40578008441` remains preserved; its fixture NameError was fixed and subsequent Runs `40578035830`, `40578402167`, `40579179343` passed.
