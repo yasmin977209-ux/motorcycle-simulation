@@ -1516,3 +1516,17 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - `main` and historical artifacts remain untouched.
 
 **Next permitted action:** poll Run `40574326793`; capture actual exit codes, test inventory and artifact hashes; only after successful preflight assess the per-scenario jobs and preserve every failure. Do not start N=600 or declare stability from this run.
+
+## S6 — aggregate contract audit and correction candidate (2026-10-27)
+
+**Status:** `CODE_CORRECTED_ON_ISOLATED_BRANCH / CI_NOT_YET_EXECUTED`.
+
+- Re-read the controlling clauses before the aggregate change: 2.5, 14.2, 21.2, 21.3, 21.5, 25.6, 25.8 and 25.9.
+- Audited `scripts/s6_first_checkpoint.py::aggregate`: it previously expected manifests for all 25 scenarios, while the workflow emits only the 20 stochastic scenarios and separately verifies the immutable S4 C100 Golden. This would make aggregation fail closed with missing C100 manifests.
+- Retrieved and inspected the exact S4 artifact `12630457193`, run `40263424595`; ZIP SHA-256 `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`. It contains the C100 Golden, its manifest, report and S4 test evidence; it does not contain S6-shaped `trials_summary.parquet` rows. The Golden records one deterministic canonical daily ledger and `N_unique_paths=1`; do not fabricate a new-source C100 TrialResult dataset or merge it into the stochastic cohort.
+- Correction candidate branch: `tmp/s6-aggregate-contract-fix-20261027`. Commits: `f6806e3fecb842d94b3881fa17941972da9e3909` (keep C100 metadata separate and update Test 192 evidence references), `65b9578cb0fd2b93804aa56a75dbeee35e718ade` (explicit stochastic scenario inventory), `f1bb0575029cb37b3aaaf79a0bd476f022311c42` (tests for separate C100 cohort and scenario inventory).
+- The revised aggregate expects only the 20 current-source stochastic scenario artifacts and reports `total_scenario_combinations=25`, `stochastic_scenario_count=20`, and `c100_reused_scenario_count=5`; C100 remains a read-only, separately identified S4 cohort. Test 192 references the owner-designated coverage evidence Runs `40531095239` and `40546712685`, with proof SHA-256 `f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b`.
+- This correction branch is not yet enabled in the S6 push trigger and has not been tested by CI. No PASS is claimed for the new code. The running Run `40574326793` remains pinned to `da1a9ea9b5cd789c944de3f07b08395bb67c49e7` on the separate integrated branch; its source and evidence are unchanged by this correction.
+- `main`, the S4 Golden, and historical artifacts remain untouched.
+
+**Next permitted action:** wait for Run `40574326793` to finish its pinned-source execution; run targeted tests for the aggregate correction and review their logs; then enable the correction branch for the next checkpoint run only after CI validates the patch. Do not reuse its current-source scenario outputs across the changed `SOURCE_SHA`.
