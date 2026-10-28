@@ -124,7 +124,7 @@ def load_golden(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             "schema_version": "s6-independent-golden-scenario-v1",
             "source_sha": SOURCE_SHA, "cohort_id": COHORT_ID, "master_seed": MASTER_SEED,
             "model_schema_version": "v2.3", "scenario_id": scenario,
-            "tested_sha": GOLDEN_TESTED_SHA, "run_id": int(GOLDEN_RUN_ID), "run_attempt": 1,
+            "tested_sha": GOLDEN_TESTED_SHA, "run_id": GOLDEN_RUN_ID, "run_attempt": 1,
             "trial_count": N, "trial_id_start": 1, "trial_id_end": N,
             "n_closed": N, "n_censored": 0, "independent_execution": True,
             "production_result_artifacts_read": False,
