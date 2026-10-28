@@ -250,13 +250,14 @@ def main() -> int:
     out = Path("audit-output")
     out.mkdir(parents=True, exist_ok=True)
     (out / "S6_N2400_INDEPENDENT_AUDIT.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    c100_scenario_count = len(c100["scenario_ids"])
     lines = [
         "# S6 N=2400 Independent Artifact Audit", "",
         f"- Status: {audit['status']}",
         f"- Source run / tested SHA: {SOURCE_RUN_ID} / {SOURCE_RUN_HEAD_SHA}",
         f"- Aggregate run / tested SHA: {AGGREGATE_RUN_ID} / {AGGREGATE_TESTED_SHA}",
         f"- SOURCE_SHA / cohort / seed: {SOURCE_SHA} / {COHORT_ID} / {MASTER_SEED}",
-        f"- Coverage: {len(scenarios)} stochastic + {len(c100[\"scenario_ids\"])} C100 read-only = {len(scenarios) + len(c100[\"scenario_ids\"])} combinations.",
+        f"- Coverage: {len(scenarios)} stochastic + {c100_scenario_count} C100 read-only = {len(scenarios) + c100_scenario_count} combinations.",
         f"- Trial rows: {trial_rows:,}; daily distribution rows: {daily_rows:,}",
         "- Canonical digest of all source scenario trial rows equals the aggregate table.",
         "- Canonical digest of all source scenario daily-distribution rows equals the aggregate table.",
