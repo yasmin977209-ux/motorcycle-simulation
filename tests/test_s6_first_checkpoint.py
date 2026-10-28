@@ -85,7 +85,7 @@ def test_exact_statistical_transition_requires_gate_a_gate_b_and_both_change_gua
     def point(n, gate_a="PASS", gate_b="PASS", p50=100, loss=Fraction(1, 10)):
         return {
             "n": n,
-            "gate_a": {"status": gate_a, "stable": gate_a == "PASS"},
+            "gate_a": {"status": gate_a, "stable": gate_a in {"PASS", "PASS_SCOPED"}},
             "gate_b": {"status": gate_b, "stable": gate_b == "PASS"},
             "p50_cumulative_project_profit": {"numerator": p50, "denominator": 1},
             "probability_accounting_loss": {
@@ -96,6 +96,9 @@ def test_exact_statistical_transition_requires_gate_a_gate_b_and_both_change_gua
     from stats_integrity import statistical_checkpoint_index
     assert [statistical_checkpoint_index(n) for n in (300, 600, 1200, 2400)] == [1, 2, 3, 4]
     assert evaluate_statistical_transition(point(300), point(600))["status"] == "PASS"
+    assert evaluate_statistical_transition(
+        point(300, gate_a="PASS_SCOPED"), point(600, gate_a="PASS_SCOPED")
+    )["status"] == "PASS"
     assert evaluate_statistical_transition(
         point(300, gate_a="NOT_EVALUATED"), point(600)
     )["status"] == "BLOCKED_GATE_A"
