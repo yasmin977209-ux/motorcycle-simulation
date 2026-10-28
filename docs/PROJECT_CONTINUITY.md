@@ -1918,3 +1918,8 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - Re-read the uploaded normative reference (SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`): §2.5/§14.2 explicitly require cumulative checkpoints `300 → 600 → 1200 → 2400 → 4800 → 9600 → …` with no prior upper cap, and §14.11.4 defines `alpha_s,k = 0.0025/(k(k+1))` for successive checkpoint index `k`.
 - Live `main/docs/stage7/statistical_execution_gate.json` (blob `a3324db6b4edecb35b28d22bf2b74e1b32370dca`) has `checkpoint_schedule=[300,600,1200,2400]` and `required_cumulative_checkpoint_points=4`, but does not explicitly encode an extension rule after N=2400. Its status is still `BLOCKED_FOR_IMPLEMENTATION`; the file also pins a conflicting normative-reference SHA `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
 - Disposition: record as `CONFLICTED / MISSING_EVIDENCE` for the unbounded checkpoint extension contract until the owner-reviewed gate contract explicitly reconciles it with the normative reference. Do not infer that 2400 is the ceiling, do not rewrite the main gate, and do not start N4800 based on this ambiguity. No simulation was executed for this check.
+
+### R4 row — checkpoint extension
+| Item | Execution | Evidence status | Evidence / risk / disposition |
+|---|---|---|---|
+| Unbounded checkpoint extension beyond N=2400 | `NOT_EXECUTED` | `CONFLICTED / MISSING_EVIDENCE` | Uploaded v2.3 reference §§2.5/14.2 requires continued doubling without an upper cap; live main gate lists only `[300,600,1200,2400]` and has no explicit extension rule. Gate remains `BLOCKED_FOR_IMPLEMENTATION`; do not alter main or launch N4800 until reviewed contract resolution. |
