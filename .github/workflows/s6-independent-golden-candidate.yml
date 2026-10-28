@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: s6-independent-golden-da1a-candidate
-  cancel-in-progress: false
+  cancel-in-progress: true
   queue: max
 
 env:
