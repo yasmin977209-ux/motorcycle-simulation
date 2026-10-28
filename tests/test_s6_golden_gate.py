@@ -196,7 +196,7 @@ def test_gate_a_rejects_scenario_coverage_gap(tmp_path):
     approval = json.loads(approval_path.read_text(encoding="utf-8"))
     approval["candidate_map_sha256"] = hashlib.sha256(golden_path.read_bytes()).hexdigest()
     approval_path.write_text(json.dumps(approval, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-    with pytest.raises(gate.GoldenEvidenceError, match="GOLDEN_MAP_IDENTITY_MISMATCH:scenario_count"):
+    with pytest.raises(gate.GoldenEvidenceError, match="GOLDEN_SCENARIO_COVERAGE_MISMATCH"):
         load(golden_path, approval_path)
 
 
