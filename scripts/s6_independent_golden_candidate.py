@@ -4,6 +4,9 @@
 This workflow performs fresh full trials from IDs 1..N. It never reads production
 trial-result artifacts. The candidate is not an approval decision; its output must
 be reviewed and compared against the production cohort independently.
+
+The workflow schedules the 20 stochastic scenarios with max-parallel=20 and uses
+a per-run concurrency group; each candidate still has a single tested SHA.
 """
 from __future__ import annotations
 
