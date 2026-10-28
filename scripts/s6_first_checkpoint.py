@@ -176,12 +176,43 @@ def run_full_trials(scenario_id: str, trial_ids: list[int], source_sha: str, wor
 
 def previous_checkpoint_n(target_n: int) -> int:
     start = constants.STATISTICAL_CHECK_START_N
-    if target_n < start:
+    if type(target_n) is not int or target_n < start:
         raise ValueError("S6_CHECKPOINT_N_BELOW_APPROVED_START")
     ratio = target_n // start
     if target_n % start or ratio & (ratio - 1):
         raise ValueError("S6_CHECKPOINT_N_NOT_APPROVED_DOUBLING_POINT")
     return 0 if target_n == start else target_n // 2
+
+
+def statistical_checkpoint_schedule(max_n: int) -> list[int]:
+    """Return every approved cumulative checkpoint up to max_n; no fixed upper cap."""
+    previous_checkpoint_n(max_n)  # fail closed unless max_n is an approved doubling point
+    schedule: list[int] = []
+    n = constants.STATISTICAL_CHECK_START_N
+    while n <= max_n:
+        schedule.append(n)
+        n *= constants.STATISTICAL_ESCALATION_MULTIPLIER
+    if not schedule or schedule[-1] != max_n:
+        raise RuntimeError("S6_STATISTICAL_CHECKPOINT_SCHEDULE_INCOMPLETE")
+    return schedule
+
+
+def validate_checkpoint_target_range(target: int, trial_start: int, trial_end: int) -> int:
+    """Validate a resumable target without imposing a hard-coded maximum checkpoint."""
+    if type(target) is not int or type(trial_start) is not int or type(trial_end) is not int:
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    if target < constants.STATISTICAL_CHECK_START_N * constants.STATISTICAL_ESCALATION_MULTIPLIER:
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    if trial_start != target // 2 + 1 or trial_end != target or target != 2 * (trial_start - 1):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    try:
+        previous_n = previous_checkpoint_n(target)
+    except ValueError as exc:
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID") from exc
+    if previous_n != target // 2:
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    return previous_n
+
 
 def _s6_action_checkpoint_config() -> dict[str, Any] | None:
     """Load owner-pinned resume config only on Actions, never under pytest."""
@@ -192,8 +223,7 @@ def _s6_action_checkpoint_config() -> dict[str, Any] | None:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_MISSING")
     config = json.loads(path.read_text(encoding="utf-8"))
     target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
-    if target not in (600, 1200, 2400) or start != target // 2 + 1 or end != target or target != 2 * (start - 1):
-        raise RuntimeError("S6_CHECKPOINT_CONFIG_RANGE_INVALID")
+    validate_checkpoint_target_range(target, start, end)
     require_source_sha(str(config["source_sha"]))
     if config.get("cohort_id") != f"s6-v23-{config['source_sha'][:8]}":
         raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_INVALID")
@@ -560,12 +590,14 @@ def evaluate_s6_aggregate_statistics(
     evaluations: dict[str, Any] = {}
     registry: list[dict[str, Any]] = []
     checkpoint_counts: dict[str, dict[str, int]] = {}
+    max_n = max((len(rows) for rows in rows_by_scenario.values()), default=0)
+    checkpoint_schedule = statistical_checkpoint_schedule(max_n)
     stability_history: dict[str, Any] = {
         "schema_version": "s6-stability-history-v1",
         "source_sha": source_sha,
         "cohort_id": cohort_id,
         "aggregation_run_id": str(run_id),
-        "checkpoint_schedule": [300, 600, 1200, 2400],
+        "checkpoint_schedule": checkpoint_schedule,
         "historical_cohorts_imported": False,
         "convergence_authorized": False,
         "per_scenario": {},
@@ -578,7 +610,7 @@ def evaluate_s6_aggregate_statistics(
             results = [result_from_record(row) for row in ordered_rows]
             validate_cumulative_trial_ids([item.trial_id for item in results], len(results), scenario_id=scenario)
             points: list[dict[str, Any]] = []
-            for n in (300, 600, 1200, 2400):
+            for n in checkpoint_schedule:
                 if n > len(results):
                     continue
                 sample = results[:n]
