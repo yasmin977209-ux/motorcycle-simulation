@@ -80,6 +80,8 @@ def load_approved_stochastic_golden(
     approval = json.loads(approval_manifest_path.read_text(encoding="utf-8"))
     golden = json.loads(golden_map_path.read_text(encoding="utf-8"))
 
+    if approval.get("approval_schema_version") != "s6-golden-approval-manifest-v1":
+        raise GoldenEvidenceError("GOLDEN_APPROVAL_SCHEMA_VERSION_INVALID")
     if approval.get("approval_status") != APPROVED_GOLDEN_STATUS:
         raise GoldenEvidenceError("GOLDEN_APPROVAL_STATUS_NOT_APPROVED")
     if approval.get("candidate_map_sha256") != map_sha:
