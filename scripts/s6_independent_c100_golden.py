@@ -199,6 +199,8 @@ def run_scenario(scenario: str, source_sha: str, workers: int, output_dir: Path)
         "claims_created_total": sum(int(getattr(result, "claims_created", 0)) for result in ordered),
         "financial_trial_fingerprints": fingerprints,
         "daily_path_fingerprints": daily_fingerprints,
+        "financial_map_sha256": sha256_bytes(canonical_json(fingerprints)),
+        "daily_path_map_sha256": sha256_bytes(canonical_json(daily_fingerprints)),
         "rng_audit_records": rng_records,
         "representative_daily_path": representative_path,
         "representative_trial_id": 1,
@@ -254,14 +256,17 @@ def aggregate(input_dir: Path, output_dir: Path, source_sha: str) -> dict[str, A
             raise RuntimeError(f"C100_GOLDEN_FINANCIAL_TRIAL_COVERAGE_MISMATCH:{scenario}")
         if set(doc.get("daily_path_fingerprints", {})) != ids:
             raise RuntimeError(f"C100_GOLDEN_DAILY_TRIAL_COVERAGE_MISMATCH:{scenario}")
-        if set(doc.get("rng_audit_records", [] ) [i].get("trial_id") for i in range(len(doc.get("rng_audit_records", [])))) != set(range(1, TRIAL_COUNT + 1):
+        rng_records = doc.get("rng_audit_records", [])
+        if len(rng_records) != TRIAL_COUNT or {
+            int(row.get("trial_id", -1)) for row in rng_records
+        } != set(range(1, TRIAL_COUNT + 1)):
             raise RuntimeError(f"C100_GOLDEN_RNG_TRIAL_COVERAGE_MISMATCH:{scenario}")
         if any(int(row.get("rng_draw_count", -1)) != 0 or int(row.get("rng_checksum", -1)) != 0 for row in doc["rng_audit_records"]):
             raise RuntimeError(f"C100_GOLDEN_RNG_ZERO_DRAW_CONTRACT_MISMATCH:{scenario}")
         if sha256_bytes(canonical_json(doc["financial_trial_fingerprints"])) != doc.get("financial_map_sha256"):
-            # Per-scenario files use the canonical line-based digest in their return; independently
-            # recalculate and store the canonical map hash below instead of trusting an absent field.
-            pass
+            raise RuntimeError(f"C100_GOLDEN_FINANCIAL_MAP_HASH_MISMATCH:{scenario}")
+        if sha256_bytes(canonical_json(doc["daily_path_fingerprints"])) != doc.get("daily_path_map_sha256"):
+            raise RuntimeError(f"C100_GOLDEN_DAILY_MAP_HASH_MISMATCH:{scenario}")
         docs[scenario] = (doc, path)
     if set(docs) != set(SCENARIOS):
         raise RuntimeError(f"C100_GOLDEN_SCENARIO_SET_INCOMPLETE:{sorted(set(SCENARIOS)-set(docs))}")
