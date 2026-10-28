@@ -1906,3 +1906,9 @@ Preserve the distinction between the successful exact fingerprint comparison and
 2. Obtain authoritative persisted asset-side daily evidence for an independent `Assets == Equity` check, or record a separately approved schema/source revision with its own `SOURCE_SHA`, cohort and independent Golden; do not alter historical Artifacts.
 3. Preserve the missing original source-run metadata SHA gap; do not substitute the separate API capture digest.
 4. Only after independent Gate A review, full preflight and approval may N4800 be considered, using only new trial IDs `2401..4800`; no N4800 execution was authorized or performed in this phase.
+
+
+## Golden candidate read-back — 2026-10-29
+- Run `40760465042` completed `success` on tested SHA `3a972c9a0b18b9bc170a289a6aaf8fe1b8797f10`; all 20 scenario jobs and the aggregate job succeeded.
+- Artifact `12857612467` digest `sha256:e6d94d715eb7e52ffc8ba61ae6dafb766b76914d956879190f1e87b87e311078`; ZIP integrity passes. Map SHA `32abf1d54be67c5e9ee37e9e14ad3bc28c9d1c0e36b2af17e44bbb23b5b3e581` matches manifest. All 20 scenarios have 2,400 IDs (`1..2400`) each, total 48,000. Source/cohort/seed match `da1a9ea9b5cd789c944de3f07b08395bb67c49e7` / `s6-v23-da1a9ea9` / `20270101`; production artifacts were not read by candidate generation.
+- Candidate remains `INDEPENDENT_GOLDEN_CANDIDATE_NOT_APPROVED`; approval `NOT_EVALUATED_REQUIRES_SEPARATE_REVIEW`. Prior exact production comparison `40784902124` was 48,000/48,000 matches, but Gate A remains unapproved; full daily balance evidence remains `MISSING_EVIDENCE`, Gate B `FAIL_SCOPED`, stability `NOT_CONVERGED`, acceptance `NOT_GRANTED`. No N4800 or simulation was run.
