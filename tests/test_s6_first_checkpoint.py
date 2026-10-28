@@ -28,8 +28,9 @@ def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     ) == (3, "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT")
     with pytest.raises(RuntimeError, match="S6_N_UNIQUE_PATHS_SOURCE_OR_COHORT_MISMATCH"):
         s6.reported_unique_path_evidence(legacy_manifest, 3, 3, "b" * 40, cohort_id)
-    with pytest.raises(RuntimeError, match="STOCHASTIC_RNG_DRAWS_REQUIRED"):
-        resolve_n_unique_paths("C085_G100", [1, 0], 2)
+    assert resolve_n_unique_paths("C085_G100", [1, 0, 0], 2) == 2
+    with pytest.raises(RuntimeError, match="N_UNIQUE_DAILY_PATHS_EXCEEDS_TRIAL_COUNT"):
+        resolve_n_unique_paths("C085_G100", [1, 0], 3)
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
@@ -46,6 +47,57 @@ def test_action_checkpoint_config_pins_n1200_resume(monkeypatch):
     assert config["n600_aggregate_run_id"] == 40582501871
     assert config["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
     assert config["cohort_id"] == "s6-v23-da1a9ea9"
+
+
+def test_aggregate_checkpoint_n_is_resolved_from_verified_manifest_counts():
+    config = {"active_target_trials": 1200, "trial_start": 601, "trial_end": 1200}
+    assert s6.resolve_aggregate_checkpoint_n(300, [300] * 20, config) == 300
+    assert s6.resolve_aggregate_checkpoint_n(600, [1200] * 20, config) == 1200
+    assert s6.resolve_aggregate_checkpoint_n(1200, [1200] * 20, config) == 1200
+    with pytest.raises(RuntimeError, match="S6_AGGREGATE_MIXED_CHECKPOINT_N"):
+        s6.resolve_aggregate_checkpoint_n(600, [600] * 19 + [1200], config)
+    with pytest.raises(RuntimeError, match="S6_AGGREGATE_REQUESTED_N_MISMATCH"):
+        s6.resolve_aggregate_checkpoint_n(300, [1200] * 20, None)
+
+
+def test_action_checkpoint_config_does_not_override_aggregate_trial_count(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    args = SimpleNamespace(
+        mode="aggregate", source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7", trials=300,
+    )
+    config = s6.apply_action_checkpoint_config(args)
+    assert config is not None and config["active_target_trials"] == 1200
+    assert args.trials == 300
+    assert args._s6_checkpoint_config["cohort_id"] == "s6-v23-da1a9ea9"
+
+
+def test_exact_statistical_transition_requires_gate_a_gate_b_and_both_change_guards():
+    from fractions import Fraction
+    from stats_integrity import evaluate_statistical_transition
+
+    def point(n, gate_a="PASS", gate_b="PASS", p50=100, loss=Fraction(1, 10)):
+        return {
+            "n": n,
+            "gate_a": {"status": gate_a, "stable": gate_a == "PASS"},
+            "gate_b": {"status": gate_b, "stable": gate_b == "PASS"},
+            "p50_cumulative_project_profit": {"numerator": p50, "denominator": 1},
+            "probability_accounting_loss": {
+                "numerator": loss.numerator, "denominator": loss.denominator,
+            },
+        }
+
+    assert evaluate_statistical_transition(point(300), point(600))["status"] == "PASS"
+    assert evaluate_statistical_transition(
+        point(300, gate_a="NOT_EVALUATED"), point(600)
+    )["status"] == "BLOCKED_GATE_A"
+    assert evaluate_statistical_transition(
+        point(300, p50=100), point(600, p50=106)
+    )["status"] == "CONTINUE_P50_GUARD"
+    assert evaluate_statistical_transition(
+        point(300, loss=Fraction(1, 10)),
+        point(600, loss=Fraction(107, 1000)),
+    )["status"] == "CONTINUE_LOSS_PROBABILITY_CHANGE"
 
 
 def test_cumulative_trial_id_contract_rejects_duplicates_and_missing_ids():

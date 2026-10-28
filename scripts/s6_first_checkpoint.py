@@ -1,6 +1,7 @@
 from __future__ import annotations
 import argparse, hashlib, json, os, platform, subprocess, sys, time
 from datetime import datetime, timezone
+from fractions import Fraction
 from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -10,7 +11,7 @@ from urllib.error import HTTPError, URLError
 import tempfile, zipfile
 import pyarrow as pa
 import pyarrow.parquet as pq
-import constants, monte_carlo, rng, validation
+import constants, monte_carlo, rng, validation, stats_integrity
 from stats_integrity import resolve_n_unique_paths, validate_cumulative_trial_ids
 
 EXPECTED_C100_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327"
@@ -287,34 +288,66 @@ def require_latest_branch_commit() -> None:
 
 
 def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
+    """Apply active checkpoint config only to scenario runs; aggregate uses manifest evidence."""
     config = _s6_action_checkpoint_config()
     if config is None:
         return None
-    args.source_sha = str(config["source_sha"])
-    args.trials = int(config["active_target_trials"])
+    args._s6_checkpoint_config = config
+    if str(args.source_sha) != str(config["source_sha"]):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_SOURCE_SHA_MISMATCH")
+    if args.mode != "scenario":
+        return config
+
+    target = int(config["active_target_trials"])
+    args.trials = target
     args.trial_start = int(config["trial_start"])
     args.trial_end = int(config["trial_end"])
-    if args.mode == "scenario":
-        scenario = str(args.scenario)
-        previous_dir = Path("/tmp/s6_prev_n600") / scenario
-        if not previous_dir.exists():
-            extracted = download_previous_scenario_artifact(int(config["previous_run_id"]), scenario, previous_dir)
-            if extracted != previous_dir:
-                import shutil
-                staged = previous_dir.with_name(previous_dir.name + "_verified")
-                if staged.exists(): shutil.rmtree(staged)
-                shutil.copytree(extracted, staged)
-                shutil.rmtree(previous_dir)
-                staged.rename(previous_dir)
-        manifest_path = previous_dir / "scenario_manifest.json"
-        if not manifest_path.is_file():
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_MANIFEST_MISSING:{scenario}")
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest.get("source_sha") != args.source_sha or manifest.get("cohort_id") != config["cohort_id"]:
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_OR_COHORT_MISMATCH:{scenario}")
-        if manifest.get("trial_count") != int(config["active_target_trials"]) // 2:
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_TRIAL_COUNT_MISMATCH:{scenario}")
-        args.previous_dir = str(previous_dir)
+    scenario = str(args.scenario)
+    prior_run_id = int(config["previous_run_id"])
+    candidates: list[Path] = []
+    if args.previous_dir:
+        supplied = Path(args.previous_dir)
+        if (supplied / "scenario_manifest.json").is_file():
+            candidates.append(supplied)
+        elif supplied.is_dir():
+            manifests = list(supplied.rglob("scenario_manifest.json"))
+            if len(manifests) == 1:
+                candidates.append(manifests[0].parent)
+    cache_dir = Path("/tmp/s6_prev_n600") / scenario
+    if cache_dir.is_dir() and (cache_dir / "scenario_manifest.json").is_file():
+        candidates.append(cache_dir)
+
+    previous_dir: Path | None = None
+    for candidate in candidates:
+        manifest = json.loads((candidate / "scenario_manifest.json").read_text(encoding="utf-8"))
+        if (
+            manifest.get("scenario_id") != scenario
+            or manifest.get("source_sha") != config["source_sha"]
+            or manifest.get("cohort_id") != config["cohort_id"]
+            or int(manifest.get("trial_count", -1)) != target // 2
+            or str(manifest.get("run_id")) != str(prior_run_id)
+            or int(manifest.get("run_attempt", -1)) != 1
+            or manifest.get("trial_id_start") != 1
+            or manifest.get("trial_id_end") != target // 2
+        ):
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
+        previous_dir = candidate
+        break
+    if previous_dir is None:
+        previous_dir = download_previous_scenario_artifact(prior_run_id, scenario, cache_dir)
+        manifest = json.loads((previous_dir / "scenario_manifest.json").read_text(encoding="utf-8"))
+        if (
+            manifest.get("scenario_id") != scenario
+            or manifest.get("source_sha") != config["source_sha"]
+            or manifest.get("cohort_id") != config["cohort_id"]
+            or int(manifest.get("trial_count", -1)) != target // 2
+            or str(manifest.get("run_id")) != str(prior_run_id)
+            or int(manifest.get("run_attempt", -1)) != 1
+            or manifest.get("trial_id_start") != 1
+            or manifest.get("trial_id_end") != target // 2
+        ):
+            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
+    args.previous_dir = str(previous_dir)
     return config
 
 
@@ -496,14 +529,36 @@ def reconstructed_scenario_command(scenario: str, source_sha: str, run_id: str,
     return command
 
 
+def resolve_aggregate_checkpoint_n(
+    requested_n: int, manifest_trial_counts: list[int], config: dict[str, Any] | None = None,
+) -> int:
+    """Resolve the cumulative N from verified input manifests, and reject mixed checkpoints."""
+    if not manifest_trial_counts:
+        raise RuntimeError("S6_AGGREGATE_SCENARIO_MANIFESTS_MISSING")
+    if any(type(value) is not int for value in manifest_trial_counts):
+        raise RuntimeError("S6_AGGREGATE_MANIFEST_TRIAL_COUNT_INVALID")
+    observed = set(manifest_trial_counts)
+    if len(observed) != 1:
+        raise RuntimeError(f"S6_AGGREGATE_MIXED_CHECKPOINT_N:{sorted(observed)}")
+    actual_n = next(iter(observed))
+    if actual_n == requested_n:
+        previous_checkpoint_n(actual_n)
+        return actual_n
+    if config is not None:
+        target = int(config["active_target_trials"])
+        if actual_n == target and requested_n == target // 2:
+            previous_checkpoint_n(actual_n)
+            return actual_n
+    raise RuntimeError(f"S6_AGGREGATE_REQUESTED_N_MISMATCH:requested={requested_n}:artifacts={actual_n}")
+
+
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
     source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
     source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
-    checkpoint_n = args.trials
-    previous_checkpoint_n(checkpoint_n)
+    requested_n = args.trials
     source_metadata_path=getattr(args,"source_run_metadata_json",None)
     source_metadata={}
     if source_metadata_path:
@@ -513,8 +568,14 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if source_metadata.get("source_sha")!=args.source_sha:
             raise RuntimeError("S6_SOURCE_RUN_METADATA_SOURCE_SHA_MISMATCH")
     root=Path(args.input_root); manifests=sorted(root.rglob("scenario_manifest.json")); by_scenario={}
-    for mp in manifests:
-        m=json.loads(mp.read_text(encoding="utf-8")); scenario=str(m.get("scenario_id",""))
+    manifest_pairs=[(mp,json.loads(mp.read_text(encoding="utf-8"))) for mp in manifests]
+    checkpoint_n=resolve_aggregate_checkpoint_n(
+        requested_n,[manifest.get("trial_count") for _,manifest in manifest_pairs],
+        getattr(args,"_s6_checkpoint_config",None),
+    )
+    previous_checkpoint_n(checkpoint_n)
+    for mp,m in manifest_pairs:
+        scenario=str(m.get("scenario_id",""))
         if scenario in by_scenario: raise RuntimeError(f"S6_DUPLICATE_SCENARIO_ARTIFACT:{scenario}")
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
         if str(m.get("run_id"))!=source_run_id or int(m.get("run_attempt",-1))!=source_run_attempt:

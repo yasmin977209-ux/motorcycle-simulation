@@ -34,8 +34,12 @@ def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], uni
         if any(value != 0 for value in counts) or unique_daily_paths != 1:
             raise RuntimeError("C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION")
         return 1
-    if any(value <= 0 for value in counts):
-        raise RuntimeError(f"STOCHASTIC_RNG_DRAWS_REQUIRED:{scenario_id}")
+    if unique_daily_paths > len(counts):
+        raise RuntimeError("N_UNIQUE_DAILY_PATHS_EXCEEDS_TRIAL_COUNT")
+    # Zero RNG draws are legal; checksum=0 and the uniqueness exemption are enforced
+    # independently by validation.validate_rng_audit_records.
+    # Under the owner-approved contract, N_unique_paths is counted from persisted
+    # complete daily paths after the caller verifies source/cohort and file integrity.
     return unique_daily_paths
 
 
@@ -389,6 +393,69 @@ def p50_relative_change_exceeds_guard(previous: Fraction, current: Fraction) -> 
         difference * constants.STAT_P50_CHANGE_GUARD_DENOMINATOR
         > abs(previous) * constants.STAT_P50_CHANGE_GUARD_NUMERATOR
     )
+
+
+def evaluate_statistical_transition(
+    previous_point: dict[str, Any],
+    current_point: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail-closed adjacent doubling evaluator with exact P50/loss-probability guards."""
+    previous_n, current_n = previous_point.get("n"), current_point.get("n")
+    if type(previous_n) is not int or type(current_n) is not int:
+        raise TypeError("STATISTICAL_TRANSITION_N_MUST_BE_INTEGER")
+    if not is_statistical_checkpoint(previous_n) or not is_statistical_checkpoint(current_n):
+        raise ValueError("STATISTICAL_TRANSITION_N_NOT_APPROVED_CHECKPOINT")
+    if current_n != previous_n * constants.STATISTICAL_ESCALATION_MULTIPLIER:
+        raise ValueError("STATISTICAL_TRANSITION_NOT_ADJACENT_DOUBLING")
+
+    def exact_fraction(point: dict[str, Any], field: str) -> Fraction:
+        value = point.get(field)
+        if not isinstance(value, dict):
+            raise ValueError(f"STATISTICAL_TRANSITION_EXACT_VALUE_MISSING:{field}")
+        numerator, denominator = value.get("numerator"), value.get("denominator")
+        if type(numerator) is not int or type(denominator) is not int or denominator <= 0:
+            raise ValueError(f"STATISTICAL_TRANSITION_EXACT_VALUE_INVALID:{field}")
+        return Fraction(numerator, denominator)
+
+    def gate_pass(point: dict[str, Any], name: str) -> bool:
+        gate = point.get(name)
+        return isinstance(gate, dict) and gate.get("status") == "PASS" and gate.get("stable") is True
+
+    ga_prev, ga_curr = gate_pass(previous_point, "gate_a"), gate_pass(current_point, "gate_a")
+    gb_prev, gb_curr = gate_pass(previous_point, "gate_b"), gate_pass(current_point, "gate_b")
+    p50_prev = exact_fraction(previous_point, "p50_cumulative_project_profit")
+    p50_curr = exact_fraction(current_point, "p50_cumulative_project_profit")
+    loss_prev = exact_fraction(previous_point, "probability_accounting_loss")
+    loss_curr = exact_fraction(current_point, "probability_accounting_loss")
+    p50_exceeded = p50_relative_change_exceeds_guard(p50_prev, p50_curr)
+    loss_delta = abs(loss_curr - loss_prev)
+    loss_tolerance = Fraction(constants.STAT_PROB_ABS_TOL_NUMERATOR, constants.STAT_PROB_ABS_TOL_DENOMINATOR)
+    loss_pass = loss_delta < loss_tolerance
+
+    if not (ga_prev and ga_curr):
+        status = "BLOCKED_GATE_A"
+    elif not (gb_prev and gb_curr):
+        status = "FAIL_GATE_B"
+    elif p50_exceeded:
+        status = "CONTINUE_P50_GUARD"
+    elif not loss_pass:
+        status = "CONTINUE_LOSS_PROBABILITY_CHANGE"
+    else:
+        status = "PASS"
+    return {
+        "previous_n": previous_n, "current_n": current_n, "status": status,
+        "passed": status == "PASS",
+        "gate_a_previous_pass": ga_prev, "gate_a_current_pass": ga_curr,
+        "gate_b_previous_pass": gb_prev, "gate_b_current_pass": gb_curr,
+        "previous_p50_numerator": p50_prev.numerator, "previous_p50_denominator": p50_prev.denominator,
+        "current_p50_numerator": p50_curr.numerator, "current_p50_denominator": p50_curr.denominator,
+        "p50_relative_change_exceeds_guard": p50_exceeded,
+        "loss_probability_abs_change_numerator": loss_delta.numerator,
+        "loss_probability_abs_change_denominator": loss_delta.denominator,
+        "loss_probability_change_tolerance_numerator": loss_tolerance.numerator,
+        "loss_probability_change_tolerance_denominator": loss_tolerance.denominator,
+        "loss_probability_change_pass": loss_pass,
+    }
 
 
 def _rank_interval(
