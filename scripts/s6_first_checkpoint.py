@@ -799,6 +799,20 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
     source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
     source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
+    golden_map_arg = getattr(args, "golden_map", None)
+    golden_approval_arg = getattr(args, "golden_approval", None)
+    if bool(golden_map_arg) != bool(golden_approval_arg):
+        raise RuntimeError("S6_GOLDEN_MAP_AND_APPROVAL_MANIFEST_MUST_BE_SUPPLIED_TOGETHER")
+    approved_golden = None
+    if golden_map_arg and golden_approval_arg:
+        approved_golden = s6_golden_gate.load_approved_stochastic_golden(
+            Path(golden_map_arg), Path(golden_approval_arg),
+            source_sha=args.source_sha,
+            cohort_id=f"s6-v23-{args.source_sha[:8]}",
+            master_seed=constants.MASTER_SEED,
+            required_trial_count=int(getattr(args, "golden_trial_count", 2400)),
+            production_run_id=source_run_id,
+        )
     requested_n = args.trials
     source_metadata_path=getattr(args,"source_run_metadata_json",None)
     source_metadata={}
@@ -964,6 +978,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     statistical_evaluation, stability_history, number_registry = evaluate_s6_aggregate_statistics(
         scenario_rows_by_id, source_sha=args.source_sha,
         cohort_id=f"s6-v23-{args.source_sha[:8]}", run_id=args.run_id,
+        approved_golden=approved_golden,
     )
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
@@ -1011,10 +1026,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "gate_b_final":statistical_evaluation["gate_b_final"],
             "scenario_stability_final":statistical_evaluation["scenario_stability_final"],
         },
-        "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
-        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-            "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
-            "stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "test192_reuse":statistical_evaluation["test192_reuse"],
+        "acceptance_status":{"gate_a":statistical_evaluation["gate_a_final"],
+            "gate_b":statistical_evaluation["gate_b_final"],
+            "stability":statistical_evaluation["scenario_stability_final"],
             "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS" if all(row["n_unique_paths"] is not None for row in summaries) else "UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
@@ -1055,6 +1070,9 @@ def main() -> int:
     p.add_argument("--base-dir")
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
+    p.add_argument("--golden-map", default=None, help="Independent same-source Gate A Golden map JSON")
+    p.add_argument("--golden-approval", default=None, help="Independent Gate A Golden approval manifest JSON")
+    p.add_argument("--golden-trial-count", type=int, default=2400, help="Full trial coverage bound of the independent Golden map")
     args=p.parse_args()
     require_latest_branch_commit()
     apply_action_checkpoint_config(args)
