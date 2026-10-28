@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: s6-n2400-independent-audit
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   N2400_RUN_ID: "40731224990"
