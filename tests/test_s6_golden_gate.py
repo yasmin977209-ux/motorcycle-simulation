@@ -205,7 +205,9 @@ def test_gate_a_rejects_scenario_coverage_gap(tmp_path):
 
 
 def test_gate_a_rejects_using_the_production_run_as_its_own_golden(tmp_path):
-    golden_path, approval_path, _, _ = make_evidence(tmp_path)
+    golden_path, approval_path, _, approval = make_evidence(tmp_path)
+    approval["production_run_id"] = "GOLDEN-RUN-800"
+    approval_path.write_text(json.dumps(approval, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     with pytest.raises(gate.GoldenEvidenceError, match="GOLDEN_PRODUCTION_SELF_REFERENCE_FORBIDDEN"):
         gate.load_approved_stochastic_golden(
             golden_path,
