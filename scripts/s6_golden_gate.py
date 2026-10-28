@@ -84,7 +84,7 @@ def load_approved_stochastic_golden(
         raise GoldenEvidenceError("GOLDEN_APPROVAL_STATUS_NOT_APPROVED")
     if approval.get("candidate_map_sha256") != map_sha:
         raise GoldenEvidenceError("GOLDEN_APPROVAL_MAP_SHA256_MISMATCH")
-    identity_fields = {
+    map_identity_fields = {
         "source_sha": source_sha,
         "cohort_id": cohort_id,
         "master_seed": master_seed,
@@ -95,9 +95,21 @@ def load_approved_stochastic_golden(
         "independent_execution": True,
         "production_result_artifacts_read": False,
     }
-    for field, expected in identity_fields.items():
+    for field, expected in map_identity_fields.items():
         if golden.get(field) != expected:
             raise GoldenEvidenceError(f"GOLDEN_MAP_IDENTITY_MISMATCH:{field}")
+    approval_identity_fields = {
+        "source_sha": source_sha,
+        "cohort_id": cohort_id,
+        "master_seed": master_seed,
+        "model_schema_version": "v2.3",
+        "golden_schema_version": STOCHASTIC_GOLDEN_SCHEMA,
+        "scenario_count": 20,
+        "trial_count_per_scenario": required_trial_count,
+        "independent_execution": True,
+        "production_result_artifacts_read": False,
+    }
+    for field, expected in approval_identity_fields.items():
         if approval.get(field) != expected:
             raise GoldenEvidenceError(f"GOLDEN_APPROVAL_IDENTITY_MISMATCH:{field}")
     for field, expected in (
