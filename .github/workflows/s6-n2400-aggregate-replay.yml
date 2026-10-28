@@ -1,0 +1,116 @@
+name: S6 v2.3 N2400 aggregate replay (immutable scenario artifacts only)
+
+on:
+  push:
+    branches:
+      - "tmp/s6-n2400-aggregate-replay-20261028"
+    paths:
+      - ".github/workflows/s6-n2400-aggregate-replay.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  SOURCE_RUN_ID: "40731224990"
+  SOURCE_RUN_ATTEMPT: "1"
+  SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  MASTER_SEED: "20270101"
+  S6_TRIAL_COUNT: "2400"
+  S6_TRIAL_START: "1201"
+
+jobs:
+  aggregate-replay:
+    name: Re-aggregate verified N2400 artifacts without rerunning Monte Carlo
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install declared requirements
+        run: python -m pip install -r requirements.txt
+      - name: Compile and run focused aggregate-contract tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_first_checkpoint.py
+          python -m pytest -q tests/test_s6_first_checkpoint.py
+      - name: Download exactly the 20 immutable scenario artifacts from N2400 run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n2400-*-${{ env.SOURCE_RUN_ID }}
+          path: results_stage7_s6/artifacts
+          merge-multiple: false
+      - name: Aggregate cumulative trial IDs 1–2400 using the verified source run identity
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          test "$(find results_stage7_s6/artifacts -name scenario_manifest.json | wc -l)" -eq 20
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \
+            --trials 2400 --input-root results_stage7_s6/artifacts \
+            --output-dir results_stage7_s6/aggregate
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          m=json.loads(Path("results_stage7_s6/aggregate/manifest.json").read_text(encoding="utf-8"))
+          assert m["schema_version"] == "s6-cumulative-aggregate-v2"
+          assert m["status"] == "EXECUTED" and m["exit_code"] == 0
+          assert m["source_sha"] == os.environ["SOURCE_SHA"]
+          assert m["cohort_id"] == "s6-v23-da1a9ea9"
+          assert m["master_seed"] == 20270101
+          assert m["checkpoint_n"] == 2400 and m["source_run_id"] == "40731224990"
+          assert m["source_run_attempt"] == 1
+          assert m["scenario_count"] == 20
+          assert m["total_scenario_combinations"] == 25 and m["c100_reused_scenario_count"] == 5
+          assert sum(x["n_total"] for x in m["scenario_summaries"]) == 48000
+          assert all(
+              x["n_unique_paths"] == x["unique_daily_paths"]
+              and x["n_unique_paths_status"] == "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
+              for x in m["scenario_summaries"]
+          )
+          assert m["acceptance_status"]["n_unique_paths"] == "COMPUTED_FROM_UNIQUE_DAILY_PATHS"
+          assert m["acceptance_status"]["gate_a"] != "PASS"
+          assert m["acceptance_status"]["gate_b"] != "PASS"
+          assert m["acceptance_status"]["stability"] != "CONVERGED"
+          statistics=m["statistical_evaluation"]
+          assert statistics["latest_checkpoint_n"] == 2400
+          assert set(statistics["checkpoint_gate_b_counts"]) == {"300","600","1200","2400"}
+          assert all(sum(counts.values()) == 20 for counts in statistics["checkpoint_gate_b_counts"].values())
+          assert statistics["gate_a_final"] == "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN"
+          assert statistics["scenario_stability_final"] == "NOT_CONVERGED"
+          assert statistics["transition_count"] == 60
+          assert statistics["successful_transition_count"] == 0
+          print(json.dumps({
+              "status":"S6_N2400_AGGREGATE_REPLAY_EXECUTED_NOT_ACCEPTED",
+              "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
+              "run_id":m["run_id"],"source_run_id":m["source_run_id"],
+              "checkpoint_n":m["checkpoint_n"],"scenario_count":m["scenario_count"],
+              "trial_rows":sum(x["n_total"] for x in m["scenario_summaries"]),
+              "daily_distribution_rows":m["files"]["daily_distribution.parquet"]["size_bytes"],
+              "gate_a":m["acceptance_status"]["gate_a"],
+              "gate_b":m["acceptance_status"]["gate_b"],
+              "stability":m["acceptance_status"]["stability"],
+              "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS"
+          },ensure_ascii=False,sort_keys=True))
+          PY
+          sha256sum results_stage7_s6/aggregate/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n2400-aggregate-replay-${{ github.run_id }}
+          path: results_stage7_s6/aggregate/
+          if-no-files-found: error
+          retention-days: 30
