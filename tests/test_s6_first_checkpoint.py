@@ -1,4 +1,4 @@
-from dataclasses import replace
+from dataclasses import asdict, replace
 from types import SimpleNamespace
 import hashlib
 import subprocess
@@ -257,16 +257,25 @@ def test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse(m
             policy="OPT1_INELIGIBLE_FULL_RUN_INCREMENTAL_RANGE"
         trial_rows=[]
         for tid in range(1,checkpoint_n+1):
-            fingerprint_scenario=base_scenario if derived_from else scenario
-            fp=hashlib.sha256(f"{fingerprint_scenario}|{tid}".encode()).hexdigest()
-            if collection==70 and tid==2:
-                fp=hashlib.sha256("C070_G100|1".encode()).hexdigest()
+            finance_tid = 1 if collection == 70 and tid == 2 else tid
             audit_fingerprint=s6.rng.rng_audit_fingerprint(source_sha=source_sha,
               master_seed=s6.constants.MASTER_SEED,scenario_id=scenario,trial_id=tid,
               rng_checksum=tid,rng_draw_count=1)
-            trial_rows.append({"scenario_id":scenario,"trial_id":tid,"final_close_date":None,"trial_fingerprint":fp,
-              "claims_created":0,"derived_from":derived_from,"rng_draw_count":1,"rng_checksum":tid,
-              "rng_checksum_fingerprint_sha256":audit_fingerprint})
+            result=TrialResult(
+              scenario_id=scenario,collection_probability=collection/100,recovery_rate_pct=recovery,trial_id=tid,
+              final_close_date=None,final_net_project_equity=10000+finance_tid,final_cash=1000+finance_tid,
+              cumulative_project_profit=3000+finance_tid,operating_net_profit=2000+finance_tid,
+              termination_count=finance_tid%4,secondary_cycle_count=finance_tid%3,owned_bikes=finance_tid%5,
+              held_assets=finance_tid%7,total_operating_revenue=5000+finance_tid,bad_debt=finance_tid%6,
+              guarantee_recovered=finance_tid%8,partner1_final_entitlement=4000+finance_tid,
+              partner2_final_entitlement=2000+finance_tid,trial_fingerprint="",rng_checksum=tid,
+              rng_draw_count=1,rng_checksum_fingerprint_sha256=audit_fingerprint,claims_created=0)
+            fp=s6.monte_carlo.trial_fingerprint(result)
+            result=replace(result,trial_fingerprint=fp)
+            row=asdict(result)
+            row.update(source_sha=source_sha,cohort_id=f"s6-v23-{source_sha[:8]}",
+              schema_version=s6.SCHEMA_VERSION,derived_from=derived_from)
+            trial_rows.append(row)
         pq.write_table(pa.Table.from_pylist(trial_rows),base/"trials_summary.parquet")
         pq.write_table(pa.Table.from_pylist([{"date":"2027-01-01","scenario_id":scenario,
           "quantile_name":"P50","metric":"Cash","value":0}]),base/"daily_distribution.parquet")
