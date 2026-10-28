@@ -1,0 +1,145 @@
+name: S6 independent C100 Golden candidate v2 SOURCE da1a
+
+on:
+  push:
+    branches:
+      - "tmp/s6-c100-golden-v2-da1a-20261028"
+    paths:
+      - ".github/workflows/s6-c100-independent-golden.yml"
+      - "scripts/s6_independent_c100_golden.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s6-independent-c100-golden-da1a
+  cancel-in-progress: false
+  queue: max
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  MASTER_SEED: "20270101"
+  GOLDEN_SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  GOLDEN_WORKERS: "2"
+
+jobs:
+  source-lock:
+    name: Verify exact source lock and deterministic C100 scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source candidate commit and full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile and validate source SHA, all Python blobs, seed, and cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_independent_c100_golden.py scripts/s6_first_checkpoint.py
+          python scripts/s6_independent_c100_golden.py --mode verify-source --source-sha "$GOLDEN_SOURCE_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$MASTER_SEED" = "20270101"
+          echo "C100_GOLDEN_SOURCE_LOCK_PASS; no production result artifacts are read"
+
+  independent-c100:
+    name: Fresh C100 deterministic Golden ${{ matrix.scenario }} N=300
+    needs: source-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        scenario:
+          - C100_G100
+          - C100_G070
+          - C100_G050
+          - C100_G030
+          - C100_G000
+    steps:
+      - name: Checkout source candidate commit and full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Execute fresh deterministic trial IDs 1..300
+        shell: bash
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          python scripts/s6_independent_c100_golden.py \
+            --mode scenario \
+            --scenario "$SCENARIO" \
+            --source-sha "$GOLDEN_SOURCE_SHA" \
+            --workers "$GOLDEN_WORKERS" \
+            --output-dir results/s6-independent-c100
+          test -s "results/s6-independent-c100/$SCENARIO/c100_golden_candidate.json"
+      - name: Upload deterministic scenario candidate and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-c100-golden-candidate-${{ matrix.scenario }}-${{ github.run_id }}
+          path: results/s6-independent-c100/${{ matrix.scenario }}/c100_golden_candidate.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-candidate:
+    name: Independently verify deterministic paths and G_INERT across five C100 scenarios
+    needs: [source-lock, independent-c100]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source candidate commit and full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all five independent C100 candidate records
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-c100-golden-candidate-*-${{ github.run_id }}
+          path: results/s6-independent-c100-input
+          merge-multiple: false
+      - name: Verify exact trial ranges, no RNG draws, identical G paths, and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/s6_independent_c100_golden.py \
+            --mode aggregate \
+            --source-sha "$GOLDEN_SOURCE_SHA" \
+            --input-dir results/s6-independent-c100-input \
+            --output-dir results/s6-independent-c100-output
+          test -s results/s6-independent-c100-output/c100_independent_golden_map.json
+          test -s results/s6-independent-c100-output/c100_independent_golden_manifest.json
+      - name: Upload reviewed-scope candidate map and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-independent-c100-golden-da1a-${{ github.run_id }}
+          path: results/s6-independent-c100-output/
+          if-no-files-found: error
+          retention-days: 30
