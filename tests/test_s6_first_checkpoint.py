@@ -87,6 +87,8 @@ def test_exact_statistical_transition_requires_gate_a_gate_b_and_both_change_gua
             },
         }
 
+    from stats_integrity import statistical_checkpoint_index
+    assert [statistical_checkpoint_index(n) for n in (300, 600, 1200, 2400)] == [1, 2, 3, 4]
     assert evaluate_statistical_transition(point(300), point(600))["status"] == "PASS"
     assert evaluate_statistical_transition(
         point(300, gate_a="NOT_EVALUATED"), point(600)
