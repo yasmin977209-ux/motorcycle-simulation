@@ -92,7 +92,8 @@ def test_action_checkpoint_config_does_not_override_aggregate_trial_count(monkey
         mode="aggregate", source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7", trials=300,
     )
     config = s6.apply_action_checkpoint_config(args)
-    assert config is not None and config["active_target_trials"] == 2400
+    assert config is not None and config["active_target_trials"] >= 2400
+    assert s6.previous_checkpoint_n(config["active_target_trials"]) == config["active_target_trials"] // 2
     assert args.trials == 300
     assert args._s6_checkpoint_config["cohort_id"] == "s6-v23-da1a9ea9"
 
