@@ -72,8 +72,9 @@ def load_approved_stochastic_golden(
     cohort_id: str,
     master_seed: int,
     required_trial_count: int,
+    production_run_id: str | None = None,
 ) -> dict[str, Any]:
-    """Load only a reviewed Golden whose approval binds the exact map file hash."""
+    """Load only a reviewed independent Golden whose approval binds its exact map hash."""
     if not golden_map_path.is_file() or not approval_manifest_path.is_file():
         raise GoldenEvidenceError("GOLDEN_EVIDENCE_FILE_MISSING")
     map_sha = sha256_file(golden_map_path)
@@ -124,6 +125,19 @@ def load_approved_stochastic_golden(
             raise GoldenEvidenceError(f"GOLDEN_APPROVAL_IDENTITY_MISMATCH:{field}")
     if golden.get("status") != CANDIDATE_STATUS:
         raise GoldenEvidenceError("GOLDEN_CANDIDATE_STATUS_INVALID")
+    golden_run_id = str(golden.get("run_id", ""))
+    if not golden_run_id:
+        raise GoldenEvidenceError("GOLDEN_RUN_ID_MISSING")
+    if str(approval.get("golden_run_id", "")) != golden_run_id:
+        raise GoldenEvidenceError("GOLDEN_APPROVAL_RUN_ID_MISMATCH")
+    approved_production_run_id = str(approval.get("production_run_id", ""))
+    if production_run_id is not None:
+        if approved_production_run_id != str(production_run_id):
+            raise GoldenEvidenceError("GOLDEN_APPROVAL_PRODUCTION_RUN_ID_MISMATCH")
+        if str(production_run_id) == golden_run_id:
+            raise GoldenEvidenceError("GOLDEN_PRODUCTION_SELF_REFERENCE_FORBIDDEN")
+    elif approved_production_run_id and approved_production_run_id == golden_run_id:
+        raise GoldenEvidenceError("GOLDEN_PRODUCTION_SELF_REFERENCE_FORBIDDEN")
     if approval.get("independent_manifest_sha256") is None or len(
         str(approval.get("independent_manifest_sha256"))
     ) != 64:
