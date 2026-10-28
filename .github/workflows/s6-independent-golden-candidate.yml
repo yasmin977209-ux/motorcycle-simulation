@@ -14,8 +14,7 @@ permissions:
 
 concurrency:
   group: s6-independent-golden-da1a-candidate
-  cancel-in-progress: true
-  queue: max
+  cancel-in-progress: false
 
 env:
   PYTHONPATH: .
