@@ -95,7 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           SCENARIO="C${COLLECTION}_G100"
-          env -u GITHUB_SHA python scripts/s6_first_checkpoint.py \
+          python scripts/s6_first_checkpoint.py \
             --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
             --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
             --trials "$S6_TRIAL_COUNT" --trial-start "$S6_TRIAL_START" --trial-end "$S6_TRIAL_COUNT" \
@@ -167,7 +167,7 @@ jobs:
           set -euo pipefail
           ARGS=()
           if [[ "$SCENARIO" == C085_* || "$SCENARIO" == C070_* ]]; then ARGS+=(--base-dir results_stage7_s6/base); fi
-          env -u GITHUB_SHA python scripts/s6_first_checkpoint.py \
+          python scripts/s6_first_checkpoint.py \
             --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
             --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
             --trials "$S6_TRIAL_COUNT" --trial-start "$S6_TRIAL_START" --trial-end "$S6_TRIAL_COUNT" \
@@ -209,7 +209,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(find results_stage7_s6/artifacts -name scenario_manifest.json | wc -l)" -eq 20
-          env -u GITHUB_SHA python scripts/s6_first_checkpoint.py \
+          python scripts/s6_first_checkpoint.py \
             --mode aggregate --source-sha "$SOURCE_SHA" \
             --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
             --source-run-id "$RUN_ID" --source-run-attempt "$RUN_ATTEMPT" \
