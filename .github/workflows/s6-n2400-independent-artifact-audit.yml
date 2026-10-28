@@ -110,11 +110,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/s6_first_checkpoint.py \\
-            --mode aggregate --source-sha "$SOURCE_SHA" \\
-            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \\
-            --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \\
-            --trials 2400 --input-root audit_work/artifacts \\
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \
+            --trials 2400 --input-root audit_work/artifacts \
             --output-dir audit_work/reaggregated
 
       - name: Independently check scenario rows, daily paths, fingerprints, RNG, exact distribution and aggregate
