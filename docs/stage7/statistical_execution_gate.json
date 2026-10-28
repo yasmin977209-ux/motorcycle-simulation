@@ -59,7 +59,16 @@
       ],
       "decision_framework": "intersection_union_test",
       "mean_components": 3,
-      "indicator_components": 7
+      "indicator_components": 7,
+      "indicators": [
+        "P10_Cumulative_Project_Profit",
+        "P50_Cumulative_Project_Profit",
+        "P90_Cumulative_Project_Profit",
+        "P90_Final_Cash",
+        "Probability_Accounting_Loss",
+        "P90_Termination_Count",
+        "P90_Held_Assets"
+      ]
     }
   },
   "component_status": {
@@ -180,7 +189,7 @@
       "tmp/s5-statistical-gate-v23-20261026",
       "tmp/s6-aggregate-contract-fix-20261027"
     ],
-    "permitted_next_work": "Execute the N=1200 cumulative checkpoint by reusing verified N=600 scenario artifacts and running only trial IDs 601..1200; then independently validate all 20 scenarios and all Gate B components. Continue to N=2400 only after validating the N=1200 evidence.",
+    "permitted_next_work": "Run the owner-authorized cumulative N=1200 checkpoint by reusing the immutable N=600 artifacts from Run 40582501871 and executing only trial IDs 601..1200; validate all 20 stochastic scenarios, exact source/cohort identity, daily path counts, RNG audit, Gate A/B components and transition evidence. Then proceed to N=2400 only after validating N=1200. Do not declare convergence or final production acceptance until all four cumulative points and three consecutive successful transitions pass.",
     "s6_execution_authorized": true,
     "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
     "active_cohort_id": "s6-v23-da1a9ea9",
@@ -196,7 +205,7 @@
       "P90_Held_Assets source, identity, completeness, and threshold verified as part of all seven Gate B indicators",
       "Test 192 coverage proof verified and the approved v2.3 alpha-spending/IUT method applied to the current cohort",
       "Full production cohort manifest, representative trial records, exact file hashes, and audit logs verified",
-      "Resolve the stochastic N_unique_paths identity rule under §§21.2/14.12, then validate the resulting metric without rewriting historical artifacts."
+      "For the pinned S6 cohort, verify N_unique_paths as the count of distinct complete daily paths computed from persisted daily snapshots under the owner-approved contract; preserve all historical artifacts unchanged."
     ],
     "required_checkpoint_sequence": [
       300,
@@ -222,7 +231,7 @@
       "S5 bounded stochastic mini-validation",
       "reusable C100 Golden identity verification without rerun",
       "sequential/parallel worker-equivalence evidence",
-      "S6 planning and authorized work-branch simulation"
+      "owner-authorized S6 cumulative checkpoints N=300, 600, 1200 and 2400 on the designated work branches"
     ],
     "production_acceptance_requires_actual_run_evidence": true
   },
