@@ -5,7 +5,10 @@ on:
     branches:
       - "tmp/s6-aggregate-contract-fix-20261027"
     paths:
-      - ".github/workflows/s6-n600-checkpoint.yml"
+      - "scripts/s6_first_checkpoint.py"
+      - "stats_integrity.py"
+      - "scripts/s6_checkpoint_config.json"
+      - "tests/test_s6_first_checkpoint.py"
 
 permissions:
   contents: read
@@ -201,7 +204,7 @@ jobs:
           pattern: s6-n2400-*-${{ github.run_id }}
           path: results_stage7_s6/artifacts
           merge-multiple: false
-      - name: Aggregate cumulative trial IDs 1–1200 and validate fail-closed status
+      - name: Aggregate cumulative trial IDs 1–2400 and validate fail-closed status
         shell: bash
         env:
           RUN_ID: ${{ github.run_id }}
@@ -223,7 +226,7 @@ jobs:
           assert m["source_run_id"]==m["run_id"]
           assert m["total_scenario_combinations"]==25 and m["c100_reused_scenario_count"]==5
           assert sum(x["n_total"] for x in m["scenario_summaries"])==48000
-          assert all(x["n_unique_paths"]==x["unique_daily_paths"] and x["n_unique_paths_status"]=="COMPUTED_UNIQUE_DAILY_PATHS" for x in m["scenario_summaries"])
+          assert all(x["n_unique_paths"]==x["unique_daily_paths"] and x["n_unique_paths_status"]=="OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT" for x in m["scenario_summaries"])
           assert m["acceptance_status"]["n_unique_paths"]=="COMPUTED_FROM_UNIQUE_DAILY_PATHS"
           assert m["acceptance_status"]["gate_a"]!="PASS"
           assert m["acceptance_status"]["gate_b"]!="PASS"
@@ -244,7 +247,7 @@ jobs:
           sha256sum results_stage7_s6/aggregate/*
       - uses: actions/upload-artifact@v4
         with:
-          name: s6-n1200-aggregate-${{ github.run_id }}
+          name: s6-n2400-aggregate-${{ github.run_id }}
           path: results_stage7_s6/aggregate/
           if-no-files-found: error
           retention-days: 30
