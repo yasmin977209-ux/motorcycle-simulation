@@ -1,0 +1,59 @@
+name: S6 N2400 independent source-vs-aggregate artifact audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-n2400-independent-artifact-audit.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  independent-audit:
+    name: Verify all N2400 scenario files, Parquet rows, fingerprints and aggregate equality
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+      AUDIT_INPUT_ROOT: audit-input
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install pinned project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download the immutable N2400 aggregate-only replay artifact
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40753615920"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-n2400-aggregate-replay-40753615920
+          path: audit-input/aggregate
+      - name: Download all 20 immutable N2400 scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40731224990"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n2400-C*-40731224990
+          path: audit-input/scenarios
+          merge-multiple: false
+      - name: Recompute persisted TrialResult fingerprints; compare source rows with aggregate
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/audit_s6_n2400_aggregate.py scripts/s6_first_checkpoint.py
+          python scripts/audit_s6_n2400_aggregate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n2400-independent-artifact-audit-${{ github.run_id }}
+          path: audit-output/
+          if-no-files-found: error
+          retention-days: 30
