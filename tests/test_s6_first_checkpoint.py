@@ -350,3 +350,56 @@ def test_s6_current_git_commit_uses_checked_out_commit_outside_actions(monkeypat
 
 def test_s6_source_sha_validation_rejects_non_commit_identity():
     with pytest.raises(ValueError,match="S6_SOURCE_SHA_INVALID"): s6.require_source_sha("not-a-commit")
+
+def test_gate_a_checkpoint_stays_not_evaluated_without_approved_golden():
+    result = s6.evaluate_gate_a_checkpoint(
+        "C030_G000", 2, {1: {"trial_fingerprint": "a" * 64}},
+        None, source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        cohort_id="s6-v23-da1a9ea9",
+    )
+    assert result["status"] == "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN"
+    assert result["checked"] is False and result["stable"] is False
+
+
+def test_gate_a_checkpoint_requires_exact_financial_fingerprint_match():
+    golden = {
+        "golden_trial_count_per_scenario": 3,
+        "golden_run_id": "12345",
+        "golden_map_sha256": "a" * 64,
+        "golden_map": {
+            "scenarios": {
+                "C030_G000": {"trial_fingerprints": {"1": "a" * 64, "2": "b" * 64, "3": "c" * 64}}
+            }
+        },
+    }
+    kwargs = {
+        "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+    }
+    exact = s6.evaluate_gate_a_checkpoint(
+        "C030_G000", 2,
+        {1: {"trial_fingerprint": "a" * 64}, 2: {"trial_fingerprint": "b" * 64}},
+        golden, **kwargs,
+    )
+    mismatch = s6.evaluate_gate_a_checkpoint(
+        "C030_G000", 2,
+        {1: {"trial_fingerprint": "a" * 64}, 2: {"trial_fingerprint": "d" * 64}},
+        golden, **kwargs,
+    )
+    insufficient = s6.evaluate_gate_a_checkpoint(
+        "C030_G000", 4, {}, golden, **kwargs,
+    )
+    assert exact["status"] == "PASS" and exact["mismatch_count"] == 0
+    assert mismatch["status"] == "FAIL_FINANCIAL_TRIAL_FINGERPRINT_MISMATCH"
+    assert mismatch["mismatch_trial_ids_sample"] == [2]
+    assert insufficient["status"] == "NOT_EVALUATED_GOLDEN_COVERAGE_INSUFFICIENT"
+    assert insufficient["checked"] is False
+
+
+def test_gate_a_golden_loader_rejects_partial_approval_input_set():
+    with pytest.raises(RuntimeError, match="S6_GATE_A_GOLDEN_INPUT_SET_INCOMPLETE"):
+        s6.load_approved_gate_a_golden(
+            "some-map.json", None, None,
+            expected_source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+            expected_cohort_id="s6-v23-da1a9ea9",
+        )

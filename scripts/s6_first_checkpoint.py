@@ -582,9 +582,246 @@ def resolve_aggregate_checkpoint_n(
     raise RuntimeError(f"S6_AGGREGATE_REQUESTED_N_MISMATCH:requested={requested_n}:artifacts={actual_n}")
 
 
+
+def ordered_stochastic_scenario_ids() -> list[str]:
+    return [f"C{collection:03d}_G{recovery:03d}"
+            for collection in COLLECTION_LEVELS for recovery in RECOVERY_LEVELS]
+
+
+def financial_fingerprint_map_sha256(scenario: str, fingerprints: dict[str, str]) -> str:
+    lines = [f"{scenario}|{trial_id}|{fingerprints[trial_id]}"
+             for trial_id in sorted(fingerprints, key=lambda value: int(value))]
+    return hashlib.sha256(("\n".join(lines) + "\n").encode("utf-8")).hexdigest()
+
+
+def load_approved_gate_a_golden(
+    golden_map_path: str | None,
+    golden_manifest_path: str | None,
+    golden_approval_path: str | None,
+    *,
+    expected_source_sha: str,
+    expected_cohort_id: str,
+) -> dict[str, Any] | None:
+    """Load a separately reviewed, hash-pinned, independent Golden map; never self-generate it."""
+    supplied = (golden_map_path, golden_manifest_path, golden_approval_path)
+    if not any(supplied):
+        return None
+    if not all(supplied):
+        raise RuntimeError("S6_GATE_A_GOLDEN_INPUT_SET_INCOMPLETE")
+
+    map_path, manifest_path, approval_path = (Path(value) for value in supplied if value)
+    for path in (map_path, manifest_path, approval_path):
+        if not path.is_file():
+            raise RuntimeError(f"S6_GATE_A_GOLDEN_INPUT_MISSING:{path.name}")
+    map_sha = sha256_file(map_path)
+    manifest_sha = sha256_file(manifest_path)
+    approval_sha = sha256_file(approval_path)
+    golden_map = json.loads(map_path.read_text(encoding="utf-8"))
+    golden_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    approval = json.loads(approval_path.read_text(encoding="utf-8"))
+
+    expected_scenarios = ordered_stochastic_scenario_ids()
+    if golden_map.get("schema_version") != "s6-independent-golden-map-v1":
+        raise RuntimeError("S6_GATE_A_GOLDEN_MAP_SCHEMA_INVALID")
+    if golden_map.get("status") != "INDEPENDENT_GOLDEN_CANDIDATE_NOT_APPROVED":
+        raise RuntimeError("S6_GATE_A_GOLDEN_MAP_STATUS_INVALID")
+    if golden_manifest.get("schema_version") != "s6-independent-golden-manifest-v1":
+        raise RuntimeError("S6_GATE_A_GOLDEN_MANIFEST_SCHEMA_INVALID")
+    if golden_manifest.get("status") != "INDEPENDENT_GOLDEN_CANDIDATE_NOT_APPROVED":
+        raise RuntimeError("S6_GATE_A_GOLDEN_MANIFEST_STATUS_INVALID")
+    if (
+        golden_map.get("source_sha") != expected_source_sha
+        or golden_manifest.get("source_sha") != expected_source_sha
+        or golden_map.get("cohort_id") != expected_cohort_id
+        or golden_manifest.get("cohort_id") != expected_cohort_id
+        or golden_map.get("master_seed") != constants.MASTER_SEED
+        or golden_manifest.get("master_seed") != constants.MASTER_SEED
+        or golden_map.get("model_schema_version") != SCHEMA_VERSION
+        or golden_manifest.get("model_schema_version") != SCHEMA_VERSION
+    ):
+        raise RuntimeError("S6_GATE_A_GOLDEN_SOURCE_COHORT_SEED_OR_SCHEMA_MISMATCH")
+
+    golden_n = golden_map.get("trial_count_per_scenario")
+    if (
+        type(golden_n) is not int
+        or golden_n < constants.STATISTICAL_CHECK_START_N
+        or golden_map.get("trial_id_start") != 1
+        or golden_map.get("trial_id_end") != golden_n
+        or golden_manifest.get("trial_count_per_scenario") != golden_n
+        or golden_manifest.get("total_trial_fingerprints") != 20 * golden_n
+        or golden_map.get("scenario_count") != len(expected_scenarios)
+        or golden_manifest.get("scenario_count") != len(expected_scenarios)
+        or golden_map.get("total_trial_fingerprints") != len(expected_scenarios) * golden_n
+        or golden_map.get("independent_execution") is not True
+        or golden_manifest.get("independent_execution") is not True
+        or golden_map.get("production_result_artifacts_read") is not False
+        or golden_manifest.get("production_result_artifacts_read") is not False
+        or golden_manifest.get("map_file") != map_path.name
+        or golden_manifest.get("map_file_sha256") != map_sha
+    ):
+        raise RuntimeError("S6_GATE_A_GOLDEN_COVERAGE_OR_INDEPENDENCE_INVALID")
+    previous_checkpoint_n(golden_n)
+
+    scenario_maps = golden_map.get("scenarios", {})
+    if not isinstance(scenario_maps, dict) or set(scenario_maps) != set(expected_scenarios):
+        raise RuntimeError("S6_GATE_A_GOLDEN_SCENARIO_SET_INVALID")
+    scenario_manifest = golden_manifest.get("scenario_manifest", [])
+    if not isinstance(scenario_manifest, list) or len(scenario_manifest) != len(expected_scenarios):
+        raise RuntimeError("S6_GATE_A_GOLDEN_SCENARIO_MANIFEST_INVALID")
+    scenario_manifest_by_id = {str(item.get("scenario_id", "")): item for item in scenario_manifest}
+    if set(scenario_manifest_by_id) != set(expected_scenarios):
+        raise RuntimeError("S6_GATE_A_GOLDEN_SCENARIO_MANIFEST_SET_INVALID")
+
+    combined_lines: list[str] = []
+    for scenario in expected_scenarios:
+        entry = scenario_maps[scenario]
+        fingerprints = entry.get("trial_fingerprints", {})
+        expected_ids = {str(trial_id) for trial_id in range(1, golden_n + 1)}
+        if set(fingerprints) != expected_ids:
+            raise RuntimeError(f"S6_GATE_A_GOLDEN_TRIAL_COVERAGE_INVALID:{scenario}")
+        if any(
+            not isinstance(value, str) or len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+            for value in fingerprints.values()
+        ):
+            raise RuntimeError(f"S6_GATE_A_GOLDEN_FINANCIAL_FINGERPRINT_INVALID:{scenario}")
+        recomputed_map_sha = financial_fingerprint_map_sha256(scenario, fingerprints)
+        if entry.get("financial_trial_fingerprint_map_sha256") != recomputed_map_sha:
+            raise RuntimeError(f"S6_GATE_A_GOLDEN_SCENARIO_MAP_HASH_MISMATCH:{scenario}")
+        manifest_entry = scenario_manifest_by_id[scenario]
+        if (
+            manifest_entry.get("trial_count") != golden_n
+            or manifest_entry.get("financial_trial_fingerprint_map_sha256") != recomputed_map_sha
+            or not manifest_entry.get("file_sha256")
+        ):
+            raise RuntimeError(f"S6_GATE_A_GOLDEN_SCENARIO_MANIFEST_HASH_MISMATCH:{scenario}")
+        for trial_id in range(1, golden_n + 1):
+            combined_lines.append(f"{scenario}|{trial_id}|{fingerprints[str(trial_id)]}")
+    combined_sha = hashlib.sha256(("\n".join(combined_lines) + "\n").encode("utf-8")).hexdigest()
+    if golden_manifest.get("combined_financial_trial_fingerprint_map_sha256") != combined_sha:
+        raise RuntimeError("S6_GATE_A_GOLDEN_COMBINED_MAP_HASH_MISMATCH")
+
+    required_review_checks = (
+        "source_lock_pass",
+        "source_cohort_seed_schema_match",
+        "full_scenario_coverage",
+        "contiguous_trial_ids",
+        "map_hashes_verified",
+        "scenario_artifact_hashes_verified",
+        "no_production_artifact_input",
+        "tested_sha_verified_from_actions",
+    )
+    review_checks = approval.get("review_checks", {})
+    if (
+        approval.get("schema_version") != "s6-gate-a-golden-approval-v1"
+        or approval.get("status") != "APPROVED_FOR_GATE_A"
+        or approval.get("review_status") != "APPROVED"
+        or approval.get("source_sha") != expected_source_sha
+        or approval.get("cohort_id") != expected_cohort_id
+        or approval.get("master_seed") != constants.MASTER_SEED
+        or approval.get("model_schema_version") != SCHEMA_VERSION
+        or approval.get("golden_map_sha256") != map_sha
+        or approval.get("golden_manifest_sha256") != manifest_sha
+        or str(approval.get("golden_run_id")) != str(golden_manifest.get("run_id"))
+        or approval.get("golden_run_attempt") != golden_manifest.get("run_attempt")
+        or approval.get("tested_sha") != golden_map.get("tested_sha")
+        or approval.get("tested_sha") != golden_manifest.get("tested_sha")
+        or approval.get("trial_id_start") != 1
+        or approval.get("trial_id_end") != golden_n
+        or approval.get("trial_count_per_scenario") != golden_n
+        or approval.get("scenario_count") != len(expected_scenarios)
+        or approval.get("independent_execution") is not True
+        or approval.get("production_result_artifacts_read") is not False
+        or not str(approval.get("golden_artifact_digest", "")).startswith("sha256:")
+        or not isinstance(review_checks, dict)
+        or any(review_checks.get(key) is not True for key in required_review_checks)
+    ):
+        raise RuntimeError("S6_GATE_A_GOLDEN_APPROVAL_INVALID_OR_NOT_HASH_PINNED")
+    approved_scenario_hashes = approval.get("scenario_artifact_file_sha256_by_scenario", {})
+    if set(approved_scenario_hashes) != set(expected_scenarios) or any(
+        approved_scenario_hashes[scenario] != scenario_manifest_by_id[scenario].get("file_sha256")
+        for scenario in expected_scenarios
+    ):
+        raise RuntimeError("S6_GATE_A_GOLDEN_SCENARIO_ARTIFACT_APPROVAL_MISMATCH")
+
+    return {
+        "status": "APPROVED_FOR_GATE_A",
+        "golden_map": golden_map,
+        "golden_manifest": golden_manifest,
+        "approval": approval,
+        "golden_map_path": str(map_path),
+        "golden_manifest_path": str(manifest_path),
+        "golden_approval_path": str(approval_path),
+        "golden_map_sha256": map_sha,
+        "golden_manifest_sha256": manifest_sha,
+        "golden_approval_sha256": approval_sha,
+        "golden_run_id": str(golden_manifest.get("run_id")),
+        "golden_run_attempt": golden_manifest.get("run_attempt"),
+        "golden_tested_sha": golden_manifest.get("tested_sha"),
+        "golden_trial_count_per_scenario": golden_n,
+        "golden_artifact_digest": approval.get("golden_artifact_digest"),
+    }
+
+
+def evaluate_gate_a_checkpoint(
+    scenario: str,
+    n: int,
+    production_rows: dict[int, dict[str, Any]],
+    golden_evidence: dict[str, Any] | None,
+    *,
+    source_sha: str,
+    cohort_id: str,
+) -> dict[str, Any]:
+    if golden_evidence is None:
+        return {
+            "status": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+            "checked": False,
+            "stable": False,
+            "source_sha": source_sha,
+            "cohort_id": cohort_id,
+        }
+    coverage_n = int(golden_evidence["golden_trial_count_per_scenario"])
+    evidence = {
+        "source_sha": source_sha,
+        "cohort_id": cohort_id,
+        "golden_run_id": golden_evidence["golden_run_id"],
+        "golden_map_sha256": golden_evidence["golden_map_sha256"],
+        "golden_trial_count_per_scenario": coverage_n,
+    }
+    if n > coverage_n:
+        return {
+            "status": "NOT_EVALUATED_GOLDEN_COVERAGE_INSUFFICIENT",
+            "checked": False,
+            "stable": False,
+            "required_trial_count": n,
+            "trial_count_checked": 0,
+            **evidence,
+        }
+    fingerprints = golden_evidence["golden_map"]["scenarios"][scenario]["trial_fingerprints"]
+    mismatch_ids: list[int] = []
+    for trial_id in range(1, n + 1):
+        row = production_rows.get(trial_id)
+        actual = str(row.get("trial_fingerprint", "")) if row is not None else ""
+        expected = fingerprints.get(str(trial_id))
+        if not actual or actual != expected:
+            mismatch_ids.append(trial_id)
+    passed = not mismatch_ids
+    return {
+        "status": "PASS" if passed else "FAIL_FINANCIAL_TRIAL_FINGERPRINT_MISMATCH",
+        "checked": True,
+        "stable": passed,
+        "required_trial_count": n,
+        "trial_count_checked": n,
+        "mismatch_count": len(mismatch_ids),
+        "mismatch_trial_ids_sample": mismatch_ids[:20],
+        **evidence,
+    }
+
+
 def evaluate_s6_aggregate_statistics(
     rows_by_scenario: dict[str, dict[int, dict[str, Any]]],
     *, source_sha: str, cohort_id: str, run_id: str,
+    golden_evidence: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Evaluate Gate B/IUT at all completed cumulative points; never promote to final acceptance."""
     evaluations: dict[str, Any] = {}
@@ -638,13 +875,10 @@ def evaluate_s6_aggregate_statistics(
                     "spending_index": k,
                     "alpha_s_k_numerator": stats_integrity.sequential_alpha_fraction(k).numerator,
                     "alpha_s_k_denominator": stats_integrity.sequential_alpha_fraction(k).denominator,
-                    "gate_a": {
-                        "status": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-                        "checked": False,
-                        "stable": False,
-                        "source_sha": source_sha,
-                        "cohort_id": cohort_id,
-                    },
+                    "gate_a": evaluate_gate_a_checkpoint(
+                        scenario, n, records, golden_evidence,
+                        source_sha=source_sha, cohort_id=cohort_id,
+                    ),
                     "gate_b": gate_b,
                     "p50_cumulative_project_profit": {"numerator": p50.numerator, "denominator": p50.denominator},
                     "probability_accounting_loss": {"numerator": loss_probability.numerator,
@@ -721,6 +955,43 @@ def evaluate_s6_aggregate_statistics(
         1 for item in evaluations.values() for transition in item.get("transitions", [])
         if transition.get("passed") is True
     )
+    latest_gate_a_statuses = [
+        item["checkpoint_points"][-1]["gate_a"]["status"]
+        for item in evaluations.values() if item.get("checkpoint_points")
+    ]
+    latest_gate_b_statuses = [
+        item["checkpoint_points"][-1]["gate_b"].get("status", "EVALUATION_ERROR")
+        for item in evaluations.values() if item.get("checkpoint_points")
+    ]
+    if not golden_evidence:
+        gate_a_final = "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN"
+    elif any(status.startswith("FAIL_") for status in latest_gate_a_statuses):
+        gate_a_final = "FAIL"
+    elif len(latest_gate_a_statuses) == len(rows_by_scenario) and all(status == "PASS" for status in latest_gate_a_statuses):
+        gate_a_final = "PASS"
+    elif "NOT_EVALUATED_GOLDEN_COVERAGE_INSUFFICIENT" in latest_gate_a_statuses:
+        gate_a_final = "NOT_EVALUATED_GOLDEN_COVERAGE_INSUFFICIENT"
+    else:
+        gate_a_final = "NOT_EVALUATED_INCOMPLETE_GATE_A_COVERAGE"
+
+    if any(status == "FAIL" for status in latest_gate_b_statuses):
+        gate_b_final = "FAIL_SCOPED"
+    elif len(latest_gate_b_statuses) == len(rows_by_scenario) and all(status == "PASS" for status in latest_gate_b_statuses):
+        gate_b_final = "PASS_SCOPED"
+    elif any(status in {"EVALUATION_ERROR", "K_SPEC / BLOCKED"} for status in latest_gate_b_statuses):
+        gate_b_final = "BLOCKED_EVALUATION_ERROR"
+    else:
+        gate_b_final = "NOT_EVALUATED"
+
+    all_scenarios_converged = (
+        len(evaluations) == len(rows_by_scenario)
+        and all(item.get("scenario_stability") == "CONVERGED" for item in evaluations.values())
+    )
+    scenario_stability_final = (
+        "CONVERGED"
+        if all_scenarios_converged and gate_a_final == "PASS" and gate_b_final == "PASS_SCOPED"
+        else "NOT_CONVERGED"
+    )
     evaluation_summary = {
         "schema_version": "s6-v23-statistical-evaluation-v1",
         "status": "EXECUTED_POINTWISE_STATISTICS_NOT_FINAL_ACCEPTANCE",
@@ -728,9 +999,18 @@ def evaluate_s6_aggregate_statistics(
         "latest_checkpoint_n": latest_n, "scenario_count": len(evaluations),
         "checkpoint_gate_b_counts": checkpoint_counts,
         "transition_count": transition_count, "successful_transition_count": passed_transitions,
-        "gate_a_final": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-        "gate_b_final": "NOT_FINAL_UNTIL_ALL_FOUR_POINTS_AND_THREE_TRANSITIONS",
-        "scenario_stability_final": "NOT_CONVERGED",
+        "gate_a_final": gate_a_final,
+        "gate_b_final": gate_b_final,
+        "scenario_stability_final": scenario_stability_final,
+        "gate_a_golden_evidence": {
+            "status": golden_evidence["status"] if golden_evidence else "NOT_PROVIDED",
+            "golden_map_sha256": golden_evidence.get("golden_map_sha256") if golden_evidence else None,
+            "golden_manifest_sha256": golden_evidence.get("golden_manifest_sha256") if golden_evidence else None,
+            "golden_approval_sha256": golden_evidence.get("golden_approval_sha256") if golden_evidence else None,
+            "golden_run_id": golden_evidence.get("golden_run_id") if golden_evidence else None,
+            "golden_trial_count_per_scenario": golden_evidence.get("golden_trial_count_per_scenario") if golden_evidence else None,
+            "golden_artifact_digest": golden_evidence.get("golden_artifact_digest") if golden_evidence else None,
+        },
         "test192_reuse": {
             "run_ids": [40531095239, 40546712685],
             "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
@@ -738,8 +1018,10 @@ def evaluate_s6_aggregate_statistics(
         },
         "scenarios": evaluations,
     }
+
     stability_history["final_gate_a_status"] = evaluation_summary["gate_a_final"]
     stability_history["final_gate_b_status"] = evaluation_summary["gate_b_final"]
+    stability_history["gate_a_golden_evidence"] = evaluation_summary["gate_a_golden_evidence"]
     number_registry = {
         "schema_version": "number-registry-v1",
         "rounding": "Decimal.quantize(Decimal('0.01'), ROUND_HALF_EVEN); exact numerator/denominator retained",
@@ -805,6 +1087,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
         ids=[int(row["trial_id"]) for row in rows]
         validate_cumulative_trial_ids(ids, checkpoint_n, scenario_id=scenario)
+        for row in rows:
+            calculated = monte_carlo.trial_fingerprint(result_from_record(row))
+            if row.get("trial_fingerprint") != calculated:
+                raise RuntimeError(f"S6_FINANCIAL_TRIAL_FINGERPRINT_RECOMPUTE_MISMATCH:{scenario}:{row.get('trial_id')}")
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
@@ -915,10 +1201,28 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if actual_derived_records!=expected_derived_records:
             raise RuntimeError(f"S6_OPT1_DERIVED_PROVENANCE_MISMATCH:{scenario}")
         opt1_derived_trial_rows+=len(expected_derived)
+    golden_evidence = load_approved_gate_a_golden(
+        getattr(args, "golden_map", None),
+        getattr(args, "golden_manifest", None),
+        getattr(args, "golden_approval", None),
+        expected_source_sha=args.source_sha,
+        expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",
+    )
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
+    gate_a_evidence_output_paths: list[Path] = []
+    if golden_evidence is not None:
+        for source_key, target_name in (
+            ("golden_map_path", "gate_a_golden_fingerprints.json"),
+            ("golden_manifest_path", "gate_a_golden_manifest.json"),
+            ("golden_approval_path", "gate_a_golden_approval.json"),
+        ):
+            target_path = out / target_name
+            target_path.write_bytes(Path(golden_evidence[source_key]).read_bytes())
+            gate_a_evidence_output_paths.append(target_path)
     statistical_evaluation, stability_history, number_registry = evaluate_s6_aggregate_statistics(
         scenario_rows_by_id, source_sha=args.source_sha,
         cohort_id=f"s6-v23-{args.source_sha[:8]}", run_id=args.run_id,
+        golden_evidence=golden_evidence,
     )
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
@@ -929,6 +1233,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     output_paths=[
         out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json",
         out/"statistical_evaluation.json",out/"stability_history.json",out/"number_registry.json",
+        *gate_a_evidence_output_paths,
     ]
     source_metadata_sha256=None
     if source_metadata_path:
@@ -967,9 +1272,10 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "scenario_stability_final":statistical_evaluation["scenario_stability_final"],
         },
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
-        "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-            "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
-            "stability":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
+        "gate_a_golden_evidence":statistical_evaluation["gate_a_golden_evidence"],
+        "acceptance_status":{"gate_a":statistical_evaluation["gate_a_final"],
+            "gate_b":statistical_evaluation["gate_b_final"],
+            "stability":statistical_evaluation["scenario_stability_final"],
             "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS" if all(row["n_unique_paths"] is not None for row in summaries) else "UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
@@ -1010,6 +1316,9 @@ def main() -> int:
     p.add_argument("--base-dir")
     p.add_argument("--previous-dir", help="Verified artifact for the immediately preceding cumulative checkpoint")
     p.add_argument("--input-root",default="results_stage7_s6/artifacts")
+    p.add_argument("--golden-map", help="Reviewed independent stochastic Golden fingerprint map JSON")
+    p.add_argument("--golden-manifest", help="Reviewed independent stochastic Golden manifest JSON")
+    p.add_argument("--golden-approval", help="Hash-pinned approval record for Gate A")
     args=p.parse_args()
     require_latest_branch_commit()
     apply_action_checkpoint_config(args)
