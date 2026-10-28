@@ -459,6 +459,7 @@ def test_s6_n4800_workflow_covers_25_combinations_and_parallelizes_independent_s
 
 
 def test_s6_independent_golden_workflow_allows_all_20_scenarios_to_schedule():
+    from pathlib import Path
     workflow_path = Path(".github/workflows/s6-independent-golden-candidate.yml")
     if not workflow_path.is_file():
         pytest.skip("Independent Golden workflow lives on its isolated candidate branch")
