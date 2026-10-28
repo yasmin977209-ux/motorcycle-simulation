@@ -1,0 +1,87 @@
+name: S6 N2400 scoped daily equity identity audit
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-n2400-daily-equity-identity-audit.yml"
+      - "scripts/audit_s6_n2400_daily_equity_identity.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-n2400-daily-equity-identity-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Check immutable daily Net Equity identity and report missing balance-sheet evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+      AUDIT_INPUT_ROOT: audit-input
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install declared dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all 20 immutable N2400 source scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40731224990"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n2400-C*-40731224990
+          path: audit-input/scenarios
+          merge-multiple: false
+      - name: Capture source-run identity, scenario jobs, and immutable artifact metadata
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p audit-input/source-api
+          api="https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/runs/40731224990"
+          curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api" -o audit-input/source-api/source_run.json
+          curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/jobs?per_page=100" -o audit-input/source-api/source_jobs.json
+          curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/artifacts?per_page=100" -o audit-input/source-api/source_artifacts.json
+      - name: Independently verify all stored Net Equity identities and daily coverage
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/audit_s6_n2400_daily_equity_identity.py
+          python scripts/audit_s6_n2400_daily_equity_identity.py
+      - name: Upload scoped evidence while preserving full-balance missing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n2400-daily-equity-identity-audit-${{ github.run_id }}
+          path: audit-output/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Assert the scoped identity result and do not promote accounting acceptance
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("audit-output/S6_N2400_DAILY_EQUITY_IDENTITY_AUDIT.json")
+          if not p.is_file():
+              raise SystemExit("AUDIT_REPORT_MISSING")
+          r=json.loads(p.read_text(encoding="utf-8"))
+          if r["status"] != "PASS_SCOPED_EQUITY_IDENTITY_ONLY":
+              raise SystemExit("SCOPED_EQUITY_IDENTITY_NOT_PASS")
+          if r["full_balance_sheet_status"] != "MISSING_EVIDENCE":
+              raise SystemExit("FULL_BALANCE_SHEET_STATUS_UNEXPECTED")
+          assert r["acceptance"] == "NOT_GRANTED"
+          assert r["gate_a_approval"] == "NOT_GRANTED_CANDIDATE_REQUIRES_SEPARATE_REVIEW"
+          PY
