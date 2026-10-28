@@ -776,11 +776,6 @@ def evaluate_s6_aggregate_statistics(
             "proof_checkpoint_schedule": test192_proof.get("checkpoint_schedule", []),
             "rerun": False,
         },
-        "test192_reuse": {
-            "run_ids": [40531095239, 40546712685],
-            "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
-            "rerun": False,
-        },
         "scenarios": evaluations,
     }
     stability_history["final_gate_a_status"] = evaluation_summary["gate_a_final"]
