@@ -127,9 +127,10 @@ def run_scenario(scenario: str, source_sha: str, workers: int, output_dir: Path)
     if set(results_by_id) != set(trial_ids) or set(daily_by_id) != set(trial_ids):
         raise RuntimeError("C100_GOLDEN_TRIAL_OR_DAILY_COVERAGE_MISMATCH")
     ordered = [results_by_id[tid] for tid in trial_ids]
-    stats_integrity.validate_cumulative_trial_ids(
-        [int(result.trial_id) for result in ordered], TRIAL_COUNT, scenario_id=scenario
-    )
+    # Validate the deterministic trial-id sequence locally. The source-pinned
+    # stats_integrity module predates the later helper and must remain unchanged.
+    if [int(result.trial_id) for result in ordered] != trial_ids:
+        raise RuntimeError("C100_GOLDEN_TRIAL_ID_SEQUENCE_MISMATCH")
     validation.validate_rng_audit_records(
         [asdict(result) for result in ordered],
         source_sha=source_sha,
