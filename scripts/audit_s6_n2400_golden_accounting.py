@@ -295,7 +295,7 @@ def main() -> int:
             raise RuntimeError(f"SOURCE_SCENARIO_DUPLICATE_OR_UNKNOWN:{scenario}")
         expected_identity = {
             "source_sha": SOURCE_SHA, "cohort_id": COHORT_ID, "master_seed": MASTER_SEED,
-            "run_id": int(SOURCE_RUN_ID), "run_attempt": 1, "trial_count": N,
+            "run_id": SOURCE_RUN_ID, "run_attempt": 1, "trial_count": N,
             "trial_id_start": 1, "trial_id_end": N,
             "schema_version": "s6-first-checkpoint-v1", "git_commit": SOURCE_RUN_HEAD_SHA,
         }
