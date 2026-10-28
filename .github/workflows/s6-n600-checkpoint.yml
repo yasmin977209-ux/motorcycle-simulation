@@ -1,14 +1,12 @@
 name: S6 v2.3 cumulative checkpoint N2400
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "tmp/s6-aggregate-contract-fix-20261027"
     paths:
-      - "scripts/s6_first_checkpoint.py"
-      - "stats_integrity.py"
       - "scripts/s6_checkpoint_config.json"
-      - "tests/test_s6_first_checkpoint.py"
 
 permissions:
   contents: read
