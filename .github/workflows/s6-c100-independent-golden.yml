@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: s6-independent-c100-golden-da1a
+  group: s6-independent-c100-golden-da1a-v2
   cancel-in-progress: false
   queue: max
 
