@@ -82,7 +82,7 @@ def stream_daily_path_fingerprints(path: Path, scenario: str) -> tuple[int, dict
 def main() -> int:
     root = Path(os.environ.get("AUDIT_INPUT_ROOT", "audit-input"))
     aggregate_manifests = list(root.joinpath("aggregate").rglob("manifest.json"))
-    scenario_manifests = sorted(root.joinpath("scenarios").rglob("scenario_manifest.json"))
+    scenario_manifests = sorted(root.joinpath("scenarios").rglob("scenario_manifest.json"), key=lambda path: str(json.loads(path.read_text(encoding="utf-8")).get("scenario_id", "")))
     if len(aggregate_manifests) != 1: raise RuntimeError(f"AGGREGATE_MANIFEST_COUNT_INVALID:{len(aggregate_manifests)}")
     if len(scenario_manifests) != 20: raise RuntimeError(f"SOURCE_SCENARIO_MANIFEST_COUNT_INVALID:{len(scenario_manifests)}")
     agg_dir = aggregate_manifests[0].parent
@@ -105,7 +105,31 @@ def main() -> int:
             raise RuntimeError(f"AGGREGATE_FILE_HASH_OR_SIZE_MISMATCH:{name}")
         aggregate_file_checks[name] = {"sha256": sha, "size_bytes": size}
 
-    scenarios = {}
+    # These five deterministic C100 scenarios are a different accepted cohort and must be reused read-only.
+    c100 = json.loads((agg_dir / "c100_reuse.json").read_text(encoding="utf-8"))
+    expected_c100 = ["C100_G100", "C100_G070", "C100_G050", "C100_G030", "C100_G000"]
+    c100_identity = {
+        "status": "REUSED_READ_ONLY",
+        "run_id": 40263424595,
+        "rerun": False,
+        "source_sha": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+        "cohort_id": "c100-v23-s4-20261026-965281d5",
+        "golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+        "manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04",
+        "trial_count_per_scenario": 300,
+        "n_unique_paths": 1,
+        "degeneracy_status": "DEGENERATE_DETERMINISTIC",
+        "G_status": "G_INERT",
+    }
+    for key, expected in c100_identity.items():
+        if c100.get(key) != expected:
+            raise RuntimeError(f"C100_READ_ONLY_REUSE_IDENTITY_MISMATCH:{key}:{c100.get(key)}")
+    if c100.get("scenario_ids") != expected_c100:
+        raise RuntimeError(f"C100_SCENARIO_COVERAGE_INVALID:{c100.get('scenario_ids')}")
+    if m.get("scenario_count") != 20 or m.get("c100_reused_scenario_count") != 5 or m.get("total_scenario_combinations") != 25:
+        raise RuntimeError("COMPLETE_25_SCENARIO_COVERAGE_INVALID")
+
+    scenarios = {};
     digest_trials = hashlib.sha256()
     digest_daily = hashlib.sha256()
     # Match aggregate writer order: sorted scenario, source Parquet rows in stored order.
@@ -207,6 +231,10 @@ def main() -> int:
         "aggregate_artifact_sha256": "b9ff1bb14fcaf57a60cbd645ce6ef3aa9b9843061852c6798a89708c64c32580",
         "source_sha": SOURCE_SHA, "cohort_id": COHORT_ID, "model_schema_version": "v2.3",
         "master_seed": MASTER_SEED, "checkpoint_n": CHECKPOINT_N, "scenario_count": len(scenarios),
+        "stochastic_scenario_ids": sorted(scenarios),
+        "deterministic_c100_scenario_ids_read_only": c100["scenario_ids"],
+        "total_scenario_combinations": len(scenarios) + len(c100["scenario_ids"]),
+        "c100_reuse_verified_read_only": True,
         "trial_rows": trial_rows, "daily_distribution_rows": daily_rows,
         "scenario_artifacts": scenarios, "aggregate_files": aggregate_file_checks,
         "row_by_row_canonical_digest_match": True, "financial_trial_fingerprints_recomputed": True,
@@ -228,7 +256,8 @@ def main() -> int:
         f"- Source run / tested SHA: {SOURCE_RUN_ID} / {SOURCE_RUN_HEAD_SHA}",
         f"- Aggregate run / tested SHA: {AGGREGATE_RUN_ID} / {AGGREGATE_TESTED_SHA}",
         f"- SOURCE_SHA / cohort / seed: {SOURCE_SHA} / {COHORT_ID} / {MASTER_SEED}",
-        f"- Scenarios: {len(scenarios)}; trial rows: {trial_rows:,}; daily distribution rows: {daily_rows:,}",
+        f"- Coverage: {len(scenarios)} stochastic + {len(c100[\"scenario_ids\"])} C100 read-only = {len(scenarios) + len(c100[\"scenario_ids\"])} combinations.",
+        f"- Trial rows: {trial_rows:,}; daily distribution rows: {daily_rows:,}",
         "- Canonical digest of all source scenario trial rows equals the aggregate table.",
         "- Canonical digest of all source scenario daily-distribution rows equals the aggregate table.",
         "- Recomputed each persisted financial trial fingerprint and validated RNG audit records.",
