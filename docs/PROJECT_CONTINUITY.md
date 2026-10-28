@@ -1894,8 +1894,8 @@ Preserve the distinction between the successful exact fingerprint comparison and
 |---|---|---|---|
 | Persisted partial-equity identity | `EXECUTED` | `VERIFIED` (scoped only) | Run `40787081064`, Artifact `12859837254`; `PASS_SCOPED_EQUITY_IDENTITY_ONLY`; 98,323,918/98,323,918 identities checked, 0 mismatches |
 | Daily ordering, date uniqueness and 1..2400 coverage | `EXECUTED` | `VERIFIED` (scoped only) | Same report; 20/20 scenarios; 0 order violations, 0 duplicate dates, 2,400 trials covered per scenario |
-| Full post-write daily balance-sheet identity | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Five required asset-side fields absent from historical daily snapshots; no inferred backfill |
-| Source-run metadata digest pin | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Original `source_run_metadata.sha256` remains null; parent Run failure preserved |
+| Full post-write daily balance-sheet identity | `EXECUTED` (recheck attempted; 0 full rows recomputed) | `MISSING_EVIDENCE` | Five required asset-side fields absent from historical daily snapshots; no inferred backfill |
+| Source-run metadata digest pin | `EXECUTED` (presence/provenance inspected) | `MISSING_EVIDENCE` | Original `source_run_metadata.sha256` remains null; parent Run failure preserved |
 | Gate A / Golden approval | `BLOCKED` | `MISSING_EVIDENCE` | Separate review/approval remains required despite exact 48,000/48,000 financial fingerprint match from Run `40784902124` |
 | Gate B / convergence | `BLOCKED` | `VERIFIED` as failure state | `FAIL_SCOPED`, `NOT_CONVERGED`; prior N2400 evidence remains 10/20 pass and 0/60 successful transitions |
 | N4800 continuation | `BLOCKED` | `VERIFIED` as blocked by live gate | No new simulation or trial IDs; await accepted statistical inference contract and authorized preflight |
