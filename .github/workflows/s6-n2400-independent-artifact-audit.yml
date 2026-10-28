@@ -7,6 +7,7 @@ on:
       - "tmp/s6-aggregate-contract-fix-20261027"
     paths:
       - ".github/workflows/s6-n2400-independent-artifact-audit.yml"
+      - "scripts/audit_s6_n2400_aggregate.py"
 
 permissions:
   contents: read

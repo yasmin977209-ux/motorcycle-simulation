@@ -40,6 +40,45 @@ def reject_floats(value: Any, path: str = "$") -> None:
     elif isinstance(value, list):
         for i, v in enumerate(value): reject_floats(v, f"{path}[{i}]")
 
+def stream_daily_path_fingerprints(path: Path, scenario: str) -> tuple[int, dict[int, str], list[str]]:
+    """Recompute full daily-path hashes with bounded memory, preserving canonical row semantics."""
+    parquet = pq.ParquetFile(path)
+    columns = parquet.schema_arrow.names
+    fingerprints: dict[int, str] = {}
+    current_trial_id: int | None = None
+    current_rows: list[dict[str, Any]] = []
+    previous_trial_id: int | None = None
+
+    def finish_path(trial_id: int, rows: list[dict[str, Any]]) -> None:
+        rows.sort(key=lambda row: str(row["date"]))
+        payload = chr(10).join(json.dumps(row, ensure_ascii=False, sort_keys=True,
+                            separators=(",", ":"), default=str) for row in rows)
+        fingerprints[trial_id] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    for batch in parquet.iter_batches(batch_size=8192):
+        for row in batch.to_pylist():
+            if row.get("schema_version") != "v2.3" or row.get("source_sha") != SOURCE_SHA or row.get("cohort_id") != COHORT_ID:
+                raise RuntimeError(f"SOURCE_DAILY_SNAPSHOT_SCHEMA_OR_IDENTITY_MISMATCH:{scenario}")
+            if str(row.get("scenario_id")) != scenario:
+                raise RuntimeError(f"SOURCE_DAILY_SNAPSHOT_SCENARIO_MISMATCH:{scenario}")
+            trial_id = int(row["trial_id"])
+            if previous_trial_id is not None and trial_id < previous_trial_id:
+                raise RuntimeError(f"DAILY_SNAPSHOT_ROWS_NOT_ORDERED_BY_TRIAL_ID:{scenario}")
+            if current_trial_id is None:
+                current_trial_id = trial_id
+            elif trial_id != current_trial_id:
+                finish_path(current_trial_id, current_rows)
+                current_trial_id = trial_id
+                current_rows = []
+            clean = {key: value for key, value in row.items()
+                     if key not in {"trial_id", "scenario_id", "source_sha", "cohort_id", "schema_version"}}
+            current_rows.append(clean)
+            previous_trial_id = trial_id
+    if current_trial_id is not None:
+        finish_path(current_trial_id, current_rows)
+    return int(parquet.metadata.num_rows), fingerprints, columns
+
+
 def main() -> int:
     root = Path(os.environ.get("AUDIT_INPUT_ROOT", "audit-input"))
     aggregate_manifests = list(root.joinpath("aggregate").rglob("manifest.json"))
@@ -109,10 +148,7 @@ def main() -> int:
             if row.get("trial_fingerprint") != fp:
                 raise RuntimeError(f"FINANCIAL_FINGERPRINT_RECOMPUTE_MISMATCH:{scenario}:{row['trial_id']}")
         s6.validate_cumulative_rng_audit(rows, SOURCE_SHA)
-        snapshots = pq.read_table(snapshots_path).to_pylist()
-        if any(row.get("schema_version") != "v2.3" or row.get("source_sha") != SOURCE_SHA or row.get("cohort_id") != COHORT_ID for row in snapshots):
-            raise RuntimeError(f"SOURCE_DAILY_SNAPSHOT_SCHEMA_OR_IDENTITY_MISMATCH:{scenario}")
-        daily_paths = s6.daily_path_fingerprints(snapshots)
+        snapshot_rows, daily_paths, snapshot_columns = stream_daily_path_fingerprints(snapshots_path, scenario)
         if set(daily_paths) != set(range(1, CHECKPOINT_N + 1)):
             raise RuntimeError(f"DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
         unique_paths = len(set(daily_paths.values()))
@@ -120,20 +156,19 @@ def main() -> int:
             raise RuntimeError(f"UNIQUE_DAILY_PATH_COUNT_MISMATCH:{scenario}")
         trial_rows, trial_sha = row_digest(trial_path)
         daily_rows, daily_sha = row_digest(daily_path)
-        for path, digest in ((trial_path, digest_trials), (daily_path, digest_daily)):
-            for batch in pq.ParquetFile(path).iter_batches(batch_size=8192):
+        for parquet_path, digest in ((trial_path, digest_trials), (daily_path, digest_daily)):
+            for batch in pq.ParquetFile(parquet_path).iter_batches(batch_size=8192):
                 for row in batch.to_pylist():
                     digest.update(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode())
-                    digest.update(b"\n")
-        snap_pf = pq.ParquetFile(snapshots_path)
+                    digest.update(bytes([10]))
         scenarios[scenario] = {
             "trial_rows": trial_rows, "trial_row_sha256": trial_sha,
             "daily_distribution_rows": daily_rows, "daily_row_sha256": daily_sha,
-            "daily_snapshots_rows": int(snap_pf.metadata.num_rows),
+            "daily_snapshots_rows": snapshot_rows,
             "daily_path_coverage": len(daily_paths), "unique_daily_paths": unique_paths,
             "rng_records_verified": len(rows), "scenario_manifest_sha256": sha256_file(mp),
             "files": file_checks,
-            "daily_balance_columns_available": {"Total_Assets","Total_Equity"}.issubset(snap_pf.schema_arrow.names),
+            "daily_balance_columns_available": {"Total_Assets","Total_Equity"}.issubset(snapshot_columns),
         }
         ordered_dirs[scenario] = folder
 
