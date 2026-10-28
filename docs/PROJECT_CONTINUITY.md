@@ -1955,3 +1955,19 @@ Preserve the distinction between the successful exact fingerprint comparison and
 2. Preserve the PR #78 full-suite failures and determine an authoritative, immutable source for the required `results_stage5` files before considering any rerun of that suite; no fixture was created, inferred, or downloaded into the repository in this phase.
 3. Obtain full daily asset-side evidence or a separately approved new schema/source/cohort/Golden. Keep the missing original `source_run_metadata.sha256` explicit.
 4. Do not start N4800 until the accepted statistical inference method, Gate A approval, full preflight and required authorization all exist. No N4800 run was started in this phase.
+
+
+## P17/P18 tracked-delivery inventory recheck — 2026-10-29
+
+- Read-only GitHub Contents API inventory returned `404 Not Found` for `deliverables/` on both `main` and `tmp/s6-aggregate-contract-fix-20261027`; these branches do not track a deliverables directory at present. The `docs/` listing on both branches has no `FINAL_AUDIT.md`.
+- Therefore the requested tracked files remain absent from both refs: `deliverables/النتائج_الكاملة_AR.xlsx`, `deliverables/Full_Results_EN.xlsx`, `deliverables/التقرير_الكامل_AR.docx`, `deliverables/Full_Report_EN.docx`, `deliverables/الملخص_AR.docx`, `deliverables/Summary_EN.docx`, `deliverables/دراسة_الجدوى_AR.docx`, `deliverables/manifest.json`, `deliverables/delivery_bundle_v2.3.zip`, `deliverables/SHA256SUMS.txt`, and `docs/FINAL_AUDIT.md`. Execution state: `NOT_EXECUTED`; evidence state: `MISSING_EVIDENCE`.
+- Re-read live `main/state.json` (blob `6d94e0699e5380b4ecc184203d0c5ad6a4a8fb66`, state pointer SHA `0577ff769018546226bf501bcd419e94020b5310`): stage remains `12-CLOSED`. Its Stage 13 evidence reports Run `40118156691`, Artifact `12570058426`, diagnostic workbook SHA-256 `cfb0afd7d2ab7ad8271c8a76fa190f33e5d351820c9a8300183e2855cb7fab96`, 185 sheets (25 daily + 25 stats + other assembly sheets) and 0 Excel error/formula cells. The same source state explicitly labels that workbook `DIAGNOSTIC_ONLY / NOT_FINAL_BLOCKED`, with `GOVERNANCE_RELEASE_GATE_NOT_RUN`; it is not the missing seven-file final delivery package and does not authorize P17/P18 or acceptance.
+- Disposition remains `BLOCKED / NOT_EXECUTED`: do not reclassify the diagnostic artifact as final delivery; do not create a final manifest/ZIP with missing or unaccepted evidence; no release or P18 authorization was made.
+
+### R4 — final delivery inventory
+| Item | Execution | Evidence status | Risk / disposition |
+|---|---|---|---|
+| `deliverables/` on `main` | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Directory not found through live repository Contents API |
+| `deliverables/` on work branch | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Directory not found through live repository Contents API |
+| `docs/FINAL_AUDIT.md` | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Absent from tracked docs listing on main and work branch |
+| Stage13 diagnostic artifact | `EXECUTED` historically | `VERIFIED` diagnostic scope only | Does not substitute for P17/P18 acceptance |
