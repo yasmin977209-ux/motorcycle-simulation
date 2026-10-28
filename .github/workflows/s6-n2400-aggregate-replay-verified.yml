@@ -1,0 +1,141 @@
+name: S6 N2400 evidence-only aggregate replay with status consistency checks
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-n2400-aggregate-replay-verified.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  SOURCE_RUN_ID: "40731224990"
+  SOURCE_RUN_ATTEMPT: "1"
+  SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  MASTER_SEED: "20270101"
+  S6_TRIAL_COUNT: "2400"
+
+jobs:
+  aggregate-replay:
+    name: Re-aggregate only immutable N2400 evidence and reconcile status fields
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install declared requirements
+        run: python -m pip install -r requirements.txt
+      - name: Compile and execute focused aggregate-contract tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_first_checkpoint.py
+          python -m pytest -q tests/test_s6_first_checkpoint.py
+      - name: Download exactly 20 immutable scenario artifacts from source run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n2400-*-${{ env.SOURCE_RUN_ID }}
+          path: results_stage7_s6/artifacts
+          merge-multiple: false
+      - name: Rebuild aggregate from trial IDs 1-2400 only (no simulation command)
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          test "$(find results_stage7_s6/artifacts -name scenario_manifest.json | wc -l)" -eq 20
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --source-run-id "$SOURCE_RUN_ID" --source-run-attempt "$SOURCE_RUN_ATTEMPT" \
+            --trials 2400 --input-root results_stage7_s6/artifacts \
+            --output-dir results_stage7_s6/aggregate
+      - name: Independently reconcile manifest, statistical JSON, and fail-closed gate results
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path("results_stage7_s6/aggregate")
+          m=json.loads((root/"manifest.json").read_text(encoding="utf-8"))
+          s=json.loads((root/"statistical_evaluation.json").read_text(encoding="utf-8"))
+          assert m["schema_version"]=="s6-cumulative-aggregate-v2"
+          assert m["status"]=="EXECUTED" and m["exit_code"]==0
+          assert m["source_sha"]==os.environ["SOURCE_SHA"]
+          assert m["cohort_id"]=="s6-v23-da1a9ea9"
+          assert m["master_seed"]==20270101
+          assert m["checkpoint_n"]==2400 and m["source_run_id"]=="40731224990"
+          assert m["source_run_attempt"]==1
+          assert m["scenario_count"]==20 and m["total_scenario_combinations"]==25
+          assert m["c100_reused_scenario_count"]==5
+          assert sum(x["n_total"] for x in m["scenario_summaries"])==48000
+          summary=m["statistical_evaluation"]
+          for key in ("status","latest_checkpoint_n","scenario_count","checkpoint_gate_b_counts",
+                      "transition_count","successful_transition_count","gate_a_final","gate_b_final",
+                      "scenario_stability_final"):
+              assert summary[key]==s[key], ("MANIFEST_STATISTICS_JSON_MISMATCH",key,summary.get(key),s.get(key))
+          a=m["acceptance_status"]
+          assert a["gate_a"]==s["gate_a_final"]
+          assert a["gate_b"]==s["gate_b_final"]
+          assert a["stability"]==s["scenario_stability_final"]
+          assert a["n_unique_paths"]=="COMPUTED_FROM_UNIQUE_DAILY_PATHS"
+          assert s["latest_checkpoint_n"]==2400
+          assert set(s["checkpoint_gate_b_counts"])=={"300","600","1200","2400"}
+          assert all(sum(counts.values())==20 for counts in s["checkpoint_gate_b_counts"].values())
+          assert s["checkpoint_gate_b_counts"]["1200"]["FAIL"]==10
+          assert s["checkpoint_gate_b_counts"]["2400"]["FAIL"]==10
+          assert s["checkpoint_gate_b_counts"]["2400"]["PASS"]==10
+          assert s["gate_a_final"]=="NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN"
+          assert s["gate_b_final"]=="FAIL_SCOPED"
+          assert s["scenario_stability_final"]=="NOT_CONVERGED"
+          assert s["transition_count"]==60 and s["successful_transition_count"]==0
+          # Missing evidence is deliberately retained rather than fabricated.
+          source_meta=m["source_run_metadata"]
+          source_meta_status=source_meta["status"]
+          source_meta_sha=source_meta["sha256"]
+          balance_columns=all({"Total_Assets","Total_Equity"} <= set(x.get("daily_balance_columns",[]))
+                               for x in m["scenario_summaries"])
+          # Actual schema column presence is checked by the independent artifact-audit workflow;
+          # this replay does not upgrade that evidence status.
+          print(json.dumps({
+              "status":"S6_N2400_AGGREGATED_FROM_IMMUTABLE_TRIAL_ARTIFACTS_NOT_ACCEPTED",
+              "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
+              "aggregation_run_id":m["run_id"],"source_run_id":m["source_run_id"],
+              "checkpoint_n":m["checkpoint_n"],"scenario_count":m["scenario_count"],
+              "trial_rows":sum(x["n_total"] for x in m["scenario_summaries"]),
+              "total_scenario_combinations":m["total_scenario_combinations"],
+              "c100_reused_scenario_count":m["c100_reused_scenario_count"],
+              "gate_a":a["gate_a"],"gate_b":a["gate_b"],"stability":a["stability"],
+              "gate_b_counts_n1200":s["checkpoint_gate_b_counts"]["1200"],
+              "gate_b_counts_n2400":s["checkpoint_gate_b_counts"]["2400"],
+              "transitions":s["transition_count"],"successful_transitions":s["successful_transition_count"],
+              "source_run_metadata_status":source_meta_status,
+              "source_run_metadata_sha256":source_meta_sha,
+              "daily_assets_equity_independent_recheck":"STILL_MISSING",
+              "acceptance":"NOT_GRANTED"
+          },ensure_ascii=False,sort_keys=True))
+          PY
+      - name: Hash and upload re-aggregated audit artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum results_stage7_s6/aggregate/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n2400-status-reconciled-aggregate-${{ github.run_id }}
+          path: results_stage7_s6/aggregate/
+          if-no-files-found: error
+          retention-days: 30
