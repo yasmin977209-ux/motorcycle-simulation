@@ -403,8 +403,11 @@ def evaluate_statistical_transition(
     previous_n, current_n = previous_point.get("n"), current_point.get("n")
     if type(previous_n) is not int or type(current_n) is not int:
         raise TypeError("STATISTICAL_TRANSITION_N_MUST_BE_INTEGER")
-    if not is_statistical_checkpoint(previous_n) or not is_statistical_checkpoint(current_n):
-        raise ValueError("STATISTICAL_TRANSITION_N_NOT_APPROVED_CHECKPOINT")
+    try:
+        previous_k = statistical_checkpoint_index(previous_n)
+        current_k = statistical_checkpoint_index(current_n)
+    except ValueError as exc:
+        raise ValueError("STATISTICAL_TRANSITION_N_NOT_APPROVED_CHECKPOINT") from exc
     if current_n != previous_n * constants.STATISTICAL_ESCALATION_MULTIPLIER:
         raise ValueError("STATISTICAL_TRANSITION_NOT_ADJACENT_DOUBLING")
 
