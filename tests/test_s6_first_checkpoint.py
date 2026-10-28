@@ -412,3 +412,59 @@ def test_gate_a_golden_loader_rejects_partial_approval_input_set():
             expected_source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
             expected_cohort_id="s6-v23-da1a9ea9",
         )
+
+
+def test_s6_n4800_workflow_covers_25_combinations_and_parallelizes_independent_scenarios():
+    from pathlib import Path
+    import yaml
+
+    workflow_path = Path(".github/workflows/s6-n4800-checkpoint.yml")
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    jobs = workflow["jobs"]
+
+    base = jobs["g100-base"]
+    opt1 = jobs["lower-g-opt1"]
+    full = jobs["lower-g-full-run"]
+    aggregate = jobs["aggregate"]
+
+    assert base["strategy"]["max-parallel"] == 4
+    assert opt1["strategy"]["max-parallel"] == 8
+    assert full["strategy"]["max-parallel"] == 8
+    assert full["needs"] == ["preflight"]
+    assert opt1["needs"] == ["preflight", "g100-base"]
+    assert set(aggregate["needs"]) == {"preflight", "g100-base", "lower-g-opt1", "lower-g-full-run"}
+
+    g100_scenarios = [f"C{collection}_G100" for collection in base["strategy"]["matrix"]["collection"]]
+    opt1_scenarios = opt1["strategy"]["matrix"]["scenario"]
+    full_scenarios = full["strategy"]["matrix"]["scenario"]
+    stochastic_scenarios = g100_scenarios + opt1_scenarios + full_scenarios
+    expected_stochastic = {
+        f"C{collection:03d}_G{recovery:03d}"
+        for collection in (85, 70, 50, 30)
+        for recovery in (100, 70, 50, 30, 0)
+    }
+    assert len(stochastic_scenarios) == 20
+    assert len(set(stochastic_scenarios)) == 20
+    assert set(stochastic_scenarios) == expected_stochastic
+
+    c100_reuse = ["C100_G100", "C100_G070", "C100_G050", "C100_G030", "C100_G000"]
+    assert len(c100_reuse) == 5
+    assert "C100" not in {scenario.split("_")[0] for scenario in stochastic_scenarios}
+
+    source = workflow_path.read_text(encoding="utf-8")
+    assert 'assert m["total_scenario_combinations"]==25' in source
+    assert 'assert m["c100_reuse"]["scenario_ids"] == ["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000"]' in source
+    assert "rerun_authorized" not in source  # workflow consumes the read-only C100 Golden; no C100 job exists
+
+
+def test_s6_independent_golden_workflow_allows_all_20_scenarios_to_schedule():
+    workflow_path = Path(".github/workflows/s6-independent-golden-candidate.yml")
+    if not workflow_path.is_file():
+        pytest.skip("Independent Golden workflow lives on its isolated candidate branch")
+    import yaml
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    job = workflow["jobs"]["independent-scenario"]
+    assert job["strategy"]["max-parallel"] == 20
+    scenarios = job["strategy"]["matrix"]["scenario"]
+    assert len(scenarios) == 20 and len(set(scenarios)) == 20
+    assert all(scenario.startswith(("C085_", "C070_", "C050_", "C030_")) for scenario in scenarios)
