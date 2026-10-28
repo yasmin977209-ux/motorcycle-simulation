@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: s6-independent-golden-da1a-candidate
+  group: s6-independent-golden-da1a-${{ github.run_id }}
   cancel-in-progress: false
 
 env:
