@@ -1868,3 +1868,41 @@ Do not delete historical failed Runs or collapse the checker failures into the u
 | Final delivery P17/P18 | BLOCKED / NOT_EXECUTED | Required files remain missing on main/work branch | No FINAL_ACCEPTED, no release |
 
 Preserve the distinction between the successful exact fingerprint comparison and the failed overall audit guard: the comparison itself is `PASS_EXACT_MATCH`, while full-accounting verification remains `MISSING_EVIDENCE`; neither grants production Gate A/B, convergence, or project acceptance.
+
+
+## Completed immutable N2400 daily-equity identity audit — 2026-10-29
+
+### Run and Artifact read-back
+- Run `40787081064` (`S6 N2400 scoped daily equity identity audit`) completed `success` on tested SHA `ef6f25bc2b5dd718f9623f75fc4dffbc0f52ace3`; job `123162847082` and all five steps completed. This was a read-only audit of existing artifacts, not a simulation.
+- Artifact `12859837254`, `s6-n2400-daily-equity-identity-audit-40787081064`, 5,883 bytes, digest `sha256:f6cafd8dc682191db83464cbbbc43b73d0cf2bc105ab7c795b08abdb109d6c73`. The downloaded ZIP passes `unzip -t` and contains exactly two report members. Local SHA-256 matches the Actions artifact digest.
+- JSON report SHA-256: `a2cb641beb3896cffca14629212594b8c55394b619628c7f840ac4b8e82fb6a1`. Report status is exactly `PASS_SCOPED_EQUITY_IDENTITY_ONLY`.
+
+### Independently checked scope and results
+- Identity tested: `Net_Equity == Capital + Retained_Earnings`. Rows checked: **98,323,918**; mismatches: **0**; invalid integer rows for these stored fields: **0**; daily order violations: **0**; duplicate dates: **0**; first-mismatch list empty.
+- The checked row total matches the previous read-only audit. All **20** stochastic scenarios contain trial IDs `1..2400` (2,400 covered per scenario), with no per-scenario identity/count/order/date exceptions in the report.
+- Identity pinned in this report: source SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, schema/model `v2.3`, `MASTER_SEED=20270101`, checkpoint `N=2400`, source run `40731224990`, source-run HEAD `a23ba71f48487f3ebead99bc30039b14ef9b7609`.
+- Provenance disposition remains `VERIFIED_SCENARIO_JOBS_ARTIFACTS_PARENT_RUN_FAILED`: the 20 source scenario jobs/artifacts were verified, but the parent source run itself remains failed. The originally pinned `source_run_metadata.sha256` remains absent/null; this follow-up does not manufacture or replace that historical metadata digest.
+
+### What this does not prove
+- Full daily `Assets == Equity` remains `MISSING_EVIDENCE`. The persisted snapshots omit `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, and `Total_Assets`. The checker deliberately did not infer or backfill these fields. Zero mismatches in the partial-equity check is not a full balance-sheet pass.
+- Gate A approval remains `NOT_GRANTED_CANDIDATE_REQUIRES_SEPARATE_REVIEW`; Gate B remains `FAIL_SCOPED`; stability remains `NOT_CONVERGED`; acceptance remains `NOT_GRANTED`. This is not a Golden approval, production Gate A/B acceptance, convergence or `FINAL_ACCEPTED`.
+- The live main execution gate remains `BLOCKED_FOR_IMPLEMENTATION`, with production Monte Carlo, scenario-stability declarations, and final acceptance disallowed. Its reference SHA `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` still conflicts with the SHA `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f` verified for the actual uploaded normative v2.3 reference. Preserve as `CONFLICTED`; do not silently reconcile it.
+- The checkpoint config is unchanged: target `2400`, IDs `1201..2400`, source `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`. No N4800 run or trial was started.
+
+### R4 update
+| Item | Execution | Evidence status | Evidence / disposition |
+|---|---|---|---|
+| Persisted partial-equity identity | `EXECUTED` | `VERIFIED` (scoped only) | Run `40787081064`, Artifact `12859837254`; `PASS_SCOPED_EQUITY_IDENTITY_ONLY`; 98,323,918/98,323,918 identities checked, 0 mismatches |
+| Daily ordering, date uniqueness and 1..2400 coverage | `EXECUTED` | `VERIFIED` (scoped only) | Same report; 20/20 scenarios; 0 order violations, 0 duplicate dates, 2,400 trials covered per scenario |
+| Full post-write daily balance-sheet identity | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Five required asset-side fields absent from historical daily snapshots; no inferred backfill |
+| Source-run metadata digest pin | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Original `source_run_metadata.sha256` remains null; parent Run failure preserved |
+| Gate A / Golden approval | `BLOCKED` | `MISSING_EVIDENCE` | Separate review/approval remains required despite exact 48,000/48,000 financial fingerprint match from Run `40784902124` |
+| Gate B / convergence | `BLOCKED` | `VERIFIED` as failure state | `FAIL_SCOPED`, `NOT_CONVERGED`; prior N2400 evidence remains 10/20 pass and 0/60 successful transitions |
+| N4800 continuation | `BLOCKED` | `VERIFIED` as blocked by live gate | No new simulation or trial IDs; await accepted statistical inference contract and authorized preflight |
+| P17/P18 and final delivery | `BLOCKED` | `MISSING_EVIDENCE` | Required delivery files and `docs/FINAL_AUDIT.md` still unproven as a complete deliverable set; no P18 authorization |
+
+### Next permitted work
+1. Resolve the live statistical-inference implementation/approval gate and the normative-reference SHA conflict through explicit reviewed governance; do not change the gate status by editing its JSON alone.
+2. Obtain authoritative persisted asset-side daily evidence for an independent `Assets == Equity` check, or record a separately approved schema/source revision with its own `SOURCE_SHA`, cohort and independent Golden; do not alter historical Artifacts.
+3. Preserve the missing original source-run metadata SHA gap; do not substitute the separate API capture digest.
+4. Only after independent Gate A review, full preflight and approval may N4800 be considered, using only new trial IDs `2401..4800`; no N4800 execution was authorized or performed in this phase.
