@@ -1672,3 +1672,38 @@ Next: continue independent non-protected work. Do not accept this candidate or m
   - `.github/workflows/s6-n600-checkpoint.yml`: `11a4157e8a33c981bdcec60ba40659ebe2686d02872e93a627500d0b08f0ee1f`
   - `.github/workflows/s6-aggregate-contract-tests.yml`: `9b523d51879adbd6d3e68160b6f3d7e9afeb7fa1d3cc5d2f23deef0f3cbb1d13`
 - The tested code head contains the cumulative RNG-audit validator, the v2.3 §14.11.4 method identifier, and fail-closed stochastic `N_unique_paths` handling. Later edits to continuity documentation do not change the tested code or policy files listed above.
+
+
+## S6 25-combination coverage, parallelism, and N2400 audit — 2026-10-28 (INTERIM)
+
+**Governing reference reverified:** `المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md`, SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`. Current `main` remained `c6e54349a5e94f65d5aa9f83141f225d777bb474`; no changes were made to `main`.
+
+### Live branch/workflow scope
+- Work branch at the start of this note: `tmp/s6-aggregate-contract-fix-20261027`, HEAD `cb139583b04f43e19c3e6b9df2faa4a6e01bb5e7`. Changes remain isolated from `main`.
+- The scenario grid is **25 combinations**, not 20. Current S6 statistical inference still correctly treats the 20 stochastic combinations as the Gate B family; C100 is deterministic, must be explicitly evidenced across the same extendable `trial_id` series, and must not be counted as 5 independent stochastic samples.
+- Existing C100 reference remains a separate historical golden, run `40263424595`, source SHA `965281d52441cd0d4b744e211c9f68ee4cdc3753`, cohort `c100-v23-s4-20261026-965281d5`, 300 trial IDs per combination, `N_unique_paths=1`, all RNG draws zero. It is **not** being silently represented as a current-`da1a` cohort.
+
+### N2400 stochastic evidence (reaggregate only; no Monte Carlo rerun)
+- Source scenario run: `40731224990`, tested source-run HEAD `a23ba71f48487f3ebead99bc30039b14ef9b7609`, `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, seed `20270101`.
+- Reaggregate run: `40753615920`, job `123046541510`, conclusion `success`, tested SHA `66cb1eb8bced40657642b6d234596c2e5b4efdd1`; artifact `12844439423`, outer digest `sha256:b9ff1bb14fcaf57a60cbd645ce6ef3aa9b9843061852c6798a89708c64c32580`.
+- Reaggregate manifest declares 20 stochastic scenarios, 48,000 cumulative trial rows, 2,086,550 daily-distribution rows, 25 total combinations and 5 separately referenced C100 combinations.
+- Gate B counts per N: N=300: 0 PASS / 20 FAIL; N=600: 0 PASS / 20 FAIL; N=1200: 10 PASS / 10 FAIL; N=2400: 10 PASS / 10 FAIL. The 60 adjacent scenario transitions have 0 successful transitions. Gate A is `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`; the run is not converged and is not accepted.
+- Immutable run artifact remains intact; the reaggregate workflow did not rerun simulations.
+
+### Independent artifact audit and regression status
+- Independent audit run `40760320230` (tested SHA `6817e3203ca5c58a6bfa604f952be6511dd5b687`) was still running at the status check. It must not be treated as final evidence for the corrected audit code.
+- Audit run `40761382163` (tested SHA `cb139583b04f43e19c3e6b9df2faa4a6e01bb5e7`) is queued. Its code correction changes canonical row-digest accumulation to the aggregator's actual sorted scenario order, instead of artifact-directory order. This run is the next applicable independent source-vs-aggregate audit.
+- Full regression run `40759635834` failed with `590 passed, 1 skipped, 1 failed` because one test omitted `from pathlib import Path`. The missing import is fixed in commit `e9e9564a94bf47c0d47c96e0882ffed4f9902411`; exact-head regression run `40760963547` was queued at the status check. Until it completes, the fix is not marked VERIFIED by a green full regression.
+- Previous independent audit attempts `40757267932`, `40757731931`, and `40760099005` failed in audit-checker assumptions / row-digest ordering. These are preserved as failures, not omitted; the current corrected audit run must independently pass before declaring parity.
+- Independent post-write `Assets == Equity` remains an evidence gap because `daily_snapshots.parquet` does not persist `Total_Assets` and `Total_Equity`. Runtime assertions are not a substitute for an independent post-write recheck.
+
+### Concurrency improvements and the five deterministic C100 combinations
+- The independent stochastic Golden workflow was updated on isolated branch `tmp/s6-independent-golden-da1a-20261028` to `max-parallel: 20`, and workflow-file-only edits no longer trigger an extra 20-scenario run. On the latest live run `40760465042`, source lock passed and 16 matrix jobs were in progress with 4 queued; a prior duplicate run `40755172767` still had 4 active jobs. This indicates actual available runner capacity remains a limiting factor; `max-parallel` cannot exceed the platform's concurrency quota.
+- Current-source C100 reproduction workflow was added on isolated branch `tmp/s6-c100-current-source-da1a-20261028`, HEAD `a1e6e144a5bc6388929e6e7db20f79885495a042`. Run `40761554588` was queued. It is set to execute all five combinations `C100_G100/G070/G050/G030/G000` at trial IDs 1..2400, with `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, seed `20270101`, and matrix `max-parallel: 5`. Its status is `QUEUED`, not EXECUTED, until scenario artifacts and the aggregate pass review.
+- N4800 workflow has been split into four G100 bases, eight lower-G OPT-1 scenarios gated on those bases, and eight C030/C050 lower-G scenarios independent of the G100 dependency. Config remains at N=2400; **no N4800 run has been launched** before the N2400 audit and resume preconditions pass.
+
+### Next execution order
+1. Finish / inspect corrected full regression `40760963547` and independent N2400 audit `40761382163`; do not use a row-digest failure from older audit code as data-integrity verdict.
+2. Allow current-source C100 run `40761554588` to acquire runners; verify all 5 artifacts, IDs 1..2400, current source/cohort/schema/seed, file hashes, RNG draw count=0, `N_unique_paths=1`, and financial/daily-path fingerprint map equality across G.
+3. Only after the 20 stochastic artifacts and 5 deterministic C100 cases are covered with compatible identity and evidence, update the cumulative C100 reference path/manifest logic and reaggregate from immutable inputs. Keep Gate A/B and convergence fail-closed.
+4. Resume N4800 only after the N2400 cumulative evidence passes independent hash, row, RNG, source/cohort and accounting checks. Execute only trial IDs 2401..4800 for stochastic scenarios; preserve the C100 deterministic rule and the prior approved range.
