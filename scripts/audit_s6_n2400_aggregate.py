@@ -80,7 +80,7 @@ def main() -> int:
             "source_sha": SOURCE_SHA, "cohort_id": COHORT_ID, "master_seed": MASTER_SEED,
             "run_id": SOURCE_RUN_ID, "run_attempt": 1, "trial_count": CHECKPOINT_N,
             "trial_id_start": 1, "trial_id_end": CHECKPOINT_N,
-            "model_schema_version": "v2.3", "git_commit": SOURCE_RUN_HEAD_SHA,
+            "schema_version": "s6-first-checkpoint-v1", "git_commit": SOURCE_RUN_HEAD_SHA,
         }
         for key, expected in checks.items():
             if sm.get(key) != expected: raise RuntimeError(f"SOURCE_MANIFEST_IDENTITY_MISMATCH:{scenario}:{key}")
@@ -102,12 +102,16 @@ def main() -> int:
         s6.validate_cumulative_trial_ids(ids, CHECKPOINT_N, scenario_id=scenario)
         if any(str(row.get("scenario_id")) != scenario for row in rows):
             raise RuntimeError(f"SOURCE_TRIAL_SCENARIO_COLUMN_MISMATCH:{scenario}")
+        if any(row.get("schema_version") != "v2.3" or row.get("source_sha") != SOURCE_SHA or row.get("cohort_id") != COHORT_ID for row in rows):
+            raise RuntimeError(f"SOURCE_TRIAL_ROW_SCHEMA_OR_IDENTITY_MISMATCH:{scenario}")
         for row in rows:
             fp = monte_carlo.trial_fingerprint(s6.result_from_record(row))
             if row.get("trial_fingerprint") != fp:
                 raise RuntimeError(f"FINANCIAL_FINGERPRINT_RECOMPUTE_MISMATCH:{scenario}:{row['trial_id']}")
         s6.validate_cumulative_rng_audit(rows, SOURCE_SHA)
         snapshots = pq.read_table(snapshots_path).to_pylist()
+        if any(row.get("schema_version") != "v2.3" or row.get("source_sha") != SOURCE_SHA or row.get("cohort_id") != COHORT_ID for row in snapshots):
+            raise RuntimeError(f"SOURCE_DAILY_SNAPSHOT_SCHEMA_OR_IDENTITY_MISMATCH:{scenario}")
         daily_paths = s6.daily_path_fingerprints(snapshots)
         if set(daily_paths) != set(range(1, CHECKPOINT_N + 1)):
             raise RuntimeError(f"DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
