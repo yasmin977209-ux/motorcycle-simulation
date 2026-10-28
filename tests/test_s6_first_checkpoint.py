@@ -10,6 +10,13 @@ import pytest
 from scripts import s6_first_checkpoint as s6
 
 
+def test_statistical_checkpoint_schedule_has_no_fixed_upper_ceiling():
+    assert s6.statistical_checkpoint_schedule(300) == [300]
+    assert s6.statistical_checkpoint_schedule(2400) == [300, 600, 1200, 2400]
+    assert s6.statistical_checkpoint_schedule(9600) == [300, 600, 1200, 2400, 4800, 9600]
+    assert s6.statistical_checkpoint_schedule(299) == []
+
+
 def test_time_uniform_method_identifier_tracks_normative_v23_clause():
     assert s6.constants.TIME_UNIFORM_METHOD_ID == "V2.3_14_11_4_ALPHA_SPENDING_V1"
     assert "APPENDIX_E" not in s6.constants.TIME_UNIFORM_METHOD_ID
