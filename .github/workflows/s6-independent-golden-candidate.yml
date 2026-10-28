@@ -1,0 +1,159 @@
+name: S6 independent Golden candidate SOURCE da1a N2400
+
+on:
+  push:
+    branches:
+      - "tmp/s6-independent-golden-da1a-20261028"
+    paths:
+      - ".github/workflows/s6-independent-golden-candidate.yml"
+      - "scripts/s6_independent_golden_candidate.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s6-independent-golden-da1a-candidate
+  cancel-in-progress: false
+  queue: max
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  MASTER_SEED: "20270101"
+  GOLDEN_SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  GOLDEN_TRIAL_COUNT: "2400"
+  GOLDEN_WORKERS: "2"
+
+jobs:
+  source-lock:
+    name: Verify exact model source lock and candidate scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile and verify source, cohort, seed, and model blob locks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_independent_golden_candidate.py scripts/s6_first_checkpoint.py
+          python scripts/s6_independent_golden_candidate.py --mode verify-source --source-sha "$GOLDEN_SOURCE_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$MASTER_SEED" = "20270101"
+          echo "INDEPENDENT_GOLDEN_SOURCE_LOCK_PASS; no production artifacts are consumed"
+
+  independent-scenario:
+    name: Fresh independent Golden ${{ matrix.scenario }} N=2400
+    needs: source-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        scenario:
+          - C085_G100
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G100
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G100
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G100
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run fresh full trials 1..2400 without production artifact input
+        shell: bash
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          set -euo pipefail
+          python scripts/s6_independent_golden_candidate.py \
+            --mode scenario \
+            --scenario "$SCENARIO" \
+            --source-sha "$GOLDEN_SOURCE_SHA" \
+            --trial-count "$GOLDEN_TRIAL_COUNT" \
+            --workers "$GOLDEN_WORKERS" \
+            --output-dir "results/s6-independent-golden"
+          test -s "results/s6-independent-golden/$SCENARIO/independent_golden_candidate.json"
+      - name: Upload scenario Golden candidate and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-golden-candidate-${{ matrix.scenario }}-${{ github.run_id }}
+          path: results/s6-independent-golden/${{ matrix.scenario }}/independent_golden_candidate.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-candidate:
+    name: Verify complete 20-scenario independent Golden candidate
+    needs: [source-lock, independent-scenario]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact workflow commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all 20 independent scenario fingerprint maps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-golden-candidate-*-${{ github.run_id }}
+          path: results/s6-independent-golden-input
+          merge-multiple: false
+      - name: Validate exact scenarios, IDs, fingerprints, and separate RNG audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/s6_independent_golden_candidate.py \
+            --mode aggregate \
+            --source-sha "$GOLDEN_SOURCE_SHA" \
+            --input-dir results/s6-independent-golden-input \
+            --output-dir results/s6-independent-golden-output
+          test -s results/s6-independent-golden-output/independent_golden_fingerprints.json
+          test -s results/s6-independent-golden-output/independent_golden_manifest.json
+      - name: Upload aggregated Golden candidate map and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-independent-golden-da1a-n2400-${{ github.run_id }}
+          path: results/s6-independent-golden-output/
+          if-no-files-found: error
+          retention-days: 30
