@@ -113,10 +113,16 @@ jobs:
           for x in m["scenario_summaries"]:
               assert x["n_total"] == 300 and x["artifact_files_verified"] is True
               assert x["command_argv"] and x["run_id"] == "40574326793"
-              assert x["n_unique_paths"] is None
-              assert x["n_unique_paths_status"] == "UNDEFINED_BUSINESS_RULE"
-              assert x["n_unique_daily_paths_diagnostic"] >= 1
-          assert m["acceptance_status"]["n_unique_paths"] == "UNDEFINED_BUSINESS_RULE"
+              assert isinstance(x["n_unique_paths"], int) and not isinstance(x["n_unique_paths"], bool)
+              assert 1 <= x["n_unique_paths"] <= x["n_total"]
+              assert x["unique_daily_paths"] == x["n_unique_paths"]
+              assert x["n_unique_daily_paths_diagnostic"] == x["n_unique_paths"]
+              if x["scenario_id"].startswith("C100_"):
+                  assert x["n_unique_paths"] == 1
+                  assert x["n_unique_paths_status"] == "DEGENERATE_DETERMINISTIC"
+              else:
+                  assert x["n_unique_paths_status"] == "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
+          assert m["acceptance_status"]["n_unique_paths"] == "COMPUTED_FROM_UNIQUE_DAILY_PATHS"
           assert m["opt1_audit"]["status"] == "PASS"
           assert m["opt1_audit"]["scenario_count"] == 20
           assert m["source_run_metadata"]["status"] == "VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS"
