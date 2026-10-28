@@ -18,20 +18,20 @@
 
 ## S5 evidence contract
 
-The workflow writes its actual outputs under `s5_evidence/`: worker-equivalence JSON, integer/Fraction-safe Parquet trial and selection tables, both daily-distribution policies, the five representative daily files per stochastic scenario with both partner reinvestment balances, number registry, mini-only diagnostic history, runtime benchmark, and SHA-256 manifest. The sample has N=50 and **cannot** establish a convergence checkpoint or scenario stability.
+The workflow writes its actual outputs under `s5_evidence/`: worker-equivalence JSON, integer/Fraction-safe Parquet trial and selection tables, both daily-distribution policies, the five representative daily files per stochastic scenario with both partner reinvestment balances, number registry, mini-only diagnostic history, runtime benchmark, and SHA-256 manifest. The sample has N=500 and **cannot** establish a convergence checkpoint or scenario stability.
 
 The S5 workflow fails closed on sequential/parallel mismatches, incomplete daily dates, missing representative roles, missing partner-balance integers, financial float leakage, cohort identity mismatch, or failure to validate reused C100 hashes.
 
 ## Measured S5 runtime
 
 <!-- S5_RUNTIME_BEGIN -->
-Actual workflow Run: 40440814682 (attempt 1); tested source SHA: 7a3cd8208f79157b8ad04b7ab77891f555b710b2.
+Actual workflow Run: 40607308355 (attempt 1); tested source SHA: cc8570df2152b5193d44c04ffdc2ecfb53e6705b.
 Measured S5-B workload: 3000 executions, 1000 unique stochastic scenario/trial paths, 20 non-C100 scenarios, N=50 trials each.
-- Sequential total: 4684.856597 s; throughput: 0.021345 unique scenario/trial paths/s.
-- Parallel 2 workers total: 2481.158059 s; throughput: 0.040304 unique scenario/trial paths/s; speed-up: 1.888173x.
-- Parallel 4 workers total: 2155.170253 s; throughput: 0.046400 unique scenario/trial paths/s; speed-up: 2.173776x.
-- Total measured script elapsed: 10006.227717 s.
-- Full repository tests: 567 passed, 1 skipped, 0 failed, 0 errors (command exit code 0).
+- Sequential total: 4546.965170 s; throughput: 0.021993 unique scenario/trial paths/s.
+- Parallel 2 workers total: 2432.963705 s; throughput: 0.041102 unique scenario/trial paths/s; speed-up: 1.868900x.
+- Parallel 4 workers total: 2113.930161 s; throughput: 0.047305 unique scenario/trial paths/s; speed-up: 2.150953x.
+- Total measured script elapsed: 9757.972081 s.
+- Full repository tests: 581 passed, 1 skipped, 0 failed, 0 errors (command exit code 0).
 S6 extrapolations remain unmeasured linear projections from this N=50 validation cohort; no production checkpoint or stability claim is inferred.
 C100 was hash-verified and reused read-only from S4 Run 40263424595; neither C100 nor Test 192's coverage simulation was rerun in S5-B.
 <!-- S5_RUNTIME_END -->
@@ -55,7 +55,7 @@ C100 was hash-verified and reused read-only from S4 Run 40263424595; neither C10
 <!-- S5_OPT1_BEGIN -->
 ## S5-C — Owner-approved OPT-1 evidence
 
-- Evidence Run: 40440814682; tested source SHA: 7a3cd8208f79157b8ad04b7ab77891f555b710b2. This section is recorded only after S5-B and the full test inventory passed.
+- Evidence Run: 40607308355; tested source SHA: cc8570df2152b5193d44c04ffdc2ecfb53e6705b. This section is recorded only after S5-B and the full test inventory passed.
 - Accepted Test 192 proof reused without rerunning its simulation: SHA-256 f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b; S5-A Run 40397897155.
 - C100: OPT1_REUSED_ACCEPTED_C100_S4_EVIDENCE, S4 Run 40263424595, Golden SHA-256 39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327; no C100 rerun.
 
@@ -71,12 +71,12 @@ For any level with claims_created == 0, the S5-B sample compared the financial t
 
 ### Required S5-B artifact SHA-256
 
-- results_stage5/worker_equivalence_manifest.json: dd941cfefcf6f86e2417f7bdbe71835853184ad640e419cdb18e4d094e79445d
-- results_stage5/trials_summary.parquet: 8b7edf562a103d3f0ed54d8e9511fa55845d53bad93996ca9120d89773a40c13
-- results_stage5/daily_distribution.parquet: ad7884055396eb85b20e1e0f42d17e0cb531f3f244298d643b86bf2d8c94a18f
+- results_stage5/worker_equivalence_manifest.json: 12ca2e85254f80d3c33a2cafe34ea39dc33fa721bb5331016fafadd0866837cc
+- results_stage5/trials_summary.parquet: 9b42a86526e967b16c3b56a2144e616c9aab19d46de60513aadc2898e6c51888
+- results_stage5/daily_distribution.parquet: f4b8e8c2fd4b16284219a96db52ff86f9d6e205073ee3476e3f05a33aae4acf1
 - results_stage5/opt1_sample_validation.json: 8e593cbe8712c6439aeb96971edaf5e7c382ccb16ae24dba71ad66e07103be05
-- results_stage5/s5_manifest.json: 13e7d3c64fdb803a30e3ff99d8fa708dde904807668d85b9ec858f94836388bb
+- results_stage5/s5_manifest.json: aae200b1035a74da4ee4173d1bbbb80980308fae988907ae776d5acdc8a38a4d
 
-- Test inventory: 567 passed, 1 skipped, 1 warning in 510.51s (0:08:30)
+- Test inventory: 581 passed, 1 skipped, 1 warning in 505.39s (0:08:25)
 - Scope limitation: this closes only S5-B/S5-C execution/equivalence evidence. It does not declare Gate A or Gate B production acceptance, convergence, or final delivery acceptance.
 <!-- S5_OPT1_END -->

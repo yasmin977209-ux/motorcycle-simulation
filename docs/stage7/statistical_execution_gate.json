@@ -189,7 +189,7 @@
       "tmp/s5-statistical-gate-v23-20261026",
       "tmp/s6-aggregate-contract-fix-20261027"
     ],
-    "permitted_next_work": "Run the owner-authorized cumulative N=1200 checkpoint by reusing the immutable N=600 artifacts from Run 40582501871 and executing only trial IDs 601..1200; validate all 20 stochastic scenarios, exact source/cohort identity, daily path counts, RNG audit, Gate A/B components and transition evidence. Then proceed to N=2400 only after validating N=1200. Do not declare convergence or final production acceptance until all four cumulative points and three consecutive successful transitions pass.",
+    "permitted_next_work": "S5-B and S5-C evidence recorded from completed execution. Proceed to the next authorized work-branch stage only with measured artifacts, preserve the historical failed transition, and reuse accepted C100 evidence read-only without rerunning it.",
     "s6_execution_authorized": true,
     "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
     "active_cohort_id": "s6-v23-da1a9ea9",
@@ -220,8 +220,8 @@
   "implementation_approval": {
     "reviewed_approval_id": "OWNER-CHAT-S5-2026-10-26",
     "owner_approved": true,
-    "validated_source_head_sha": "7a3cd8208f79157b8ad04b7ab77891f555b710b2",
-    "evidence_sha256": "13e7d3c64fdb803a30e3ff99d8fa708dde904807668d85b9ec858f94836388bb",
+    "validated_source_head_sha": "cc8570df2152b5193d44c04ffdc2ecfb53e6705b",
+    "evidence_sha256": "aae200b1035a74da4ee4173d1bbbb80980308fae988907ae776d5acdc8a38a4d",
     "note": "Exact source and S5-B/S5-C evidence verified from a completed GitHub Actions run. This records bounded execution/equivalence evidence only; production statistical acceptance remains separate."
   },
   "authorization_semantics": {
@@ -238,10 +238,10 @@
   "s5_execution_evidence": {
     "status": "EXECUTED",
     "overall_s5_b_s5_c": "PASS",
-    "executed_at_utc": "2026-10-27T05:46:56+00:00",
-    "workflow_run_id": 40440814682,
+    "executed_at_utc": "2026-10-28T03:04:32+00:00",
+    "workflow_run_id": 40607308355,
     "workflow_run_attempt": 1,
-    "tested_source_sha": "7a3cd8208f79157b8ad04b7ab77891f555b710b2",
+    "tested_source_sha": "cc8570df2152b5193d44c04ffdc2ecfb53e6705b",
     "s5_b": {
       "status": "PASS_S5_MINI_EVIDENCE",
       "command": "python scripts/s5_mini_verification.py --source-sha <GITHUB_SHA> --tested-commit <GITHUB_SHA>",
@@ -249,8 +249,8 @@
       "full_test_suite": {
         "command": "python -m pytest -q tests --junitxml=s5_evidence/junit.xml",
         "exit_code": 0,
-        "summary_line": "567 passed, 1 skipped, 1 warning in 510.51s (0:08:30)",
-        "passed": 567,
+        "summary_line": "581 passed, 1 skipped, 1 warning in 505.39s (0:08:25)",
+        "passed": 581,
         "failed": 0,
         "skipped": 1,
         "errors": 0
@@ -657,17 +657,17 @@
           "status": "OPT1_INELIGIBLE_FULL_RUN_REQUIRED"
         }
       ],
-      "results_stage5_manifest_sha256": "13e7d3c64fdb803a30e3ff99d8fa708dde904807668d85b9ec858f94836388bb",
+      "results_stage5_manifest_sha256": "aae200b1035a74da4ee4173d1bbbb80980308fae988907ae776d5acdc8a38a4d",
       "required_artifact_sha256": {
-        "results_stage5/worker_equivalence_manifest.json": "dd941cfefcf6f86e2417f7bdbe71835853184ad640e419cdb18e4d094e79445d",
-        "results_stage5/trials_summary.parquet": "8b7edf562a103d3f0ed54d8e9511fa55845d53bad93996ca9120d89773a40c13",
-        "results_stage5/selection.parquet": "7d7b6d2fe3a747444628b3e1c70f4a8c2897650f5fc1c8d7ca7cb72e2ccf375b",
-        "results_stage5/daily_distribution.parquet": "ad7884055396eb85b20e1e0f42d17e0cb531f3f244298d643b86bf2d8c94a18f",
+        "results_stage5/worker_equivalence_manifest.json": "12ca2e85254f80d3c33a2cafe34ea39dc33fa721bb5331016fafadd0866837cc",
+        "results_stage5/trials_summary.parquet": "9b42a86526e967b16c3b56a2144e616c9aab19d46de60513aadc2898e6c51888",
+        "results_stage5/selection.parquet": "19aab781667d394536623e70fe6decb37f0bfb50fd5fdefb8538296c0f605414",
+        "results_stage5/daily_distribution.parquet": "f4b8e8c2fd4b16284219a96db52ff86f9d6e205073ee3476e3f05a33aae4acf1",
         "results_stage5/opt1_sample_validation.json": "8e593cbe8712c6439aeb96971edaf5e7c382ccb16ae24dba71ad66e07103be05",
-        "results_stage5/number_registry.json": "e3f311befe37d70370aeca1fed5274e8ba3952ee7685a9a9e66afff09c4f0c95",
-        "results_stage5/runtime_benchmark.json": "768fb98c397ac206f5eee6d9a3ac6764af787ad37046d33fb4b30728f05f8bd4",
-        "results_stage5/s5_acceptance.json": "a149a57651b5b5d2f26c14fd4a88e8310fbe8f0db232243d047e9cd13468a95f",
-        "results_stage5/s5_manifest.json": "13e7d3c64fdb803a30e3ff99d8fa708dde904807668d85b9ec858f94836388bb"
+        "results_stage5/number_registry.json": "de544e5c5c85f9ff93200e062031588e24e08cd94af8c903b2418ccdc7156d53",
+        "results_stage5/runtime_benchmark.json": "c8660e85326a62ea2d1195bf1e8dc0b837322364d847b6d77966521f675311e7",
+        "results_stage5/s5_acceptance.json": "f01828a29458b9bd185fa00861dc3757a393459ebbb5c3c3bfb96a9e02d24203",
+        "results_stage5/s5_manifest.json": "aae200b1035a74da4ee4173d1bbbb80980308fae988907ae776d5acdc8a38a4d"
       }
     },
     "s5_c": {
