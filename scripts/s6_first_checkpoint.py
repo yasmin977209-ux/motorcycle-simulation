@@ -12,6 +12,7 @@ import tempfile, zipfile
 import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, monte_carlo, rng, validation, stats_integrity
+from scripts import s6_golden_gate
 from stats_integrity import resolve_n_unique_paths, validate_cumulative_trial_ids
 
 EXPECTED_C100_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327"
@@ -552,20 +553,58 @@ def resolve_aggregate_checkpoint_n(
     raise RuntimeError(f"S6_AGGREGATE_REQUESTED_N_MISMATCH:requested={requested_n}:artifacts={actual_n}")
 
 
+def statistical_checkpoint_schedule(max_n: int) -> list[int]:
+    """Return every approved doubling checkpoint through max_n, with no fixed upper ceiling."""
+    if type(max_n) is not int or max_n < 0:
+        raise TypeError("STATISTICAL_CHECKPOINT_MAX_N_MUST_BE_NONNEGATIVE_INTEGER")
+    n = constants.STATISTICAL_CHECK_START_N
+    schedule: list[int] = []
+    while n <= max_n:
+        schedule.append(n)
+        n *= constants.STATISTICAL_ESCALATION_MULTIPLIER
+    return schedule
+
+
 def evaluate_s6_aggregate_statistics(
     rows_by_scenario: dict[str, dict[int, dict[str, Any]]],
     *, source_sha: str, cohort_id: str, run_id: str,
+    approved_golden: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """Evaluate Gate B/IUT at all completed cumulative points; never promote to final acceptance."""
+    """Evaluate Gate A, Gate B/IUT, and every available doubling point without final project acceptance."""
     evaluations: dict[str, Any] = {}
     registry: list[dict[str, Any]] = []
     checkpoint_counts: dict[str, dict[str, int]] = {}
+    max_n = max((len(records) for records in rows_by_scenario.values()), default=0)
+    checkpoint_schedule = statistical_checkpoint_schedule(max_n)
+    test192_path = Path("docs/stage7/test192_coverage_proof.json")
+    test192_expected_sha256 = "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b"
+    test192_actual_sha256 = sha256_file(test192_path) if test192_path.is_file() else None
+    test192_proof = json.loads(test192_path.read_text(encoding="utf-8")) if test192_path.is_file() else {}
+    test192_valid = (
+        test192_actual_sha256 == test192_expected_sha256
+        and test192_proof.get("test_id") == 192
+        and test192_proof.get("pass") is True
+        and test192_proof.get("master_seed") == constants.MASTER_SEED
+        and test192_proof.get("scenario_count") == 20
+        and test192_proof.get("alpha_spending", {}).get("formula") == "0.0025 / (k * (k + 1))"
+    )
+    test192_supported_schedule = test192_valid and set(checkpoint_schedule).issubset(
+        set(test192_proof.get("checkpoint_schedule", []))
+    )
     stability_history: dict[str, Any] = {
         "schema_version": "s6-stability-history-v1",
         "source_sha": source_sha,
         "cohort_id": cohort_id,
         "aggregation_run_id": str(run_id),
-        "checkpoint_schedule": [300, 600, 1200, 2400],
+        "checkpoint_schedule": checkpoint_schedule,
+        "test192_proof": {
+            "path": str(test192_path),
+            "expected_sha256": test192_expected_sha256,
+            "actual_sha256": test192_actual_sha256,
+            "valid": test192_valid,
+            "supports_full_checkpoint_schedule": test192_supported_schedule,
+            "proof_checkpoint_schedule": test192_proof.get("checkpoint_schedule", []),
+        },
         "historical_cohorts_imported": False,
         "convergence_authorized": False,
         "per_scenario": {},
@@ -578,7 +617,7 @@ def evaluate_s6_aggregate_statistics(
             results = [result_from_record(row) for row in ordered_rows]
             validate_cumulative_trial_ids([item.trial_id for item in results], len(results), scenario_id=scenario)
             points: list[dict[str, Any]] = []
-            for n in (300, 600, 1200, 2400):
+            for n in checkpoint_schedule:
                 if n > len(results):
                     continue
                 sample = results[:n]
@@ -606,13 +645,10 @@ def evaluate_s6_aggregate_statistics(
                     "spending_index": k,
                     "alpha_s_k_numerator": stats_integrity.sequential_alpha_fraction(k).numerator,
                     "alpha_s_k_denominator": stats_integrity.sequential_alpha_fraction(k).denominator,
-                    "gate_a": {
-                        "status": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-                        "checked": False,
-                        "stable": False,
-                        "source_sha": source_sha,
-                        "cohort_id": cohort_id,
-                    },
+                    "gate_a": s6_golden_gate.evaluate_gate_a_point(
+                        scenario, sample, n=n, source_sha=source_sha, cohort_id=cohort_id,
+                        approved_golden=approved_golden,
+                    ),
                     "gate_b": gate_b,
                     "p50_cumulative_project_profit": {"numerator": p50.numerator, "denominator": p50.denominator},
                     "probability_accounting_loss": {"numerator": loss_probability.numerator,
@@ -656,7 +692,12 @@ def evaluate_s6_aggregate_statistics(
                 "checkpoint_points": point_records,
                 "transitions": transitions,
                 "consecutive_successful_transitions": consecutive,
-                "scenario_stability": "CONVERGED" if consecutive >= constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED else "NOT_CONVERGED",
+                "test192_coverage_valid": test192_valid,
+                "test192_supports_checkpoint_schedule": test192_supported_schedule,
+                "scenario_stability": (
+                    "CONVERGED" if consecutive >= constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED and test192_supported_schedule
+                    else ("NOT_CONVERGED_TEST192_COVERAGE_MISSING" if consecutive >= constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED else "NOT_CONVERGED")
+                ),
             }
         except Exception as exc:
             evaluation = {
@@ -689,16 +730,52 @@ def evaluate_s6_aggregate_statistics(
         1 for item in evaluations.values() for transition in item.get("transitions", [])
         if transition.get("passed") is True
     )
+    latest_gate_a_statuses = [
+        next((point.get("gate_a", {}).get("status") for point in item.get("checkpoint_points", [])
+              if int(point.get("n", 0)) == latest_n), "MISSING_EVIDENCE")
+        for item in evaluations.values()
+    ]
+    latest_gate_b_statuses = [
+        next((point.get("gate_b", {}).get("status") for point in item.get("checkpoint_points", [])
+              if int(point.get("n", 0)) == latest_n), "MISSING_EVIDENCE")
+        for item in evaluations.values()
+    ]
+    gate_a_final = (
+        "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN" if approved_golden is None
+        else ("PASS_SCOPED" if len(latest_gate_a_statuses) == 20 and all(s == "PASS_SCOPED" for s in latest_gate_a_statuses)
+              else ("FAIL" if any(str(s).startswith("FAIL_") for s in latest_gate_a_statuses) else "MISSING_EVIDENCE"))
+    )
+    gate_b_final = (
+        "PASS_SCOPED" if gate_a_final == "PASS_SCOPED"
+        and len(latest_gate_b_statuses) == 20 and all(s == "PASS" for s in latest_gate_b_statuses)
+        and all(item.get("scenario_stability") == "CONVERGED" for item in evaluations.values())
+        else "BLOCKED_TEST192_COVERAGE_MISSING" if not test192_supported_schedule
+        else "NOT_FINAL_UNTIL_GATE_A_GATE_B_AND_TRANSITIONS"
+    )
+    scenario_stability_final = (
+        "CONVERGED" if gate_a_final == "PASS_SCOPED" and gate_b_final == "PASS_SCOPED"
+        and all(item.get("scenario_stability") == "CONVERGED" for item in evaluations.values())
+        else "NOT_CONVERGED"
+    )
     evaluation_summary = {
         "schema_version": "s6-v23-statistical-evaluation-v1",
         "status": "EXECUTED_POINTWISE_STATISTICS_NOT_FINAL_ACCEPTANCE",
         "run_id": str(run_id), "source_sha": source_sha, "cohort_id": cohort_id,
         "latest_checkpoint_n": latest_n, "scenario_count": len(evaluations),
+        "checkpoint_schedule": checkpoint_schedule,
         "checkpoint_gate_b_counts": checkpoint_counts,
         "transition_count": transition_count, "successful_transition_count": passed_transitions,
-        "gate_a_final": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
-        "gate_b_final": "NOT_FINAL_UNTIL_ALL_FOUR_POINTS_AND_THREE_TRANSITIONS",
-        "scenario_stability_final": "NOT_CONVERGED",
+        "gate_a_final": gate_a_final,
+        "gate_b_final": gate_b_final,
+        "scenario_stability_final": scenario_stability_final,
+        "test192_reuse": {
+            "run_ids": [40531095239, 40546712685],
+            "proof_sha256": test192_actual_sha256,
+            "proof_valid": test192_valid,
+            "supports_full_checkpoint_schedule": test192_supported_schedule,
+            "proof_checkpoint_schedule": test192_proof.get("checkpoint_schedule", []),
+            "rerun": False,
+        },
         "test192_reuse": {
             "run_ids": [40531095239, 40546712685],
             "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
