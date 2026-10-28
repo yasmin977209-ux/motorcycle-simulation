@@ -1841,3 +1841,30 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 | Final delivery / P17/P18 | BLOCKED / NOT_EXECUTED | All required paths checked on main/work branch and absent | No release evidence | No `FINAL_ACCEPTED`, no P18 |
 
 Do not delete historical failed Runs or collapse the checker failures into the upcoming audit result. Preserve source-run `conclusion=failure` even though its 20 scenario jobs and artifacts were individually successful; keep the original `source_run_metadata.sha256=null` gap explicit even if the separate API provenance capture is verified.
+
+
+## Exact Golden result and daily-equity follow-up — 2026-10-29
+
+### Completed read-only audit result
+- Run `40784902124`, tested SHA `e7527b42ed30a26a857c5b25064f5419d0dc6c14`, finished `failure` at its explicit full-accounting guard. It did **not** fail the financial fingerprint comparison.
+- Audit Artifact `12859860023`, ZIP SHA-256 `9d776347d95adf24f0ed8c1e921df81fb51daa08e18905e78e451a4594864de1`; the local downloaded ZIP passes `testzip()` and contains three files.
+- The report verifies exactly **48,000/48,000** production-to-independent-candidate financial TrialResult fingerprint matches and **0 mismatches**. Golden candidate map/manifest integrity also passed. This is `PASS_EXACT_MATCH` only; the Golden candidate approval field remains `NOT_EVALUATED_REQUIRES_SEPARATE_REVIEW`, Gate A is still `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`, and acceptance is not granted.
+- The same audit visited **98,323,918** daily snapshot rows, but recomputed **0** complete balance-sheet rows because required asset components were not persisted. All 20 source scenario exports have the reduced daily snapshot schema: `Cash`, `Capital`, `Retained_Earnings`, `Net_Equity`, `Active_Bikes`, `Owned_Transferred_Bikes`, `Pending_Claims`, partner reinvestment balances, `Final_Close_Date`, date and identity fields. Full balance-sheet evidence remains `MISSING_EVIDENCE`; zero observed balance mismatches in this audit is not a pass because there were no recomputed rows.
+- Source-level inspection identified the exporter scope: `monte_carlo._daily_snapshot` persists the reduced daily projection for statistical distributions, while `accounting.balance_sheet_snapshot` constructs a richer in-memory dictionary that includes receivables, gross bike assets, depreciation, total assets, and balance difference. The source scenario Artifact does not persist those richer fields for all 98m daily records. No field was inferred or backfilled; no historical Artifact or trial was rewritten.
+
+### Scoped follow-up audit (non-simulation)
+- Added `scripts/audit_s6_n2400_daily_equity_identity.py` blob `b5b538a835a372b66f750557959d8b31fa5dec8c` and `.github/workflows/s6-n2400-daily-equity-identity-audit.yml` blob `6140eccbd235d75c7e07d5a6a187b995e5624c44` in commit `ef6f25bc2b5dd718f9623f75fc4dffbc0f52ace3` on the temporary branch only.
+- This follow-up checks only the persisted, testable identity `Net_Equity == Capital + Retained_Earnings`, daily order/duplicate dates, row totals, 1..2400 coverage for each of 20 stochastic scenarios, source/cohort/schema identity, each file hash, and the source Run/Artifact API identities. It deliberately keeps the full Assets==Equity recheck as `MISSING_EVIDENCE`, and cannot grant Gate A/B or acceptance.
+- Run `40787081064`, tested SHA `ef6f25bc2b5dd718f9623f75fc4dffbc0f52ace3`, was `IN_PROGRESS` at last read after all 20 source Artifact downloads and API provenance capture succeeded. The streaming audit step was in progress; **no outcome or Artifact is claimed yet**. Do not launch another copy while it is active.
+
+### Updated R4 disposition
+| Item | Status | Evidence | Interpretation / action |
+|---|---|---|---|
+| Exact production-vs-Golden financial fingerprints | VERIFIED exact match (scoped) | Run `40784902124`, Artifact `12859860023`, digest `9d776347...` | 48,000/48,000; use as evidence for a separate candidate review only; do not declare Gate A approved |
+| Daily full balance sheet after-write verification | MISSING_EVIDENCE | Same Artifact; 98,323,918 rows seen, 0 full balance rows recomputed | Export omitted asset-side fields; do not infer, rebuild, or edit the historical data |
+| Persisted Net Equity arithmetic identity | IN_PROGRESS / NOT_EVALUATED | Run `40787081064` | Await only this exact Run's result; scoped identity does not replace Assets==Equity |
+| Gate B / convergence | FAIL_SCOPED / NOT_CONVERGED | N2400 statistical evaluation | 10/20 fail Gate B, 0/60 successful transitions; keep closed |
+| N4800 continuation | BLOCKED / NOT_EXECUTED | Current config remains N=2400 and source/gate blockers remain | No trial execution until statistical execution gate is accepted and preflight resolved |
+| Final delivery P17/P18 | BLOCKED / NOT_EXECUTED | Required files remain missing on main/work branch | No FINAL_ACCEPTED, no release |
+
+Preserve the distinction between the successful exact fingerprint comparison and the failed overall audit guard: the comparison itself is `PASS_EXACT_MATCH`, while full-accounting verification remains `MISSING_EVIDENCE`; neither grants production Gate A/B, convergence, or project acceptance.
