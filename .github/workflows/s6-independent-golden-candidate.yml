@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - "tmp/s6-independent-golden-da1a-20261028"
+    # Workflow-only tuning must not launch a duplicate 20-scenario Monte Carlo run.
     paths:
-      - ".github/workflows/s6-independent-golden-candidate.yml"
       - "scripts/s6_independent_golden_candidate.py"
   workflow_dispatch:
 
@@ -59,7 +59,7 @@ jobs:
     timeout-minutes: 360
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 20
       matrix:
         scenario:
           - C085_G100
