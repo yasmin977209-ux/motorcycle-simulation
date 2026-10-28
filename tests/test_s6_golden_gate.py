@@ -59,6 +59,7 @@ def make_evidence(tmp_path: Path, *, approve: bool = True):
     golden = {
         "schema_version": gate.STOCHASTIC_GOLDEN_SCHEMA,
         "status": gate.CANDIDATE_STATUS,
+        "run_id": "GOLDEN-RUN-800",
         "source_sha": SOURCE_SHA,
         "cohort_id": COHORT_ID,
         "master_seed": 20270101,
@@ -78,6 +79,8 @@ def make_evidence(tmp_path: Path, *, approve: bool = True):
     approval = {
         "approval_status": gate.APPROVED_GOLDEN_STATUS if approve else "PENDING_REVIEW",
         "approval_schema_version": "s6-golden-approval-manifest-v1",
+        "golden_run_id": "GOLDEN-RUN-800",
+        "production_run_id": "PRODUCTION-RUN-900",
         "golden_schema_version": gate.STOCHASTIC_GOLDEN_SCHEMA,
         "candidate_map_sha256": golden_sha,
         "source_sha": SOURCE_SHA,
@@ -105,6 +108,7 @@ def load(golden_path: Path, approval_path: Path):
         cohort_id=COHORT_ID,
         master_seed=20270101,
         required_trial_count=2,
+        production_run_id="PRODUCTION-RUN-900",
     )
 
 
@@ -198,6 +202,20 @@ def test_gate_a_rejects_scenario_coverage_gap(tmp_path):
     approval_path.write_text(json.dumps(approval, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     with pytest.raises(gate.GoldenEvidenceError, match="GOLDEN_SCENARIO_COVERAGE_MISMATCH"):
         load(golden_path, approval_path)
+
+
+def test_gate_a_rejects_using_the_production_run_as_its_own_golden(tmp_path):
+    golden_path, approval_path, _, _ = make_evidence(tmp_path)
+    with pytest.raises(gate.GoldenEvidenceError, match="GOLDEN_PRODUCTION_SELF_REFERENCE_FORBIDDEN"):
+        gate.load_approved_stochastic_golden(
+            golden_path,
+            approval_path,
+            source_sha=SOURCE_SHA,
+            cohort_id=COHORT_ID,
+            master_seed=20270101,
+            required_trial_count=2,
+            production_run_id="GOLDEN-RUN-800",
+        )
 
 
 def test_scenario_map_digest_rejects_invalid_fingerprint():
