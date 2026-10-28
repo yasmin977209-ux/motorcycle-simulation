@@ -552,6 +552,170 @@ def resolve_aggregate_checkpoint_n(
     raise RuntimeError(f"S6_AGGREGATE_REQUESTED_N_MISMATCH:requested={requested_n}:artifacts={actual_n}")
 
 
+def evaluate_s6_aggregate_statistics(
+    rows_by_scenario: dict[str, dict[int, dict[str, Any]]],
+    *, source_sha: str, cohort_id: str, run_id: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Evaluate Gate B/IUT at all completed cumulative points; never promote to final acceptance."""
+    evaluations: dict[str, Any] = {}
+    registry: list[dict[str, Any]] = []
+    checkpoint_counts: dict[str, dict[str, int]] = {}
+    stability_history: dict[str, Any] = {
+        "schema_version": "s6-stability-history-v1",
+        "source_sha": source_sha,
+        "cohort_id": cohort_id,
+        "aggregation_run_id": str(run_id),
+        "checkpoint_schedule": [300, 600, 1200, 2400],
+        "historical_cohorts_imported": False,
+        "convergence_authorized": False,
+        "per_scenario": {},
+    }
+    for scenario in sorted(rows_by_scenario):
+        point_records: list[dict[str, Any]] = []
+        try:
+            records = rows_by_scenario[scenario]
+            ordered_rows = [records[tid] for tid in sorted(records)]
+            results = [result_from_record(row) for row in ordered_rows]
+            validate_cumulative_trial_ids([item.trial_id for item in results], len(results), scenario_id=scenario)
+            points: list[dict[str, Any]] = []
+            for n in (300, 600, 1200, 2400):
+                if n > len(results):
+                    continue
+                sample = results[:n]
+                if [item.trial_id for item in sample] != list(range(1, n + 1)):
+                    raise RuntimeError(f"S6_STATISTICAL_CHECKPOINT_TRIAL_COVERAGE_INVALID:{scenario}:N{n}")
+                k = stats_integrity.statistical_checkpoint_index(n)
+                mean_samples = {
+                    "Final_Net_Project_Equity": [int(item.final_net_project_equity) for item in sample],
+                    "Partner1_Final_Entitlement": [int(item.partner1_final_entitlement) for item in sample],
+                    "Partner2_Final_Entitlement": [int(item.partner2_final_entitlement) for item in sample],
+                }
+                try:
+                    gate_b = stats_integrity.evaluate_gate_b_statistical(mean_samples, sample, k=k)
+                except Exception as exc:
+                    gate_b = {"status": "EVALUATION_ERROR", "stable": False, "n": n,
+                              "spending_index": k, "error_type": type(exc).__name__, "error": str(exc)}
+                p50 = stats_integrity.linear_quantile_fraction(
+                    [int(item.cumulative_project_profit) for item in sample], Fraction(1, 2),
+                )
+                loss_probability = Fraction(
+                    sum(1 for item in sample if int(item.cumulative_project_profit) < 0), n,
+                )
+                point = {
+                    "n": n,
+                    "spending_index": k,
+                    "alpha_s_k_numerator": stats_integrity.sequential_alpha_fraction(k).numerator,
+                    "alpha_s_k_denominator": stats_integrity.sequential_alpha_fraction(k).denominator,
+                    "gate_a": {
+                        "status": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+                        "checked": False,
+                        "stable": False,
+                        "source_sha": source_sha,
+                        "cohort_id": cohort_id,
+                    },
+                    "gate_b": gate_b,
+                    "p50_cumulative_project_profit": {"numerator": p50.numerator, "denominator": p50.denominator},
+                    "probability_accounting_loss": {"numerator": loss_probability.numerator,
+                                                     "denominator": loss_probability.denominator},
+                }
+                points.append(point)
+                registry.append(stats_integrity.number_registry_entry(
+                    f"{scenario}.N{n}.P50_Cumulative_Project_Profit", p50,
+                    source=f"{source_sha}/{cohort_id}/{scenario}/N{n}/P50_Cumulative_Project_Profit",
+                ))
+                registry.append(stats_integrity.number_registry_entry(
+                    f"{scenario}.N{n}.Probability_of_Accounting_Loss", loss_probability,
+                    source=f"{source_sha}/{cohort_id}/{scenario}/N{n}/Probability_of_Accounting_Loss",
+                ))
+                if gate_b.get("status") not in {"EVALUATION_ERROR", "K_SPEC / BLOCKED"}:
+                    for name, summary in gate_b.get("financial_means", {}).items():
+                        registry.append(stats_integrity.number_registry_entry(
+                            f"{scenario}.N{n}.mean.{name}",
+                            Fraction(int(summary["mean_exact_numerator"]), int(summary["mean_exact_denominator"])),
+                            source=f"{source_sha}/{cohort_id}/{scenario}/N{n}/GateB/{name}",
+                        ))
+                    for name, summary in gate_b.get("indicators", {}).get("indicators", {}).items():
+                        registry.append(stats_integrity.number_registry_entry(
+                            f"{scenario}.N{n}.indicator.{name}",
+                            Fraction(int(summary["estimate_exact_numerator"]), int(summary["estimate_exact_denominator"])),
+                            source=f"{source_sha}/{cohort_id}/{scenario}/N{n}/GateB/{name}",
+                        ))
+                point_records.append(point)
+            transitions = [
+                stats_integrity.evaluate_statistical_transition(previous, current)
+                for previous, current in zip(point_records, point_records[1:])
+            ]
+            consecutive = 0
+            for transition in transitions:
+                consecutive = consecutive + 1 if transition["passed"] else 0
+            evaluation = {
+                "scenario_id": scenario,
+                "source_sha": source_sha,
+                "cohort_id": cohort_id,
+                "status": "EXECUTED_POINTWISE_STATISTICS_NOT_FINAL_ACCEPTANCE",
+                "checkpoint_points": point_records,
+                "transitions": transitions,
+                "consecutive_successful_transitions": consecutive,
+                "scenario_stability": "CONVERGED" if consecutive >= constants.STABILITY_CONSECUTIVE_CHECKS_REQUIRED else "NOT_CONVERGED",
+            }
+        except Exception as exc:
+            evaluation = {
+                "scenario_id": scenario,
+                "source_sha": source_sha,
+                "cohort_id": cohort_id,
+                "status": "EVALUATION_ERROR",
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "checkpoint_points": point_records,
+                "transitions": [],
+                "consecutive_successful_transitions": 0,
+                "scenario_stability": "NOT_CONVERGED",
+            }
+        evaluations[scenario] = evaluation
+        stability_history["per_scenario"][scenario] = {
+            "checkpoint_points": evaluation["checkpoint_points"],
+            "transitions": evaluation["transitions"],
+            "consecutive_successful_transitions": evaluation["consecutive_successful_transitions"],
+            "status": evaluation["scenario_stability"],
+        }
+        for point in evaluation["checkpoint_points"]:
+            counts = checkpoint_counts.setdefault(str(point["n"]), {"PASS": 0, "FAIL": 0, "EVALUATION_ERROR": 0, "BLOCKED": 0})
+            status = str(point["gate_b"].get("status", "EVALUATION_ERROR"))
+            counts[status if status in counts else "BLOCKED"] += 1
+
+    latest_n = max((int(point["n"]) for item in evaluations.values() for point in item.get("checkpoint_points", [])), default=0)
+    transition_count = sum(len(item.get("transitions", [])) for item in evaluations.values())
+    passed_transitions = sum(
+        1 for item in evaluations.values() for transition in item.get("transitions", [])
+        if transition.get("passed") is True
+    )
+    evaluation_summary = {
+        "schema_version": "s6-v23-statistical-evaluation-v1",
+        "status": "EXECUTED_POINTWISE_STATISTICS_NOT_FINAL_ACCEPTANCE",
+        "run_id": str(run_id), "source_sha": source_sha, "cohort_id": cohort_id,
+        "latest_checkpoint_n": latest_n, "scenario_count": len(evaluations),
+        "checkpoint_gate_b_counts": checkpoint_counts,
+        "transition_count": transition_count, "successful_transition_count": passed_transitions,
+        "gate_a_final": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+        "gate_b_final": "NOT_FINAL_UNTIL_ALL_FOUR_POINTS_AND_THREE_TRANSITIONS",
+        "scenario_stability_final": "NOT_CONVERGED",
+        "test192_reuse": {
+            "run_ids": [40531095239, 40546712685],
+            "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
+            "rerun": False,
+        },
+        "scenarios": evaluations,
+    }
+    stability_history["final_gate_a_status"] = evaluation_summary["gate_a_final"]
+    stability_history["final_gate_b_status"] = evaluation_summary["gate_b_final"]
+    number_registry = {
+        "schema_version": "number-registry-v1",
+        "rounding": "Decimal.quantize(Decimal('0.01'), ROUND_HALF_EVEN); exact numerator/denominator retained",
+        "entries": registry,
+    }
+    return evaluation_summary, stability_history, number_registry
+
+
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
@@ -720,10 +884,20 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             raise RuntimeError(f"S6_OPT1_DERIVED_PROVENANCE_MISMATCH:{scenario}")
         opt1_derived_trial_rows+=len(expected_derived)
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
+    statistical_evaluation, stability_history, number_registry = evaluate_s6_aggregate_statistics(
+        scenario_rows_by_id, source_sha=args.source_sha,
+        cohort_id=f"s6-v23-{args.source_sha[:8]}", run_id=args.run_id,
+    )
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
         pq.write_table(pa.Table.from_pylist(rows),out/name,compression="zstd")
     write_json(out/"c100_reuse.json",c100_reuse)
-    output_paths=[out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json"]
+    write_json(out/"statistical_evaluation.json",statistical_evaluation)
+    write_json(out/"stability_history.json",stability_history)
+    write_json(out/"number_registry.json",number_registry)
+    output_paths=[
+        out/"trials_summary.parquet",out/"daily_distribution.parquet",out/"c100_reuse.json",
+        out/"statistical_evaluation.json",out/"stability_history.json",out/"number_registry.json",
+    ]
     source_metadata_sha256=None
     if source_metadata_path:
         source_metadata_bytes=Path(source_metadata_path).read_bytes()
@@ -749,6 +923,17 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
         "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else ("SOURCE_SCENARIO_MANIFESTS_COMPLETE" if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else "NOT_PROVIDED"),
             "sha256":source_metadata_sha256,"scenario_count":len(source_metadata.get("scenarios",{})) if source_metadata_path else (len(expected) if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else 0)},
+        "statistical_evaluation":{
+            "status":statistical_evaluation["status"],
+            "latest_checkpoint_n":statistical_evaluation["latest_checkpoint_n"],
+            "scenario_count":statistical_evaluation["scenario_count"],
+            "checkpoint_gate_b_counts":statistical_evaluation["checkpoint_gate_b_counts"],
+            "transition_count":statistical_evaluation["transition_count"],
+            "successful_transition_count":statistical_evaluation["successful_transition_count"],
+            "gate_a_final":statistical_evaluation["gate_a_final"],
+            "gate_b_final":statistical_evaluation["gate_b_final"],
+            "scenario_stability_final":statistical_evaluation["scenario_stability_final"],
+        },
         "test192_reuse":{"run_ids":[40531095239,40546712685],"proof_sha256":"f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b","rerun":False},
         "acceptance_status":{"gate_a":"NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
             "gate_b":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if checkpoint_n==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
@@ -756,6 +941,16 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS" if all(row["n_unique_paths"] is not None for row in summaries) else "UNDEFINED_BUSINESS_RULE"},
         "files":files}
     write_json(out/"manifest.json",manifest)
+    print(json.dumps({
+        "status": "S6_STATISTICAL_EVALUATION_SUMMARY",
+        "checkpoint_n": statistical_evaluation["latest_checkpoint_n"],
+        "checkpoint_gate_b_counts": statistical_evaluation["checkpoint_gate_b_counts"],
+        "transition_count": statistical_evaluation["transition_count"],
+        "successful_transition_count": statistical_evaluation["successful_transition_count"],
+        "gate_a_final": statistical_evaluation["gate_a_final"],
+        "gate_b_final": statistical_evaluation["gate_b_final"],
+        "stability_final": statistical_evaluation["scenario_stability_final"],
+    }, ensure_ascii=False, sort_keys=True))
     print(json.dumps({"status":"S6_CUMULATIVE_CHECKPOINT_EXECUTED","source_sha":args.source_sha,
         "cohort_id":manifest["cohort_id"],"checkpoint_n":checkpoint_n,"scenario_count":len(expected),"trial_rows":len(all_trials),
         "daily_distribution_rows":len(all_daily),"stochastic_scenario_count":len(expected),
