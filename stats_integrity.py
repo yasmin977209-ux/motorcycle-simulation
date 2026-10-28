@@ -39,6 +39,22 @@ def resolve_n_unique_paths(scenario_id: str, rng_draw_counts: Iterable[int], uni
     return unique_daily_paths
 
 
+def validate_cumulative_trial_ids(trial_ids: Iterable[int], expected_n: int, *, scenario_id: str) -> list[int]:
+    """Require the complete, duplicate-free cumulative trial sequence 1..N."""
+    if isinstance(expected_n, bool) or not isinstance(expected_n, int) or expected_n < 1:
+        raise ValueError("S6_EXPECTED_TRIAL_COUNT_INVALID")
+    ids = list(trial_ids)
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in ids):
+        raise TypeError(f"S6_TRIAL_ID_MUST_BE_INTEGER:{scenario_id}")
+    if len(ids) != expected_n:
+        raise RuntimeError(f"S6_TRIAL_ID_COUNT_MISMATCH:{scenario_id}:{len(ids)}:{expected_n}")
+    if len(set(ids)) != len(ids):
+        raise RuntimeError(f"S6_DUPLICATE_TRIAL_ID:{scenario_id}")
+    if sorted(ids) != list(range(1, expected_n + 1)):
+        raise RuntimeError(f"S6_TRIAL_ID_COVERAGE_MISMATCH:{scenario_id}")
+    return sorted(ids)
+
+
 def statistical_checkpoint_index(n: int) -> int:
     """Map approved N=300*2**(k-1) checkpoints to their 1-based spending index."""
     if not isinstance(n, int) or isinstance(n, bool) or n < 300 or n % 300:
