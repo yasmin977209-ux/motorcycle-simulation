@@ -223,8 +223,22 @@ def download_previous_scenario_artifact(run_id: int, scenario_id: str, destinati
             payload = json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError) as exc:
         raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_LIST_FAILED:{type(exc).__name__}") from exc
-    expected_names = {f"s6-n600-{scenario_id}-{run_id}", f"s6-n600-{scenario_id.replace('_G', '-G')}-{run_id}"}
-    matches = [a for a in payload.get("artifacts", []) if a.get("name") in expected_names and not a.get("expired")]
+    # Artifact labels in legacy workflows may retain the old N300 label even when
+    # the manifest is a later cumulative checkpoint. Select by pinned run and scenario,
+    # then validate the manifest's N and trial IDs before reuse.
+    expected_scenario = scenario_id.replace("_", "-")
+    matches = []
+    for artifact in payload.get("artifacts", []):
+        name = str(artifact.get("name", ""))
+        if artifact.get("expired") or not name.startswith("s6-n") or not name.endswith(f"-{run_id}"):
+            continue
+        remainder = name[len("s6-n"):]
+        checkpoint_label, separator, scenario_label = remainder.partition("-")
+        if not separator or not checkpoint_label.isdigit():
+            continue
+        scenario_label = scenario_label[:-(len(str(run_id)) + 1)]
+        if scenario_label.replace("_", "-") == expected_scenario:
+            matches.append(artifact)
     if len(matches) != 1:
         raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_NOT_UNIQUE:{scenario_id}:{len(matches)}")
     archive_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{int(matches[0]['id'])}/zip"
