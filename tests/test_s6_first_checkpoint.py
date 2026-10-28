@@ -33,6 +33,17 @@ def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
+def test_cumulative_trial_id_contract_rejects_duplicates_and_missing_ids():
+    from stats_integrity import validate_cumulative_trial_ids
+    assert validate_cumulative_trial_ids([3, 1, 2], 3, scenario_id="C070_G100") == [1, 2, 3]
+    with pytest.raises(RuntimeError, match="S6_DUPLICATE_TRIAL_ID"):
+        validate_cumulative_trial_ids([1, 2, 2], 3, scenario_id="C070_G100")
+    with pytest.raises(RuntimeError, match="S6_TRIAL_ID_COVERAGE_MISMATCH"):
+        validate_cumulative_trial_ids([1, 2, 4], 3, scenario_id="C070_G100")
+    with pytest.raises(RuntimeError, match="S6_TRIAL_ID_COUNT_MISMATCH"):
+        validate_cumulative_trial_ids([1, 2], 3, scenario_id="C070_G100")
+
+
 def test_cumulative_rng_audit_checks_cross_checkpoint_duplicates_and_exempts_zero_draws():
     source_sha = "a" * 40
     def record(scenario, trial_id, checksum, draws):
