@@ -46,7 +46,7 @@ jobs:
           pattern: s6-n2400-C*-40731224990
           path: audit-input/scenarios
           merge-multiple: false
-      - name: Recompute persisted TrialResult fingerprints; compare source rows with aggregate
+      - name: Recompute persisted TrialResult fingerprints; verify v2.3 row schema and compare aggregate
         run: |
           set -euo pipefail
           python -m py_compile scripts/audit_s6_n2400_aggregate.py scripts/s6_first_checkpoint.py
