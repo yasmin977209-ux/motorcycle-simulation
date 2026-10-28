@@ -120,14 +120,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  lower-g:
-    name: S6 N4800 ${{ matrix.scenario }}
+  lower-g-opt1:
+    name: S6 N4800 OPT-1 eligible ${{ matrix.scenario }}
     needs: [preflight, g100-base]
     runs-on: ubuntu-latest
     timeout-minutes: 360
     strategy:
       fail-fast: false
-      max-parallel: 16
+      max-parallel: 8
       matrix:
         scenario:
           - C085_G070
@@ -138,14 +138,6 @@ jobs:
           - C070_G050
           - C070_G030
           - C070_G000
-          - C050_G070
-          - C050_G050
-          - C050_G030
-          - C050_G000
-          - C030_G070
-          - C030_G050
-          - C030_G030
-          - C030_G000
     steps:
       - uses: actions/checkout@v4
         with:
@@ -163,7 +155,6 @@ jobs:
           name: s6-n2400-${{ matrix.scenario }}-40731224990
           path: results_stage7_s6/previous
       - name: Download current N4800 G100 base only where OPT-1 applies
-        if: startsWith(matrix.scenario, 'C085_') || startsWith(matrix.scenario, 'C070_')
         uses: actions/download-artifact@v4
         with:
           name: s6-n4800-${{ startsWith(matrix.scenario, 'C085_') && 'C085' || 'C070' }}-G100-${{ github.run_id }}
@@ -192,9 +183,66 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+
+  lower-g-full-run:
+    name: S6 N4800 full-run non-OPT-1 ${{ matrix.scenario }}
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        scenario:
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Download immutable N2400 scenario checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-n2400-${{ matrix.scenario }}-40731224990
+          path: results_stage7_s6/previous
+      - name: Execute full incremental runs for C030/C050; OPT-1 is not eligible
+        shell: bash
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python scripts/s6_first_checkpoint.py \
+            --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --trials "$S6_TRIAL_COUNT" --trial-start "$S6_TRIAL_START" --trial-end "$S6_TRIAL_COUNT" \
+            --workers "$S6_WORKERS" --previous-dir results_stage7_s6/previous \
+            --output-dir "results_stage7_s6/$SCENARIO"
+          test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n4800-${{ matrix.scenario }}-${{ github.run_id }}
+          path: results_stage7_s6/${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 30
+
   aggregate:
     name: Validate cumulative N4800 evidence and keep acceptance gates closed
-    needs: [preflight, g100-base, lower-g]
+    needs: [preflight, g100-base, lower-g-opt1, lower-g-full-run]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -236,6 +284,7 @@ jobs:
           assert m["checkpoint_n"]==4800 and m["source_run_id"]==m["run_id"]
           assert m["scenario_count"]==20
           assert m["total_scenario_combinations"]==25 and m["c100_reused_scenario_count"]==5
+          assert m["c100_reuse"]["scenario_ids"] == ["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000"]
           assert sum(x["n_total"] for x in m["scenario_summaries"])==96000
           assert all(x["n_unique_paths"]==x["unique_daily_paths"] and
             x["n_unique_paths_status"]=="OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
