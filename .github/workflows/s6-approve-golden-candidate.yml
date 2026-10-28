@@ -1,0 +1,85 @@
+name: S6 approve independently verified Golden candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      golden_run_id:
+        description: Completed independent Golden candidate workflow run ID
+        required: true
+        type: string
+      production_run_id:
+        description: Completed production run ID that will be compared against this Golden
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-golden-approval-${{ inputs.golden_run_id }}-${{ inputs.production_run_id }}
+  cancel-in-progress: false
+  queue: max
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  GOLDEN_SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+
+jobs:
+  verify-and-approve:
+    name: Verify complete Golden provenance and issue scoped approval manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout verifier code with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all independent per-scenario candidate maps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-golden-candidate-*-${{ inputs.golden_run_id }}
+          path: results/golden-approval-scenario-input
+          run-id: ${{ inputs.golden_run_id }}
+          github-token: ${{ github.token }}
+          merge-multiple: false
+      - name: Download independent aggregate fingerprint map and manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: s6-independent-golden-da1a-n2400-${{ inputs.golden_run_id }}
+          path: results/golden-approval-aggregate-input
+          run-id: ${{ inputs.golden_run_id }}
+          github-token: ${{ github.token }}
+      - name: Compile verifier and independently verify exact source tree, artifacts, and run separation
+        shell: bash
+        env:
+          GOLDEN_RUN_ID: ${{ inputs.golden_run_id }}
+          PRODUCTION_RUN_ID: ${{ inputs.production_run_id }}
+        run: |
+          set -euo pipefail
+          test "$GOLDEN_RUN_ID" != "$PRODUCTION_RUN_ID"
+          python -m py_compile scripts/s6_golden_gate.py scripts/s6_approve_golden_candidate.py
+          python scripts/s6_approve_golden_candidate.py \
+            --aggregate-input results/golden-approval-aggregate-input \
+            --scenario-input results/golden-approval-scenario-input \
+            --production-run-id "$PRODUCTION_RUN_ID" \
+            --output-dir results/golden-approval-output
+          test -s results/golden-approval-output/independent_golden_fingerprints.json
+          test -s results/golden-approval-output/independent_golden_manifest.json
+          test -s results/golden-approval-output/golden_approval.json
+      - name: Upload source-pinned approved Golden map and audit trail
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-approved-golden-da1a-n2400-${{ github.run_id }}
+          path: results/golden-approval-output/
+          if-no-files-found: error
+          retention-days: 30
