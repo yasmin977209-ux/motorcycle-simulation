@@ -785,6 +785,8 @@ def evaluate_s6_aggregate_statistics(
     }
     stability_history["final_gate_a_status"] = evaluation_summary["gate_a_final"]
     stability_history["final_gate_b_status"] = evaluation_summary["gate_b_final"]
+    stability_history["final_status"] = evaluation_summary["scenario_stability_final"]
+    stability_history["convergence_authorized"] = evaluation_summary["scenario_stability_final"] == "CONVERGED"
     number_registry = {
         "schema_version": "number-registry-v1",
         "rounding": "Decimal.quantize(Decimal('0.01'), ROUND_HALF_EVEN); exact numerator/denominator retained",
