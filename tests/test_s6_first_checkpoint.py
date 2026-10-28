@@ -13,6 +13,11 @@ from scripts import s6_first_checkpoint as s6
 def test_time_uniform_method_identifier_tracks_normative_v23_clause():
     assert s6.constants.TIME_UNIFORM_METHOD_ID == "V2.3_14_11_4_ALPHA_SPENDING_V1"
     assert "APPENDIX_E" not in s6.constants.TIME_UNIFORM_METHOD_ID
+    from pathlib import Path
+    policy = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+    spending = policy["approved_policy"]["sequential_alpha_spending"]
+    assert spending["checkpoints"] == [300, 600, 1200, 2400]
+    assert spending["checkpoint_indices"] == [1, 2, 3, 4]
 
 
 def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
@@ -34,17 +39,18 @@ def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
-def test_action_checkpoint_config_pins_n1200_resume(monkeypatch):
+def test_action_checkpoint_config_pins_n2400_resume(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     config = s6._s6_action_checkpoint_config()
     assert config is not None
-    assert config["active_target_trials"] == 1200
-    assert config["trial_start"] == 601
-    assert config["trial_end"] == 1200
-    assert config["previous_run_id"] == 40582501871
+    assert config["active_target_trials"] == 2400
+    assert config["trial_start"] == 1201
+    assert config["trial_end"] == 2400
+    assert config["previous_run_id"] == 40596643263
     assert config["n300_aggregate_run_id"] == 40588234012
     assert config["n600_aggregate_run_id"] == 40582501871
+    assert config["n1200_aggregate_run_id"] == 40596643263
     assert config["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
     assert config["cohort_id"] == "s6-v23-da1a9ea9"
 
@@ -67,7 +73,7 @@ def test_action_checkpoint_config_does_not_override_aggregate_trial_count(monkey
         mode="aggregate", source_sha="da1a9ea9b5cd789c944de3f07b08395bb67c49e7", trials=300,
     )
     config = s6.apply_action_checkpoint_config(args)
-    assert config is not None and config["active_target_trials"] == 1200
+    assert config is not None and config["active_target_trials"] == 2400
     assert args.trials == 300
     assert args._s6_checkpoint_config["cohort_id"] == "s6-v23-da1a9ea9"
 
