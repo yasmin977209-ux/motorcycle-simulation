@@ -1,8 +1,8 @@
 {
-  "active_target_trials": 1200,
-  "trial_start": 601,
-  "trial_end": 1200,
-  "previous_run_id": 40582501871,
+  "active_target_trials": 2400,
+  "trial_start": 1201,
+  "trial_end": 2400,
+  "previous_run_id": 40596643263,
   "n300_aggregate_run_id": 40588234012,
   "n600_aggregate_run_id": 40582501871,
   "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
