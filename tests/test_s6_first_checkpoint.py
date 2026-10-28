@@ -39,20 +39,39 @@ def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
-def test_action_checkpoint_config_pins_n2400_resume(monkeypatch):
+def test_action_checkpoint_config_pins_valid_incremental_resume(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     config = s6._s6_action_checkpoint_config()
     assert config is not None
-    assert config["active_target_trials"] == 2400
-    assert config["trial_start"] == 1201
-    assert config["trial_end"] == 2400
-    assert config["previous_run_id"] == 40596643263
+    target = config["active_target_trials"]
+    assert target >= 2400
+    assert s6.validate_checkpoint_target_range(
+        target, config["trial_start"], config["trial_end"]
+    ) == target // 2
+    assert config["previous_run_id"] > 0
     assert config["n300_aggregate_run_id"] == 40588234012
     assert config["n600_aggregate_run_id"] == 40582501871
     assert config["n1200_aggregate_run_id"] == 40596643263
     assert config["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
     assert config["cohort_id"] == "s6-v23-da1a9ea9"
+
+
+def test_statistical_checkpoint_schedule_has_no_fixed_upper_cap():
+    assert s6.statistical_checkpoint_schedule(300) == [300]
+    assert s6.statistical_checkpoint_schedule(2400) == [300, 600, 1200, 2400]
+    assert s6.statistical_checkpoint_schedule(4800) == [300, 600, 1200, 2400, 4800]
+    assert s6.statistical_checkpoint_schedule(9600) == [300, 600, 1200, 2400, 4800, 9600]
+    assert s6.stats_integrity.statistical_checkpoint_index(4800) == 5
+    assert s6.validate_checkpoint_target_range(4800, 2401, 4800) == 2400
+    assert s6.validate_checkpoint_target_range(9600, 4801, 9600) == 4800
+
+
+def test_statistical_checkpoint_schedule_rejects_nonapproved_checkpoints():
+    with pytest.raises(ValueError, match="S6_CHECKPOINT_N_NOT_APPROVED_DOUBLING_POINT"):
+        s6.statistical_checkpoint_schedule(4801)
+    with pytest.raises(RuntimeError, match="S6_CHECKPOINT_CONFIG_RANGE_INVALID"):
+        s6.validate_checkpoint_target_range(4800, 1201, 4800)
 
 
 def test_aggregate_checkpoint_n_is_resolved_from_verified_manifest_counts():
