@@ -180,11 +180,6 @@ def main() -> int:
             raise RuntimeError(f"UNIQUE_DAILY_PATH_COUNT_MISMATCH:{scenario}")
         trial_rows, trial_sha = row_digest(trial_path)
         daily_rows, daily_sha = row_digest(daily_path)
-        for parquet_path, digest in ((trial_path, digest_trials), (daily_path, digest_daily)):
-            for batch in pq.ParquetFile(parquet_path).iter_batches(batch_size=8192):
-                for row in batch.to_pylist():
-                    digest.update(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode())
-                    digest.update(bytes([10]))
         scenarios[scenario] = {
             "trial_rows": trial_rows, "trial_row_sha256": trial_sha,
             "daily_distribution_rows": daily_rows, "daily_row_sha256": daily_sha,
@@ -198,6 +193,20 @@ def main() -> int:
 
     if set(scenarios) != set(EXPECTED_SCENARIOS): raise RuntimeError("SOURCE_SCENARIO_SET_NOT_EXACT")
     if sum(int(x["n_total"]) for x in m["scenario_summaries"]) != 48_000: raise RuntimeError("AGGREGATE_TRIAL_ROW_SUM_INVALID")
+    # Match the production aggregator's exact row-concatenation order, not filesystem ZIP order.
+    # Artifact directory names differ for G100 (hyphen) versus lower-G (underscore).
+    for scenario in EXPECTED_SCENARIOS:
+        folder = ordered_dirs[scenario]
+        for filename, digest in (("trials_summary.parquet", digest_trials),
+                                 ("daily_distribution.parquet", digest_daily)):
+            path = folder / filename
+            for batch in pq.ParquetFile(path).iter_batches(batch_size=8192):
+                for row in batch.to_pylist():
+                    digest.update(json.dumps(
+                        row, ensure_ascii=False, sort_keys=True,
+                        separators=(",", ":"), default=str
+                    ).encode())
+                    digest.update(bytes([10]))
     trial_rows, trial_sha = row_digest(agg_dir / "trials_summary.parquet")
     daily_rows, daily_sha = row_digest(agg_dir / "daily_distribution.parquet")
     if trial_rows != 48_000 or digest_trials.hexdigest() != trial_sha:
