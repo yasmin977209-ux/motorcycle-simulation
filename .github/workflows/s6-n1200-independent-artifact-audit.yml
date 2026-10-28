@@ -13,7 +13,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: s6-n1200-independent-audit
+  group: s6-n1200-independent-audit-v2
   cancel-in-progress: false
 
 env:
@@ -137,7 +137,9 @@ jobs:
           def read_json(p): return json.loads(p.read_text(encoding="utf-8"))
           def verify_exact_distribution(rows, scenario):
               if not rows: raise RuntimeError(f"{scenario}:DAILY_DISTRIBUTION_EMPTY")
-              identity_rows(rows,scenario,"daily_distribution")
+              for i,row in enumerate(rows):
+                  if row.get("scenario_id")!=scenario or row.get("source_sha")!=SOURCE or row.get("cohort_id")!=COHORT:
+                      raise RuntimeError(f"{scenario}:DAILY_DISTRIBUTION_IDENTITY_MISMATCH row={i}")
               expected_keys=set()
               by_date=set()
               for i,row in enumerate(rows):
