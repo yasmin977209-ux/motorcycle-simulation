@@ -221,7 +221,9 @@ def download_previous_scenario_artifact(run_id: int, scenario_id: str, destinati
     try:
         with urlopen(Request(api, headers=headers), timeout=60) as response:
             payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError) as exc:
+    except HTTPError as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_LIST_FAILED:HTTP_{exc.code}") from exc
+    except (URLError, TimeoutError) as exc:
         raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_LIST_FAILED:{type(exc).__name__}") from exc
     # Artifact labels in legacy workflows may retain the old N300 label even when
     # the manifest is a later cumulative checkpoint. Select by pinned run and scenario,
@@ -245,7 +247,9 @@ def download_previous_scenario_artifact(run_id: int, scenario_id: str, destinati
     try:
         with urlopen(Request(archive_url, headers=headers), timeout=300) as response:
             data = response.read()
-    except (HTTPError, URLError, TimeoutError) as exc:
+    except HTTPError as exc:
+        raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_DOWNLOAD_FAILED:{scenario_id}:HTTP_{exc.code}") from exc
+    except (URLError, TimeoutError) as exc:
         raise RuntimeError(f"S6_PREVIOUS_ARTIFACT_DOWNLOAD_FAILED:{scenario_id}:{type(exc).__name__}") from exc
     destination.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(prefix="s6-prev-", suffix=".zip", delete=False) as tmp:
