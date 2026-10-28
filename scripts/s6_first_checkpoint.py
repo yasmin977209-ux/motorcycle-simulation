@@ -11,7 +11,7 @@ import tempfile, zipfile
 import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, monte_carlo, rng, validation
-from stats_integrity import resolve_n_unique_paths
+from stats_integrity import resolve_n_unique_paths, validate_cumulative_trial_ids
 
 EXPECTED_C100_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327"
 EXPECTED_C100_MANIFEST_SHA256 = "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
@@ -318,8 +318,7 @@ def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str
             raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_FILE_HASH_MISMATCH:{name}")
     rows = pq.read_table(previous_dir / "trials_summary.parquet").to_pylist()
     ids = [int(row["trial_id"]) for row in rows]
-    if ids != list(range(1, expected_n + 1)):
-        raise RuntimeError("S6_PREVIOUS_CHECKPOINT_TRIAL_ID_COVERAGE_MISMATCH")
+    validate_cumulative_trial_ids(ids, expected_n, scenario_id=scenario_id)
     results = {int(row["trial_id"]): result_from_record(row) for row in rows}
     derived = {int(row["trial_id"]): row.get("derived_from") for row in rows}
     daily_rows = pq.read_table(previous_dir / "daily_snapshots.parquet").to_pylist()
@@ -530,7 +529,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         base,m=by_scenario[scenario]
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
         ids=[int(row["trial_id"]) for row in rows]
-        if ids!=list(range(1,checkpoint_n+1)): raise RuntimeError(f"S6_TRIAL_ID_SEQUENCE_MISMATCH:{scenario}")
+        validate_cumulative_trial_ids(ids, checkpoint_n, scenario_id=scenario)
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
