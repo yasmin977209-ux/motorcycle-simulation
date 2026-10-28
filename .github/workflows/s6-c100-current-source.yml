@@ -1,0 +1,129 @@
+name: S6 v2.3 C100 current-source deterministic reproduction N2400
+
+on:
+  push:
+    branches:
+      - "tmp/s6-c100-current-source-da1a-20261028"
+    paths:
+      - ".github/workflows/s6-c100-current-source.yml"
+      - "scripts/s6_c100_current_source.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-c100-current-source-da1a-n2400
+  cancel-in-progress: false
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  MASTER_SEED: "20270101"
+  C100_WORKERS: "2"
+
+jobs:
+  source-lock:
+    name: Verify exact v2.3 source blobs, reference, seed and cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Verify model source lock and immutable policy hash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_c100_current_source.py
+          python scripts/s6_c100_current_source.py --help
+          python - <<'PY'
+          import hashlib, os, subprocess, constants
+          from pathlib import Path
+          def git(*a): return subprocess.run(["git",*a],check=True,capture_output=True,text=True).stdout.strip()
+          source="da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+          paths=("constants.py","dateutils.py","daily_engine.py","entities.py","monte_carlo.py","rng.py","validation.py","stats_integrity.py")
+          assert git("rev-parse","HEAD")==os.environ["GITHUB_SHA"]
+          assert constants.MASTER_SEED==20270101
+          reference=Path("المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md")
+          assert hashlib.sha256(reference.read_bytes()).hexdigest()=="e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
+          assert os.environ["GITHUB_REF"]=="refs/heads/tmp/s6-c100-current-source-da1a-20261028"
+          for path in paths:
+              assert git("rev-parse",f"{source}:{path}")==git("rev-parse",f"HEAD:{path}"),path
+          print("C100_CURRENT_SOURCE_LOCK_PASS; SOURCE_SHA da1a; seed 20270101; all eight model blobs pinned")
+          PY
+
+  scenario:
+    name: Execute current-source deterministic C100 ${{ matrix.scenario }} N2400
+    needs: source-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        scenario: ["C100_G100","C100_G070","C100_G050","C100_G030","C100_G000"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Run full daily trials 1..2400 for this exact C100/G combination
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+          GITHUB_RUN_ID_VALUE: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python scripts/s6_c100_current_source.py --mode scenario --scenario "$SCENARIO" --workers "$C100_WORKERS" --output-root c100-output
+          test -s "c100-output/$SCENARIO/scenario_manifest.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-c100-current-${{ matrix.scenario }}-${{ github.run_id }}
+          path: c100-output/${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    name: Verify five C100 paths and deterministic equality
+    needs: [source-lock, scenario]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Download all five C100 artifacts from this run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-c100-current-C100_G*-${{ github.run_id }}
+          path: c100-input
+          merge-multiple: false
+      - name: Validate current-source C100 coverage and equality across G
+        run: |
+          set -euo pipefail
+          test "$(find c100-input -name scenario_manifest.json | wc -l)" -eq 5
+          python scripts/s6_c100_current_source.py --mode aggregate --input-root c100-input --output-root c100-output-aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-c100-current-source-aggregate-${{ github.run_id }}
+          path: c100-output-aggregate/
+          if-no-files-found: error
+          retention-days: 30
