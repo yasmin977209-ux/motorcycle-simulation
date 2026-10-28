@@ -1,0 +1,114 @@
+name: S6 N2400 exact Golden and daily accounting audit
+
+on:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - ".github/workflows/s6-n2400-golden-accounting-audit.yml"
+      - "scripts/audit_s6_n2400_golden_accounting.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-n2400-golden-accounting-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Compare immutable N2400 production rows with independent Golden and recheck accounting
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+      AUDIT_INPUT_ROOT: audit-input
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install declared dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download the latest immutable N2400 aggregate
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40773412377"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-n2400-status-reconciled-aggregate-40773412377
+          path: audit-input/aggregate
+      - name: Download all 20 immutable production scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40731224990"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-n2400-C*-40731224990
+          path: audit-input/scenarios
+          merge-multiple: false
+      - name: Download the aggregated independent Golden candidate
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40760465042"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-independent-golden-da1a-n2400-40760465042
+          path: audit-input/golden
+      - name: Download all 20 independent Golden scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "40760465042"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: s6-golden-candidate-*-40760465042
+          path: audit-input/golden-scenarios
+          merge-multiple: false
+      - name: Capture immutable source-run job and artifact metadata
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p audit-input/source-api
+          api="https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/runs/40731224990"
+          if curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api" -o audit-input/source-api/source_run.json \
+            && curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/jobs?per_page=100" -o audit-input/source-api/source_jobs.json \
+            && curl --fail --silent --show-error --location -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/artifacts?per_page=100" -o audit-input/source-api/source_artifacts.json; then
+            echo "SOURCE_RUN_API_CAPTURE=AVAILABLE"
+          else
+            rm -f audit-input/source-api/source_run.json audit-input/source-api/source_jobs.json audit-input/source-api/source_artifacts.json
+            echo "SOURCE_RUN_API_CAPTURE=MISSING_EVIDENCE; core audit will still run"
+          fi
+      - name: Verify hashes, source identity, exact fingerprints, RNG, and daily accounting
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/audit_s6_n2400_golden_accounting.py
+          python scripts/audit_s6_n2400_golden_accounting.py
+      - name: Upload audit evidence even when the final gate is blocked
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-n2400-golden-accounting-audit-${{ github.run_id }}
+          path: audit-output/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Keep Gate A, accounting, and convergence fail-closed
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("audit-output/S6_N2400_GOLDEN_ACCOUNTING_AUDIT.json")
+          if not p.is_file():
+              raise SystemExit("AUDIT_REPORT_MISSING")
+          r=json.loads(p.read_text(encoding="utf-8"))
+          if r["golden_candidate_comparison"]["status"] != "PASS_EXACT_MATCH":
+              raise SystemExit("GOLDEN_CANDIDATE_EXACT_COMPARISON_NOT_PASS")
+          if r["daily_balance_reconciliation"]["status"] != "PASS_INDEPENDENT_RECHECK":
+              raise SystemExit("DAILY_ACCOUNTING_BALANCE_RECHECK_NOT_PASS")
+          assert r["gate_a_approval"] == "NOT_GRANTED_CANDIDATE_REQUIRES_SEPARATE_REVIEW"
+          assert r["acceptance"] == "NOT_GRANTED"
+          PY
