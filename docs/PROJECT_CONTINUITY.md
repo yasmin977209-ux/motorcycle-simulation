@@ -1743,3 +1743,62 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 2. Diagnose why C100 source-lock Run `40761554588` failed without rerunning its matrix.
 3. Resolve the documented normative conflict on C100 reuse, then obtain independent daily balance evidence and a pinned source-run metadata digest from authoritative evidence before N4800 preflight.
 4. Only after runner capacity and the complete resume contract are verified may N4800 be started; it must execute only stochastic IDs 2401–4800 and preserve prior IDs and all immutable artifacts.
+
+
+## S6 live verification continuation — 2026-10-29 Asia/Aden (post-run reconciliation)
+
+> This entry updates the earlier interim snapshot without deleting historical failures. It supersedes only the earlier stated pending status of Run 40773412377 and the in-progress status of Run 40760465042. No simulation was run during this continuation.
+
+### Reference, repository and execution preflight
+- Recomputed SHA-256 from the actual uploaded v2.3 reference bytes: `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f` — **VERIFIED**. The reference was not edited and was not copied into the repository.
+- Live GitHub state: `main=c6e54349a5e94f65d5aa9f83141f225d777bb474`, unchanged in this phase. Authorized working branch `tmp/s6-aggregate-contract-fix-20261027` is at `4c5175ed553e631d5b90f96815c8b5aa7978655c`; repository permission check for `yasmin977209-ux` returned `admin`. Comparison of `4f2f2cc16d0cb5125262088704febccbae6f50ed` to `4c5175ed553e631d5b90f96815c8b5aa7978655c` showed the only intervening change was `docs/PROJECT_CONTINUITY.md` (36 changed lines). No write was made to `main`.
+- The live Actions query returned 0 runs in `in_progress` and 0 in `queued` at the time checked. This is a point-in-time finding, not a guarantee that no later run can start.
+
+### Independent stochastic Golden candidate — executed, not approved
+- Run `40760465042` completed `success` on candidate branch `tmp/s6-independent-golden-da1a-20261028`, tested SHA `3a972c9a0b18b9bc170a289a6aaf8fe1b8797f10`. All 20 scenario jobs and the final aggregate/coverage verification job succeeded.
+- Downloaded Artifact `12857612467`, digest `sha256:e6d94d715eb7e52ffc8ba61ae6dafb766b76914d956879190f1e87b87e311078`, size 1,850,621 bytes. Recomputed the ZIP digest and both member hashes locally:
+  - `independent_golden_fingerprints.json`: `sha256:32abf1d54be67c5e9ee37e9e14ad3bc28c9d1c0e36b2af17e44bbb23b5b3e581`.
+  - `independent_golden_manifest.json`: `sha256:6a79489331f78a5cfe1db67ec3c7ead1dace1f0aa3d31614208d1d0be27ec4c3`.
+  - Combined financial-fingerprint-map digest recorded in manifest: `3312c57580c1717b2b59f64a7c0e2611d206d552b847639f31de5735852f711c`.
+- Read-back check of the downloaded map verified the 20 expected stochastic scenario IDs, exact trial IDs 1..2400 for each scenario, 48,000 financial fingerprints, 48,000 closed trials, zero censored trials, `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, schema v2.3, and `MASTER_SEED=20270101`. The candidate declares `independent_execution=true` and `production_result_artifacts_read=false`.
+- The artifact and verifier output both explicitly say `INDEPENDENT_GOLDEN_CANDIDATE_NOT_APPROVED` / `NOT_EVALUATED_REQUIRES_SEPARATE_REVIEW`. **Gate A remains NOT_EVALUATED/BLOCKED**. Successful candidate generation is not approval, and this candidate must not be merged with the old failed run `40755172767`. The exact production-vs-Golden trial comparison and independent approval are not completed by this run.
+
+### N2400 immutable reaggregation — complete, FAIL_SCOPED, not acceptance
+- Evidence-only reaggregation Run `40773412377` completed `success`, tested workflow commit `4f2f2cc16d0cb5125262088704febccbae6f50ed`. It downloaded 20 immutable production scenario artifacts from source Run `40731224990` and executed aggregation only; no Monte Carlo scenario command ran.
+- Artifact `12852969854`, digest `sha256:ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`, size 9,357,996 bytes. Artifact member hashes recorded in its manifest; map this to its exact artifact rather than any older N2400 artifact.
+- Read-back of `manifest.json`, `statistical_evaluation.json`, and `c100_reuse.json` confirmed: `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, seed 20270101; 20 stochastic scenarios; 48,000 cumulative trial rows; 25 total combinations; 5 C100 combinations separately referenced as read-only deterministic reuse.
+- Gate B counts: N=300, 0/20 pass; N=600, 0/20 pass; N=1200, 10/20 pass; N=2400, 10/20 pass. Transition count 60 and successful transition count 0. Final status remains `gate_a=NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`, `gate_b=FAIL_SCOPED`, `stability=NOT_CONVERGED`. These are scoped data/evaluation results, not `FINAL_ACCEPTED`.
+
+### C100 current-source reproduction — blocked before all simulation jobs
+- Run `40761554588`, tested SHA `a1e6e144a5bc6388929e6e7db20f79885495a042`, failed in source-lock job `123074530178` at “Verify model source lock and immutable policy hash”; all five scenario jobs and aggregate were skipped. Execution status: `NOT_EXECUTED`.
+- Job log gives the concrete failure: `FileNotFoundError` for `المرجع_النهائي_الموحد_v2.3-إعادة_صياغة.md` inside the GitHub checkout. The reference bytes are supplied externally and are not tracked in GitHub per current repository policy. Thus this Run does not establish any C100 simulation result or prove a model-source mismatch.
+- Disposition: record `WORKFLOW_DEFECT / BLOCKED`; do not rerun the five-job matrix, do not add the normative reference to the repository, and do not change this workflow without the required R4/approval. A policy-compliant way to verify the externally supplied reference in CI needs a documented decision first.
+
+### Resume, statistics and accounting gates
+- `scripts/s6_checkpoint_config.json` on the working branch still declares `active_target_trials=2400`, `trial_start=1201`, `trial_end=2400`. The N4800 workflow requires target 4800 and only trial IDs 2401..4800. No N4800 run was found. Do not edit the config or trigger the workflow in this phase.
+- Independent audit Run `40761382163`, tested SHA `cb139583b04f43e19c3e6b9df2faa4a6e01bb5e7`, Artifact `12850320049`, outer digest `sha256:9e0c1e981725051ac7ee97b4db1ace393ec10d2cc77286171ac3d690367cb56a` remains `PASS_SCOPED` for data-integrity checks only. It does not close two recorded evidence gaps: the post-write daily `Assets == Equity` recheck cannot be independently recomputed from current daily snapshots because `Total_Assets` and `Total_Equity` are absent; the pinned `source_run_metadata.sha256` remains missing.
+- Latest source-of-truth `main/state.json` still records `STATISTICAL_INFERENCE_BLOCKED`: the financial-mean time-uniform procedure/tail-bound contract and exact-source end-to-end stopping/history handling are not accepted. It also records `GOLDEN_COVERAGE_INCOMPLETE`, `STAGE10_METADATA_DRIFT_OPEN`, `G2_RISK`, and `FINAL_DELIVERY_NOT_ACCEPTED`. Do not treat Test 192 or a successful workflow as production Gate A/B acceptance.
+- Regression Run `40760963547` succeeded on tested SHA `e9e9564a94bf47c0d47c96e0882ffed4f9902411` with `590 passed, 2 skipped, 1 warning`; this result is scoped to that older tested SHA and does not prove the later N2400 reconciliation or approve the new Golden.
+- Required S7/S8/S9/P17 delivery set and `docs/FINAL_AUDIT.md` remain unproven as a complete current delivery. No P18 authorization exists.
+
+### R4 — current disposition
+| Item | Status | Reference/evidence | Run / branch / file | Risk | Action in this phase | Test/evidence |
+|---|---|---|---|---|---|---|
+| Normative reference identity | VERIFIED | Expected SHA-256 matched actual uploaded bytes | External v2.3 reference | Low; no edits | Read-only | SHA-256 exact match |
+| Branch/main isolation | VERIFIED | Live refs + commit comparison | main `c6e543...`; work HEAD `4c5175...` | Candidate branch is not production | Updated continuity only on tmp branch | One-file diff from `4f2f2cc...`; no active/queued runs observed |
+| N2400 aggregation | EXECUTED; PASS only for run execution | Re-read artifact and manifest digest | Run `40773412377`, Artifact `12852969854` | Does not imply acceptance | Reconciled evidence snapshot | Run success; status fields consistently fail-closed |
+| Independent Golden candidate coverage | EXECUTED / VERIFIED for structure and coverage | Manifest/map and hashes | Run `40760465042`, Artifact `12857612467` | Approval/exact production comparison absent | Preserve as candidate only | 20 scenarios × 2400 IDs; 48,000 fingerprints |
+| Gate A / approved Golden | BLOCKED / MISSING_EVIDENCE | Artifact approval field says separate review required | Candidate Artifact `12857612467` | Incorrectly promoting it would falsify acceptance | No approval issued | No current-candidate approval evidence |
+| Gate B / convergence | FAIL_SCOPED / NOT_CONVERGED | Statistical evaluation JSON | N2400 Artifact `12852969854` | 0/60 successful transitions | No claims promoted | 10/20 Gate B PASS only at N1200 and N2400; 0/20 at N300/N600 |
+| C100 current-source reproduction | BLOCKED / NOT_EXECUTED | Source-lock failure log | Run `40761554588`, job `123074530178` | Five C100 jobs never ran | No rerun/workflow patch | Missing external reference path in checkout |
+| N4800 resume | BLOCKED / NOT_EXECUTED | Live checkpoint config + workflow assertions | Config target 2400, IDs 1201..2400 | Wrong range would fail preflight or risk identity drift | No config edit/run | No N4800 run found |
+| Daily accounting recheck | MISSING_EVIDENCE | Independent audit JSON | Run `40761382163`, Artifact `12850320049` | Cannot independently verify daily `Assets == Equity` from current fields | Keep blocked | Required persisted fields absent |
+| Source-run metadata pin | MISSING_EVIDENCE | N2400 manifest/audit | Run `40773412377` and audit `40761382163` | Run provenance not fully pinned | Keep blocked | `source_run_metadata.sha256=null` in prior aggregate; independent audit identified missing file |
+| Final delivery / P17 / P18 | BLOCKED / NOT_EXECUTED | main state and missing complete current delivery audit | main + work branch | Premature final claim/release | No release | `FINAL_ACCEPTED` prohibited |
+
+### Next permitted steps (not executed here)
+1. Conduct a separately reviewed exact Gate A evaluation/approval for candidate Run `40760465042`; do not alter its map/manifest, do not approve it by inference from green jobs.
+2. Resolve the policy-compliant CI reference-hash contract for the C100 current-source workflow under R4 and required approval; only then determine whether the deterministic reproduction can run.
+3. Obtain authoritative independent daily balance evidence and the pinned source-run metadata digest, then reevaluate whether the N2400 resume preconditions are all met.
+4. Resolve the statistical-inference blocker through the approved procedure/decision. Only after that and an explicit resume preflight may a run target N4800, and it must use only stochastic trial IDs 2401..4800 while preserving the immutable 1..2400 data.
+5. Keep the C100 normative-versus-reuse conflict explicit; do not silently claim 25-scenario completion or final acceptance.
