@@ -1,0 +1,277 @@
+name: S6 v2.3 cumulative checkpoint N4800
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "tmp/s6-aggregate-contract-fix-20261027"
+    paths:
+      - "scripts/s6_checkpoint_config.json"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: s6-n4800-cumulative
+  cancel-in-progress: false
+
+env:
+  PYTHONPATH: .
+  PYTHONDONTWRITEBYTECODE: "1"
+  SOURCE_RUN_ID: "40731224990"
+  SOURCE_RUN_ATTEMPT: "1"
+  SOURCE_SHA: "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+  MASTER_SEED: "20270101"
+  S6_TRIAL_COUNT: "4800"
+  S6_TRIAL_START: "2401"
+  S6_WORKERS: "2"
+
+jobs:
+  preflight:
+    name: Verify immutable N2400 resume contract before N4800
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Compile, check CLI, and run focused S6 tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/s6_first_checkpoint.py
+          python scripts/s6_first_checkpoint.py --help
+          python -m pytest -q tests/test_s6_first_checkpoint.py
+      - name: Verify approved target, pinned prior run, source, cohort and exact incremental range
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, constants
+          from pathlib import Path
+          from scripts.s6_first_checkpoint import previous_checkpoint_n, validate_checkpoint_target_range, verify_c100_reuse
+          c=json.loads(Path("scripts/s6_checkpoint_config.json").read_text(encoding="utf-8"))
+          assert c["active_target_trials"] == 4800
+          assert c["trial_start"] == 2401 and c["trial_end"] == 4800
+          assert c["previous_run_id"] == 40731224990
+          assert c["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+          assert c["cohort_id"] == "s6-v23-da1a9ea9"
+          assert c["reference_sha256"] == "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
+          assert constants.MASTER_SEED == 20270101
+          assert previous_checkpoint_n(4800) == 2400
+          assert validate_checkpoint_target_range(4800, 2401, 4800) == 2400
+          c100=verify_c100_reuse()
+          assert c100["run_id"] == 40263424595 and c100["rerun"] is False
+          print(json.dumps({"status":"S6_N4800_PREFLIGHT_PASS","source_run_id":40731224990,
+            "previous_n":2400,"target_n":4800,"incremental_trial_ids":[2401,4800],
+            "c100_reuse":"READ_ONLY","convergence_claim":"PROHIBITED"},sort_keys=True))
+          PY
+
+  g100-base:
+    name: S6 N4800 G100 base — C${{ matrix.collection }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        collection: ["085", "070", "050", "030"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Download immutable N2400 G100 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-n2400-C${{ matrix.collection }}-G100-40731224990
+          path: results_stage7_s6/previous
+      - name: Execute only trial IDs 2401–4800 and preserve cumulative prior records
+        shell: bash
+        env:
+          COLLECTION: ${{ matrix.collection }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          SCENARIO="C${COLLECTION}_G100"
+          python scripts/s6_first_checkpoint.py \
+            --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --trials "$S6_TRIAL_COUNT" --trial-start "$S6_TRIAL_START" --trial-end "$S6_TRIAL_COUNT" \
+            --workers "$S6_WORKERS" --previous-dir results_stage7_s6/previous \
+            --output-dir "results_stage7_s6/$SCENARIO"
+          test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n4800-C${{ matrix.collection }}-G100-${{ github.run_id }}
+          path: results_stage7_s6/C${{ matrix.collection }}_G100/
+          if-no-files-found: error
+          retention-days: 30
+
+  lower-g:
+    name: S6 N4800 ${{ matrix.scenario }}
+    needs: [preflight, g100-base]
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        scenario:
+          - C085_G070
+          - C085_G050
+          - C085_G030
+          - C085_G000
+          - C070_G070
+          - C070_G050
+          - C070_G030
+          - C070_G000
+          - C050_G070
+          - C050_G050
+          - C050_G030
+          - C050_G000
+          - C030_G070
+          - C030_G050
+          - C030_G030
+          - C030_G000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Download immutable N2400 scenario checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: s6-n2400-${{ matrix.scenario }}-40731224990
+          path: results_stage7_s6/previous
+      - name: Download current N4800 G100 base only where OPT-1 applies
+        if: startsWith(matrix.scenario, 'C085_') || startsWith(matrix.scenario, 'C070_')
+        uses: actions/download-artifact@v4
+        with:
+          name: s6-n4800-${{ startsWith(matrix.scenario, 'C085_') && 'C085' || 'C070' }}-G100-${{ github.run_id }}
+          path: results_stage7_s6/base
+      - name: Execute only incremental block and apply approved OPT-1 policy
+        shell: bash
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [[ "$SCENARIO" == C085_* || "$SCENARIO" == C070_* ]]; then ARGS+=(--base-dir results_stage7_s6/base); fi
+          python scripts/s6_first_checkpoint.py \
+            --mode scenario --scenario "$SCENARIO" --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --trials "$S6_TRIAL_COUNT" --trial-start "$S6_TRIAL_START" --trial-end "$S6_TRIAL_COUNT" \
+            --workers "$S6_WORKERS" --previous-dir results_stage7_s6/previous \
+            --output-dir "results_stage7_s6/$SCENARIO" "${ARGS[@]}"
+          test -s "results_stage7_s6/$SCENARIO/scenario_manifest.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n4800-${{ matrix.scenario }}-${{ github.run_id }}
+          path: results_stage7_s6/${{ matrix.scenario }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    name: Validate cumulative N4800 evidence and keep acceptance gates closed
+    needs: [preflight, g100-base, lower-g]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Download all 20 N4800 scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: s6-n4800-*-${{ github.run_id }}
+          path: results_stage7_s6/artifacts
+          merge-multiple: false
+      - name: Aggregate cumulative trial IDs 1–4800 and validate fail-closed status
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          test "$(find results_stage7_s6/artifacts -name scenario_manifest.json | wc -l)" -eq 20
+          python scripts/s6_first_checkpoint.py \
+            --mode aggregate --source-sha "$SOURCE_SHA" \
+            --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --source-run-id "$RUN_ID" --source-run-attempt "$RUN_ATTEMPT" \
+            --trials 4800 --input-root results_stage7_s6/artifacts \
+            --output-dir results_stage7_s6/aggregate
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("results_stage7_s6/aggregate/manifest.json").read_text(encoding="utf-8"))
+          assert m["schema_version"]=="s6-cumulative-aggregate-v2" and m["status"]=="EXECUTED"
+          assert m["source_sha"]=="da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+          assert m["cohort_id"]=="s6-v23-da1a9ea9" and m["master_seed"]==20270101
+          assert m["checkpoint_n"]==4800 and m["source_run_id"]==m["run_id"]
+          assert m["scenario_count"]==20
+          assert m["total_scenario_combinations"]==25 and m["c100_reused_scenario_count"]==5
+          assert sum(x["n_total"] for x in m["scenario_summaries"])==96000
+          assert all(x["n_unique_paths"]==x["unique_daily_paths"] and
+            x["n_unique_paths_status"]=="OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
+            for x in m["scenario_summaries"])
+          assert m["acceptance_status"]["n_unique_paths"]=="COMPUTED_FROM_UNIQUE_DAILY_PATHS"
+          assert m["acceptance_status"]["gate_a"]!="PASS"
+          assert m["acceptance_status"]["gate_b"]!="PASS"
+          assert m["acceptance_status"]["stability"]!="CONVERGED"
+          statistics=m["statistical_evaluation"]
+          assert statistics["latest_checkpoint_n"]==4800
+          expected_points=[]
+          n=300
+          while n<=m["checkpoint_n"]:
+              expected_points.append(n)
+              n*=2
+          assert expected_points==[300,600,1200,2400,4800]
+          assert set(statistics["checkpoint_gate_b_counts"])=={str(n) for n in expected_points}
+          assert all(sum(counts.values())==20 for counts in statistics["checkpoint_gate_b_counts"].values())
+          assert statistics["transition_count"]==20*(len(expected_points)-1)
+          assert statistics["successful_transition_count"]==0
+          assert statistics["gate_a_final"]=="NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN"
+          assert statistics["scenario_stability_final"]=="NOT_CONVERGED"
+          print(json.dumps({"status":"S6_N4800_CHECKPOINT_EXECUTED_NOT_CONVERGED",
+            "source_sha":m["source_sha"],"git_commit":m["git_commit"],"run_id":m["run_id"],
+            "checkpoint_n":m["checkpoint_n"],"checkpoint_points":expected_points,
+            "scenario_count":m["scenario_count"],"transition_count":statistics["transition_count"],
+            "successful_transition_count":statistics["successful_transition_count"],
+            "trial_rows":sum(x["n_total"] for x in m["scenario_summaries"]),
+            "gate_a":m["acceptance_status"]["gate_a"],"gate_b":m["acceptance_status"]["gate_b"],
+            "stability":m["acceptance_status"]["stability"],
+            "n_unique_paths":"COMPUTED_FROM_UNIQUE_DAILY_PATHS"},ensure_ascii=False,sort_keys=True))
+          PY
+          sha256sum results_stage7_s6/aggregate/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s6-n4800-aggregate-${{ github.run_id }}
+          path: results_stage7_s6/aggregate/
+          if-no-files-found: error
+          retention-days: 30
