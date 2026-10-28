@@ -33,6 +33,21 @@ def test_owner_approved_n_unique_paths_uses_verified_daily_path_count():
     with pytest.raises(RuntimeError, match="C100_DETERMINISTIC_PATH_CONTRACT_VIOLATION"):
         resolve_n_unique_paths("C100_G100", [0, 0], 2)
 
+def test_action_checkpoint_config_pins_n1200_resume(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    config = s6._s6_action_checkpoint_config()
+    assert config is not None
+    assert config["active_target_trials"] == 1200
+    assert config["trial_start"] == 601
+    assert config["trial_end"] == 1200
+    assert config["previous_run_id"] == 40582501871
+    assert config["n300_aggregate_run_id"] == 40588234012
+    assert config["n600_aggregate_run_id"] == 40582501871
+    assert config["source_sha"] == "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
+    assert config["cohort_id"] == "s6-v23-da1a9ea9"
+
+
 def test_cumulative_trial_id_contract_rejects_duplicates_and_missing_ids():
     from stats_integrity import validate_cumulative_trial_ids
     assert validate_cumulative_trial_ids([3, 1, 2], 3, scenario_id="C070_G100") == [1, 2, 3]
