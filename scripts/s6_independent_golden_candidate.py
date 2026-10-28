@@ -106,10 +106,31 @@ def require_source_identity(source_sha: str) -> dict[str, str]:
         if not remote_head or remote_head[0] != tested_sha:
             raise RuntimeError("S6_GOLDEN_STALE_WORKFLOW_COMMIT")
 
+    def tree_blobs(revision: str) -> dict[str, str]:
+        entries = run_git("ls-tree", "-r", "--format=%(objectname) %(path)", revision).splitlines()
+        result: dict[str, str] = {}
+        for entry in entries:
+            blob, file_path = entry.split(" ", 1)
+            result[file_path] = blob
+        return result
+
+    source_tree = tree_blobs(source_sha)
+    tested_tree = tree_blobs("HEAD")
+    source_python_paths = sorted(path for path in source_tree if path.endswith(".py"))
+    missing_lock_targets = sorted(set(PINNED_MODEL_FILES) - set(source_python_paths))
+    if missing_lock_targets:
+        raise RuntimeError(f"S6_GOLDEN_MODEL_LOCK_TARGET_MISSING:{missing_lock_targets}")
+    extra_python_paths = sorted(
+        path for path in set(tested_tree) - set(source_tree)
+        if path.endswith(".py") and path != "scripts/s6_independent_golden_candidate.py"
+    )
+    if extra_python_paths:
+        raise RuntimeError(f"S6_GOLDEN_UNEXPECTED_EXTRA_PYTHON_FILES:{extra_python_paths}")
+
     source_blobs: dict[str, str] = {}
-    for path in PINNED_MODEL_FILES:
-        source_blob = run_git("rev-parse", f"{source_sha}:{path}")
-        tested_blob = run_git("rev-parse", f"HEAD:{path}")
+    for path in source_python_paths:
+        source_blob = source_tree[path]
+        tested_blob = tested_tree.get(path)
         if source_blob != tested_blob:
             raise RuntimeError(f"S6_GOLDEN_MODEL_CODE_DRIFT:{path}")
         source_blobs[path] = source_blob
