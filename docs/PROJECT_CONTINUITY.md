@@ -1923,3 +1923,35 @@ Preserve the distinction between the successful exact fingerprint comparison and
 | Item | Execution | Evidence status | Evidence / risk / disposition |
 |---|---|---|---|
 | Unbounded checkpoint extension beyond N=2400 | `NOT_EXECUTED` | `CONFLICTED / MISSING_EVIDENCE` | Uploaded v2.3 reference §§2.5/14.2 requires continued doubling without an upper cap; live main gate lists only `[300,600,1200,2400]` and has no explicit extension rule. Gate remains `BLOCKED_FOR_IMPLEMENTATION`; do not alter main or launch N4800 until reviewed contract resolution. |
+
+
+## Follow-up verification and separate R4 CI disposition — 2026-10-29
+
+### Re-read of immutable N2400 and Golden artifacts
+- Recomputed the uploaded normative-reference SHA-256 locally: `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`; exact match.
+- Rechecked local ZIP integrity and outer SHA-256 for the daily identity audit (`f6cafd8dc682191db83464cbbbc43b73d0cf2bc105ab7c795b08abdb109d6c73`), independent Golden candidate (`e6d94d715eb7e52ffc8ba61ae6dafb766b76914d956879190f1e87b87e311078`), N2400 aggregate (`ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`), and exact-Golden/accounting audit (`9d776347d95adf24f0ed8c1e921df81fb51daa08e18905e78e451a4594864de1`). All ZIP CRC checks passed.
+- The current N2400 aggregate manifest independently declares `total_scenario_combinations=25`, `scenario_count=20`, and `c100_reused_scenario_count=5`; the 20 scenario summaries list all C030/C050/C070/C085 × five recovery settings. `c100_reuse.json` confirms five deterministic paths were reused read-only from historical source SHA `965281d52441cd0d4b744e211c9f68ee4cdc3753`, historical cohort `c100-v23-s4-20261026-965281d5`, with `G_INERT` and `n_unique_paths=1`. This is the mandated separate deterministic path, not stochastic samples from current cohort `s6-v23-da1a9ea9`.
+- `number_registry.json`: 960 entries; recursive scan found 0 JSON float values. Rounding metadata declares `Decimal.quantize(Decimal('0.01'), ROUND_HALF_EVEN)` with exact numerator/denominator retained. Aggregate statistical result still says N=2400, Gate A `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`, Gate B `FAIL_SCOPED`, `NOT_CONVERGED`, 0/60 successful transitions. Local environment has no `pyarrow`; no claim is made that Parquet files were independently row-scanned locally in this follow-up; prior CI audit evidence remains separately identified.
+
+### Separate PR #78 — R4 fail-closed guard, not merged
+- Live PR `#78` remains open and Draft; base `main` = `c6e54349a5e94f65d5aa9f83141f225d777bb474`, candidate branch `tmp/cp-r4-statistical-gate-fail-closed-20261027` at `f536c7d979977b7cd92d5ab159dbe1d5ec96c8ec`. No merge or main write occurred.
+- R4 Workflow Run `40543600329` (tested SHA `236fd3f0f78bb5d796f70540e58b685847869f43`) and Run `40543690736` (tested current PR head `f536c7d979977b7cd92d5ab159dbe1d5ec96c8ec`) both completed `failure`. In both, the focused regression `test_statistical_gate_cannot_be_cleared_by_status_string_alone` passed (one test).
+- Full-suite outcomes: Run `40543600329`: `5 failed, 512 passed, 1 skipped, 1 warning` (240.58s); Run `40543690736`: `5 failed, 512 passed, 1 skipped, 1 warning` (428.46s). The five failures are fixture/environment omissions: missing `results_stage5/worker_equivalence_manifest.json`, `results_stage5/trials_summary.parquet`, and `results_stage5/daily_distribution.parquet`; the hash-seed subprocess test also fails because `trials_summary.parquet` is absent. This is an overall test-suite `NON_PASS`, not evidence that the focused R4 regression failed. Do not relabel either workflow as full-suite pass.
+- Disposition: keep PR #78 Draft/unmerged until the missing fixture/data provenance is resolved and the full suite is verifiably green, or an owner-reviewed test-scope decision explicitly documents the blockers. Do not bypass or hide these five failures; do not start Monte Carlo as part of this repair.
+
+### Refreshed R4
+| Item | Execution | Evidence status | Disposition |
+|---|---|---|---|
+| Normative reference bytes | `EXECUTED` | `VERIFIED` | SHA-256 matches required immutable reference |
+| N2400 artifact archive integrity | `EXECUTED` | `VERIFIED` for ZIP integrity and declared outer hashes | CRC checks passed for four inspected ZIPs; N2400 status remains `FAIL_SCOPED/NOT_CONVERGED` |
+| Scenario matrix/C100 reuse | `EXECUTED` | `VERIFIED` for aggregate metadata | 25 combinations, 20 stochastic summaries and 5 C100 read-only reused scenarios; historical deterministic cohort explicitly distinct |
+| PR #78 focused R4 test | `EXECUTED` | `VERIFIED` scoped | Focused test passed on both recorded SHAs |
+| PR #78 full-suite validation | `EXECUTED` | `VERIFIED` as NON_PASS | Same five missing-file failures; no acceptance from 512 passing tests |
+| PR #78 production repair | `NOT_EXECUTED` for merge/release | `MISSING_EVIDENCE` | PR remains Draft/open; no new workflow, merge, or source change initiated |
+| N4800 and final delivery | `NOT_EXECUTED` | `BLOCKED` | Gate/identity/accounting/statistical blockers remain; do not continue trial execution |
+
+### Immediate next permitted work
+1. Resolve, by approved governance record, the difference between the immutable v2.3 reference SHA and the SHA pinned by `main/docs/stage7/statistical_execution_gate.json`, including the unlimited post-2400 checkpoint extension requirement.
+2. Preserve the PR #78 full-suite failures and determine an authoritative, immutable source for the required `results_stage5` files before considering any rerun of that suite; no fixture was created, inferred, or downloaded into the repository in this phase.
+3. Obtain full daily asset-side evidence or a separately approved new schema/source/cohort/Golden. Keep the missing original `source_run_metadata.sha256` explicit.
+4. Do not start N4800 until the accepted statistical inference method, Gate A approval, full preflight and required authorization all exist. No N4800 run was started in this phase.
