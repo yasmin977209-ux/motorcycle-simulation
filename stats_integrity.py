@@ -422,7 +422,9 @@ def evaluate_statistical_transition(
 
     def gate_pass(point: dict[str, Any], name: str) -> bool:
         gate = point.get(name)
-        return isinstance(gate, dict) and gate.get("status") == "PASS" and gate.get("stable") is True
+        # PASS_SCOPED means this cumulative checkpoint matched all IDs in its declared scope;
+        # it does not imply whole-project FINAL_ACCEPTED.
+        return isinstance(gate, dict) and gate.get("status") in {"PASS", "PASS_SCOPED"} and gate.get("stable") is True
 
     ga_prev, ga_curr = gate_pass(previous_point, "gate_a"), gate_pass(current_point, "gate_a")
     gb_prev, gb_curr = gate_pass(previous_point, "gate_b"), gate_pass(current_point, "gate_b")
