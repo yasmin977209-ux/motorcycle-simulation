@@ -27,7 +27,7 @@ The **content-path fingerprint** hashes canonical daily content ordered by date 
 
 ## Historical S6 status
 
-The old S6 N2400 daily snapshots omit five required fields: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. They remain immutable and cannot be inferred. Resume/base loaders reject v1 manifests before any new Trial; historical aggregate rows remain visible but full balance/path identity is `MISSING_EVIDENCE`. Mixed legacy/v2 manifests are rejected. Current config remains N=2400 / IDs 1201..2400; no N4800 is authorized, and no RNG/seed/threshold/financial result is changed.
+The old S6 N2400 daily snapshots omit five required fields: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. They remain immutable and cannot be inferred. Resume/base loaders reject v1 manifests before any new Trial. A read-only aggregate may still recompute `N_unique_paths` under the historical content-path contract for a homogeneous v1 cohort, preserving its existing per-scenario status. Separately, full daily-balance evidence remains `MISSING_EVIDENCE` and the new source-bound identity map remains `MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP`; the old count is not promoted to the v2 path identity contract. Mixed legacy/v2 manifests are rejected. Current config remains N=2400 / IDs 1201..2400; no N4800 is authorized, and no RNG/seed/threshold/financial result is changed.
 
 | Item | Execution | Evidence | Disposition |
 |---|---|---|---|

@@ -1120,8 +1120,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
             n_unique_daily_paths=len(set(path_fingerprints.values()))
             n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
-            reported_n_unique_paths=None;reported_n_unique_paths_status="MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA"
-            daily_balance_schema_status="MISSING_EVIDENCE";daily_path_identity_status="MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA"
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+            daily_balance_schema_status="MISSING_EVIDENCE";daily_path_identity_status="MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP"
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         rng_audit_records_verified=validate_cumulative_rng_audit(rows,args.source_sha)
         if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
@@ -1274,7 +1274,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "daily_balance_schema_status":"PASS_SCOPED_POST_WRITE_BALANCE_CHECK" if all_have_path_contract else "MISSING_EVIDENCE",
-        "daily_path_identity_status":"PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT" if all_have_path_contract else "MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA",
+        "daily_path_identity_status":"PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT" if all_have_path_contract else "MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP",
         "opt1_audit":{"status":"PASS","scenario_count":len(expected),
             "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
         "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else ("SOURCE_SCENARIO_MANIFESTS_COMPLETE" if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else "NOT_PROVIDED"),
