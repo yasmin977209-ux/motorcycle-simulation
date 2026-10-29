@@ -255,3 +255,55 @@ def test_direct_run_batch_entrypoint_blocks_before_any_state_or_trial_side_effec
     assert not output_dir.exists()
 
 
+
+
+def test_statistical_gate_rejects_pass_labels_with_stale_execution_approval_and_open_blockers(tmp_path: Path) -> None:
+    path = tmp_path / "statistical_execution_gate.json"
+    contract = json.loads(Path("docs/stage7/statistical_execution_gate.json").read_text(encoding="utf-8"))
+    contract["status"] = "ACCEPTED_FOR_PRODUCTION"
+    contract["execution_authorization"] = {
+        "production_trial_checkpoint_monte_carlo_allowed": True,
+        "scenario_stability_declaration_allowed": True,
+        "final_delivery_acceptance_allowed": True,
+    }
+    contract["component_status"] = {
+        key: {**value, "status": "PASS"}
+        for key, value in contract["component_status"].items()
+    }
+    # This is only the existing bounded S5 execution/equivalence approval,
+    # not an approval that resolves the statistical method or component blockers.
+    contract["implementation_approval"] = {
+        "reviewed_approval_id": "OWNER-CHAT-S5-2026-10-26",
+        "owner_approved": True,
+        "validated_source_head_sha": "7a3cd8208f79157b8ad04b7ab77891f555b710b2",
+        "evidence_sha256": "13e7d3c64fdb803a30e3ff99d8fa708dde904807668d85b9ec858f94836388bb",
+        "note": "Bounded execution/equivalence evidence only; production statistical acceptance remains separate.",
+    }
+    path.write_text(json.dumps(contract), encoding="utf-8")
+    result = statistical_execution_status(path)
+    assert result["authorized"] is False
+    assert any(
+        item.startswith("STATISTICAL_COMPONENT_BLOCKERS_UNRESOLVED:")
+        or item.startswith("STATISTICAL_COMPONENT_IMPLEMENTATION_GAP:")
+        for item in result["blockers"]
+    )
+
+
+
+def test_r4_workflow_uses_only_read_only_inputs_and_never_rebuilds_fixtures() -> None:
+    workflow = Path(".github/workflows/r4-statistical-gate.yml").read_text(encoding="utf-8")
+    assert "\n  push:" not in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "run_single_trial" not in workflow
+    assert "run_trials_sequentially" not in workflow
+    assert "run_trials_parallel" not in workflow
+    assert "UNREVIEWED_STAGE5_FIXTURE_FILES_PRESENT" in workflow
+    assert '"status": "MISSING_EVIDENCE"' in workflow
+    assert '"execution": "NOT_EXECUTED"' in workflow
+    for node_id in (
+        "test_127_تطابق_التسلسلي_والمتوازي",
+        "test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط",
+        "test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا",
+        "test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات",
+    ):
+        assert node_id in workflow

@@ -1469,3 +1469,32 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **PR #60/#61 stale branches:** closure-reconciliation comments were added. #60's scoped Stage 9C evidence is already appended to current main while its historic PARTIAL/broad-pytest evidence remains preserved. #61's original standalone daily extraction is superseded by the separate exact-Trial replay adapter used by PR #74. Neither closed PR establishes final acceptance.
 - **Next:** do not label the diagnostic workbook a final deliverable. Resolve the registered statistical K_SPEC, Golden coverage, historical failed transition, P90_Held_Assets, Stage10 metadata/fidelity, G2 runtime, and P17/P18 release blockers before assembling and accepting the final seven-file AR/EN package plus manifest.json.
 
+
+
+## CP-R4-STATISTICAL-GATE-FAIL-CLOSED-20261027 — R4 recorded and minimal production guard added
+
+- **Baseline verified:** `main` HEAD `c6e54349a5e94f65d5aa9f83141f225d777bb474`; `state.json` blob `6d94e0699e5380b4ecc184203d0c5ad6a4a8fb66`; `state.sha=0577ff769018546226bf501bcd419e94020b5310` with `parent_state_commit_pointer` semantics. `docs/STATE_SHA_SEMANTICS.md` blob `134363f0f2834f8087760b3148910a1a3d3af38b`.
+- **R4 before repair:** Run `40531094349`, job `122283775598`, tested SHA `d08e2e7843a23c8ebea00080e8e2b362b97d6787`. Actual command `python -m pytest -q tests`, exit code `1`; result `1 failed, 572 passed, 1 skipped, 1 warning`. Failure: `tests/test_golden_provider_workflow_integration.py::test_statistical_gate_cannot_be_cleared_by_status_string_alone`; the test changed the top-level status, three authorization booleans, and component status labels, and the function returned `authorized=True`. S6 matrix/aggregate jobs skipped; no artifact.
+- **Pre-repair record:** `docs/audits/R4_statistical_gate_fail_closed_2026-10-27.md`, commit `5440ef74edf687f5c445faeca400a2efc26a7a33`, created before the production source edit.
+- **Minimal production edit:** `scripts/golden_reference_provider.py` now requires each required component to retain an explicit empty `blockers` list and no non-empty `implementation_gap`; a status label cannot override unresolved component evidence. The failing test itself was not edited.
+- **Current CP branch:** `tmp/cp-r4-statistical-gate-fail-closed-20261027`, based on verified main HEAD. Production edit commit `486adf6e08e8924853479e6a4138eacbdae4b960`; updated provider blob `83c9d7d9dbbc5e8ac62830a4d11ba06fd28c16b1`.
+- **Validation status:** focused and full tests have not yet run against this repair. No S6 or production Monte Carlo is authorized by this CP; the statistical execution gate remains `BLOCKED_FOR_IMPLEMENTATION`. The prior R4 failure is preserved unchanged.
+- **Reference clauses read:** `0.20`, `0.25`, `2.5`, `14.2`, `14.11`, `21.2`, `21.3`, `21.5`, `23.5`, `25.6`. Reference SHA-256 verified: `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
+
+
+- **Regression strengthening:** added a separate test (the original failing test remains unchanged) that supplies the existing bounded S5 approval while leaving component blockers/implementation gaps intact, then asserts the gate remains unauthorized. Test commit: `236fd3f0f78bb5d796f70540e58b685847869f43`; test blob `bd12bc45d734affe46bcf829e276b57234e523e8`.
+- **Validation follow-up:** dedicated workflow `.github/workflows/r4-statistical-gate.yml` orders the focused original R4 test before the full suite. PR #78 is open as Draft against the verified main base. At the time of this ledger update, the connector returned no PR-triggered workflow runs or commit status checks for the candidate; therefore neither focused nor full tests are claimed as executed/passed here. Direct `git clone` was attempted but the environment could not resolve `github.com`; exit code `128`. Wait for verifiable Actions evidence before proceeding.
+
+
+## CP-GOV-REFERENCE-CHECKPOINT-ACCOUNTING-GOLDEN-FULLSUITE — 2026-10-29
+
+**الحكم:** تمت تسوية المرجع الفعّال وعقد نقاط الفحص للسياق التنفيذي الحالي؛ دليل التوازن المحاسبي المسجل للفوج الكامل في Stage 12 مكتمل؛ اعتماد Golden المستقل مثبت ضمن نطاقه؛ واختبارات رأس فرع PR #78 اجتازت المجموعة الكاملة. لا يترتب على ذلك قبول إحصائي أو تسليم نهائي.
+
+- المرجع الأصلي المثبت، بعد إعادة حساب البايتات الخام: 271,496 بايت / SHA-256 = ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479. المرجع المنافس v2.3 هو ملف مختلف بحجم 381,559 بايت / SHA-256 = e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f؛ يحمل تناقضًا داخليًا بين «معتمد ونافذ» و«مسودة للتبني»، ولا يوجد قرار نافذ يتبناه. التفاصيل والتصحيح في تقرير CP.
+- عقد نقاط الفحص: 300→600→1200→2400→4800→…؛ +50 قيمة تاريخية للتوافق لا خطوة جدولة. القرار اللاحق لـIUT يشترط أربع نقاط تراكمية وثلاثة انتقالات ناجحة للإعلان النهائي عن الاستقرار. أُضيف تصحيح ملحق للنص التاريخي الذي خالف الكود الحالي.
+- دليل المحاسبة Stage 12: blob 6084e8f68fa649fcf0726daa04f41ae9b0636706، PASS، 25 سيناريو، 11,005 تجربة، 22,546,465 صفًا، صفر مخالفات في كل معادلات الرول-فوروارد والتوازن والهوية. النطاق هو الفوج التاريخي لـStage 12، ولا يرقّي Stage 9C التاريخي من PARTIAL.
+- Golden: run 38169163565 ناجح 27/27، 11,005/11,005 بصمات متطابقة و22,546,465 صفًا، صفر mismatch. التغطية الموسعة إلى N=2400 تظل محصورة في C030_G030؛ لا تمديد ضمنيًا لبقية السيناريوهات.
+- اختبارات فرع PR #78 على SHA 35a3d2a9fa4820e35873deedd83c73ddccd1bdd5: Run 40797229996 وRun 40797224205 نجحا. النتيجة: 517 passed، اختبار واحد متجاوز K_TEST (158)، تحذير واحد، صفر إخفاقات. أضيفت خطوة fixture-first المؤقتة لإعادة إنتاج ملفات Stage 5 الناقصة وتهيئة PYTHONPATH؛ محاولات الفشل القديمة محفوظة ولا تُمحى.
+- لم يتغير main ولا main/state.json؛ PR #78 مفتوح Draft وغير مدمج؛ حالة بوابة الاستدلال الإحصائي ما زالت BLOCKED_FOR_IMPLEMENTATION.
+
+التقرير الحاكم لهذه المراجعة: docs/audits/CP_GOV_REFERENCE_CHECKPOINT_ACCOUNTING_GOLDEN_FULLSUITE_2026-10-29.md.
