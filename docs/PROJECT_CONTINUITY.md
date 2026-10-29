@@ -2141,3 +2141,12 @@ Preserve the distinction between the successful exact fingerprint comparison and
 | Daily-balance/path contract | `EXECUTED` | `VERIFIED` pure-contract scope | Run 40801742310: 10 passed, no Trial |
 | Historical S6 full balance | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Old snapshots untouched; no full-row balance recomputation |
 | N4800 / convergence / final acceptance | `NOT_EXECUTED` | `BLOCKED` | Requires source/schema/path preflight, full accounting evidence and independent Golden compatibility |
+
+
+### Correction — preserve legacy N_unique_paths without promoting legacy balance/path identity — 2026-10-29
+
+- A post-write code review found that the first S6 contract patch had marked legacy v1 `N_unique_paths` as missing even when the legacy homogeneous cohort's daily content-path counts were available. This would have removed an existing valid diagnostic and conflicted with the instruction to recompute `N_unique_paths`/ `unique_daily_paths` from historical `daily_snapshots` where appropriate.
+- Corrected without changing historical artifacts: commit `f8494f80e8b8a812cab09f8aa1530261864b5a66` preserves legacy `reported_unique_path_evidence` and `OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT` for the homogeneous legacy-schema cohort, while keeping `daily_balance_schema_status=MISSING_EVIDENCE` and `daily_path_identity_status=MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP`. Thus a legacy path count is retained as scoped historical evidence, not silently upgraded to the new v2 identity-bound map. Mixed v1/v2 scenario manifests remain rejected.
+- Follow-up pure verification Run `40802150287`, tested SHA `f8494f80e8b8a812cab09f8aa1530261864b5a66`, completed `success`: compile passed; **10 passed, 0 failed** in `1.88s`; log printed `SIMULATION_TRIALS=NOT_EXECUTED`. No artifact uploaded; no model Trial started.
+- Current contract source blob `9a7f26eb2473590b82af81471b662d2c3efd0a16`; regression test blob `ba0c04450cdea7cb088e3c96ce9bd511a9de7696`; governance note blob `665d80b16e6bccdce96b6efc0e965e03c9772334`.
+- Current S6 branch head at this update: `f8494f80e8b8a812cab09f8aa1530261864b5a66`; `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`. Current S6 config is still N=2400, trial range 1201..2400. No N4800 or completed Trial replay was started. Historical full `Assets == Equity` remains `MISSING_EVIDENCE`; Gate B remains `FAIL_SCOPED`, convergence and final acceptance remain false.
