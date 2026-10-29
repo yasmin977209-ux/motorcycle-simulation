@@ -103,10 +103,12 @@
   },
   "component_status": {
     "gate_a_exact_golden": {
-      "status": "CURRENT_COHORT_GOLDEN_COVERAGE_PENDING",
+      "status": "PASS_SCOPED_FINANCIAL_FINGERPRINT_MATCH_BY_CHECKPOINT",
       "blockers": [
-        "The reused C100 Golden remains a separate deterministic cohort and is read-only.",
-        "The current stochastic cohort SOURCE_SHA da1a9ea9b5cd789c944de3f07b08395bb67c49e7 requires an independently prepared and reviewed same-source Golden map before Gate A can pass; the prior f3af historical map is not interchangeable."
+        "This scoped check proves exact financial trial fingerprints at cumulative checkpoints N=300,600,1200,2400 for the pinned S6 source/cohort; do not treat the old aggregate manifest's historical NOT_EVALUATED status as retroactively edited.",
+        "Full S6 daily Assets == Equity is still MISSING_EVIDENCE because five asset-side fields were not persisted in historical N=2400 snapshots; the full balance cannot be inferred or backfilled.",
+        "The source-run parent Run 40731224990 remains failure and its original source_run_metadata.sha256 remains null. Keep that provenance gap explicit.",
+        "Gate B remains FAIL_SCOPED; scenario stability and final delivery acceptance remain false."
       ],
       "c100_reuse": {
         "run_id": "40263424595",
@@ -115,6 +117,43 @@
         "golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
         "manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04",
         "rerun_authorized": false
+      },
+      "approved_golden": {
+        "approval_id": "S6-GOLDEN-APPROVAL-DA1A-N2400-2026-10-29",
+        "approval_path": "docs/stage7/S6_GOLDEN_APPROVAL_DA1A_N2400.json",
+        "approval_blob_sha": "b0ff67c147cce496855b73f697f223a1d8031e0a",
+        "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "tested_sha": "3a972c9a0b18b9bc170a289a6aaf8fe1b8797f10",
+        "run_id": "40760465042",
+        "artifact_id": 12857612467,
+        "artifact_sha256": "sha256:e6d94d715eb7e52ffc8ba61ae6dafb766b76914d956879190f1e87b87e311078",
+        "golden_map_sha256": "32abf1d54be67c5e9ee37e9e14ad3bc28c9d1c0e36b2af17e44bbb23b5b3e581",
+        "golden_manifest_sha256": "6a79489331f78a5cfe1db67ec3c7ead1dace1f0aa3d31614208d1d0be27ec4c3",
+        "combined_financial_map_sha256": "3312c57580c1717b2b59f64a7c0e2611d206d552b847639f31de5735852f711c"
+      },
+      "retrospective_checkpoint_comparison": {
+        "status": "PASS_SCOPED_FINANCIAL_FINGERPRINTS_BY_CHECKPOINT",
+        "workflow_run_id": 40795628228,
+        "tested_sha": "fe0ab11a00bf05f958a7cc2eb4c05064128bbfc3",
+        "artifact_id": 12862934537,
+        "artifact_sha256": "sha256:d465de983b6fd574f792eae245f92745c3a70bcaf40e11bbbb7ec76f5ebc073b",
+        "report_filename": "S6_GOLDEN_APPROVAL_AND_BALANCE_PROJECTION_VERIFICATION.json",
+        "report_sha256": "3683605fda2e2e3a0a3a3f370c404d7de32b30347155b803a49729e4407849b9",
+        "checkpoints": [
+          300,
+          600,
+          1200,
+          2400
+        ],
+        "scenario_checkpoint_pairs_passed": 80,
+        "scenario_checkpoint_pairs_expected": 80,
+        "total_financial_fingerprint_comparisons": 90000,
+        "mismatch_count": 0,
+        "underlying_immutable_aggregate_run_id": 40773412377,
+        "underlying_aggregate_manifest_sha256": "3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba",
+        "original_aggregate_and_historical_artifacts_modified": false,
+        "simulation_trials_run": false
       }
     },
     "gate_b_financial_means": {
@@ -219,7 +258,7 @@
       "tmp/s5-statistical-gate-v23-20261026",
       "tmp/s6-aggregate-contract-fix-20261027"
     ],
-    "permitted_next_work": "N=2400 historical artifacts are available and the independent financial-fingerprint comparison is 48,000/48,000 exact; the Golden approval is scoped to read-only financial fingerprints only. Do not dispatch N=4800 yet: complete the source/schema/path-identity review for the new daily balance snapshot projection, retain the missing full-balance evidence for the historical N=2400 artifacts, and perform all preflight checks. Any later N=4800 run must use only trial IDs 2401..4800. Gate B, stability declaration, and final delivery acceptance remain separate decisions.",
+    "permitted_next_work": "The independent financial Golden approval is hash-pinned and the retrospective Gate A fingerprint comparison passed at N=300,600,1200,2400 (80/80 scenario-checkpoint pairs; 90,000 comparisons; zero mismatches). Do not dispatch N=4800 yet: full S6 daily Assets==Equity remains MISSING_EVIDENCE, the original source-run metadata SHA is null, and the added daily-balance projection changes schema/path-fingerprint inputs. Resolve exact source/schema/path identity and all preflight checks first. Any subsequently approved N=4800 run must use only trial IDs 2401..4800. Gate B, stability declaration, and final delivery acceptance remain separate decisions.",
     "s6_execution_authorized": true,
     "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
     "active_cohort_id": "s6-v23-da1a9ea9",
