@@ -185,13 +185,24 @@ jobs:
               raise SystemExit("MISSING_BALANCE_EVIDENCE_STATUS_NOT_PRESERVED")
           if audit.get("original_source_run_metadata_sha256") is not None or audit.get("acceptance") != "NOT_GRANTED":
               raise SystemExit("SOURCE_METADATA_GAP_OR_ACCEPTANCE_BOUNDARY_CHANGED")
-          if gate.get("source_basis", {}).get("reference_sha256") != "e5efaf0874384e8248c339ca10e248ea9e17f0882153b4ef88bc955b91d53f":
+          if gate.get("source_basis", {}).get("reference_sha256") != "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f":
               raise SystemExit("S6_NORMATIVE_REFERENCE_HASH_MISMATCH")
           extension = gate.get("approved_policy", {}).get("checkpoint_extension_policy", {})
           if extension.get("no_fixed_upper_cap") is not True or extension.get("four_points_are_ceiling") is not False:
               raise SystemExit("CHECKPOINT_EXTENSION_CONTRACT_INVALID")
           if gate.get("execution_authorization", {}).get("scenario_stability_declaration_allowed") is not False or gate.get("execution_authorization", {}).get("final_delivery_acceptance_allowed") is not False:
               raise SystemExit("ACCEPTANCE_FLAGS_UNEXPECTEDLY_PROMOTED")
+
+          from scripts.s6_first_checkpoint import load_approved_gate_a_golden
+          loaded_golden = load_approved_gate_a_golden(
+              str(map_path),
+              str(manifest_path),
+              "docs/stage7/S6_GOLDEN_APPROVAL_DA1A_N2400.json",
+              expected_source_sha=approval["source_sha"],
+              expected_cohort_id=approval["cohort_id"],
+          )
+          if loaded_golden is None or loaded_golden.get("status") != "APPROVED_FOR_GATE_A":
+              raise SystemExit("S6_RUNTIME_GOLDEN_LOADER_REJECTED_APPROVAL")
 
           report = {
               "status": "PASS_SCOPED_GOLDEN_APPROVAL_AND_PROJECTION_TEST",
