@@ -2103,3 +2103,41 @@ Preserve the distinction between the successful exact fingerprint comparison and
 | N4800 / P17 / P18 / final delivery | `NOT_EXECUTED` | `BLOCKED` | Need source/schema/path preflight, complete S6 accounting evidence, metadata provenance and separate authorizations |
 
 **Next step:** maintain the historical statuses and failures; do not rerun completed trials or the R4 workflow. First review the two same-SHA CI executions as a governance deviation, decide an authorized fixture policy, and resolve S6 daily-balance schema/path identity before any future checkpoint. No `FINAL_ACCEPTED` declaration is supported.
+
+
+## CP — R4 fixture deviation and S6 daily-balance/path-identity contract — 2026-10-29
+
+**Review/record time:** 2026-10-29 04:17 Asia/Aden; evidence rechecked through 2026-10-29T01:40:05Z. No production Trial or N4800 checkpoint was started. `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+
+### 1. R4 fixture governance correction — source edit and CI verified
+- Updated only temporary branch `tmp/cp-r4-statistical-gate-fail-closed-20261027`, commit `92786b53a9e20576c241502817ffca9429a1dc3b`. The R4 workflow no longer has a `push` trigger and no longer builds fixtures by running model Trials; it retains PR validation, manual dispatch and a same-purpose concurrency guard.
+- Workflow blob: `212c0491836992557ca0518a7a46297ed742dd52`; static source-guard test blob: `27917c0e6d83f52c0da515fc482282505bf28f36`.
+- New R4 Run `40800718613`, tested SHA `92786b53a9e20576c241502817ffca9429a1dc3b`, succeeded: [Actions run](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40800718613). Focused fail-closed test: `1 passed in 1.25s`; fixture-independent suite: **514 passed, 0 failed, 1 skipped, 4 deselected, 1 warning** in `462.06s` (7m42s). Exit status was successful. The 4 deselected test IDs are 127, 159, 160, 161 and are explicitly `NOT_EXECUTED / MISSING_EVIDENCE`, not passed tests.
+- The read-only fixture preflight reports `MISSING_EVIDENCE`, `NOT_EXECUTED`, `fixture_builder_trials_started=false`. It names the five required Stage 5 inputs and refuses to use any unreviewed directory if one appears. No R4 artifact was uploaded, so no immutable fixture bundle exists as a result of this run.
+- The previous same-SHA runs `40798707550` and `40798713596` remain historical deviation evidence. They did execute the inline `C100_G100 trial 1` and sequential/parallel `C070_G100 IDs 1..3` builder without retaining the resulting directory. Do not use their generated C100 output as Golden evidence and do not rerun either workflow. PR #78 remains open, Draft, and unmerged.
+
+### 2. S6 daily balance/path-identity contract — implementation and pure CI verified
+- Temporary branch: `tmp/cp-s6-daily-path-contract-20261029`; implementation commit `3f6ea31dd8c527070ff1e05e83f62e7845bcc5f8`. Prior helper/audit/test commit: `8d19ce111810fd6cd829f58bf195182a74bff916`.
+- Added `scripts/s6_daily_path_identity.py` (blob `606ac6896aac32621e8ed49c4c0481415bd3930b`), `scripts/audit_s6_daily_balance_artifact.py` (blob `4bb841b3e55e20d3f1ad4f884da5cd778a4072d4`) and pure synthetic contract tests `tests/test_s6_daily_path_identity_contract.py` (blob `a4f3f6359bee009fa218e382297b3f5d9e053e4a`).
+- Modified `scripts/s6_first_checkpoint.py` blob `026225356c6e98a63000876af94037ba176b2a22` and its legacy aggregate regression test blob `a9def8fdf5f57d8083d926d7cf5eb4b6b3d52c29`.
+- New read-only/pure CI [Run 40801742310](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40801742310), tested SHA `3f6ea31dd8c527070ff1e05e83f62e7845bcc5f8`: succeeded; compile passed, **10 passed, 0 failed** in 2.78s; policy step output `SIMULATION_TRIALS=NOT_EXECUTED`. This run deliberately uploads no artifact because the test is pure contract verification and creates no production dataset.
+- Daily row schema is `s6-daily-balance-v1`; scenario manifest schema is `s6-first-checkpoint-v2`; the path identity contract is `s6-daily-path-identity-v1`. It requires exact integer fields, complete key set, exact source/cohort/scenario/schema row metadata, complete calendar dates, correct close marker and zero balance difference on every persisted row.
+- The post-write reader reopens the generated Parquet, revalidates file hashes, trial IDs, row/source identity, all day balance equations, and daily path evidence before writing `daily_balance_path_audit.json`. The audit sidecar is separate from manifest file hashes to avoid a circular digest; its SHA-256 is printed in the scenario job log.
+- Two distinct hashes are defined. `daily_path_content_map_sha256` canonicalizes daily content without trial/scenario/source/cohort/model-schema identity metadata (but keeps the daily schema version) for correct trajectory uniqueness. `identity_bound_daily_path_map_sha256` separately binds content to SOURCE_SHA, cohort, MASTER_SEED, collection RNG stream, scenario, trial ID, model/daily schemas, start date, row count and date span. Financial `trial_fingerprint`, RNG checksum/draw metadata, content-path hashes and identity-bound hashes stay distinct.
+- `load_previous_artifact` and `load_base_artifact` now reject legacy v1/incomplete manifests and recompute+compare path evidence before any incremental Trial starts. Aggregation rejects mixed manifest schema versions. Read-only aggregation of old uniform v1 artifacts can still report historical metrics but marks its full-balance/path contract `MISSING_EVIDENCE`; it does not promote the old diagnostic path count to accepted `N_unique_paths`.
+
+### 3. Provenance and limits that remain
+- The S6 N2400 historical snapshots still do not contain `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, or `Total_Assets`. Their full daily `Assets == Equity` condition remains `MISSING_EVIDENCE`; no reconstruction/backfill was attempted.
+- This implementation establishes a fail-closed contract for new-version scenario artifacts and tests the contract on synthetic test rows. It does not retroactively validate old N2400 outputs, does not establish that production output has followed the new schema, and does not by itself establish source/schema/Golden compatibility for an actual next checkpoint.
+- The active checkpoint config remains N=2400 and trial range 1201..2400. No N4800 run or any completed Trial replay is authorized. Any future checkpoint needs a separate preflight and approval establishing a coherent source/cohort/schema/path identity and compatible independent Golden.
+- Gate A remains `PASS_SCOPED` for independent financial fingerprint comparisons only. Historical Gate B remains `FAIL_SCOPED` (10/20 PASS and 10/20 FAIL at N=2400; 0/60 successful transitions), and the project remains `NOT_CONVERGED` / not accepted. No P17/P18 or `FINAL_ACCEPTED` declaration is supported.
+
+### R4 (updated)
+| Item | Execution | Evidence status | Disposition |
+|---|---|---|---|
+| Remove R4 fixture builder / duplicate trigger | `EXECUTED` | `VERIFIED` on Run 40800718613 | Source code excludes trial-builder; no generated fixture artifact retained |
+| Fixture input set | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Tests 127/159/160/161 excluded and declared not executed |
+| R4 regression | `EXECUTED` | `VERIFIED` scoped pass | 514 passed / 0 failed / 1 skipped / 4 deselected / 1 warning |
+| Daily-balance/path contract | `EXECUTED` | `VERIFIED` pure-contract scope | Run 40801742310: 10 passed, no Trial |
+| Historical S6 full balance | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Old snapshots untouched; no full-row balance recomputation |
+| N4800 / convergence / final acceptance | `NOT_EXECUTED` | `BLOCKED` | Requires source/schema/path preflight, full accounting evidence and independent Golden compatibility |
