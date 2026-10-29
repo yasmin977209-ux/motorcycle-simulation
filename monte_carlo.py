@@ -11,7 +11,11 @@ import multiprocessing
 import constants
 import daily_engine
 import rng
+from accounting import balance_sheet_snapshot
 from entities import BikeState, ClaimStatus, Project
+
+
+DAILY_BALANCE_SNAPSHOT_SCHEMA_VERSION = "s6-daily-balance-v1"
 
 
 def parse_scenario_id(scenario_id: str) -> tuple[float, int]:
@@ -80,15 +84,29 @@ def _daily_snapshot(
     current_date,
     trial_id: int,
 ) -> dict[str, object]:
+    # Persist the complete day-end accounting identity for an independent
+    # post-write Assets == Equity audit. This changes the daily-output schema;
+    # it does not alter the simulation engine, RNG draws, or TrialResult fields.
+    balance = balance_sheet_snapshot(project)
     return {
         "date": current_date.isoformat(),
         "trial_id": trial_id,
+        "daily_balance_schema_version": DAILY_BALANCE_SNAPSHOT_SCHEMA_VERSION,
         "Cash": project.project_cash,
-        "Partner1_Reinvestment_Balance": project.partner1_reinvestment_balance,
-        "Partner2_Reinvestment_Balance": project.partner2_reinvestment_balance,
         "Capital": project.capital,
         "Retained_Earnings": project.retained_earnings,
         "Net_Equity": project.capital + project.retained_earnings,
+        "Accounts_Receivable": balance["Accounts_Receivable"],
+        "Guarantee_Claim_Receivable": balance["Guarantee_Claim_Receivable"],
+        "Gross_Bike_Assets": balance["Gross_Bike_Assets"],
+        "Accumulated_Depreciation": balance["Accumulated_Depreciation"],
+        "Net_Bike_Assets": balance["Net_Bike_Assets"],
+        "Total_Assets": balance["Total_Assets"],
+        "Total_Equity": balance["Total_Equity"],
+        "Liabilities": balance["Liabilities"],
+        "Balance_Difference": balance["Balance_Difference"],
+        "Partner1_Reinvestment_Balance": project.partner1_reinvestment_balance,
+        "Partner2_Reinvestment_Balance": project.partner2_reinvestment_balance,
         "Active_Bikes": sum(
             1
             for bike in project.bikes
