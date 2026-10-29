@@ -1971,3 +1971,38 @@ Preserve the distinction between the successful exact fingerprint comparison and
 | `deliverables/` on work branch | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Directory not found through live repository Contents API |
 | `docs/FINAL_AUDIT.md` | `NOT_EXECUTED` | `MISSING_EVIDENCE` | Absent from tracked docs listing on main and work branch |
 | Stage13 diagnostic artifact | `EXECUTED` historically | `VERIFIED` diagnostic scope only | Does not substitute for P17/P18 acceptance |
+
+
+## Current-main source identity and Stage 5 fixture provenance review — 2026-10-29
+
+### S6 source identity is not the current main production identity
+- Live main HEAD is `c6e54349a5e94f65d5aa9f83141f225d777bb474`; live `main/state.json` blob is `6d94e0699e5380b4ecc184203d0c5ad6a4a8fb66`, whose current source identity is `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` and whose Stage 13 canonical source identity has the same SHA.
+- The S6 checkpoint config blob `44560c2fa2a2af292a9f2afff957248f3db0c243` still pins `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, target N=2400 and trial IDs 1201..2400. The source SHA does **not** match current main. Preserve all S6 audit conclusions as scoped to the historical S6 source/cohort; they are not evidence that current-main source has passed Gate A/B, balance recheck, or checkpoint acceptance.
+- Live statistical gate blob `a3324db6b4edecb35b28d22bf2b74e1b32370dca` remains `BLOCKED_FOR_IMPLEMENTATION`; production Monte Carlo, stability declarations, and final delivery acceptance are explicitly false. Its pinned reference SHA `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` conflicts with the actual uploaded normative v2.3 reference SHA `e5efaf0874384e8248c339ca10e248ea9e17f0882153b4ef88bc955b91d53f`. No source or gate edits were made.
+
+### PR #78 missing-fixture investigation — read-only
+- PR #78 remains open and Draft, unmerged. The two recorded runs `40543600329` and `40543690736` both have overall full-suite result `5 failed, 512 passed, 1 skipped, 1 warning`; the focused R4 regression passed in each. Preserve those as full-suite `NON_PASS`, not a passing suite.
+- Compared current-main workflow source:
+  - `.github/workflows/stage4-acceptance-port.yml`, blob `120366c01a7b7624d4dd1d8ff81e75a94c337e69`;
+  - `.github/workflows/stage9c-precision-regression.yml`, blob `1f54d80cb026b25be7ce21a8e678bdebe6d36623`;
+  - `.github/workflows/stage5-main-postround2-validation.yml`, blob `abe1f8afdb6fc13a1a44e4811f25c44f70099db8`.
+- These workflows contain an inline ephemeral `results_stage5` builder. It first deletes/recreates that directory, calls `monte_carlo.run_single_trial("C100_G100", 1, master_seed=20270101)` and asserts hard-coded expected outputs and 2,198 daily rows; it also calls sequential and parallel `C070_G100` trials `1..3` to generate `worker_equivalence_manifest.json`. This is executable generator code, not a preserved immutable `results_stage5` data artifact.
+- Their upload scopes do not preserve the generated `results_stage5` input set: Stage4 uploads `results/v2_*`, Stage5 uploads its validation log, and the Stage9C regression job uploads `results_stage9c/`. Thus this inspection did **not** find an authoritative retained artifact for `worker_equivalence_manifest.json`, `trials_summary.parquet`, or `daily_distribution.parquet`.
+- Do not download or synthesize missing outputs into the repository, do not rerun the generator/full suite, and do not edit tests/workflows on this evidence alone. The inline generator is only a candidate ephemeral fixture recipe for a separately approved workflow decision; because it executes model trials (including C100_G100), it must not be invoked under the current S6 no-rerun restrictions without an explicit reviewed authorization and exact source/cohort scope.
+- No pytest, workflow, trial, or Monte Carlo execution was started during this provenance review; no artifact or canonical data was mutated.
+
+### R4 update
+| Item | Execution | Evidence status | Disposition |
+|---|---|---|---|
+| Current-main source SHA vs S6 checkpoint source SHA | `EXECUTED` | `VERIFIED` mismatch | Main state uses `f3af4f06...`; S6 config uses `da1a9ea9...`; do not transfer S6 claims or resume N4800 |
+| Authoritative immutable `results_stage5` snapshot | `NOT_EXECUTED` | `MISSING_EVIDENCE` | No retained snapshot found; main workflows only regenerate ephemeral files and upload other paths/logs |
+| PR #78 focused R4 regression | `EXECUTED` historically | `VERIFIED` scoped pass | Focused test passed on recorded candidate heads |
+| PR #78 full test suite | `EXECUTED` historically | `VERIFIED` as `NON_PASS` | Both recorded full-suite runs have 5 failures; do not rerun until fixture provenance/authorization is resolved |
+| Production execution / final delivery | `NOT_EXECUTED` | `BLOCKED` | Keep all production gate flags false; no P17/P18 promotion |
+
+### Next permitted work
+1. Obtain an owner-reviewed decision on the deterministic Stage 5 test-fixture contract and whether/how a CI job may generate disposable inputs without committing them or rerunning prohibited production trials.
+2. Resolve the normative-reference hash conflict and the missing post-2400 checkpoint extension contract.
+3. For S6, align only through an explicitly approved source/cohort plan and independent Golden; never rewrite historical artifacts or reuse the N2400 cohort as evidence for a different source SHA.
+4. Keep final delivery blocked until the seven required AR/EN files, manifest, checksums, delivery ZIP, and independent review/acceptance actually exist.
+
