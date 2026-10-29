@@ -1,0 +1,49 @@
+name: S6 daily balance and path identity contract tests
+on:
+  push:
+    branches:
+      - "tmp/cp-s6-daily-path-contract-20261029"
+    paths:
+      - "scripts/s6_daily_path_identity.py"
+      - "scripts/audit_s6_daily_balance_artifact.py"
+      - "scripts/s6_first_checkpoint.py"
+      - "tests/test_s6_daily_path_identity_contract.py"
+      - "tests/test_s6_daily_balance_snapshot_schema.py"
+      - "tests/test_s6_first_checkpoint.py"
+      - ".github/workflows/s6-daily-path-identity-contract.yml"
+      - "docs/governance/D-2026-10-29-R4-FIXTURE-AND-S6-DAILY-PATH-IDENTITY.md"
+permissions:
+  contents: read
+jobs:
+  pure-contract-tests:
+    name: Pure schema/path tests (no simulation Trial)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout exact contract candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile S6 source/auditor
+        run: python -m py_compile scripts/s6_daily_path_identity.py scripts/audit_s6_daily_balance_artifact.py scripts/s6_first_checkpoint.py
+      - name: Run pure path contract and projection tests
+        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py tests/test_s6_first_checkpoint.py::test_s6_aggregate_accepts_twenty_current_scenarios_and_separate_c100_reuse
+      - name: Verify no model Trials in this workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          content = Path(".github/workflows/s6-daily-path-identity-contract.yml").read_text(encoding="utf-8")
+          names = ("run_" + "single_trial", "run_trials_" + "parallel", "run_trials_" + "sequentially", "run_full_" + "trials")
+          for name in names:
+              assert name not in content
+          print("SIMULATION_TRIALS=NOT_EXECUTED")
+          PY

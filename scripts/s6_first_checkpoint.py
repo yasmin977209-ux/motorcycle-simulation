@@ -13,6 +13,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import constants, monte_carlo, rng, validation, stats_integrity
 from stats_integrity import resolve_n_unique_paths, validate_cumulative_trial_ids
+from scripts.s6_daily_path_identity import DAILY_BALANCE_INTEGER_FIELDS, DAILY_BALANCE_SCHEMA_VERSION, SCENARIO_MANIFEST_SCHEMA_VERSION, build_daily_path_identity_evidence, require_daily_path_manifest_contract
 
 EXPECTED_C100_GOLDEN_SHA256 = "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327"
 EXPECTED_C100_MANIFEST_SHA256 = "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
@@ -136,6 +137,7 @@ def load_base_artifact(base_dir: Path, collection_pct: int, source_sha: str, coh
     manifest=json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("scenario_id") != f"C{collection_pct:03d}_G100": raise RuntimeError("S6_OPT1_BASE_SCENARIO_MISMATCH")
     if manifest.get("source_sha") != source_sha or manifest.get("cohort_id") != cohort_id: raise RuntimeError("S6_OPT1_BASE_SOURCE_OR_COHORT_MISMATCH")
+    require_daily_path_manifest_contract(manifest, expected_source_sha=source_sha, expected_cohort_id=cohort_id, expected_scenario_id=f"C{collection_pct:03d}_G100", expected_master_seed=constants.MASTER_SEED, expected_trial_count=trial_count, model_schema_version=SCHEMA_VERSION)
     for name,entry in manifest.get("files",{}).items():
         path=base_dir/name
         if not path.is_file() or path.stat().st_size != entry["size_bytes"] or sha256_file(path) != entry["sha256"]:
@@ -145,6 +147,8 @@ def load_base_artifact(base_dir: Path, collection_pct: int, source_sha: str, coh
     expected=set(range(1,trial_count+1))
     if set(results)!=expected: raise RuntimeError("S6_OPT1_BASE_TRIAL_ID_COVERAGE_MISMATCH")
     daily_rows=pq.read_table(base_dir/"daily_snapshots.parquet").to_pylist()
+    base_evidence=build_daily_path_identity_evidence(daily_rows,source_sha=source_sha,cohort_id=cohort_id,master_seed=constants.MASTER_SEED,scenario_id=f"C{collection_pct:03d}_G100",expected_trial_ids=range(1,trial_count+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+    if base_evidence["summary"]!=manifest.get("daily_path_identity_contract"): raise RuntimeError("S6_OPT1_BASE_DAILY_PATH_IDENTITY_CONTRACT_MISMATCH")
     slices={}
     for row in daily_rows:
         tid=int(row["trial_id"])
@@ -393,6 +397,7 @@ def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str
         raise RuntimeError("S6_PREVIOUS_CHECKPOINT_SOURCE_OR_COHORT_MISMATCH")
     if manifest.get("trial_count") != expected_n or manifest.get("trial_id_start") != 1 or manifest.get("trial_id_end") != expected_n:
         raise RuntimeError("S6_PREVIOUS_CHECKPOINT_RANGE_MISMATCH")
+    require_daily_path_manifest_contract(manifest, expected_source_sha=source_sha, expected_cohort_id=cohort_id, expected_scenario_id=scenario_id, expected_master_seed=constants.MASTER_SEED, expected_trial_count=expected_n, model_schema_version=SCHEMA_VERSION)
     for name, entry in manifest.get("files", {}).items():
         path = previous_dir / name
         if not path.is_file() or path.stat().st_size != entry["size_bytes"] or sha256_file(path) != entry["sha256"]:
@@ -403,6 +408,8 @@ def load_previous_artifact(previous_dir: Path, scenario_id: str, source_sha: str
     results = {int(row["trial_id"]): result_from_record(row) for row in rows}
     derived = {int(row["trial_id"]): row.get("derived_from") for row in rows}
     daily_rows = pq.read_table(previous_dir / "daily_snapshots.parquet").to_pylist()
+    previous_evidence=build_daily_path_identity_evidence(daily_rows,source_sha=source_sha,cohort_id=cohort_id,master_seed=constants.MASTER_SEED,scenario_id=scenario_id,expected_trial_ids=range(1,expected_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+    if previous_evidence["summary"]!=manifest.get("daily_path_identity_contract"): raise RuntimeError("S6_PREVIOUS_CHECKPOINT_DAILY_PATH_IDENTITY_MISMATCH")
     slices = {}
     for row in daily_rows:
         tid = int(row["trial_id"])
@@ -481,16 +488,10 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     rng_audit_records_verified = validate_cumulative_rng_audit([asdict(x) for x in ordered], args.source_sha)
     trial_rows=[result_record(results[tid],args.source_sha,cohort_id,derived.get(tid)) for tid in trial_ids]
     daily_rows=[snapshot_record(row,args.scenario,args.source_sha,cohort_id) for tid in trial_ids for row in sorted(slices[tid],key=lambda x:str(x["date"]))]
-    path_fingerprints=daily_path_fingerprints(daily_rows)
-    if set(path_fingerprints)!=set(trial_ids):
-        raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{args.scenario}")
-    n_unique_daily_paths=len(set(path_fingerprints.values()))
+    path_evidence=build_daily_path_identity_evidence(daily_rows,source_sha=args.source_sha,cohort_id=cohort_id,master_seed=constants.MASTER_SEED,scenario_id=args.scenario,expected_trial_ids=trial_ids,expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+    path_contract=path_evidence["summary"]
+    n_unique_daily_paths=int(path_contract["unique_daily_path_count"])
     n_unique_financial_outcomes=len({monte_carlo.trial_fingerprint(x) for x in ordered})
-    n_unique_paths=resolve_n_unique_paths(
-        args.scenario,
-        [int(getattr(x, "rng_draw_count", 0)) for x in ordered],
-        n_unique_daily_paths,
-    )
     os.environ["S5_TRIAL_COUNT"]=str(args.trials)
     from scripts.s5_mini_verification import build_exact_daily_distribution
     distribution=build_exact_daily_distribution(ordered,slices,args.scenario,cohort_id,args.source_sha)
@@ -500,6 +501,12 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "daily_distribution.parquet":distribution,
     }
     for name,rows in targets.items(): pq.write_table(pa.Table.from_pylist(rows),out_dir/name,compression="zstd")
+    persisted_daily=pq.read_table(out_dir/"daily_snapshots.parquet").to_pylist()
+    readback=build_daily_path_identity_evidence(persisted_daily,source_sha=args.source_sha,cohort_id=cohort_id,master_seed=constants.MASTER_SEED,scenario_id=args.scenario,expected_trial_ids=trial_ids,expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+    if readback["summary"]!=path_contract: raise RuntimeError("S6_POST_WRITE_DAILY_PATH_IDENTITY_MISMATCH")
+    path_contract=readback["summary"]
+    n_unique_daily_paths=int(path_contract["unique_daily_path_count"])
+    n_unique_paths=resolve_n_unique_paths(args.scenario,[int(getattr(x,"rng_draw_count",0)) for x in ordered],n_unique_daily_paths)
     provenance={
         "scenario_id":args.scenario,"collection_level":collection_pct,"recovery_level":recovery_pct,
         "policy":policy,"sample_trial_count":args.trials,
@@ -512,11 +519,14 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     names=[*targets.keys(),"opt1_provenance.json"]
     files={name:{"sha256":sha256_file(out_dir/name),"size_bytes":(out_dir/name).stat().st_size} for name in names}
     manifest={
-        "schema_version":"s6-first-checkpoint-v1","status":"EXECUTED","scenario_id":args.scenario,
+        "schema_version":SCENARIO_MANIFEST_SCHEMA_VERSION,"status":"EXECUTED","scenario_id":args.scenario,
         "collection_level":collection_pct,"recovery_level":recovery_pct,"source_sha":args.source_sha,
         "cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"rng_scope":"COLLECTION_LEVEL",
         "schema_version_model":SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":args.trials,
-        "trial_count":len(ordered),"n_unique_paths":n_unique_paths,
+        "trial_count":len(ordered),
+        "daily_balance_contract":{"schema_version":DAILY_BALANCE_SCHEMA_VERSION,"status":"PASS_SCOPED_POST_WRITE_BALANCE_CHECK","source_sha":args.source_sha,"cohort_id":cohort_id,"master_seed":constants.MASTER_SEED,"model_schema_version":SCHEMA_VERSION,"rows_checked":path_contract["balance_rows_checked"],"balance_mismatch_count":path_contract["balance_mismatch_count"],"required_integer_fields":list(DAILY_BALANCE_INTEGER_FIELDS)},
+        "daily_path_identity_contract":path_contract,
+        "n_unique_paths":n_unique_paths,
         "rng_audit_validation":{"status":"PASS","records_verified":rng_audit_records_verified,"scope":"cumulative scenario trial IDs 1..N"},
         "n_unique_paths_status":"DEGENERATE_DETERMINISTIC" if args.scenario.startswith("C100_") else "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT",
         "unique_daily_paths":n_unique_daily_paths,
@@ -533,11 +543,11 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
         "files":files}
     write_json(out_dir/"scenario_manifest.json",manifest)
-    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,
-        "trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,
-        "eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],
-        "derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"files":files},
-        ensure_ascii=False,sort_keys=True))
+    from scripts.audit_s6_daily_balance_artifact import audit_scenario_artifacts
+    audit_report=audit_scenario_artifacts(out_dir)
+    if audit_report["status"]!="PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY": raise RuntimeError("S6_POST_WRITE_DAILY_BALANCE_AUDIT_NOT_PASS")
+    write_json(out_dir/"daily_balance_path_audit.json",audit_report)
+    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,"trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,"eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],"derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"daily_balance_audit_status":audit_report["status"],"daily_balance_path_audit_sha256":sha256_file(out_dir/"daily_balance_path_audit.json"),"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
 
 def stochastic_scenario_ids() -> set[str]:
@@ -1080,6 +1090,9 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
                 raise RuntimeError(f"S6_SOURCE_RUN_METADATA_INCOMPLETE:{scenario}")
     if set(by_scenario)!=expected:
         raise RuntimeError(f"S6_SCENARIO_COVERAGE_MISMATCH:missing={sorted(expected-set(by_scenario))}:extra={sorted(set(by_scenario)-expected)}")
+    manifest_versions={str(item[1].get("schema_version","LEGACY_SCHEMA_UNKNOWN")) for item in by_scenario.values()}
+    if len(manifest_versions)!=1: raise RuntimeError(f"S6_AGGREGATE_DAILY_SCHEMA_MIXED:{sorted(manifest_versions)}")
+    all_have_path_contract=manifest_versions=={SCENARIO_MANIFEST_SCHEMA_VERSION}
     all_trials=[]; all_daily=[]; summaries=[]
     scenario_rows_by_id={}; scenario_path_fingerprints={}; scenario_provenance={}
     for scenario in sorted(expected):
@@ -1094,20 +1107,23 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
-        path_fingerprints=daily_path_fingerprints(snapshots)
-        if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):
-            raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
-        n_unique_daily_paths=len(set(path_fingerprints.values()))
+        if all_have_path_contract:
+            require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
+            path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=f"s6-v23-{args.source_sha[:8]}",master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+            if path_evidence["summary"]!=m.get("daily_path_identity_contract"): raise RuntimeError(f"S6_DAILY_PATH_IDENTITY_MANIFEST_MISMATCH:{scenario}")
+            path_fingerprints=path_evidence["path_content_fingerprint_by_trial"];n_unique_daily_paths=int(path_evidence["summary"]["unique_daily_path_count"])
+            daily_balance_schema_status="PASS_SCOPED_POST_WRITE_BALANCE_CHECK";daily_path_identity_status="PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT"
+            n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+        else:
+            path_fingerprints=daily_path_fingerprints(snapshots)
+            if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
+            n_unique_daily_paths=len(set(path_fingerprints.values()))
+            n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
+            reported_n_unique_paths=None;reported_n_unique_paths_status="MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA"
+            daily_balance_schema_status="MISSING_EVIDENCE";daily_path_identity_status="MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA"
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
-        rng_audit_records_verified = validate_cumulative_rng_audit(rows, args.source_sha)
-        rng_draw_counts=[int(row.get("rng_draw_count", 0)) for row in rows]
-        n_unique_paths=resolve_n_unique_paths(scenario, rng_draw_counts, n_unique_daily_paths)
-        # Legacy N300/N600 manifests did not record the v2.3 unique_daily_paths contract.
-        # Keep the recomputed count diagnostic-only until the source artifact carries that contract.
-        reported_n_unique_paths, reported_n_unique_paths_status = reported_unique_path_evidence(
-            m, n_unique_paths, n_unique_daily_paths, args.source_sha,
-            f"s6-v23-{args.source_sha[:8]}"
-        )
+        rng_audit_records_verified=validate_cumulative_rng_audit(rows,args.source_sha)
         if m.get("unique_terminal_fingerprints", n_unique_financial_outcomes) != n_unique_financial_outcomes:
             raise RuntimeError(f"S6_SCENARIO_UNIQUE_TERMINAL_FINGERPRINTS_MISMATCH:{scenario}")
         provenance_path=base/"opt1_provenance.json"
@@ -1125,6 +1141,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         summaries.append({"scenario_id":scenario,"status":m.get("status"),
             "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
             "n_unique_paths":reported_n_unique_paths,"n_unique_paths_status":reported_n_unique_paths_status,
+            "daily_balance_schema_status":daily_balance_schema_status,"daily_path_identity_status":daily_path_identity_status,
             "unique_daily_paths":n_unique_daily_paths,
             "unique_terminal_fingerprints":n_unique_financial_outcomes,
             "n_unique_financial_outcomes":n_unique_financial_outcomes,
@@ -1256,6 +1273,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "total_scenario_combinations":len(expected)+len(c100_reuse["scenario_ids"]),
         "c100_reused_scenario_count":len(c100_reuse["scenario_ids"]),
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
+        "daily_balance_schema_status":"PASS_SCOPED_POST_WRITE_BALANCE_CHECK" if all_have_path_contract else "MISSING_EVIDENCE",
+        "daily_path_identity_status":"PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT" if all_have_path_contract else "MISSING_EVIDENCE_LEGACY_DAILY_SCHEMA",
         "opt1_audit":{"status":"PASS","scenario_count":len(expected),
             "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
         "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else ("SOURCE_SCENARIO_MANIFESTS_COMPLETE" if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else "NOT_PROVIDED"),
