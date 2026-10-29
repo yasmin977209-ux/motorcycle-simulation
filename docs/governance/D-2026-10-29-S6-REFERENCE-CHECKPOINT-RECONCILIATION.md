@@ -83,3 +83,35 @@ This approval deliberately does **not** declare production Gate A PASS, Gate B P
 3. Decide the new full-daily schema/source identity and path-fingerprint contract before a future checkpoint. Existing S6 N2400 rows remain incomplete and immutable; old main Stage12 rows are another lineage.
 4. Adopt a separately reviewed test-fixture policy; no immutable `results_stage5` input bundle is currently identified.
 5. Keep Gate B, stability, and final delivery acceptance blocked until their own exact-cohort evidence and review conditions pass.
+
+
+## 8. Verification results after the approved read-only Gate A review — 2026-10-29
+
+### Golden and balance projection verification
+- Read-only workflow Run `40795230337`, tested SHA `ae3a50f3a5580ceff2715ae7218043ebf5e895b7`, completed `success`. Artifact `12862963702`, outer SHA-256 `288fd93c44e15520b9ba07e119e0b702d53be77254081828afac0bfa6d1bc25d`, report JSON SHA-256 `3461dd75fda118e95f1f8be851c437ddc943fd62c058853d8941f46f1c972bc4`. It independently checked the Golden map/manifest/approval and called the real S6 approved-Golden loader. Scope: 48,000 fingerprints, 48,000 exact matches, zero mismatch. The report explicitly retains daily full-balance `MISSING_EVIDENCE`, 0 rows recomputed, Gate B `FAIL_SCOPED`, stability `NOT_CONVERGED`, acceptance `NOT_GRANTED`.
+- Read-only checkpoint comparison Run `40795628228`, tested SHA `fe0ab11a00bf05f958a7cc2eb4c05064128bbfc3`, completed `success`; artifact `12862934537`, outer SHA-256 `d465de983b6fd574f792eae245f92745c3a70bcaf40e11bbbb7ec76f5ebc073b`, report JSON SHA-256 `3683605fda2e2e3a0a3a3f370c404d7de32b30347155b803a49729e4407849b9`. It loaded the approved map through `scripts/s6_first_checkpoint.py::load_approved_gate_a_golden`, then applied the actual `evaluate_gate_a_checkpoint` function to the immutable N2400 aggregate trial rows for the initial cumulative checkpoints 300, 600, 1200 and 2400 across all 20 stochastic scenarios.
+- Gate A retrospective scoped result: **80/80 scenario-checkpoint pairs PASS**, **90,000** financial-fingerprint comparisons, **zero** mismatches. Verified per-checkpoint pairs: N=300: 20/20; N=600: 20/20; N=1200: 20/20; N=2400: 20/20. The separate total production-vs-Golden comparison remains 48,000/48,000 exact.
+- This evaluation reads previously materialized trial rows from immutable Artifact `12852969854` / aggregate Run `40773412377`, manifest SHA-256 `3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba`. The historical aggregate and prior statistical JSON were not rewritten; their historical Gate A `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN` status is preserved as at the time of that run.
+- Daily balance projection unit verification Run `40792786844`, tested SHA `f4de3352d080eb433e3852d5a365b5655d054619`, completed `success`: `py_compile` and `tests/test_s6_daily_balance_snapshot_schema.py` succeeded without running a simulation Trial. This validates the pure snapshot projection contract on an initial project object, not the historical N=2400 Parquet exports.
+
+### Updated interpretation
+- S6 gate JSON blob `05b4fadd14e8670a765714fef1954af9b9d78855` records `gate_a_exact_golden.status=PASS_SCOPED_FINANCIAL_FINGERPRINT_MATCH_BY_CHECKPOINT` with the approval identity, artifact digest, checkpoint comparison evidence, and explicit remaining accounting/provenance blockers.
+- Overall gate status remains `AUTHORIZED_FOR_V2.3_EXECUTION` for the scoped S6 candidate contract; `scenario_stability_declaration_allowed=false`, `final_delivery_acceptance_allowed=false`, and `final_production_gate_cleared=false`. This is not an overall project acceptance or convergence result.
+- Gate B remains `FAIL_SCOPED` in the immutable N=2400 evidence: 10/20 pass and 10/20 fail at N=2400; 60 historical transitions, zero successful transitions. The independent Golden approval does not change any Gate B estimate or historical transition.
+- The five asset-side fields absent from the S6 historical `daily_snapshots.parquet` remain absent. No full `Assets == Equity` row was recomputed for S6. The new projection writes future schema `s6-daily-balance-v1`; its addition changes daily-path fingerprint inputs, so source/schema/path-identity and Golden compatibility must be reviewed before any next checkpoint. Do not backfill the old data or start N=4800 as a result of these scoped passes.
+- Original source Run `40731224990` remains parent `failure`; its 20 scenario jobs/artifacts are verified, but the original `source_run_metadata.sha256` remains null. No substitute hash was written.
+- Verifier-fix runs `40794882008`, `40794944921`, and `40795071356` remain failed on their tested verifier revisions. Preserve them in the audit trail as validator defects (field-status literal, run-ID string normalization, and reference digest typo); subsequent exact-head verification passed on Runs `40795230337` and `40795628228`. These failures are not production-trial failures.
+
+## 9. R4 refresh after read-only Gate A review
+
+| Item | Execution | Evidence status | Disposition |
+|---|---|---|---|
+| S6 normative reference selection | `EXECUTED` | `VERIFIED` | E5 reference bound to S6 cohort; EE preserved for historical f3af lineage |
+| Unlimited checkpoint extension | `EXECUTED` | `VERIFIED` in candidate gate contract | `N_k=300*2^(k-1)`, unbounded k; alpha spending unbounded; no N4800 authorized here |
+| Missing Stage 5 fixtures provenance | `EXECUTED` | `VERIFIED` recipe / `MISSING_EVIDENCE` immutable dataset | No fixture data files retained; no build or trial rerun |
+| Golden approval and runtime loader | `EXECUTED` | `VERIFIED` scoped | Separate approval JSON passes the runtime loader and hash/identity checks |
+| Gate A financial fingerprint checkpoints | `EXECUTED` | `PASS_SCOPED` | 80/80 pairs PASS; 90,000 comparisons; 0 mismatches |
+| Full daily S6 Assets == Equity | `NOT_EXECUTED` for historical full-row recomputation | `MISSING_EVIDENCE` | Historical S6 snapshots lack the required fields; new projection unit test is not historical proof |
+| Gate B / stability / release | `BLOCKED` | `FAIL_SCOPED / NOT_CONVERGED / MISSING_EVIDENCE` | No stable declaration, no P17/P18 acceptance, no `FINAL_ACCEPTED` |
+| N=4800 | `NOT_EXECUTED` | `BLOCKED_PENDING_SOURCE_SCHEMA_PATH_PREFLIGHT` | Any later authorization uses only IDs 2401..4800 |
+
