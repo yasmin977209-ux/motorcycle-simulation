@@ -752,11 +752,28 @@ def test_160_التكرارات_التوضيحية_الاربعة_تنتج_فع�
     assert all((ROOT / 'results_stage5' / f'C100_G100_trial_{selection[k]:06d}_daily.json').exists() for k in selection)
 
 
+def _assert_daily_distribution_has_no_calendar_gaps(rows):
+    assert rows, "daily_distribution must not be empty"
+    dates = [date.fromisoformat(row["date"]) for row in rows]
+    assert all(
+        current == previous + timedelta(days=1)
+        for previous, current in zip(dates, dates[1:])
+    ), "daily_distribution contains calendar-date gaps"
+
+
+def test_161_daily_distribution_gap_guard_rejects_missing_day():
+    with pytest.raises(AssertionError, match="calendar-date gaps"):
+        _assert_daily_distribution_has_no_calendar_gaps([
+            {"date": "2027-01-01"},
+            {"date": "2027-01-03"},
+        ])
+
+
 def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
     import pyarrow.parquet as pq
     rows = pq.read_table(ROOT / 'results_stage5' / 'daily_distribution.parquet').to_pylist()
     assert rows and rows[0]['date'] == '2027-01-01' and rows[-1]['date'] == '2033-01-06'
-    assert all((rows[i+1]['date'] > rows[i]['date']) for i in range(len(rows)-1))
+    _assert_daily_distribution_has_no_calendar_gaps(rows)
 
 
 def test_162_شروط_الاغلاق_لا_تشترط_المطالبات_او_الذمم():
