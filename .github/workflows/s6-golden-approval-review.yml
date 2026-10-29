@@ -181,7 +181,7 @@ jobs:
           if audit.get("source_sha") != approval["source_sha"] or audit.get("cohort_id") != approval["cohort_id"] or audit.get("master_seed") != approval["master_seed"]:
               raise SystemExit("COMPARISON_SOURCE_IDENTITY_MISMATCH")
           accounting = audit["daily_balance_reconciliation"]
-          if accounting.get("status") != "MISSING_EVIDENCE" or accounting.get("rows_recomputed") != 0 or accounting.get("assets_field_present_all_scenarios") is not False:
+          if accounting.get("status") != "MISSING_EVIDENCE_FOR_INDEPENDENT_RECHECK" or accounting.get("rows_recomputed") != 0 or accounting.get("missing_component_rows") != accounting.get("rows_seen") or accounting.get("assets_field_present_all_scenarios") is not False:
               raise SystemExit("MISSING_BALANCE_EVIDENCE_STATUS_NOT_PRESERVED")
           if audit.get("original_source_run_metadata_sha256") is not None or audit.get("acceptance") != "NOT_GRANTED":
               raise SystemExit("SOURCE_METADATA_GAP_OR_ACCEPTANCE_BOUNDARY_CHANGED")
