@@ -61,6 +61,14 @@ jobs:
           repository: ${{ github.repository }}
           run-id: 40784902124
           path: audit-input/comparison
+      - name: Download the verified immutable N2400 aggregate output (read-only)
+        uses: actions/download-artifact@v4
+        with:
+          name: s6-n2400-status-reconciled-aggregate-40773412377
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 40773412377
+          path: audit-input/aggregate
       - name: Validate independent map, manifest, approval and exact comparison without simulation
         shell: bash
         run: |
@@ -204,8 +212,100 @@ jobs:
           if loaded_golden is None or loaded_golden.get("status") != "APPROVED_FOR_GATE_A":
               raise SystemExit("S6_RUNTIME_GOLDEN_LOADER_REJECTED_APPROVAL")
 
+          from scripts.s6_first_checkpoint import evaluate_gate_a_checkpoint, ordered_stochastic_scenario_ids
+          import pyarrow.parquet as pq
+
+          aggregate_dir = Path("audit-input/aggregate")
+          aggregate_manifest_path = aggregate_dir / "manifest.json"
+          trials_path = aggregate_dir / "trials_summary.parquet"
+          c100_path = aggregate_dir / "c100_reuse.json"
+          stats_path = aggregate_dir / "statistical_evaluation.json"
+          for path in (aggregate_manifest_path, trials_path, c100_path, stats_path):
+              if not path.is_file():
+                  raise SystemExit(f"IMMUTABLE_N2400_AGGREGATE_MEMBER_MISSING:{path}")
+          aggregate_manifest = json.loads(aggregate_manifest_path.read_text(encoding="utf-8"))
+          c100_reuse = json.loads(c100_path.read_text(encoding="utf-8"))
+          historical_stats = json.loads(stats_path.read_text(encoding="utf-8"))
+          if aggregate_manifest.get("source_sha") != approval["source_sha"] or aggregate_manifest.get("cohort_id") != approval["cohort_id"]:
+              raise SystemExit("IMMUTABLE_N2400_AGGREGATE_IDENTITY_MISMATCH")
+          if aggregate_manifest.get("run_id") != "40773412377" or aggregate_manifest.get("source_run_id") != "40731224990" or aggregate_manifest.get("checkpoint_n") != 2400:
+              raise SystemExit("IMMUTABLE_N2400_AGGREGATE_RUN_BINDING_MISMATCH")
+          if aggregate_manifest.get("scenario_count") != 20 or aggregate_manifest.get("total_scenario_combinations") != 25 or aggregate_manifest.get("c100_reused_scenario_count") != 5:
+              raise SystemExit("IMMUTABLE_N2400_SCENARIO_COUNT_INVALID")
+          for filename, meta in aggregate_manifest.get("files", {}).items():
+              path = aggregate_dir / filename
+              if not path.is_file() or path.stat().st_size != meta["size_bytes"] or sha256(path) != meta["sha256"]:
+                  raise SystemExit(f"IMMUTABLE_N2400_AGGREGATE_MEMBER_HASH_MISMATCH:{filename}")
+          if c100_reuse.get("status") != "REUSED_READ_ONLY" or c100_reuse.get("G_status") != "G_INERT" or c100_reuse.get("rerun") is not False or c100_reuse.get("trial_count_per_scenario") != 300:
+              raise SystemExit("C100_DETERMINISTIC_REUSE_CONTRACT_INVALID")
+          if set(c100_reuse.get("scenario_ids", [])) != {f"C100_G{g:03d}" for g in (100,70,50,30,0)}:
+              raise SystemExit("C100_REUSED_SCENARIO_SET_INVALID")
+          if c100_reuse.get("golden_sha256") != gate["component_status"]["gate_a_exact_golden"]["c100_reuse"]["golden_sha256"] or c100_reuse.get("manifest_sha256") != gate["component_status"]["gate_a_exact_golden"]["c100_reuse"]["manifest_sha256"]:
+              raise SystemExit("C100_GOLDEN_REFERENCE_HASH_MISMATCH")
+
+          trial_rows = pq.read_table(trials_path).to_pylist()
+          if len(trial_rows) != 20 * 2400:
+              raise SystemExit("IMMUTABLE_N2400_TRIAL_ROW_COUNT_INVALID")
+          expected_scenarios = ordered_stochastic_scenario_ids()
+          rows_by_scenario = {scenario: {} for scenario in expected_scenarios}
+          for row in trial_rows:
+              scenario = str(row.get("scenario_id", ""))
+              trial_id = row.get("trial_id")
+              if scenario not in rows_by_scenario or type(trial_id) is not int:
+                  raise SystemExit("IMMUTABLE_N2400_TRIAL_ROW_IDENTITY_INVALID")
+              if trial_id in rows_by_scenario[scenario]:
+                  raise SystemExit(f"DUPLICATE_TRIAL_ID_IN_AGGREGATE:{scenario}:{trial_id}")
+              if not isinstance(row.get("trial_fingerprint"), str) or len(row["trial_fingerprint"]) != 64:
+                  raise SystemExit(f"INVALID_FINANCIAL_FINGERPRINT:{scenario}:{trial_id}")
+              for field, expected_value in (("source_sha", approval["source_sha"]), ("cohort_id", approval["cohort_id"])):
+                  if row.get(field) is not None and row.get(field) != expected_value:
+                      raise SystemExit(f"TRIAL_ROW_SOURCE_IDENTITY_MISMATCH:{scenario}:{trial_id}:{field}")
+              rows_by_scenario[scenario][trial_id] = row
+          if any(set(rows_by_scenario[s]) != set(range(1,2401)) for s in expected_scenarios):
+              raise SystemExit("IMMUTABLE_N2400_TRIAL_COVERAGE_INVALID")
+
+          checkpoint_results = []
+          total_compared = 0
+          for n in (300,600,1200,2400):
+              for scenario in expected_scenarios:
+                  result = evaluate_gate_a_checkpoint(
+                      scenario, n, rows_by_scenario[scenario], loaded_golden,
+                      source_sha=approval["source_sha"],
+                      cohort_id=approval["cohort_id"],
+                  )
+                  total_compared += result.get("trial_count_checked", 0)
+                  checkpoint_results.append({
+                      "scenario_id": scenario,
+                      "n": n,
+                      "status": result.get("status"),
+                      "checked": result.get("checked"),
+                      "trial_count_checked": result.get("trial_count_checked"),
+                      "mismatch_count": result.get("mismatch_count"),
+                      "golden_run_id": result.get("golden_run_id"),
+                      "golden_map_sha256": result.get("golden_map_sha256"),
+                  })
+                  if result.get("status") != "PASS" or result.get("mismatch_count") != 0 or result.get("trial_count_checked") != n:
+                      raise SystemExit(f"GATE_A_CHECKPOINT_FINGERPRINT_NOT_PASS:{scenario}:N{n}")
+          if len(checkpoint_results) != 80 or total_compared != 90000:
+              raise SystemExit("GATE_A_CHECKPOINT_EVALUATION_COVERAGE_INVALID")
+          if historical_stats.get("gate_a_final") != "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN":
+              raise SystemExit("HISTORICAL_AGGREGATE_STATUS_CHANGED_UNEXPECTEDLY")
+          if historical_stats.get("gate_b_final") != "FAIL_SCOPED" or historical_stats.get("scenario_stability_final") != "NOT_CONVERGED":
+              raise SystemExit("HISTORICAL_GATE_B_OR_STABILITY_STATUS_CHANGED")
+
           report = {
-              "status": "PASS_SCOPED_GOLDEN_APPROVAL_AND_PROJECTION_TEST",
+              "status": "PASS_SCOPED_GOLDEN_APPROVAL_BALANCE_PROJECTION_AND_GATE_A_CHECK",
+              "gate_a_retroactive_comparison": "PASS_SCOPED_FINANCIAL_FINGERPRINTS_BY_CHECKPOINT",
+              "gate_a_scenario_checkpoint_pairs_passed": len(checkpoint_results),
+              "gate_a_scenario_checkpoint_pairs_expected": 80,
+              "gate_a_financial_fingerprint_comparisons": total_compared,
+              "gate_a_mismatches": 0,
+              "gate_a_checkpoint_counts": {"300": 20, "600": 20, "1200": 20, "2400": 20},
+              "c100_reused_read_only_scenarios": 5,
+              "c100_g_status": c100_reuse["G_status"],
+              "historical_aggregate_run_id": aggregate_manifest["run_id"],
+              "historical_aggregate_manifest_sha256": sha256(aggregate_manifest_path),
+              "gate_a_checkpoint_results": checkpoint_results,
               "approval_id": approval["approval_id"],
               "approved_scope": "read-only financial fingerprint map only",
               "source_sha": approval["source_sha"],
