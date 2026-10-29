@@ -122,7 +122,7 @@ jobs:
               raise SystemExit("GOLDEN_TRIAL_SCOPE_INVALID")
           if fmap["total_trial_fingerprints"] != 48000 or manifest["total_trial_fingerprints"] != 48000:
               raise SystemExit("GOLDEN_TOTAL_FINGERPRINT_COUNT_INVALID")
-          if manifest["run_id"] != 40760465042 or manifest["run_attempt"] != 1 or manifest["tested_sha"] != approval["tested_sha"]:
+          if str(manifest["run_id"]) != "40760465042" or manifest["run_attempt"] != 1 or manifest["tested_sha"] != approval["tested_sha"]:
               raise SystemExit("GOLDEN_ACTIONS_PROVENANCE_MISMATCH")
           if manifest["map_file_sha256"] != fmap_sha or manifest["map_file"] != map_path.name:
               raise SystemExit("GOLDEN_MAP_MANIFEST_LINK_MISMATCH")
