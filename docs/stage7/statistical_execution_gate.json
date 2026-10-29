@@ -69,7 +69,36 @@
         "Probability_Accounting_Loss",
         "P90_Termination_Count",
         "P90_Held_Assets"
-      ]
+      ],
+      "checkpoint_indices_are_initial_window_only": true,
+      "checkpoint_sequence_formula": "N_k = 300 * 2^(k-1), k = 1, 2, ...",
+      "next_checkpoint_multiplier": 2,
+      "maximum_checkpoint_index": null,
+      "cumulative_checkpoint_points_are_minimum_not_ceiling": true,
+      "alpha_spending_k_starts_at": 1,
+      "alpha_spending_k_unbounded": true
+    },
+    "checkpoint_schedule_semantics": "The listed points are the initial four cumulative checkpoints required to evaluate three adjacent transitions; the list is not an upper bound.",
+    "checkpoint_extension_policy": {
+      "formula": "N_k = 300 * 2^(k-1), k = 1, 2, ...",
+      "initial_checkpoints": [
+        300,
+        600,
+        1200,
+        2400
+      ],
+      "initial_window_only": true,
+      "k_starts_at": 1,
+      "next_checkpoint_multiplier": 2,
+      "maximum_checkpoint_n": null,
+      "maximum_checkpoint_index": null,
+      "no_fixed_upper_cap": true,
+      "minimum_cumulative_checkpoint_points": 4,
+      "four_points_are_ceiling": false,
+      "required_successful_adjacent_transitions": 3,
+      "continue_until": "CONVERGED or a separately evidenced NOT_CONVERGED_OPERATIONAL_STOP",
+      "alpha_spending_formula": "alpha_s,k = 0.0025 / (k*(k+1))",
+      "alpha_spending_k_unbounded": true
     }
   },
   "component_status": {
@@ -190,7 +219,7 @@
       "tmp/s5-statistical-gate-v23-20261026",
       "tmp/s6-aggregate-contract-fix-20261027"
     ],
-    "permitted_next_work": "The N=1200 checkpoint already executed successfully in Run 40596643263 by reusing immutable N=600 artifacts from Run 40582501871 and executing trial IDs 601..1200 only. Evaluate Gate B on the resulting immutable cohort before moving to N=2400. Gate A, final Gate B, scenario stability, and final production acceptance remain blocked until a reviewed same-SOURCE_SHA production Golden exists and the four checkpoint points and three consecutive transitions pass.",
+    "permitted_next_work": "N=2400 historical artifacts are available and the independent financial-fingerprint comparison is 48,000/48,000 exact; the Golden approval is scoped to read-only financial fingerprints only. Do not dispatch N=4800 yet: complete the source/schema/path-identity review for the new daily balance snapshot projection, retain the missing full-balance evidence for the historical N=2400 artifacts, and perform all preflight checks. Any later N=4800 run must use only trial IDs 2401..4800. Gate B, stability declaration, and final delivery acceptance remain separate decisions.",
     "s6_execution_authorized": true,
     "active_source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
     "active_cohort_id": "s6-v23-da1a9ea9",
@@ -747,5 +776,15 @@
       "proof_sha256": "f6add77e9e7ff8256b36b661df337897de10cd96d7e00b0d9dfa660dea0e927b",
       "rerun": false
     }
+  },
+  "governance_reconciliation": {
+    "decision_id": "D-2026-10-29-S6-REFERENCE-CHECKPOINT-RECONCILIATION",
+    "reference_scope": "S6 v2.3 cohort only",
+    "reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+    "legacy_main_reference_sha256": "ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479",
+    "legacy_main_source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+    "checkpoint_extension_resolved": true,
+    "production_gate_status_unchanged": true,
+    "note": "This additive governance record resolves reference identity by source lineage; it does not accept Gate A/B, convergence, or final delivery."
   }
 }
