@@ -287,3 +287,23 @@ def test_statistical_gate_rejects_pass_labels_with_stale_execution_approval_and_
         or item.startswith("STATISTICAL_COMPONENT_IMPLEMENTATION_GAP:")
         for item in result["blockers"]
     )
+
+
+
+def test_r4_workflow_uses_only_read_only_inputs_and_never_rebuilds_fixtures() -> None:
+    workflow = Path(".github/workflows/r4-statistical-gate.yml").read_text(encoding="utf-8")
+    assert "\n  push:" not in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "run_single_trial" not in workflow
+    assert "run_trials_sequentially" not in workflow
+    assert "run_trials_parallel" not in workflow
+    assert "UNREVIEWED_STAGE5_FIXTURE_FILES_PRESENT" in workflow
+    assert '"status": "MISSING_EVIDENCE"' in workflow
+    assert '"execution": "NOT_EXECUTED"' in workflow
+    for node_id in (
+        "test_127_تطابق_التسلسلي_والمتوازي",
+        "test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط",
+        "test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا",
+        "test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات",
+    ):
+        assert node_id in workflow

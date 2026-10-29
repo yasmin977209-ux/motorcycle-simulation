@@ -1,25 +1,28 @@
-name: R4 statistical gate fail-closed validation
+name: R4 statistical gate fail-closed validation (fixture-safe)
 
 on:
-  push:
-    branches:
-      - "tmp/cp-r4-statistical-gate-fail-closed-20261027"
   pull_request:
     branches:
       - main
     paths:
       - "scripts/golden_reference_provider.py"
       - "tests/test_golden_provider_workflow_integration.py"
+      - "tests/test_acceptance_16_v2.py"
       - ".github/workflows/r4-statistical-gate.yml"
       - "docs/stage7/statistical_execution_gate.json"
       - "requirements.txt"
+  workflow_dispatch:
+
+concurrency:
+  group: r4-statistical-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   r4-tests:
-    name: Focused R4 regression then full test suite
+    name: Focused R4 regression and fixture-independent suite
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -36,235 +39,60 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Focused R4 regression test
         run: python -m pytest -q tests/test_golden_provider_workflow_integration.py::test_statistical_gate_cannot_be_cleared_by_status_string_alone
-      - name: Build Stage 5 fixtures for v2 parquet tests
-        env:
-          PYTHONPATH: .
+      - name: Read-only fixture provenance gate (no trial execution)
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf results_stage5
-          mkdir -p results_stage5
-
-          cat > /tmp/stage5_round5_build.py <<'PY'
-          from __future__ import annotations
-
+          python - <<'PY'
           import json
-          from dataclasses import asdict
+          import os
+          from pathlib import Path
 
-          import pyarrow as pa
-          import pyarrow.parquet as pq
-          import monte_carlo
-
-          RESULTS = "results_stage5"
-
-          def main():
-              c100_result, c100_daily = monte_carlo.run_single_trial(
-                  "C100_G100", 1, master_seed=20270101
+          root = Path("results_stage5")
+          required = [
+              root / "worker_equivalence_manifest.json",
+              root / "trials_summary.parquet",
+              root / "selection.parquet",
+              root / "C100_G100_trial_000001_daily.json",
+              root / "daily_distribution.parquet",
+          ]
+          present = [str(path) for path in required if path.exists()]
+          if present:
+              raise SystemExit(
+                  "UNREVIEWED_STAGE5_FIXTURE_FILES_PRESENT:"
+                  + ",".join(present)
+                  + "; refusing to consume unpinned test inputs"
               )
-              c100_results = [c100_result]
-              c100_slices = {1: c100_daily}
-              selection = monte_carlo.select_representative_trials(c100_results)
-
-              assert c100_result.final_net_project_equity == 209671000
-              assert c100_result.partner1_final_entitlement == 146769700
-              assert c100_result.partner2_final_entitlement == 62901300
-              assert c100_result.final_cash == 209671000
-              assert c100_result.final_close_date == "2033-01-06"
-              assert len(c100_daily) == 2198
-
-              pq.write_table(
-                  pa.Table.from_pylist([asdict(c100_result)]),
-                  f"{RESULTS}/trials_summary.parquet",
-              )
-
-              pq.write_table(
-                  pa.Table.from_pylist([
-                      {"selection_key": key, "trial_id": int(trial_id)}
-                      for key, trial_id in selection.items()
-                  ]),
-                  f"{RESULTS}/selection.parquet",
-              )
-
-              with open(
-                  f"{RESULTS}/C100_G100_trial_{selection.p50_trial_id:06d}_daily.json",
-                  "w",
-                  encoding="utf-8",
-              ) as handle:
-                  json.dump(
-                      c100_daily,
-                      handle,
-                      ensure_ascii=False,
-                      indent=2,
-                      sort_keys=True,
-                  )
-                  handle.write("\n")
-
-              long_distribution = monte_carlo.build_daily_distribution(
-                  c100_results,
-                  c100_slices,
-              )
-
-              wide_by_date = {}
-              for row in long_distribution:
-                  current = wide_by_date.setdefault(
-                      row["date"],
-                      {
-                          "date": row["date"],
-                          "active_trial_count": row["active_trial_count"],
-                      },
-                  )
-                  for metric in (
-                      "Cash",
-                      "Net_Equity",
-                      "Active_Bikes",
-                      "Owned_Transferred_Bikes",
-                      "Pending_Claims",
-                  ):
-                      current[f"{row['quantile_name']}_{metric}"] = row[metric]
-
-              daily_distribution = [
-                  wide_by_date[key]
-                  for key in sorted(wide_by_date)
-              ]
-
-              pq.write_table(
-                  pa.Table.from_pylist(daily_distribution),
-                  f"{RESULTS}/daily_distribution.parquet",
-              )
-
-              print(json.dumps({
-                  "artifacts": [
-                      "results_stage5/trials_summary.parquet",
-                      "results_stage5/daily_distribution.parquet",
-                      "results_stage5/selection.parquet",
-                  ],
-                  "c100_golden": {
-                      "final_net_project_equity": c100_result.final_net_project_equity,
-                      "partner1_final_entitlement": c100_result.partner1_final_entitlement,
-                      "partner2_final_entitlement": c100_result.partner2_final_entitlement,
-                      "final_cash": c100_result.final_cash,
-                      "final_close_date": c100_result.final_close_date,
-                      "daily_balance_checks": len(c100_daily),
-                  },
-                  "selection": selection,
-              }, ensure_ascii=False, sort_keys=True))
-
-          if __name__ == "__main__":
-              main()
+          report = {
+              "status": "MISSING_EVIDENCE",
+              "execution": "NOT_EXECUTED",
+              "fixture_builder_trials_started": False,
+              "required_immutable_inputs": [str(path) for path in required],
+              "reason": "No retained, reviewed fixture bundle with pinned source/cohort/schema and SHA-256 was found.",
+              "policy": "Do not replay C100_G100 trial 1 or C070_G100 trial IDs 1..3 to manufacture fixtures."
+          }
+          print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Stage 5 fixture provenance\n\n")
+              summary.write("**MISSING_EVIDENCE / NOT_EXECUTED:** no immutable, hash-pinned fixture bundle is present. ")
+              summary.write("No model Trial was executed to construct fixtures. Four dependent test cases are explicitly excluded below.\n")
           PY
-
-          python /tmp/stage5_round5_build.py
-
-          cat > /tmp/stage5_round5_worker_manifest.py <<'PY2'
-          from __future__ import annotations
-
-          import hashlib
-          import json
-          from dataclasses import asdict
-
-          import monte_carlo
-
-          RESULTS = "results_stage5"
-
-          def stable_sha(value):
-              payload = json.dumps(
-                  value,
-                  ensure_ascii=False,
-                  sort_keys=True,
-                  separators=(",", ":"),
-                  default=str,
-              ).encode("utf-8")
-              return hashlib.sha256(payload).hexdigest()
-
-          def main():
-              trial_ids = (1, 2, 3)
-
-              seq_results, seq_slices = monte_carlo.run_trials_sequentially(
-                  "C070_G100",
-                  trial_ids,
-              )
-
-              par2_results, par2_slices = monte_carlo.run_trials_parallel(
-                  "C070_G100",
-                  trial_ids,
-                  2,
-              )
-
-              par4_results, par4_slices = monte_carlo.run_trials_parallel(
-                  "C070_G100",
-                  trial_ids,
-                  4,
-              )
-
-              def by_id(results):
-                  return {result.trial_id: result for result in results}
-
-              seq_by_id = by_id(seq_results)
-              par2_by_id = by_id(par2_results)
-              par4_by_id = by_id(par4_results)
-
-              manifest = []
-              for trial_id in trial_ids:
-                  seq_result = asdict(seq_by_id[trial_id])
-                  p2_result = asdict(par2_by_id[trial_id])
-                  p4_result = asdict(par4_by_id[trial_id])
-                  seq_daily = seq_slices[trial_id]
-                  p2_daily = par2_slices[trial_id]
-                  p4_daily = par4_slices[trial_id]
-
-                  manifest.append({
-                      "scenario_id": "C070_G100",
-                      "trial_id": trial_id,
-                      "exact_1_eq_2": (
-                          seq_result == p2_result
-                          and seq_daily == p2_daily
-                      ),
-                      "exact_1_eq_4": (
-                          seq_result == p4_result
-                          and seq_daily == p4_daily
-                      ),
-                      "trial_result_sha256_1": stable_sha(seq_result),
-                      "trial_result_sha256_2": stable_sha(p2_result),
-                      "trial_result_sha256_4": stable_sha(p4_result),
-                      "daily_slice_sha256_1": stable_sha(seq_daily),
-                      "daily_slice_sha256_2": stable_sha(p2_daily),
-                      "daily_slice_sha256_4": stable_sha(p4_daily),
-                  })
-
-              assert all(
-                  row["exact_1_eq_2"] and row["exact_1_eq_4"]
-                  for row in manifest
-              )
-
-              with open(
-                  f"{RESULTS}/worker_equivalence_manifest.json",
-                  "w",
-                  encoding="utf-8",
-              ) as handle:
-                  json.dump(
-                      manifest,
-                      handle,
-                      ensure_ascii=False,
-                      indent=2,
-                      sort_keys=True,
-                  )
-                  handle.write("\n")
-
-              print(json.dumps({
-                  "worker_manifest_rows": len(manifest),
-                  "exact_all": all(
-                      row["exact_1_eq_2"] and row["exact_1_eq_4"]
-                      for row in manifest
-                  ),
-              }, ensure_ascii=False, sort_keys=True))
-
-          if __name__ == "__main__":
-              main()
-          PY2
-
-          python /tmp/stage5_round5_worker_manifest.py
-      - name: Full repository test suite (only after focused test passes)
+      - name: Run fixture-independent repository regression
         if: success()
         env:
           PYTHONPATH: .
-        run: python -m pytest -q tests
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests \
+            --deselect='tests/test_acceptance_16_v2.py::test_127_تطابق_التسلسلي_والمتوازي' \
+            --deselect='tests/test_acceptance_16_v2.py::test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط' \
+            --deselect='tests/test_acceptance_16_v2.py::test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا' \
+            --deselect='tests/test_acceptance_16_v2.py::test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات'
+      - name: Record explicit regression scope
+        if: always()
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Regression scope
+          The focused R4 test and all fixture-independent tests are run. Tests 127, 159, 160 and 161 are **NOT_EXECUTED** while their authoritative fixture bundle is absent. A successful workflow is not a full-suite acceptance result and does not establish production Gate A/B, convergence, accounting balance, or delivery acceptance.
+          EOF
