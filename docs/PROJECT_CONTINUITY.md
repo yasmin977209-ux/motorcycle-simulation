@@ -1469,3 +1469,14 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 - **PR #60/#61 stale branches:** closure-reconciliation comments were added. #60's scoped Stage 9C evidence is already appended to current main while its historic PARTIAL/broad-pytest evidence remains preserved. #61's original standalone daily extraction is superseded by the separate exact-Trial replay adapter used by PR #74. Neither closed PR establishes final acceptance.
 - **Next:** do not label the diagnostic workbook a final deliverable. Resolve the registered statistical K_SPEC, Golden coverage, historical failed transition, P90_Held_Assets, Stage10 metadata/fidelity, G2 runtime, and P17/P18 release blockers before assembling and accepting the final seven-file AR/EN package plus manifest.json.
 
+
+## CP-TEST161-CALENDAR-GAP-20261029 — اختبار فجوات DAILY_DISTRIBUTION
+
+- **النطاق:** إصلاح اختبار فقط في `tests/test_acceptance_16_v2.py`. لا تعديل في منطق المحاكاة أو المرجع أو RNG أو البذرة أو النتائج أو قواعد القبول.
+- **الدليل قبل الإصلاح:** الاختبار القديم يفحص أول تاريخ `2027-01-01` وآخر تاريخ `2033-01-06` والترتيب الصاعد فقط؛ لا يثبت تتابع الأيام. تجربة اصطناعية بالتواريخ `2027-01-01, 2027-01-03, 2033-01-06` اجتازت هذه الشروط رغم غياب يوم.
+- **الفرع/الهوية:** `tmp/cp-test161-calendar-gap-20261029`; أساس التغيير `c6e54349a5e94f65d5aa9f83141f225d777bb474`; commit الاختبار `9433ad22a586150180267c82768bc5573cee0208`. رأس main عند التحقق: `c6e54349a5e94f65d5aa9f83141f225d777bb474` (لم يُعدّل).
+- **التغيير:** إضافة حارس يومي يشترط أن يكون كل تاريخ لاحق مساويًا للتاريخ السابق + يوم واحد، واختبار اصطناعي يثبت رفض فجوة، وربط اختبار 161 الفعلي بهذا الحارس.
+- **الاختبار المحلي:** `python -m pytest -q /tmp/test_daily_gap_regression.py` — exit 0، `3 passed` في 0.10s. الاختبار يثبت قبول المنطق القديم للحالة ذات الفجوة، ورفض الحارس الجديد لها، وقبول التواريخ المتتابعة. هذا اختبار مصغر للمنطق وليس تشغيلًا لاختبار Parquet الإنتاجي.
+- **لم يُشغّل:** لا Workflow/pytest suite للمستودع؛ مسارات الـworkflow المتاحة التي تبني fixture تنفذ `run_single_trial` وتجارب sequential/parallel، ولذلك لم تُشغّل لتجنب أي Trial. لم تُنشأ PR ولم يحدث دمج.
+- **الحالة:** `PASS_SCOPED` لاختبار المنطق الاصطناعي؛ قبول الاختبار الفعلي على Parquet وCI الكامل ما زال `MISSING_EVIDENCE`. لا يثبت هذا الإصلاح سلامة DAILY_DISTRIBUTION الإنتاجية.
+- **الخطوة التالية المسموحة:** مراجعة مستقلة للتغيير فقط؛ لا تبدأ إصلاحًا آخر ولا تشغيل Trials.
