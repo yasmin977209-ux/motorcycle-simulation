@@ -2051,3 +2051,9 @@ Preserve the distinction between the successful exact fingerprint comparison and
 3. Keep missing Stage 5 fixtures explicit until a reviewed fixture-source decision; no fixture generation or full-suite rerun occurred.
 4. N4800 remains unstarted. If source/schema/path checks and authorizations eventually pass, use only IDs 2401..4800; continue unlimited doubling thereafter until convergence or a separately evidenced operational stop.
 5. Do not claim `Gate B PASS`, `CONVERGED`, `FINAL_ACCEPTED`, P17 or P18 until independent evidence satisfies every required condition.
+
+
+### Latest post-decision verifier repeat — 2026-10-29
+- After the scoped Gate A result was recorded in the candidate gate and governance decision, verifier Run `40795998745` completed `success` on tested SHA `a5573eb1891ed2c56b01f6c9b3ccfe9619a08358`; Artifact `12864165788`, outer SHA-256 `744cb0ae563a44b672ccd0c254f1033f31f7d4f7ceb3fb03bfe907870b6866c8`. This repeat exercised the same read-only Golden map/manifest/approval and 80-pair Gate A checkpoint verification; the inner report SHA stayed `3683605fda2e2e3a0a3a3f370c404d7de32b30347155b803a49729e4407849b9`, with 80/80 PASS, 90,000 comparisons, zero mismatch, full daily balance `MISSING_EVIDENCE`, Gate B `FAIL_SCOPED`, stability `NOT_CONVERGED`, final acceptance `NOT_GRANTED`.
+- Read back the latest gate after this CP: blob `05b4fadd14e8670a765714fef1954af9b9d78855`; overall `AUTHORIZED_FOR_V2.3_EXECUTION`; component Gate A `PASS_SCOPED_FINANCIAL_FINGERPRINT_MATCH_BY_CHECKPOINT`; Gate B remains production checkpoints pending / historical aggregate `FAIL_SCOPED`; stability and final delivery flags remain false. Current `main` stays `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- The three intermediate verifier failures remain in history as verifier defects; the latest corrected Run `40795998745` is successful. No simulation trial or N4800 execution was started.
