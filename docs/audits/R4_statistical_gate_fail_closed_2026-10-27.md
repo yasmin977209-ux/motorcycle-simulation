@@ -25,3 +25,13 @@ Keep the test unchanged. In production code, a component's status string must no
 - `21.5`, `23.5`, `25.6`: evidence manifests, workflow execution, source identity and historical separation.
 
 Reference file SHA-256 verified locally: `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
+
+
+## Post-run correction — exact identity of the reference checksum (2026-10-29)
+
+The earlier line “Reference file SHA-256 verified locally: e5efaf…” did not identify the bytes of the file named المرجع_النهائي_الموحد_المعتمد.md. Raw-byte verification identifies the two files as follows:
+
+- المرجع_النهائي_الموحد_المعتمد.md: 271,496 bytes; SHA-256 ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479 — the effective reference pinned by main.
+- المرجع_النهائي_الموحد_v2.3-إعادة_صياغة(1).md: 381,559 bytes; SHA-256 e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f — a separate rewrite/draft.
+
+The former statement is retained as historical evidence; this addendum corrects its file identity. The v2.3 rewrite has conflicting status language and no effective-main decision adopting it, so it is not a substitute for the pinned original.

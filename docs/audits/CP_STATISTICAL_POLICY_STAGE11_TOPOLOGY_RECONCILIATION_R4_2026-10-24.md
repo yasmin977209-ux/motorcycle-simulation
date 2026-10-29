@@ -140,3 +140,16 @@ The original document above records the before-PR64 candidate state. The exact-h
 This rebased Stage11 CP updates the governance decision log and state snapshot only to record `D-2026-10-24-02`: Stage11 is documentation/identity reconciliation for the existing 11,005-trial cohort and does not require a separate runtime workflow/topology. The scope decision retains Stage10 metadata/fidelity drift and G2 runtime risk. Its static workflow explicitly validates the merged statistical-gate schema using `execution_authorization`, not the old candidate-only field name `authorization`.
 
 No Trial/Checkpoint/Monte Carlo or production workbook ran. Final delivery remains NOT_FINAL_BLOCKED.
+
+
+## Current-main correction addendum — reference, checkpoint and accounting evidence (2026-10-29)
+
+The earlier sentence in §2 claiming that main's current window accepts three history entries is not supported by the reviewed main source at c6e54349a5e94f65d5aa9f83141f225d777bb474. Current constants.py requires 3 successful transitions and 4 cumulative points; run_batch.py passes both values to has_successful_adjacent_transition_window; scripts/stage7_stability.py rejects any points value other than transitions + 1; and tests/test_stage7_authoring.py explicitly requires four points and rejects three. Preserve the original sentence as historical audit text, but do not use it as current-source evidence.
+
+The active new-execution ladder is 300 → 600 → 1200 → 2400 → …; the legacy +50 value is not the scheduler. The later owner-approved IUT record requires three successful adjacent transitions across four cumulative points for final SCENARIO_STABLE. P50 >5% is a separate preliminary continuation trigger.
+
+Raw-file identity has now been rechecked: the pinned reference is 271,496 bytes, SHA-256 ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479. The different v2.3 rewrite is 381,559 bytes, SHA-256 e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f. Its conflicting header and lack of an effective-main adoption decision mean it does not supersede the current pinned reference.
+
+The recorded complete Stage 12 accounting validation reports 22,546,465 rows and zero violations for every roll-forward, equality, balance-difference and source-identity check. This closes the Stage 12 canonical-cohort accounting-evidence gap only; it does not promote historical Stage 9C overall status or the statistical execution gate.
+
+The full repository test suite passed on exact candidate SHA 35a3d2a9fa4820e35873deedd83c73ddccd1bdd5 in PR Run 40797229996 and push Run 40797224205: 517 passed, 1 K_TEST skip, 1 warning, 0 failed. See docs/audits/CP_GOV_REFERENCE_CHECKPOINT_ACCOUNTING_GOLDEN_FULLSUITE_2026-10-29.md.

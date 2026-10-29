@@ -209,3 +209,17 @@ This authorization is tied to the provider implementation constants and runtime 
 - **Disposition:** `STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY`; keep Stage 10 metadata drift and runtime-risk blockers explicitly open.
 
 References: `docs/stage11/dataset_identity.json`; `docs/stage11/global_manifest_11005_reconciled.json`; `docs/stage11/R4_manifest_reconciliation.md`; `docs/stage10/STAGE10_METRICS.json`; `docs/PROJECT_CONTINUITY.md` and the five supplied references.
+
+
+## D-2026-10-29-01 — Effective reference and checkpoint-contract reconciliation
+
+**Status:** Normative reconciliation of existing approved decisions only; no new numerical threshold or business rule.
+
+1. The effective reference for the current main lineage is the exact file named “المرجع_النهائي_الموحد_المعتمد.md”: 271,496 bytes, raw SHA-256 ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479. Its raw bytes were re-hashed from the Library.
+2. The different document “المرجع_النهائي_الموحد_v2.3-إعادة_صياغة(1).md” is 381,559 bytes, SHA-256 e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f. Its own opening says both “approved and operative” and “draft for adoption”; its new RNG/source identity and added acceptance tests are not adopted in the effective decision log or pinned runtime identities. It therefore does not supersede the current reference automatically. Adopting it requires a separate explicit decision, a complete rules-difference review and, where source/output identity changes, a new verified Golden lineage.
+3. For new execution on the current source, D-2026-10-10-01 controls the active checkpoint ladder 300 → 600 → 1200 → 2400 → 4800 → … with no fixed cap; the retained +50 constant is a historical compatibility value, not the active schedule.
+4. The later approved IUT record requires four consecutive cumulative checkpoints and three successful adjacent transitions for a final SCENARIO_STABLE declaration. The older “three points” wording alone is insufficient for final stability. Current constants.py, run_batch.py, scripts/stage7_stability.py and focused authoring tests all implement or assert the four-point/three-transition contract. The P50 >5% continuation trigger remains a separate preliminary continuation rule.
+5. This clarification does not open the statistical execution gate. docs/stage7/statistical_execution_gate.json remains BLOCKED_FOR_IMPLEMENTATION until every required component method, data-identity requirement and end-to-end acceptance check is implemented and accepted. No production Monte Carlo, checkpoint, stability declaration or final-delivery acceptance is authorized here.
+6. The historical C030_G030 / P90_Final_Cash failure at N=300→600 remains preserved; a later passing transition does not erase it.
+
+Evidence: raw reference hashes; D-2026-10-10-01; CP-IUT-DECISION-RECONCILIATION in docs/PROJECT_CONTINUITY.md; constants.py; run_batch.py; scripts/stage7_stability.py; tests/test_stage7_authoring.py; statistical_execution_gate.json.

@@ -1484,3 +1484,17 @@ Next: continue independent non-protected work. Do not accept this candidate or m
 
 - **Regression strengthening:** added a separate test (the original failing test remains unchanged) that supplies the existing bounded S5 approval while leaving component blockers/implementation gaps intact, then asserts the gate remains unauthorized. Test commit: `236fd3f0f78bb5d796f70540e58b685847869f43`; test blob `bd12bc45d734affe46bcf829e276b57234e523e8`.
 - **Validation follow-up:** dedicated workflow `.github/workflows/r4-statistical-gate.yml` orders the focused original R4 test before the full suite. PR #78 is open as Draft against the verified main base. At the time of this ledger update, the connector returned no PR-triggered workflow runs or commit status checks for the candidate; therefore neither focused nor full tests are claimed as executed/passed here. Direct `git clone` was attempted but the environment could not resolve `github.com`; exit code `128`. Wait for verifiable Actions evidence before proceeding.
+
+
+## CP-GOV-REFERENCE-CHECKPOINT-ACCOUNTING-GOLDEN-FULLSUITE — 2026-10-29
+
+**الحكم:** تمت تسوية المرجع الفعّال وعقد نقاط الفحص للسياق التنفيذي الحالي؛ دليل التوازن المحاسبي المسجل للفوج الكامل في Stage 12 مكتمل؛ اعتماد Golden المستقل مثبت ضمن نطاقه؛ واختبارات رأس فرع PR #78 اجتازت المجموعة الكاملة. لا يترتب على ذلك قبول إحصائي أو تسليم نهائي.
+
+- المرجع الأصلي المثبت، بعد إعادة حساب البايتات الخام: 271,496 بايت / SHA-256 = ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479. المرجع المنافس v2.3 هو ملف مختلف بحجم 381,559 بايت / SHA-256 = e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f؛ يحمل تناقضًا داخليًا بين «معتمد ونافذ» و«مسودة للتبني»، ولا يوجد قرار نافذ يتبناه. التفاصيل والتصحيح في تقرير CP.
+- عقد نقاط الفحص: 300→600→1200→2400→4800→…؛ +50 قيمة تاريخية للتوافق لا خطوة جدولة. القرار اللاحق لـIUT يشترط أربع نقاط تراكمية وثلاثة انتقالات ناجحة للإعلان النهائي عن الاستقرار. أُضيف تصحيح ملحق للنص التاريخي الذي خالف الكود الحالي.
+- دليل المحاسبة Stage 12: blob 6084e8f68fa649fcf0726daa04f41ae9b0636706، PASS، 25 سيناريو، 11,005 تجربة، 22,546,465 صفًا، صفر مخالفات في كل معادلات الرول-فوروارد والتوازن والهوية. النطاق هو الفوج التاريخي لـStage 12، ولا يرقّي Stage 9C التاريخي من PARTIAL.
+- Golden: run 38169163565 ناجح 27/27، 11,005/11,005 بصمات متطابقة و22,546,465 صفًا، صفر mismatch. التغطية الموسعة إلى N=2400 تظل محصورة في C030_G030؛ لا تمديد ضمنيًا لبقية السيناريوهات.
+- اختبارات فرع PR #78 على SHA 35a3d2a9fa4820e35873deedd83c73ddccd1bdd5: Run 40797229996 وRun 40797224205 نجحا. النتيجة: 517 passed، اختبار واحد متجاوز K_TEST (158)، تحذير واحد، صفر إخفاقات. أضيفت خطوة fixture-first المؤقتة لإعادة إنتاج ملفات Stage 5 الناقصة وتهيئة PYTHONPATH؛ محاولات الفشل القديمة محفوظة ولا تُمحى.
+- لم يتغير main ولا main/state.json؛ PR #78 مفتوح Draft وغير مدمج؛ حالة بوابة الاستدلال الإحصائي ما زالت BLOCKED_FOR_IMPLEMENTATION.
+
+التقرير الحاكم لهذه المراجعة: docs/audits/CP_GOV_REFERENCE_CHECKPOINT_ACCOUNTING_GOLDEN_FULLSUITE_2026-10-29.md.
