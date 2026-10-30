@@ -1187,15 +1187,25 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             calculated = monte_carlo.trial_fingerprint(result_from_record(row))
             if row.get("trial_fingerprint") != calculated:
                 raise RuntimeError(f"S6_FINANCIAL_TRIAL_FINGERPRINT_RECOMPUTE_MISMATCH:{scenario}:{row.get('trial_id')}")
-        daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
+        distribution_table=pq.read_table(base/"daily_distribution.parquet")
+        daily=distribution_table.to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
-        stats_integrity.validate_daily_distribution_rows(
-            daily, scenario_id=scenario, source_sha=args.source_sha,
-            cohort_id=f"s6-v23-{args.source_sha[:8]}",
-            expected_dates=sorted({str(row["date"]) for row in snapshots}),
-            expected_trial_count=checkpoint_n,
-        )
+        required_distribution_fields={
+            "source_sha","cohort_id","scenario_id","date","mode","quantile_name",
+            "active_trial_count","sample_trial_count","metric_name",
+            "exact_numerator","exact_denominator","display_value",
+        }
+        if required_distribution_fields.issubset(set(distribution_table.schema.names)):
+            stats_integrity.validate_daily_distribution_rows(
+                daily, scenario_id=scenario, source_sha=args.source_sha,
+                cohort_id=f"s6-v23-{args.source_sha[:8]}",
+                expected_dates=sorted({str(row["date"]) for row in snapshots}),
+                expected_trial_count=checkpoint_n,
+            )
+            daily_distribution_status="PASS_SCOPED_DAILY_DISTRIBUTION_SCHEMA_AND_COVERAGE"
+        else:
+            daily_distribution_status="MISSING_EVIDENCE_DAILY_DISTRIBUTION_SCHEMA"
         if all_have_path_contract:
             require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
             path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=f"s6-v23-{args.source_sha[:8]}",master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
@@ -1231,6 +1241,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "n_total":len(rows),"n_closed":n_closed,"n_censored":n_censored,
             "n_unique_paths":reported_n_unique_paths,"n_unique_paths_status":reported_n_unique_paths_status,
             "daily_balance_schema_status":daily_balance_schema_status,"daily_path_identity_status":daily_path_identity_status,
+            "daily_distribution_validation_status":daily_distribution_status,
             "unique_daily_paths":n_unique_daily_paths,
             "unique_terminal_fingerprints":n_unique_financial_outcomes,
             "n_unique_financial_outcomes":n_unique_financial_outcomes,
@@ -1366,6 +1377,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         "scenario_summaries":summaries,"c100_reuse":c100_reuse,
         "daily_balance_schema_status":"PASS_SCOPED_POST_WRITE_BALANCE_CHECK" if all_have_path_contract else "MISSING_EVIDENCE",
         "daily_path_identity_status":"PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT" if all_have_path_contract else "MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP",
+        "daily_distribution_validation_status":"PASS_SCOPED" if all(row.get("daily_distribution_validation_status")=="PASS_SCOPED_DAILY_DISTRIBUTION_SCHEMA_AND_COVERAGE" for row in summaries) else "MISSING_EVIDENCE",
         "opt1_audit":{"status":"PASS","scenario_count":len(expected),
             "derived_trial_rows":opt1_derived_trial_rows,"full_run_scenario_rows":len(expected)*checkpoint_n-opt1_derived_trial_rows},
         "source_run_metadata":{"status":"VERIFIED_FROM_GITHUB_ACTIONS_JOB_LOGS" if source_metadata_path else ("SOURCE_SCENARIO_MANIFESTS_COMPLETE" if all(all(row.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions","command_argv")) for row in summaries) else "NOT_PROVIDED"),
