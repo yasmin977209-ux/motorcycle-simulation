@@ -2178,3 +2178,19 @@ Preserve the distinction between the successful exact fingerprint comparison and
 **حالات غير مغلقة:** عدد المفاتيح الفريدة لتعيينات الأدوار الـ125 = `MISSING_EVIDENCE`؛ خريطة الأدوار 25×5 = `MISSING_EVIDENCE`؛ Full Logging = `DESIGN_READY / IMPLEMENTATION_INPUTS_INCOMPLETE`. لم يُسمح بتغيير هذه الحالات أو استخراج البيانات.
 
 **بوابات محظورة:** لا ترقية Gate A أو Gate B، لا `FINAL_ACCEPTED`، لا `CONVERGED`، لا Merge أو PR أو تعديل main. نتائج الاختبارات، إن نجحت، تثبت نطاق validator tests فقط.
+
+
+## نتيجة Stage B — إصلاحات validators المحدودة وCI — 2026-10-30
+
+- قرار المالك المحفوظ: `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md`؛ SHA-256 لبايتات الملف المحفوظة: `1076b3e876d3db1a7e6ab4473fedb22226dfda0cb499d230ba3a0c2a9652a95d`. هذه بصمة ملف سجل القرار، وليست بصمة المرجع الحاكم نفسه؛ بصمة المرجع التي صرح بها المالك هي `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- فرع العمل: `tmp/cp-v240-decision-and-validators-20261030`. أساسه `f3a7f8cdcf691ab63eaef9676c7e4fa20a9fae29`. رأس Stage B بعد التنفيذ: `9c94c88ff6f0493d6b2301b3ee89b3e034e20884`. لم يتغير `main` عن `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- تغيّرت الملفات السبعة المصرح بها فقط: سجل القرار، هذا الملف، `scripts/s6_first_checkpoint.py`, `stats_integrity.py`, `scripts/audit_s6_daily_balance_artifact.py`, `tests/test_s6_first_checkpoint.py`، وWorkflow المؤقت `.github/workflows/cp-v240-stage-b-validators-temporary.yml`. مقارنة GitHub من base إلى رأس الفرع أظهرت هذه المسارات السبعة دون غيرها.
+- Workflow المؤقت ثبت اعتماديات `requirements.txt` بنجاح على Python 3.12. أمر الاختبار الوحيد في كل المحاولات هو حرفيًا: `pytest -q tests/test_s6_first_checkpoint.py tests/test_s6_daily_path_identity_contract.py`.
+- Runs المحفوظة بالتسلسل:
+  - Run `40992846961`, tested SHA `bba6dd275956da60995c4da99398bd992ee5e1c5`: فشل جمع الاختبارات بسبب غياب `PYTHONPATH=.`؛ لا نتيجة اختبار.
+  - Run `40992912092`, tested SHA `4a0b53a6e0b652d1b997194c379692abc74911ff`: `15 passed, 3 failed`; أظهرت إخفاقات الاختبار أن قيم العرض الاختبارية لا تطابق HALF_EVEN إلى منزلتين، وأن auditor يجب أن يميز ملفات daily distribution التاريخية/العينية عن المخطط الكامل بدل ترقيتها.
+  - Run `40993030819`, tested SHA `9c94c88ff6f0493d6b2301b3ee89b3e034e20884`: `18 passed in 0.90s`; النتيجة PASS_SCOPED لاختباري validator المحددين فقط. لا تعني اجتياز مجموعة المشروع أو قبول S6.
+- إصلاحات S6-CODE-01..07 في هذا النطاق: منع إسقاط trial IDs المكررة قبل بناء dict؛ فرض ملف manifest الدقيق والتحقق من أحجام الملفات وبصماتها؛ رفض duplicate trial/date وفجوات التواريخ في legacy path map؛ تشديد تحقق metadata لعقد daily balance؛ تحقق بنيوي كامل من daily distribution عندما يكون المخطط كاملًا، مع إبقاء المخطط القديم/العيني MISSING_EVIDENCE_DAILY_DISTRIBUTION_SCHEMA بدل اعتباره PASS؛ عدم استبدال git_commit المفقود بـsource_sha، مع فصل بصمة ملف source metadata المحسوبة عن قيمة sha256 المعلنة داخله (والتي قد تبقى null)؛ والتحقق من combined fingerprint map pin داخل موافقة Golden.
+- لا تزال مخرجات daily distribution القديمة/العينية غير المكتملة غير مثبتة كدليل تغطية كامل. لا تُرقّ إلى PASS من هذا الإصلاح.
+- الـWorkflow المؤقت باقٍ على الفرع المؤقت؛ لم يُحذف، ولم ينشأ PR أو Merge. لا تعديل لـmain، ولا Trials/Simulations، ولا N=4800، ولا تشغيل workflows أخرى.
+- الحالات التي لم تتغير: 125 role-assignment unique-key count = MISSING_EVIDENCE؛ 25×5 representative role map = MISSING_EVIDENCE؛ Full Logging = DESIGN_READY / IMPLEMENTATION_INPUTS_INCOMPLETE. Gate B التاريخي = FAIL_SCOPED؛ الاستقرار = NOT_CONVERGED؛ القبول النهائي = NOT_GRANTED.
