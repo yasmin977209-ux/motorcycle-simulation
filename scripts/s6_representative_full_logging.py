@@ -114,6 +114,12 @@ def exact_linear_target(values: list[int], q_num: int, q_den: int = 100) -> tupl
     return target.numerator, target.denominator
 
 
+def validate_trial_fingerprint_match(expected: str, actual: str) -> dict[str, Any]:
+    if not isinstance(expected, str) or len(expected) != 64 or expected != actual:
+        raise RuntimeError("REPRESENTATIVE_FINANCIAL_FINGERPRINT_MISMATCH")
+    return {"status": "PASS_SCOPED_FINGERPRINT_MATCH", "expected": expected, "actual": actual}
+
+
 def select_five_roles(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     if not rows:
         raise RuntimeError("REPRESENTATIVE_SELECTION_EMPTY_COHORT")
@@ -426,10 +432,7 @@ def _write_trial_payload(folder: Path, key: dict[str, Any], execution_commit: st
     )
     if project.log_events is not True:
         raise RuntimeError("REPRESENTATIVE_FULL_LOGGING_EVENT_MODE_NOT_ENABLED")
-    if result.trial_fingerprint != key["trial_fingerprint"]:
-        raise RuntimeError(
-            f"REPRESENTATIVE_FINANCIAL_FINGERPRINT_MISMATCH:{key['scenario_id']}:{key['trial_id']}"
-        )
+    validate_trial_fingerprint_match(key["trial_fingerprint"], result.trial_fingerprint)
     if key.get("rng_checksum") is not None and result.rng_checksum != key["rng_checksum"]:
         raise RuntimeError("REPRESENTATIVE_RNG_CHECKSUM_MISMATCH")
     if key.get("rng_draw_count") is not None and result.rng_draw_count != key["rng_draw_count"]:
