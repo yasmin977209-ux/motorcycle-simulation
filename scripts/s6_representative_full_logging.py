@@ -8,7 +8,7 @@ import os
 import tempfile
 import time
 from dataclasses import asdict, is_dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -132,10 +132,11 @@ def select_five_roles(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     selections: dict[str, tuple[int, int] | int] = {}
     for role, q_num in (("P10", 10), ("P50", 50), ("P90", 90)):
         numerator, denominator = exact_linear_target(equities, q_num)
-        target = numerator / denominator
+        from fractions import Fraction
+        target = Fraction(numerator, denominator)
         selected = min(
             rows,
-            key=lambda row: (abs(row["final_net_project_equity"] - target), row["trial_id"]),
+            key=lambda row: (abs(Fraction(row["final_net_project_equity"]) - target), row["trial_id"]),
         )
         selections[role] = (selected["trial_id"], numerator, denominator)
     selections["LossCase"] = min(
@@ -382,7 +383,7 @@ def validate_daily_balance_rows(rows: list[dict[str, Any]], *, trial_id: int, so
         if row["Total_Assets"] != row["Total_Equity"] or row["Balance_Difference"] != 0:
             raise RuntimeError("REPRESENTATIVE_DAILY_BALANCE_MISMATCH")
         dates.append(date.fromisoformat(row["date"]))
-    if dates != sorted(dates) or dates != [dates[0] + __import__("datetime").timedelta(days=i) for i in range(len(dates))]:
+    if dates != sorted(dates) or dates != [dates[0] + timedelta(days=i) for i in range(len(dates))]:
         raise RuntimeError("REPRESENTATIVE_DAILY_DATE_GAP_OR_ORDER_MISMATCH")
     return {
         "daily_rows_checked": len(rows),
