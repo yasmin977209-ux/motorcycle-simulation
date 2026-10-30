@@ -2259,3 +2259,64 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - `main` لم يتغير، ولا PR/merge، ولا Stage13، ولا N=4800.
 - Artifact: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740/artifacts/12998778418
 - Run: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740
+
+
+## Stage D — تفويض Builder ومخرجات T2_INTERIM — 2026-10-30
+
+### التفويض وحدوده
+- التفويض: `AUTH-S6-BUILDER-AND-T2-INTERIM-DELIVERABLES-2026-10-30-STAGE-D`، الحالة `STAGE_D_AUTHORIZED — ACTIVATED`.
+- القرار الحاكم المعلن: `D-2026-10-30-REFERENCE-V2.4.0`؛ المرجع المعلن SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- الفرع المخصص موجود بالفعل: `tmp/cp-v240-stage-d-s6-deliverables-20261030`. فحص GitHub API في 2026-10-30 أعاد رأسه `42389fe4ef5df1b2412339b78660c75845cca09d`. رأس Stage C في لحظة الفحص هو الرأس نفسه. رأس Stage B الحالي `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2`. رأس main `c6e54349a5e94f65d5aa9f83141f225d777bb474` ولم يتغير في هذا التحديث.
+- هذا الإدخال يسجل التفويض والحالة الحية فقط؛ لا يثبت إنجاز Builder أو ملفات التسليم أو الاختبارات الخاصة بالمرحلة د.
+- المحظورات: لا تعديل main، لا PR أو merge، لا Release، لا Trial/Simulation جديد، لا N=4800، لا تعديل التاريخ التاريخي لـStage 13، ولا إعلان `FINAL_ACCEPTED` أو `CONVERGED` أو `P17_FINAL_ACCEPTED`.
+- تصنيف جميع المخرجات المطلوبة: `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+### فحص GitHub الحي
+- المستودع: `yasmin977209-ux/motorcycle-simulation`، عام، default branch `main`، repository id `1398760345`، آخر push الظاهر وقت الفحص `2026-10-30T18:21:17Z`.
+- فروع CP ذات الصلة:
+  - Stage B `tmp/cp-v240-decision-and-validators-20261030`: HEAD `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2`.
+  - Stage C `tmp/cp-v240-stage-c-rep-full-logging-20261030`: HEAD `42389fe4ef5df1b2412339b78660c75845cca09d`.
+  - Stage D `tmp/cp-v240-stage-d-s6-deliverables-20261030`: HEAD `42389fe4ef5df1b2412339b78660c75845cca09d`.
+  - main: HEAD `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Runs التي تحققت منها مباشرة:
+  - Stage B Run `40993439735`: completed/success، tested SHA `b2e7adec5be59069e8e4e18dee51d166670bb58b`. هذا هو SHA الذي شغّله الـRun، وليس HEAD الفرع الحالي.
+  - Stage C Run `41098699740`: completed/success، tested SHA `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70`. هذا هو SHA الذي شغّله الـRun، وليس HEAD الفرع الحالي.
+  - S6 aggregate Run `40773412377`: completed/success، branch `tmp/s6-aggregate-contract-fix-20261027`، tested SHA `4f2f2cc16d0cb5125262088704febccbae6f50ed`.
+  - C100 Run `40263424595`: completed/success، branch `tmp/s4-c100-golden-v23-20261026`، tested SHA `24050f15bc7eb3097e20f76785a45c5d177643dd`.
+- Artifacts من GitHub Actions:
+  - Artifact `12998778418`, `s6-stage-c-representative-full-logging-41098699740`, size `310827203` bytes, not expired.
+  - Artifact `12852969854`, `s6-n2400-status-reconciled-aggregate-40773412377`, size `9357996` bytes, not expired.
+  - Artifact `12630457193`, `s4-c100-v23-40263424595`, size `361733` bytes, not expired.
+  - لم تُرجع قائمة artifacts لـRun `40993439735` أي عنصر في الفحص.
+- SHA-256 المعلن في سجل Stage C للـArtifact 12998778418: `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`؛ continuity السابق يسجل أنه حُسب بعد تنزيل ZIP. بصمة Artifact 12852969854 المعلنة من المالك `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`، ولم يُعد حسابها في هذا الفحص. لا تتوفر هنا بصمة مستقلة محسوبة لـArtifact 12630457193.
+- آخر Stage C continuity file blob SHA قبل هذا الإدخال: `b9e9aff13cca774425809cbb52e23282d332939b`.
+
+### مدخلات البناء المعتمدة
+1. S6 aggregate Artifact `12852969854`, Run `40773412377`, ZIP SHA المعلن `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`.
+2. Representative Full Logging Artifact `12998778418`, Run `41098699740`, ZIP SHA `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`.
+3. C100 reuse Artifact `12630457193`, Run `40263424595`; يجب إبقاء `source_sha` و`cohort_id` الأصليين وتوسيمه `CROSS_COHORT_DETERMINISTIC_REUSE`.
+
+### حالة الأدلة والبوابات التي يجب أن تظهر كما هي
+- خريطة الأدوار: 125 assignments = 25 scenarios × (P50, P10, P90, LossCase, MaxCase)؛ 105 unique keys = 100 S6 + 5 C100، مع 20 تعييناً مكرراً.
+- Full Logging: `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING` لـ105/105؛ 216,253 daily rows؛ 24,545,842 events؛ 1,297,518 roll-forward checks؛ partner balances مكتملة حسب سجل Stage C.
+- Gate A المالي: `PASS_SCOPED_FINANCIAL_FINGERPRINT_MATCH` (80/80، 90,000 comparisons).
+- Gate A الإنتاجي الشامل: `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B عند N=2400: `FAIL_SCOPED`؛ 10 PASS في C085/C070 و10 FAIL في C050/C030. يجب إظهار جدول السيناريوهات والقيم والفواصل والتسامحات من الأدلة المصدرية لا من التخمين.
+- التقارب: `NOT_CONVERGED_OPERATIONAL_STOP`؛ 0/60 successful transitions.
+- C100: `DEGENERATE_DETERMINISTIC / G_INERT / CROSS_COHORT_DETERMINISTIC_REUSE`.
+- بيانات 48,000 التاريخية: لا تُعدّل ولا تُرقّى إلى PASS؛ فجوة حقول الأرصدة التاريخية ما زالت مفتوحة.
+- Stage 9C وأي Gate/مقارنة إضافية: لا تستنتج حالة غير موثقة؛ اقرأ سجلاتها المصدرية في بداية التنفيذ.
+
+### خطة Stage D المصرح بها (لم يثبت تنفيذها بعد)
+- S6-CODE-08: إنشاء `scripts/s6_deliverables_builder.py` مستقل الهوية عن Stage 13 التاريخي؛ توحيد قراءة trial_manifest مع post-write audit و`representative_full_logging_manifest.json` دون تغيير الملفات التاريخية.
+- S7: بناء مصنفي Excel من كائن بيانات واحد مشترك، 185 ورقة بالضبط لكل ملف، الحساب المالي بـ`fractions.Fraction` والعرض بـ`Decimal.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)` دون float مالي، مع تطابق رقمي خلية بخلية وRTL للعربية.
+- S8: توليد `results/number_registry.json` وربط كل رقم في التقارير الخمسة به، ثم Word عربي/إنجليزي وتقارير الملخص ودراسة الجدوى، مع الإفصاح عن فجوة الواقعية §17.3 ووسم T2_INTERIM / NOT_FINAL_BLOCKED.
+- S9: `deliverables/manifest.json`، أرشيف ZIP بثمانية أعضاء بالضبط (ملفات التسليم السبعة + manifest)، `SHA256SUMS.txt` خارج الأرشيف، ومدقق مستقل يفتح كل عضو من القرص ويعيد حساب الأحجام والبصمات ويفتح Excel/Word ويتحقق من كل شروط الاختبارات 175,176,179,180,181,182,183,186.
+- تحديث `docs/FINAL_AUDIT.md` و`docs/PROJECT_CONTINUITY.md` ورفع GitHub Actions Artifact بعد نجاح التدقيق فقط.
+- لا تشغّل المحاكاة أو Trials. يسمح فقط باستهلاك Artifacts الثابتة المحددة أعلاه وبناء/تدقيق deliverables.
+
+### حالة المرحلة د وقت تسجيل هذا الإدخال
+- التفويض نشط والفرع موجود، لكن لا يوجد Run Stage D مثبت في الفحص الحالي.
+- لا يوجد دليل في هذا الفحص على إنشاء ملفات S6 Builder أو المصنفين أو التقارير الخمسة أو حزمة الثمانية أعضاء.
+- اختبارات 175,176,179,180,181,182,183,186: `NOT_RUN / NOT_VERIFIED` في هذه اللقطة.
+- لا تسجل Artifact ID أو Run ID للمرحلة د قبل صدورهما فعلياً.
