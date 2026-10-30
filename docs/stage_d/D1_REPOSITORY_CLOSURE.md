@@ -1,17 +1,15 @@
 # D1 Repository Closure — Independent S6 Builder Source Package
 
-**Status:** `D1_REPOSITORY_PACKAGE_COMMITTED / PASS_SCOPED_WITH_LIMITATIONS`
+**Status:** `D1_REPOSITORY_DOCUMENTATION_COMMITTED / SOURCE_BUNDLE_NOT_COMMITTED`
 **Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`
 **Repository:** `yasmin977209-ux/motorcycle-simulation`
 **Branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`
 **Date:** 2026-10-31
 
 ## Committed package
-- Source bundle: `docs/stage_d/D1_S6_Independent_Builder_Source_Bundle.zip`
-- SHA-256: `ea171fc713cd47cddc0618926b4a8544e6d3999233d49c45208aae5f0a0800db`
-- Size: 26,093 bytes
-- Archive integrity: `unzip -t` PASS; exactly 7 members.
-- Members:
+- Local source bundle (not yet committed to GitHub): `/mnt/data/D1_S6_Independent_Builder_Source_Bundle.zip`
+- Local SHA-256: `ea171fc713cd47cddc0618926b4a8544e6d3999233d49c45208aae5f0a0800db`; size 26,093 bytes; `unzip -t` PASS; exactly 7 members.
+- The following member list describes the verified local bundle; these files are not yet individually present in the repository:
   1. `scripts/s6_deliverables_builder.py`
   2. `scripts/s6_deliverables_model.py`
   3. `scripts/s6_artifact_reader.py`
@@ -40,4 +38,4 @@ These test and integration results are **VERIFIED_LOCAL**, not a GitHub Actions 
 - No Excel/Word final deliverables, Stage D Run, Job, or Artifact are claimed by this D1 source-package closure.
 
 ## Disposition
-D1 is closed **at repository source-package level** once this package, checksum, and closure record are committed and read back from the authorized branch. This does not mean Stage D acceptance tests passed, does not create a Stage D workflow run, and does not lift `NOT_FINAL_BLOCKED`.
+D1 is **not yet closed at repository source-package level**: the closure record is committed, but the seven-file source bundle remains local and is not yet stored in GitHub. Therefore D1 repository closure is BLOCKED pending publication and read-back verification of the bundle (or its seven source members) on the authorized branch. This does not mean Stage D acceptance tests passed, does not create a Stage D workflow run, and does not lift `NOT_FINAL_BLOCKED`.
