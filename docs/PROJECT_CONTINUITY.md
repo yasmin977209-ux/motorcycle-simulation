@@ -2463,3 +2463,14 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - القيمتان مختلفتان؛ لم تتوفر بايتات المرجع التاريخي الأصلي ضمن الملفات المفحوصة لحسم الصحيح. الحالة: `K_SPEC / HISTORICAL_REFERENCE_HASH_CONFLICT`. لا تصحح أي قيمة بالتخمين، ولا تنقل دليل Stage 12 إلى S6. يلزم استرجاع الملف التاريخي الأصلي وحساب SHA-256 مباشرة ثم تسجيل قرار/تصحيح موثق مع حفظ القيمتين التاريخيتين.
 - Stage D implementation identifiers: `S6-CODE-08` هو Builder/Adapter المحدد في التفويض. لم يظهر تعريف كافٍ لـ`S6-CODE-09` و`S6-CODE-10` في سجل التفويض/الاستمرارية المفحوص؛ تبقيان `UNDEFINED / MISSING_EVIDENCE` إلى أن تُراجع متطلبات v2.4.0 واختبارات Stage D دون اختراع نطاق.
 - Test 192 historical coverage record: 10,000 nested synthetic repetitions across 20 scenarios and checkpoints 300/600/1200/2400؛ FWER `0.0435 ≤ 0.05`. هذا دليل تغطية inference فقط وليس Gate B pass أو إنتاجًا جديدًا.
+
+
+## Job-level verification addendum — Stage B/C and immutable inputs — 2026-10-30
+
+تم جلب Jobs مباشرة من GitHub Actions API للـRuns المحددة، وكلها `completed / success`:
+- Stage B Run `40993439735`: Job `123860990524`, name `validators`.
+- Stage C Run `41098699740`: Job `124211088430`, name `representative-full-logging`.
+- S6 aggregate Run `40773412377`: Job `123116321625`, name `Re-aggregate only immutable N2400 evidence and reconcile status fields`.
+- C100 read-only source Run `40263424595`: Job `121380485436`, name `P50 rule, full pytest inventory, and 1,500 deterministic C100 trials`.
+- Artifact list لRun Stage B `40993439735` فارغة في الفحص؛ لا Artifact مرفوع لهذا الـRun.
+- هذه Jobs تخص Runs الأربعة المحددة فقط؛ لم يُدّعِ هذا الفحص تعداد كل Jobs/Workflow Runs في المستودع. لا يوجد Run/Job Stage D مسجل في لقطة الفرع بعد.
