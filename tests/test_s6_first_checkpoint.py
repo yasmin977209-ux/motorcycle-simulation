@@ -476,7 +476,6 @@ def test_s6_independent_golden_workflow_allows_all_20_scenarios_to_schedule():
 
 # Stage B T-01..T-10 negative validator tests (synthetic tmp_path only).
 
-from __future__ import annotations
 
 import hashlib
 from pathlib import Path
