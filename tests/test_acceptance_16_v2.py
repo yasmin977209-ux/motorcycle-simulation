@@ -812,8 +812,8 @@ def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
                         "cohort_id": cohort, "scenario_id": "C085_G100",
                         "active_trial_count": active_count,
                         "sample_trial_count": active_count if mode == "ACTIVE_ONLY" else 2,
-                        "exact_numerator": 0, "exact_denominator": 1,
-                        "display_value": "0.00",
+                        "exact_numerator": 1, "exact_denominator": 2,
+                        "display_value": "0.50",
                     })
     audit = validate_daily_distribution_rows(
         distribution, scenario_id="C085_G100", source_sha=source,
