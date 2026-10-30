@@ -55,6 +55,7 @@ def test_pinned_historical_c100_cohort_identity_is_scoped_and_allowed():
     cohort = "c100-v23-s4-20261026-965281d5"
     sample = row(1, START, source, cohort)
     sample["scenario_id"] = "C100_G100"
+    sample["Final_Close_Date"] = START.isoformat()
     evidence = build_daily_path_identity_evidence(
         [sample], source_sha=source, cohort_id=cohort, master_seed=SEED,
         scenario_id="C100_G100", expected_trial_ids=[1],
