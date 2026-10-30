@@ -165,7 +165,7 @@ def select_five_roles(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             "source_sha": row["source_sha"],
             "cohort_id": row["cohort_id"],
             "schema_version": row["schema_version"],
-            "rng_checksum": row.get("rng_checksum"),
+            "rng_checksum": (int(row["rng_checksum"]) if row.get("rng_checksum") is not None else None),
             "rng_draw_count": row.get("rng_draw_count"),
             "rng_checksum_fingerprint_sha256": row.get("rng_checksum_fingerprint_sha256"),
             "quantile_target_exact": target,
