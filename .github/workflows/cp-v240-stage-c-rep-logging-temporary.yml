@@ -1,0 +1,94 @@
+name: Temporary Stage C representative full logging
+
+on:
+  push:
+    branches:
+      - tmp/cp-v240-stage-c-rep-full-logging-20261030
+    paths:
+      - "scripts/s6_first_checkpoint.py"
+      - "scripts/s6_daily_path_identity.py"
+      - "scripts/audit_s6_daily_balance_artifact.py"
+      - "scripts/s6_representative_full_logging.py"
+      - "monte_carlo.py"
+      - "stats_integrity.py"
+      - "tests/test_s6_first_checkpoint.py"
+      - "tests/test_s6_daily_path_identity_contract.py"
+      - "tests/test_acceptance_16_v2.py"
+      - ".github/workflows/cp-v240-stage-c-rep-logging-temporary.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cp-v240-stage-c-representative-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  representative-full-logging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      PYTHONPATH: .
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project dependencies including pyarrow
+        run: python -m pip install -r requirements.txt
+
+      - name: Download pinned S6 N=2400 aggregate artifact
+        run: |
+          gh run download 40773412377 \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "s6-n2400-status-reconciled-aggregate-40773412377" \
+            --dir inputs/s6
+
+      - name: Download pinned historical C100 reuse artifact
+        run: |
+          gh run download 40263424595 \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "s4-c100-v23-40263424595" \
+            --dir inputs/c100
+
+      - name: Extract 125 representative assignments and replay unique keys in Full Logging mode
+        run: |
+          python scripts/s6_representative_full_logging.py \
+            --aggregate-dir inputs/s6 \
+            --c100-root inputs/c100 \
+            --output-dir stagec-output
+
+      - name: Run S6 validator and daily-path contract tests
+        run: pytest -q tests/test_s6_first_checkpoint.py tests/test_s6_daily_path_identity_contract.py
+
+      - name: Run acceptance contracts 127, 159, 160, 161, 174, 180, 181
+        run: >
+          pytest -q
+          tests/test_acceptance_16_v2.py::test_127_تطابق_التسلسلي_والمتوازي
+          tests/test_acceptance_16_v2.py::test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Project_Equity_فقط
+          tests/test_acceptance_16_v2.py::test_160_التكرارات_التمثيلية_الخمسة_تنتج_فعليا
+          tests/test_acceptance_16_v2.py::test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات
+          tests/test_acceptance_16_v2.py::test_174_full_logging_trial_fingerprint_matches_summary_fingerprint
+          tests/test_acceptance_16_v2.py::test_180_representative_daily_balance_and_partner_balances_are_complete
+          tests/test_acceptance_16_v2.py::test_181_representative_rollforward_equations_are_checked
+
+      - name: Upload Stage C evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s6-stage-c-representative-full-logging-${{ github.run_id }}
+          path: |
+            stagec-output/**
+            stagec-output.staging-*/**
+          if-no-files-found: warn
+          retention-days: 90
