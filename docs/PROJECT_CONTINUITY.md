@@ -2396,3 +2396,59 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - هذه الإضافة توثيق استمرارية من الأدلة المقروءة فقط؛ لا تحل محل قراءة الملفات الخام داخل Artifacts الثلاثة.
 - أرقام Gate B التفصيلية وقيم 125 role assignments لا تُعاد كتابتها من الذاكرة؛ يجب استخراجها من artifact JSON الفعلي.
 - لا يُعامل نجاح Run Stage C أو سلامة Full Logging كقبول Gate A الشامل أو Gate B أو التقارب أو P17/P18.
+
+
+## تصحيح أدلة Stage C بعد تنزيل Artifacts الثلاثة وفحصها محليًا — 2026-10-30
+
+### بصمات ZIP المحسوبة من البايتات المنزلة
+| Artifact ID | الحجم | SHA-256 المحسوب محليًا | نتيجة المقارنة |
+|---|---:|---|---|
+| 12852969854 | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` | يطابق GitHub digest |
+| 12998778418 | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` | يطابق GitHub digest |
+| 12630457193 | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` | يطابق GitHub digest |
+
+### إعادة تحقق خريطة الأدوار
+- فُك Artifact `12998778418` وقُرئ `stagec-output/representative_selection_map.json` من داخله: 125 assignments بالضبط.
+- `representative_selection_map.json`: 161,639 bytes؛ SHA-256 `3b7b2924cf9a9840e2f2bc7982a2d2eda5e2d98ad43de274861d0a45830276ac`؛ مطابق للـroot manifest.
+- `representative_unique_keys.json`: 52,167 bytes؛ SHA-256 `4e92dad7f6a06d78dec249f1f0a1ea41f187d35afd340dbf2ff54621cf1b9f25`؛ مطابق للـroot manifest.
+- `representative_full_logging_manifest.json`: 66,658 bytes؛ SHA-256 `4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd`.
+- تم تصدير جميع التعيينات الـ125 مع scenario/role/trial_id/source/cohort/fingerprint إلى ملف CSV وMarkdown في حزمة التسليم المحلية. القاعدة: P50/P10/P90 أقرب قيمة إلى linear quantile، وLossCase=argmin وMaxCase=argmax على `Final_Net_Project_Equity`، والتعادل بأصغر trial_id.
+- 100 مفتاح S6 فريد (20 سيناريو × 5 أدوار) + 5 مفاتيح C100 فريدة؛ 20 تعيينًا مكررًا؛ 105 مفاتيح فريدة إجمالًا. C100 يظل cohort منفصلًا مع `CROSS_COHORT_DETERMINISTIC_REUSE`.
+
+### إعادة تدقيق Full Logging
+- ZIP يحوي 105 مجلدات Trial؛ 105/105 `post_write_audit.json` بحالة `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING`؛ 105/105 `trial_manifest.json` بحالة `WRITTEN_PENDING_POST_WRITE_AUDIT` (تعارض metadata محفوظ).
+- المجاميع المستخرجة من root manifest وpost-write audit files:
+  - 216,253 daily rows؛ 24,545,842 event rows.
+  - 1,297,518 roll-forward equation checks؛ 0 roll-forward mismatch؛ 0 balance mismatch.
+  - 216,253/216,253 صفًا لأرصدة Partner1 و216,253/216,253 لأرصدة Partner2.
+  - مجاميع كيانات السجلات: 30,170 assets؛ 93,902 claims؛ 117,639 contracts؛ 117,639 guarantors؛ 117,639 tenants؛ 9,543 receivables.
+- Artifact root manifest: 105 completed / 0 failed؛ `final_acceptance=NOT_GRANTED`؛ `historical_48000_trial_daily_artifacts=MISSING_EVIDENCE_NOT_AUDITED_OR_MODIFIED`.
+
+### Gate B التفصيلي من statistical_evaluation.json الأصلي
+- Artifact المصدر: `12852969854`; `statistical_evaluation.json` SHA-256 كما في manifest: `dad605bb73dc4f5cdf8c992e737c13d6e87bf0f0aabcabac6829f9575deb1c74`.
+- N=2400: C030_G000/C030_G030/C030_G050/C030_G070/C030_G100 تفشل في `P90_Final_Cash` و`P90_Termination_Count`؛ C050_G000/C050_G030/C050_G050/C050_G070/C050_G100 تفشل في `P90_Held_Assets` و`P90_Termination_Count`. السيناريوهات العشرة C070/C085 تجتاز Gate B.
+- قيم الفشل كما تظهر في JSON (estimate; sequential half-width; tolerance; interval lower..upper):
+  - C030_G000: P90_Final_Cash 7,334,250; 112,750; 146,685/2; [7,232,000..7,447,000]. P90_Termination_Count 1,577.10; 8.90; 1; [1,570..1,586].
+  - C030_G030: P90_Final_Cash 12,912,080; 196,820; 645,604/5; [12,720,000..13,108,900]. P90_Termination_Count 1,968; 15; 1; [1,958..1,983].
+  - C030_G050: P90_Final_Cash 18,110,550; 275,450; 362,211/2; [17,889,000..18,386,000]. P90_Termination_Count 2,282.10; 14.90; 1; [2,270..2,297].
+  - C030_G070: P90_Final_Cash 25,147,610; 497,090; 2,514,761/10; [24,798,700..25,644,700]. P90_Termination_Count 2,669; 21; 1; [2,652..2,690].
+  - C030_G100: P90_Final_Cash 39,341,950; 639,550; 786,839/2; [38,827,000..39,981,500]. P90_Termination_Count 3,353.10; 28.90; 1; [3,334..3,382].
+  - C050_G000: P90_Held_Assets 198; 1; 1; [197..199]. P90_Termination_Count 1,154; 10; 1; [1,145..1,164].
+  - C050_G030: P90_Held_Assets 203; 2; 1; [201..204]. P90_Termination_Count 1,177; 12; 1; [1,169..1,189].
+  - C050_G050: P90_Held_Assets 205; 2; 1; [204..207]. P90_Termination_Count 1,196; 9; 1; [1,188..1,205].
+  - C050_G070: P90_Held_Assets 208; 2; 1; [207..210]. P90_Termination_Count 1,211; 11; 1; [1,204..1,222].
+  - C050_G100: P90_Held_Assets 213; 2; 1; [212..215]. P90_Termination_Count 1,237; 10; 1; [1,229..1,247].
+- المتوسطات المالية الثلاثة في السيناريوهات العشرة الفاشلة اجتازت حدودها الفردية في هذا JSON؛ سبب فشل Gate B في كل سيناريو هو المؤشرات المذكورة أعلاه. التفاصيل الكاملة للمتوسطات (mean/half-CI/limit) محفوظة في JSON/CSV المرفقين بحزمة التسليم.
+- Counts by checkpoint: N=300: 0 PASS / 20 FAIL؛ N=600: 0/20؛ N=1200: 10/20؛ N=2400: 10/20. Transitions: 0/60 successful. `gate_a_final=NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN` في aggregate manifest؛ المقارنة المالية اللاحقة هي PASS_SCOPED منفصل ولا تعيد كتابة الحالة الأصلية.
+
+### فحص ملفات Stage D على الفرع
+على `tmp/cp-v240-stage-d-s6-deliverables-20261030` أعادت GitHub Contents API حالة 404 للملفات:
+- `scripts/s6_deliverables_builder.py`
+- `deliverables/النتائج_الكاملة_AR.xlsx`
+- `deliverables/Full_Results_EN.xlsx`
+- `results/number_registry.json`
+- `docs/FINAL_AUDIT.md`
+وهذا يدعم أن Builder والتسليمات لم تكن موجودة على رأس الفرع الذي فُحص؛ لا يوجد Run/Artifact Stage D مثبت.
+
+### مخرجات محلية لهذه الجلسة
+أُنشئت ملفات handoff محلية تشمل خريطة الأدوار 125، وJSON/CSV/Markdown لتفاصيل Gate B، وتقرير الاستمرارية، وتعليمات المشروع، وFirst Message Prompt. هذه الملفات ليست GitHub commits أو Stage D artifacts ولا تُعد قبولًا للتسليم.
