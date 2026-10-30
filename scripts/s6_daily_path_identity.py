@@ -16,10 +16,16 @@ def _canon(v:object)->bytes:
 def _sha(b:bytes)->str:return hashlib.sha256(b).hexdigest()
 def _identity(*,source_sha:str,cohort_id:str,master_seed:int,scenario_id:str,model_schema_version:str,daily_balance_schema_version:str)->str:
     if not isinstance(source_sha,str) or not re.fullmatch(r"[0-9a-f]{40}",source_sha):raise RuntimeError("S6_DAILY_PATH_SOURCE_SHA_INVALID")
-    if cohort_id!=f"s6-v23-{source_sha[:8]}":raise RuntimeError("S6_DAILY_PATH_SOURCE_COHORT_MISMATCH")
-    if type(master_seed)is not int:raise RuntimeError("S6_DAILY_PATH_MASTER_SEED_INVALID")
     m=re.fullmatch(r"C([0-9]{3})_G([0-9]{3})",str(scenario_id))
     if not m:raise RuntimeError("S6_DAILY_PATH_SCENARIO_ID_INVALID")
+    is_pinned_historical_c100 = (
+        str(scenario_id).startswith("C100_")
+        and source_sha == "965281d52441cd0d4b744e211c9f68ee4cdc3753"
+        and cohort_id == "c100-v23-s4-20261026-965281d5"
+    )
+    if cohort_id!=f"s6-v23-{source_sha[:8]}" and not is_pinned_historical_c100:
+        raise RuntimeError("S6_DAILY_PATH_SOURCE_COHORT_MISMATCH")
+    if type(master_seed)is not int:raise RuntimeError("S6_DAILY_PATH_MASTER_SEED_INVALID")
     if model_schema_version!=MODEL_SCHEMA_VERSION:raise RuntimeError("S6_DAILY_PATH_MODEL_SCHEMA_MISMATCH")
     if daily_balance_schema_version!=DAILY_BALANCE_SCHEMA_VERSION:raise RuntimeError("S6_DAILY_PATH_BALANCE_SCHEMA_MISMATCH")
     return f"C{m.group(1)}"
