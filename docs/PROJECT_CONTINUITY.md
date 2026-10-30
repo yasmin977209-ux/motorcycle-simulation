@@ -2194,3 +2194,14 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - لا تزال مخرجات daily distribution القديمة/العينية غير المكتملة غير مثبتة كدليل تغطية كامل. لا تُرقّ إلى PASS من هذا الإصلاح.
 - الـWorkflow المؤقت باقٍ على الفرع المؤقت؛ لم يُحذف، ولم ينشأ PR أو Merge. لا تعديل لـmain، ولا Trials/Simulations، ولا N=4800، ولا تشغيل workflows أخرى.
 - الحالات التي لم تتغير: 125 role-assignment unique-key count = MISSING_EVIDENCE؛ 25×5 representative role map = MISSING_EVIDENCE؛ Full Logging = DESIGN_READY / IMPLEMENTATION_INPUTS_INCOMPLETE. Gate B التاريخي = FAIL_SCOPED؛ الاستقرار = NOT_CONVERGED؛ القبول النهائي = NOT_GRANTED.
+
+
+## تصحيح نتيجة Stage B بعد استعادة الاختبارات السابقة — 2026-10-30
+
+- **تصحيح لازم للسجل أعلاه:** Run `40993030819` أعطى `18 passed` على SHA `9c94c88ff6f0493d6b2301b3ee89b3e034e20884`، لكن المراجعة اللاحقة لفروق Git أظهرت أن الملف `tests/test_s6_first_checkpoint.py` كان قد استُبدل مؤقتًا بدل إلحاق T-01..T-10 بالاختبارات القائمة. لذلك لا يُستخدم هذا الـRun كدليل تغطية للمجموعة الأصلية؛ تظل نتيجته التاريخية محفوظة ولا تُمحى.
+- أُعيد الملف الأصلي من base commit `f3a7f8cdcf691ab63eaef9676c7e4fa20a9fae29` (blob `ba0c04450cdea7cb088e3c96ce9bd511a9de7696`) ثم أُلحقت به اختبارات T-01..T-10 دون حذف الاختبارات السابقة. عولج كذلك موضع `from __future__ import annotations` بحيث يبقى في بداية الملف.
+- Run `40993267030`, tested SHA `cac53671ba0761dd49b0de267fc90bef5bc6c3dc`: فشل جمع الاختبارات بسبب موضع future import؛ لا نتيجة اختبار.
+- Run `40993341387`, tested SHA `680e82b208cd0cbca2d3590b345348fd6b95a8d9`: `40 passed, 1 failed, 1 skipped`. كشف أن aggregate يجب أن يسجل مخطط daily distribution القديم/العيني كـ`MISSING_EVIDENCE` بدل تمريره كتحقق كامل أو رفض تجميعه بالكامل.
+- بعد إضافة هذا الفصل الصريح، Run `40993439735`, tested SHA `b2e7adec5be59069e8e4e18dee51d166670bb58b`: **`41 passed, 1 skipped in 2.09s`** على أمري الاختبار المصرح بهما فقط. هذه هي نتيجة Stage B النهائية الصالحة ضمن نطاق الاختبارات المحدد؛ لا تعني قبولًا عامًا.
+- رأس الفرع الحالي بعد هذا التحديث البرمجي: `b2e7adec5be59069e8e4e18dee51d166670bb58b`. نتيجة الاختبار تختبر هذا الرأس تحديدًا. لا توجد تغييرات بعده حتى لحظة هذا الإدخال.
+- التزام الملفّات: مقارنة base مع رأس الفرع تبين المسارات السبعة المصرح بها فقط. لم يُعدّل `main`؛ يظل رأسه `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
