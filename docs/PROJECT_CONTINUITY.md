@@ -2557,3 +2557,8 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - D1 local evidence: 24 tests passed; compileall and CLI integration passed. These are VERIFIED_LOCAL, not a GitHub Actions exact-head run.
 - D1 limitations retained: representative map full-value revalidation not done; 105 normalized manifest statuses NOT_VERIFIED; historical reference hash and five 48K accounting fields MISSING_EVIDENCE; Stage D acceptance tests 175,176,179,180,181,182,183,186 NOT_RUN; no Excel/DOCX delivery or Stage D Run/Job/Artifact claimed.
 - All outputs remain `T2_INTERIM / NOT_FINAL_BLOCKED`. No simulation, Trial, Monte Carlo, or N=4800.
+
+
+### Correction — D1 repository publication boundary (2026-10-31)
+
+The previous Stage D continuity entry listed the local D1 bundle path as if it were a repository path. Correction: `D1_S6_Independent_Builder_Source_Bundle.zip` exists and passed local ZIP/hash checks, but **has not been committed to GitHub**. The repository currently contains the D1 closure report only, which explicitly records `D1_REPOSITORY_DOCUMENTATION_COMMITTED / SOURCE_BUNDLE_NOT_COMMITTED`. D1 repository source-package closure is therefore `BLOCKED` pending publication and live read-back of the seven source members or the exact bundle. The 24 passing tests and CLI/compile checks remain `VERIFIED_LOCAL`, not repository CI evidence. D0 repository closure remains complete and scoped.
