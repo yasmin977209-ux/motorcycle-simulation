@@ -761,7 +761,7 @@ def test_159_اختيار_التكرار_التمثيلي_حسب_Final_Net_Proje
     assert selected.max_case_trial_id == 5
 
 
-def test_160_التكرارات_التوضيحية_الاربعة_تنتج_فعليا():
+def test_160_التكرارات_التمثيلية_الخمسة_تنتج_فعليا():
     from monte_carlo import TrialResult, select_representative_trials
     trials = [
         TrialResult(
@@ -795,6 +795,103 @@ def test_161_DAILY_DISTRIBUTION_لكل_يوم_تقويمي_بلا_فجوات():
         validate_daily_distribution_dates([
             {"date": "2027-01-01"}, {"date": "2027-01-03"}
         ])
+
+    # TEST_ONLY_SYNTHETIC_FIXTURE: both required population groups and all metrics/quantiles.
+    from stats_integrity import validate_daily_distribution_rows
+    source = "a" * 40
+    cohort = "s6-v23-aaaaaaaa"
+    dates = ["2027-01-01", "2027-01-02"]
+    distribution = []
+    for day, active_count in zip(dates, (2, 1)):
+        for mode in ("ACTIVE_ONLY", "ALL_TRIALS_CARRY_FORWARD"):
+            for metric in ("Cash", "Net_Equity", "Active_Bikes", "Owned_Transferred_Bikes", "Pending_Claims"):
+                for quantile in ("P10", "P25", "P50", "P75", "P90"):
+                    distribution.append({
+                        "date": day, "mode": mode, "metric_name": metric,
+                        "quantile_name": quantile, "source_sha": source,
+                        "cohort_id": cohort, "scenario_id": "C085_G100",
+                        "active_trial_count": active_count,
+                        "sample_trial_count": active_count if mode == "ACTIVE_ONLY" else 2,
+                        "exact_numerator": 0, "exact_denominator": 1,
+                        "display_value": "0.00",
+                    })
+    audit = validate_daily_distribution_rows(
+        distribution, scenario_id="C085_G100", source_sha=source,
+        cohort_id=cohort, expected_dates=dates, expected_trial_count=2,
+    )
+    assert audit["rows_checked"] == 100
+    with pytest.raises(RuntimeError, match="S6_DAILY_DISTRIBUTION_KEY_COVERAGE_MISMATCH"):
+        validate_daily_distribution_rows(
+            distribution[:-1], scenario_id="C085_G100", source_sha=source,
+            cohort_id=cohort, expected_dates=dates, expected_trial_count=2,
+        )
+    with pytest.raises(RuntimeError, match="S6_DAILY_DISTRIBUTION_DATE_GAP"):
+        validate_daily_distribution_rows(
+            distribution, scenario_id="C085_G100", source_sha=source,
+            cohort_id=cohort, expected_dates=["2027-01-01", "2027-01-03"],
+            expected_trial_count=2,
+        )
+
+
+# The following contract fixtures are deliberately synthetic and are not production evidence.
+TEST_ONLY_SYNTHETIC_FIXTURE = True
+
+
+def test_174_full_logging_trial_fingerprint_matches_summary_fingerprint():
+    from scripts.s6_representative_full_logging import validate_trial_fingerprint_match
+    fingerprint = "a" * 64
+    assert validate_trial_fingerprint_match(fingerprint, fingerprint)["status"] == "PASS_SCOPED_FINGERPRINT_MATCH"
+    with pytest.raises(RuntimeError, match="REPRESENTATIVE_FINANCIAL_FINGERPRINT_MISMATCH"):
+        validate_trial_fingerprint_match(fingerprint, "b" * 64)
+
+
+def test_180_representative_daily_balance_and_partner_balances_are_complete():
+    from scripts.s6_daily_path_identity import DAILY_BALANCE_INTEGER_FIELDS, DAILY_BALANCE_SCHEMA_VERSION, MODEL_SCHEMA_VERSION
+    from scripts.s6_representative_full_logging import validate_daily_balance_rows
+    source = "a" * 40
+    cohort = "s6-v23-aaaaaaaa"
+    row = {field: 0 for field in DAILY_BALANCE_INTEGER_FIELDS}
+    row.update({
+        "date": "2027-01-01", "trial_id": 1,
+        "daily_balance_schema_version": DAILY_BALANCE_SCHEMA_VERSION,
+        "Final_Close_Date": None, "scenario_id": "C085_G100",
+        "source_sha": source, "cohort_id": cohort, "schema_version": MODEL_SCHEMA_VERSION,
+        "Cash": 100, "Capital": 100, "Net_Equity": 100,
+        "Total_Assets": 100, "Total_Equity": 100, "Balance_Difference": 0,
+        "Partner1_Reinvestment_Balance": 70, "Partner2_Reinvestment_Balance": 30,
+    })
+    audit = validate_daily_balance_rows(
+        [row], trial_id=1, source_sha=source, cohort_id=cohort,
+        scenario_id="C085_G100",
+    )
+    assert audit["balance_rows_checked"] == 1
+    assert audit["partner1_balance_rows"] == audit["partner2_balance_rows"] == 1
+    bad = dict(row)
+    bad["Partner2_Reinvestment_Balance"] = None
+    with pytest.raises(RuntimeError, match="REPRESENTATIVE_DAILY_REQUIRED_INTEGER_MISSING"):
+        validate_daily_balance_rows(
+            [bad], trial_id=1, source_sha=source, cohort_id=cohort,
+            scenario_id="C085_G100",
+        )
+
+
+def test_181_representative_rollforward_equations_are_checked():
+    from scripts.s6_representative_full_logging import validate_rollforward_rows
+    dates = ["2027-01-01"]
+    cash = [{"Opening_Cash": 100, "Inflows": 10, "Outflows": 5, "Closing_Cash": 105,
+             "Operating_Cash_Outflows": 5, "Investing_Cash_Outflows": 0}]
+    ar = [{"Opening_AR": 10, "Accruals": 5, "Collections": 2,
+           "TransfersToGuarantee": 1, "Closing_AR": 12}]
+    assets = [{"Opening_Gross_Bike_Assets": 100, "Capitalized_Purchases_And_Customs": 20,
+               "Gross_Writeoffs_On_Ownership": 10, "Closing_Gross_Bike_Assets": 110,
+               "Opening_Accumulated_Depreciation": 20, "Expense_Depreciation": 5,
+               "AD_Removed_On_Writeoff": 3, "Closing_Accumulated_Depreciation": 22}]
+    equity = [{"Opening_Equity": 100, "Operating_Net_Profit": 5, "Closing_Equity": 105}]
+    audit = validate_rollforward_rows(dates, cash, ar, assets, equity)
+    assert audit["rollforward_equation_checks"] == 6
+    broken = [dict(equity[0], Closing_Equity=106)]
+    with pytest.raises(RuntimeError, match="REPRESENTATIVE_EQUITY_ROLLFORWARD_MISMATCH"):
+        validate_rollforward_rows(dates, cash, ar, assets, broken)
 
 
 def test_162_شروط_الاغلاق_لا_تشترط_المطالبات_او_الذمم():
