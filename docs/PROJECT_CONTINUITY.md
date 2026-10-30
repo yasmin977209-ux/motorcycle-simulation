@@ -2474,3 +2474,76 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - C100 read-only source Run `40263424595`: Job `121380485436`, name `P50 rule, full pytest inventory, and 1,500 deterministic C100 trials`.
 - Artifact list لRun Stage B `40993439735` فارغة في الفحص؛ لا Artifact مرفوع لهذا الـRun.
 - هذه Jobs تخص Runs الأربعة المحددة فقط؛ لم يُدّعِ هذا الفحص تعداد كل Jobs/Workflow Runs في المستودع. لا يوجد Run/Job Stage D مسجل في لقطة الفرع بعد.
+
+
+## CP-STAGE-D-LIVE-RECONCILIATION-20261030 — verified handoff closure addendum
+
+**Inspection time:** 2026-10-30 22:28 Asia/Riyadh (UTC+03:00).  
+**Method:** direct GitHub API reads, artifact downloads, local ZIP SHA-256 recomputation, and parsing of the pinned JSON/sidecar audits. No simulation, Monte Carlo, Trial, N=4800, workflow dispatch, PR, merge, release, or historical evidence mutation was performed.
+
+### Current live refs and branch comparison
+- Repository: `yasmin977209-ux/motorcycle-simulation`.
+- `main`: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Stage B: `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2`.
+- Stage C: `42389fe4ef5df1b2412339b78660c75845cca09d`.
+- Stage D: `35a761a7aeac71ac93a5d630351a2f29ff097195`.
+- Stage D vs Stage C: ahead 5, behind 0; compare reports only `docs/PROJECT_CONTINUITY.md` changed (215 additions, 0 deletions). The five documentation commits are `68716986d6bc78078a256ff97200ac370a2a17cb`, `d12fa7deee1d69d721de9b0ffb014a9bad709619`, `5658737484e721071fbb998ef38b0fa2c9b207cc`, `1ea3a651d7a014fc6d9daa80e35f1086f8378ee3`, `35a761a7aeac71ac93a5d630351a2f29ff097195`. Their messages are respectively: record Stage D authorization/live handoff; record Stage C evidence/Stage D handoff; add exact representative map/Gate B artifact audit; record historical reference hash conflict and Stage D code gaps; add verified B/C job IDs and immutable-input references.
+- Branch-specific Actions query for Stage D returns zero workflow runs. Repository-wide `status=in_progress` query returns zero active runs. Latest repository run in the queried first page is Stage C Run `41098699740`.
+- Direct Contents API reads on Stage D return 404 for: `scripts/s6_deliverables_builder.py`, `scripts/report_builder.py`, `scripts/audit_s6_deliverables_bundle.py`, both requested Excel files, `results/number_registry.json`, and `docs/FINAL_AUDIT.md`. Thus Stage D implementation/deliverables remain NOT_RUN / MISSING_EVIDENCE, not failed tests and not completed work.
+
+### Owner decision and governing reference
+- Live decision file on Stage B: `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md`; Git blob SHA-1 `58f89bc016523f1350345428b4a224ac42a8b130`.
+- Decision `D-2026-10-30-REFERENCE-V2.4.0`: `APPROVED_BY_OWNER`; effective 2026-10-30; owner authorization token `OWNER-AUTH-SIG-20261030-V240`; scope project-wide, chapters 0–25 and appendices B/D.
+- Governing v2.4.0 SHA-256: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b` (independently matched to the extracted reference file in the uploaded candidate ZIP).
+- v2.3 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f` is superseded within the decision scope but retained as historical S6 execution reference; v2.3.1 `724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0` is `CLOSED_UNAPPROVED_CANDIDATE`; Stage 12/13 historical reference is retained for its own lineage only.
+- Decision file's declared reference hash is supported by local byte-level SHA verification. The reference package's approval-template/cover still says candidate/pending, a documentary status mismatch; the explicit live owner decision controls. Preserve the mismatch as `K_SPEC / DOCUMENT_STATUS_CONFLICT` until editorial reconciliation; do not rewrite the reference bytes.
+
+### Stage B execution history and tested SHAs
+- `40992846961`, SHA `bba6dd275956da60995c4da99398bd992ee5e1c5`: collection failure, `ModuleNotFoundError: No module named 'scripts'` (missing `PYTHONPATH=.`).
+- `40992912092`, SHA `4a0b53a6e0b652d1b997194c379692abc74911ff`: `15 passed, 3 failed`; expected regex mismatch in daily-distribution coverage/duplicate-key tests and a daily key shape error.
+- `40993030819`, SHA `9c94c88ff6f0493d6b2301b3ee89b3e034e20884`: `18 passed`; not counted as final proof because the existing test file had been replaced rather than appended/preserved.
+- `40993267030`, SHA `cac53671ba0761dd49b0de267fc90bef5bc6c3dc`: collection failure because `from __future__` was not at module start.
+- `40993341387`, SHA `680e82b208cd0cbca2d3590b345348fd6b95a8d9`: `40 passed, 1 failed, 1 skipped`; unexpected daily-distribution key.
+- Final `40993439735`, Job `123860990524`, tested SHA `b2e7adec5be59069e8e4e18dee51d166670bb58b`: `41 passed, 1 skipped`; PASS_SCOPED for authorized validator scope. No artifact was uploaded by this run.
+- The live Stage B branch head is a later docs-only SHA `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2`; do not call it the tested SHA.
+
+### Stage C execution and artifact revalidation
+- Run `41098699740`, Job `124211088430`, tested SHA `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70`, completed/success.
+- Artifact `12998778418`, 310,827,203 bytes, GitHub digest and locally recomputed SHA-256 both `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`.
+- Stage C earlier runs: `41088540712` cancelled (SHA `7e1a1634646b77d84f732bbeeda8fdf7fbf9e25a`); `41088662110` cancelled (SHA `c988c3cc82c56dc538d33a57ddbc9d96b1d19206`); `41089023782` failure (SHA `c2dd64043f268e2fe840be50a532142b034ded5f`, artifact `12996432920`, 310,827,297 bytes, SHA-256 `709bdd9e6de7a25b0e1232b48da06a05935939778bc07cb51c778fe1b68fb696`).
+- Stage C job steps confirmed: pinned aggregate download; pinned C100 download; extract 125 roles and replay unique keys; run S6 validators/path tests; run acceptance tests 127/159/160/161/174/180/181; upload evidence artifact. All steps succeeded in final run.
+- Tests on the final Stage C run: `43 passed, 1 skipped` for `test_s6_first_checkpoint.py` + `test_s6_daily_path_identity_contract.py`; `7 passed` for acceptance tests 127,159,160,161,174,180,181. This is scoped test evidence only, not Stage D deliverables acceptance.
+- Immutable source artifacts re-downloaded and SHA-256 recomputed:
+  - Artifact `12852969854`, Run `40773412377`, 9,357,996 bytes, SHA-256 `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`.
+  - Artifact `12998778418`, Run `41098699740`, 310,827,203 bytes, SHA-256 `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`.
+  - Artifact `12630457193`, Run `40263424595`, 361,733 bytes, SHA-256 `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`.
+- Role map: 125 assignments (25 scenarios × P50/P10/P90/LossCase/MaxCase); 105 unique `(scenario_id, trial_id)` keys = 100 S6 + 5 C100; 20 duplicate role assignments. Map SHA-256 `3b7b2924cf9a9840e2f2bc7982a2d2eda5e2d98ad43de274861d0a45830276ac`; unique-key list SHA-256 `4e92dad7f6a06d78dec249f1f0a1ea41f187d35afd340dbf2ff54621cf1b9f25`; Full Logging root manifest SHA-256 `4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd`.
+- Recomputed post-write audit totals from all 105 audit JSONs: 216,253 daily rows; 24,545,842 event rows; 1,297,518 roll-forward equation checks; 0 balance mismatches; 0 roll-forward mismatches; Partner1 and Partner2 balances present in all 216,253 daily rows each; assets 30,170; claims 93,902; contracts 117,639; guarantors 117,639; tenants 117,639; receivables 9,543. All 105 sidecar post-write audits passed and all 105 trial fingerprints matched. The 105 individual `trial_manifest.json` files still say `WRITTEN_PENDING_POST_WRITE_AUDIT`; preserve this metadata conflict.
+- Historical 48,000-trial daily artifacts remain `MISSING_EVIDENCE_NOT_AUDITED_OR_MODIFIED`; representative Full Logging does not close that historical gap.
+
+### Gate B N=2400 exact failures re-extracted from the immutable aggregate JSON
+- Artifact `12852969854`, member `statistical_evaluation.json`, SHA-256 `dad605bb73dc4f5cdf8c992e737c13d6e87bf0f0aabcabac6829f9575deb1c74`.
+- N=300: 0 PASS / 20 FAIL; N=600: 0/20; N=1200: 10/20; N=2400: 10/20. Successful stability transitions: 0/60. Gate B `FAIL_SCOPED`; stability `NOT_CONVERGED`.
+- Failed scenarios and failed indicators (estimate; sequential half-width; tolerance; interval):
+  - C030_G000: P90_Final_Cash 7,334,250; 112,750; 146,685/2; [7,232,000, 7,447,000]. P90_Termination_Count 1,577.10; 8.90; 1; [1,570, 1,586].
+  - C030_G030: P90_Final_Cash 12,912,080; 196,820; 645,604/5; [12,720,000, 13,108,900]. P90_Termination_Count 1,968; 15; 1; [1,958, 1,983].
+  - C030_G050: P90_Final_Cash 18,110,550; 275,450; 362,211/2; [17,889,000, 18,386,000]. P90_Termination_Count 2,282.10; 14.90; 1; [2,270, 2,297].
+  - C030_G070: P90_Final_Cash 25,147,610; 497,090; 2,514,761/10; [24,798,700, 25,644,700]. P90_Termination_Count 2,669; 21; 1; [2,652, 2,690].
+  - C030_G100: P90_Final_Cash 39,341,950; 639,550; 786,839/2; [38,827,000, 39,981,500]. P90_Termination_Count 3,353.10; 28.90; 1; [3,334, 3,382].
+  - C050_G000: P90_Held_Assets 198; 1; 1; [197, 199]. P90_Termination_Count 1,154; 10; 1; [1,145, 1,164].
+  - C050_G030: P90_Held_Assets 203; 2; 1; [201, 204]. P90_Termination_Count 1,177; 12; 1; [1,169, 1,189].
+  - C050_G050: P90_Held_Assets 205; 2; 1; [204, 207]. P90_Termination_Count 1,196; 9; 1; [1,188, 1,205].
+  - C050_G070: P90_Held_Assets 208; 2; 1; [207, 210]. P90_Termination_Count 1,211; 11; 1; [1,204, 1,222].
+  - C050_G100: P90_Held_Assets 213; 2; 1; [212, 215]. P90_Termination_Count 1,237; 10; 1; [1,229, 1,247].
+- All three financial means in those ten scenarios pass their individual limits in the aggregate JSON; Gate B fails on the indicators listed above. The independent financial fingerprint comparison remains `PASS_SCOPED` (80/80 scenario-checkpoint pairs; 90,000 comparisons; zero mismatches) and does not rewrite the aggregate's original `gate_a_final=NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`.
+
+### S6-CODE and Stage D boundary
+- Stage B closes S6-CODE-01..07 within the authorized validator scope only; its final exact tested SHA is `b2e7adec5be59069e8e4e18dee51d166670bb58b`.
+- Stage C added deterministic representative selection/full logging, independent post-write audits, source-bound daily path identity, staging/read-back and atomic publication paths. These do not implement the Stage D Builder or produce Stage D deliverables.
+- Stage D authorization is `AUTH-S6-BUILDER-AND-T2-INTERIM-DELIVERABLES-2026-10-30-STAGE-D`; its only explicitly named S6-CODE closure target is S6-CODE-08 (independent S6 Builder/Adapter). S6-CODE-09/10 identifiers remain `UNDEFINED / MISSING_EVIDENCE` in the Stage D continuity record until mapped to the governing reference and tests; do not invent meanings.
+- Required Stage D tests 175,176,179,180,181,182,183,186: `NOT_RUN` as a Stage D deliverables suite. Stage C's 180/181 passes are separate test invocations and not substitutes.
+- Required output label: `T2_INTERIM / NOT_FINAL_BLOCKED`. No P17 final acceptance, no P18 release, no `FINAL_ACCEPTED`, no `CONVERGED`.
+
+### Integrity and limitations
+- This addendum records the API responses and local artifact-byte checks actually performed. It does not claim every repository run, every historical job, or all 2,454 repository-wide Actions runs were individually enumerated; branch-specific B/C run lists and the current first page/recent status queries were checked.
+- No source files or evidence artifacts were altered. Only this continuity document is updated by this commit.
