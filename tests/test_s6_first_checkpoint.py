@@ -33,7 +33,7 @@ def _valid_distribution_rows():
                     "metric_name": metric,
                     "exact_numerator": 7,
                     "exact_denominator": 2,
-                    "display_value": "3.5",
+                    "display_value": "3.50",
                 })
     return rows
 

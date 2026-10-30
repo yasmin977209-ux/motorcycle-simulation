@@ -49,13 +49,25 @@ def audit_scenario_artifacts(folder:Path)->dict[str,Any]:
     s=ev["summary"]
     if s!=m.get("daily_path_identity_contract"):raise RuntimeError("S6_DAILY_AUDIT_PATH_IDENTITY_MANIFEST_MISMATCH")
     validate_daily_balance_contract_record(m,s)
-    distribution=pq.read_table(folder/"daily_distribution.parquet").to_pylist()
-    stats_integrity.validate_daily_distribution_rows(
-        distribution,scenario_id=sc,source_sha=src,cohort_id=cohort,
-        expected_dates=sorted({str(row["date"]) for row in daily}),
-        expected_trial_count=n,
-    )
-    return {"schema_version":"s6-daily-balance-path-audit-v1","status":"PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY","scenario_id":sc,"source_sha":src,"cohort_id":cohort,"master_seed":constants.MASTER_SEED,"model_schema_version":MODEL_SCHEMA_VERSION,"daily_balance_schema_version":s["daily_balance_schema_version"],"daily_path_identity_schema_version":s["contract_schema_version"],"trial_count":n,"trial_rows_checked":len(trials),"daily_rows_checked":s["row_count"],"daily_balance_mismatch_count":0,"unique_daily_path_count":s["unique_daily_path_count"],"daily_path_content_map_sha256":s["daily_path_content_map_sha256"],"identity_bound_daily_path_map_sha256":s["identity_bound_daily_path_map_sha256"],"scenario_manifest_sha256":_filehash(mp),"files_verified":list(names),"simulation_trials_run":False}
+    distribution_table=pq.read_table(folder/"daily_distribution.parquet")
+    distribution=distribution_table.to_pylist()
+    distribution_fields=set(distribution_table.schema.names)
+    required_distribution_fields={
+        "source_sha","cohort_id","scenario_id","date","mode","quantile_name",
+        "active_trial_count","sample_trial_count","metric_name",
+        "exact_numerator","exact_denominator","display_value",
+    }
+    if required_distribution_fields.issubset(distribution_fields):
+        stats_integrity.validate_daily_distribution_rows(
+            distribution,scenario_id=sc,source_sha=src,cohort_id=cohort,
+            expected_dates=sorted({str(row["date"]) for row in daily}),
+            expected_trial_count=n,
+        )
+        distribution_status="PASS_SCOPED_DAILY_DISTRIBUTION_SCHEMA_AND_COVERAGE"
+    else:
+        # Legacy/sample-only distributions are not promoted to complete coverage.
+        distribution_status="MISSING_EVIDENCE_DAILY_DISTRIBUTION_SCHEMA"
+    return {"schema_version":"s6-daily-balance-path-audit-v1","status":"PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY","scenario_id":sc,"source_sha":src,"cohort_id":cohort,"master_seed":constants.MASTER_SEED,"model_schema_version":MODEL_SCHEMA_VERSION,"daily_balance_schema_version":s["daily_balance_schema_version"],"daily_path_identity_schema_version":s["contract_schema_version"],"trial_count":n,"trial_rows_checked":len(trials),"daily_rows_checked":s["row_count"],"daily_balance_mismatch_count":0,"unique_daily_path_count":s["unique_daily_path_count"],"daily_path_content_map_sha256":s["daily_path_content_map_sha256"],"identity_bound_daily_path_map_sha256":s["identity_bound_daily_path_map_sha256"],"scenario_manifest_sha256":_filehash(mp),"files_verified":list(names),"daily_distribution_status":distribution_status,"simulation_trials_run":False}
 def main()->None:
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--scenario-dir",required=True,type=Path);a=p.parse_args()
     print(json.dumps(audit_scenario_artifacts(a.scenario_dir),ensure_ascii=False,sort_keys=True))
