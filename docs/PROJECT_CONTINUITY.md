@@ -2547,3 +2547,13 @@ Preserve the distinction between the successful exact fingerprint comparison and
 ### Integrity and limitations
 - This addendum records the API responses and local artifact-byte checks actually performed. It does not claim every repository run, every historical job, or all 2,454 repository-wide Actions runs were individually enumerated; branch-specific B/C run lists and the current first page/recent status queries were checked.
 - No source files or evidence artifacts were altered. Only this continuity document is updated by this commit.
+
+
+## 12. Stage D repository closure — 2026-10-31
+
+- Authorized branch: `tmp/cp-v240-stage-d-s6-deliverables-20261030`; no changes to main, PR, merge, release, or workflow.
+- D0 repository documentation closure: `docs/stage_d/D0_REPOSITORY_CLOSURE.md`; underlying audit files remain `D0_INPUT_AUDIT.md` and `D0_INPUT_AUDIT.json`. D0 remains `PASS_SCOPED_WITH_LIMITATIONS`.
+- D1 repository source-package closure: `docs/stage_d/D1_REPOSITORY_CLOSURE.md`; source bundle path `docs/stage_d/D1_S6_Independent_Builder_Source_Bundle.zip`, SHA-256 `ea171fc713cd47cddc0618926b4a8544e6d3999233d49c45208aae5f0a0800db`, 26,093 bytes, seven members.
+- D1 local evidence: 24 tests passed; compileall and CLI integration passed. These are VERIFIED_LOCAL, not a GitHub Actions exact-head run.
+- D1 limitations retained: representative map full-value revalidation not done; 105 normalized manifest statuses NOT_VERIFIED; historical reference hash and five 48K accounting fields MISSING_EVIDENCE; Stage D acceptance tests 175,176,179,180,181,182,183,186 NOT_RUN; no Excel/DOCX delivery or Stage D Run/Job/Artifact claimed.
+- All outputs remain `T2_INTERIM / NOT_FINAL_BLOCKED`. No simulation, Trial, Monte Carlo, or N=4800.
