@@ -2452,3 +2452,14 @@ Preserve the distinction between the successful exact fingerprint comparison and
 
 ### مخرجات محلية لهذه الجلسة
 أُنشئت ملفات handoff محلية تشمل خريطة الأدوار 125، وJSON/CSV/Markdown لتفاصيل Gate B، وتقرير الاستمرارية، وتعليمات المشروع، وFirst Message Prompt. هذه الملفات ليست GitHub commits أو Stage D artifacts ولا تُعد قبولًا للتسليم.
+
+
+## K_SPEC إضافي — تعارض بصمة مرجع Stage 12/13 التاريخي — 2026-10-30
+
+- سجل قرار المالك `D-2026-10-30-REFERENCE-V2.4.0` يذكر بصمة مرجع Stage 12/13 التاريخي:
+  `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0c6d4d1a6b7479`.
+- تقرير الحالة التاريخي `حالة المشروع.md`، الحقل `source_basis.reference_sha256`، يذكر:
+  `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`.
+- القيمتان مختلفتان؛ لم تتوفر بايتات المرجع التاريخي الأصلي ضمن الملفات المفحوصة لحسم الصحيح. الحالة: `K_SPEC / HISTORICAL_REFERENCE_HASH_CONFLICT`. لا تصحح أي قيمة بالتخمين، ولا تنقل دليل Stage 12 إلى S6. يلزم استرجاع الملف التاريخي الأصلي وحساب SHA-256 مباشرة ثم تسجيل قرار/تصحيح موثق مع حفظ القيمتين التاريخيتين.
+- Stage D implementation identifiers: `S6-CODE-08` هو Builder/Adapter المحدد في التفويض. لم يظهر تعريف كافٍ لـ`S6-CODE-09` و`S6-CODE-10` في سجل التفويض/الاستمرارية المفحوص؛ تبقيان `UNDEFINED / MISSING_EVIDENCE` إلى أن تُراجع متطلبات v2.4.0 واختبارات Stage D دون اختراع نطاق.
+- Test 192 historical coverage record: 10,000 nested synthetic repetitions across 20 scenarios and checkpoints 300/600/1200/2400؛ FWER `0.0435 ≤ 0.05`. هذا دليل تغطية inference فقط وليس Gate B pass أو إنتاجًا جديدًا.
