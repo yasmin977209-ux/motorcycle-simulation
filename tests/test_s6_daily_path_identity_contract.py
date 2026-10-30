@@ -47,3 +47,25 @@ def test_postwrite_audit_rechecks_parquet_and_hashes(tmp_path:Path):
     contract=ev(daily)["summary"];m={"schema_version":SCENARIO_MANIFEST_SCHEMA_VERSION,"status":"EXECUTED","scenario_id":SC,"source_sha":SRC,"cohort_id":COHORT,"master_seed":SEED,"schema_version_model":MODEL_SCHEMA_VERSION,"trial_id_start":1,"trial_id_end":2,"trial_count":2,"daily_balance_contract":{"schema_version":DAILY_BALANCE_SCHEMA_VERSION,"status":"PASS_SCOPED_POST_WRITE_BALANCE_CHECK","source_sha":SRC,"cohort_id":COHORT,"master_seed":SEED,"model_schema_version":MODEL_SCHEMA_VERSION,"rows_checked":4,"balance_mismatch_count":0,"required_integer_fields":list(DAILY_BALANCE_INTEGER_FIELDS)},"daily_path_identity_contract":contract,"files":files}
     (d/"scenario_manifest.json").write_text(json.dumps(m,sort_keys=True),encoding="utf-8");report=audit_scenario_artifacts(d)
     assert report["status"]=="PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY" and report["daily_rows_checked"]==4 and report["daily_balance_mismatch_count"]==0 and report["identity_bound_daily_path_map_sha256"]==contract["identity_bound_daily_path_map_sha256"]
+
+
+def test_pinned_historical_c100_cohort_identity_is_scoped_and_allowed():
+    from scripts.s6_daily_path_identity import build_daily_path_identity_evidence
+    source = "965281d52441cd0d4b744e211c9f68ee4cdc3753"
+    cohort = "c100-v23-s4-20261026-965281d5"
+    sample = row(1, START, source, cohort)
+    sample["scenario_id"] = "C100_G100"
+    evidence = build_daily_path_identity_evidence(
+        [sample], source_sha=source, cohort_id=cohort, master_seed=SEED,
+        scenario_id="C100_G100", expected_trial_ids=[1],
+        expected_start_date=START.isoformat(),
+    )
+    assert evidence["summary"]["source_sha"] == source
+    assert evidence["summary"]["cohort_id"] == cohort
+    with pytest.raises(RuntimeError, match="S6_DAILY_PATH_SOURCE_COHORT_MISMATCH"):
+        build_daily_path_identity_evidence(
+            [dict(sample, cohort_id="c100-v23-unapproved")],
+            source_sha=source, cohort_id="c100-v23-unapproved", master_seed=SEED,
+            scenario_id="C100_G100", expected_trial_ids=[1],
+            expected_start_date=START.isoformat(),
+        )

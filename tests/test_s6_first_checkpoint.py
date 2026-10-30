@@ -610,3 +610,18 @@ def test_t10_duplicate_daily_distribution_key_is_rejected():
             cohort_id="s6-v23-aaaaaaaa", expected_dates=["2021-01-01"],
             expected_trial_count=2,
         )
+
+
+def test_s6_atomic_publish_directory_is_atomic_and_never_overwrites(tmp_path: Path):
+    staging = tmp_path / "output.staging-one"
+    final = tmp_path / "output"
+    staging.mkdir()
+    (staging / "manifest.json").write_text('{"status":"verified"}', encoding="utf-8")
+    s6.atomic_publish_directory(staging, final)
+    assert not staging.exists()
+    assert json.loads((final / "manifest.json").read_text(encoding="utf-8"))["status"] == "verified"
+    other = tmp_path / "output.staging-two"
+    other.mkdir()
+    with pytest.raises(RuntimeError, match="S6_ATOMIC_FINAL_DIRECTORY_ALREADY_EXISTS"):
+        s6.atomic_publish_directory(other, final)
+    assert other.is_dir()
