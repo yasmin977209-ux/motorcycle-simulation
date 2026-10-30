@@ -2320,3 +2320,79 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - لا يوجد دليل في هذا الفحص على إنشاء ملفات S6 Builder أو المصنفين أو التقارير الخمسة أو حزمة الثمانية أعضاء.
 - اختبارات 175,176,179,180,181,182,183,186: `NOT_RUN / NOT_VERIFIED` في هذه اللقطة.
 - لا تسجل Artifact ID أو Run ID للمرحلة د قبل صدورهما فعلياً.
+
+
+## إغلاق وتسليم جلسة 2026-10-30 — Stage D handoff checkpoint
+
+**وقت الفحص:** 2026-10-30 22:05 Asia/Riyadh (UTC+03:00).  
+**نوع الإجراء:** فحص حيّ + تحديث توثيقي فقط. لا تشغيل محاكاة/Trial/Checkpoint/Workflow، ولا تعديل مصدر أو بيانات تاريخية، ولا Merge/PR/Release.
+
+### حسم حوكمة المرجع v2.4.0
+- تمت قراءة السجل الحي `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md` من فرع Stage D. Blob SHA-1: `58f89bc016523f1350345428b4a224ac42a8b130`.
+- السجل يحدد القرار `D-2026-10-30-REFERENCE-V2.4.0` بالحالة `APPROVED_BY_OWNER`، تاريخ القرار والنفاذ 2026-10-30، والنطاق: المشروع كاملًا، والملف `المرجع_الحاكم_الموحّد_v2.4.0_مرشح_للاعتماد.md` ببصمة SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- يصرح القرار باستبدال v2.3 ببصمة `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f)، وإغلاق v2.3.1 ببصمة `724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0` بوصفه `CLOSED_UNAPPROVED_CANDIDATE`، والاحتفاظ بمرجع Stage 12/13 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0c6d4d1a6b7479` لسلالة المصدر التاريخية فقط.
+- بصمة SHA-256 الموثقة لسجل القرار نفسه: `1076b3e876d3db1a7e6ab4473fedb22226dfda0cb499d230ba3a0c2a9652a95d`. بصمة المرجع حُسبت مستقلًا من الملف المرفق وتطابقت مع `225de8…52c0b`.
+- يوجد تعارض وثائقي يجب عدم محوه: غلاف المرجع المرفق وملف نموذج الاعتماد داخل الحزمة ما زالا يصفان v2.4.0 بأنه مرشح/بانتظار الإقرار، بينما سجل القرار الحي أعلاه يثبت اعتماد المالك وتاريخ النفاذ والنطاق. يُعتمد سجل القرار الصريح في تحديد السلطة، وتبقى حالة الغلاف/نموذج الاعتماد `K_SPEC / DOCUMENT_STATUS_CONFLICT` تحتاج تصحيحًا تحريريًا منفصلًا دون تغيير بايتات المرجع التاريخية أو إعادة كتابة الأدلة.
+
+### تثبيت حالة GitHub التي أمكن التحقق منها
+- المستودع `yasmin977209-ux/motorcycle-simulation`، repository ID `1398760345`، عام، default branch `main`، غير مؤرشف؛ صلاحية الموصل Admin.
+- GitHub branch search أكد وجود الفروع: `tmp/cp-v240-decision-and-validators-20261030`, `tmp/cp-v240-stage-c-rep-full-logging-20261030`, `tmp/cp-v240-stage-d-s6-deliverables-20261030`, و`main`.
+- رؤوس الفروع وفق أحدث لقطة الاستمرارية المقروءة على فرع Stage D، مع التحقق من وجود commits المحددة عبر GitHub:
+  - Stage B: `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2`. رأس التنفيذ/الاختبار البرمجي السابق `b2e7adec5be59069e8e4e18dee51d166670bb58b`؛ Run النهائي اختبر `b2e7…0bb58b` وليس commit الحوكمة الأحدث.
+  - Stage C: `42389fe4ef5df1b2412339b78660c75845cca09d`.
+  - Stage D: `42389fe4ef5df1b2412339b78660c75845cca09d` (لم يظهر أي commit تنفيذ Stage D في اللقطة المقروءة).
+  - main المجمد: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- commit `42389fe4ef5df1b2412339b78660c75845cca09d` جرى جلب بياناته مباشرة؛ رسالته `docs(stage-c): record verified representative full logging evidence` وتاريخه `2026-10-30T18:07:44Z`. هذا commit يوثق Stage C، ولا يثبت بناء Stage D.
+- لا يوجد في هذا الفحص دليل على تغيير `main` أو دمج الفروع.
+
+### Stage B — validators
+- التفويض: `AUTH-VALIDATORS-2026-10-30-STAGE-B`؛ التغييرات محصورة بالمسارات السبعة المسجلة سابقًا.
+- Runs:
+  - `40992846961`, tested SHA `bba6dd275956da60995c4da99398bd992ee5e1c5`: فشل جمع الاختبارات بسبب غياب `PYTHONPATH=.`; لا نتيجة اختبار.
+  - `40992912092`, tested SHA `4a0b53a6e0b652d1b997194c379692abc74911ff`: `15 passed, 3 failed`; ظهرت مشكلات HALF_EVEN وتمييز daily distribution التاريخي/العيني.
+  - `40993030819`, tested SHA `9c94c88ff6f0493d6b2301b3ee89b3e034e20884`: `18 passed` لكن لا يُحتسب دليلًا للمجموعة الأصلية بعد اكتشاف استبدال ملف الاختبار بدل إلحاق الاختبارات.
+  - `40993267030`, tested SHA `cac53671ba0761dd49b0de267fc90bef5bc6c3dc`: فشل جمع بسبب موضع `from __future__ import annotations`.
+  - `40993341387`, tested SHA `680e82b208cd0cbca2d3590b345348fd6b95a8d9`: `40 passed, 1 failed, 1 skipped`.
+  - `40993439735`, tested SHA `b2e7adec5be59069e8e4e18dee51d166670bb58b`: `41 passed, 1 skipped`؛ PASS_SCOPED للاختبارين المصرح بهما فقط.
+- أُغلقت S6-CODE-01..07 ضمن نطاق validators. لا يُستنتج منها اكتمال S6-CODE-08..10 أو قبول المنتج.
+
+### Stage C — representative selection وFull Logging
+- التفويض: `AUTH-REP-ROLES-AND-FULL-LOGGING-2026-10-30-STAGE-C`.
+- Run `41098699740`، Job ID `124211088430` (`representative-full-logging`)، `completed/success`; tested SHA `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70`.
+- المدخلات:
+  - S6 aggregate: Run `40773412377`, Artifact `12852969854`, الحجم `9,357,996` bytes، GitHub digest `sha256:ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`.
+  - C100 reuse: Run `40263424595`, Artifact `12630457193`, الحجم `361,733` bytes، GitHub digest `sha256:c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`.
+- S6 source `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`; C100 source `965281d52441cd0d4b744e211c9f68ee4cdc3753`, cohort `c100-v23-s4-20261026-965281d5`; `MASTER_SEED=20270101`. لم تنشأ stochastic trials جديدة.
+- Artifact Full Logging: ID `12998778418`, الاسم `s6-stage-c-representative-full-logging-41098699740`, الحجم `310,827,203` bytes، digest `sha256:403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`, not expired.
+- الخريطة: 125 assignments = 25 scenarios × 5 roles؛ 105 unique `(scenario_id, trial_id)` keys = 100 S6 + 5 C100؛ 20 role assignments مكررة من C100 لأن الأدوار الخمسة لكل C100 scenario تشير إلى trial_id=1. S6: 100/100 unique؛ C100: 25 assignments / 5 unique keys، مع `CROSS_COHORT_DETERMINISTIC_REUSE`.
+- ملفات الخريطة: `representative_selection_map.json` SHA-256 `3b7b2924cf9a9840e2f2bc7982a2d2eda5e2d98ad43de274861d0a45830276ac`; `representative_unique_keys.json` SHA-256 `4e92dad7f6a06d78dec249f1f0a1ea41f187d35afd340dbf2ff54621cf1b9f25`; `representative_full_logging_manifest.json` SHA-256 `4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd`.
+- Full Logging: 105/105 keys completed؛ 216,253 daily rows؛ 24,545,842 event rows؛ 105/105 post-write audits pass-scoped؛ 105/105 trial fingerprints match؛ zero balance mismatches؛ zero roll-forward mismatches؛ 1,297,518 roll-forward equations checked؛ Partner1/Partner2 balances present in 216,253/216,253 daily rows؛ 1,365 archived/result files across manifests had matching sizes/digests.
+- Artifact ZIP itself: `310,827,203` bytes، SHA-256 `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`.
+- ملاحظة metadata محفوظة: 105 `trial_manifest.json` تحمل `WRITTEN_PENDING_POST_WRITE_AUDIT`، بينما sidecar audit وroot manifest يحملان PASS_SCOPED. لا تُعدّل الأثر التاريخي؛ وحّد الدلالة في builder/manifest جديد لاحقًا.
+- اختبارات Stage C: `tests/test_s6_first_checkpoint.py` و`tests/test_s6_daily_path_identity_contract.py`: `43 passed, 1 skipped in 1.29s`; الاختبارات 127,159,160,161,174,180,181: `7 passed in 0.59s`. Run سابق `41089023782` فشل بسبب fixture C100 اصطناعي ناقص `Final_Close_Date`؛ محفوظ تاريخيًا.
+- النتيجة `PASS_SCOPED` لهذا النطاق فقط. سجلات 48,000 trial التاريخية لم تُدقق ولم تُعدل، وما زالت حقول الأرصدة الخمسة مفقودة منها.
+
+### بوابات S6 وGate B — لا ترقية
+- Gate A المالي: `PASS_SCOPED_FINANCIAL_FINGERPRINT_MATCH`؛ 80/80 scenario-checkpoint pairs و90,000 financial fingerprint comparisons، صفر mismatch.
+- Gate A الإنتاجي الشامل: `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B عند N=2400: `FAIL_SCOPED`؛ 10 PASS في C085/C070 و10 FAIL في C050/C030. الملخص المتاح لا يتضمن القيم العددية التفصيلية لكل سيناريو/مقياس/فاصل/تسامح؛ يجب استخراجها من ملفات artifact الأصلية قبل إعادة نشر جدول تفصيلي. لا تُخمن القيم.
+- الانتقالات: 0/60 ناجحة؛ `NOT_CONVERGED_OPERATIONAL_STOP`.
+- C100: `DEGENERATE_DETERMINISTIC / G_INERT / CROSS_COHORT_DETERMINISTIC_REUSE`.
+- 48,000 historical trials: لا backfill ولا إعادة كتابة؛ الخمسة حقول `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets` غير مثبتة في snapshots التاريخية؛ full historical `Assets == Equity` = `MISSING_EVIDENCE`.
+- Gate B summary historical checkpoints: N=300: 0/20 pass; N=600: 0/20 pass; N=1200: 10/20 pass; N=2400: 10/20 pass. احتفظ بالفشل التاريخي، بما فيه `C030_G030` transition 300→600 `P90_Final_Cash=FAILED_NOT_REQUALIFIED` وفق السجل السابق.
+
+### Stage D — الحالة المباشرة
+- التفويض: `AUTH-S6-BUILDER-AND-T2-INTERIM-DELIVERABLES-2026-10-30-STAGE-D`, `STAGE_D_AUTHORIZED — ACTIVATED`.
+- لا يوجد Run أو Job أو Artifact Stage D مثبت حتى هذا التحديث؛ ولا يوجد دليل على إنشاء `scripts/s6_deliverables_builder.py` أو المصنفين أو التقارير الخمسة أو حزمة S9. اختبارات 175,176,179,180,181,182,183,186 لم تُشغّل كحزمة Stage D.
+- المخرجات يجب أن تبقى `T2_INTERIM / NOT_FINAL_BLOCKED`؛ لا `FINAL_ACCEPTED`, لا P17 final acceptance، لا Release.
+- الخطوة التالية المسموحة: فحص source tree والاعتماديات والـArtifact schemas، تنزيل/فحص Artifacts الثلاثة المذكورة، ثم تصميم S6 Builder/Adapter مستقل عن Stage 13. لا تستخدم Stage13 builders القديمة بمجرد تغيير reference hash؛ فهي مرتبطة بهوية/فوج Stage 12/13.
+- S7: مصنف عربي ومصنف إنجليزي، 185 ورقة لكل منهما، مصدر مشترك، تطابق رقمي خلية بخلية، RTL للعربية، int/Fraction للحساب وDecimal HALF_EVEN للعرض.
+- S8: `results/number_registry.json` والتقارير الخمسة DOCX، مع ربط كل رقم بمصدره/بسطه/مقامه، والإفصاح عن فجوة الواقعية §17.3.
+- S9: 7 deliverables + manifest = 8 ZIP members بالضبط؛ `SHA256SUMS.txt` خارج ZIP؛ مستقل auditor يعيد فتح الملفات من القرص ويعيد حساب hashes/byte sizes ويختبر Excel/Word.
+- الاختبارات المطلوبة: 175,176,179,180,181,182,183,186. لا تدّعِ نتائجها قبل تنفيذها على exact tested SHA.
+- لا Trial/Simulation/N=4800، لا تعديل main، لا PR/merge/release، ولا تعديل ملفات الأدلة التاريخية.
+
+### حدود هذا التحديث
+- هذه الإضافة توثيق استمرارية من الأدلة المقروءة فقط؛ لا تحل محل قراءة الملفات الخام داخل Artifacts الثلاثة.
+- أرقام Gate B التفصيلية وقيم 125 role assignments لا تُعاد كتابتها من الذاكرة؛ يجب استخراجها من artifact JSON الفعلي.
+- لا يُعامل نجاح Run Stage C أو سلامة Full Logging كقبول Gate A الشامل أو Gate B أو التقارب أو P17/P18.
