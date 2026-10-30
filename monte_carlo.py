@@ -210,23 +210,19 @@ def _trial_result_from_project(
     return replace(result, trial_fingerprint=trial_fingerprint(result))
 
 
-def run_single_trial(
+def _run_single_trial_with_project(
     scenario_id: str,
     trial_id: int,
     *,
     master_seed: int = constants.MASTER_SEED,
     source_sha: str | None = None,
-) -> tuple[TrialResult, list[dict[str, object]]]:
-    collection_probability, recovery_rate_pct = parse_scenario_id(
-        scenario_id
-    )
-
+    log_events: bool,
+) -> tuple[TrialResult, list[dict[str, object]], Project]:
+    collection_probability, recovery_rate_pct = parse_scenario_id(scenario_id)
     daily_rows: list[dict[str, object]] = []
 
     def capture_day(project: Project, current_date) -> None:
-        daily_rows.append(
-            _daily_snapshot(project, current_date, trial_id)
-        )
+        daily_rows.append(_daily_snapshot(project, current_date, trial_id))
 
     project = daily_engine.run_deterministic_trial(
         recovery_rate_pct=recovery_rate_pct,
@@ -235,8 +231,8 @@ def run_single_trial(
         master_seed=master_seed,
         collection_probability=collection_probability,
         on_day_end=capture_day,
+        log_events=log_events,
     )
-
     result = _trial_result_from_project(
         project,
         scenario_id=scenario_id,
@@ -246,8 +242,36 @@ def run_single_trial(
         master_seed=master_seed,
         source_sha=source_sha,
     )
+    return result, daily_rows, project
 
+
+def run_single_trial(
+    scenario_id: str,
+    trial_id: int,
+    *,
+    master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
+) -> tuple[TrialResult, list[dict[str, object]]]:
+    """Summary mode: preserve numeric outputs while omitting the full event log."""
+    result, daily_rows, _project = _run_single_trial_with_project(
+        scenario_id, trial_id, master_seed=master_seed,
+        source_sha=source_sha, log_events=False,
+    )
     return result, daily_rows
+
+
+def run_single_trial_full_logging(
+    scenario_id: str,
+    trial_id: int,
+    *,
+    master_seed: int = constants.MASTER_SEED,
+    source_sha: str | None = None,
+) -> tuple[TrialResult, list[dict[str, object]], Project]:
+    """Deterministically replay one selected representative with full event logging."""
+    return _run_single_trial_with_project(
+        scenario_id, trial_id, master_seed=master_seed,
+        source_sha=source_sha, log_events=True,
+    )
 
 
 def run_trials_sequentially(
@@ -576,6 +600,7 @@ __all__ = [
     "TrialResult",
     "parse_scenario_id",
     "run_single_trial",
+    "run_single_trial_full_logging",
     "run_trials_sequentially",
     "run_trials_parallel",
     "fingerprint_trial_results",
