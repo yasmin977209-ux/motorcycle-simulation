@@ -111,6 +111,19 @@ def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
+def atomic_publish_directory(staging_dir: Path, final_dir: Path) -> None:
+    """Atomically expose a fully written staging directory without overwriting prior evidence."""
+    staging_dir = Path(staging_dir)
+    final_dir = Path(final_dir)
+    if not staging_dir.is_dir():
+        raise RuntimeError("S6_ATOMIC_STAGING_DIRECTORY_MISSING")
+    if staging_dir.parent.resolve() != final_dir.parent.resolve():
+        raise RuntimeError("S6_ATOMIC_STAGING_MUST_SHARE_FINAL_PARENT")
+    if final_dir.exists():
+        raise RuntimeError("S6_ATOMIC_FINAL_DIRECTORY_ALREADY_EXISTS")
+    os.replace(staging_dir, final_dir)
+
+
 def require_source_sha(value: str) -> None:
     if len(value) != 40 or any(c not in "0123456789abcdef" for c in value):
         raise ValueError("S6_SOURCE_SHA_INVALID")
@@ -518,7 +531,10 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     cohort_id=f"s6-v23-{args.source_sha[:8]}"
     trial_ids=list(range(1,args.trials+1))
     new_trial_ids=list(range(trial_start,trial_end+1))
-    out_dir=Path(args.output_dir); out_dir.mkdir(parents=True,exist_ok=True)
+    out_dir=Path(args.output_dir)
+    out_dir.parent.mkdir(parents=True,exist_ok=True)
+    if out_dir.exists(): raise RuntimeError("S6_OUTPUT_TARGET_ALREADY_EXISTS")
+    staging_dir=Path(tempfile.mkdtemp(prefix=f"{out_dir.name}.staging-",dir=out_dir.parent))
     if previous_n:
         results, slices, derived = load_previous_artifact(Path(args.previous_dir), args.scenario, args.source_sha, cohort_id, previous_n)
     else:
@@ -571,8 +587,8 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "daily_snapshots.parquet":daily_rows,
         "daily_distribution.parquet":distribution,
     }
-    for name,rows in targets.items(): pq.write_table(pa.Table.from_pylist(rows),out_dir/name,compression="zstd")
-    persisted_daily=pq.read_table(out_dir/"daily_snapshots.parquet").to_pylist()
+    for name,rows in targets.items(): pq.write_table(pa.Table.from_pylist(rows),staging_dir/name,compression="zstd")
+    persisted_daily=pq.read_table(staging_dir/"daily_snapshots.parquet").to_pylist()
     readback=build_daily_path_identity_evidence(persisted_daily,source_sha=args.source_sha,cohort_id=cohort_id,master_seed=constants.MASTER_SEED,scenario_id=args.scenario,expected_trial_ids=trial_ids,expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
     if readback["summary"]!=path_contract: raise RuntimeError("S6_POST_WRITE_DAILY_PATH_IDENTITY_MISMATCH")
     path_contract=readback["summary"]
@@ -586,9 +602,9 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "full_run_trial_ids":[tid for tid in trial_ids if derived.get(tid) is None],
         "derived_trials":[{"trial_id":tid,"derived_from":derived.get(tid),"trial_fingerprint":results[tid].trial_fingerprint} for tid in trial_ids if derived.get(tid) is not None],
         "status":"EXECUTED"}
-    write_json(out_dir/"opt1_provenance.json",provenance)
+    write_json(staging_dir/"opt1_provenance.json",provenance)
     names=[*targets.keys(),"opt1_provenance.json"]
-    files={name:{"sha256":sha256_file(out_dir/name),"size_bytes":(out_dir/name).stat().st_size} for name in names}
+    files={name:{"sha256":sha256_file(staging_dir/name),"size_bytes":(staging_dir/name).stat().st_size} for name in names}
     manifest={
         "schema_version":SCENARIO_MANIFEST_SCHEMA_VERSION,"status":"EXECUTED","scenario_id":args.scenario,
         "collection_level":collection_pct,"recovery_level":recovery_pct,"source_sha":args.source_sha,
@@ -618,12 +634,23 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "gate_b_status":"NOT_EVALUATED_FIRST_CHECKPOINT_ONLY" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
         "stability_status":"NOT_CONVERGED_CHECKPOINT_N300_BASELINE" if args.trials==constants.STATISTICAL_CHECK_START_N else "NOT_EVALUATED_INTERMEDIATE_CHECKPOINT",
         "files":files}
-    write_json(out_dir/"scenario_manifest.json",manifest)
+    write_json(staging_dir/"scenario_manifest.json",manifest)
     from scripts.audit_s6_daily_balance_artifact import audit_scenario_artifacts
     audit_report=audit_scenario_artifacts(out_dir)
     if audit_report["status"]!="PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY": raise RuntimeError("S6_POST_WRITE_DAILY_BALANCE_AUDIT_NOT_PASS")
-    write_json(out_dir/"daily_balance_path_audit.json",audit_report)
-    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,"trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,"eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],"derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"daily_balance_audit_status":audit_report["status"],"daily_balance_path_audit_sha256":sha256_file(out_dir/"daily_balance_path_audit.json"),"files":files},ensure_ascii=False,sort_keys=True))
+    write_json(staging_dir/"daily_balance_path_audit.json",audit_report)
+    persisted_manifest=json.loads((staging_dir/"scenario_manifest.json").read_text(encoding="utf-8"))
+    if persisted_manifest.get("files")!=files:
+        raise RuntimeError("S6_ATOMIC_MANIFEST_READBACK_MISMATCH")
+    persisted_audit=json.loads((staging_dir/"daily_balance_path_audit.json").read_text(encoding="utf-8"))
+    if persisted_audit.get("status")!="PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY":
+        raise RuntimeError("S6_ATOMIC_AUDIT_READBACK_MISMATCH")
+    for name,entry in files.items():
+        path=staging_dir/name
+        if not path.is_file() or path.stat().st_size!=entry["size_bytes"] or sha256_file(path)!=entry["sha256"]:
+            raise RuntimeError(f"S6_ATOMIC_PREPUBLISH_FILE_HASH_MISMATCH:{name}")
+    atomic_publish_directory(staging_dir,out_dir)
+    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,"trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,"eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],"derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"daily_balance_audit_status":audit_report["status"],"daily_balance_path_audit_sha256":sha256_file(staging_dir/"daily_balance_path_audit.json"),"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
 
 def stochastic_scenario_ids() -> set[str]:
