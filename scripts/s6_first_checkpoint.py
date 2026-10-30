@@ -636,7 +636,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "files":files}
     write_json(staging_dir/"scenario_manifest.json",manifest)
     from scripts.audit_s6_daily_balance_artifact import audit_scenario_artifacts
-    audit_report=audit_scenario_artifacts(out_dir)
+    audit_report=audit_scenario_artifacts(staging_dir)
     if audit_report["status"]!="PASS_SCOPED_DAILY_BALANCE_AND_PATH_IDENTITY": raise RuntimeError("S6_POST_WRITE_DAILY_BALANCE_AUDIT_NOT_PASS")
     write_json(staging_dir/"daily_balance_path_audit.json",audit_report)
     persisted_manifest=json.loads((staging_dir/"scenario_manifest.json").read_text(encoding="utf-8"))
@@ -650,7 +650,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         if not path.is_file() or path.stat().st_size!=entry["size_bytes"] or sha256_file(path)!=entry["sha256"]:
             raise RuntimeError(f"S6_ATOMIC_PREPUBLISH_FILE_HASH_MISMATCH:{name}")
     atomic_publish_directory(staging_dir,out_dir)
-    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,"trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,"eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],"derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"daily_balance_audit_status":audit_report["status"],"daily_balance_path_audit_sha256":sha256_file(staging_dir/"daily_balance_path_audit.json"),"files":files},ensure_ascii=False,sort_keys=True))
+    print(json.dumps({"status":"S6_SCENARIO_CHECKPOINT_EXECUTED","scenario":args.scenario,"trial_count":len(ordered),"source_sha":args.source_sha,"cohort_id":cohort_id,"opt1_policy":policy,"eligible_zero_claim_trials":provenance["eligible_zero_claim_trials"],"derived_trial_count":provenance["derived_trial_count"],"elapsed_seconds":manifest["elapsed_seconds"],"daily_balance_audit_status":audit_report["status"],"daily_balance_path_audit_sha256":sha256_file(out_dir/"daily_balance_path_audit.json"),"files":files},ensure_ascii=False,sort_keys=True))
     return manifest
 
 def stochastic_scenario_ids() -> set[str]:
