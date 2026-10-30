@@ -1,0 +1,240 @@
+{
+  "audit_id": "D0-S6-INPUT-AUDIT-2026-10-30",
+  "status": "D0_COMPLETE_PASS_SCOPED_WITH_LIMITATIONS",
+  "delivery_classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/cp-v240-stage-d-s6-deliverables-20261030",
+  "pre_audit_head": "67763f3156c00db5beaa568d8b78a055c5a8f968",
+  "current_live_recheck": {
+    "main_head": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
+    "stage_b": {
+      "branch": "tmp/cp-v240-decision-and-validators-20261030",
+      "head": "a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2"
+    },
+    "stage_c": {
+      "branch": "tmp/cp-v240-stage-c-rep-full-logging-20261030",
+      "head": "42389fe4ef5df1b2412339b78660c75845cca09d"
+    },
+    "stage_d": {
+      "branch": "tmp/cp-v240-stage-d-s6-deliverables-20261030",
+      "head": "67763f3156c00db5beaa568d8b78a055c5a8f968",
+      "workflow_runs": 0,
+      "in_progress_runs": 0
+    },
+    "continuity": {
+      "path": "docs/PROJECT_CONTINUITY.md",
+      "git_blob_sha1": "a08cc8498350d40912ddd4506870b3a3dff22edf",
+      "content_sha256": "787d90a4cc47376a00ea535bc1da98ec5495013b0d224143e2c417447bb21746",
+      "content_sha256_status": "REPORTED_ONLY"
+    },
+    "owner_decision": {
+      "id": "D-2026-10-30-REFERENCE-V2.4.0",
+      "status": "APPROVED_BY_OWNER",
+      "effective_date": "2026-10-30",
+      "path": "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+      "git_blob_sha1": "58f89bc016523f1350345428b4a224ac42a8b130",
+      "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+    }
+  },
+  "artifacts": [
+    {
+      "purpose": "S6_N2400_AGGREGATE",
+      "artifact_id": 12852969854,
+      "run_id": 40773412377,
+      "size_bytes": 9357996,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
+      "zip_crc": "PASS_PRIOR_AUDIT",
+      "members": 7
+    },
+    {
+      "purpose": "S6_REPRESENTATIVE_FULL_LOGGING",
+      "artifact_id": 12998778418,
+      "run_id": 41098699740,
+      "size_bytes": 310827203,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
+      "zip_crc": "PASS_PRIOR_AUDIT",
+      "members": 1578
+    },
+    {
+      "purpose": "C100_DETERMINISTIC_REUSE",
+      "artifact_id": 12630457193,
+      "run_id": 40263424595,
+      "size_bytes": 361733,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
+      "zip_crc": "PASS_PRIOR_AUDIT"
+    }
+  ],
+  "identity": {
+    "s6": {
+      "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+      "cohort_id": "s6-v23-da1a9ea9",
+      "master_seed": 20270101,
+      "status": "VERIFIED_PRIOR_ARTIFACT_AUDIT"
+    },
+    "c100": {
+      "source_sha": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+      "cohort_id": "c100-v23-s4-20261026-965281d5",
+      "classification": "CROSS_COHORT_DETERMINISTIC_REUSE",
+      "scenario_count": 5,
+      "trial_count_per_scenario": 300,
+      "n_unique_paths": 1,
+      "rerun": false,
+      "status": "VERIFIED_PRIOR_ARTIFACT_AUDIT"
+    },
+    "stage_12_13": {
+      "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+      "status": "HISTORICAL_LINEAGE_ONLY"
+    }
+  },
+  "counts": {
+    "role_assignments": 125,
+    "unique_keys": 105,
+    "s6_unique_keys": 100,
+    "c100_unique_keys": 5,
+    "duplicate_role_assignments": 20,
+    "daily_rows": 216253,
+    "event_rows": 24545842,
+    "roll_forward_checks": 1297518,
+    "trial_manifests": 105,
+    "sidecar_audits_passed": 105,
+    "fingerprint_matches": 105,
+    "balance_mismatches": 0,
+    "roll_forward_mismatches": 0
+  },
+  "aggregate_members": [
+    {
+      "path": "manifest.json",
+      "size_bytes": 63828,
+      "sha256": "9ad19a904a21d4f8d4426ef913dde95d69b8227f9cb2414c477281421cef4798"
+    },
+    {
+      "path": "c100_reuse.json",
+      "size_bytes": 804,
+      "sha256": "4bc87f0492a1e668249df0f44d3c6ebcb58b55465ac21b1fc4415bd3eceab3bc"
+    },
+    {
+      "path": "daily_distribution.parquet",
+      "size_bytes": 4881090,
+      "sha256": "9619fc94e371da073a622f8f0fcd28786caf79fac47697cca2bfadbb469e4903"
+    },
+    {
+      "path": "trials_summary.parquet",
+      "size_bytes": 4578172,
+      "sha256": "66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522"
+    },
+    {
+      "path": "number_registry.json",
+      "size_bytes": 320474,
+      "sha256": "6a8fbb9aa249fa8dc678b14317b44eefdc26cd0e1b96633a9915721e2399d0e9"
+    },
+    {
+      "path": "stability_history.json",
+      "size_bytes": 805106,
+      "sha256": "549db3a6aab8519d701e9351d3e997f30dc19831c15b7e1dffe4a1fddb5c1ba9"
+    },
+    {
+      "path": "statistical_evaluation.json",
+      "size_bytes": 810178,
+      "sha256": "37ab2c98530c98015eced5e8cc4bb4e8735862e6a5fb23fa28fb36f4fd9f9864"
+    }
+  ],
+  "manifest_reconciliation": {
+    "original_trial_manifest_count": 105,
+    "original_status": "WRITTEN_PENDING_POST_WRITE_AUDIT",
+    "sidecar_audit_count": 105,
+    "sidecar_status": "PASS",
+    "root_manifest_status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
+    "root_manifest_sha256": "4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd",
+    "fingerprint_matches": "105/105",
+    "derived_read_only_normalized_status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
+    "preserve_original_files": true,
+    "conflict_id": "K_SPEC / TRIAL_MANIFEST_STATUS_CONFLICT",
+    "per_file_hashes_location": "Immutable root manifest and individual sidecar audit files; no source mutation"
+  },
+  "data_availability": {
+    "stats": "AVAILABLE_FROM_AGGREGATE_WITH_SOURCE_LABELS",
+    "daily": "AGGREGATE_DISTRIBUTION_PLUS_105_REPRESENTATIVE_KEYS_ONLY",
+    "assets": "REPRESENTATIVE_KEYS_ONLY",
+    "accounting": "14_FIELDS_PRESENT_ON_216253_REPRESENTATIVE_DAILY_ROWS_ONLY",
+    "partner": "BOTH_PARTNER_BALANCES_PRESENT_ON_REPRESENTATIVE_DAILY_ROWS_ONLY",
+    "guarantee": "REPRESENTATIVE_KEYS_ONLY",
+    "contracts": "REPRESENTATIVE_KEYS_ONLY",
+    "historical_48k_full_daily_ledgers": "MISSING_EVIDENCE",
+    "missing_historical_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "aggregate_source_run_metadata_sha256": null
+  },
+  "conflicts": [
+    "K_SPEC / DOCUMENT_STATUS_CONFLICT",
+    "K_SPEC / HISTORICAL_REFERENCE_HASH_CONFLICT",
+    "K_SPEC / TRIAL_MANIFEST_STATUS_CONFLICT",
+    "K_SPEC / S6-CODE-ID-MAPPING",
+    "Stage 9C PARTIAL vs historical Stage 12 Reaudit PASS — keep lineage separate"
+  ],
+  "status_ledger": {
+    "git_heads": "VERIFIED_LIVE",
+    "owner_decision": "VERIFIED_LIVE",
+    "artifact_metadata": "VERIFIED_LIVE",
+    "archive_sha256_and_crc": "VERIFIED_LOCAL_PRIOR_AUDIT",
+    "schemas_and_counts": "VERIFIED_PRIOR_STAGE_C_AUDIT",
+    "individual_trial_manifest_hashes": "VERIFIED_PRIOR_AUDIT_IN_ROOT_MANIFEST_AND_SIDECARS",
+    "historical_48k_ledgers": "MISSING_EVIDENCE",
+    "aggregate_source_run_metadata_sha256": "MISSING_EVIDENCE",
+    "path_traversal_duplicate_normalized_name_scan": "NOT_RETAINED_AS_SEPARATE_PRIOR_RESULT; REQUIRED_DEFENSIVE_D1_PREFLIGHT",
+    "stage_d_builder": "NOT_RUN",
+    "stage_d_tests": [
+      {
+        "id": 175,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 176,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 179,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 180,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 181,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 182,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 183,
+        "status": "NOT_RUN"
+      },
+      {
+        "id": 186,
+        "status": "NOT_RUN"
+      }
+    ]
+  },
+  "d0_gate": {
+    "result": "COMPLETE_PASS_SCOPED_WITH_LIMITATIONS",
+    "d1_allowed": "YES_WITH_SOURCE_BOUNDED_LIMITS",
+    "restrictions": [
+      "No Stage 13 or Stage 12 substitution",
+      "No trial/simulation/Monte Carlo/N=4800",
+      "No inferred values or zero-fill",
+      "Use representative detail only for the 105 unique keys",
+      "Perform safe ZIP member path/duplicate/symlink validation before extraction",
+      "Keep T2_INTERIM / NOT_FINAL_BLOCKED"
+    ]
+  }
+}
