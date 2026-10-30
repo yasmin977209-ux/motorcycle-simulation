@@ -2213,3 +2213,49 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - SHA-256 المحسوب من بايتات الملف: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`؛ يطابق القيمة التي أعلنها المالك في D-2026-10-30-REFERENCE-V2.4.0.
 - ملف `06_HASHES/SHA256SUMS.txt` داخل الحزمة يسجل البصمة نفسها للملف؛ كما أن الحساب المباشر من بايتات الملف أعاد القيمة المطابقة. بذلك أصبح تحقق هوية المرجع PASS ضمن نطاق هذا الملف المرفوع.
 - بصمة SHA-256 لسجل القرار المحفوظ في Git هي `1076b3e876d3db1a7e6ab4473fedb22226dfda0cb499d230ba3a0c2a9652a95d`، وهي بصمة ملف مختلف عن المرجع الحاكم.
+
+
+## Stage C — نتيجة إعادة التحقق المستقلة واكتمال Full Logging للممثلين — 2026-10-30
+
+### المصدر والتنفيذ
+- قرار التفويض: `AUTH-REP-ROLES-AND-FULL-LOGGING-2026-10-30-STAGE-C`؛ المرجع الحاكم `D-2026-10-30-REFERENCE-V2.4.0`، SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- الفرع: `tmp/cp-v240-stage-c-rep-full-logging-20261030`.
+- رأس الكود الذي اختبره التشغيل النهائي: `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70`.
+- Run: `41098699740`، النتيجة النهائية من GitHub Actions: `completed / success`.
+- تم تنزيل S6 Aggregate Artifact `12852969854` من Run `40773412377`، وC100 Artifact `12630457193` من Run `40263424595`.
+- مصدر S6: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7` / cohort `s6-v23-da1a9ea9`.
+- مصدر C100: `965281d52441cd0d4b744e211c9f68ee4cdc3753` / cohort `c100-v23-s4-20261026-965281d5`.
+- `MASTER_SEED=20270101`. لم تُنشأ stochastic trials جديدة ولم تُعدّل summary الأصلية ذات 48,000 صف.
+
+### خريطة الاختيار ومفاتيح التفرد
+- `representative_selection_map.json`: 125 role assignments = 25 سيناريو × 5 أدوار.
+- `representative_unique_keys.json`: 105 مفاتيح فريدة `(scenario_id, trial_id)`، و20 تعيين دور مكرراً بسبب أدوار C100 الخمسة التي تعود إلى `trial_id=1` لكل سيناريو من السيناريوهات الخمسة.
+- S6: 100 تعيين / 100 مفتاح فريد. C100: 25 تعيين / 5 مفاتيح فريدة. بقي C100 cohort مستقلاً مع وسم `CROSS_COHORT_DETERMINISTIC_REUSE`.
+- اختيار P50/P10/P90 على `Final_Net_Project_Equity` وفق linear quantile وأقرب قيمة، والتعادل بأصغر `trial_id`. LossCase = argmin، MaxCase = argmax على المتغير نفسه، والتعادل بأصغر `trial_id`.
+- بصمة `representative_selection_map.json`: `3b7b2924cf9a9840e2f2bc7982a2d2eda5e2d98ad43de274861d0a45830276ac`.
+- بصمة `representative_unique_keys.json`: `4e92dad7f6a06d78dec249f1f0a1ea41f187d35afd340dbf2ff54621cf1b9f25`.
+- بصمة `representative_full_logging_manifest.json`: `4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd`.
+
+### Full Logging وإعادة القراءة
+- Root manifest: `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING`؛ 105/105 مفتاح مكتمل، صفر إخفاقات.
+- 216,253 daily rows، جميعها تحمل `s6-daily-balance-v1` والحقول المحاسبية الـ14 المطلوبة موجودة وغير null.
+- 24,545,842 event rows.
+- 105/105 post-write audits ناجحة؛ 105/105 trial fingerprints متطابقة؛ 0 balance mismatches؛ 0 roll-forward mismatches؛ 1,297,518 معادلة roll-forward مفحوصة.
+- Partner1 وPartner2 balances مكتملة في 216,253/216,253 صف لكل منهما.
+- أُعيد فحص ملفات الـ105 manifests: 1,365 ملفاً مضغوطاً/نتيجة ذات بصمات وأحجام مطابقة؛ لا mismatch.
+- تحقق إضافي من ZIP بعد تنزيله: الحجم 310,827,203 bytes؛ SHA-256 `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`، مطابق لبصمة GitHub Artifact metadata.
+- Artifact ID `12998778418`، الاسم `s6-stage-c-representative-full-logging-41098699740`.
+- ملاحظة metadata: ملفات `trial_manifest.json` الـ105 تحمل `status=WRITTEN_PENDING_POST_WRITE_AUDIT`، بينما ملفات `post_write_audit.json` المنفصلة لكل مفتاح تحمل `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING`، والـroot manifest يحمل PASS scoped. نحتفظ بهذه الحالة كما صدرت ولا نعيد كتابة أدلة التشغيل؛ ينبغي توحيد دلالة status في تحسين لاحق قبل أي توسيع لنطاق الاعتماد.
+
+### اختبارات CI
+- `tests/test_s6_first_checkpoint.py` و`tests/test_s6_daily_path_identity_contract.py`: **43 passed, 1 skipped in 1.29s**.
+- اختبارات القبول المحددة 127 و159 و160 و161 و174 و180 و181: **7 passed in 0.59s**.
+- بذلك انتهى Run `41098699740` بـ`success`. فشل Run `41089023782` السابق محفوظ تاريخياً؛ سببه fixture C100 اصطناعي ناقص `Final_Close_Date`، وقد عولج في fixture فقط قبل التشغيل النهائي.
+
+### حدود النتيجة والبوابات
+- النتيجة: `PASS_SCOPED` لخريطة 125 تعييناً، وعدد 105 مفاتيح فريدة، وFull Logging للمفاتيح الـ105، والاختبارات المحددة أعلاه فقط.
+- سجلات الـ48,000 trial التاريخية لم تُدقق ولم تُعدل، وتظل `MISSING_EVIDENCE` للحقول الخمسة الناقصة.
+- Gate B يبقى `FAIL_SCOPED` (10 PASS / 10 FAIL)، والاستقرار `NOT_CONVERGED`، والقبول النهائي `NOT_GRANTED`.
+- `main` لم يتغير، ولا PR/merge، ولا Stage13، ولا N=4800.
+- Artifact: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740/artifacts/12998778418
+- Run: https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740
