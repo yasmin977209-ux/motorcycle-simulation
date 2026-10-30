@@ -22,6 +22,8 @@ concurrency:
 jobs:
   validators:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
     timeout-minutes: 25
     steps:
       - name: Checkout exact pushed commit
