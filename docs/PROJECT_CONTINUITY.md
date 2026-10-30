@@ -2150,3 +2150,31 @@ Preserve the distinction between the successful exact fingerprint comparison and
 - Follow-up pure verification Run `40802150287`, tested SHA `f8494f80e8b8a812cab09f8aa1530261864b5a66`, completed `success`: compile passed; **10 passed, 0 failed** in `1.88s`; log printed `SIMULATION_TRIALS=NOT_EXECUTED`. No artifact uploaded; no model Trial started.
 - Current contract source blob `9a7f26eb2473590b82af81471b662d2c3efd0a16`; regression test blob `ba0c04450cdea7cb088e3c96ce9bd511a9de7696`; governance note blob `665d80b16e6bccdce96b6efc0e965e03c9772334`.
 - Current S6 branch head at this update: `f8494f80e8b8a812cab09f8aa1530261864b5a66`; `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`. Current S6 config is still N=2400, trial range 1201..2400. No N4800 or completed Trial replay was started. Historical full `Assets == Equity` remains `MISSING_EVIDENCE`; Gate B remains `FAIL_SCOPED`, convergence and final acceptance remain false.
+
+
+## تصحيح استمرارية — قرار v2.4.0 وتفويض Stage B المحدود — 2026-10-30
+
+**القرار النافذ:** `D-2026-10-30-REFERENCE-V2.4.0`، المالك `APPROVED_BY_OWNER`، تاريخ السريان 2026-10-30، المرجع `المرجع_الحاكم_الموحّد_v2.4.0_مرشح_للاعتماد.md`، SHA-256 المصرح به `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`. السجل التفصيلي في `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md`. هذا الإدخال إضافة تصحيحية ولا يعيد كتابة اللقطات التاريخية السابقة.
+
+**فرع Stage B:** `tmp/cp-v240-decision-and-validators-20261030`، أساسه `f3a7f8cdcf691ab63eaef9676c7e4fa20a9fae29`. لم يُعدّل `main`.
+
+**تفويض التنفيذ:** `AUTH-VALIDATORS-2026-10-30-STAGE-B` مع توسعة لاحقة صريحة لإنشاء وتشغيل Workflow مؤقت على الفرع المحدد وتثبيت اعتماديات `requirements.txt` في CI. الأمر الوحيد المسموح به للاختبار:
+`pytest -q tests/test_s6_first_checkpoint.py tests/test_s6_daily_path_identity_contract.py`.
+
+**نطاق الملفات:** الملفات الستة الأصلية فقط:
+- `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md`
+- `docs/PROJECT_CONTINUITY.md`
+- `scripts/s6_first_checkpoint.py`
+- `stats_integrity.py`
+- `scripts/audit_s6_daily_balance_artifact.py`
+- `tests/test_s6_first_checkpoint.py`
+
+والملف السابع المسموح به بالتوسعة: `.github/workflows/cp-v240-stage-b-validators-temporary.yml`. لا تعديل لأي ملف آخر.
+
+**قضايا الإصلاح المحددة:** S6-CODE-01..07 فقط: رفض تكرار trial IDs قبل بناء الخرائط؛ فرض اكتمال manifest وملفات السيناريو؛ تشديد مسار daily path القديم ضد التكرار والفجوات؛ تدقيق سجل توازن يومي مكتمل ومقيد بالهوية؛ تحقق تغطية daily distribution ومفاتيحه وقيمه؛ منع اختلاق git_commit أو استبدال بصمة metadata المعلنة؛ والتحقق من pin بصمة خريطة Golden في قرار الموافقة.
+
+**اختبارات T-01..T-10:** بيانات اصطناعية صغيرة في `tmp_path` فقط. لا fixture production ولا Trial ولا Simulation. لا Stage13 ولا Builders ولا `scripts/s6_daily_path_identity.py` ولا N=4800.
+
+**حالات غير مغلقة:** عدد المفاتيح الفريدة لتعيينات الأدوار الـ125 = `MISSING_EVIDENCE`؛ خريطة الأدوار 25×5 = `MISSING_EVIDENCE`؛ Full Logging = `DESIGN_READY / IMPLEMENTATION_INPUTS_INCOMPLETE`. لم يُسمح بتغيير هذه الحالات أو استخراج البيانات.
+
+**بوابات محظورة:** لا ترقية Gate A أو Gate B، لا `FINAL_ACCEPTED`، لا `CONVERGED`، لا Merge أو PR أو تعديل main. نتائج الاختبارات، إن نجحت، تثبت نطاق validator tests فقط.

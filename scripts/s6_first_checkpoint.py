@@ -1,6 +1,6 @@
 from __future__ import annotations
 import argparse, hashlib, json, os, platform, subprocess, sys, time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from fractions import Fraction
 from importlib.metadata import PackageNotFoundError, version
 from dataclasses import asdict, replace
@@ -23,26 +23,89 @@ COLLECTION_LEVELS = (85, 70, 50, 30)
 RECOVERY_LEVELS = (100, 70, 50, 30, 0)
 OPT1_ENABLED_COLLECTIONS = frozenset({85, 70})
 SCHEMA_VERSION = "v2.3"
+GOVERNING_DECISION_ID = "D-2026-10-30-REFERENCE-V2.4.0"
+GOVERNING_REFERENCE_SHA256 = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+REQUIRED_SCENARIO_ARTIFACT_FILES = (
+    "trials_summary.parquet",
+    "daily_snapshots.parquet",
+    "daily_distribution.parquet",
+    "opt1_provenance.json",
+)
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def daily_path_fingerprints(rows: list[dict[str, Any]]) -> dict[int, str]:
-    """Hash complete daily trajectories without conflating them with financial or RNG fingerprints."""
+    """Hash legacy daily trajectories only after rejecting duplicate or gapped keys."""
     grouped: dict[int, list[dict[str, Any]]] = {}
+    seen: set[tuple[int, str]] = set()
     for row in rows:
-        trial_id = int(row["trial_id"])
+        if not isinstance(row, dict):
+            raise RuntimeError("S6_LEGACY_DAILY_ROW_INVALID")
+        trial_id = row.get("trial_id")
+        if type(trial_id) is not int or trial_id < 1:
+            raise RuntimeError("S6_LEGACY_DAILY_TRIAL_ID_INVALID")
+        date_text = row.get("date")
+        if not isinstance(date_text, str):
+            raise RuntimeError("S6_LEGACY_DAILY_DATE_INVALID")
+        try:
+            parsed_date = date.fromisoformat(date_text)
+        except ValueError as exc:
+            raise RuntimeError("S6_LEGACY_DAILY_DATE_INVALID") from exc
+        if parsed_date.isoformat() != date_text:
+            raise RuntimeError("S6_LEGACY_DAILY_DATE_INVALID")
+        key = (trial_id, date_text)
+        if key in seen:
+            raise RuntimeError(f"S6_LEGACY_DAILY_DUPLICATE_TRIAL_DATE:{trial_id}:{date_text}")
+        seen.add(key)
         clean = {key: value for key, value in row.items()
                  if key not in {"trial_id", "scenario_id", "source_sha", "cohort_id", "schema_version"}}
         grouped.setdefault(trial_id, []).append(clean)
+    if not grouped:
+        raise RuntimeError("S6_LEGACY_DAILY_ROWS_MISSING")
     fingerprints: dict[int, str] = {}
     for trial_id, path_rows in grouped.items():
         path_rows.sort(key=lambda row: str(row["date"]))
+        dates = [date.fromisoformat(str(row["date"])) for row in path_rows]
+        expected = [dates[0] + timedelta(days=i) for i in range((dates[-1] - dates[0]).days + 1)]
+        if dates != expected:
+            raise RuntimeError(f"S6_LEGACY_DAILY_DATE_GAP:{trial_id}")
         payload = "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True,
             separators=(",", ":"), default=str) for row in path_rows)
         fingerprints[trial_id] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
     return fingerprints
+
+
+def validate_unique_trial_ids(rows: list[dict[str, Any]], expected_n: int, *, context: str) -> None:
+    """Reject duplicate IDs before any dict comprehension can collapse them."""
+    if type(expected_n) is not int or expected_n < 1:
+        raise RuntimeError(f"S6_TRIAL_COUNT_INVALID:{context}")
+    ids = [row.get("trial_id") for row in rows]
+    if any(type(trial_id) is not int or trial_id < 1 for trial_id in ids):
+        raise RuntimeError(f"S6_TRIAL_ID_INVALID:{context}")
+    if len(ids) != len(set(ids)):
+        raise RuntimeError(f"S6_DUPLICATE_TRIAL_ID:{context}")
+    if sorted(ids) != list(range(1, expected_n + 1)):
+        raise RuntimeError(f"S6_TRIAL_ID_COVERAGE_MISMATCH:{context}")
+
+
+def validate_required_scenario_files(base_dir: Path, manifest: dict[str, Any]) -> None:
+    """Require the complete, exact S6 scenario file inventory and verify every byte."""
+    files = manifest.get("files")
+    if not isinstance(files, dict) or set(files) != set(REQUIRED_SCENARIO_ARTIFACT_FILES):
+        raise RuntimeError("S6_SCENARIO_REQUIRED_FILE_MANIFEST_INCOMPLETE")
+    for name in REQUIRED_SCENARIO_ARTIFACT_FILES:
+        entry = files.get(name)
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"S6_SCENARIO_FILE_MANIFEST_ENTRY_INVALID:{name}")
+        size = entry.get("size_bytes")
+        digest = entry.get("sha256")
+        if type(size) is not int or size < 0 or not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise RuntimeError(f"S6_SCENARIO_FILE_MANIFEST_ENTRY_INVALID:{name}")
+        path = base_dir / name
+        if not path.is_file() or path.stat().st_size != size or sha256_file(path) != digest:
+            raise RuntimeError(f"S6_SCENARIO_FILE_HASH_MISMATCH:{name}")
 
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,11 +138,21 @@ def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
     return computed_count, "OWNER_APPROVED_UNIQUE_DAILY_PATHS_CONTRACT"
 
 
-def current_git_commit(source_sha: str) -> str:
+def current_git_commit(source_sha: str | None = None) -> str | None:
+    """Return an actual checked-out commit SHA; never substitute SOURCE_SHA."""
     commit = os.environ.get("GITHUB_SHA")
+    if commit:
+        require_source_sha(commit)
+        return commit
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    commit = result.stdout.strip()
     if not commit:
-        result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
-        commit = result.stdout.strip()
+        return None
     require_source_sha(commit)
     return commit
 
@@ -138,12 +211,10 @@ def load_base_artifact(base_dir: Path, collection_pct: int, source_sha: str, coh
     if manifest.get("scenario_id") != f"C{collection_pct:03d}_G100": raise RuntimeError("S6_OPT1_BASE_SCENARIO_MISMATCH")
     if manifest.get("source_sha") != source_sha or manifest.get("cohort_id") != cohort_id: raise RuntimeError("S6_OPT1_BASE_SOURCE_OR_COHORT_MISMATCH")
     require_daily_path_manifest_contract(manifest, expected_source_sha=source_sha, expected_cohort_id=cohort_id, expected_scenario_id=f"C{collection_pct:03d}_G100", expected_master_seed=constants.MASTER_SEED, expected_trial_count=trial_count, model_schema_version=SCHEMA_VERSION)
-    for name,entry in manifest.get("files",{}).items():
-        path=base_dir/name
-        if not path.is_file() or path.stat().st_size != entry["size_bytes"] or sha256_file(path) != entry["sha256"]:
-            raise RuntimeError(f"S6_OPT1_BASE_ARTIFACT_HASH_MISMATCH:{name}")
+    validate_required_scenario_files(base_dir, manifest)
     rows=pq.read_table(base_dir/"trials_summary.parquet").to_pylist()
-    results={int(row["trial_id"]):result_from_record(row) for row in rows}
+    validate_unique_trial_ids(rows, trial_count, context="OPT1_BASE")
+    results={row["trial_id"]:result_from_record(row) for row in rows}
     expected=set(range(1,trial_count+1))
     if set(results)!=expected: raise RuntimeError("S6_OPT1_BASE_TRIAL_ID_COVERAGE_MISMATCH")
     daily_rows=pq.read_table(base_dir/"daily_snapshots.parquet").to_pylist()
@@ -533,7 +604,12 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
         "n_unique_financial_outcomes":n_unique_financial_outcomes,
         "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
-        "git_commit":current_git_commit(args.source_sha),"run_id":args.run_id,"run_attempt":args.run_attempt,
+        "git_commit":current_git_commit(args.source_sha),
+        "governing_decision_id":GOVERNING_DECISION_ID,
+        "governing_reference_sha256":GOVERNING_REFERENCE_SHA256,
+        "source_run_metadata_declared_sha256":source_metadata.get("sha256") if source_metadata_path else None,
+        "source_run_metadata_file_sha256":sha256_file(Path(source_metadata_path)) if source_metadata_path else None,
+        "run_id":args.run_id,"run_attempt":args.run_attempt,
         "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),"command_argv":command_argv(),"exit_code":0,
         "python_version":platform.python_version(),"package_versions":package_versions(),
         "elapsed_seconds":time.monotonic()-started,"workers":args.workers,
@@ -602,6 +678,14 @@ def financial_fingerprint_map_sha256(scenario: str, fingerprints: dict[str, str]
     lines = [f"{scenario}|{trial_id}|{fingerprints[trial_id]}"
              for trial_id in sorted(fingerprints, key=lambda value: int(value))]
     return hashlib.sha256(("\n".join(lines) + "\n").encode("utf-8")).hexdigest()
+
+
+def validate_golden_approval_combined_map_pin(approval:dict[str,Any],manifest:dict[str,Any],combined_sha:str)->None:
+    if (
+        manifest.get("combined_financial_trial_fingerprint_map_sha256")!=combined_sha
+        or approval.get("combined_financial_trial_fingerprint_map_sha256")!=combined_sha
+    ):
+        raise RuntimeError("S6_GATE_A_GOLDEN_APPROVAL_COMBINED_MAP_PIN_MISMATCH")
 
 
 def load_approved_gate_a_golden(
@@ -710,6 +794,7 @@ def load_approved_gate_a_golden(
     combined_sha = hashlib.sha256(("\n".join(combined_lines) + "\n").encode("utf-8")).hexdigest()
     if golden_manifest.get("combined_financial_trial_fingerprint_map_sha256") != combined_sha:
         raise RuntimeError("S6_GATE_A_GOLDEN_COMBINED_MAP_HASH_MISMATCH")
+    validate_golden_approval_combined_map_pin(approval, golden_manifest, combined_sha)
 
     required_review_checks = (
         "source_lock_pass",
@@ -742,7 +827,7 @@ def load_approved_gate_a_golden(
         or approval.get("scenario_count") != len(expected_scenarios)
         or approval.get("independent_execution") is not True
         or approval.get("production_result_artifacts_read") is not False
-        or not str(approval.get("golden_artifact_digest", "")).startswith("sha256:")
+        or not __import__("re").fullmatch(r"sha256:[0-9a-f]{64}", str(approval.get("golden_artifact_digest", "")))
         or not isinstance(review_checks, dict)
         or any(review_checks.get(key) is not True for key in required_review_checks)
     ):
@@ -1072,10 +1157,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
         if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
-        for name,e in m.get("files",{}).items():
-            p=base/name
-            if not p.is_file() or p.stat().st_size!=e["size_bytes"] or sha256_file(p)!=e["sha256"]:
-                raise RuntimeError(f"S6_SCENARIO_FILE_HASH_MISMATCH:{scenario}:{name}")
+        validate_required_scenario_files(base, m)
         by_scenario[scenario]=(base,m)
     # C100 is a separate, immutable S4 cohort. It is verified and referenced above,
     # never merged into the new stochastic SOURCE_SHA/cohort or counted as independent samples.
@@ -1098,7 +1180,8 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     for scenario in sorted(expected):
         base,m=by_scenario[scenario]
         rows=pq.read_table(base/"trials_summary.parquet").to_pylist()
-        ids=[int(row["trial_id"]) for row in rows]
+        validate_unique_trial_ids(rows, checkpoint_n, context=scenario)
+        ids=[row["trial_id"] for row in rows]
         validate_cumulative_trial_ids(ids, checkpoint_n, scenario_id=scenario)
         for row in rows:
             calculated = monte_carlo.trial_fingerprint(result_from_record(row))
@@ -1107,6 +1190,12 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         daily=pq.read_table(base/"daily_distribution.parquet").to_pylist()
         if not daily: raise RuntimeError(f"S6_DAILY_DISTRIBUTION_EMPTY:{scenario}")
         snapshots=pq.read_table(base/"daily_snapshots.parquet").to_pylist()
+        stats_integrity.validate_daily_distribution_rows(
+            daily, scenario_id=scenario, source_sha=args.source_sha,
+            cohort_id=f"s6-v23-{args.source_sha[:8]}",
+            expected_dates=sorted({str(row["date"]) for row in snapshots}),
+            expected_trial_count=checkpoint_n,
+        )
         if all_have_path_contract:
             require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
             path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=f"s6-v23-{args.source_sha[:8]}",master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
@@ -1149,7 +1238,9 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
             "opt1_policy":m["opt1_policy"],
             "source_sha":m["source_sha"],"cohort_id":m["cohort_id"],
-            "git_commit":m.get("git_commit") or srcmeta.get("git_commit") or m["source_sha"],
+            "git_commit":m.get("git_commit") or srcmeta.get("git_commit"),
+            "governing_decision_id":m.get("governing_decision_id"),
+            "governing_reference_sha256":m.get("governing_reference_sha256"),
             "execution_metadata_source":"scenario_manifest" if all(m.get(k) for k in ("git_commit","started_at_utc","finished_at_utc","python_version","package_versions")) else ("source_run_job_api_and_logs" if srcmeta else "pinned_workflow_and_source_sha"),
             "run_id":m.get("run_id"),"run_attempt":m.get("run_attempt"),
             "source_job_id":srcmeta.get("job_id"),"source_job_name":srcmeta.get("job_name"),

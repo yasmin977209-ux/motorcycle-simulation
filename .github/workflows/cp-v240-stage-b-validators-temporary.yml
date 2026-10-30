@@ -1,0 +1,40 @@
+name: Temporary Stage B v2.4.0 validator verification
+
+on:
+  push:
+    branches:
+      - tmp/cp-v240-decision-and-validators-20261030
+    paths:
+      - "scripts/s6_first_checkpoint.py"
+      - "stats_integrity.py"
+      - "scripts/audit_s6_daily_balance_artifact.py"
+      - "tests/test_s6_first_checkpoint.py"
+      - "tests/test_s6_daily_path_identity_contract.py"
+      - ".github/workflows/cp-v240-stage-b-validators-temporary.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cp-v240-stage-b-validators-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validators:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run only the authorized validator tests
+        run: pytest -q tests/test_s6_first_checkpoint.py tests/test_s6_daily_path_identity_contract.py

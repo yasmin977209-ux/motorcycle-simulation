@@ -1,7 +1,7 @@
 """Exact report-statistics helpers implementing v2.3 §§2.5, 14.11.4, 14.12, and 21.3."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from functools import lru_cache
 from fractions import Fraction
@@ -642,4 +642,83 @@ def evaluate_gate_b_statistical(
         "alpha_s_k_denominator": sequential_alpha_fraction(k).denominator,
         "financial_means": summaries,
         "indicators": indicators,
+    }
+
+
+
+def validate_daily_distribution_rows(
+    rows: list[dict[str, Any]],
+    *,
+    scenario_id: str,
+    source_sha: str,
+    cohort_id: str,
+    expected_dates: Iterable[str],
+    expected_trial_count: int,
+) -> dict[str, Any]:
+    """Validate exact daily-distribution key coverage, identities, counts and rational values."""
+    dates = list(expected_dates)
+    if type(expected_trial_count) is not int or expected_trial_count < 1:
+        raise RuntimeError("S6_DAILY_DISTRIBUTION_EXPECTED_TRIAL_COUNT_INVALID")
+    if not dates or dates != sorted(set(dates)):
+        raise RuntimeError("S6_DAILY_DISTRIBUTION_EXPECTED_DATES_INVALID")
+    try:
+        parsed = [date.fromisoformat(value) for value in dates]
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("S6_DAILY_DISTRIBUTION_EXPECTED_DATES_INVALID") from exc
+    if any(value.isoformat() != text for value, text in zip(parsed, dates)):
+        raise RuntimeError("S6_DAILY_DISTRIBUTION_EXPECTED_DATES_INVALID")
+    if parsed != [parsed[0] + timedelta(days=i) for i in range((parsed[-1] - parsed[0]).days + 1)]:
+        raise RuntimeError("S6_DAILY_DISTRIBUTION_DATE_GAP")
+    modes = ("ACTIVE_ONLY", "ALL_TRIALS_CARRY_FORWARD")
+    metrics = ("Cash", "Net_Equity", "Active_Bikes", "Owned_Transferred_Bikes", "Pending_Claims")
+    quantiles = ("P10", "P25", "P50", "P75", "P90")
+    expected_keys = {
+        (day, mode, metric, quantile)
+        for day in dates for mode in modes for metric in metrics for quantile in quantiles
+    }
+    seen: set[tuple[str, str, str, str]] = set()
+    active_counts: dict[str, int] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_ROW_INVALID")
+        key = (row.get("date"), row.get("mode"), row.get("metric_name"), row.get("quantile_name"))
+        if key in seen:
+            raise RuntimeError(f"S6_DAILY_DISTRIBUTION_DUPLICATE_KEY:{key}")
+        seen.add(key)
+        if key not in expected_keys:
+            raise RuntimeError(f"S6_DAILY_DISTRIBUTION_UNEXPECTED_KEY:{key}")
+        if row.get("source_sha") != source_sha or row.get("cohort_id") != cohort_id or row.get("scenario_id") != scenario_id:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_IDENTITY_MISMATCH")
+        active = row.get("active_trial_count")
+        sample = row.get("sample_trial_count")
+        numerator = row.get("exact_numerator")
+        denominator = row.get("exact_denominator")
+        if type(active) is not int or not 0 <= active <= expected_trial_count:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_ACTIVE_COUNT_INVALID")
+        if row["date"] in active_counts and active_counts[row["date"]] != active:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_ACTIVE_COUNT_INCONSISTENT")
+        active_counts[row["date"]] = active
+        if type(sample) is not int or sample < 1:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_SAMPLE_COUNT_INVALID")
+        expected_sample = active if row["mode"] == "ACTIVE_ONLY" else expected_trial_count
+        if expected_sample < 1 or sample != expected_sample:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_SAMPLE_COVERAGE_INVALID")
+        if type(numerator) is not int or type(denominator) is not int or denominator < 1:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_EXACT_VALUE_INVALID")
+        exact = Fraction(numerator, denominator)
+        if exact.numerator != numerator or exact.denominator != denominator:
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_EXACT_VALUE_NOT_REDUCED")
+        if row.get("display_value") != str(fraction_to_report_value(exact)):
+            raise RuntimeError("S6_DAILY_DISTRIBUTION_DISPLAY_VALUE_MISMATCH")
+    if seen != expected_keys:
+        missing = sorted(expected_keys - seen)
+        raise RuntimeError(f"S6_DAILY_DISTRIBUTION_KEY_COVERAGE_MISMATCH:{len(missing)}")
+    return {
+        "status": "PASS_SCOPED_DAILY_DISTRIBUTION_SCHEMA_AND_COVERAGE",
+        "date_count": len(dates),
+        "rows_checked": len(rows),
+        "expected_rows": len(expected_keys),
+        "scenario_id": scenario_id,
+        "source_sha": source_sha,
+        "cohort_id": cohort_id,
     }
