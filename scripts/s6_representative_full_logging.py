@@ -19,6 +19,7 @@ import pyarrow.parquet as pq
 import constants
 import monte_carlo
 from entities import EventType
+from scripts.audit_s6_daily_balance_artifact import audit_representative_full_logging_trial
 from scripts.s6_daily_path_identity import (
     DAILY_BALANCE_INTEGER_FIELDS,
     DAILY_BALANCE_SCHEMA_VERSION,
@@ -157,6 +158,9 @@ def select_five_roles(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             "source_sha": row["source_sha"],
             "cohort_id": row["cohort_id"],
             "schema_version": row["schema_version"],
+            "rng_checksum": row.get("rng_checksum"),
+            "rng_draw_count": row.get("rng_draw_count"),
+            "rng_checksum_fingerprint_sha256": row.get("rng_checksum_fingerprint_sha256"),
             "quantile_target_exact": target,
             "selection_rule": (
                 "nearest_to_linear_quantile_Final_Net_Project_Equity"
@@ -547,24 +551,14 @@ def _write_trial_payload(folder: Path, key: dict[str, Any], execution_commit: st
         expected_start_date=constants.PROJECT_START_DATE.isoformat(),
         model_schema_version=MODEL_SCHEMA_VERSION,
     )
-    report = {
-        "schema_version": "s6-representative-post-write-audit-v1",
-        "status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
-        "scenario_id": key["scenario_id"],
-        "trial_id": key["trial_id"],
-        "source_sha": key["source_sha"],
-        "cohort_id": key["cohort_id"],
-        "trial_fingerprint_match": True,
-        "expected_trial_fingerprint": key["trial_fingerprint"],
-        "actual_trial_fingerprint": read_result["trial_fingerprint"],
-        "daily_balance": read_daily_audit,
-        "rollforward": read_rollforward_audit,
-        "events": read_event_audit,
-        "daily_path_identity": read_identity["summary"],
-        "prewrite_checks": {"daily_balance": daily_audit, "rollforward": rollforward_audit, "events": event_audit},
-        "readback_rows_checked": len(read_daily),
-        "historical_48000_trial_daily_artifacts_audited": False,
-    }
+    report = audit_representative_full_logging_trial(
+        folder,
+        expected_scenario_id=key["scenario_id"],
+        expected_trial_id=key["trial_id"],
+        expected_source_sha=key["source_sha"],
+        expected_cohort_id=key["cohort_id"],
+        expected_trial_fingerprint=key["trial_fingerprint"],
+    )
     write_json(folder / "post_write_audit.json", report)
     return {
         "scenario_id": key["scenario_id"],
@@ -662,6 +656,10 @@ def run_all(aggregate_dir: Path, c100_root: Path, output_dir: Path) -> dict[str,
         # Re-read root-level selection and unique-key files before atomic publication.
         reread_map = json.loads((staging / "representative_selection_map.json").read_text(encoding="utf-8"))
         reread_unique = json.loads((staging / "representative_unique_keys.json").read_text(encoding="utf-8"))
+        for name, entry in map_files.items():
+            path = staging / name
+            if path.stat().st_size != entry["size_bytes"] or sha256_file(path) != entry["sha256"]:
+                raise RuntimeError(f"REPRESENTATIVE_SELECTION_FILE_READBACK_HASH_MISMATCH:{name}")
         if reread_map["role_assignment_count"] != 125 or reread_unique["unique_key_count"] != len(results):
             raise RuntimeError("REPRESENTATIVE_ROOT_READBACK_MISMATCH")
         if len(results) != unique_doc["unique_key_count"] or any(row["status"] != "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING" for row in results):
