@@ -17,15 +17,16 @@
     },
     "stage_d": {
       "branch": "tmp/cp-v240-stage-d-s6-deliverables-20261030",
-      "head": "67763f3156c00db5beaa568d8b78a055c5a8f968",
+      "head": "702f0c2275dbcd66d50f69832bedd393e2bcde16",
       "workflow_runs": 0,
       "in_progress_runs": 0
     },
     "continuity": {
       "path": "docs/PROJECT_CONTINUITY.md",
-      "git_blob_sha1": "a08cc8498350d40912ddd4506870b3a3dff22edf",
-      "content_sha256": "787d90a4cc47376a00ea535bc1da98ec5495013b0d224143e2c417447bb21746",
-      "content_sha256_status": "REPORTED_ONLY"
+      "git_blob_sha1": "3f05f706cca1d14ae9326cf5519f4271b050e5e3",
+      "content_sha256": "351647414b34714fbf79e5fc2bc0d89e2759b528e5dc80a0c142a9f87bb21163",
+      "utf8_bytes": 444088,
+      "content_sha256_status": "VERIFIED_LIVE_RECOMPUTED"
     },
     "owner_decision": {
       "id": "D-2026-10-30-REFERENCE-V2.4.0",
@@ -33,7 +34,8 @@
       "effective_date": "2026-10-30",
       "path": "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
       "git_blob_sha1": "58f89bc016523f1350345428b4a224ac42a8b130",
-      "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+      "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+      "reference_file_sha256_status": "VERIFIED_LOCAL_FROM_UPLOADED_ZIP"
     }
   },
   "artifacts": [
@@ -43,9 +45,13 @@
       "run_id": 40773412377,
       "size_bytes": 9357996,
       "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
-      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
-      "zip_crc": "PASS_PRIOR_AUDIT",
-      "members": 7
+      "sha256_status": "VERIFIED_LOCAL_CURRENT_RECHECK",
+      "zip_crc": "PASS",
+      "members": 7,
+      "duplicate_names": 0,
+      "unsafe_paths": 0,
+      "run_branch": "tmp/s6-aggregate-contract-fix-20261027",
+      "run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed"
     },
     {
       "purpose": "S6_REPRESENTATIVE_FULL_LOGGING",
@@ -53,9 +59,13 @@
       "run_id": 41098699740,
       "size_bytes": 310827203,
       "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
-      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
-      "zip_crc": "PASS_PRIOR_AUDIT",
-      "members": 1578
+      "sha256_status": "VERIFIED_LOCAL_CURRENT_RECHECK",
+      "zip_crc": "PASS",
+      "members": 1578,
+      "duplicate_names": 0,
+      "unsafe_paths": 0,
+      "run_branch": "tmp/cp-v240-stage-c-rep-full-logging-20261030",
+      "run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
     },
     {
       "purpose": "C100_DETERMINISTIC_REUSE",
@@ -63,8 +73,13 @@
       "run_id": 40263424595,
       "size_bytes": 361733,
       "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
-      "sha256_status": "VERIFIED_LOCAL_PRIOR_AUDIT",
-      "zip_crc": "PASS_PRIOR_AUDIT"
+      "sha256_status": "VERIFIED_LOCAL_CURRENT_RECHECK",
+      "zip_crc": "PASS",
+      "members": 9,
+      "duplicate_names": 0,
+      "unsafe_paths": 0,
+      "run_branch": "tmp/s4-c100-golden-v23-20261026",
+      "run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd"
     }
   ],
   "identity": {
@@ -107,8 +122,8 @@
   "aggregate_members": [
     {
       "path": "manifest.json",
-      "size_bytes": 63828,
-      "sha256": "9ad19a904a21d4f8d4426ef913dde95d69b8227f9cb2414c477281421cef4798"
+      "size_bytes": 64015,
+      "sha256": "3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba"
     },
     {
       "path": "c100_reuse.json",
@@ -132,27 +147,30 @@
     },
     {
       "path": "stability_history.json",
-      "size_bytes": 805106,
-      "sha256": "549db3a6aab8519d701e9351d3e997f30dc19831c15b7e1dffe4a1fddb5c1ba9"
+      "size_bytes": 805339,
+      "sha256": "c41d7fc6e4fa51edeec9f2f03fa2346a80b8108ff0ed25546a6f03f433bb3c93"
     },
     {
       "path": "statistical_evaluation.json",
-      "size_bytes": 810178,
-      "sha256": "37ab2c98530c98015eced5e8cc4bb4e8735862e6a5fb23fa28fb36f4fd9f9864"
+      "size_bytes": 810411,
+      "sha256": "dad605bb73dc4f5cdf8c992e737c13d6e87bf0f0aabcabac6829f9575deb1c74"
     }
   ],
   "manifest_reconciliation": {
     "original_trial_manifest_count": 105,
     "original_status": "WRITTEN_PENDING_POST_WRITE_AUDIT",
     "sidecar_audit_count": 105,
-    "sidecar_status": "PASS",
+    "sidecar_status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
     "root_manifest_status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
     "root_manifest_sha256": "4c98ff56f5af27fa5e259153d56fe1015b34c834e6a924b7af2e5d15af557fdd",
     "fingerprint_matches": "105/105",
     "derived_read_only_normalized_status": "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING",
     "preserve_original_files": true,
     "conflict_id": "K_SPEC / TRIAL_MANIFEST_STATUS_CONFLICT",
-    "per_file_hashes_location": "Immutable root manifest and individual sidecar audit files; no source mutation"
+    "per_file_hashes_location": "Verified against root manifest entries in immutable Full Logging artifact; 105-row CSV companion attached locally, not committed",
+    "trial_manifest_sha_matches": "105/105",
+    "post_write_audit_sha_matches": "105/105",
+    "source_cohort_key_identity_matches": "105/105"
   },
   "data_availability": {
     "stats": "AVAILABLE_FROM_AGGREGATE_WITH_SOURCE_LABELS",
@@ -170,7 +188,9 @@
       "Guarantee_Claim_Receivable",
       "Total_Assets"
     ],
-    "aggregate_source_run_metadata_sha256": null
+    "aggregate_source_run_metadata_sha256": null,
+    "parquet_schema_and_row_counts": "MISSING_EVIDENCE_IN_CURRENT_RECHECK; file hashes/sizes verified, schema/rows not parsed because no Parquet reader installed",
+    "daily_distribution_rows": "REPORTED_ONLY: 2,086,550 from prior audit"
   },
   "conflicts": [
     "K_SPEC / DOCUMENT_STATUS_CONFLICT",
@@ -223,7 +243,10 @@
         "id": 186,
         "status": "NOT_RUN"
       }
-    ]
+    ],
+    "parquet_schema_and_row_counts": "MISSING_EVIDENCE",
+    "artifact_archive_bytes": "VERIFIED_LOCAL",
+    "trial_manifest_reconciliation": "VERIFIED_LOCAL"
   },
   "d0_gate": {
     "result": "COMPLETE_PASS_SCOPED_WITH_LIMITATIONS",
@@ -235,6 +258,93 @@
       "Use representative detail only for the 105 unique keys",
       "Perform safe ZIP member path/duplicate/symlink validation before extraction",
       "Keep T2_INTERIM / NOT_FINAL_BLOCKED"
+    ],
+    "status": "D0_COMPLETE_PASS_SCOPED_WITH_LIMITATIONS",
+    "live_recheck_head": "702f0c2275dbcd66d50f69832bedd393e2bcde16",
+    "limitations": [
+      "Aggregate Parquet schema and row counts not independently parsed in current runtime",
+      "Historical 48K full daily ledgers and five accounting fields remain MISSING_EVIDENCE",
+      "No Stage D builder or deliverables; D1 not executed"
     ]
+  },
+  "live_recheck_2026_10_31": {
+    "inspected_head": "702f0c2275dbcd66d50f69832bedd393e2bcde16",
+    "branch_workflow_runs": 0,
+    "repository_in_progress_runs": 0,
+    "zip_integrity": {
+      "all_three_sha_size_match": true,
+      "crc_test_pass": true,
+      "duplicate_names": 0,
+      "duplicate_normalized_paths": 0,
+      "unsafe_paths": 0
+    },
+    "aggregate_manifest": {
+      "sha256": "3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba",
+      "size_bytes": 64015,
+      "declared_member_hashes_and_sizes_match": "6/6"
+    },
+    "full_logging": {
+      "member_count": 1578,
+      "trial_manifest_count": 105,
+      "post_write_audit_count": 105,
+      "daily_rows": 216253,
+      "event_rows": 24545842,
+      "rollforward_equation_checks": 1297518,
+      "asset_rows": 30170,
+      "claim_rows": 93902,
+      "contract_rows": 117639,
+      "guarantor_rows": 117639,
+      "tenant_rows": 117639,
+      "receivable_rows": 9543,
+      "balance_mismatches": 0,
+      "rollforward_mismatches": 0,
+      "daily_schema_version": "s6-daily-balance-v1",
+      "accounting_fields_present_nonnull_integer": "14/14 fields across 216253/216253 rows",
+      "date_gaps": 0,
+      "duplicate_dates": 0,
+      "partner1_rows": 216253,
+      "partner2_rows": 216253,
+      "manifest_sha_matches": "105/105",
+      "audit_sha_matches": "105/105",
+      "fingerprint_matches": "105/105",
+      "source_cohort_key_identity_matches": "105/105"
+    },
+    "role_map": {
+      "role_assignments": 125,
+      "scenario_count": 25,
+      "unique_keys": 105,
+      "s6_unique_keys": 100,
+      "c100_unique_keys": 5,
+      "duplicate_role_assignments": 20
+    },
+    "aggregate_parquet": {
+      "files_present": 2,
+      "hash_and_size_match_manifest": "2/2",
+      "parquet_schema_read": "MISSING_EVIDENCE_NO_PYARROW_FASTPARQUET_DUCKDB_POLARS",
+      "trials_summary_rows": "REPORTED_ONLY_FROM_SCENARIO_METADATA_20x2400",
+      "daily_distribution_rows": "REPORTED_ONLY_2086550_PRIOR_AUDIT"
+    },
+    "c100": {
+      "source_sha": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+      "cohort_id": "c100-v23-s4-20261026-965281d5",
+      "status": "REUSED_READ_ONLY",
+      "rerun": false,
+      "n_unique_paths": 1,
+      "scenarios": 5,
+      "trials_per_scenario": 300,
+      "golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+      "golden_manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
+    },
+    "d1_reconciliation_review_required": "D1_REPOSITORY_CLOSURE.md says 105 normalized statuses NOT_VERIFIED due absent expected byte sizes; this D0 recheck verifies all 210 per-trial manifest/audit bytes against root SHA-256. Do not silently rewrite D1 closure; review whether its additional size criterion remains required.",
+    "builder_and_deliverables": {
+      "s6_deliverables_builder": "MISSING_EVIDENCE",
+      "s6_artifact_reader": "MISSING_EVIDENCE",
+      "s6_manifest_resolver": "MISSING_EVIDENCE",
+      "arabic_excel": "MISSING_EVIDENCE",
+      "english_excel": "MISSING_EVIDENCE",
+      "number_registry_output": "MISSING_EVIDENCE",
+      "final_audit": "MISSING_EVIDENCE"
+    },
+    "d0_gate": "D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS"
   }
 }
