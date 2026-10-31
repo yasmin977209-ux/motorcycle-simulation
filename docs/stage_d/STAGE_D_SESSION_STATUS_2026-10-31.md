@@ -88,7 +88,7 @@ The importer and workflow are already published individually on the authorized b
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
   Remote SHA-256: `26d76c16f8ef3a79d9835a2d1832e853567be1e60458e48a5e3ab41e4aed630f`; Git blob SHA-1: `93e9a953d87104401fa37153d2e33c1eb84273c6`; containing commit: `2d4328b7c6a7b1a6ba284d1b5a51e96580e9fd00`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
-  Remote SHA-256: `52bb0918639313836aa67539e8e4dab975cda82a467e3e026809c57de1aa97ba`; Git blob SHA-1: `f5e4a7d3d7d7d4706ce1b5c6e79b17ad95e27c4d`; containing commit: `d5f204eca834aa91df6e5243a590be42edf799f7`.
+  Remote SHA-256: `5e916c69f739fb471b2fa5e954ca451d9dfbd3528fcf09974d60297a8728fb2f`; Git blob SHA-1: `f5e4a7d3d7d7d4706ce1b5c6e79b17ad95e27c4d`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
 
 The importer verifies the three already-provided ZIPs by exact SHA-256, extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
 
