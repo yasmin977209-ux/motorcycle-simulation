@@ -1,0 +1,150 @@
+name: Stage D D1-D2 pinned build and exact-head validation
+on:
+  push:
+    branches:
+      - tmp/cp-v240-stage-d-s6-deliverables-20261030
+    paths:
+      - 'scripts/s6_deliverables_builder.py'
+      - 'scripts/s6_deliverables_model.py'
+      - 'scripts/s6_artifact_reader.py'
+      - 'scripts/s6_manifest_resolver.py'
+      - 'scripts/s6_number_registry.py'
+      - 'scripts/s6_validate_representatives.py'
+      - 'tests/test_s6_deliverables_builder.py'
+      - 'tests/test_s6_number_registry.py'
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout authorized Stage D branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/cp-v240-stage-d-s6-deliverables-20261030
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pytest pyarrow
+      - name: Download and verify the three pinned GitHub artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, urllib.request, zipfile
+          repo = 'yasmin977209-ux/motorcycle-simulation'
+          items = [
+            ('aggregate',12852969854,40773412377,'4f2f2cc16d0cb5125262088704febccbae6f50ed',9357996,'ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54','s6-n2400.zip'),
+            ('full_logging',12998778418,41098699740,'e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70',310827203,'403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb','full-logging.zip'),
+            ('c100',12630457193,40263424595,'24050f15bc7eb3097e20f76785a45c5d177643dd',361733,'c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79','c100-reuse.zip'),
+          ]
+          token=os.environ['GH_TOKEN']; out=pathlib.Path('/mnt/data'); out.mkdir(parents=True,exist_ok=True)
+          def get_json(url):
+            req=urllib.request.Request(url,headers={'Authorization':f'Bearer {token}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+            with urllib.request.urlopen(req,timeout=120) as r: return json.loads(r.read().decode('utf-8'))
+          summary=[]
+          for name,aid,rid,tested,size,expected,filename in items:
+            run=get_json(f'https://api.github.com/repos/{repo}/actions/runs/{rid}')
+            if run.get('status')!='completed' or run.get('conclusion')!='success' or run.get('head_sha')!=tested: raise SystemExit(f'PINNED_RUN_METADATA_MISMATCH:{rid}')
+            meta=get_json(f'https://api.github.com/repos/{repo}/actions/artifacts/{aid}')
+            if meta.get('expired') or meta.get('size_in_bytes')!=size: raise SystemExit(f'PINNED_ARTIFACT_METADATA_MISMATCH:{aid}')
+            url=f'https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip'
+            req=urllib.request.Request(url,headers={'Authorization':f'Bearer {token}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+            path=out/filename; h=hashlib.sha256(); total=0
+            with urllib.request.urlopen(req,timeout=300) as r, path.open('wb') as f:
+              while True:
+                block=r.read(1024*1024)
+                if not block: break
+                f.write(block); h.update(block); total+=len(block)
+            digest=h.hexdigest()
+            if total!=size or digest!=expected: raise SystemExit(f'PINNED_ARTIFACT_BYTES_MISMATCH:{aid}:{total}:{digest}')
+            with zipfile.ZipFile(path) as z:
+              names=z.namelist(); norm=[n.replace('\\\\','/') for n in names]
+              unsafe=[n for n in names if n.startswith('/') or '..' in n.split('/') or '\\\\' in n]
+              symlinks=[n for n in names if (z.getinfo(n).external_attr>>16)&0o170000==0o120000]
+              if z.testzip() is not None or len(names)!=len(set(names)) or unsafe or symlinks: raise SystemExit(f'PINNED_ZIP_INTEGRITY_FAILURE:{aid}')
+            summary.append({'name':name,'artifact_id':aid,'run_id':rid,'tested_sha':tested,'size_bytes':total,'sha256':digest,'zip_members':len(names),'zip_crc':'PASS','unsafe_paths':len(unsafe),'symlinks':len(symlinks)})
+          pathlib.Path('results').mkdir(exist_ok=True)
+          pathlib.Path('results/D0_REMOTE_ARTIFACT_RECHECK.json').write_text(json.dumps(summary,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(summary,indent=2))
+          PY
+      - name: Run D1-D2 tests on the exact source commit
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts tests
+          python -m pytest -q | tee /tmp/stage-d-source-tests.log
+      - name: Build D1 shared model and D2 number registry from pinned artifacts
+        run: |
+          set -euo pipefail
+          python -m scripts.s6_deliverables_builder --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --c100 /mnt/data/c100-reuse.zip --output results/shared_model.json
+          python -m scripts.s6_number_registry --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --c100 /mnt/data/c100-reuse.zip --output results/number_registry.json --continuity-sha256 7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74 --continuity-path docs/PROJECT_CONTINUITY.md --continuity-blob-sha b956ebee141e3e9d625114973a0693506454b117
+          python -m scripts.s6_validate_representatives --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --output results/representative_validation.json
+      - name: Write D1-D2 scoped audit documents
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          def load(p): return json.loads(pathlib.Path(p).read_text(encoding='utf-8'))
+          model=load('results/shared_model.json'); reg=load('results/number_registry.json'); rep=load('results/representative_validation.json')
+          reg_audit=reg.get('audit_summary',{})
+          files=['results/shared_model.json','results/number_registry.json','results/representative_validation.json']
+          hashes={p:{'size_bytes':pathlib.Path(p).stat().st_size,'sha256':hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()} for p in files}
+          summary={'classification':'T2_INTERIM / NOT_FINAL_BLOCKED','d1_status':'BUILT_AWAITING_REMOTE_READBACK','d2_status':'BUILT_AWAITING_REMOTE_READBACK','representative_mapping':{'role_assignments':len(model.get('representative_mapping',[])),'unique_keys':len(model.get('unique_keys',[])),'manifest_status_counts':{s:sum(1 for x in model.get('manifest_reconciliation',[]) if x.get('normalized_audit_status')==s) for s in sorted({x.get('normalized_audit_status') for x in model.get('manifest_reconciliation',[])})}},'representative_validation':rep,'number_registry':reg_audit or reg.get('summary',{}),'outputs':hashes,'parquet_schema_and_values':rep.get('status'),'stage_d_acceptance_tests_175_176_179_180_181_182_183_186':'NOT_RUN_AS_FINAL_DELIVERY_SUITE','simulation':'NOT_RUN'}
+          pathlib.Path('results/D1_D2_BUILD_SUMMARY.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          d1audit={'audit_id':'D1-S6-BUILDER-AUDIT-2026-10-31','classification':'T2_INTERIM / NOT_FINAL_BLOCKED','status':'BUILT_AWAITING_REMOTE_READBACK','unit_test_suite':'27 tests expected; exact-head run evidence is attached to this workflow run','builder_integration':summary['representative_mapping'],'representative_value_revalidation':rep,'repository_source_publication':'COMMITTED_ON_AUTHORIZED_STAGE_D_BRANCH','exact_head_workflow':'PENDING_FINAL_BUILD_COMMIT_TEST'}
+          pathlib.Path('docs/stage_d/D1_BUILDER_AUDIT.json').write_text(json.dumps(d1audit,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          pathlib.Path('docs/stage_d/D1_REPOSITORY_CLOSURE.md').write_text('# D1 Repository Closure — Independent S6 Builder\n\n**Status:** `BUILT_AWAITING_REMOTE_READBACK`  \n**Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`\n\nThe six independent S6 source modules, two test modules, and Stage D validation workflow have been extracted from the local source archive and committed as individual repository files. The three pinned GitHub Actions artifacts were downloaded directly from GitHub and validated against their pinned SHA-256 and sizes.\n\nThe Builder generated `results/shared_model.json`; the representative-value validator ran against the frozen mapping and pinned aggregate Parquet. The complete test suite and exact-head result are recorded in this workflow run. The repository-file remote SHA-256 readback is still pending and must be completed before D1 can be declared closed.\n\nThe manifest resolver retains all original pending states and keeps 105 normalized records `NOT_VERIFIED` where independent expected byte sizes are absent. No re-selection, simulation, Trial, Monte Carlo, or N=4800 occurred.\n',encoding='utf-8')
+          d2audit={'audit_id':'D2-S6-NUMBER-REGISTRY-2026-10-31','classification':'T2_INTERIM / NOT_FINAL_BLOCKED','status':'BUILT_AWAITING_REMOTE_READBACK','registry_path':'results/number_registry.json','registry_size_bytes':hashes['results/number_registry.json']['size_bytes'],'registry_sha256_local_build':hashes['results/number_registry.json']['sha256'],'summary':reg.get('summary',{}),'audit_summary':reg_audit,'gate_statuses':reg.get('gate_statuses',{}),'exact_head_workflow':'PENDING_FINAL_BUILD_COMMIT_TEST','remote_sha256_readback':'PENDING'}
+          pathlib.Path('docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json').write_text(json.dumps(d2audit,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          pathlib.Path('docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md').write_text('# D2 — Exact Financial Calculations and Number Registry Audit\n\n**Status:** `BUILT_AWAITING_REMOTE_READBACK`  \n**Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`\n\nThe registry was rebuilt in GitHub Actions from the three pinned GitHub artifacts.\n\n- Entries: '+str(reg_audit.get('entry_count',reg.get('summary',{}).get('entry_count')))+'\n- Artifact-backed verified-local records: '+str(reg_audit.get('artifact_entry_count',reg.get('summary',{}).get('verified_local_count')))+'\n- Documentary reported-only records: '+str(reg_audit.get('documentary_entry_count',reg.get('summary',{}).get('reported_only_count')))+'\n- Unavailable evidence records: '+str(reg.get('summary',{}).get('not_derivable_count'))+'\n- Duplicate number IDs: '+str(reg_audit.get('duplicate_number_id_count'))+'\n- Float values: '+str(reg_audit.get('float_count'))+'\n- Registry size: '+str(hashes['results/number_registry.json']['size_bytes'])+' bytes\n- Local build SHA-256: `'+hashes['results/number_registry.json']['sha256']+'`\n\nAll numeric calculations use integer/Fraction exact values and Decimal HALF_EVEN display. Missing evidence remains explicit; no zero-fill, inferred values, or historical backfill was used. Remote GitHub readback and SHA-256 calculation are still pending; no D2 gate is declared PASS until that readback and exact-head validation are verified.\n',encoding='utf-8')
+          # Correct the stale continuity source hashes in the existing design document.
+          p=pathlib.Path('docs/stage_d/D1_BUILDER_DESIGN.md')
+          if p.exists():
+            t=p.read_text(encoding='utf-8').replace('bf6f157c26a2072ccb5c5df4b73e1e03332e4c51439772a7c53f00a9e7747caf','7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74').replace('3f05f706cca1d14ae9326cf5519f4271b050e5e3','b956ebee141e3e9d625114973a0693506454b117')
+            p.write_text(t,encoding='utf-8')
+          print(json.dumps(summary,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit generated D1 and D2 outputs
+        env:
+          BRANCH: tmp/cp-v240-stage-d-s6-deliverables-20261030
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add results/shared_model.json results/number_registry.json results/representative_validation.json results/D1_D2_BUILD_SUMMARY.json results/D0_REMOTE_ARTIFACT_RECHECK.json docs/stage_d/D1_BUILDER_AUDIT.json docs/stage_d/D1_REPOSITORY_CLOSURE.md docs/stage_d/D1_BUILDER_DESIGN.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json
+          git commit -m 'build(stage-d): publish S6 shared model and exact number registry'
+          git push origin HEAD:refs/heads/$BRANCH
+      - name: Validate exact final build commit
+        run: |
+          set -euo pipefail
+          TESTED_SHA=$(git rev-parse HEAD)
+          python -m compileall -q scripts tests
+          python -m pytest -q | tee /tmp/stage-d-final-tests.log
+          ! grep -R -nE 'scripts\\.(stage13_assemble|excel_builder)|run_simulation|monte_carlo|trial_runner' scripts/s6_*.py
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          paths=['scripts/s6_deliverables_builder.py','scripts/s6_deliverables_model.py','scripts/s6_artifact_reader.py','scripts/s6_manifest_resolver.py','scripts/s6_number_registry.py','scripts/s6_validate_representatives.py','tests/test_s6_deliverables_builder.py','tests/test_s6_number_registry.py','results/shared_model.json','results/number_registry.json','results/representative_validation.json','results/D1_D2_BUILD_SUMMARY.json','results/D0_REMOTE_ARTIFACT_RECHECK.json']
+          files={p:{'size_bytes':pathlib.Path(p).stat().st_size,'sha256':hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()} for p in paths}
+          evidence={'status':'EXACT_HEAD_TESTS_PASSED_LOCAL_TO_RUNNER','run_id':int(os.environ['GITHUB_RUN_ID']),'workflow_run_head_sha':os.environ['GITHUB_SHA'],'tested_sha':sha,'branch':os.environ['GITHUB_REF_NAME'],'pytest_log':'/tmp/stage-d-final-tests.log','files':files,'classification':'T2_INTERIM / NOT_FINAL_BLOCKED'}
+          pathlib.Path('/tmp/exact_head_evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(evidence,indent=2))
+          PY
+      - name: Upload exact-head D1-D2 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-d-d1-d2-exact-head-evidence
+          path: |
+            results/shared_model.json
+            results/number_registry.json
+            results/representative_validation.json
+            results/D1_D2_BUILD_SUMMARY.json
+            results/D0_REMOTE_ARTIFACT_RECHECK.json
+            /tmp/exact_head_evidence.json
+            /tmp/stage-d-final-tests.log
+          if-no-files-found: error
+          retention-days: 90
