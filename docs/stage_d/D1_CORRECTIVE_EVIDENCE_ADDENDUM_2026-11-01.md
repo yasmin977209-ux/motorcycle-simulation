@@ -58,3 +58,18 @@ No Trial, simulation, Monte Carlo, N=4800, backfill, accounting-field zero-fill,
 ## Disposition
 
 D1 remains `BLOCKED`. Required blockers still include canonical remote publication/readback of v2.4.0 and historical/quarantine references, successful exact-final-HEAD CI with real artifacts and Parquet extreme validation, and complete per-file remote evidence for the final commit. This addendum corrects earlier stale audit statements append-only; it does not overwrite them or close D1.
+
+
+## Correction record — 2026-11-01
+
+## Hash computation correction (append-only)
+
+The SHA-256 values shown in the historical conflict inventory above for the archived reader and shared model are superseded. Recalculation from the exact UTF-8 bytes re-fetched from GitHub yields:
+
+| Original path | Correct SHA-256 | Git blob SHA-1 | Bytes | Original containing commit |
+|---|---|---|---:|---|
+| `scripts/s6_artifact_reader.py` | `37d882bb793ad4b447918287b5969fb8481f6e8c5bce1defdafeb7660b693f57` | `35e644e22557eb6f3449571190c1c31e2af3d461` | 10,181 | `2ef20e9634d346d3b5a263f474a613415b47b996` |
+| `scripts/s6_deliverables_model.py` | `1713b88ab0f619eb5a1747fc56eb3896a63e7cb8ac65b4e03142434dd03e13ea` | `670c10d39adcc732fe464437c1bf02f451b76f26` | 3,209 | `15e5a49fc1ff96d7106506103e1d35ee164879e0` |
+| `scripts/s6_manifest_resolver.py` | `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a` | `55ba5e5f0657d2b5337af84eff6a01e3749f5491` | 5,143 | `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9` |
+
+The earlier reader/model SHA-256 entries are retained above as an audit trail and must not be reused.
