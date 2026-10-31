@@ -86,3 +86,17 @@ Use a repository-first / CI-produced workflow:
 
 ## Required first message in any new conversation
 "Read `docs/PROJECT_HANDOFF.md`, `docs/PROJECT_CONTINUITY.md`, and the Stage D audit/closure files from GitHub. Revalidate the live branch and remote bytes before relying on any prior status. Continue only on the authorized Stage D branch, preserve all constraints and conflicts, and do not ask me to re-upload files already present in the repository or pinned Actions artifacts."
+
+
+## Latest execution checkpoint — 2026-10-31 18:02 UTC
+
+- Authorized branch: `tmp/cp-v240-stage-d-s6-deliverables-20261030`.
+- Live branch HEAD at checkpoint start: `19559159f280cef241cb8758e923ffb5a5151694`.
+- `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- D0 remains closed only as `D0_REPOSITORY_CLOSED / PASS_SCOPED_WITH_LIMITATIONS`, bounded to the pinned-input audit and repository documentation. Historical 48K accounting gaps, missing fields, Parquet limitations, and manifest conflicts remain open.
+- D1 and D2 remain `BLOCKED / REPORTED_ONLY_LOCAL`: the full local source package, tests, workflow, and 13,954-entry registry are not present in the live branch. The required exact-head Actions run does not exist.
+- Local source workspace identified in the prior session: `/mnt/data/d1_work`; source archive: `D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip` (SHA-256 `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`, 50,734 bytes). These are local evidence only and are not repository files.
+- Current GitHub connector actions available in this execution expose text-content writes and Git object creation, but no direct local-filesystem-to-GitHub binary upload bridge. Do not claim source publication or D1/D2 closure until the exact local bytes are committed, fetched back from GitHub, SHA-256 hashed remotely, and tied to the commit.
+- Stage D validation workflow runs on the authorized branch: none observed in the live run listing. The local workflow file is not present in the repository tree.
+- Next action: establish a supported binary/source transfer path or a user-authorized upload bridge for the existing source archive; then publish source files, run only the no-simulation D1/D2 validation workflow on exact HEAD, commit generated shared model and registry, verify every committed output by remote bytes + SHA-256 + commit, and stop before D3.
+- No D3–D6 work is authorized by this checkpoint. No simulation, Trial, Monte Carlo, N=4800, main update, PR, merge, or Release was performed.
