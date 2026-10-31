@@ -240,3 +240,15 @@ Both updates are source/workflow preparation only. Neither importer nor workflow
 المدخلات المثبتة للمستورد: D1/D2 source bundle (50,734 bytes؛ SHA-256 caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6)، governing archive (14,507,701 bytes؛ efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c)، historical source pack (366,034 bytes؛ 4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a)، وD0 local evidence archive (22,706 bytes؛ b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2). لا يُطلب إرفاقها إلى محادثة جديدة؛ يلزم تشغيل الاستيراد مرة واحدة من clone محلي موثق إذا لم تتوفر بيئة تنفيذ محلية متصلة بهذه المحادثة.
 
 الحالة: المستورد لم يُشغّل، والـWorkflow لم يعمل. لذلك لا تُفتح D1 أو D2 بعد. بعد هذا التصحيح، تُعاد قراءة الملفات المنشورة وتسجيل URL + remote SHA-256 + containing commit لكل ملف قبل أي PASS.
+
+### 7.7 ثلاثيات الملفات المصححة بعد readback من GitHub
+
+هذه القيم حُسبت من البايتات التي أُعيد جلبها من GitHub بعد الإيداع. commit SHA هو commit الذي يحتوي النسخة المشار إليها:
+
+| الملف | رابط GitHub | SHA-256 للبايتات البعيدة | Git blob SHA-1 | containing commit |
+|---|---|---|---|---|
+| scripts/import_stage_d_sources.py | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/scripts/import_stage_d_sources.py | 526192c3b96dfd531125b39a87100d392847f1eee19a9b6aff97d271b333261e | 88f17791b992fe7e7b948b19d379049933b29b6e | 2397376005523096c162d96325e04f6f5c40f114 |
+| .github/workflows/stage-d-d1-d2-validation.yml | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/.github/workflows/stage-d-d1-d2-validation.yml | 43faea5b3c0ac89fa178f58da188261a4abed5e2e18e96074de310c129ca4c59 | 923b6b17cee8f5419d25a6b5c86c508c4bae14a1 | 9d7a96d969b15d3febf0d33a128542c6b18a16e2 |
+| docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | 8e66e6cd5b2cc41ea9dcf507ca904b73658f729b2e4f9f7219c080e8f68c9ba8 | 14ade2d56441f74ee579fe229d16cfceadf9378e | cc4e8f7d4e255d54e08fd7cd9a23ba4cd1651a84 |
+
+التحقق الساكن بعد التصحيح أكد أن importer يستخدم bytes([0]) في Git blob preamble، وأن Workflow يحسب SHA-256 بواسطة sha256sum وGit blob بواسطة git hash-object. لم يُشغّل importer أو Workflow، لذلك هذا يثبت نشر أداة النقل وصحة قيم الـreadback فقط، ولا يثبت D1/D2.
