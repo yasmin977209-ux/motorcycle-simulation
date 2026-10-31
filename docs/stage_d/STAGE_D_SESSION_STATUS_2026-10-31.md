@@ -267,3 +267,18 @@ The D0 closure and D0 remote evidence ledger tables above have been refreshed to
 ### 7.9 Final SHA-256 verification correction
 
 The intermediate continuity digest 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6 is superseded. The current GitHub-fetched continuity file is 445,430 bytes; its verified SHA-256 is b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4, Git blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5, containing commit 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f. The SHA-256 implementation used for the final readback matched both the abc and million-a standard vectors. D0 closure and ledger entries above now point to their latest corrected versions.
+
+## 8. Final live branch snapshot — 2026-10-31
+
+- Branch HEAD immediately before this status update: 35fb6f711b35179b2f87cb7c571766dd14cf7c7f.
+- main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474 (unchanged).
+- Stage D workflow runs: 0. No Stage D exact-head validation has run.
+- Open PRs are pre-existing project PRs; no PR was created for Stage D. Releases endpoint returned an empty list.
+- Current D0 disposition: COMPLETE / PASS_SCOPED_WITH_LIMITATIONS; the three immutable artifacts and D0 repository files have current remote evidence triples in this document and the D0 closure/ledger.
+- Current D1 disposition: BLOCKED / REPORTED_ONLY. Existing model, artifact reader and manifest resolver are present but differ from the local D1/D2 source bundle; preserve them as pre-import conflicts. Missing: s6_deliverables_builder.py, s6_number_registry.py, s6_validate_representatives.py, test_s6_deliverables_builder.py, test_s6_number_registry.py.
+- Current D2 disposition: BLOCKED / REPORTED_ONLY. results/number_registry.json is absent from GitHub. The 13,954-entry local registry and 27 local tests remain reported-only until import, build, remote readback and exact-head CI.
+- The durable new-chat entry point is docs/stage_d/NEW_CHAT_BOOTSTRAP_AND_D0_D6_PROMPTS_AR.md. Remote SHA-256 00c1b7266561e568d30dbdc5b2ffc2a318bba964de064fa2d372ca62315aac59; Git blob SHA-1 640d8dc69f07480f83e394b9354a7680698525e6; containing commit 17a013cc09fa8663410e4821bb13e80338538bd6.
+- The one-time importer and persistent D1-D2 workflow have verified remote triples in section 7.7. They now compute continuity SHA-256/Git blob pins dynamically. Neither has been executed.
+- After this status update is committed, re-read this file and record its own current remote SHA-256 and containing commit; do not use this pre-update HEAD as the current branch head.
+
+All remaining work stays on the authorized temporary branch. No main change, PR, merge, release, simulation, Trial, Monte Carlo or N=4800 is authorized or performed.
