@@ -2,7 +2,7 @@
 
 **Repository:** `yasmin977209-ux/motorcycle-simulation`  
 **Authorized working branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`  
-**Branch HEAD before this status-file commit:** `40dd65250edafc4773f2cc5608833a83092ee1c7`  
+**Branch HEAD before this status-file correction:** `1a4b8122d52e94c1bd659ad242166910e2ab010e`  
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474` — unchanged.  
 **Stage D workflow runs at this check:** 0.  
 **PRs / Releases:** none created by this work.  
@@ -33,10 +33,10 @@ D0 repository files:
 
 | File | Remote SHA-256 | Git blob SHA-1 | Containing commit | URL |
 |---|---|---|---|---|
-| D0 closure | `b3ba974cc821993c93ceb7fa23e09dbefaa8f80ceb0a808db5f8f93cd3c44eb4` | `56bee39773a47f6106acfa5162ec9350a94895a8` | `192e8909bb87f992569ff6fd7370fb56e2b256fc` | [D0_REPOSITORY_CLOSURE.md](D0_REPOSITORY_CLOSURE.md) |
-| D0 remote evidence ledger | `fae96b8612934bbadf1f7d01834ac983cd048b1dc627c6e59dff20950d4d9623` | `d50c12a86be75b18434b92cc79a7b687204ffe60` | `4cd0aa9afcdd3ca09a9cdf9cb75d68062dae33e0` | [D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) |
-| D0 input audit MD | `1064e81dd98ddaefd443389a5bbc6d53fc1052903328d533839da84a16f705a0` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` | [D0_INPUT_AUDIT.md](D0_INPUT_AUDIT.md) |
-| D0 input audit JSON | `abe8482b44b78de950c33c9b1b38480e90e08b2563f184acf70695036b17aa80` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` | [D0_INPUT_AUDIT.json](D0_INPUT_AUDIT.json) |
+| D0 closure | `5ea39bea243e210ada1e4aab66aab58b5d95293dede25bcc6d6c35f41b7ea36e` | `4ec7b036bfc61556eaa14b4419c3a00b5c2c5d81` | `1a4b8122d52e94c1bd659ad242166910e2ab010e` | [D0_REPOSITORY_CLOSURE.md](D0_REPOSITORY_CLOSURE.md) |
+| D0 remote evidence ledger | `4ac7b2c3acbddc297c289586b72117b115bb2695a90538b9550bf759ab17bb18` | `0ad14ec661b4823c5d3d2f1372029f4fe7e8a790` | `e8d26cfcbe85ceaaa44312e6821621fa2ab7f80b` | [D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) |
+| D0 input audit MD | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` | [D0_INPUT_AUDIT.md](D0_INPUT_AUDIT.md) |
+| D0 input audit JSON | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` | [D0_INPUT_AUDIT.json](D0_INPUT_AUDIT.json) |
 
 D0 limits remain: no independent aggregate Parquet schema/row audit in the current local runtime; 48K historical daily accounting data remains missing; the five missing fields remain unfilled; Full Logging remains limited to 105 representative keys.
 
@@ -86,9 +86,9 @@ It also preserves v2.3 as historical and v2.3.1 as quarantined, and imports text
 The importer and workflow are already published individually on the authorized branch:
 
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
-  Remote SHA-256: `b9c03669e1bc33214c69ff3eacb22a4fb32d908d1780bae8832fddb6456e03b6`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `853790f8e4388428137bb017c45bf1e386d12c4c`.
+  Remote SHA-256: `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `853790f8e4388428137bb017c45bf1e386d12c4c`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
-  Remote SHA-256: `1c338a21ebc8709c8bf1bbc4b24afa8b9ae358c961c76df653b7d13667c99c9c`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `31bd70355ac89e36a4ef2e242536618622c4a26b`.
+  Remote SHA-256: `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `31bd70355ac89e36a4ef2e242536618622c4a26b`.
 
 The importer verifies four already-provided ZIPs by exact SHA-256:
 - D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
@@ -127,3 +127,48 @@ After this one-time push, future chats should use GitHub only. No recurring sour
 - N=4800: `NOT_EXECUTED`, not authorized.
 - Do not backfill missing accounting fields or modify historical manifests.
 - No Trial, Simulation, Monte Carlo, main update, PR, merge, Release, or final acceptance.
+
+
+## 8. Verified remote-byte correction and current handoff — 2026-10-31 19:20Z
+
+A SHA-256 implementation was independently checked against the standard SHA-256("abc") test vector. For every repository text file below, the Git blob SHA-1 was also compared with GitHub's returned blob SHA, confirming that the fetched UTF-8 bytes were the bytes hashed. Four incorrect SHA-256 values in the earlier D0 evidence ledger were corrected in commit `e8d26cfcbe85ceaaa44312e6821621fa2ab7f80b`. Do not reuse the superseded values.
+
+| File | Remote SHA-256 | Git blob SHA-1 | Containing commit |
+|---|---|---|---|
+| [D0 closure](D0_REPOSITORY_CLOSURE.md) | `5ea39bea243e210ada1e4aab66aab58b5d95293dede25bcc6d6c35f41b7ea36e` | `4ec7b036bfc61556eaa14b4419c3a00b5c2c5d81` | `1a4b8122d52e94c1bd659ad242166910e2ab010e` |
+| [D0 remote evidence ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) | `4ac7b2c3acbddc297c289586b72117b115bb2695a90538b9550bf759ab17bb18` | `0ad14ec661b4823c5d3d2f1372029f4fe7e8a790` | `e8d26cfcbe85ceaaa44312e6821621fa2ab7f80b` |
+| [D0 input audit Markdown](D0_INPUT_AUDIT.md) | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` |
+| [D0 input audit JSON](D0_INPUT_AUDIT.json) | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` |
+| [Project continuity](../PROJECT_CONTINUITY.md) | `d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78` | `b956ebee141e3e9d625114973a0693506454b117` | `126451e5466e83363bbece84992279d660c1bd0b` |
+| [Owner decision record](../governance/D-2026-10-30-REFERENCE-V2.4.0.md) | `417c8838c4f70d8571938af89f1b34ec7e680dceaae8a594e242d55d1e94778c` | `58f89bc016523f1350345428b4a224ac42a8b130` | `bba6dd275956da60995c4da99398bd992ee5e1c5` |
+| [Source importer](../../scripts/import_stage_d_sources.py) | `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca` | `67f4bb66e7c052992da08e870ec4531760eb7fd2` | `853790f8e4388428137bb017c45bf1e386d12c4c` |
+| [D1-D2 validation workflow](../../.github/workflows/stage-d-d1-d2-validation.yml) | `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59` | `03e9d43ab7f68829f5752e53bd03c009253e2507` | `31bd70355ac89e36a4ef2e242536618622c4a26b` |
+
+The canonical normative v2.4.0 Markdown is **not yet present** in the live tree. The short owner decision record above is not a substitute for the canonical 401,397-byte reference. The canonical file's expected SHA-256 remains `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, verified against the supplied archive member locally.
+
+### Exact current disposition
+
+- D0: `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` for pinned artifact byte integrity and the documented scoped input preflight only. It does not establish 48K production accounting acceptance, representative value revalidation, or final project acceptance.
+- D1: `BLOCKED / REPORTED_ONLY`; the six S6 source modules and two test files have not been imported as individual files to this branch. Existing three similarly named modules are content-conflicted with the local source package; do not silently overwrite them.
+- D2: `BLOCKED / REPORTED_ONLY`; the 22.8MB Number Registry is not present remotely.
+- Stage D workflow runs: `0`; no exact-head test evidence exists. D3-D6 are not started.
+- Current main remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`. No PR, merge, release, trial, simulation, Monte Carlo or N=4800 was performed.
+
+### One-time import, then GitHub-only continuity
+
+The source ZIPs are containers, not deliverables. The published importer `scripts/import_stage_d_sources.py` verifies the four supplied archive hashes, extracts the eight D1/D2 implementation/test files and all UTF-8 text/Markdown/JSON/CSV members from the v2.4.0 and historical archives (including nested text packs), preserves v2.3 as historical and v2.3.1 as quarantined, writes an import manifest, commits individual extracted files, and pushes only this authorized branch. Binary ZIPs are not committed. After that one-time local import/push, the persistent workflow downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits generated JSON/audit outputs, reads committed files back from GitHub, computes SHA-256 from remote bytes, records each file's URL/blob/commit triple, and tests the exact final head.
+
+The current ChatGPT GitHub connector can write repository text but cannot stream arbitrary local `/mnt/data` attachments into a local Git worktree or execute the importer against a local clone. Therefore the one-time importer has **not** been run in this session. The user should not upload the archives again in future chats; instead, run the importer once from an authenticated clean clone of this branch using the four already-downloaded local archive paths. After the resulting push triggers the workflow, subsequent sessions can resume entirely from GitHub.
+
+Recommended one-time command (paths are illustrative; use the actual existing local paths):
+
+```bash
+python scripts/import_stage_d_sources.py \
+  --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
+  --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
+  --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \
+  --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip \
+  --apply
+```
+
+**No new local build output was created in this session.** No D3-D6 work was authorized or started.
