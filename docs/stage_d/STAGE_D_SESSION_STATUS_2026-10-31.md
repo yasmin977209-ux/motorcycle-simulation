@@ -282,3 +282,27 @@ The intermediate continuity digest 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c5
 - After this status update is committed, re-read this file and record its own current remote SHA-256 and containing commit; do not use this pre-update HEAD as the current branch head.
 
 All remaining work stays on the authorized temporary branch. No main change, PR, merge, release, simulation, Trial, Monte Carlo or N=4800 is authorized or performed.
+
+## 10. D0 revalidation final readback — 2026-10-31
+
+### Final repository state after D0 documentation updates
+- main remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Stage D branch final documentation commit before this status update: `932411c91ec6c906e46c1b6950a9d9ea467ebc2e`.
+- Stage D workflow runs remain 0; no PR, merge, Release, Trial, Simulation, Monte Carlo, or N=4800 was created or executed.
+- All writes were append-only updates on the authorized Stage D branch. Historical Artifacts and main were not modified.
+
+### D0 file readback triples
+The following files were fetched again from GitHub after their commits. SHA-256 was calculated from the fetched UTF-8 bytes; GitHub's blob SHA-1 is recorded as returned by Contents API.
+
+| File | GitHub URL | Remote SHA-256 | Git blob SHA-1 | Bytes | Commit containing these bytes |
+|---|---|---|---|---:|---|
+| `docs/stage_d/D0_INPUT_AUDIT.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_INPUT_AUDIT.md | `bdac4286acf42153f9956e069dd0674a9e6385cb28ec0f8f700a7e987c58be96` | `0f5a17abec79f51a6d7e1f9b8032d866a1dfdef6` | 35,055 | `e169725d567fe0be7a1115bbf4cdb78a576c78f6` |
+| `docs/stage_d/D0_INPUT_AUDIT.json` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_INPUT_AUDIT.json | `6518d9b16d81ededfd183671e3d80bdee6b5c8a78a5627f0c6bcd8f09403e208` | `2423a1e79f3e32dfda19a3793bdd19b1b229ddc9` | 15,225 | `af47dda4572c3ff88aa031b052c7b7413cc9fb14` |
+| `docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | `95610d4703b0c37e7a9fe18e698dc28faad7595e29e354789942c679e490ef81` | `acd273353f44a741b0c68165fd36d58827207470` | 12,512 | `838d82fa87acdfa4539bfc81f33305735d48b4ef` |
+| `docs/stage_d/D0_REPOSITORY_CLOSURE.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REPOSITORY_CLOSURE.md | `5ef597b180b48854e156ddd06b9463312a4b3e39578db5f62ad359c8eb4049ff` | `e387a732b6bf8a55b9f615c56ca7a6127143d6f0` | 7,085 | `c1e880e12458587b25ea65df48d1debfbc083c09` |
+| `docs/PROJECT_CONTINUITY.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/PROJECT_CONTINUITY.md | `6bae4c8adae30cfffb1e0d074a846244673ad7425dec07674008c5cf47549bf5` | `6cd7a2255663f2d88ebf386476132c28bb3339ee` | 448,084 | `932411c91ec6c906e46c1b6950a9d9ea467ebc2e` |
+
+The status file itself is being committed by the next commit; its own final remote triple must be obtained after that commit.
+
+### Exact-head and stage boundary
+D0 disposition is `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`. The exact final branch HEAD after the status update must be read from GitHub and the D0 files must be read back at that exact branch HEAD. D1 remains BLOCKED / REPORTED_ONLY and was not started by this session.
