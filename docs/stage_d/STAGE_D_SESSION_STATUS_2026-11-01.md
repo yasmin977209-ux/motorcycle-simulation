@@ -51,3 +51,12 @@ A final digest pass using a SHA-256 implementation validated against the standar
 - Original `s6_manifest_resolver.py`: `f10fbcccb35445a1866d1ce0fed1d9da9c9cdd307e01507f13dea1d1f34c3d01` (5,143 bytes; blob `55ba5e5f0657d2b5337af84eff6a01e3749f5491`; original commit `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9`).
 
 All earlier SHA-256 values for these three files in this session's appended records are superseded by this reconciliation. Blob SHA-1, byte sizes and original containing commits are unchanged. The raw archive files were read back from GitHub; the resolver raw copy's Git blob SHA-1 exactly matches the original historical file blob.
+
+
+## 2026-11-01 — explicit governing-reference publication attempts
+
+The user requested an explicit local extraction and three-route publication attempt. The v2.4.0 member was extracted from `/mnt/data/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip`; the exact member measured 401,397 bytes and SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, matching the expected source. The same archive yielded v2.3 (381,559 bytes, SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`) and v2.3.1 (394,983 bytes, SHA-256 `724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0`).
+
+Publication routes: local Git push failed with literal DNS error `fatal: unable to access 'https://github.com/yasmin977209-ux/motorcycle-simulation.git/': Could not resolve host: github.com`. The available GitHub connector's write APIs require complete content strings and cannot read a local path or file reference, so no valid content-bearing API call could be formed. `python-gitlab` is not installed (module probe returned `gitlab False`); network access is also unavailable. No reference bytes were published and no remote SHA mismatch occurred. Final outcome: `CANNOT_PUBLISH`; D1 remains BLOCKED; D2 not started.
+
+Detailed attempt log and exact manual publication instructions: [D1_REFERENCE_PUBLICATION_ATTEMPT_2026-11-01.md](D1_REFERENCE_PUBLICATION_ATTEMPT_2026-11-01.md). The report was remotely read back and its SHA-256 is `2d37bda25f77ad042f8dc772927b53d79ab8b75272e4940dc488b76a032f829e`, Git blob `b903da2689044254dba83925d9e3ffd5c0f5cd71`, 9,474 bytes, containing commit `a18a18cda50e29c9682a8f15247c4871f31687a6`. Do not mark v2.4.0 VERIFIED_LIVE; local extraction is VERIFIED_LOCAL only.
