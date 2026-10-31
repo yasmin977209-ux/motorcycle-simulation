@@ -33,8 +33,8 @@ D0 repository files:
 
 | File | Remote SHA-256 | Git blob SHA-1 | Containing commit | URL |
 |---|---|---|---|---|
-| D0 closure | `a3396f87529b608d2911024cc4f1aa1582fc7a20678d0b403ab8907e2596a99c` | `3a6ce3170810d2c73e506f51fea2e1f13d6a8d18` | `7935b0366040a4272173931aac8bf982a9feeaeb` | [D0_REPOSITORY_CLOSURE.md](D0_REPOSITORY_CLOSURE.md) |
-| D0 remote evidence ledger | `7e7413b0d0a182da40081938a5927ddf9e5638df75ab30b94f26b82eb9d8114e` | `61c494b7b0e5f4e718eaabcd1bb86e5b27e1e81c` | `3b750024b75c60415ad80e877e6bf49c0e8a103e` | [D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) |
+| D0 closure | `e9f6a5d49460ab55f15add7ea7ce31244494639712d6bd93801610d847dfb1c5` | `783170d66f387b946a5b495a836d976377bbb8a1` | `66ca5c7e5310a0bf9ba37564ce6e94851c790b37` | [D0_REPOSITORY_CLOSURE.md](D0_REPOSITORY_CLOSURE.md) |
+| D0 remote evidence ledger | `4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d` | `2b008cb1bf71cfce6bd27172c6673e8ac44d0562` | `89e66beca2b5320c9b5c383fd4c8585fa3be04b9` | [D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) |
 | D0 input audit MD | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` | [D0_INPUT_AUDIT.md](D0_INPUT_AUDIT.md) |
 | D0 input audit JSON | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` | [D0_INPUT_AUDIT.json](D0_INPUT_AUDIT.json) |
 
@@ -131,15 +131,15 @@ After this one-time push, future chats should use GitHub only. No recurring sour
 
 ## 8. Verified remote-byte correction and current handoff — 2026-10-31 19:20Z
 
-A SHA-256 implementation was independently checked against the standard SHA-256("abc") test vector. For every repository text file below, the Git blob SHA-1 was also compared with GitHub's returned blob SHA, confirming that the fetched UTF-8 bytes were the bytes hashed. Four incorrect SHA-256 values in the earlier D0 evidence ledger were corrected in commit `3b750024b75c60415ad80e877e6bf49c0e8a103e`. Do not reuse the superseded values.
+A SHA-256 implementation was independently checked against the standard SHA-256("abc") test vector. For every repository text file below, the Git blob SHA-1 was also compared with GitHub's returned blob SHA, confirming that the fetched UTF-8 bytes were the bytes hashed. Four incorrect SHA-256 values in the earlier D0 evidence ledger were corrected in commit `89e66beca2b5320c9b5c383fd4c8585fa3be04b9`. Do not reuse the superseded values.
 
 | File | Remote SHA-256 | Git blob SHA-1 | Containing commit |
 |---|---|---|---|
-| [D0 closure](D0_REPOSITORY_CLOSURE.md) | `a3396f87529b608d2911024cc4f1aa1582fc7a20678d0b403ab8907e2596a99c` | `3a6ce3170810d2c73e506f51fea2e1f13d6a8d18` | `7935b0366040a4272173931aac8bf982a9feeaeb` |
-| [D0 remote evidence ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) | `7e7413b0d0a182da40081938a5927ddf9e5638df75ab30b94f26b82eb9d8114e` | `61c494b7b0e5f4e718eaabcd1bb86e5b27e1e81c` | `3b750024b75c60415ad80e877e6bf49c0e8a103e` |
+| [D0 closure](D0_REPOSITORY_CLOSURE.md) | `e9f6a5d49460ab55f15add7ea7ce31244494639712d6bd93801610d847dfb1c5` | `783170d66f387b946a5b495a836d976377bbb8a1` | `66ca5c7e5310a0bf9ba37564ce6e94851c790b37` |
+| [D0 remote evidence ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) | `4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d` | `2b008cb1bf71cfce6bd27172c6673e8ac44d0562` | `89e66beca2b5320c9b5c383fd4c8585fa3be04b9` |
 | [D0 input audit Markdown](D0_INPUT_AUDIT.md) | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` |
 | [D0 input audit JSON](D0_INPUT_AUDIT.json) | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` |
-| [Project continuity](../PROJECT_CONTINUITY.md) | `5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6` | `abbc4909feacba26055d0c6db703d0ec5b963ea5` | `126451e5466e83363bbece84992279d660c1bd0b` |
+| [Project continuity](../PROJECT_CONTINUITY.md) | `b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4` | `abbc4909feacba26055d0c6db703d0ec5b963ea5` | `126451e5466e83363bbece84992279d660c1bd0b` |
 | [Owner decision record](../governance/D-2026-10-30-REFERENCE-V2.4.0.md) | `417c8838c4f70d8571938af89f1b34ec7e680dceaae8a594e242d55d1e94778c` | `58f89bc016523f1350345428b4a224ac42a8b130` | `bba6dd275956da60995c4da99398bd992ee5e1c5` |
 | [Source importer](../../scripts/import_stage_d_sources.py) | `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca` | `67f4bb66e7c052992da08e870ec4531760eb7fd2` | `853790f8e4388428137bb017c45bf1e386d12c4c` |
 | [D1-D2 validation workflow](../../.github/workflows/stage-d-d1-d2-validation.yml) | `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59` | `feb14141edb4c0353e4d06a784dcfa2eb210df52` | `31bd70355ac89e36a4ef2e242536618622c4a26b` |
@@ -193,7 +193,7 @@ No Stage D workflow was triggered by this importer-only documentation/code updat
 
 The importer now also preserves any pre-existing branch version of an S6 source module when its bytes differ from the supplied source bundle. Such versions are copied to `docs/stage_d/archive/pre_import_conflicts/` and listed in the archive import manifest before the canonical source module is replaced. This prevents the three previously identified content conflicts from being silently overwritten; Git history and explicit byte-level backup are both retained.
 
-The importer also now uses the corrected remote-byte SHA-256 for `docs/PROJECT_CONTINUITY.md` (`5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6`) when patching source pins. The workflow's Number Registry command and D1 design-pin correction use the same verified SHA-256 and the verified Git blob SHA-1 `abbc4909feacba26055d0c6db703d0ec5b963ea5`.
+The importer also now uses the corrected remote-byte SHA-256 for `docs/PROJECT_CONTINUITY.md` (`b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4`) when patching source pins. The workflow's Number Registry command and D1 design-pin correction use the same verified SHA-256 and the verified Git blob SHA-1 `abbc4909feacba26055d0c6db703d0ec5b963ea5`.
 
 Latest importer:
 - Remote SHA-256: `9985aedb3e5dd1af4ac0eae6c35a779fac34ba04d3c8a2c293224d123ce5dde2`
@@ -217,7 +217,7 @@ Both updates are source/workflow preparation only. Neither importer nor workflow
 - قائمة Releases أعادت صفر عناصر.
 
 ### 7.2 تصحيح SHA-256 لملف الاستمرارية
-أُعيد جلب docs/PROJECT_CONTINUITY.md من GitHub. البايتات المسترجعة 445,430 بايت؛ SHA-256 المحسوبة منها 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6، وGit blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5. القيمة السابقة 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6 كانت خطأ حسابياً في سجل/أداة سابقة؛ تم تصحيح سجل D0 وأداة الاستيراد وسير التحقق أدناه.
+أُعيد جلب docs/PROJECT_CONTINUITY.md من GitHub. البايتات المسترجعة 445,430 بايت؛ SHA-256 المحسوبة منها b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4، وGit blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5. القيمة السابقة b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4 كانت خطأ حسابياً في سجل/أداة سابقة؛ تم تصحيح سجل D0 وأداة الاستيراد وسير التحقق أدناه.
 
 ### 7.3 إصلاح منع تكرار خطأ continuity pin
 - scripts/import_stage_d_sources.py لم يعد يثبت SHA-256 أو Git blob SHA-1 لملف الاستمرارية كقيم ثابتة؛ يحسبهما من بايتات الملف الحي داخل clone، ثم يحدّث pins داخل ملفات Python المستوردة.
@@ -249,16 +249,21 @@ Both updates are source/workflow preparation only. Neither importer nor workflow
 |---|---|---|---|---|
 | scripts/import_stage_d_sources.py | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/scripts/import_stage_d_sources.py | 526192c3b96dfd531125b39a87100d392847f1eee19a9b6aff97d271b333261e | 88f17791b992fe7e7b948b19d379049933b29b6e | 2397376005523096c162d96325e04f6f5c40f114 |
 | .github/workflows/stage-d-d1-d2-validation.yml | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/.github/workflows/stage-d-d1-d2-validation.yml | 43faea5b3c0ac89fa178f58da188261a4abed5e2e18e96074de310c129ca4c59 | 923b6b17cee8f5419d25a6b5c86c508c4bae14a1 | 9d7a96d969b15d3febf0d33a128542c6b18a16e2 |
-| docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | 7e7413b0d0a182da40081938a5927ddf9e5638df75ab30b94f26b82eb9d8114e | 61c494b7b0e5f4e718eaabcd1bb86e5b27e1e81c | 3b750024b75c60415ad80e877e6bf49c0e8a103e |
+| docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md | 4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d | 2b008cb1bf71cfce6bd27172c6673e8ac44d0562 | 89e66beca2b5320c9b5c383fd4c8585fa3be04b9 |
 
 التحقق الساكن بعد التصحيح أكد أن importer يستخدم bytes([0]) في Git blob preamble، وأن Workflow يحسب SHA-256 بواسطة sha256sum وGit blob بواسطة git hash-object. لم يُشغّل importer أو Workflow، لذلك هذا يثبت نشر أداة النقل وصحة قيم الـreadback فقط، ولا يثبت D1/D2.
 
 ### 7.8 ثلاثية النسخة المصححة من Project Continuity
 
 - URL: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/PROJECT_CONTINUITY.md
-- Remote SHA-256: 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6
+- Remote SHA-256: b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4
 - Git blob SHA-1: abbc4909feacba26055d0c6db703d0ec5b963ea5
 - Containing commit: 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f
 - Size: 445,430 bytes.
 
 The D0 closure and D0 remote evidence ledger tables above have been refreshed to the new continuity version. D0's input scope and limitations are unchanged. The importer/workflow digest calculation is dynamic; the source bundle will be pinned to the corrected live continuity bytes during the one-time import.
+
+
+### 7.9 Final SHA-256 verification correction
+
+The intermediate continuity digest 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6 is superseded. The current GitHub-fetched continuity file is 445,430 bytes; its verified SHA-256 is b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4, Git blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5, containing commit 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f. The SHA-256 implementation used for the final readback matched both the abc and million-a standard vectors. D0 closure and ledger entries above now point to their latest corrected versions.
