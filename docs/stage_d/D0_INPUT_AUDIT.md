@@ -298,3 +298,66 @@ Run lineage from GitHub artifact metadata:
 **حكم D0 بعد إعادة التحقق:** `D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`. هوية المدخلات وبصمات الأرشيفات وسلامة ZIP وفصل الأفواج وFull Logging للـ105 مفاتيح مثبتة. يمكن وصف البيانات المتاحة بدقة وإنتاج مخرجات مجمعة/تمثيلية فقط. تبقى قراءة Parquet schema/row counts، وسجلات 48K التفصيلية، وحقول الميزانية الخمسة موانع لأي مخرج يدّعي تغطية تفصيلية أو محاسبية شاملة.
 
 لا D1 في هذه المهمة؛ لا Builder execution، لا Excel/DOCX generation، لا tests/workflow dispatch، لا Simulation/Trial/Monte Carlo، لا N=4800، ولا تعديل لـmain أو artifacts تاريخية.
+
+
+## 12. Live artifact re-download and D0 revalidation — 2026-10-31
+
+**Observed branch HEAD before this revalidation:** `f011f633c89707988af0c4989db033823b02f3f3`.  
+**Live main HEAD:** `c6e54349a5e94f65d5aa9f83141f225d777bb474`.  
+**D0 branch Actions runs:** 0. **D0 branch PRs:** 0. **Repository Releases:** 0.  
+No D0 workflow, D1 workflow, Trial, Simulation, Monte Carlo, or N=4800 was dispatched.
+
+### 12.1 Fresh GitHub artifact download — byte-level result
+
+The three immutable artifact ZIPs were downloaded again using their GitHub Actions artifact IDs. SHA-256 was recomputed over the downloaded bytes in the execution runtime; sizes, ZIP CRC, duplicate names, unsafe paths, and symlink members were independently checked.
+
+| Input | Artifact / Run | Producing run SHA | Bytes | Recomputed SHA-256 | ZIP members | CRC | Duplicate names | Unsafe paths | Symlinks |
+|---|---:|---|---:|---|---:|---|---:|---:|---:|
+| S6 N=2400 aggregate | 12852969854 / 40773412377 | `4f2f2cc16d0cb5125262088704febccbae6f50ed` | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` | 7 | PASS | 0 | 0 | 0 |
+| S6 representative Full Logging | 12998778418 / 41098699740 | `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70` | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` | 1,578 | PASS | 0 | 0 | 0 |
+| C100 deterministic reuse | 12630457193 / 40263424595 | `24050f15bc7eb3097e20f76785a45c5d177643dd` | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` | 9 | PASS | 0 | 0 | 0 |
+
+All three actual sizes and SHA-256 values match the pinned values. No mismatch investigation was triggered. The prior ledger entries are retained; this is an additional fresh download/recheck, not a replacement of the old evidence.
+
+GitHub artifact URLs:
+- [Aggregate artifact](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40773412377/artifacts/12852969854)
+- [Full Logging artifact](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740/artifacts/12998778418)
+- [C100 artifact](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40263424595/artifacts/12630457193)
+
+### 12.2 Producing runs and Jobs
+
+| Run | Branch | Tested SHA | Run / Job | Result |
+|---|---|---|---:|---|
+| 40773412377 | `tmp/s6-aggregate-contract-fix-20261027` | `4f2f2cc16d0cb5125262088704febccbae6f50ed` | Job 123116321625 | completed / success |
+| 41098699740 | `tmp/cp-v240-stage-c-rep-full-logging-20261030` | `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70` | Job 124211088430 | completed / success |
+| 40263424595 | `tmp/s4-c100-golden-v23-20261026` | `24050f15bc7eb3097e20f76785a45c5d177643dd` | Job 121380485436 | completed / success |
+
+Run success confirms the recorded workflow execution only; artifact byte identity is independently established above. The three Runs are historical producers on their own branches and do not constitute Stage D exact-head CI.
+
+### 12.3 Re-read identities and role counts from downloaded artifact members
+
+- S6: `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, `cohort_id=s6-v23-da1a9ea9`, `MASTER_SEED=20270101`, aggregate checkpoint N=2400.
+- C100: `SOURCE_SHA=965281d52441cd0d4b744e211c9f68ee4cdc3753`, `cohort_id=c100-v23-s4-20261026-965281d5`, `CROSS_COHORT_DETERMINISTIC_REUSE`, `REUSED_READ_ONLY`, `rerun=false`, five scenarios × 300 trials, `n_unique_paths=1`.
+- Stage 12/13 remains a separate historical lineage: `SOURCE_SHA=f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`; it is not S6 or C100.
+- Full Logging selection metadata re-read from the archive confirms 125 role assignments, 105 unique `(scenario_id, trial_id)` keys, 20 duplicate role assignments, and exact separation of 100 S6 keys + 5 C100 keys. The 5 C100 keys remain in their own cohort/source namespace.
+- The root Full Logging manifest reports 105 completed representative keys and 0 failed keys. This is representative coverage only, not full-population detailed logging.
+
+### 12.4 Gate status and accounting boundary
+
+- Aggregate Gate A field: `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`. The project continuity record separately retains the scoped financial fingerprint result `PASS_SCOPED`; that is not Gate A production acceptance. Production Gate A remains `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B at N=2400: `FAIL_SCOPED`, 10 PASS / 10 FAIL. Earlier checkpoints in the aggregate: N=300 0/20, N=600 0/20, N=1200 10/20.
+- Stability: `NOT_CONVERGED`, successful transitions 0/60; convergence authorization false.
+- N=4800: `NOT_EXECUTED` and not authorized by the governing decision.
+- Five missing historical 48K accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. No field was filled, backfilled, or inferred.
+
+### 12.5 Parquet inspection capability
+
+The downloaded aggregate contains `daily_distribution.parquet` and `trials_summary.parquet`; their archive member sizes and SHA-256 values match the aggregate's own `manifest.json`. However, this execution runtime has no installed `pyarrow`, `fastparquet`, or `duckdb` reader. Installing PyArrow was attempted and blocked because package-index DNS/network access is unavailable. Therefore Parquet schema and row counts were **not** read in this revalidation. ZIP CRC verifies archive/member decompression integrity only; it does not validate Parquet values, schema, or row count. Those Parquet-level properties remain `MISSING_EVIDENCE` here and must not be inferred from ZIP CRC or file hashes.
+
+### 12.6 Reference authority
+
+The live owner decision [D-2026-10-30-REFERENCE-V2.4.0](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md) remains `APPROVED_BY_OWNER` and declares v2.4.0 SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b` as the current governing reference. It explicitly retains v2.3 SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f` as the historical S6 execution reference. These roles are separate. Stage 12/13 remains on its own historical source lineage. The full canonical v2.3 text path is not published at the expected GitHub archive path; this revalidation confirms the owner's hash/role declaration, not a fresh remote-byte hash of that historical text.
+
+### 12.7 D0 conclusion
+
+`D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` remains justified for pinned-input identity, fresh artifact ZIP integrity/path safety, S6/C100 cohort separation, representative role/key counts, and recorded Gate/financial limitations. This does not certify Parquet schema/row values, historical 48K detailed accounting, production Gate A, Gate B pass, convergence, N=4800, or final acceptance. No D1 work was started.
