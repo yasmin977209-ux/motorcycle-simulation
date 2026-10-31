@@ -333,7 +333,7 @@ def main() -> int:
                                   'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
                                   'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
-    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
+    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
     all_paths = IMPORT_PATHS | set(governance_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
