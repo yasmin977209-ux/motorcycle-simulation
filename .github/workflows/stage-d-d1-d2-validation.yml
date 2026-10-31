@@ -137,7 +137,9 @@ jobs:
                  'results/D1_D2_BUILD_SUMMARY.json','results/D0_REMOTE_ARTIFACT_RECHECK.json',
                  'docs/stage_d/D1_BUILDER_DESIGN.md','docs/stage_d/D1_BUILDER_AUDIT.json',
                  'docs/stage_d/D1_REPOSITORY_CLOSURE.md','docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md',
-                 'docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json','docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md',
+                 'docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json','docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md','docs/stage_d/D0_INPUT_AUDIT.md','docs/stage_d/D0_INPUT_AUDIT.json',
+                 'docs/PROJECT_CONTINUITY.md','docs/STATE_SHA_SEMANTICS.md',
+                 'docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md','docs/governance/DECISIONS_LOG.md',
                  'docs/stage_d/D0_REPOSITORY_CLOSURE.md','docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-10-31.md','docs/stage_d/STAGE_D_SESSION_STATUS_2026-10-31.md']
           manifest_path=pathlib.Path('docs/governance/ARCHIVE_IMPORT_MANIFEST.json')
           if manifest_path.exists():
