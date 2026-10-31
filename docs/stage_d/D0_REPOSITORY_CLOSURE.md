@@ -1,27 +1,30 @@
 # D0 Repository Closure — Stage D / S6
 
-**Status:** `D0_REPOSITORY_CLOSED / PASS_SCOPED_WITH_LIMITATIONS`
-**Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`
-**Repository:** `yasmin977209-ux/motorcycle-simulation`
-**Branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`
-**Closure date:** 2026-10-31
+**Status:** `D0_REPOSITORY_CLOSED / PASS_SCOPED_WITH_LIMITATIONS`  
+**Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`  
+**Live pre-update HEAD:** `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9`  
+**main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474`
 
-## Repository evidence
-- The D0 input audit is committed on this branch:
-  - `docs/stage_d/D0_INPUT_AUDIT.md`
-  - `docs/stage_d/D0_INPUT_AUDIT.json`
-- Live GitHub read confirmed the branch and the committed D0 audit files. The D0 audit commit is `ed9aaeffecd1360b38a9ec20ccc51c96c8db3381`; it records the audit's pre-audit HEAD `67763f3156c00db5beaa568d8b78a055c5a8f968`.
-- D0 Markdown blob SHA-1 at recheck: `80a14dab151b7b5be10f23c5ff2677391c5a6dbf`.
-- D0 JSON blob SHA-1 at recheck: `4dede5b92b333cd9e0df725a2eb69dfbfa497e04`.
-- Main remains governed separately; no write to `main`, PR, merge, release, or workflow was performed.
+## Current live evidence
+- D0 Markdown blob SHA-1: `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`; content SHA-256: `94fce3d6c4a4713ed393370aa66ad40778b7c62129ebb7c8de56a67467b36173`.
+- D0 JSON blob SHA-1: `02e250c9b3ac493e7ff9543c2c8ebe185a319801`; content SHA-256: `48c09485d9562188368d16f2f457a0d0908de5655fcde84dcf154f61d8ba44e2`.
+- Continuity blob SHA-1: `3f05f706cca1d14ae9326cf5519f4271b050e5e3`; content SHA-256: `bf6f157c26a2072ccb5c5df4b73e1e03332e4c51439772a7c53f00a9e7747caf`.
 
-## Scope and limitations retained
-- The three immutable inputs and their identities, sizes and SHA-256 values remain exactly as recorded in `D0_INPUT_AUDIT.json`.
-- D0's archive byte-level checks and Stage C schema/count findings remain labelled as prior local/audit evidence, not newly recomputed by this GitHub-only closure.
-- S6 and C100 identities remain separate; Stage 12/13 remains historical lineage only.
-- Detailed records remain limited to 105 representative unique keys; full historical 48K ledgers and the five missing accounting fields remain `MISSING_EVIDENCE`.
-- `K_SPEC / DOCUMENT_STATUS_CONFLICT`, `K_SPEC / HISTORICAL_REFERENCE_HASH_CONFLICT`, `K_SPEC / TRIAL_MANIFEST_STATUS_CONFLICT`, `K_SPEC / S6-CODE-ID-MAPPING`, and the Stage 9C lineage conflict remain open and preserved.
-- No source artifact was modified. No simulation, trial, Monte Carlo, or N=4800 was run.
+## Immutable D0 inputs rechecked locally
 
-## Disposition
-D0 is closed **at repository documentation level**: its audit report and machine-readable record are committed and readable on the authorized Stage D branch. This is not a production-data acceptance or final project acceptance.
+| Input | Artifact | Run | Bytes | SHA-256 |
+|---|---:|---:|---:|---|
+| S6 N=2400 aggregate | 12852969854 | 40773412377 | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` |
+| Representative Full Logging | 12998778418 | 41098699740 | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` |
+| C100 deterministic reuse | 12630457193 | 40263424595 | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` |
+
+All three local byte hashes and sizes match; ZIP CRC, duplicate member/path and traversal checks pass.
+
+## Limitations preserved
+- Full Logging covers 105 representative keys only, not all 48,000 historical trials.
+- Five historical accounting fields and the full historical 48K daily ledger remain `MISSING_EVIDENCE`.
+- Parquet schemas/rows were not parsed in the current runtime.
+- SHA/fingerprint checks for 105 manifests match, but independent expected byte sizes are absent; all 105 normalized statuses remain `NOT_VERIFIED`; original pending states remain unchanged.
+- Preserve all open `K_SPEC` conflicts, including document status, historical reference hash, trial manifest status and S6 code mapping.
+
+**Disposition:** D0 is closed at the pinned-input audit and repository-documentation level only. It is not full production accounting acceptance or final project acceptance. No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge or Release was performed.
