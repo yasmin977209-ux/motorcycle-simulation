@@ -1,4 +1,4 @@
-import os, zipfile, hashlib
+import os, zipfile, hashlib, stat, warnings, io
 import pytest
 from scripts.s6_artifact_reader import ArtifactPin, Archive, ArtifactValidationError, S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT, MASTER_SEED
 from scripts.s6_deliverables_model import to_jsonable, ModelValidationError, SourceRef, sourced
@@ -64,3 +64,63 @@ def test_48k_scope_not_claimed(model):
 
 def test_no_c100_relabeling(model):
     assert all(k["source_sha"]==C100_SOURCE for k in model.unique_keys if k["cohort_id"]==C100_COHORT)
+
+
+def _make_archive(tmp_path, members):
+    p=tmp_path/"safety.zip"
+    with zipfile.ZipFile(p,"w") as z:
+        for info, data in members:
+            z.writestr(info, data)
+    raw=p.read_bytes()
+    pin=ArtifactPin(9,9,len(raw),hashlib.sha256(raw).hexdigest(),"safety.zip")
+    return Archive(str(p),pin)
+
+def test_zip_duplicate_member_rejected(tmp_path):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        a=_make_archive(tmp_path,[( "same.json",'{"a":1}'),("same.json",'{"a":2}')])
+    with pytest.raises(ArtifactValidationError,match="DUPLICATE_ZIP_MEMBER"):
+        a.open()
+
+@pytest.mark.parametrize("member",["../escape.json","/absolute.json","C:/drive.json","a//b.json","a/./b.json"])
+def test_zip_unsafe_paths_rejected(tmp_path,member):
+    a=_make_archive(tmp_path,[(member,"x")])
+    with pytest.raises(ArtifactValidationError,match="UNSAFE_ZIP_PATH"):
+        a.open()
+
+def test_zip_symlink_rejected(tmp_path):
+    link=zipfile.ZipInfo("link")
+    link.create_system=3
+    link.external_attr=(stat.S_IFLNK|0o777)<<16
+    a=_make_archive(tmp_path,[(link,"target")])
+    with pytest.raises(ArtifactValidationError,match="ZIP_SYMLINK"):
+        a.open()
+
+def test_losscase_and_maxcase_are_global_argmin_argmax_read_only(model):
+    import pyarrow.parquet as pq
+    agg=zipfile.ZipFile(P["aggregate"])
+    try:
+        table=pq.read_table(io.BytesIO(agg.read("trials_summary.parquet")))
+    finally:
+        agg.close()
+    cols={name.lower():name for name in table.column_names}
+    scenario_col=cols.get("scenario_id")
+    trial_col=cols.get("trial_id")
+    equity_col=cols.get("final_net_project_equity")
+    assert scenario_col and trial_col and equity_col, table.column_names
+    extrema={}
+    for row in table.select([scenario_col,trial_col,equity_col]).to_pylist():
+        value=row[equity_col]
+        assert not isinstance(value,float), "FLOAT_IN_TRIAL_SUMMARY"
+        extrema.setdefault(row[scenario_col],[]).append((int(row[trial_col]),int(value)))
+    frozen={}
+    for assignment in model.representative_mapping:
+        if assignment["cohort_id"] != S6_COHORT:
+            continue
+        frozen.setdefault(assignment["scenario_id"],{})[assignment["role"]]=assignment
+    assert len(frozen)==20
+    assert set(frozen)==set(extrema)
+    for scenario, roles in frozen.items():
+        values=[value for _,value in extrema[scenario]]
+        assert roles["LossCase"]["final_net_project_equity"]==min(values), scenario
+        assert roles["MaxCase"]["final_net_project_equity"]==max(values), scenario
