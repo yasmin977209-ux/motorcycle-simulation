@@ -6,9 +6,9 @@
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474`
 
 ## Current live evidence
-- D0 Markdown: [remote file](D0_INPUT_AUDIT.md); Git blob SHA-1 `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`; remote-byte SHA-256 `dccb66a3879139867c69390323e6fec14fb0457176342d78b3e3e59e2f906190`; commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
-- D0 JSON: [remote file](D0_INPUT_AUDIT.json); Git blob SHA-1 `02e250c9b3ac493e7ff9543c2c8ebe185a319801`; remote-byte SHA-256 `93f1bbc6d3d352f057d68c8f6d2beb9fb2a61737dc9a49df415a38c06d3f68eb`; commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
-- Continuity: [remote file](../PROJECT_CONTINUITY.md); Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`; remote-byte SHA-256 `19d0ff5fac286cece2dcb10d9c1c6c3468be5aa8e0a2d700e667659ff1a6b07a`; commit `126451e5466e83363bbece84992279d660c1bd0b`.
+- D0 Markdown: [remote file](D0_INPUT_AUDIT.md); Git blob SHA-1 `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`; remote-byte SHA-256 `1064e81dd98ddaefd443389a5bbc6d53fc1052903328d533839da84a16f705a0`; commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
+- D0 JSON: [remote file](D0_INPUT_AUDIT.json); Git blob SHA-1 `02e250c9b3ac493e7ff9543c2c8ebe185a319801`; remote-byte SHA-256 `abe8482b44b78de950c33c9b1b38480e90e08b2563f184acf70695036b17aa80`; commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
+- Continuity: [remote file](../PROJECT_CONTINUITY.md); Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`; remote-byte SHA-256 `7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74`; commit `126451e5466e83363bbece84992279d660c1bd0b`.
 
 ## Immutable D0 inputs rechecked locally
 
