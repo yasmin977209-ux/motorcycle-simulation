@@ -10,6 +10,8 @@ def validate(paths: dict[str,str], output: str) -> dict:
         selection=full.read_json("stagec-output/representative_selection_map.json")
         root=full.read_json("stagec-output/representative_full_logging_manifest.json")
         assignments=selection["assignments"]
+        s6_assignments=[a for a in assignments if a["cohort_id"]=="s6-v23-da1a9ea9"]
+        c100_assignment_count=sum(1 for a in assignments if a["cohort_id"]=="c100-v23-s4-20261026-965281d5")
         parquet_status="NOT_VERIFIED"; detail="PARQUET_READER_UNAVAILABLE_OR_SCHEMA_UNCHECKED"
         try:
             table=agg.read_parquet("trials_summary.parquet")
@@ -18,14 +20,14 @@ def validate(paths: dict[str,str], output: str) -> dict:
             if not all((scenario,trial,equity)): detail="REQUIRED_COLUMNS_NOT_FOUND:"+",".join(table.column_names)
             else:
                 by={(r[scenario],r[trial]):r[equity] for r in table.select([scenario,trial,equity]).to_pylist()}
-                mismatches=[(a["scenario_id"],a["trial_id"]) for a in assignments
+                mismatches=[(a["scenario_id"],a["trial_id"]) for a in s6_assignments
                   if by.get((a["scenario_id"],a["trial_id"])) is None or int(by[(a["scenario_id"],a["trial_id"])])!=int(a["final_net_project_equity"])]
                 parquet_status="PASS_SCOPED" if not mismatches else "FAIL_SCOPED"
-                detail={"rows_checked":len(assignments),"mismatches":mismatches}
+                detail={"rows_checked":len(s6_assignments),"mismatches":mismatches}
         except MissingEvidenceError: pass
         result={"status":"PASS_SCOPED_FROZEN_MAPPING_INTEGRITY","role_assignments":len(assignments),
           "unique_keys":root.get("unique_key_count"),"full_logging_completed":root.get("full_logging_keys_completed"),
-          "full_logging_failed":root.get("full_logging_keys_failed"),"parquet_value_revalidation":parquet_status,
+          "full_logging_failed":root.get("full_logging_keys_failed"),"s6_role_assignments":len(s6_assignments),"c100_role_assignments":c100_assignment_count,"c100_golden_revalidation":"NOT_RUN_SEPARATE_GOLDEN_REQUIRED","parquet_value_revalidation":parquet_status,
           "parquet_detail":detail,"selection_recomputed":False,"trial_execution":"NOT_RUN"}
         if len(assignments)!=125 or root.get("role_assignment_count")!=125: raise ValueError("ROLE_ASSIGNMENT_COUNT_MISMATCH")
         if root.get("unique_key_count")!=105 or root.get("full_logging_keys_completed")!=105: raise ValueError("UNIQUE_KEY_COUNT_MISMATCH")
