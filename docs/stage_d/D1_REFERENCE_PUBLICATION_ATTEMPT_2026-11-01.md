@@ -172,3 +172,24 @@ A post-publication remote-readback digest pass was repeated using a SHA-256 impl
 - Size: 9,474 bytes
 
 The earlier in-session report digest `2d37bda25f77ad042f8dc772927b53d79ab8b75272e4940dc488b76a032f829e` is superseded and must not be used. The report content itself is unchanged by this correction note until this append is committed; after commit, its SHA-256 and size will necessarily be recalculated again and recorded in the final readback ledger.
+
+
+## Corrective re-attempt — Git Data API and staged payload (2026-11-01)
+
+The earlier report's statement that no usable GitHub write API was available was too broad. The installed GitHub connector exposes `create_blob`, `create_tree`, `create_commit`, `update_ref`, and Contents API `create_file`. A real Contents API write successfully created a temporary file at `tmp/reference-payload/part-00.txt` (commit `46fda6249fb52bf161eb6004b6c1ae5559988c8f`, blob `d39fc14319119023f08dd2a8a2d6435baf437836`), containing only the first 10,000 characters of a compressed LZMA/base64 transfer package. This fragment was not a reference and was immediately replaced with an explicit warning; it must not be consumed as a payload. The neutralizing update committed as `85b07c2fbafbce10026be8351148446d3702821b`, blob `6be0ca385846fee473dbc1f85b9996d06c603048`.
+
+The complete deterministic transfer package was prepared locally from the three exact ZIP members and independently checked before compression:
+- v2.4.0: 401,397 bytes, SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- v2.3: 381,559 bytes, SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
+- v2.3.1: 394,983 bytes, SHA-256 `724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0`.
+The packed LZMA payload is 91,012 bytes / 121,352 base64 characters; its compressed-byte SHA-256 is `8c980c32bdc6024414ea3e203aef22b9d978f3079f30fc7183835be851c12e44`. Only the 10,000-character fragment was staged; the complete payload was not transferred, no decoder workflow was activated, and no reference file was committed. The previous absolute `CANNOT_PUBLISH` wording is superseded by the more precise state: `BLOCKED / PARTIAL_TRANSFER_ONLY`. Local source integrity is VERIFIED_LOCAL; remote reference evidence remains MISSING_EVIDENCE.
+
+The local container's outbound GitHub network remains unavailable. Direct probe: `curl: (6) Could not resolve host: api.github.com`; forced-IP probes returned `curl: (7) Could not connect to server`. The GitHub connector can write explicit text strings, but there is no direct file-stream/file-path bridge from the local archive into that connector. The temporary fragment is neutralized but remains in Git history; no historical commit was rewritten.
+
+## Exact-head validation refresh
+
+After the prior report commits, the branch HEAD was `76834d581c07d1bcfc5399044c759be13bdb2b63`. Workflow Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41251114795) tested that exact SHA and concluded `success`. Job `d1-source` completed all five relevant steps successfully: clone and exact-head validation, download and cryptographic verification of all three pinned historical artifacts, compileall + unit/real artifact integration tests, and final exact live branch-head assertion. Logs show all three artifact size/SHA pins matched and `26 passed in 3.08s`, with no skips. This validates code/artifact integration at that SHA, not reference publication. Subsequent documentation commits require a fresh run on the new exact final HEAD.
+
+Live repository state at this recheck: main `c6e54349a5e94f65d5aa9f83141f225d777bb474`; branch before the temporary transfer cleanup `76834d581c07d1bcfc5399044c759be13bdb2b63`. No D1 PR, no Releases. Existing unrelated open PRs were left untouched.
+
+Disposition: D1 remains `BLOCKED` solely on canonical reference publication and remote triple verification; do not start D2, merge, release, or run Trials.
