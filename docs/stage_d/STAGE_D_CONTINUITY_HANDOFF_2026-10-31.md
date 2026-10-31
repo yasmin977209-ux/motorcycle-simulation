@@ -27,8 +27,8 @@ The three pinned artifacts were downloaded again from GitHub Actions and rehashe
 | S6 Full Logging | 12998778418 / 41098699740 | `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70` | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` |
 | C100 reuse | 12630457193 / 40263424595 | `24050f15bc7eb3097e20f76785a45c5d177643dd` | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` |
 
-- [D0 Remote Evidence Ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) — remote content SHA-256 `7e7413b0d0a182da40081938a5927ddf9e5638df75ab30b94f26b82eb9d8114e`, Git blob SHA-1 `61c494b7b0e5f4e718eaabcd1bb86e5b27e1e81c`, containing commit `3b750024b75c60415ad80e877e6bf49c0e8a103e`.
-- [D0 Repository Closure](D0_REPOSITORY_CLOSURE.md) — remote content SHA-256 `a3396f87529b608d2911024cc4f1aa1582fc7a20678d0b403ab8907e2596a99c`, Git blob SHA-1 `3a6ce3170810d2c73e506f51fea2e1f13d6a8d18`, containing commit `7935b0366040a4272173931aac8bf982a9feeaeb`.
+- [D0 Remote Evidence Ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) — remote content SHA-256 `4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d`, Git blob SHA-1 `2b008cb1bf71cfce6bd27172c6673e8ac44d0562`, containing commit `89e66beca2b5320c9b5c383fd4c8585fa3be04b9`.
+- [D0 Repository Closure](D0_REPOSITORY_CLOSURE.md) — remote content SHA-256 `e9f6a5d49460ab55f15add7ea7ce31244494639712d6bd93801610d847dfb1c5`, Git blob SHA-1 `783170d66f387b946a5b495a836d976377bbb8a1`, containing commit `66ca5c7e5310a0bf9ba37564ce6e94851c790b37`.
 - [D0 Input Audit Markdown](D0_INPUT_AUDIT.md) — remote SHA-256 `1064e81dd98ddaefd443389a5bbc6d53fc1052903328d533839da84a16f705a0`, blob `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`, containing commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
 - [D0 Input Audit JSON](D0_INPUT_AUDIT.json) — remote SHA-256 `abe8482b44b78de950c33c9b1b38480e90e08b2563f184acf70695036b17aa80`, blob `02e250c9b3ac493e7ff9543c2c8ebe185a319801`, containing commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
 
@@ -72,7 +72,7 @@ Local validation performed:
 - No Trial, Simulation, Monte Carlo or N=4800 was run.
 
 The local Builder and test source were patched to use the current live continuity-document hashes:
-- continuity SHA-256 `5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6`
+- continuity SHA-256 `b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4`
 - Git blob SHA-1 `abbc4909feacba26055d0c6db703d0ec5b963ea5`
 
 The bundled D1/D2 docs and pre-generated JSON outputs contain earlier source pins and must be regenerated or corrected; do not publish them unchanged.
@@ -173,7 +173,12 @@ This is a one-time import only. Future chats should use GitHub and the pinned Ac
 
 ## Corrected continuity and D0 remote triples — 2026-10-31
 
-- Current docs/PROJECT_CONTINUITY.md: SHA-256 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6; Git blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5; containing commit 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f; 445,430 bytes. Its authority block now correctly names v2.4.0 225de... as current governing reference and ee277... as Stage 12/13 historical only.
-- Current D0 Repository Closure: SHA-256 a3396f87529b608d2911024cc4f1aa1582fc7a20678d0b403ab8907e2596a99c; Git blob SHA-1 3a6ce3170810d2c73e506f51fea2e1f13d6a8d18; containing commit 7935b0366040a4272173931aac8bf982a9feeaeb.
-- Current D0 Remote Evidence Ledger: SHA-256 7e7413b0d0a182da40081938a5927ddf9e5638df75ab30b94f26b82eb9d8114e; Git blob SHA-1 61c494b7b0e5f4e718eaabcd1bb86e5b27e1e81c; containing commit 3b750024b75c60415ad80e877e6bf49c0e8a103e.
+- Current docs/PROJECT_CONTINUITY.md: SHA-256 b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4; Git blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5; containing commit 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f; 445,430 bytes. Its authority block now correctly names v2.4.0 225de... as current governing reference and ee277... as Stage 12/13 historical only.
+- Current D0 Repository Closure: SHA-256 e9f6a5d49460ab55f15add7ea7ce31244494639712d6bd93801610d847dfb1c5; Git blob SHA-1 783170d66f387b946a5b495a836d976377bbb8a1; containing commit 66ca5c7e5310a0bf9ba37564ce6e94851c790b37.
+- Current D0 Remote Evidence Ledger: SHA-256 4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d; Git blob SHA-1 2b008cb1bf71cfce6bd27172c6673e8ac44d0562; containing commit 89e66beca2b5320c9b5c383fd4c8585fa3be04b9.
 - The former continuity digest 745872... and historical-reference mislabel in section 2 are superseded. Importer and workflow now calculate continuity digests dynamically; no fixed digest should be manually copied into a future source build.
+
+
+## Final SHA-256 validation note — 2026-10-31
+
+The intermediate continuity digest 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6 was superseded after the SHA-256 implementation was checked against both the standard abc vector and the 1,000,000-byte a vector. The verified current remote SHA-256 is b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4 for 445,430 bytes. The Git blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5 and containing commit 36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f are unchanged.
