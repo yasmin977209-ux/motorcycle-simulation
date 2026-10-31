@@ -101,6 +101,8 @@ def write_text_member(root: Path, prefix: str, name: str, raw: bytes, source_arc
     destination = PurePosixPath(prefix) / rel
     target = root.joinpath(*destination.parts)
     target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists() and target.read_bytes() != raw:
+        raise SystemExit(f'GOVERNANCE_FILE_COLLISION:{destination.as_posix()}')
     target.write_bytes(raw)
     files.append({
         "repository_path": destination.as_posix(),
@@ -233,6 +235,8 @@ def import_governance_archives(root: Path, governing_zip: Path, historical_zip: 
                 raise SystemExit(f"CANONICAL_REFERENCE_HASH_MISMATCH:{rel}:{digest(raw)}")
             target = root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_bytes() != raw:
+                raise SystemExit(f'CANONICAL_FILE_COLLISION:{rel}')
             target.write_bytes(raw)
             files.append({"repository_path":rel,"source_archive":"governing_reference_zip",
                           "source_member":rel,"source_lineage":lineage,"size_bytes":len(raw),
@@ -319,12 +323,26 @@ def main() -> int:
             target.write_bytes(raw)
 
     governance_paths = import_governance_archives(root, archives[1], archives[2])
+    manifest_path = root / 'docs/governance/ARCHIVE_IMPORT_MANIFEST.json'
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    manifest['archive_inputs'].append({'label':'d1d2_source_bundle','size_bytes':archives[0].stat().st_size,'sha256':digest_source})
+    for imported_path in sorted(IMPORT_PATHS):
+        raw = (root / imported_path).read_bytes()
+        manifest['files'].append({'repository_path':imported_path,'source_archive':'d1d2_source_bundle',
+                                  'source_member':imported_path,'source_lineage':'S6_D1_D2_IMPLEMENTATION',
+                                  'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
+                                  'remote_readback_status':'PENDING'})
+    manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
+    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
     all_paths = IMPORT_PATHS | set(governance_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
     changed = set(run("git", "diff", "--cached", "--name-only", cwd=root).splitlines())
-    if changed != all_paths:
-        raise SystemExit(f"STAGED_PATH_SET_MISMATCH:{sorted(changed^all_paths)}")
+    if not set(changed).issubset(all_paths):
+        raise SystemExit(f"UNEXPECTED_STAGED_PATHS:{sorted(set(changed)-all_paths)}")
+    if not changed:
+        print(json.dumps({'status':'NO_CHANGES_ALREADY_IMPORTED','branch':BRANCH,'files_expected':len(all_paths)},indent=2))
+        return 0
 
     name = subprocess.run(["git", "config", "user.name"], cwd=root, text=True, stdout=subprocess.PIPE).stdout.strip()
     email = subprocess.run(["git", "config", "user.email"], cwd=root, text=True, stdout=subprocess.PIPE).stdout.strip()
@@ -347,7 +365,8 @@ def main() -> int:
         "source_bundle_sha256": digest_source,
         "governing_reference_zip_sha256": digest(archives[1].read_bytes()),
         "historical_source_pack_zip_sha256": digest(archives[2].read_bytes()),
-        "files_committed": len(all_paths),
+        "files_committed": len(changed),
+        "governance_text_files": len(json.loads((root / 'docs/governance/ARCHIVE_IMPORT_MANIFEST.json').read_text(encoding='utf-8')).get('files',[])),
         "canonical_governing_reference": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
         "workflow": f"https://github.com/{REPOSITORY}/actions",
         "main_modified": False,
