@@ -139,7 +139,7 @@ A SHA-256 implementation was independently checked against the standard SHA-256(
 | [D0 remote evidence ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) | `4ba3a30daeedaa200a6e78b96e4787ee69d23a34ef5f3325602563a34008ad3d` | `2b008cb1bf71cfce6bd27172c6673e8ac44d0562` | `89e66beca2b5320c9b5c383fd4c8585fa3be04b9` |
 | [D0 input audit Markdown](D0_INPUT_AUDIT.md) | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `cd97dca1f982f9d9220bd335b478c085ec85c679` |
 | [D0 input audit JSON](D0_INPUT_AUDIT.json) | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `d087e4eb951ced0efee4c910b690c712ab26a126` |
-| [Project continuity](../PROJECT_CONTINUITY.md) | `b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4` | `abbc4909feacba26055d0c6db703d0ec5b963ea5` | `126451e5466e83363bbece84992279d660c1bd0b` |
+| [Project continuity](../PROJECT_CONTINUITY.md) | `b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4` | `abbc4909feacba26055d0c6db703d0ec5b963ea5` | `36e186a2f5d2dbf2d67749ed5a75a3912f0b9f5f` |
 | [Owner decision record](../governance/D-2026-10-30-REFERENCE-V2.4.0.md) | `417c8838c4f70d8571938af89f1b34ec7e680dceaae8a594e242d55d1e94778c` | `58f89bc016523f1350345428b4a224ac42a8b130` | `bba6dd275956da60995c4da99398bd992ee5e1c5` |
 | [Source importer](../../scripts/import_stage_d_sources.py) | `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca` | `67f4bb66e7c052992da08e870ec4531760eb7fd2` | `853790f8e4388428137bb017c45bf1e386d12c4c` |
 | [D1-D2 validation workflow](../../.github/workflows/stage-d-d1-d2-validation.yml) | `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59` | `feb14141edb4c0353e4d06a784dcfa2eb210df52` | `31bd70355ac89e36a4ef2e242536618622c4a26b` |
@@ -217,7 +217,7 @@ Both updates are source/workflow preparation only. Neither importer nor workflow
 - قائمة Releases أعادت صفر عناصر.
 
 ### 7.2 تصحيح SHA-256 لملف الاستمرارية
-أُعيد جلب docs/PROJECT_CONTINUITY.md من GitHub. البايتات المسترجعة 445,430 بايت؛ SHA-256 المحسوبة منها b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4، وGit blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5. القيمة السابقة b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4 كانت خطأ حسابياً في سجل/أداة سابقة؛ تم تصحيح سجل D0 وأداة الاستيراد وسير التحقق أدناه.
+أُعيد جلب docs/PROJECT_CONTINUITY.md من GitHub. البايتات المسترجعة 445,430 بايت؛ SHA-256 المحسوبة منها b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4، وGit blob SHA-1 abbc4909feacba26055d0c6db703d0ec5b963ea5. القيمتان السابقتان d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78 و7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74 كانتا قيمتين غير صحيحتين/لنسخ سابقة؛ القيمة النهائية للنسخة الحالية هي b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4، وتم التحقق من تطبيق SHA-256 بمطابقة متجهي abc و1,000,000 حرف a.
 
 ### 7.3 إصلاح منع تكرار خطأ continuity pin
 - scripts/import_stage_d_sources.py لم يعد يثبت SHA-256 أو Git blob SHA-1 لملف الاستمرارية كقيم ثابتة؛ يحسبهما من بايتات الملف الحي داخل clone، ثم يحدّث pins داخل ملفات Python المستوردة.
