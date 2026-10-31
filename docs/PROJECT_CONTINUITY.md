@@ -2590,3 +2590,16 @@ Parquet member hashes/sizes match the aggregate manifest, but no Parquet reader 
 The current governing reference remains owner-approved v2.4.0 SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; historical S6 execution reference remains v2.3 SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`. Stage 12/13 lineage is distinct.
 
 **D0:** `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` within this verified scope only. No production Gate A, full 48K accounting, Parquet schema/value-level validation, Gate B pass, convergence, N=4800, or final acceptance is declared. No D1 work was started.
+
+
+## 2026-11-01 — D1 corrective continuation (append-only)
+
+Live resumption revalidated branch `tmp/d1-rebuild-20261101` at initial HEAD `93da765f287fb28066d9c3eca4cdefdc39658d75`; `main` remained `c6e54349a5e94f65d5aa9f83141f225d777bb474`. The three rebuilt source modules and two test files were retained. The importer was not run because it pins another branch and the 50,734-byte source bundle plus Local Evidence ZIP are absent from this runtime.
+
+The old resolver is restored as raw UTF-8 under `docs/stage_d/archive/pre_import_conflicts/s6_manifest_resolver.py`; the old base64 copy is retained. Exact original commit/blob/size/SHA-256 inventory is in `docs/stage_d/D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md` and the archive README. Historical SHA-256 values were computed from bytes fetched from the original GitHub file refs.
+
+ZIP path validation now rejects normalized collisions, Windows drive paths and empty/dot segments in addition to duplicate entries, traversal and symlinks. New tests cover those cases and frozen S6 LossCase/MaxCase argmin/argmax against the full pinned Parquet trial summary. The workflow now downloads all three original Actions artifacts by immutable artifact ID, verifies their metadata/size/SHA-256, installs pyarrow and runs real integration rather than skipping absent local ZIPs. This is a workflow/test change only; its gate remains pending until a successful run on the exact final HEAD.
+
+The owner decision was read live and still states `APPROVED_BY_OWNER`. The v2.4.0 normative member is verified locally at 401,397 bytes / SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, but the complete canonical file, v2.3 historical file and v2.3.1 quarantine file remain absent from GitHub. The uploaded local archive cannot be streamed into GitHub through the currently available connector; these remain `MISSING_EVIDENCE`, not `VERIFIED_LIVE`. See the corrective addendum for exact archive/member hashes and scope.
+
+D1 remains `BLOCKED`; D2–D6 remain not started. No Trial, simulation, Monte Carlo, N=4800, historical backfill, financial zero-fill, D2 registry, Excel/DOCX, main change, PR, merge or Release occurred. All previous Gate statuses and S6/C100 identities remain unchanged.
