@@ -86,11 +86,11 @@ It also preserves v2.3 as historical and v2.3.1 as quarantined, and imports text
 The importer and workflow are already published individually on the authorized branch:
 
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
-  Remote SHA-256: `ead6045cfaa01d5c11a444131c0b32a6a35bc5817e9ac3f4e0d87c792374b405`; Git blob SHA-1: `93e9a953d87104401fa37153d2e33c1eb84273c6`; containing commit: `2d4328b7c6a7b1a6ba284d1b5a51e96580e9fd00`.
+  Remote SHA-256: `b9c03669e1bc33214c69ff3eacb22a4fb32d908d1780bae8832fddb6456e03b6`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `853790f8e4388428137bb017c45bf1e386d12c4c`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
-  Remote SHA-256: `4359f1358b54e476b4776a1f4fd7c5c9c71d6d99ccddccd2c4770f44aefcb389`; Git blob SHA-1: `f5e4a7d3d7d7d4706ce1b5c6e79b17ad95e27c4d`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
+  Remote SHA-256: `1014df2abffdf5ffa5c7e7761e45f41e80accaee5408dcc111aa7b24589e776f`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
 
-The importer verifies the three already-provided ZIPs by exact SHA-256, extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
+The importer verifies the four already-provided ZIPs by exact SHA-256, extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
 
 **Not yet executed:** importer not run; workflow runs = 0. Therefore D1/D2 remain BLOCKED / REPORTED_ONLY.
 
