@@ -2,7 +2,7 @@
 
 **Repository:** `yasmin977209-ux/motorcycle-simulation`  
 **Authorized working branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`  
-**Branch HEAD before this status-file correction:** `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`  
+**Branch HEAD before this status-file correction:** `f9cbf193d9499d627ea033b04bb02d8fadab5457`  
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474` — unchanged.  
 **Stage D workflow runs at this check:** 0.  
 **PRs / Releases:** none created by this work.  
@@ -86,9 +86,9 @@ It also preserves v2.3 as historical and v2.3.1 as quarantined, and imports text
 The importer and workflow are already published individually on the authorized branch:
 
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
-  Remote SHA-256: `ffc8a7475d5ece9dc76a41554ecf9919416d2e7eb57d397c9ea4920cdafbaeed`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`.
+  Remote SHA-256: `9985aedb3e5dd1af4ac0eae6c35a779fac34ba04d3c8a2c293224d123ce5dde2`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
-  Remote SHA-256: `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `31bd70355ac89e36a4ef2e242536618622c4a26b`.
+  Remote SHA-256: `776ed50863b59435e2a904140b77f2dd16f6267560ed65ca28ceead86f8f6b2c`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `5eb688e4d9a52272f4ce0913a5fd713fd9a1275b`.
 
 The importer verifies four already-provided ZIPs by exact SHA-256:
 - D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
@@ -142,7 +142,7 @@ A SHA-256 implementation was independently checked against the standard SHA-256(
 | [Project continuity](../PROJECT_CONTINUITY.md) | `d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78` | `b956ebee141e3e9d625114973a0693506454b117` | `126451e5466e83363bbece84992279d660c1bd0b` |
 | [Owner decision record](../governance/D-2026-10-30-REFERENCE-V2.4.0.md) | `417c8838c4f70d8571938af89f1b34ec7e680dceaae8a594e242d55d1e94778c` | `58f89bc016523f1350345428b4a224ac42a8b130` | `bba6dd275956da60995c4da99398bd992ee5e1c5` |
 | [Source importer](../../scripts/import_stage_d_sources.py) | `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca` | `67f4bb66e7c052992da08e870ec4531760eb7fd2` | `853790f8e4388428137bb017c45bf1e386d12c4c` |
-| [D1-D2 validation workflow](../../.github/workflows/stage-d-d1-d2-validation.yml) | `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59` | `03e9d43ab7f68829f5752e53bd03c009253e2507` | `31bd70355ac89e36a4ef2e242536618622c4a26b` |
+| [D1-D2 validation workflow](../../.github/workflows/stage-d-d1-d2-validation.yml) | `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59` | `feb14141edb4c0353e4d06a784dcfa2eb210df52` | `31bd70355ac89e36a4ef2e242536618622c4a26b` |
 
 The canonical normative v2.4.0 Markdown is **not yet present** in the live tree. The short owner decision record above is not a substitute for the canonical 401,397-byte reference. The canonical file's expected SHA-256 remains `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, verified against the supplied archive member locally.
 
@@ -183,7 +183,26 @@ The recursive archive inventory across the four local containers found 97 text-m
 Updated importer evidence:
 - [importer](../../scripts/import_stage_d_sources.py)
 - Remote SHA-256: `ffc8a7475d5ece9dc76a41554ecf9919416d2e7eb57d397c9ea4920cdafbaeed`
-- Git blob SHA-1: `c7a8ad254d4ff8b00b227976b09774e7f145cbed`
+- Git blob SHA-1: `6e205ecfd919c91dfba58f00f9f16349a17f02cf`
 - Containing commit: `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`
 
 No Stage D workflow was triggered by this importer-only documentation/code update because the workflow push filter is limited to the eight D1/D2 source/test files. Workflow run count remains zero at the last live check.
+
+
+### Final import safety refinements — 2026-10-31
+
+The importer now also preserves any pre-existing branch version of an S6 source module when its bytes differ from the supplied source bundle. Such versions are copied to `docs/stage_d/archive/pre_import_conflicts/` and listed in the archive import manifest before the canonical source module is replaced. This prevents the three previously identified content conflicts from being silently overwritten; Git history and explicit byte-level backup are both retained.
+
+The importer also now uses the corrected remote-byte SHA-256 for `docs/PROJECT_CONTINUITY.md` (`d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78`) when patching source pins. The workflow's Number Registry command and D1 design-pin correction use the same verified SHA-256 and the verified Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`.
+
+Latest importer:
+- Remote SHA-256: `9985aedb3e5dd1af4ac0eae6c35a779fac34ba04d3c8a2c293224d123ce5dde2`
+- Git blob SHA-1: `6e205ecfd919c91dfba58f00f9f16349a17f02cf`
+- Containing commit: `f9cbf193d9499d627ea033b04bb02d8fadab5457`
+
+Latest workflow:
+- Remote SHA-256: `776ed50863b59435e2a904140b77f2dd16f6267560ed65ca28ceead86f8f6b2c`
+- Git blob SHA-1: `feb14141edb4c0353e4d06a784dcfa2eb210df52`
+- Containing commit: `5eb688e4d9a52272f4ce0913a5fd713fd9a1275b`
+
+Both updates are source/workflow preparation only. Neither importer nor workflow has been executed; exact-head tests remain NOT_RUN.
