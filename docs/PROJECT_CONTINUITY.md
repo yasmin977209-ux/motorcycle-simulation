@@ -2650,3 +2650,10 @@ The final report file after its digest-correction append was fetched again from 
 - The report file is present on the branch and contains the explicit `CANNOT_PUBLISH` determination and manual publication procedure.
 
 This triple proves the audit report's remote integrity only. It does not prove publication of v2.4.0, v2.3 or v2.3.1; all three source references remain `VERIFIED_LOCAL` only and canonical remote paths remain unpublished.
+
+
+## Corrective publication-transfer assessment — 2026-11-01
+
+A later audit found the GitHub connector does expose Git Data writes (`create_blob/tree/commit/update_ref`) and Contents API writes; therefore the prior statement that no write API existed is superseded. A compressed transfer package for all three reference members was locally built and hash-checked (LZMA 91,012 bytes; base64 121,352 chars). Only an initial 10,000-character fragment was staged and then neutralized with a warning; it is not a usable payload and no reference was committed. Local network probes to GitHub failed DNS/connectivity. Exact details are in `D1_REFERENCE_PUBLICATION_ATTEMPT_2026-11-01.md`. Canonical reference files remain MISSING_EVIDENCE; D1 stays BLOCKED.
+
+Latest successful source/artifact integration run: [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41251114795), exact tested HEAD `76834d581c07d1bcfc5399044c759be13bdb2b63`, 26 passed / 0 failed / 0 skipped; all three pinned artifacts re-downloaded and hash-verified; exact-head assertion passed. A new exact-head run is required after subsequent documentation commits.
