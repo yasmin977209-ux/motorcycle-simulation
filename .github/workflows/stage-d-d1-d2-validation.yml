@@ -1,3 +1,21 @@
 name: Stage D1-D2 Source Validation
 on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
   workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  d1-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone current Stage D branch and validate exact remote head
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch tmp/d1-rebuild-20261101 https://github.com/yasmin977209-ux/motorcycle-simulation.git d1
+          cd d1
+          python -m pip install --upgrade pytest
+          python -m compileall -q scripts/s6_artifact_reader.py scripts/s6_deliverables_model.py scripts/s6_manifest_resolver.py scripts/s6_deliverables_builder.py scripts/s6_number_registry.py scripts/s6_validate_representatives.py tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
+          python -m pytest -q tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
+          test "$(git rev-parse HEAD)" = "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)"
