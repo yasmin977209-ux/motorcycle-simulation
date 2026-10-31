@@ -28,7 +28,7 @@ The following files were fetched from the live Stage D branch using GitHub Conte
 | `docs/stage_d/D0_REPOSITORY_CLOSURE.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_REPOSITORY_CLOSURE.md | `0aab322a45e26aee0bc9adb4d3c784681ae1d7cd` | `3840185213f646bb215deaba2bfb509bc8bba1ce570703e0b8cb51ec39fb5f7b` | 3,494 | `fa349360e08bbf8dca83dbd65e4c7abe9d2ddd7d` |
 | `docs/stage_d/D0_INPUT_AUDIT.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_INPUT_AUDIT.md | `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950` | `ad1ae34568f06f088c1de203baa4af242e6127721783aeeb802eb8812a29c6a9` | 28,171 | `cd97dca1f982f9d9220bd335b478c085ec85c679` |
 | `docs/stage_d/D0_INPUT_AUDIT.json` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/stage_d/D0_INPUT_AUDIT.json | `02e250c9b3ac493e7ff9543c2c8ebe185a319801` | `bf8ba80a1d25352a63333a199c90a9974b59ffcf5230af63dc63d98cb0130a8d` | 13,243 | `d087e4eb951ced0efee4c910b690c712ab26a126` |
-| `docs/PROJECT_CONTINUITY.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/PROJECT_CONTINUITY.md | `b956ebee141e3e9d625114973a0693506454b117` | `d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78` | 444,746 | `126451e5466e83363bbece84992279d660c1bd0b` |
+| `docs/PROJECT_CONTINUITY.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/PROJECT_CONTINUITY.md | `b956ebee141e3e9d625114973a0693506454b117` | `7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74` | 444,746 | `126451e5466e83363bbece84992279d660c1bd0b` |
 | `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/cp-v240-stage-d-s6-deliverables-20261030/docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md | `58f89bc016523f1350345428b4a224ac42a8b130` | `417c8838c4f70d8571938af89f1b34ec7e680dceaae8a594e242d55d1e94778c` | 3,527 | `bba6dd275956da60995c4da99398bd992ee5e1c5` |
 
 ## 3. D0 data-boundary results retained
@@ -54,3 +54,8 @@ No Stage D workflow was run in this verification pass. No Trial, Simulation, Mon
 ## Hash correction note — 2026-10-31
 
 A subsequent independent SHA-256 implementation was validated against the standard `abc` test vector and the Git blob SHA-1 of each fetched file. This revision corrects four remote-content SHA-256 values above; the previous values were erroneous and must not be used. Git blob SHA-1 values, file URLs, sizes and containing commits remain unchanged. The current D0 closure file is a later revision than the historical closure row above; its current triple is recorded in the session status handoff.
+
+
+## Correction: continuity digest — 2026-10-31
+
+The live GitHub file docs/PROJECT_CONTINUITY.md was fetched again and SHA-256 was computed from its 444,746 UTF-8 bytes. The correct value is 7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74; its Git blob SHA-1 remains b956ebee141e3e9d625114973a0693506454b117. The previous value d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78 is superseded and invalid. The file bytes themselves were not changed by this correction.

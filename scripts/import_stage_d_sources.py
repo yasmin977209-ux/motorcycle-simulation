@@ -35,8 +35,9 @@ GOVERNING_REFERENCE_SHA256 = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d
 HISTORICAL_V23_SHA256 = "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 CLOSED_V231_SHA256 = "724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0"
 
-CONTINUITY_SHA256 = "d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78"
-CONTINUITY_GIT_BLOB_SHA1 = "b956ebee141e3e9d625114973a0693506454b117"
+def git_blob_sha1(raw: bytes) -> str:
+    """Return the canonical Git blob SHA-1 for exact file bytes."""
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\x00" + raw).hexdigest()
 
 IMPORT_PATHS = {
     "scripts/s6_deliverables_builder.py",
@@ -332,13 +333,20 @@ def main() -> int:
                 preexisting_conflict_paths.append(backup_rel)
             if name.endswith(".py"):
                 text = raw.decode("utf-8")
-                text = text.replace(
+                continuity_raw = (root / "docs/PROJECT_CONTINUITY.md").read_bytes()
+                continuity_sha256 = digest(continuity_raw)
+                continuity_blob_sha1 = git_blob_sha1(continuity_raw)
+                for old_sha in (
                     "bf6f157c26a2072ccb5c5df4b73e1e03332e4c51439772a7c53f00a9e7747caf",
-                    CONTINUITY_SHA256,
-                ).replace(
+                    "d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78",
+                    "7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74",
+                ):
+                    text = text.replace(old_sha, continuity_sha256)
+                for old_blob in (
                     "3f05f706cca1d14ae9326cf5519f4271b050e5e3",
-                    CONTINUITY_GIT_BLOB_SHA1,
-                )
+                    "b956ebee141e3e9d625114973a0693506454b117",
+                ):
+                    text = text.replace(old_blob, continuity_blob_sha1)
                 raw = text.encode("utf-8")
             target.write_bytes(raw)
 

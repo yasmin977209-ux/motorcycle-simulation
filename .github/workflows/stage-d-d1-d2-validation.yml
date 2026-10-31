@@ -84,7 +84,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m scripts.s6_deliverables_builder --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --c100 /mnt/data/c100-reuse.zip --output results/shared_model.json
-          python -m scripts.s6_number_registry --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --c100 /mnt/data/c100-reuse.zip --output results/number_registry.json --continuity-sha256 d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78 --continuity-path docs/PROJECT_CONTINUITY.md --continuity-blob-sha b956ebee141e3e9d625114973a0693506454b117
+          CONTINUITY_SHA256="$(python -c \"import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/PROJECT_CONTINUITY.md').read_bytes()).hexdigest())\")"
+          CONTINUITY_BLOB_SHA="$(git hash-object docs/PROJECT_CONTINUITY.md)"
+          python -m scripts.s6_number_registry --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --c100 /mnt/data/c100-reuse.zip --output results/number_registry.json --continuity-sha256 "$CONTINUITY_SHA256" --continuity-path docs/PROJECT_CONTINUITY.md --continuity-blob-sha "$CONTINUITY_BLOB_SHA"
           python -m scripts.s6_validate_representatives --aggregate /mnt/data/s6-n2400.zip --full-logging /mnt/data/full-logging.zip --output results/representative_validation.json
       - name: Write D1-D2 scoped audit documents
         run: |

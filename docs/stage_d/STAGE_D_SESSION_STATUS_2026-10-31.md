@@ -206,3 +206,37 @@ Latest workflow:
 - Containing commit: `5eb688e4d9a52272f4ce0913a5fd713fd9a1275b`
 
 Both updates are source/workflow preparation only. Neither importer nor workflow has been executed; exact-head tests remain NOT_RUN.
+
+## 7. تصحيح وتحقق حي إضافي — 2026-10-31 22:47 +03:00
+
+### 7.1 لقطة GitHub الحية
+- HEAD قبل هذا التصحيح: 17a013cc09fa8663410e4821bb13e80338538bd6؛ شجرة Git: 00138081717846132d8636d0693d5dc3c06c0725.
+- main بقي عند c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- عدد Stage D workflow runs على الفرع: 0؛ لا يوجد exact-head CI حتى الآن.
+- لا يوجد PR خاص بفرع Stage D ضمن قائمة PRs المفتوحة. توجد PRs تاريخية أخرى مفتوحة (منها #78 و#77 و#76)، ولم ننشئ أو ندمج أو نغلق أي PR.
+- قائمة Releases أعادت صفر عناصر.
+
+### 7.2 تصحيح SHA-256 لملف الاستمرارية
+أُعيد جلب docs/PROJECT_CONTINUITY.md من GitHub. البايتات المسترجعة 444,746 بايت؛ SHA-256 المحسوبة منها 7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74، وGit blob SHA-1 b956ebee141e3e9d625114973a0693506454b117. القيمة السابقة d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78 كانت خطأ حسابياً في سجل/أداة سابقة؛ تم تصحيح سجل D0 وأداة الاستيراد وسير التحقق أدناه.
+
+### 7.3 إصلاح منع تكرار خطأ continuity pin
+- scripts/import_stage_d_sources.py لم يعد يثبت SHA-256 أو Git blob SHA-1 لملف الاستمرارية كقيم ثابتة؛ يحسبهما من بايتات الملف الحي داخل clone، ثم يحدّث pins داخل ملفات Python المستوردة.
+- .github/workflows/stage-d-d1-d2-validation.yml يحسب SHA-256 وGit blob SHA-1 لملف الاستمرارية وقت التشغيل، ويمررهما إلى Number Registry بدلاً من قيم ثابتة قد تصبح قديمة.
+- هذا إصلاح للأداة/Workflow فقط؛ لا يثبت أن المستورد نُفذ أو أن D1/D2 اجتازا.
+
+### 7.4 تعارض توثيق المرجع الذي يجب حسمه أثناء استيراد المرجع
+قرار المالك D-2026-10-30-REFERENCE-V2.4.0 يحدد المرجع الحاكم الحالي v2.4.0 ببصمة 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b. ويحدد صراحةً ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479 كمرجع تاريخي لـStage 12/13 فقط. لكن القسم 2 من docs/PROJECT_CONTINUITY.md ما زال يعرض ee277... على أنه SHA المتوقع للمرجع الحاكم الحالي. هذا K_SPEC / CONTINUITY_REFERENCE_HASH_MISIDENTIFICATION؛ لا تستخدم هذا السطر الخاطئ لتحديد v2.4.0. المرجع الحاكم وفق قرار المالك هو 225de.... يلزم تصحيح continuity وإعادة حساب pins الخاصة به في خطوة الاستيراد/التوثيق، مع إبقاء مرجع Stage 12/13 التاريخي منفصلاً.
+
+### 7.5 حالة D0–D2 بعد التحقق
+- D0: COMPLETE / PASS_SCOPED_WITH_LIMITATIONS وفق نطاق فحص المدخلات الثلاثة وسجلات GitHub؛ لا يشمل إغلاق فجوة 48K أو Parquet value-level.
+- D1: BLOCKED / REPORTED_ONLY. ثلاثة modules موجودة لكن محتواها متعارض مع الحزمة المحلية؛ ملفات Builder وNumber Registry وrepresentative validator والاختبارات غير مكتملة النشر؛ لا Workflow run.
+- D2: BLOCKED / REPORTED_ONLY. سجل 13,954 رقماً محلي فقط؛ results/number_registry.json غير موجود في GitHub؛ لا remote SHA/commit triple ولا exact-head run.
+- D3–D6: NOT_STARTED.
+- لا محاكاة أو Trial أو Monte Carlo أو N=4800؛ لا تعديل لـmain ولا PR أو Merge أو Release.
+
+### 7.6 آلية النقل لمرة واحدة ثم الاستمرار عبر GitHub
+المستورد المنشور scripts/import_stage_d_sources.py مصمم لفحص بصمات أربع حاويات ZIP ثم استخراج الملفات النصية والبرمجية فقط وإيداعها فردياً على فرع Stage D؛ لا يرفع ZIP الحاويات إلى المستودع. بعد الإيداع، Workflow المنشور ينزّل Artifacts الثلاثة المثبتة مباشرة من GitHub، ويشغّل الاختبارات والبناء، ثم يودع JSON الناتج وسجل remote evidence ويعيد التحقق على exact final head.
+
+المدخلات المثبتة للمستورد: D1/D2 source bundle (50,734 bytes؛ SHA-256 caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6)، governing archive (14,507,701 bytes؛ efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c)، historical source pack (366,034 bytes؛ 4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a)، وD0 local evidence archive (22,706 bytes؛ b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2). لا يُطلب إرفاقها إلى محادثة جديدة؛ يلزم تشغيل الاستيراد مرة واحدة من clone محلي موثق إذا لم تتوفر بيئة تنفيذ محلية متصلة بهذه المحادثة.
+
+الحالة: المستورد لم يُشغّل، والـWorkflow لم يعمل. لذلك لا تُفتح D1 أو D2 بعد. بعد هذا التصحيح، تُعاد قراءة الملفات المنشورة وتسجيل URL + remote SHA-256 + containing commit لكل ملف قبل أي PASS.
