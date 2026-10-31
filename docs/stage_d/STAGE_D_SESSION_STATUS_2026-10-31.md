@@ -88,7 +88,7 @@ The importer and workflow are already published individually on the authorized b
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
   Remote SHA-256: `b9c03669e1bc33214c69ff3eacb22a4fb32d908d1780bae8832fddb6456e03b6`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `853790f8e4388428137bb017c45bf1e386d12c4c`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
-  Remote SHA-256: `1014df2abffdf5ffa5c7e7761e45f41e80accaee5408dcc111aa7b24589e776f`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
+  Remote SHA-256: `1c338a21ebc8709c8bf1bbc4b24afa8b9ae358c961c76df653b7d13667c99c9c`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `31bd70355ac89e36a4ef2e242536618622c4a26b`.
 
 The importer verifies four already-provided ZIPs by exact SHA-256:
 - D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
