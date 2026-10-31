@@ -1,7 +1,7 @@
 {
   "audit_id": "D1-S6-BUILDER-AUDIT-2026-10-31",
   "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
-  "status": "D1_COMPLETE_PASS_SCOPED_WITH_LIMITATIONS_LOCAL_ONLY",
+  "status": "D1_COMPLETE_REPORTED_ONLY_LOCAL_ONLY_LOCAL_ONLY",
   "local_test_command": "python -m pytest -q",
   "local_test_result": "27 passed",
   "compileall": "PASS",
