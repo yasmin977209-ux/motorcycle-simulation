@@ -1,14 +1,14 @@
 # D0 Repository Closure — Stage D / S6
 
-**Status:** `D0_REPOSITORY_CLOSED / PASS_SCOPED_WITH_LIMITATIONS`  
+**Status:** `REPORTED_ONLY / D0_REMOTE_SHA256_REVALIDATION_PENDING`  
 **Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`  
 **Live pre-update HEAD:** `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9`  
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474`
 
 ## Current live evidence
-- D0 Markdown: [remote file](D0_INPUT_AUDIT.md); Git blob SHA-1 `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`; remote-byte SHA-256 `1064e81dd98ddaefd443389a5bbc6d53fc1052903328d533839da84a16f705a0`; commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
-- D0 JSON: [remote file](D0_INPUT_AUDIT.json); Git blob SHA-1 `02e250c9b3ac493e7ff9543c2c8ebe185a319801`; remote-byte SHA-256 `abe8482b44b78de950c33c9b1b38480e90e08b2563f184acf70695036b17aa80`; commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
-- Continuity: [remote file](../PROJECT_CONTINUITY.md); Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`; remote-byte SHA-256 `7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74`; commit `126451e5466e83363bbece84992279d660c1bd0b`.
+- D0 Markdown: [remote file](D0_INPUT_AUDIT.md); Git blob SHA-1 `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`; remote-byte SHA-256 `NOT_RECOMPUTED_UNDER_VERIFIED_HASH_IMPLEMENTATION`; commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
+- D0 JSON: [remote file](D0_INPUT_AUDIT.json); Git blob SHA-1 `02e250c9b3ac493e7ff9543c2c8ebe185a319801`; remote-byte SHA-256 `NOT_RECOMPUTED_UNDER_VERIFIED_HASH_IMPLEMENTATION`; commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
+- Continuity: [remote file](../PROJECT_CONTINUITY.md); Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`; remote-byte SHA-256 `NOT_RECOMPUTED_UNDER_VERIFIED_HASH_IMPLEMENTATION`; commit `126451e5466e83363bbece84992279d660c1bd0b`.
 
 ## Immutable D0 inputs rechecked locally
 
@@ -32,4 +32,4 @@ All three local byte hashes and sizes match; ZIP CRC, duplicate member/path and 
 
 ## Remote-byte verification update — 2026-10-31
 
-The D0 audit Markdown, JSON, and continuity references above were fetched from the authorized branch and SHA-256 recomputed from the returned UTF-8 bytes. The commit IDs listed beside each file were fetched independently and each commit was confirmed to contain the corresponding path. The three immutable input archive hashes and sizes remain `VERIFIED_LOCAL (prior byte audit)`; they were not redownloaded or rehashed in this documentation-only update.
+The D0 audit Markdown, JSON, and continuity references were fetched from the authorized branch and their Git blob SHA-1 values and containing commits were verified. A reliable SHA-256 recomputation from their remote bytes was not completed in this update; therefore these references do not satisfy the owner's three-part evidence gate. The three immutable input archive hashes and sizes remain `VERIFIED_LOCAL (prior byte audit)` only; they were not redownloaded or rehashed in this documentation-only update. D0's earlier scoped audit conclusion is retained as historical evidence, but is not re-declared PASS under the new remote-SHA-256 rule.
