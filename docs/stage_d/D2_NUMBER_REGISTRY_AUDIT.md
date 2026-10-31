@@ -38,10 +38,10 @@ All 13,954 IDs are unique. The local audit report states that it rechecks intege
 Ten items remain unavailable: historical 48K daily ledger; Parquet schema/rows for trials_summary and daily_distribution; value-level representative revalidation; five missing historical accounting fields; and null source_run_metadata.sha256. No backfill, zero-fill, inferred value or cohort mixing was used.
 
 ## Verification
-- Local tests: 27 passed.
-- compileall: PASS.
-- All three pinned ZIP SHA-256/size/CRC/path checks: PASS.
+- Local tests: 27 passed, as reported locally (`REPORTED_ONLY`).
+- compileall: reported local success (`REPORTED_ONLY`).
+- All three pinned ZIP SHA-256/size/CRC/path checks: reported local success (`REPORTED_ONLY`).
 - Exact-head GitHub workflow: NOT_RUN.
 - No reports/workbooks have been generated; future report numbers must resolve through the registry.
 
-D2 is PASS_SCOPED locally only. D1 repository source publication/exact-head validation remains blocked; no D3/D4, Excel, Word or ZIP generation is authorized yet.
+D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D2 gate is open. D1 repository source publication/exact-head validation remains blocked; no D3/D4, Excel, Word or ZIP generation is authorized yet.
