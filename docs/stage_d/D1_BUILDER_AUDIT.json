@@ -1,0 +1,25 @@
+{
+  "audit_id": "D1-S6-BUILDER-AUDIT-2026-10-31",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "status": "D1_COMPLETE_PASS_SCOPED_WITH_LIMITATIONS_LOCAL_ONLY",
+  "local_test_command": "python -m pytest -q",
+  "local_test_result": "27 passed",
+  "compileall": "PASS",
+  "builder_integration": {
+    "pinned_artifacts": 3,
+    "role_assignments": 125,
+    "unique_keys": 105,
+    "s6_unique_keys": 100,
+    "c100_unique_keys": 5,
+    "manifest_resolutions": 105,
+    "normalized_status_counts": {
+      "NOT_VERIFIED": 105
+    },
+    "excel_word": "NOT_STARTED",
+    "simulation": "NOT_RUN"
+  },
+  "independence": "PASS_SCOPED_STATIC_AST_SCAN",
+  "representative_value_revalidation": "NOT_VERIFIED_PARQUET_READER_UNAVAILABLE",
+  "repository_source_publication": "BLOCKED",
+  "exact_head_workflow": "NOT_RUN"
+}
