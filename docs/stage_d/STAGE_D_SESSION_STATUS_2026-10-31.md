@@ -90,7 +90,13 @@ The importer and workflow are already published individually on the authorized b
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
   Remote SHA-256: `1014df2abffdf5ffa5c7e7761e45f41e80accaee5408dcc111aa7b24589e776f`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
 
-The importer verifies four already-provided ZIPs by exact SHA-256:\n- D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.\n- v2.4.0 governing-reference archive: 14,507,701 bytes, `efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c`.\n- Historical source pack: 366,034 bytes, `4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a`.\n- D0 local text evidence: 22,706 bytes, `b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2`.\n\nIt extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
+The importer verifies four already-provided ZIPs by exact SHA-256:
+- D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
+- v2.4.0 governing-reference archive: 14,507,701 bytes, `efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c`.
+- Historical source pack: 366,034 bytes, `4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a`.
+- D0 local text evidence: 22,706 bytes, `b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2`.
+
+It extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
 
 **Not yet executed:** importer not run; workflow runs = 0. Therefore D1/D2 remain BLOCKED / REPORTED_ONLY.
 
@@ -101,6 +107,7 @@ python scripts/import_stage_d_sources.py \
   --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
   --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
   --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \
+  --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip \
   --apply
 ```
 
