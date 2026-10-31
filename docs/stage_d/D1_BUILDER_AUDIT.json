@@ -1,7 +1,7 @@
 {
   "audit_id": "D1-S6-BUILDER-REBUILD-2026-11-01",
   "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
-  "source_method": "REIMPLEMENTED_FROM_D1_SPEC_AND_PINNED_GITHUB_ARTIFACTS; IMPORTER_NOT_RUN",
+  "source_method": "REIMPLEMENTED_FROM_LIVE_D1_SPEC_AND_PINNED_GITHUB_ARTIFACTS; IMPORTER_NOT_RUN",
   "artifact_pins": [
     {
       "artifact_id": 12852969854,
@@ -33,25 +33,38 @@
     "simulation": "NOT_RUN"
   },
   "github_exact_head_ci": {
-    "run_id": 41244366317,
-    "tested_sha": "c39301f73365e251d4bec9da98ea46f9b17b6f9d",
+    "workflow": ".github/workflows/stage-d-d1-d2-validation.yml",
+    "run_id": 41244813966,
+    "tested_sha": "c17b6f68ba5b5eb585cf78ef81700a9512b6a960",
     "conclusion": "success",
     "tests_passed": 10,
     "tests_skipped": 8,
-    "scope": "compileall and unit/source tests; artifact integration skipped because pinned archives are not mounted in the source-only workflow"
+    "scope": "compileall and source/unit tests; artifact-dependent integration tests skipped because pinned archives are not mounted in source-only workflow"
   },
   "parquet_revalidation": "NOT_VERIFIED_LOCAL_PARQUET_READER_UNAVAILABLE",
   "c100_golden_revalidation": "NOT_RUN_SEPARATE_GOLDEN_REQUIRED",
-  "reference_file": {
-    "expected_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-    "local_archive_member_size_bytes": 401397,
-    "local_archive_member_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-    "remote_repository_file": "MISSING_EVIDENCE"
+  "governing_reference_local": {
+    "archive_path": "MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip",
+    "archive_size_bytes": 14507701,
+    "archive_sha256": "efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c",
+    "member_path": "01_REFERENCE/المرجع_الحاكم_الموحّد_v2.4.0_مرشح_للاعتماد.md",
+    "member_size_bytes": 401397,
+    "member_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+    "classification": "VERIFIED_LOCAL"
   },
-  "overall_d1_status": "BLOCKED_PENDING_REQUIRED_REFERENCE_FILE_REMOTE_PUBLICATION_AND_FULL_REMOTE_EVIDENCE",
+  "governing_reference_remote": {
+    "required_path": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+    "status": "MISSING_EVIDENCE"
+  },
+  "owner_decision": {
+    "path": "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+    "status": "APPROVED_BY_OWNER",
+    "decision_id": "D-2026-10-30-REFERENCE-V2.4.0"
+  },
+  "overall_d1_status": "BLOCKED_PENDING_FULL_REFERENCE_REMOTE_PUBLICATION_AND_FINAL_REMOTE_EVIDENCE",
   "limitations": [
     "105 representative keys only; not 48,000 trials.",
-    "All 105 normalized manifest statuses remain NOT_VERIFIED where independent expected byte sizes are absent.",
+    "All 105 normalized manifest states remain NOT_VERIFIED where independent expected byte sizes are absent.",
     "Five historical accounting fields remain MISSING_EVIDENCE.",
     "No D2 registry build; no Excel or DOCX outputs."
   ]
