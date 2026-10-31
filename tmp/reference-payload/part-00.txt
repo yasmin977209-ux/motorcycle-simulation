@@ -1,2 +1,0 @@
-INCOMPLETE TRANSFER FRAGMENT — NOT A REFERENCE, NOT AN ARTIFACT, NOT TO BE CONSUMED.
-This temporary staging attempt contains only the first 10,000 base64 characters of a compressed transfer package. It is intentionally invalid as a complete payload. The source ZIP remains locally verified; no canonical reference was published by this fragment.
