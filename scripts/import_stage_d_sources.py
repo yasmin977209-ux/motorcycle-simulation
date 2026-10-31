@@ -5,7 +5,7 @@ Run from a clean local clone of the authorized Stage D branch:
   python scripts/import_stage_d_sources.py \
     --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
     --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
-    --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \\\n    --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip --apply
+    --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip\n    --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip --apply
 
 The ZIP files are containers only. This script does not commit the ZIPs or binary artifact ZIPs.
 It extracts individual source modules, tests and text/JSON/CSV governance files, preserves
@@ -366,7 +366,7 @@ def main() -> int:
                                   'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
                                   'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
-    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
+    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
     all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
