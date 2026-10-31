@@ -30,3 +30,8 @@ D1 remains `BLOCKED` pending full reference publication, per-file remote evidenc
 - The 50,734-byte source bundle and Local Evidence ZIP are absent from the active runtime. Importer remains `NOT_RUN`.
 - D1 disposition remains `BLOCKED`; D2–D6 not started. No Trial/simulation/Monte Carlo/N=4800, backfill, zero-fill, main change, PR, merge or Release.
 - See `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md` for complete raw-source provenance and the exact workflow contract.
+
+
+## Correction record — 2026-11-01
+
+Hash correction (append-only): the original reader/model SHA-256 values previously appended in this session were incorrect and are superseded by the corrected values in `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md`: reader `37d882bb793ad4b447918287b5969fb8481f6e8c5bce1defdafeb7660b693f57`; model `1713b88ab0f619eb5a1747fc56eb3896a63e7cb8ac65b4e03142434dd03e13ea`; resolver `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a`. Original blobs, sizes and commit IDs are unchanged. Earlier SHA values are superseded, not evidence.
