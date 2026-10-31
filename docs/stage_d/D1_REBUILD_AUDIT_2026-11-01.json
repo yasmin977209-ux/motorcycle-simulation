@@ -1,0 +1,50 @@
+{
+  "audit_id": "D1-S6-SOURCE-REBUILD-2026-11-01",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "status": "LOCAL_REBUILD_TESTED_AWAITING_GITHUB_EXACT_HEAD",
+  "source_method": "REIMPLEMENTED_FROM_LIVE_D1_SPEC_AND_PINNED_GITHUB_ARTIFACTS; IMPORTER_NOT_RUN",
+  "artifacts": [
+    {
+      "artifact_id": 12852969854,
+      "run_id": 40773412377,
+      "size_bytes": 9357996,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54"
+    },
+    {
+      "artifact_id": 12998778418,
+      "run_id": 41098699740,
+      "size_bytes": 310827203,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb"
+    },
+    {
+      "artifact_id": 12630457193,
+      "run_id": 40263424595,
+      "size_bytes": 361733,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79"
+    }
+  ],
+  "local_validation": {
+    "compileall": "PASS",
+    "pytest": "19 passed",
+    "builder": {
+      "role_assignments": 125,
+      "unique_keys": 105,
+      "trial_records": 105,
+      "S6_unique_keys": 100,
+      "C100_unique_keys": 5,
+      "manifest_normalized_NOT_VERIFIED": 105
+    },
+    "parquet_value_revalidation": "NOT_VERIFIED_PARQUET_READER_UNAVAILABLE",
+    "simulation": "NOT_RUN"
+  },
+  "remote_publication": "PENDING",
+  "exact_head_workflow": "NOT_RUN",
+  "limitations": [
+    "Full Logging covers 105 representative keys only, not 48,000 trials.",
+    "Independent expected manifest byte sizes are missing; all 105 normalized manifest statuses remain NOT_VERIFIED.",
+    "Five historical accounting fields remain MISSING_EVIDENCE.",
+    "Canonical normative v2.4.0 Markdown remains a separate D1 closure dependency.",
+    "No D2 registry output was built."
+  ],
+  "stage_disposition": "D1 remains BLOCKED until every required source file has GitHub URL + remote SHA-256 + containing commit and exact-final-head workflow validation passes."
+}
