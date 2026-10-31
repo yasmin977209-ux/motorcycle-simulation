@@ -40,3 +40,12 @@ The prior statement that exact-head validation had not run is superseded for the
 Run 17 (`41249454018`) also completed the 26 tests successfully but failed only the final exact-head comparison because the branch advanced during concurrent documentation commits. Run 19 above is the exact-head success. Earlier source-only runs with 8 skipped integration tests remain historical and are not reclassified.
 
 **Disposition remains `BLOCKED`, not D1 PASS.** The canonical full v2.4.0 reference and v2.3/v2.3.1 historical/quarantine full-text files still lack GitHub publication and remote readback. The local archive hash is not a substitute for the required remote evidence. The five missing accounting fields and all project gate limits remain unchanged. A documentation-only commit after Run 19 requires one more exact-head run.
+
+
+## Final source/artifact gate refresh — 2026-11-01
+
+- Latest previously completed exact-head run: [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41251114795), tested SHA `76834d581c07d1bcfc5399044c759be13bdb2b63`, conclusion `success`; all 26 tests passed, no skips, all three pinned artifact downloads and SHA-256 checks passed, Parquet LossCase/MaxCase global argmin/argmax integration passed, and exact live HEAD assertion passed.
+- A further documentation-only correction was appended after that run. Final branch HEAD now is `e1e707a8a2dbc137267c0e9a75d600c253a95947`; exact-head run [41251941533](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41251941533) was triggered for this HEAD and must complete successfully before this closure note is treated as exact-head validated.
+- Reference publication was re-attempted using the available GitHub Contents API. Only a 10,000-character compressed payload fragment was staged temporarily, then replaced by an explicit warning; it is not a usable reference or evidence. No v2.4.0/v2.3/v2.3.1 canonical file was committed. Full source package remains locally verified; remote reference triples remain missing.
+- Current D1 disposition: **BLOCKED** on the three complete reference publications and their remote readback triples. This report does not close D1 and does not authorize D2.
+- Main remains unchanged at `c6e54349a5e94f65d5aa9f83141f225d777bb474`. No D1 PR, merge, Release, Trial, Simulation or Monte Carlo was performed.
