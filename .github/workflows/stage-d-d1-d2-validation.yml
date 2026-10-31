@@ -12,11 +12,13 @@ on:
       - 'scripts/s6_validate_representatives.py'
       - 'tests/test_s6_deliverables_builder.py'
       - 'tests/test_s6_number_registry.py'
+  workflow_dispatch:
 permissions:
   contents: write
   actions: read
 jobs:
   build-validate:
+    if: github.ref_name == 'tmp/cp-v240-stage-d-s6-deliverables-20261030'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -143,7 +145,7 @@ jobs:
             with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
             local=pathlib.Path(p).read_bytes()
             if raw!=local: raise SystemExit(f'REMOTE_BYTES_DIFFER_FROM_CHECKOUT:{p}')
-            blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest()
+            blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\x00'+raw).hexdigest()
             git_blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
             if blob!=git_blob: raise SystemExit(f'GIT_BLOB_SHA1_MISMATCH:{p}')
             rows.append({'path':p,'url':f'https://github.com/{repo}/blob/{commit}/{p}',
@@ -176,8 +178,10 @@ jobs:
           url=f'https://raw.githubusercontent.com/{repo}/{sha}/{p}'
           with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
           if raw!=pathlib.Path(p).read_bytes(): raise SystemExit('REMOTE_LEDGER_READBACK_MISMATCH')
-          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest()
+          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\x00'+raw).hexdigest()
           if blob!=subprocess.check_output(['git','hash-object',p],text=True).strip(): raise SystemExit('REMOTE_LEDGER_BLOB_MISMATCH')
+          remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/'+os.environ['GITHUB_REF_NAME']],text=True).split()[0]
+          if remote!=sha: raise SystemExit('REMOTE_BRANCH_HEAD_DIFFERS_FROM_TESTED_SHA')
           evidence={'status':'EXACT_HEAD_TESTS_PASSED_AND_REMOTE_BYTES_VERIFIED',
                     'run_id':int(os.environ['GITHUB_RUN_ID']),'workflow_run_head_sha':os.environ['GITHUB_SHA'],
                     'tested_sha':sha,'branch':os.environ['GITHUB_REF_NAME'],
@@ -198,6 +202,7 @@ jobs:
             results/representative_validation.json
             results/D1_D2_BUILD_SUMMARY.json
             results/D0_REMOTE_ARTIFACT_RECHECK.json
+            docs/stage_d/D1_D2_REMOTE_EVIDENCE.json
             /tmp/exact_head_evidence.json
             /tmp/stage-d-final-tests.log
           if-no-files-found: error
