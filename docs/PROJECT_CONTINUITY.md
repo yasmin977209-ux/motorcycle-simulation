@@ -2613,3 +2613,14 @@ Hash correction for the original conflict inventory: the first corrective addend
 ## Exact artifact integration CI — 2026-11-01 (append-only)
 
 Workflow Run `41249462481` passed at exact tested HEAD `7895f63ed1bb34508723d81ced956e6d77d5bda7`: compileall passed and pytest reported 26 passed, 0 failed, 0 skipped. The job downloaded the three pinned GitHub Actions artifacts by immutable IDs and verified exact metadata, byte sizes and SHA-256; it installed pyarrow and checked frozen S6 LossCase/MaxCase global argmin/argmax against the full pinned Parquet trial summary across 20 S6 scenarios. The final branch-head assertion passed. Run 17 (`41249454018`) is preserved as a failed exact-head check caused by concurrent branch advancement even though its 26 tests passed; Run 19 is the successful exact-head result. The closure addendum records this. The next documentation-only commit requires a new exact-head run. D1 remains BLOCKED on canonical full reference publication/readback and remaining evidence; no gate or project acceptance is promoted.
+
+
+## Final SHA-256 reconciliation — supersedes all prior in-session corrections
+
+A final digest pass using a SHA-256 implementation validated against the standard `abc` test vector was applied to the exact UTF-8 bytes re-fetched from GitHub. The authoritative historical-file SHA-256 values are:
+
+- Original `s6_artifact_reader.py`: `7db68e7f0e41aabefbdff30667c6f4f8d626728c15c9bd1a2f5afc8b80858b09` (10,181 bytes; blob `35e644e22557eb6f3449571190c1c31e2af3d461`; original commit `2ef20e9634d346d3b5a263f474a613415b47b996`).
+- Original `s6_deliverables_model.py`: `568c5c52be1c4399a849f617d919371126320af59aea7aa5369849d445f25891` (3,209 bytes; blob `670c10d39adcc732fe464437c1bf02f451b76f26`; original commit `15e5a49fc1ff96d7106506103e1d35ee164879e0`).
+- Original `s6_manifest_resolver.py`: `f10fbcccb35445a1866d1ce0fed1d9da9c9cdd307e01507f13dea1d1f34c3d01` (5,143 bytes; blob `55ba5e5f0657d2b5337af84eff6a01e3749f5491`; original commit `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9`).
+
+All earlier SHA-256 values for these three files in this session's appended records are superseded by this reconciliation. Blob SHA-1, byte sizes and original containing commits are unchanged. The raw archive files were read back from GitHub; the resolver raw copy's Git blob SHA-1 exactly matches the original historical file blob.
