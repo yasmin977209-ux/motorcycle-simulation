@@ -161,3 +161,14 @@ git push origin tmp/d1-rebuild-20261101
 ## Audit note
 
 This report records attempts and limitations without rewriting historical records. A local source hash is not a remote publication proof. The governing-reference identity remains v2.4.0 SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; the historical execution reference remains v2.3 SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`.
+
+
+## SHA-256 calculation reconciliation
+
+A post-publication remote-readback digest pass was repeated using a SHA-256 implementation validated against the standard `abc` test vector (`ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`). The final remote-readback SHA-256 for this report's exact UTF-8 bytes is:
+
+- SHA-256: `1efb2cbecaa8262a3cf308d91ce27d267ba23e162a72db7390ea24ba69cec70c`
+- Git blob SHA-1: `b903da2689044254dba83925d9e3ffd5c0f5cd71`
+- Size: 9,474 bytes
+
+The earlier in-session report digest `2d37bda25f77ad042f8dc772927b53d79ab8b75272e4940dc488b76a032f829e` is superseded and must not be used. The report content itself is unchanged by this correction note until this append is committed; after commit, its SHA-256 and size will necessarily be recalculated again and recorded in the final readback ledger.
