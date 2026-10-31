@@ -2603,3 +2603,8 @@ ZIP path validation now rejects normalized collisions, Windows drive paths and e
 The owner decision was read live and still states `APPROVED_BY_OWNER`. The v2.4.0 normative member is verified locally at 401,397 bytes / SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, but the complete canonical file, v2.3 historical file and v2.3.1 quarantine file remain absent from GitHub. The uploaded local archive cannot be streamed into GitHub through the currently available connector; these remain `MISSING_EVIDENCE`, not `VERIFIED_LIVE`. See the corrective addendum for exact archive/member hashes and scope.
 
 D1 remains `BLOCKED`; D2–D6 remain not started. No Trial, simulation, Monte Carlo, N=4800, historical backfill, financial zero-fill, D2 registry, Excel/DOCX, main change, PR, merge or Release occurred. All previous Gate statuses and S6/C100 identities remain unchanged.
+
+
+## Correction record — 2026-11-01
+
+Hash correction for the original conflict inventory: the first corrective addendum contained two incorrect SHA-256 values due to a digest implementation defect. Append-only correction in `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md` supersedes them. Correct remote-byte SHA-256 values: reader `37d882bb793ad4b447918287b5969fb8481f6e8c5bce1defdafeb7660b693f57`; model `1713b88ab0f619eb5a1747fc56eb3896a63e7cb8ac65b4e03142434dd03e13ea`; resolver `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a`. Blob SHA-1, byte sizes and original commits are unchanged. Do not use the superseded values.
