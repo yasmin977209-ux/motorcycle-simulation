@@ -1,6 +1,6 @@
 # D1 Repository Closure — Independent S6 Builder
 
-**Local implementation:** `D1_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`  
+**Local implementation evidence:** `REPORTED_ONLY / LOCAL_TESTS_REPORTED`  
 **Repository source publication:** `BLOCKED / SOURCE_BUNDLE_NOT_COMMITTED`  
 **Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`
 
@@ -21,4 +21,4 @@
 - Parquet schema/rows are not parseable in the current runtime; value-level P50/P10/P90/LossCase/MaxCase revalidation remains `NOT_VERIFIED`.
 - Acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 remain `NOT_RUN` on an exact-head delivery commit.
 
-**Disposition:** D1 passes locally for architecture, isolation, cohort separation, fail-closed manifest handling and unit tests. It is not repository-source-closed or delivery-acceptance-closed. No Excel/Word generation is authorized by this status.
+**Disposition:** The local report records successful architecture, isolation, cohort separation, fail-closed manifest handling and unit tests. Under the evidence contract now in force, these are `REPORTED_ONLY` until the exact source files are committed, fetched back, hashed remotely, and tied to the commit. D1 is not repository-source-closed or delivery-acceptance-closed. No Excel/Word generation is authorized by this status.
