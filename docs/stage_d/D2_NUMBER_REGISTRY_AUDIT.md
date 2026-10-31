@@ -1,6 +1,6 @@
 # D2 — Exact Financial Calculations and Number Registry Audit
 
-**Status:** `D2_PASS_SCOPED_WITH_LIMITATIONS / T2_INTERIM / NOT_FINAL_BLOCKED`  
+**Status:** `REPORTED_ONLY_LOCAL / T2_INTERIM / NOT_FINAL_BLOCKED`  
 **Registry:** local `results/number_registry.json`  
 **Size:** 22,781,475 bytes  
 **SHA-256:** `53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73`
@@ -16,7 +16,7 @@
 | Duplicate number_id | 0 |
 | Python float values | 0 |
 
-All 13,954 IDs are unique. The independent audit rechecks integer numerator/denominator, exact-value round trip, display value, source digest and locator, source type, cohort boundaries, and recursive float exclusion. Eight documentary entries have no artifact/run ID by nature, but carry repository document SHA-256, Git blob SHA-1 and line locators. Ten unavailable items also retain explicit source anchors.
+All 13,954 IDs are unique. The local audit report states that it rechecks integer numerator/denominator, exact-value round trip, display value, source digest and locator, source type, cohort boundaries, and recursive float exclusion. Eight documentary entries have no artifact/run ID by nature, but carry repository document SHA-256, Git blob SHA-1 and line locators. Ten unavailable items also retain explicit source anchors.
 
 ## Exact arithmetic
 - int for integer counts and financial sums.
