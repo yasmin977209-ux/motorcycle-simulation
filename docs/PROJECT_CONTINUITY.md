@@ -2638,3 +2638,15 @@ Detailed attempt log and exact manual publication instructions: [D1_REFERENCE_PU
 ### Corrective digest note — 2026-11-01
 
 The SHA-256 recorded for the publication-attempt report in the first continuity append (`2d37bda25f77ad042f8dc772927b53d79ab8b75272e4940dc488b76a032f829e`) is superseded. The digest routine was independently validated against the standard SHA-256 `abc` test vector. A repeat remote readback of the report before this corrective append yielded `1efb2cbecaa8262a3cf308d91ce27d267ba23e162a72db7390ea24ba69cec70c`, blob `b903da2689044254dba83925d9e3ffd5c0f5cd71`, 9,474 bytes. The report was then updated append-only to preserve this correction; its final post-update hash must be taken from the final readback ledger. Do not use either superseded digest as the final hash for the updated report.
+
+
+### Final remote readback triple — publication attempt report
+
+The final report file after its digest-correction append was fetched again from GitHub. Its verified remote-readback details are:
+- URL: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/D1_REFERENCE_PUBLICATION_ATTEMPT_2026-11-01.md
+- SHA-256: `7b2db4001a8c627e32cb0f8e81d0824096ee8bcae193b640612b579f044de337`
+- Git blob SHA-1: `b6df1362b49deab2787629fe05a364a384e1825c`
+- Size: 10,312 bytes
+- The report file is present on the branch and contains the explicit `CANNOT_PUBLISH` determination and manual publication procedure.
+
+This triple proves the audit report's remote integrity only. It does not prove publication of v2.4.0, v2.3 or v2.3.1; all three source references remain `VERIFIED_LOCAL` only and canonical remote paths remain unpublished.
