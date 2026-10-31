@@ -100,3 +100,14 @@ Use a repository-first / CI-produced workflow:
 - Stage D validation workflow runs on the authorized branch: none observed in the live run listing. The local workflow file is not present in the repository tree.
 - Next action: establish a supported binary/source transfer path or a user-authorized upload bridge for the existing source archive; then publish source files, run only the no-simulation D1/D2 validation workflow on exact HEAD, commit generated shared model and registry, verify every committed output by remote bytes + SHA-256 + commit, and stop before D3.
 - No D3–D6 work is authorized by this checkpoint. No simulation, Trial, Monte Carlo, N=4800, main update, PR, merge, or Release was performed.
+
+
+## Task result — 2026-10-31 18:02 UTC (stop point)
+
+- Latest live Stage D branch HEAD after the D0 closure provenance correction: 5c5faca3ca018816950a9034c046405bde6480f3.
+- main remains c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- D0 closure record was corrected to use current remote-byte hashes for the D0 audit Markdown, D0 audit JSON and continuity document. The D0 closure record itself is committed at the branch HEAD and its own remote-byte SHA-256 is recorded in the response that performed this update.
+- D0 remains scoped closure only; pinned artifact byte checks were from the prior local audit and were not re-downloaded in this update. The historical 48K gaps and all known conflicts remain open.
+- D1/D2 were not closed. The exact source files, tests, workflow and Number Registry remain absent from the repository tree; local implementation and test claims remain REPORTED_ONLY. No Stage D Actions workflow run exists.
+- The local-to-GitHub binary/source transfer is still the blocking dependency. Do not attempt D3–D6 until source publication, exact-head validation, registry generation/commit, and remote-byte SHA-256 + commit verification are complete.
+- Stop condition honored: no D3–D6, Trial, Simulation, Monte Carlo, N=4800, main change, PR, merge, or Release.
