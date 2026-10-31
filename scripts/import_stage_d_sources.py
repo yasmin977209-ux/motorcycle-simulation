@@ -48,15 +48,16 @@ IMPORT_PATHS = {
     "tests/test_s6_deliverables_builder.py",
     "tests/test_s6_number_registry.py",
 }
-SOURCE_ARCHIVE_MEMBERS = IMPORT_PATHS | {
-    "docs/stage_d/D0_REPOSITORY_CLOSURE.md",
-    "docs/stage_d/D1_BUILDER_DESIGN.md",
-    "docs/stage_d/D1_BUILDER_AUDIT.json",
-    "docs/stage_d/D1_REPOSITORY_CLOSURE.md",
-    "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
-    "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json",
-    ".github/workflows/stage-d-deliverables-validation.yml",
+SOURCE_ARCHIVE_DOCS = {
+    "docs/stage_d/D0_REPOSITORY_CLOSURE.md": "docs/stage_d/archive/source_bundle/D0_REPOSITORY_CLOSURE.md",
+    "docs/stage_d/D1_BUILDER_DESIGN.md": "docs/stage_d/archive/source_bundle/D1_BUILDER_DESIGN.md",
+    "docs/stage_d/D1_BUILDER_AUDIT.json": "docs/stage_d/archive/source_bundle/D1_BUILDER_AUDIT.json",
+    "docs/stage_d/D1_REPOSITORY_CLOSURE.md": "docs/stage_d/archive/source_bundle/D1_REPOSITORY_CLOSURE.md",
+    "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md": "docs/stage_d/archive/source_bundle/D2_NUMBER_REGISTRY_AUDIT.md",
+    "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json": "docs/stage_d/archive/source_bundle/D2_NUMBER_REGISTRY_AUDIT.json",
+    ".github/workflows/stage-d-deliverables-validation.yml": "docs/stage_d/archive/source_bundle/workflows/stage-d-deliverables-validation.yml",
 }
+SOURCE_ARCHIVE_MEMBERS = IMPORT_PATHS | set(SOURCE_ARCHIVE_DOCS)
 TEXT_EXTENSIONS = {".md", ".txt", ".json", ".csv", ".yaml", ".yml", ".py", ".toml", ".xml", ".ini"}
 TEXT_ROOT = "docs/governance/imported"
 
@@ -119,7 +120,9 @@ def write_text_member(root: Path, prefix: str, name: str, raw: bytes, source_arc
 
 def process_nested_archive(raw_zip: bytes, prefix: str, source_archive: str, lineage: str,
                            root: Path, files: list[dict], skipped: list[dict],
-                           recurse_sources: bool = True) -> None:
+                           recurse_sources: bool = True, depth: int = 0) -> None:
+    if depth > 8:
+        raise SystemExit(f"NESTED_ARCHIVE_DEPTH_LIMIT:{source_archive}")
     with zipfile.ZipFile(io.BytesIO(raw_zip)) as zf:
         names = [decoded_member_name(i) for i in zf.infolist()]
         if len(names) != len(set(names)):
@@ -135,27 +138,29 @@ def process_nested_archive(raw_zip: bytes, prefix: str, source_archive: str, lin
             member = zf.read(info)
             lower = name.lower()
             if rel.suffix.lower() == ".zip":
-                should_recurse = recurse_sources and (
-                    "source_pack" in lower or "v2.3.1" in lower or "quarantine" in lower
-                )
-                if should_recurse:
-                    if "v2.3.1" in lower or "quarantine" in lower:
-                        next_lineage = "QUARANTINED_NOT_AUTHORITATIVE_V2.3.1"
-                        next_prefix = f"{prefix}/QUARANTINE_V2.3.1"
-                    else:
-                        next_lineage = "HISTORICAL_SOURCE_PACK"
-                        next_prefix = f"{prefix}/SOURCE_PACK_ORIGINAL"
-                    process_nested_archive(member, next_prefix, f"{source_archive}!/{name}",
-                                            next_lineage, root, files, skipped, recurse_sources=True)
-                else:
+                if not recurse_sources:
                     skipped.append({
                         "source_archive": source_archive, "source_member": name,
                         "size_bytes": len(member), "sha256": digest(member),
-                        "reason": "BINARY_OR_PINNED_ARTIFACT_ARCHIVE_NOT_EXPANDED",
+                        "reason": "NESTED_ARCHIVE_RECURSION_DISABLED",
                     })
+                    continue
+                stem = rel.stem.replace(" ", "_")
+                archive_id = digest(member)[:12]
+                if "v2.3.1" in lower or "quarantine" in lower:
+                    next_lineage = "QUARANTINED_NOT_AUTHORITATIVE_V2.3.1"
+                    next_prefix = f"{prefix}/QUARANTINE_V2.3.1/{stem}_{archive_id}"
+                elif "source_pack" in lower:
+                    next_lineage = "HISTORICAL_SOURCE_PACK"
+                    next_prefix = f"{prefix}/SOURCE_PACK_ORIGINAL/{stem}_{archive_id}"
+                else:
+                    next_lineage = f"{lineage}/NESTED_ARCHIVE_TEXT_ONLY"
+                    next_prefix = f"{prefix}/NESTED_ARCHIVES/{stem}_{archive_id}"
+                process_nested_archive(member, next_prefix, f"{source_archive}!/{name}",
+                                       next_lineage, root, files, skipped,
+                                       recurse_sources=True, depth=depth + 1)
                 continue
             write_text_member(root, prefix, name, member, source_archive, lineage, files)
-
 
 def import_governance_archives(root: Path, governing_zip: Path, historical_zip: Path) -> list[str]:
     files: list[dict] = []
@@ -208,14 +213,16 @@ def import_governance_archives(root: Path, governing_zip: Path, historical_zip: 
                 raise SystemExit(f"SOURCE_PACK_SYMLINK:{name}")
             member = zf.read(info)
             if name.lower().endswith(".zip"):
+                stem = PurePosixPath(name).stem.replace(" ", "_")
+                archive_id = digest(member)[:12]
                 if "v2.3.1" in name.lower() or "quarantine" in name.lower():
-                    process_nested_archive(member, f"{TEXT_ROOT}/source_pack/QUARANTINE_V2.3.1",
-                                           "historical_source_pack_zip", "QUARANTINED_NOT_AUTHORITATIVE_V2.3.1",
-                                           root, files, skipped)
+                    next_prefix = f"{TEXT_ROOT}/source_pack/QUARANTINE_V2.3.1/{stem}_{archive_id}"
+                    next_lineage = "QUARANTINED_NOT_AUTHORITATIVE_V2.3.1"
                 else:
-                    skipped.append({"source_archive":"historical_source_pack_zip","source_member":name,
-                                    "size_bytes":len(member),"sha256":digest(member),
-                                    "reason":"BINARY_ARCHIVE_NOT_EXPANDED"})
+                    next_prefix = f"{TEXT_ROOT}/source_pack/NESTED_ARCHIVES/{stem}_{archive_id}"
+                    next_lineage = "HISTORICAL_SOURCE_PACK_NESTED_ARCHIVE"
+                process_nested_archive(member, next_prefix, f"historical_source_pack_zip!/{name}",
+                                       next_lineage, root, files, skipped)
                 continue
             write_text_member(root, f"{TEXT_ROOT}/source_pack", name, member,
                               "historical_source_pack_zip", "HISTORICAL_V2.3_SOURCE_PACK", files)
@@ -325,6 +332,18 @@ def main() -> int:
                 raw = text.encode("utf-8")
             target.write_bytes(raw)
 
+    source_archive_paths = []
+    with zipfile.ZipFile(archives[0]) as zf:
+        for source_name, destination in sorted(SOURCE_ARCHIVE_DOCS.items()):
+            raw = zf.read(source_name)
+            raw.decode("utf-8")
+            target = root / destination
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_bytes() != raw:
+                raise SystemExit(f"SOURCE_ARCHIVE_DOCUMENT_COLLISION:{destination}")
+            target.write_bytes(raw)
+            source_archive_paths.append(destination)
+
     governance_paths = import_governance_archives(root, archives[1], archives[2])
     local_evidence_paths = []
     if not archives[3].is_file():
@@ -358,6 +377,13 @@ def main() -> int:
                                   'source_member':imported_path,'source_lineage':'S6_D1_D2_IMPLEMENTATION',
                                   'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
                                   'remote_readback_status':'PENDING'})
+    for imported_path in sorted(source_archive_paths):
+        raw = (root / imported_path).read_bytes()
+        manifest['files'].append({'repository_path':imported_path,'source_archive':'d1d2_source_bundle',
+                                  'source_member':next(k for k,v in SOURCE_ARCHIVE_DOCS.items() if v==imported_path),
+                                  'source_lineage':'SOURCE_BUNDLE_DOCUMENT_ARCHIVE',
+                                  'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
+                                  'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
     manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
     for imported_path in sorted(local_evidence_paths):
@@ -368,7 +394,7 @@ def main() -> int:
                                   'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
     manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
-    all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths)
+    all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths) | set(source_archive_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
     changed = set(run("git", "diff", "--cached", "--name-only", cwd=root).splitlines())
