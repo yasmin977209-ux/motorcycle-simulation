@@ -9,7 +9,10 @@ P={"aggregate":os.environ.get("STAGE_D_AGGREGATE","/mnt/data/github-actions-arti
    "c100":os.environ.get("STAGE_D_C100","/mnt/data/github-actions-artifact-12630457193.zip")}
 
 @pytest.fixture(scope="module")
-def model(): return build_shared_model(P)
+def model():
+    if not all(os.path.isfile(p) for p in P.values()):
+        pytest.skip("pinned artifact ZIPs are supplied only to the local integration validation")
+    return build_shared_model(P)
 
 def test_pinned_identities():
     assert (S6_SOURCE,S6_COHORT,MASTER_SEED)==("da1a9ea9b5cd789c944de3f07b08395bb67c49e7","s6-v23-da1a9ea9",20270101)
