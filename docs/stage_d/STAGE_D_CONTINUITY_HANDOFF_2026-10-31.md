@@ -137,3 +137,22 @@ The following D1/D2 files were confirmed absent from the live branch tree at tha
 The existing D1/D2 documentation files are present, but their prior statuses remain non-closing evidence. The live tree correction overrides any broad statement above that all three existing modules were absent. The current accurate state is: 3 existing but content-conflicted modules; 3 missing core modules; 2 missing D1/D2 test modules; missing validation workflow; missing generated shared model and Number Registry.
 
 No source overwrite was performed. No workflow was dispatched. The temporary write-enabled source-import workflow was deleted before any trigger.
+
+
+## 8. One-time source import path now published on GitHub
+
+To avoid repeated uploads in future chats, two repository tools have now been added:
+
+1. `scripts/import_stage_d_sources.py` — one-time local import helper. It verifies the original 50,734-byte source container SHA-256, validates the ZIP member set/CRC/path safety, extracts only the six individual S6 source modules and two test modules, patches the stale continuity pins to the current live continuity SHA/blob, checks that the local clone is on the authorized branch with a clean worktree and correct origin, commits the eight individual files, pushes only the Stage D branch, and verifies the pushed remote HEAD.
+2. `.github/workflows/stage-d-d1-d2-validation.yml` — persistent GitHub Actions workflow. It triggers when the eight source/test files are pushed (or can be dispatched on the authorized branch), downloads the three pinned artifacts directly from GitHub, verifies their remote bytes, installs pytest and PyArrow, runs the tests, builds the shared model and Number Registry, validates the frozen representative mapping, commits the generated JSON outputs and audit documents, records remote-byte evidence, reruns tests on the exact final commit, and uploads the evidence artifact.
+
+The original ZIP is not a final repository deliverable. The import helper does not commit the ZIP or the bundled D0/D1/D2 documents; the documents already exist on the branch and the validation workflow regenerates the D1/D2 audit outputs.
+
+**Not yet executed:** the helper has not been run against a local clone, and the new workflow has not been triggered. Therefore none of the missing source modules, tests, generated model, or Number Registry has been published by this mechanism yet. D1/D2 remain `BLOCKED / REPORTED_ONLY` until the one-time import is executed and the workflow run completes with remote-byte readback evidence.
+
+One-time command from a clean local clone of the authorized branch (after authenticating Git push credentials):
+```bash
+python scripts/import_stage_d_sources.py --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip --apply
+```
+
+This is a one-time source transfer only. The large aggregate, Full Logging and C100 data remain pinned GitHub Actions artifacts and are downloaded automatically by the workflow; future chats should not need those ZIPs attached again.
