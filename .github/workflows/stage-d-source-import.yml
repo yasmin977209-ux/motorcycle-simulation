@@ -27,15 +27,16 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import base64, hashlib, io, pathlib, tarfile
+          import base64, hashlib, io, lzma, pathlib, tarfile
           root = pathlib.Path('.')
           chunk_dir = root / '.stage_d_import'
           chunks = sorted(chunk_dir.glob('chunk_*.b64'))
           if len(chunks) != 4: raise SystemExit(f'EXPECTED_4_SOURCE_CHUNKS_GOT_{len(chunks)}')
           encoded = ''.join(p.read_text(encoding='ascii').strip() for p in chunks)
-          if hashlib.sha256(encoded.encode('ascii')).hexdigest() != '8251c672fbb6ed765e5dd8fbe1c9b0b73337d30d9389fcf97881476291030e18': raise SystemExit('SOURCE_PAYLOAD_BASE64_SHA256_MISMATCH')
-          raw = base64.b64decode(encoded, validate=True)
-          if hashlib.sha256(raw).hexdigest() != 'bb19be1fead00f7c73df5626331867efc392e209e7fe2a63f12bfcc6eb477323': raise SystemExit('SOURCE_TAR_SHA256_MISMATCH')
+          if hashlib.sha256(encoded.encode('ascii')).hexdigest() != 'faac472c69b61272084588f4a7ae460dc486e564c5921e1b4ab571ebd5cab1ab': raise SystemExit('SOURCE_PAYLOAD_BASE64_SHA256_MISMATCH')
+          compressed = base64.b64decode(encoded, validate=True)
+          if hashlib.sha256(compressed).hexdigest() != '29702604ddc3e4a2c6618c1a45b3be302cdd341a3b1ba153fd7a15104512af43': raise SystemExit('SOURCE_TAR_XZ_SHA256_MISMATCH')
+          raw = lzma.decompress(compressed)
           allowed = {
             'scripts/s6_deliverables_builder.py','scripts/s6_deliverables_model.py',
             'scripts/s6_artifact_reader.py','scripts/s6_manifest_resolver.py',
@@ -44,7 +45,7 @@ jobs:
             '.github/workflows/stage-d-deliverables-validation.yml',
           }
           seen = set()
-          with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as tf:
+          with tarfile.open(fileobj=io.BytesIO(raw), mode='r:') as tf:
             members = tf.getmembers()
             names = {m.name for m in members}
             if names != allowed: raise SystemExit(f'SOURCE_MEMBER_SET_MISMATCH:{sorted(names ^ allowed)}')
