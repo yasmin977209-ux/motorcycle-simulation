@@ -134,25 +134,36 @@ The following D1/D2 files were confirmed absent from the live branch tree at tha
 - `results/shared_model.json`
 - `results/number_registry.json`
 
-The existing D1/D2 documentation files are present, but their prior statuses remain non-closing evidence. The live tree correction overrides any broad statement above that all three existing modules were absent. The current accurate state is: 3 existing but content-conflicted modules; 3 missing core modules; 2 missing D1/D2 test modules; missing validation workflow; missing generated shared model and Number Registry.
+The existing D1/D2 documentation files are present, but their prior statuses remain non-closing evidence. The live tree correction overrides any broad statement above that all three existing modules were absent. The current accurate state is: 3 existing but content-conflicted modules; 3 missing core modules; 2 missing D1/D2 test modules; the original bundled workflow `stage-d-deliverables-validation.yml` is absent; the new persistent `stage-d-d1-d2-validation.yml` is present; generated shared model and Number Registry are missing. The canonical v2.4.0 normative reference text is also not yet present in GitHub; only the owner decision document is present.
 
 No source overwrite was performed. No workflow was dispatched. The temporary write-enabled source-import workflow was deleted before any trigger.
 
 
-## 8. One-time source import path now published on GitHub
+## 8. One-time source and governance-text import path now published on GitHub
 
-To avoid repeated uploads in future chats, two repository tools have now been added:
+To avoid repeated uploads in future chats, two repository tools are now available:
 
-1. `scripts/import_stage_d_sources.py` — one-time local import helper. It verifies the original 50,734-byte source container SHA-256, validates the ZIP member set/CRC/path safety, extracts only the six individual S6 source modules and two test modules, patches the stale continuity pins to the current live continuity SHA/blob, checks that the local clone is on the authorized branch with a clean worktree and correct origin, commits the eight individual files, pushes only the Stage D branch, and verifies the pushed remote HEAD.
-2. `.github/workflows/stage-d-d1-d2-validation.yml` — persistent GitHub Actions workflow. It triggers when the eight source/test files are pushed (or can be dispatched on the authorized branch), downloads the three pinned artifacts directly from GitHub, verifies their remote bytes, installs pytest and PyArrow, runs the tests, builds the shared model and Number Registry, validates the frozen representative mapping, commits the generated JSON outputs and audit documents, records remote-byte evidence, reruns tests on the exact final commit, and uploads the evidence artifact.
+1. `scripts/import_stage_d_sources.py` — one-time local import helper. It verifies three already-provided input archives by SHA-256:
+   - D1/D2 source container: 50,734 bytes, SHA-256 `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
+   - v2.4.0 governing-reference archive: 14,507,701 bytes, SHA-256 `efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c`.
+   - Historical source pack: 366,034 bytes, SHA-256 `4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a`.
 
-The original ZIP is not a final repository deliverable. The import helper does not commit the ZIP or the bundled D0/D1/D2 documents; the documents already exist on the branch and the validation workflow regenerates the D1/D2 audit outputs.
+   It extracts the six S6 source modules and two test modules as individual files; extracts the text/Markdown/JSON/CSV files from the v2.4.0 and historical source archives, including the nested owner starter pack and quarantined v2.3.1 text; does not commit any ZIP or binary artifact archive; verifies the exact governing reference SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; preserves v2.3 as historical and v2.3.1 as quarantined; writes `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`; patches the current continuity pins; commits each extracted file individually; and pushes only the authorized Stage D branch.
 
-**Not yet executed:** the helper has not been run against a local clone, and the new workflow has not been triggered. Therefore none of the missing source modules, tests, generated model, or Number Registry has been published by this mechanism yet. D1/D2 remain `BLOCKED / REPORTED_ONLY` until the one-time import is executed and the workflow run completes with remote-byte readback evidence.
+2. `.github/workflows/stage-d-d1-d2-validation.yml` — persistent GitHub Actions workflow. It triggers when the eight source/test files are pushed (or can be dispatched on the authorized branch), downloads the three pinned large artifacts directly from GitHub, verifies their remote bytes, installs pytest and PyArrow, runs the tests, builds the shared model and Number Registry, validates the frozen representative mapping, commits the generated JSON outputs and audit documents, reads the committed files back from GitHub to compute remote SHA-256 and Git blob SHA-1, records the evidence ledger, reruns tests on the exact final commit, and uploads the evidence artifact. Its remote-readback step also includes every text file listed in the archive import manifest and guards the canonical v2.4.0 reference hash.
 
-One-time command from a clean local clone of the authorized branch (after authenticating Git push credentials):
+The three input ZIPs are containers only and are not final repository deliverables. The importer writes extracted files into GitHub; the large aggregate, Full Logging and C100 data remain immutable GitHub Actions artifacts and are downloaded automatically by the workflow.
+
+**Not yet executed:** the helper has not been run against a local clone, and the new workflow has not been triggered. The v2.4.0 normative reference and the extracted governance text archive are therefore not yet on GitHub. The six source modules/two tests and generated model/Number Registry are also not yet fully published. D1/D2 remain `BLOCKED / REPORTED_ONLY` until the one-time import is executed and the workflow run completes with remote-byte readback evidence.
+
+One-time command from a clean local clone of the authorized branch, after authenticating Git push credentials and using the three existing local archive files:
+
 ```bash
-python scripts/import_stage_d_sources.py --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip --apply
+python scripts/import_stage_d_sources.py \
+  --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
+  --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
+  --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \
+  --apply
 ```
 
-This is a one-time source transfer only. The large aggregate, Full Logging and C100 data remain pinned GitHub Actions artifacts and are downloaded automatically by the workflow; future chats should not need those ZIPs attached again.
+This is a one-time import only. Future chats should use GitHub and the pinned Actions artifacts; they should not need these archives attached again.
