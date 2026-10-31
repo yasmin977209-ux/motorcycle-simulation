@@ -5,7 +5,7 @@ Run from a clean local clone of the authorized Stage D branch:
   python scripts/import_stage_d_sources.py \
     --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
     --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
-    --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip --apply
+    --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \\\n    --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip --apply
 
 The ZIP files are containers only. This script does not commit the ZIPs or binary artifact ZIPs.
 It extracts individual source modules, tests and text/JSON/CSV governance files, preserves
@@ -29,6 +29,7 @@ BRANCH = "tmp/cp-v240-stage-d-s6-deliverables-20261030"
 SOURCE_BUNDLE_SHA256 = "caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6"
 GOVERNING_ZIP_SHA256 = "efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c"
 HISTORICAL_SOURCE_PACK_SHA256 = "4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a"
+LOCAL_D0_EVIDENCE_SHA256 = "b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2"
 GOVERNING_REFERENCE_SHA256 = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
 HISTORICAL_V23_SHA256 = "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 CLOSED_V231_SHA256 = "724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0"
@@ -266,13 +267,14 @@ def main() -> int:
     parser.add_argument("--source-zip", required=True, type=Path)
     parser.add_argument("--governing-reference-zip", required=True, type=Path)
     parser.add_argument("--historical-source-pack-zip", required=True, type=Path)
+    parser.add_argument("--local-evidence-zip", required=True, type=Path, help="small archive containing the D0 reconciliation CSV and executive continuity report")
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
     parser.add_argument("--apply", action="store_true", help="required to write, commit and push")
     args = parser.parse_args()
 
     root = args.repo_root.resolve()
     archives = [args.source_zip.expanduser().resolve(), args.governing_reference_zip.expanduser().resolve(),
-                args.historical_source_pack_zip.expanduser().resolve()]
+                args.historical_source_pack_zip.expanduser().resolve(), args.local_evidence_zip.expanduser().resolve()]
     if not args.apply:
         raise SystemExit("NO_WRITE_PERFORMED: pass --apply after reviewing this script")
     if not archives[0].is_file():
@@ -323,9 +325,32 @@ def main() -> int:
             target.write_bytes(raw)
 
     governance_paths = import_governance_archives(root, archives[1], archives[2])
+    local_evidence_paths = []
+    if not archives[3].is_file():
+        raise SystemExit(f'LOCAL_EVIDENCE_ARCHIVE_NOT_FOUND:{archives[3]}')
+    local_evidence_raw = archives[3].read_bytes()
+    if digest(local_evidence_raw) != LOCAL_D0_EVIDENCE_SHA256:
+        raise SystemExit(f'LOCAL_EVIDENCE_ARCHIVE_SHA256_MISMATCH:{digest(local_evidence_raw)}')
+    local_targets = {
+        'D0_trial_manifest_reconciliation_105.csv': 'docs/stage_d/archive/D0_trial_manifest_reconciliation_105.csv',
+        '01_EXECUTIVE_AND_CONTINUITY_REPORT_AR-1.md': 'docs/stage_d/archive/01_EXECUTIVE_AND_CONTINUITY_REPORT_AR-1.md',
+    }
+    with zipfile.ZipFile(archives[3]) as zf:
+        if zf.testzip() is not None or set(zf.namelist()) != set(local_targets):
+            raise SystemExit('LOCAL_EVIDENCE_ARCHIVE_MEMBER_OR_CRC_MISMATCH')
+        for member, rel in local_targets.items():
+            raw = zf.read(member)
+            raw.decode('utf-8')
+            target = root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_bytes() != raw:
+                raise SystemExit(f'LOCAL_EVIDENCE_FILE_COLLISION:{rel}')
+            target.write_bytes(raw)
+            local_evidence_paths.append(rel)
     manifest_path = root / 'docs/governance/ARCHIVE_IMPORT_MANIFEST.json'
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
     manifest['archive_inputs'].append({'label':'d1d2_source_bundle','size_bytes':archives[0].stat().st_size,'sha256':digest_source})
+    manifest['archive_inputs'].append({'label':'d0_local_text_evidence','size_bytes':archives[3].stat().st_size,'sha256':LOCAL_D0_EVIDENCE_SHA256})
     for imported_path in sorted(IMPORT_PATHS):
         raw = (root / imported_path).read_bytes()
         manifest['files'].append({'repository_path':imported_path,'source_archive':'d1d2_source_bundle',
@@ -334,7 +359,15 @@ def main() -> int:
                                   'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
     manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
-    all_paths = IMPORT_PATHS | set(governance_paths)
+    for imported_path in sorted(local_evidence_paths):
+        raw = (root / imported_path).read_bytes()
+        manifest['files'].append({'repository_path':imported_path,'source_archive':'d0_local_text_evidence',
+                                  'source_member':Path(imported_path).name,'source_lineage':'D0_LOCAL_DERIVED_AUDIT_REPORTED_ONLY',
+                                  'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
+                                  'remote_readback_status':'PENDING'})
+    manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
+    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
+    all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
     changed = set(run("git", "diff", "--cached", "--name-only", cwd=root).splitlines())
@@ -365,6 +398,7 @@ def main() -> int:
         "source_bundle_sha256": digest_source,
         "governing_reference_zip_sha256": digest(archives[1].read_bytes()),
         "historical_source_pack_zip_sha256": digest(archives[2].read_bytes()),
+        "local_d0_evidence_zip_sha256": LOCAL_D0_EVIDENCE_SHA256,
         "files_committed": len(changed),
         "governance_text_files": len(json.loads((root / 'docs/governance/ARCHIVE_IMPORT_MANIFEST.json').read_text(encoding='utf-8')).get('files',[])),
         "canonical_governing_reference": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
