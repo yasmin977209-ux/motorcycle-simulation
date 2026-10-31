@@ -112,3 +112,28 @@ After the one-time import, all future chats should use GitHub only; no repeated 
 ## 6. Next action
 
 D0 is closed. D1/D2 remain blocked until the extracted files are committed individually and fetched back from GitHub with the required URL + remote-byte SHA-256 + containing commit triple. Do not begin D3 until D1/D2 are closed.
+
+
+## 7. Live repository tree correction — verified after initial handoff draft
+
+A recursive Git tree read at branch HEAD `0e4ecf25d868f2a77febffbb0422f6c1dd4c2465` found three S6 modules already present, but their remote SHA-256 values do **not** match the corresponding local D1/D2 source-bundle files. They must not be silently treated as the same source or overwritten without a source-level diff.
+
+| Existing GitHub file | Remote SHA-256 | Git blob SHA-1 | Containing commit | Corresponding local D1/D2 source SHA-256 | Comparison |
+|---|---|---|---|---|---|
+| `scripts/s6_artifact_reader.py` | `c61b30efd2e9cf10ef64bace5d919afc44dc57049ae35e20bac8e855d9b328ba` | `35e644e22557eb6f3449571190c1c31e2af3d461` | `2ef20e9634d346d3b5a263f474a613415b47b996` | `def740f8bfcbebafc4a45dc2425b18c3c56e3bc2ba67dc5a7a3af0eb81e693f2` | `CONFLICTED` |
+| `scripts/s6_deliverables_model.py` | `9d7bd49178d362d988cbca1d78d6736b3cdeab9bcb39435f5163729e5f336da7` | `670c10d39adcc732fe464437c1bf02f451b76f26` | `15e5a49fc1ff96d7106506103e1d35ee164879e0` | `568c5c52be1c4399a849f617d919371126320af59aea7aa5369849d445f25891` | `CONFLICTED` |
+| `scripts/s6_manifest_resolver.py` | `09396173a7ea7cddbce47d892580e9393b271b84b13558f554c920147fdeae19` | `55ba5e5f0657d2b5337af84eff6a01e3749f5491` | `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9` | `f10fbcccb35445a1866d1ce0fed1d9da9c9cdd307e01507f13dea1d1f34c3d01` | `CONFLICTED` |
+
+The following D1/D2 files were confirmed absent from the live branch tree at that check:
+- `scripts/s6_deliverables_builder.py`
+- `scripts/s6_number_registry.py`
+- `scripts/s6_validate_representatives.py`
+- `tests/test_s6_deliverables_builder.py`
+- `tests/test_s6_number_registry.py`
+- `.github/workflows/stage-d-deliverables-validation.yml`
+- `results/shared_model.json`
+- `results/number_registry.json`
+
+The existing D1/D2 documentation files are present, but their prior statuses remain non-closing evidence. The live tree correction overrides any broad statement above that all three existing modules were absent. The current accurate state is: 3 existing but content-conflicted modules; 3 missing core modules; 2 missing D1/D2 test modules; missing validation workflow; missing generated shared model and Number Registry.
+
+No source overwrite was performed. No workflow was dispatched. The temporary write-enabled source-import workflow was deleted before any trigger.
