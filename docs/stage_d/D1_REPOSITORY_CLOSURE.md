@@ -22,3 +22,21 @@
 - Acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 remain `NOT_RUN` on an exact-head delivery commit.
 
 **Disposition:** The local report records successful architecture, isolation, cohort separation, fail-closed manifest handling and unit tests. Under the evidence contract now in force, these are `REPORTED_ONLY` until the exact source files are committed, fetched back, hashed remotely, and tied to the commit. D1 is not repository-source-closed or delivery-acceptance-closed. No Excel/Word generation is authorized by this status.
+
+
+## Corrective execution evidence — 2026-11-01 (append-only)
+
+The prior statement that exact-head validation had not run is superseded for the rebuilt branch by the following live run:
+
+- Workflow run: [41249462481](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41249462481)
+- Tested commit: `7895f63ed1bb34508723d81ced956e6d77d5bda7`
+- Conclusion: `success`; exact live branch-head assertion passed.
+- Compile: `python -m compileall` passed.
+- Tests: `26 passed, 0 failed, 0 skipped`.
+- Actual artifact downloads: IDs `12852969854`, `12998778418`, `12630457193`; each download was checked against GitHub artifact metadata, exact size and SHA-256.
+- Parquet integration: `pyarrow` installed; the frozen S6 `LossCase` and `MaxCase` roles were checked as global argmin/argmax of `Final_Net_Project_Equity` against the full pinned S6 `trials_summary.parquet`, across 20 S6 scenarios. The selection map was not modified or recomputed.
+- ZIP safety tests for duplicate names, traversal/absolute/Windows/dot-segment paths and symlinks ran in the same suite.
+
+Run 17 (`41249454018`) also completed the 26 tests successfully but failed only the final exact-head comparison because the branch advanced during concurrent documentation commits. Run 19 above is the exact-head success. Earlier source-only runs with 8 skipped integration tests remain historical and are not reclassified.
+
+**Disposition remains `BLOCKED`, not D1 PASS.** The canonical full v2.4.0 reference and v2.3/v2.3.1 historical/quarantine full-text files still lack GitHub publication and remote readback. The local archive hash is not a substitute for the required remote evidence. The five missing accounting fields and all project gate limits remain unchanged. A documentation-only commit after Run 19 requires one more exact-head run.
