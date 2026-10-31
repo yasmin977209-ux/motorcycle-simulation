@@ -6,10 +6,10 @@
 
 ## Local verification
 - Local package path: `/mnt/data/d1_work`.
-- Builder tests: 10 passed.
-- Number Registry tests: 17 passed.
-- Combined suite: **27 passed**.
-- `python -m compileall -q scripts tests`: PASS.
+- Builder tests: local report records 10 passed (`REPORTED_ONLY`).
+- Number Registry tests: local report records 17 passed (`REPORTED_ONLY`).
+- Combined suite: local report records **27 passed** (`REPORTED_ONLY`).
+- `python -m compileall -q scripts tests`: reported local success (`REPORTED_ONLY`).
 - Builder integration: three pinned D0 archives validated; 125 role assignments; 105 unique cohort-qualified keys (100 S6 + 5 C100); 105 manifest resolutions.
 - Static AST scan: no Stage 13 assembler, legacy Excel builder, or Stage 12/13 role-selector imports.
 - LossCase is `argmin(Final_Net_Project_Equity)`; MaxCase is `argmax(Final_Net_Project_Equity)` without positivity filter. The frozen map is retained; no re-selection.
