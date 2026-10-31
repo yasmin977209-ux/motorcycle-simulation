@@ -2569,3 +2569,24 @@ The previous Stage D continuity entry listed the local D1 bundle path as if it w
 ## Persistent ChatGPT / Agent Handoff — 2026-10-31
 
 The durable handoff entry point is now [docs/PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). Any new ChatGPT conversation or engineering agent must read it together with this continuity record and the Stage D audit/closure documents before proceeding. It defines the authority hierarchy, immutable restrictions, current D0/D1/D2 limitations, evidence contract (GitHub URL + remote-byte SHA-256 + commit SHA), and repository-first / CI-produced workflow intended to eliminate local-only deliverables and repeated owner uploads. The handoff is not a gate PASS and does not change any project acceptance status.
+
+
+## D0 exact artifact-byte recheck and scoped closure — 2026-10-31
+
+Fresh read-only verification on the authorized Stage D branch. Pre-write Stage D HEAD was `f011f633c89707988af0c4989db033823b02f3f3`; main HEAD was `c6e54349a5e94f65d5aa9f83141f225d777bb474`. Stage D branch Actions runs=0, PRs=0, Releases=0.
+
+All three pinned GitHub Actions artifacts were downloaded again, hashed from downloaded bytes, and archive-checked:
+- Aggregate 12852969854 / Run 40773412377: 9,357,996 bytes; SHA-256 `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`; 7 members.
+- Full Logging 12998778418 / Run 41098699740: 310,827,203 bytes; SHA-256 `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`; 1,578 members.
+- C100 12630457193 / Run 40263424595: 361,733 bytes; SHA-256 `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`; 9 members.
+All sizes/hashes matched. ZIP CRC passed; duplicate names, unsafe paths, and symlink members were zero.
+
+The Full Logging role metadata confirms 125 assignments and 105 unique keys (100 S6 + 5 C100), with 20 duplicate role assignments. S6 identity remains `da1a9ea9b5cd789c944de3f07b08395bb67c49e7` / `s6-v23-da1a9ea9` / seed `20270101`. C100 remains `965281d52441cd0d4b744e211c9f68ee4cdc3753` / `c100-v23-s4-20261026-965281d5`, cross-cohort deterministic read-only reuse. Stage 12/13 source `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b` remains separate.
+
+Gate status: aggregate Gate A `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`; financial fingerprint `PASS_SCOPED` only; production Gate A `NOT_DECLARED`. Gate B N=2400 `FAIL_SCOPED` (10 PASS / 10 FAIL); Stability `NOT_CONVERGED` (0/60); N=4800 `NOT_EXECUTED`. Five historical 48K accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+
+Parquet member hashes/sizes match the aggregate manifest, but no Parquet reader is installed in this runtime; installing PyArrow was blocked by DNS/network. Schema and row counts were not read. ZIP CRC is not Parquet validation.
+
+The current governing reference remains owner-approved v2.4.0 SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; historical S6 execution reference remains v2.3 SHA-256 `e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f`. Stage 12/13 lineage is distinct.
+
+**D0:** `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` within this verified scope only. No production Gate A, full 48K accounting, Parquet schema/value-level validation, Gate B pass, convergence, N=4800, or final acceptance is declared. No D1 work was started.
