@@ -2562,3 +2562,8 @@ Preserve the distinction between the successful exact fingerprint comparison and
 ### Correction — D1 repository publication boundary (2026-10-31)
 
 The previous Stage D continuity entry listed the local D1 bundle path as if it were a repository path. Correction: `D1_S6_Independent_Builder_Source_Bundle.zip` exists and passed local ZIP/hash checks, but **has not been committed to GitHub**. The repository currently contains the D1 closure report only, which explicitly records `D1_REPOSITORY_DOCUMENTATION_COMMITTED / SOURCE_BUNDLE_NOT_COMMITTED`. D1 repository source-package closure is therefore `BLOCKED` pending publication and live read-back of the seven source members or the exact bundle. The 24 passing tests and CLI/compile checks remain `VERIFIED_LOCAL`, not repository CI evidence. D0 repository closure remains complete and scoped.
+
+
+## Persistent ChatGPT / Agent Handoff — 2026-10-31
+
+The durable handoff entry point is now [docs/PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). Any new ChatGPT conversation or engineering agent must read it together with this continuity record and the Stage D audit/closure documents before proceeding. It defines the authority hierarchy, immutable restrictions, current D0/D1/D2 limitations, evidence contract (GitHub URL + remote-byte SHA-256 + commit SHA), and repository-first / CI-produced workflow intended to eliminate local-only deliverables and repeated owner uploads. The handoff is not a gate PASS and does not change any project acceptance status.
