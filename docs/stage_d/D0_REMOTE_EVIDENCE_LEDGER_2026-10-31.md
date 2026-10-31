@@ -69,3 +69,45 @@ The authority block in docs/PROJECT_CONTINUITY.md was corrected to identify v2.4
 ## SHA-256 implementation correction — 2026-10-31
 
 The intermediate value 5c0dbe96806f8a7a268b4516eee9cb523fb83268429c528612af7ca0ad0780d6 is superseded. The current continuity file SHA-256 is b844682d2a600814fdd65dda6c287160ed46d38af4fbf557c57bf88e96d80be4, computed from the fetched 445,430 UTF-8 bytes using an implementation validated against both the SHA-256 abc vector and the 1,000,000-byte 'a' vector. Git blob SHA-1 and containing commit are unchanged.
+
+
+## Fresh GitHub artifact re-download and archive validation — 2026-10-31
+
+The three pinned artifact IDs were downloaded again directly from GitHub Actions. Their actual bytes were materialized in the execution runtime and independently hashed. All expected values matched exactly.
+
+| Artifact | Run | Producing SHA | GitHub URL | Bytes | Fresh SHA-256 | ZIP members | CRC | Duplicate / unsafe / symlink |
+|---|---:|---|---|---:|---|---:|---|---|
+| 12852969854 — aggregate | 40773412377 | `4f2f2cc16d0cb5125262088704febccbae6f50ed` | https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40773412377/artifacts/12852969854 | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` | 7 | PASS | 0 / 0 / 0 |
+| 12998778418 — Full Logging | 41098699740 | `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70` | https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740/artifacts/12998778418 | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` | 1,578 | PASS | 0 / 0 / 0 |
+| 12630457193 — C100 | 40263424595 | `24050f15bc7eb3097e20f76785a45c5d177643dd` | https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40263424595/artifacts/12630457193 | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` | 9 | PASS | 0 / 0 / 0 |
+
+The producing Runs and Jobs were re-read from GitHub:
+- Run 40773412377 / Job 123116321625 — completed, success.
+- Run 41098699740 / Job 124211088430 — completed, success.
+- Run 40263424595 / Job 121380485436 — completed, success.
+
+The three historical Runs were produced on their own source branches and tested SHAs. They are not Stage D branch CI.
+
+## Fresh source identity and mapping reconciliation
+
+Downloaded aggregate metadata confirms S6 source/cohort/seed: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7` / `s6-v23-da1a9ea9` / `20270101`. C100 reuse metadata confirms `965281d52441cd0d4b744e211c9f68ee4cdc3753` / `c100-v23-s4-20261026-965281d5` / `CROSS_COHORT_DETERMINISTIC_REUSE`, `REUSED_READ_ONLY`, `rerun=false`, 5 scenarios × 300 trials and `n_unique_paths=1`. Stage 12/13 remains historical source `f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b`, separate from S6.
+
+The Full Logging selection files confirm 125 role assignments, 105 unique keys, 100 S6 + 5 C100, and 20 duplicate role assignments. The root manifest has 105 completed keys and zero failed keys. This is not a 48K detailed-log claim.
+
+## Gate and accounting status re-read
+
+- Aggregate Gate A: `NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN`; scoped financial fingerprint status remains `PASS_SCOPED` in continuity evidence only; production Gate A remains `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B N=2400: `FAIL_SCOPED`, 10 PASS / 10 FAIL.
+- Stability: `NOT_CONVERGED`, 0/60 successful transitions.
+- N=4800: `NOT_EXECUTED`.
+- Five missing historical fields: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+
+## Parquet limitation in this revalidation
+
+The aggregate ZIP has two Parquet members whose sizes and SHA-256 values match the embedded aggregate manifest. The execution runtime lacked `pyarrow`, `fastparquet`, and `duckdb`; installing PyArrow was blocked by package-index DNS/network unavailability. No Parquet schema or row count was read. ZIP CRC is an archive integrity test, not a Parquet values/schema test. Keep Parquet schema and row-count claims as `MISSING_EVIDENCE` for this revalidation.
+
+## Repository state observed before D0 documentation commits
+
+- Stage D HEAD: `f011f633c89707988af0c4989db033823b02f3f3`; main HEAD: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Stage D branch workflow runs: 0; PRs from this branch: 0; Releases: 0.
+- No workflow was dispatched and no historical Artifact was modified.
