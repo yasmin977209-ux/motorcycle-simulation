@@ -18,3 +18,15 @@ The uploaded v2.4.0 archive was CRC-checked. Its normative Markdown member is 40
 S6/C100 identities and frozen selection unchanged. Full Logging remains 105 representative keys only, not 48,000 trials. Five missing historical accounting fields remain `MISSING_EVIDENCE`. No Trial, simulation, Monte Carlo, N=4800, D2 registry output, Excel or DOCX was produced. D2-D6 not started. No PR, merge, Release or main update.
 
 D1 remains `BLOCKED` pending full reference publication, per-file remote evidence and exact-final-head validation after the remaining commits.
+
+## Corrective continuation — 2026-11-01 (append-only)
+
+- Live starting point revalidated: branch HEAD was `93da765f287fb28066d9c3eca4cdefdc39658d75`; main HEAD was `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Historical versions of all three conflicting modules now have exact raw SHA-256, byte size, original Git blob SHA-1 and original containing commit recorded in `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md`. The old manifest resolver was restored from its base64 archival copy to raw UTF-8 and read back from GitHub; original raw bytes match the historical resolver blob.
+- ZIP reader safety checks and tests were expanded for duplicate names, path traversal, Windows drive paths, dot/empty path segments, normalized names and symlinks.
+- Exact-head workflow now downloads the three original pinned Actions artifacts by artifact ID, validates metadata + bytes + SHA-256, installs pyarrow and runs real Parquet-backed LossCase/MaxCase argmin/argmax integration. Prior CI runs with 8 skipped artifact tests remain historical successes only; they are not upgraded.
+- Workflow run on the final commit is pending/in progress at time of this append; no PASS is claimed until the exact HEAD run and jobs complete successfully.
+- v2.4.0 normative reference and v2.3/v2.3.1 historical/quarantine full text are verified in the local uploaded archive but not published/read back from GitHub. The current connector execution path cannot transfer the local archive bytes into GitHub; status remains `MISSING_EVIDENCE`.
+- The 50,734-byte source bundle and Local Evidence ZIP are absent from the active runtime. Importer remains `NOT_RUN`.
+- D1 disposition remains `BLOCKED`; D2–D6 not started. No Trial/simulation/Monte Carlo/N=4800, backfill, zero-fill, main change, PR, merge or Release.
+- See `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md` for complete raw-source provenance and the exact workflow contract.
