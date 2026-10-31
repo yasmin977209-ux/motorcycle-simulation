@@ -268,83 +268,146 @@
     ]
   },
   "live_recheck_2026_10_31": {
-    "inspected_head": "702f0c2275dbcd66d50f69832bedd393e2bcde16",
-    "branch_workflow_runs": 0,
-    "repository_in_progress_runs": 0,
-    "zip_integrity": {
-      "all_three_sha_size_match": true,
-      "crc_test_pass": true,
-      "duplicate_names": 0,
-      "duplicate_normalized_paths": 0,
-      "unsafe_paths": 0
+    "observed_before_write": {
+      "main_head": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
+      "stage_d_branch": "tmp/cp-v240-stage-d-s6-deliverables-20261030",
+      "stage_d_head": "f011f633c89707988af0c4989db033823b02f3f3",
+      "stage_d_branch_workflow_runs": 0,
+      "stage_d_branch_prs": 0,
+      "releases": 0
     },
-    "aggregate_manifest": {
-      "sha256": "3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba",
-      "size_bytes": 64015,
-      "declared_member_hashes_and_sizes_match": "6/6"
+    "artifacts": [
+      {
+        "purpose": "S6_N2400_AGGREGATE",
+        "artifact_id": 12852969854,
+        "run_id": 40773412377,
+        "run_branch": "tmp/s6-aggregate-contract-fix-20261027",
+        "run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed",
+        "job_id": 123116321625,
+        "run_status": "completed",
+        "conclusion": "success",
+        "size_bytes": 9357996,
+        "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+        "members": 7,
+        "zip_crc": "PASS",
+        "duplicate_names": 0,
+        "unsafe_paths": 0,
+        "symlinks": 0,
+        "byte_verification": "VERIFIED_LOCAL_FROM_FRESH_GITHUB_ARTIFACT_DOWNLOAD"
+      },
+      {
+        "purpose": "S6_REPRESENTATIVE_FULL_LOGGING",
+        "artifact_id": 12998778418,
+        "run_id": 41098699740,
+        "run_branch": "tmp/cp-v240-stage-c-rep-full-logging-20261030",
+        "run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70",
+        "job_id": 124211088430,
+        "run_status": "completed",
+        "conclusion": "success",
+        "size_bytes": 310827203,
+        "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+        "members": 1578,
+        "zip_crc": "PASS",
+        "duplicate_names": 0,
+        "unsafe_paths": 0,
+        "symlinks": 0,
+        "byte_verification": "VERIFIED_LOCAL_FROM_FRESH_GITHUB_ARTIFACT_DOWNLOAD"
+      },
+      {
+        "purpose": "C100_DETERMINISTIC_REUSE",
+        "artifact_id": 12630457193,
+        "run_id": 40263424595,
+        "run_branch": "tmp/s4-c100-golden-v23-20261026",
+        "run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd",
+        "job_id": 121380485436,
+        "run_status": "completed",
+        "conclusion": "success",
+        "size_bytes": 361733,
+        "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+        "members": 9,
+        "zip_crc": "PASS",
+        "duplicate_names": 0,
+        "unsafe_paths": 0,
+        "symlinks": 0,
+        "byte_verification": "VERIFIED_LOCAL_FROM_FRESH_GITHUB_ARTIFACT_DOWNLOAD"
+      }
+    ],
+    "identity_recheck": {
+      "s6": {
+        "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "master_seed": 20270101
+      },
+      "c100": {
+        "source_sha": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+        "cohort_id": "c100-v23-s4-20261026-965281d5",
+        "classification": "CROSS_COHORT_DETERMINISTIC_REUSE",
+        "status": "REUSED_READ_ONLY",
+        "rerun": false,
+        "scenario_count": 5,
+        "trial_count_per_scenario": 300,
+        "n_unique_paths": 1
+      },
+      "stage_12_13": {
+        "source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b",
+        "status": "HISTORICAL_LINEAGE_ONLY"
+      }
     },
-    "full_logging": {
-      "member_count": 1578,
-      "trial_manifest_count": 105,
-      "post_write_audit_count": 105,
-      "daily_rows": 216253,
-      "event_rows": 24545842,
-      "rollforward_equation_checks": 1297518,
-      "asset_rows": 30170,
-      "claim_rows": 93902,
-      "contract_rows": 117639,
-      "guarantor_rows": 117639,
-      "tenant_rows": 117639,
-      "receivable_rows": 9543,
-      "balance_mismatches": 0,
-      "rollforward_mismatches": 0,
-      "daily_schema_version": "s6-daily-balance-v1",
-      "accounting_fields_present_nonnull_integer": "14/14 fields across 216253/216253 rows",
-      "date_gaps": 0,
-      "duplicate_dates": 0,
-      "partner1_rows": 216253,
-      "partner2_rows": 216253,
-      "manifest_sha_matches": "105/105",
-      "audit_sha_matches": "105/105",
-      "fingerprint_matches": "105/105",
-      "source_cohort_key_identity_matches": "105/105"
-    },
-    "role_map": {
+    "role_key_recheck": {
       "role_assignments": 125,
-      "scenario_count": 25,
       "unique_keys": 105,
       "s6_unique_keys": 100,
       "c100_unique_keys": 5,
-      "duplicate_role_assignments": 20
+      "duplicate_role_assignments": 20,
+      "full_logging_completed_keys": 105,
+      "full_logging_failed_keys": 0
     },
-    "aggregate_parquet": {
-      "files_present": 2,
-      "hash_and_size_match_manifest": "2/2",
-      "parquet_schema_read": "MISSING_EVIDENCE_NO_PYARROW_FASTPARQUET_DUCKDB_POLARS",
-      "trials_summary_rows": "REPORTED_ONLY_FROM_SCENARIO_METADATA_20x2400",
-      "daily_distribution_rows": "REPORTED_ONLY_2086550_PRIOR_AUDIT"
+    "gate_recheck": {
+      "aggregate_gate_a": "NOT_EVALUATED_NO_SAME_SOURCE_PRODUCTION_GOLDEN",
+      "financial_fingerprint_gate_a": "PASS_SCOPED_RECORDED_IN_PROJECT_CONTINUITY_ONLY",
+      "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+      "gate_b_n2400": "FAIL_SCOPED",
+      "gate_b_n2400_counts": {
+        "pass": 10,
+        "fail": 10
+      },
+      "stability": "NOT_CONVERGED",
+      "stability_transitions": {
+        "successful": 0,
+        "total": 60
+      },
+      "n4800": "NOT_EXECUTED"
     },
-    "c100": {
-      "source_sha": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
-      "cohort_id": "c100-v23-s4-20261026-965281d5",
-      "status": "REUSED_READ_ONLY",
-      "rerun": false,
-      "n_unique_paths": 1,
-      "scenarios": 5,
-      "trials_per_scenario": 300,
-      "golden_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
-      "golden_manifest_sha256": "2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04"
+    "missing_historical_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "parquet_recheck": {
+      "files_present": [
+        "daily_distribution.parquet",
+        "trials_summary.parquet"
+      ],
+      "member_sha_and_size_match_aggregate_manifest": "2/2",
+      "reader_packages": {
+        "pyarrow": false,
+        "fastparquet": false,
+        "duckdb": false
+      },
+      "reader_install_attempt": "BLOCKED_NETWORK_DNS",
+      "schema_read": "MISSING_EVIDENCE",
+      "row_count_read": "MISSING_EVIDENCE",
+      "zip_crc_is_not_parquet_validation": true
     },
-    "d1_reconciliation_review_required": "D1_REPOSITORY_CLOSURE.md says 105 normalized statuses NOT_VERIFIED due absent expected byte sizes; this D0 recheck verifies all 210 per-trial manifest/audit bytes against root SHA-256. Do not silently rewrite D1 closure; review whether its additional size criterion remains required.",
-    "builder_and_deliverables": {
-      "s6_deliverables_builder": "MISSING_EVIDENCE",
-      "s6_artifact_reader": "MISSING_EVIDENCE",
-      "s6_manifest_resolver": "MISSING_EVIDENCE",
-      "arabic_excel": "MISSING_EVIDENCE",
-      "english_excel": "MISSING_EVIDENCE",
-      "number_registry_output": "MISSING_EVIDENCE",
-      "final_audit": "MISSING_EVIDENCE"
+    "reference_authority": {
+      "current_governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+      "owner_decision": "D-2026-10-30-REFERENCE-V2.4.0 / APPROVED_BY_OWNER",
+      "historical_s6_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+      "stage_12_13_source_sha": "f3af4f06fded8b7a4e8c7730b5f2d19201a0a84b"
     },
-    "d0_gate": "D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS"
+    "disposition": "D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS",
+    "prohibited_actions_performed": false
   }
 }
