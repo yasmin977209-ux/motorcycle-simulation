@@ -178,3 +178,123 @@ No D1 code, deliverables, tests, simulation, trial, Monte Carlo, N=4800, PR, mer
 - `PASS_SCOPED_WITH_LIMITATIONS`: bounded preflight completion; not project acceptance.
 
 **Final D0 disposition:** `D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`; overall project and delivery remain `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+
+---
+
+## 11. إعادة تحقق حيّة وبايتية — 2026-10-31
+
+هذه الإضافة لا تمحو لقطة ما قبل التدقيق عند HEAD `67763f3156c00db5beaa568d8b78a055c5a8f968`. وهي تصحح بيانات العضوية الداخلية غير المطابقة في الجدول السابق، وتحدّث الحالة الحية إلى الرأس الذي فُحص في 2026-10-31.
+
+### 11.1 GitHub live snapshot
+
+| العنصر | القيمة | الحالة |
+|---|---|---|
+| `main` HEAD | `c6e54349a5e94f65d5aa9f83141f225d777bb474` | VERIFIED_LIVE |
+| Stage B HEAD | `a8d7e933cf9a3986c08bc49b7a10f39f0bd498d2` | VERIFIED_LIVE |
+| Stage C HEAD | `42389fe4ef5df1b2412339b78660c75845cca09d` | VERIFIED_LIVE |
+| Stage D HEAD قبل تحديث هذا التقرير | `702f0c2275dbcd66d50f69832bedd393e2bcde16` | VERIFIED_LIVE |
+| Stage D branch workflow runs | 0 | VERIFIED_LIVE |
+| Repository-wide in-progress runs | 0 | VERIFIED_LIVE |
+
+Commit الرأس الحالي قبل هذا التحديث هو `docs: correct D1 source bundle publication status`، وتغييره في GitHub اقتصر على إضافة تصحيح إلى `docs/PROJECT_CONTINUITY.md`.
+
+ملف الاستمرارية على الرأس المفحوص:
+- Git blob SHA-1: `3f05f706cca1d14ae9326cf5519f4271b050e5e3`
+- SHA-256 لمحتوى UTF-8 المعاد قراءته: `351647414b34714fbf79e5fc2bc0d89e2759b528e5dc80a0c142a9f87bb21163`
+- الحجم UTF-8: 444,088 bytes
+- الحالة: VERIFIED_LIVE + SHA-256 recomputed from fetched content.
+
+قرار المالك:
+- `D-2026-10-30-REFERENCE-V2.4.0`: `APPROVED_BY_OWNER`.
+- Decision blob SHA-1: `58f89bc016523f1350345428b4a224ac42a8b130`.
+- المرجع الحاكم المستخرج من الحزمة المرفوعة: 401,397 bytes؛ SHA-256 الفعلي `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b` — VERIFIED_LOCAL.
+- يبقى `K_SPEC / DOCUMENT_STATUS_CONFLICT` لأن غلاف/قالب الموافقة يعرض pending بينما القرار الحي يثبت APPROVED_BY_OWNER.
+
+### 11.2 إعادة تنزيل Artifacts والتحقق من البايتات
+
+تم تنزيل الأرشيفات الثلاثة مجددًا في هذه الجولة. تمت مطابقة الحجم وSHA-256 الفعليين مع GitHub artifact metadata، كما نجح ZIP CRC/read test، ولم تظهر أسماء مكررة أو مسارات مطلقة أو `..` أو مسارات مكررة بعد normalization.
+
+| Artifact | Run | الحجم الفعلي | SHA-256 الفعلي | الأعضاء | CRC / path scan |
+|---|---:|---:|---|---:|---|
+| S6 N=2400 Aggregate `12852969854` | `40773412377` | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` | 7 | PASS |
+| Full Logging `12998778418` | `41098699740` | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` | 1,578 | PASS |
+| C100 Reuse `12630457193` | `40263424595` | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` | 9 | PASS |
+
+Run lineage from GitHub artifact metadata:
+- Aggregate: branch `tmp/s6-aggregate-contract-fix-20261027`, head `4f2f2cc16d0cb5125262088704febccbae6f50ed`.
+- Full Logging: branch `tmp/cp-v240-stage-c-rep-full-logging-20261030`, tested/head SHA `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70`.
+- C100: branch `tmp/s4-c100-golden-v23-20261026`, head `24050f15bc7eb3097e20f76785a45c5d177643dd`.
+
+### 11.3 تصحيح بصمات أعضاء Aggregate الداخلية
+
+أعيدت قراءة `manifest.json` داخل ZIP وحُسبت بصمات الأعضاء الستة التي يعلنها. جميع الأحجام والبصمات تطابقت مع `manifest.json` نفسه (6/6). الجدول التالي هو القيم الفعلية؛ ويحل محل قيم العضوية غير المطابقة في §3 من هذا التقرير:
+
+| العضو | الحجم الفعلي | SHA-256 الفعلي |
+|---|---:|---|
+| `manifest.json` | 64,015 | `3f01d143b7c98a0da272fa38411d079572deae328afbba81b24320b4a745a6ba` |
+| `c100_reuse.json` | 804 | `4bc87f0492a1e668249df0f44d3c6ebcb58b55465ac21b1fc4415bd3eceab3bc` |
+| `daily_distribution.parquet` | 4,881,090 | `9619fc94e371da073a622f8f0fcd28786caf79fac47697cca2bfadbb469e4903` |
+| `trials_summary.parquet` | 4,578,172 | `66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522` |
+| `number_registry.json` | 320,474 | `6a8fbb9aa249fa8dc678b14317b44eefdc26cd0e1b96633a9915721e2399d0e9` |
+| `stability_history.json` | 805,339 | `c41d7fc6e4fa51edeec9f2f03fa2346a80b8108ff0ed25546a6f03f433bb3c93` |
+| `statistical_evaluation.json` | 810,411 | `dad605bb73dc4f5cdf8c992e737c13d6e87bf0f0aabcabac6829f9575deb1c74` |
+
+تنبيه: بصمات `manifest.json` و`stability_history.json` و`statistical_evaluation.json` وحجم manifest في الجدول السابق لم تطابق البايتات الحالية. تم تسجيل التصحيح هنا بدل إخفاء الاختلاف. بصمة `manifest.json` الفعلية هي أيضًا قيمة `aggregate_manifest_sha256` المشار إليها في representative selection map.
+
+### 11.4 الهوية والمخططات والصفوف التي أمكن إعادة قراءتها
+
+- Aggregate manifest: `source_sha=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, `cohort_id=s6-v23-da1a9ea9`, `master_seed=20270101`, `schema_version=s6-cumulative-aggregate-v2`.
+- Aggregate JSON يعلن 20 S6 scenario summaries، وكل summary يحمل `n_total=2400`; حاصل التغطية من metadata هو 48,000 Trial. هذا تحقق من manifest metadata، وليس إعادة قراءة عدد صفوف Parquet.
+- `source_run_metadata.sha256=null` — MISSING_EVIDENCE؛ لا يعاد بناؤها.
+- C100 reuse manifest: source `965281d52441cd0d4b744e211c9f68ee4cdc3753`, cohort `c100-v23-s4-20261026-965281d5`, status `REUSED_READ_ONLY`, `rerun=false`, `n_unique_paths=1`, وخمس سيناريوهات × 300 Trial.
+- C100 Golden الفعلية داخل الأرشيف: SHA-256 `39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327`، وتطابق `golden_sha256` في `c100_reuse.json`. C100 manifest SHA-256 `2097284d77ead6b00492bf75830d09aeef8dbde4aaa1c15dae6a877dc7e9ff04`، وتطابق القيمة المشار إليها في reuse metadata.
+- Selection map: 125 assignments على 25 سيناريو × 5 أدوار؛ 105 مفاتيح فريدة، 100 S6 + 5 C100؛ 20 duplicate role assignments. في الخريطة 25 C100 role assignments تقابل 5 مفاتيح فريدة، مع بقاء C100 في namespace الأصلي وتصنيف `CROSS_COHORT_DETERMINISTIC_REUSE`.
+- تم فحص 105 trial folders؛ كل folder يحتوي على `trial_manifest.json` و`post_write_audit.json`.
+
+إعادة العد من ملفات JSONL gzip الفعلية في Full Logging:
+- daily snapshots: 216,253 rows.
+- events: 24,545,842 rows.
+- assets: 30,170؛ claims: 93,902؛ contracts: 117,639؛ guarantors: 117,639؛ tenants: 117,639؛ receivables: 9,543.
+- roll-forward equation checks من مجموع sidecar audits: 1,297,518.
+- balance mismatches: 0؛ roll-forward mismatches: 0.
+- 14 accounting fields المطلوبة موجودة وغير null، وكلها integer في 216,253/216,253 daily rows.
+- `s6-daily-balance-v1` في 216,253/216,253؛ لا duplicate dates أو date gaps؛ Partner1 وPartner2 balances موجودة في كل الصفوف؛ `Balance_Difference=0` و`Net_Equity=Capital+Retained_Earnings` دون اختلاف.
+
+**قيد Parquet:** لم تتوفر في بيئة إعادة التحقق مكتبة قراءة Parquet (`pyarrow`, `fastparquet`, `duckdb`, `polars` غير مثبتة). لذلك تم التحقق من وجود الملفين وحجمهما وSHA-256 وفق manifest، لكن لم تُقرأ Parquet schemas أو row counts من البايتات في هذه الجولة. عدد 48,000 مستند إلى scenario metadata أعلاه؛ وعدد 2,086,550 لصفوف daily distribution يبقى `REPORTED_ONLY` من التدقيق السابق، لا `VERIFIED_LOCAL` في هذه الجولة. لا تُنشأ أوراق تعتمد على أعمدة أو صفوف Parquet قبل قراءتها فعليًا في بيئة Builder.
+
+### 11.5 تسوية 105 Trial Manifests — تحقق SHA-256 على مستوى كل مفتاح
+
+أُعيدت مطابقة كل سجل من root manifest مع الملفين الفعليين في ZIP. النتيجة:
+
+| طبقة الدليل | العدد | الحالة الفعلية |
+|---|---:|---|
+| Original `trial_manifest.json` | 105 | `WRITTEN_PENDING_POST_WRITE_AUDIT` (محفوظ كما هو) |
+| `post_write_audit.json` | 105 | `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING` |
+| Root manifest result entries | 105 | `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING` |
+| Trial manifest SHA-256 = root expected SHA | 105/105 | MATCH |
+| Sidecar audit SHA-256 = root expected SHA | 105/105 | MATCH |
+| expected/actual/sidecar/root trial fingerprint | 105/105 | MATCH |
+| scenario/trial/source/cohort identity | 105/105 | MATCH |
+
+**الـnormalized status المقترح، للعرض المشتق فقط:** `PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING` للمفاتيح الـ105، لأن SHA-256 لكلا الملفين تطابق root manifest، كما تطابقت بصمة التجربة وهوية المصدر والفوج والمفتاح. لا يُعدّل أي من ملفات `trial_manifest.json` الأصلية، وتبقى قيمة pending محفوظة. لذلك يظل `K_SPEC / TRIAL_MANIFEST_STATUS_CONFLICT` قائمًا بوصفه تعارضًا في metadata التاريخية، لا فشلًا في post-write audit.
+
+تفاصيل 105 مفاتيح، وSHA-256 لكل manifest ولكل sidecar، وfingerprint والحالة المقترحة محفوظة في ملف CSV المساند المرفق بهذه المراجعة: `D0_trial_manifest_reconciliation_105.csv`، SHA-256 `e2653552868606cbf905c84c379a16fb63be3972ce2426e2a8cee2a9a9b153e7`. هذا CSV ملف مساند محلي لهذه الجلسة وليس GitHub artifact أو عضوًا من الأرشيفات الثلاثة.
+
+يوجد اختلاف توثيقي لاحق في `D1_REPOSITORY_CLOSURE.md` يقول إن normalized statuses بقيت NOT_VERIFIED بسبب غياب expected byte sizes. إعادة تحقق D0 الحالية تثبت تطابق SHA-256 الفعلي مع root manifest لكل الملفات الـ210 (105 + 105). لا نغيّر D1 closure تلقائيًا؛ يسجل هذا كـ`D1_RECONCILIATION_REVIEW_REQUIRED` لمراجعة معيار الحجم الإضافي، مع بقاء أصل manifest pending دون تعديل.
+
+### 11.6 حدود بيانات السيناريوهات وقرار D0
+
+| البيانات | ما ثبت وجوده | ما لا يجوز ادعاؤه |
+|---|---|---|
+| STATS | JSON statistical evaluation وstability history وnumber registry؛ parquet summary/distribution موجودان ومثبتا البصمة | لا ادعاء بإعادة قراءة Parquet schema/rows في هذه الجولة |
+| DAILY | aggregate daily distribution file + 216,253 daily snapshots للمفاتيح الممثلة فقط | لا daily ledgers لكل 48,000 Trial |
+| ASSETS / CONTRACTS / GUARANTEE / PARTNER | السجلات التفصيلية للمفاتيح الممثلة الـ105 فقط | لا تعميم على جميع Trials |
+| ACCTG | 14 حقلاً محاسبيًا مكتملًا في 216,253 representative daily rows | لا إثبات تاريخي شامل لميزانية 48K |
+| C100 | deterministic reuse evidence منفصل بهويته الأصلية | لا إعادة تشغيل ولا دمج هوية C100 مع S6 |
+
+تظل الحقول التاريخية الخمسة للسكان 48K `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. ولا يجوز backfill أو الاستعانة بـStage 12/13.
+
+**حكم D0 بعد إعادة التحقق:** `D0_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`. هوية المدخلات وبصمات الأرشيفات وسلامة ZIP وفصل الأفواج وFull Logging للـ105 مفاتيح مثبتة. يمكن وصف البيانات المتاحة بدقة وإنتاج مخرجات مجمعة/تمثيلية فقط. تبقى قراءة Parquet schema/row counts، وسجلات 48K التفصيلية، وحقول الميزانية الخمسة موانع لأي مخرج يدّعي تغطية تفصيلية أو محاسبية شاملة.
+
+لا D1 في هذه المهمة؛ لا Builder execution، لا Excel/DOCX generation، لا tests/workflow dispatch، لا Simulation/Trial/Monte Carlo، لا N=4800، ولا تعديل لـmain أو artifacts تاريخية.
