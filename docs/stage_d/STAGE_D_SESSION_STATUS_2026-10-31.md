@@ -2,7 +2,7 @@
 
 **Repository:** `yasmin977209-ux/motorcycle-simulation`  
 **Authorized working branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`  
-**Branch HEAD before this status-file correction:** `1a4b8122d52e94c1bd659ad242166910e2ab010e`  
+**Branch HEAD before this status-file correction:** `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`  
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474` — unchanged.  
 **Stage D workflow runs at this check:** 0.  
 **PRs / Releases:** none created by this work.  
@@ -86,7 +86,7 @@ It also preserves v2.3 as historical and v2.3.1 as quarantined, and imports text
 The importer and workflow are already published individually on the authorized branch:
 
 - [`scripts/import_stage_d_sources.py`](../../scripts/import_stage_d_sources.py)  
-  Remote SHA-256: `635a441055fc27e5f787b9425ba03b15eeba639814eff1c72f9c41b224222aca`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `853790f8e4388428137bb017c45bf1e386d12c4c`.
+  Remote SHA-256: `ffc8a7475d5ece9dc76a41554ecf9919416d2e7eb57d397c9ea4920cdafbaeed`; Git blob SHA-1: `67f4bb66e7c052992da08e870ec4531760eb7fd2`; containing commit: `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`.
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
   Remote SHA-256: `d568fad342d881df2702d6dd7d6ccbfab39e55dcd0388070a85f0f6e05a96c59`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `31bd70355ac89e36a4ef2e242536618622c4a26b`.
 
@@ -156,7 +156,7 @@ The canonical normative v2.4.0 Markdown is **not yet present** in the live tree.
 
 ### One-time import, then GitHub-only continuity
 
-The source ZIPs are containers, not deliverables. The published importer `scripts/import_stage_d_sources.py` verifies the four supplied archive hashes, extracts the eight D1/D2 implementation/test files and all UTF-8 text/Markdown/JSON/CSV members from the v2.4.0 and historical archives (including nested text packs), preserves v2.3 as historical and v2.3.1 as quarantined, writes an import manifest, commits individual extracted files, and pushes only this authorized branch. Binary ZIPs are not committed. After that one-time local import/push, the persistent workflow downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits generated JSON/audit outputs, reads committed files back from GitHub, computes SHA-256 from remote bytes, records each file's URL/blob/commit triple, and tests the exact final head.
+The source ZIPs are containers, not deliverables. The published importer `scripts/import_stage_d_sources.py` verifies the four supplied archive hashes, extracts the eight D1/D2 implementation/test files, preserves the seven remaining source-bundle documents under `docs/stage_d/archive/source_bundle/`, and recursively extracts UTF-8 text/Markdown/JSON/CSV members from every nested archive in the v2.4.0 and historical packs (including nested evidence ZIPs), preserves v2.3 as historical and v2.3.1 as quarantined, writes an import manifest, commits individual extracted files, and pushes only this authorized branch. Binary ZIPs are not committed. After that one-time local import/push, the persistent workflow downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits generated JSON/audit outputs, reads committed files back from GitHub, computes SHA-256 from remote bytes, records each file's URL/blob/commit triple, and tests the exact final head.
 
 The current ChatGPT GitHub connector can write repository text but cannot stream arbitrary local `/mnt/data` attachments into a local Git worktree or execute the importer against a local clone. Therefore the one-time importer has **not** been run in this session. The user should not upload the archives again in future chats; instead, run the importer once from an authenticated clean clone of this branch using the four already-downloaded local archive paths. After the resulting push triggers the workflow, subsequent sessions can resume entirely from GitHub.
 
@@ -172,3 +172,18 @@ python scripts/import_stage_d_sources.py \
 ```
 
 **No new local build output was created in this session.** No D3-D6 work was authorized or started.
+
+
+### Importer hardening — 2026-10-31
+
+The importer was revised to address a completeness gap found in the archive review: the first version extracted only selected nested text packs and did not preserve the seven non-code documents from the 15-member D1/D2 source bundle. The revised script now recursively scans nested ZIPs (depth limit 8), extracts supported UTF-8 text members only, skips binary payloads, gives nested archives content-derived unique paths, preserves quarantined v2.3.1 lineage, and archives the seven non-code source-bundle documents instead of overwriting active D0/D1/D2 records. This is a code change only; it has not been executed against a clone and has not been workflow-tested.
+
+The recursive archive inventory across the four local containers found 97 text-member occurrences totaling 17,507,075 bytes (55 Markdown, 5 TXT, 26 JSON, 2 CSV, 8 Python and 1 YAML). This includes duplicate historical copies preserved under distinct provenance paths. The 97 count is a local archive inventory, not a GitHub publication claim.
+
+Updated importer evidence:
+- [importer](../../scripts/import_stage_d_sources.py)
+- Remote SHA-256: `ffc8a7475d5ece9dc76a41554ecf9919416d2e7eb57d397c9ea4920cdafbaeed`
+- Git blob SHA-1: `c7a8ad254d4ff8b00b227976b09774e7f145cbed`
+- Containing commit: `5e20b9bef3d301809ec8e9c4a39743b1506d9e07`
+
+No Stage D workflow was triggered by this importer-only documentation/code update because the workflow push filter is limited to the eight D1/D2 source/test files. Workflow run count remains zero at the last live check.
