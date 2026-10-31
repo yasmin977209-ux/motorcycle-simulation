@@ -143,7 +143,7 @@ No source overwrite was performed. No workflow was dispatched. The temporary wri
 
 To avoid repeated uploads in future chats, two repository tools are now available:
 
-1. `scripts/import_stage_d_sources.py` — one-time local import helper. It verifies three already-provided input archives by SHA-256:
+1. `scripts/import_stage_d_sources.py` — one-time local import helper. It verifies four already-provided input archives by SHA-256:
    - D1/D2 source container: 50,734 bytes, SHA-256 `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.
    - v2.4.0 governing-reference archive: 14,507,701 bytes, SHA-256 `efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c`.
    - Historical source pack: 366,034 bytes, SHA-256 `4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a`.
@@ -157,13 +157,14 @@ The four input ZIPs are containers only and are not final repository deliverable
 
 **Not yet executed:** the helper has not been run against a local clone, and the new workflow has not been triggered. The v2.4.0 normative reference and the extracted governance text archive are therefore not yet on GitHub. The six source modules/two tests and generated model/Number Registry are also not yet fully published. D1/D2 remain `BLOCKED / REPORTED_ONLY` until the one-time import is executed and the workflow run completes with remote-byte readback evidence.
 
-One-time command from a clean local clone of the authorized branch, after authenticating Git push credentials and using the three existing local archive files:
+One-time command from a clean local clone of the authorized branch, after authenticating Git push credentials and using the four existing local archive files:
 
 ```bash
 python scripts/import_stage_d_sources.py \
   --source-zip /path/to/D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip \
   --governing-reference-zip /path/to/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip \
   --historical-source-pack-zip /path/to/MOTORCYCLE_SIMULATION_SOURCE_PACK.zip \
+  --local-evidence-zip /path/to/STAGE_D_LOCAL_TEXT_EVIDENCE_2026-10-31.zip \
   --apply
 ```
 
