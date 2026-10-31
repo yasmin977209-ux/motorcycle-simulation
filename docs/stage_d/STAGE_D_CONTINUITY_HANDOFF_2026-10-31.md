@@ -1,0 +1,114 @@
+# Stage D continuity handoff — 2026-10-31
+
+**Repository:** `yasmin977209-ux/motorcycle-simulation`  
+**Authorized work branch:** `tmp/cp-v240-stage-d-s6-deliverables-20261030`  
+**Branch HEAD at handoff creation:** `6bfe3e50ec9d87c3fd0050e23895c78544aca9db`  
+**main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474` (unchanged)  
+**Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`
+
+This addendum is the current handoff for the D0-D2 continuation. It supplements, and does not rewrite, the historical `docs/PROJECT_CONTINUITY.md`.
+
+## 1. Current stage dispositions
+
+| Stage | Disposition | What is proven | What is still missing |
+|---|---|---|---|
+| D0 | `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` | Three pinned GitHub artifacts downloaded again from GitHub; byte SHA-256 and size match; ZIP CRC/path checks pass; D0 audit and closure documents have live GitHub links and remote-byte hashes | Parquet schema/row parsing remains limited unless run with a Parquet reader; 48K historical daily accounting gap remains |
+| D1 | `BLOCKED / REPORTED_ONLY` | Local extracted source tree; local compileall pass; 27 local unit tests passed; local Builder integration produced 125 role assignments, 105 unique keys and 105 manifest resolutions | Source modules, tests and workflow have not been committed individually to GitHub; no exact-head GitHub Stage D run |
+| D2 | `BLOCKED / REPORTED_ONLY` | Local Number Registry has 13,954 entries, 13,946 VERIFIED_LOCAL, 8 REPORTED_ONLY, 10 unavailable-evidence records, 1 missing source digest, 0 duplicate IDs and 0 float values | The registry file itself is local only; no remote GitHub file URL/SHA-256/containing commit triple; no exact-head GitHub test run |
+| D3-D6 | `NOT_STARTED / NOT_VERIFIED` | No claim of completion | Excel, DOCX, ZIP bundle, SHA256SUMS, independent Post-Write Audit and exact-head delivery validation |
+
+## 2. D0 remote evidence
+
+The three pinned artifacts were downloaded again from GitHub Actions and rehashed from the downloaded remote bytes:
+
+| Input | Artifact / Run | Tested SHA | Size | SHA-256 |
+|---|---:|---|---:|---|
+| S6 N=2400 aggregate | 12852969854 / 40773412377 | `4f2f2cc16d0cb5125262088704febccbae6f50ed` | 9,357,996 | `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54` |
+| S6 Full Logging | 12998778418 / 41098699740 | `e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70` | 310,827,203 | `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb` |
+| C100 reuse | 12630457193 / 40263424595 | `24050f15bc7eb3097e20f76785a45c5d177643dd` | 361,733 | `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79` |
+
+- [D0 Remote Evidence Ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md) — remote content SHA-256 `fae96b8612934bbadf1f7d01834ac983cd048b1dc627c6e59dff20950d4d9623`, Git blob SHA-1 `d50c12a86be75b18434b92cc79a7b687204ffe60`, containing commit `4cd0aa9afcdd3ca09a9cdf9cb75d68062dae33e0`.
+- [D0 Repository Closure](D0_REPOSITORY_CLOSURE.md) — remote content SHA-256 `b3ba974cc821993c93ceb7fa23e09dbefaa8f80ceb0a808db5f8f93cd3c44eb4`, Git blob SHA-1 `56bee39773a47f6106acfa5162ec9350a94895a8`, containing commit `192e8909bb87f992569ff6fd7370fb56e2b256fc`.
+- [D0 Input Audit Markdown](D0_INPUT_AUDIT.md) — remote SHA-256 `1064e81dd98ddaefd443389a5bbc6d53fc1052903328d533839da84a16f705a0`, blob `7dcdcd9fbc7244f9cb98bdb42ea889abc9899950`, containing commit `cd97dca1f982f9d9220bd335b478c085ec85c679`.
+- [D0 Input Audit JSON](D0_INPUT_AUDIT.json) — remote SHA-256 `abe8482b44b78de950c33c9b1b38480e90e08b2563f184acf70695036b17aa80`, blob `02e250c9b3ac493e7ff9543c2c8ebe185a319801`, containing commit `d087e4eb951ced0efee4c910b690c712ab26a126`.
+
+For the remote repository documents, SHA-256 was calculated from GitHub-fetched UTF-8 content and the Git blob SHA-1 was independently recomputed and matched the GitHub blob ID.
+
+## 3. Local-only D1/D2 work — do not call this GitHub-published
+
+The original source ZIP is only a transport container and should not be committed as a final deliverable. Its 15 extracted members are listed below with SHA-256 values calculated from the extracted local bytes. These hashes are local evidence only until the individual files are committed and read back from GitHub.
+
+| Extracted file | Local bytes | Local SHA-256 |
+|---|---:|---|
+| `scripts/s6_deliverables_builder.py` (patched continuity pins) | 22,629 | `c3ab20c81da559f7c712e05302b1cda5990bdf05ebe2456d2bccd713a8bfcabe` |
+| `scripts/s6_deliverables_model.py` | 3,209 | `568c5c52be1c4399a849f617d919371126320af59aea7aa5369849d445f25891` |
+| `scripts/s6_artifact_reader.py` | 10,182 | `def740f8bfcbebafc4a45dc2425b18c3c56e3bc2ba67dc5a7a3af0eb81e693f2` |
+| `scripts/s6_manifest_resolver.py` | 5,143 | `f10fbcccb35445a1866d1ce0fed1d9da9c9cdd307e01507f13dea1d1f34c3d01` |
+| `scripts/s6_number_registry.py` | 50,187 | `b1e6ad46e6bbaf96bcc426eedd823f5884ba9307b2eb2809c464ee54e738feef` |
+| `scripts/s6_validate_representatives.py` | 7,669 | `4af0bdd060fe96680508abf7163ebd1a8367d186f7af06e002b3fa319ed8a213` |
+| `tests/test_s6_deliverables_builder.py` | 8,529 | `7bd595fedbb27b79c53319881a93d2a069f6f34aff6f8140f78bd31c64f26407` |
+| `tests/test_s6_number_registry.py` (patched continuity pins) | 9,661 | `4c179fa98ce06ea439be9abb1e4ee062d1eeaea1a17e50910240ce4b8628f079` |
+| `.github/workflows/stage-d-deliverables-validation.yml` | 1,158 | `5b089da7946bf70533e6f873241b13e37473cb526b80b5c4afae2f528d3980fa` |
+| `docs/stage_d/D0_REPOSITORY_CLOSURE.md` (old bundled copy; do not overwrite live corrected closure) | 3,323 | `45487b8cb6cd13de01d98ed28c02e23cd9a9683e994beef216b41661c369a5e1` |
+| `docs/stage_d/D1_BUILDER_DESIGN.md` | 8,921 | `510e4b447ddae15551115f33ff087911f0cda291cb2637f1f2021bc8cc54d922` |
+| `docs/stage_d/D1_BUILDER_AUDIT.json` | 3,581 | `6aaaed609e958d5b760fefab668996ca1874b55ba1f81fcda4dbd6b0bd32983f` |
+| `docs/stage_d/D1_REPOSITORY_CLOSURE.md` | 2,836 | `3439b9c7fbc71511e9df939ac597010af9b1b42dbb1cec996cffe3c8fb00a361` |
+| `docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md` | 8,326 | `f2f46a2c37d335887ed2e12af50eecc4949b8ceea02082f0af55667c104fe683` |
+| `docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json` | 4,912 | `de940ad23227ebbbc3557e30c12413d6befed86449797a320c816ca5a2a58610` |
+
+The source archive itself is `D1_D2_S6_BUILDER_SOURCE_BUNDLE.zip`, 50,734 bytes, local SHA-256 `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`. It is intentionally not a final repository member.
+
+Local generated outputs:
+- `S6_D1_shared_model.json`: 4,387,332 bytes; local SHA-256 `3c484ddead389e43a4da778a22e233448786ae09869e5a6737b9f53a3655b3a7`; 125 role assignments, 105 unique keys, 105 manifest resolutions, all 105 normalized statuses `NOT_VERIFIED`.
+- `S6_D2_number_registry.json`: 22,781,475 bytes; local SHA-256 `53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73`; 13,954 entries, 13,946 `VERIFIED_LOCAL`, 8 `REPORTED_ONLY`, 10 unavailable evidence records, 1 missing source digest, 0 duplicate IDs, 0 floats.
+- `D0_trial_manifest_reconciliation_105.csv`: 83,949 bytes; local SHA-256 `e2653552868606cbf905c84c379a16fb63be3972ce2426e2a8cee2a9a9b153e7`.
+- `01_EXECUTIVE_AND_CONTINUITY_REPORT_AR-1.md`: 22,715 bytes; local SHA-256 `01eb871fd9356e2c2ff6cb40d9632f64f5b3f7cf855788c53c63665ec6b2c16f`.
+
+Local validation performed:
+- `python -m compileall -q scripts tests`: passed.
+- `python -m pytest -q`: 27 passed.
+- Builder integration on pinned local artifacts: 125 assignments, 105 unique keys, 105 manifest resolutions; normalized status remains `NOT_VERIFIED`.
+- No Excel, DOCX or delivery ZIP was generated.
+- No Trial, Simulation, Monte Carlo or N=4800 was run.
+
+The local Builder and test source were patched to use the current live continuity-document hashes:
+- continuity SHA-256 `7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74`
+- Git blob SHA-1 `b956ebee141e3e9d625114973a0693506454b117`
+
+The bundled D1/D2 docs and pre-generated JSON outputs contain earlier source pins and must be regenerated or corrected; do not publish them unchanged.
+
+## 4. Transfer blocker and no-repeat solution
+
+The ZIP is not required on GitHub. The required final repository state is the extracted individual source files, tests, workflows, and generated JSON outputs.
+
+The current chat environment can:
+- read/write small UTF-8 files through the GitHub connector;
+- download GitHub Actions artifacts into the local analysis environment;
+- fetch repository text and calculate SHA-256 from the remote-fetched bytes.
+
+The current chat environment does **not** expose a direct filesystem-to-GitHub upload bridge for arbitrary local files in `/mnt/data`. GitHub Contents API write tools accept complete text content, not a local file path or a local attachment ID. Therefore the local 50KB source archive and 22.8MB registry have not been transferred. A temporary write-enabled bootstrap workflow was explored but removed before any trigger; it is not present on the branch.
+
+Do not claim D1/D2 source publication. The next safe transfer options are:
+1. Use a one-time local Git clone/import script (the script should extract the source container, apply the current continuity pins, regenerate shared model and registry from the three GitHub artifacts, commit individual files to this authorized branch, and calculate remote readback hashes); or
+2. Use an approved file-transfer mechanism that exposes the local extracted files to GitHub Actions.
+
+After the one-time import, all future chats should use GitHub only; no repeated artifact or source-package uploads should be necessary. The three large input ZIPs remain immutable GitHub Actions artifacts and can be downloaded by their pinned IDs in CI.
+
+## 5. Non-negotiable project constraints
+
+- Governing decision v2.4.0 SHA-256: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- S6 historical execution reference v2.3 remains separate from current governing reference v2.4.0.
+- S6 source/cohort/seed remain unchanged.
+- C100 remains `CROSS_COHORT_DETERMINISTIC_REUSE`; never mix it statistically with S6.
+- Stage 12/13 remains separate historical lineage.
+- Gate A financial fingerprints: `PASS_SCOPED` only.
+- Production-wide Gate A: `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B N=2400: `FAIL_SCOPED`, 10 PASS / 10 FAIL.
+- Stability: `NOT_CONVERGED`, 0/60 transitions.
+- N=4800: `NOT_EXECUTED`, not authorized.
+- Do not backfill the five missing accounting fields.
+- No main changes, PR, merge, release, Trial, Simulation, Monte Carlo, or final acceptance.
+
+## 6. Next action
+
+D0 is closed. D1/D2 remain blocked until the extracted files are committed individually and fetched back from GitHub with the required URL + remote-byte SHA-256 + containing commit triple. Do not begin D3 until D1/D2 are closed.
