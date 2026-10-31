@@ -145,7 +145,7 @@ jobs:
             with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
             local=pathlib.Path(p).read_bytes()
             if raw!=local: raise SystemExit(f'REMOTE_BYTES_DIFFER_FROM_CHECKOUT:{p}')
-            blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\x00'+raw).hexdigest()
+            blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\x00'+raw).hexdigest()
             git_blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
             if blob!=git_blob: raise SystemExit(f'GIT_BLOB_SHA1_MISMATCH:{p}')
             rows.append({'path':p,'url':f'https://github.com/{repo}/blob/{commit}/{p}',
@@ -157,7 +157,7 @@ jobs:
                   'limitations':['105 normalized trial-manifest records remain NOT_VERIFIED where independent expected byte sizes are absent.',
                                  '48K historical accounting fields remain MISSING_EVIDENCE.',
                                  'This ledger does not constitute final project acceptance or convergence.']}
-          pathlib.Path('docs/stage_d/D1_D2_REMOTE_EVIDENCE.json').write_text(json.dumps(ledger,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
+          pathlib.Path('docs/stage_d/D1_D2_REMOTE_EVIDENCE.json').write_text(json.dumps(ledger,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -178,7 +178,7 @@ jobs:
           url=f'https://raw.githubusercontent.com/{repo}/{sha}/{p}'
           with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
           if raw!=pathlib.Path(p).read_bytes(): raise SystemExit('REMOTE_LEDGER_READBACK_MISMATCH')
-          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\x00'+raw).hexdigest()
+          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\x00'+raw).hexdigest()
           if blob!=subprocess.check_output(['git','hash-object',p],text=True).strip(): raise SystemExit('REMOTE_LEDGER_BLOB_MISMATCH')
           remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/'+os.environ['GITHUB_REF_NAME']],text=True).split()[0]
           if remote!=sha: raise SystemExit('REMOTE_BRANCH_HEAD_DIFFERS_FROM_TESTED_SHA')
@@ -189,7 +189,7 @@ jobs:
                                      'sha256':hashlib.sha256(raw).hexdigest(),'git_blob_sha1':blob,
                                      'commit_sha':sha,'size_bytes':len(raw)},
                     'pytest_log':'/tmp/stage-d-final-tests.log','classification':'T2_INTERIM / NOT_FINAL_BLOCKED'}
-          pathlib.Path('/tmp/exact_head_evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\\n')
+          pathlib.Path('/tmp/exact_head_evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
           print(json.dumps(evidence,indent=2))
           PY
       - name: Upload exact-head D1-D2 evidence
