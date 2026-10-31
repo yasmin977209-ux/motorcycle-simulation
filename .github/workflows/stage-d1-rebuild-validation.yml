@@ -55,7 +55,16 @@ jobs:
             if art.get("expired") or art.get("size_in_bytes")!=size:raise SystemExit("PINNED_ARTIFACT_METADATA_MISMATCH")
             q=urllib.request.Request(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip",headers={"Authorization":f"Bearer {token}","Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"})
             h=hashlib.sha256(); total=0; dest=pathlib.Path("/tmp/stage-d")/name
-            with urllib.request.urlopen(q,timeout=300) as r,dest.open("wb") as f:
+            from urllib.request import HTTPRedirectHandler, build_opener
+            from urllib.error import HTTPError
+            class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl): return None
+            opener=build_opener(NoRedirect)
+            try: response=opener.open(q,timeout=300)
+            except HTTPError as e:
+              if e.code not in (301,302,303,307,308): raise
+              response=urllib.request.urlopen(urllib.request.Request(e.headers["Location"]),timeout=300)
+            with response as r,dest.open("wb") as f:
               while True:
                 block=r.read(1024*1024)
                 if not block:break
