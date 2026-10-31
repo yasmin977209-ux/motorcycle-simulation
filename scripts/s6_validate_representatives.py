@@ -30,6 +30,7 @@ def validate(paths: dict[str,str], output: str) -> dict:
           "full_logging_failed":root.get("full_logging_keys_failed"),"s6_role_assignments":len(s6_assignments),"c100_role_assignments":c100_assignment_count,"c100_golden_revalidation":"NOT_RUN_SEPARATE_GOLDEN_REQUIRED","parquet_value_revalidation":parquet_status,
           "parquet_detail":detail,"selection_recomputed":False,"trial_execution":"NOT_RUN"}
         if len(assignments)!=125 or root.get("role_assignment_count")!=125: raise ValueError("ROLE_ASSIGNMENT_COUNT_MISMATCH")
+        if len(s6_assignments)!=100 or c100_assignment_count!=25: raise ValueError("COHORT_ROLE_ASSIGNMENT_COUNTS_MISMATCH")
         if root.get("unique_key_count")!=105 or root.get("full_logging_keys_completed")!=105: raise ValueError("UNIQUE_KEY_COUNT_MISMATCH")
         if root.get("full_logging_keys_failed")!=0: raise ValueError("FULL_LOGGING_FAILURES_PRESENT")
         if len({(a["scenario_id"],a["trial_id"]) for a in assignments})!=105: raise ValueError("UNIQUE_KEY_SET_MISMATCH")
