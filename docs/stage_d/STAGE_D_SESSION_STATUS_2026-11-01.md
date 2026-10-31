@@ -35,3 +35,8 @@ D1 remains `BLOCKED` pending full reference publication, per-file remote evidenc
 ## Correction record — 2026-11-01
 
 Hash correction (append-only): the original reader/model SHA-256 values previously appended in this session were incorrect and are superseded by the corrected values in `D1_CORRECTIVE_EVIDENCE_ADDENDUM_2026-11-01.md`: reader `37d882bb793ad4b447918287b5969fb8481f6e8c5bce1defdafeb7660b693f57`; model `1713b88ab0f619eb5a1747fc56eb3896a63e7cb8ac65b4e03142434dd03e13ea`; resolver `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a`. Original blobs, sizes and commit IDs are unchanged. Earlier SHA values are superseded, not evidence.
+
+
+## Exact artifact integration CI — 2026-11-01 (append-only)
+
+Workflow Run `41249462481` passed at exact tested HEAD `7895f63ed1bb34508723d81ced956e6d77d5bda7`: compileall passed and pytest reported 26 passed, 0 failed, 0 skipped. The job downloaded the three pinned GitHub Actions artifacts by immutable IDs and verified exact metadata, byte sizes and SHA-256; it installed pyarrow and checked frozen S6 LossCase/MaxCase global argmin/argmax against the full pinned Parquet trial summary across 20 S6 scenarios. The final branch-head assertion passed. Run 17 (`41249454018`) is preserved as a failed exact-head check caused by concurrent branch advancement even though its 26 tests passed; Run 19 is the successful exact-head result. The closure addendum records this. The next documentation-only commit requires a new exact-head run. D1 remains BLOCKED on canonical full reference publication/readback and remaining evidence; no gate or project acceptance is promoted.
