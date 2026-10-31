@@ -111,3 +111,8 @@ Use a repository-first / CI-produced workflow:
 - D1/D2 were not closed. The exact source files, tests, workflow and Number Registry remain absent from the repository tree; local implementation and test claims remain REPORTED_ONLY. No Stage D Actions workflow run exists.
 - The local-to-GitHub binary/source transfer is still the blocking dependency. Do not attempt D3–D6 until source publication, exact-head validation, registry generation/commit, and remote-byte SHA-256 + commit verification are complete.
 - Stop condition honored: no D3–D6, Trial, Simulation, Monte Carlo, N=4800, main change, PR, merge, or Release.
+
+
+## Correction to D0 status — 2026-10-31
+
+The current D0 closure note at docs/stage_d/D0_REPOSITORY_CLOSURE.md has been downgraded to REPORTED_ONLY / D0_REMOTE_SHA256_REVALIDATION_PENDING. The earlier scoped input-audit work remains historical evidence, but the remote-byte SHA-256 values for D0_INPUT_AUDIT.md, D0_INPUT_AUDIT.json and docs/PROJECT_CONTINUITY.md were not reliably recomputed in this execution. Do not use the old D0 PASS_SCOPED_WITH_LIMITATIONS label to open a gate under the owner's new three-part evidence rule. D1 and D2 remain blocked as previously stated. The latest D0 closure file itself is committed, but its referenced inputs still lack a fully revalidated remote SHA-256 + commit + URL triple.
