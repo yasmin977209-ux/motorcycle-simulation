@@ -1,7 +1,7 @@
 # D1 — Independent S6 Deliverables Builder Design
 
 **Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`  
-**Local status:** `D1_COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`  
+**Local implementation report:** `REPORTED_ONLY_LOCAL / NOT_A_REPOSITORY_GATE`  
 **Repository publication:** pending complete source-bundle publication.
 
 ## Architecture
