@@ -1,0 +1,27 @@
+{
+  "audit_id": "D2-S6-NUMBER-REGISTRY-2026-10-31",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "status": "D2_PASS_SCOPED_WITH_LIMITATIONS_LOCAL_ONLY",
+  "registry_path": "results/number_registry.json",
+  "size_bytes": 22781475,
+  "sha256": "53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73",
+  "entry_count": 13954,
+  "verified_local_count": 13946,
+  "reported_only_count": 8,
+  "unavailable_record_count": 10,
+  "missing_source_digest_count": 1,
+  "duplicate_number_id_count": 0,
+  "float_count": 0,
+  "gate_statuses": {
+    "gate_a_financial": "PASS_SCOPED",
+    "gate_a_production": "NOT_DECLARED",
+    "gate_b_n2400": "FAIL_SCOPED",
+    "stability": "NOT_CONVERGED",
+    "n4800": "NOT_EXECUTED",
+    "full_logging": "PASS_SCOPED_105_KEYS_ONLY"
+  },
+  "local_tests": "27 passed",
+  "compileall": "PASS",
+  "exact_head_workflow": "NOT_RUN",
+  "reports_generated": false
+}
