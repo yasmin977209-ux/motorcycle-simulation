@@ -35,7 +35,7 @@ GOVERNING_REFERENCE_SHA256 = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d
 HISTORICAL_V23_SHA256 = "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 CLOSED_V231_SHA256 = "724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04c44db0"
 
-CONTINUITY_SHA256 = "7458723582ba50454ff80bacb4132afacf76035de9db0907da0145d86ed20f74"
+CONTINUITY_SHA256 = "d9ade8e347b1b0bec7a9a60e35ca05ae2a8374c51a7ba5f7da494bd5b66c7d78"
 CONTINUITY_GIT_BLOB_SHA1 = "b956ebee141e3e9d625114973a0693506454b117"
 
 IMPORT_PATHS = {
@@ -316,10 +316,20 @@ def main() -> int:
             p = safe_name(info.filename)
             if p.is_absolute():
                 raise SystemExit(f"UNSAFE_SOURCE_PATH:{info.filename}")
+        preexisting_conflict_paths = []
         for name in sorted(IMPORT_PATHS):
             target = root.joinpath(*PurePosixPath(name).parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             raw = zf.read(name)
+            if target.exists() and target.read_bytes() != raw:
+                backup_rel = f"docs/stage_d/archive/pre_import_conflicts/{name}"
+                backup = root / backup_rel
+                backup.parent.mkdir(parents=True, exist_ok=True)
+                previous = target.read_bytes()
+                if backup.exists() and backup.read_bytes() != previous:
+                    raise SystemExit(f"PRE_IMPORT_BACKUP_COLLISION:{backup_rel}")
+                backup.write_bytes(previous)
+                preexisting_conflict_paths.append(backup_rel)
             if name.endswith(".py"):
                 text = raw.decode("utf-8")
                 text = text.replace(
@@ -377,6 +387,13 @@ def main() -> int:
                                   'source_member':imported_path,'source_lineage':'S6_D1_D2_IMPLEMENTATION',
                                   'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
                                   'remote_readback_status':'PENDING'})
+    for imported_path in sorted(preexisting_conflict_paths):
+        raw = (root / imported_path).read_bytes()
+        manifest['files'].append({'repository_path':imported_path,'source_archive':'pre_import_remote_branch',
+                                  'source_member':imported_path.replace('docs/stage_d/archive/pre_import_conflicts/','',1),
+                                  'source_lineage':'PRE_IMPORT_CONFLICTED_CONTENT_PRESERVED',
+                                  'size_bytes':len(raw),'sha256_local_source_bytes':digest(raw),
+                                  'remote_readback_status':'PENDING'})
     for imported_path in sorted(source_archive_paths):
         raw = (root / imported_path).read_bytes()
         manifest['files'].append({'repository_path':imported_path,'source_archive':'d1d2_source_bundle',
@@ -394,7 +411,7 @@ def main() -> int:
                                   'remote_readback_status':'PENDING'})
     manifest['files'] = sorted(manifest['files'], key=lambda x:x['repository_path'])
     manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+'\n',encoding='utf-8')
-    all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths) | set(source_archive_paths)
+    all_paths = IMPORT_PATHS | set(governance_paths) | set(local_evidence_paths) | set(source_archive_paths) | set(preexisting_conflict_paths)
     for path in sorted(all_paths):
         run("git", "add", path, cwd=root)
     changed = set(run("git", "diff", "--cached", "--name-only", cwd=root).splitlines())
