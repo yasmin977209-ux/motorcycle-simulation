@@ -1,0 +1,23 @@
+{
+  "classification": "VERIFIED_LOCAL",
+  "archive": {
+    "filename": "MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0_CANDIDATE_2026-10-30.zip",
+    "size_bytes": 14507701,
+    "sha256": "efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c"
+  },
+  "member": {
+    "path": "01_REFERENCE/المرجع_الحاكم_الموحّد_v2.4.0_مرشح_للاعتماد.md",
+    "size_bytes": 401397,
+    "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+  },
+  "owner_decision": {
+    "github_path": "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+    "status": "APPROVED_BY_OWNER",
+    "decision_id": "D-2026-10-30-REFERENCE-V2.4.0"
+  },
+  "archive_manifest_status": "REFERENCE_CANDIDATE_PENDING_OWNER_APPROVAL",
+  "interpretation": "The uploaded archive manifest predates the live owner approval. The live GitHub owner decision is authoritative and records APPROVED_BY_OWNER. The extracted normative member matches the approved SHA-256 exactly.",
+  "required_remote_path": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+  "required_remote_path_status": "MISSING_EVIDENCE",
+  "note": "Local byte identity is proven; this file has not yet been published and read back from GitHub."
+}
