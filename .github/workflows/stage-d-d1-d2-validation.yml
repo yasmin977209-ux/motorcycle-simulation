@@ -1,0 +1,3 @@
+name: Stage D1-D2 Source Validation
+on:
+  workflow_dispatch:
