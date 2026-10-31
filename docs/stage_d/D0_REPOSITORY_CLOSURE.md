@@ -59,3 +59,22 @@ No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge, or Release wa
 ## Corrected remote evidence pointer — 2026-10-31
 
 The D0 remote evidence ledger was corrected after an independent SHA-256 implementation was validated against the standard test vector and Git blob SHA-1 readback. Use the corrected ledger triple above; superseded SHA-256 values are invalid. The closure document itself must be read back at its latest branch commit for its current SHA-256.
+
+
+## Fresh live D0 revalidation — 2026-10-31
+
+This addendum supersedes any stale pre-audit HEAD wording above; it does not delete or rewrite prior audit history.
+
+- Live Stage D branch HEAD before the revalidation commits: `f011f633c89707988af0c4989db033823b02f3f3`.
+- Live `main` HEAD: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Branch-specific Stage D Actions runs: 0; branch PRs: 0; Releases: 0.
+- All three pinned GitHub artifacts were freshly downloaded again. Exact sizes and SHA-256 values matched; ZIP CRC passed; duplicate names, unsafe paths, and symlinks were all zero. See the new 2026-10-31 addendum in [D0_INPUT_AUDIT.md](D0_INPUT_AUDIT.md) and the [remote evidence ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md).
+- Re-read representative selection metadata confirms 125 role assignments and 105 unique keys, split 100 S6 + 5 C100; 20 assignments are duplicate role assignments, not extra unique trials.
+- Gate B remains FAIL_SCOPED (10 PASS / 10 FAIL at N=2400); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. Production Gate A remains NOT_DECLARED.
+- The five missing 48K accounting fields remain MISSING_EVIDENCE and unchanged.
+- Parquet files are present and their byte hashes match the aggregate manifest, but this runtime has no Parquet reader and package installation was blocked by network DNS. Schema/row count validation was not run. ZIP CRC is not Parquet validation.
+- Current governing reference is v2.4.0 under the owner-approved decision; v2.3 remains the historical S6 execution reference. Stage 12/13 lineage remains separate.
+
+**D0 disposition:** `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` for input identity, archive integrity/path safety, source/cohort separation, representative role/key reconciliation, and the stated evidence boundaries only. No production Gate A, full historical 48K accounting, Parquet value-level validation, Gate B pass, convergence, or final acceptance is declared.
+
+No Trial, Simulation, Monte Carlo, N=4800, D1 execution, main update, PR, merge, or Release was performed.
