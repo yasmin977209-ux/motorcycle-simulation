@@ -28,4 +28,8 @@ All three local byte hashes and sizes match; ZIP CRC, duplicate member/path and 
 - Preserve all open `K_SPEC` conflicts, including document status, historical reference hash, trial manifest status and S6 code mapping.
 
 **Disposition:** D0 is closed at the pinned-input audit and repository-documentation level only. It is not full production accounting acceptance or final project acceptance. No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge or Release was performed.
-\n\n## Remote-byte verification update — 2026-10-31\n\nThe D0 audit Markdown, JSON, and continuity references above were fetched from the authorized branch and SHA-256 recomputed from the returned UTF-8 bytes. The commit IDs listed beside each file were fetched independently and each commit was confirmed to contain the corresponding path. The three immutable input archive hashes and sizes remain `VERIFIED_LOCAL (prior byte audit)`; they were not redownloaded or rehashed in this documentation-only update.\n
+
+
+## Remote-byte verification update — 2026-10-31
+
+The D0 audit Markdown, JSON, and continuity references above were fetched from the authorized branch and SHA-256 recomputed from the returned UTF-8 bytes. The commit IDs listed beside each file were fetched independently and each commit was confirmed to contain the corresponding path. The three immutable input archive hashes and sizes remain `VERIFIED_LOCAL (prior byte audit)`; they were not redownloaded or rehashed in this documentation-only update.
