@@ -41,9 +41,17 @@ class Archive:
         z = zipfile.ZipFile(io.BytesIO(raw))
         names = z.namelist()
         if len(names) != len(set(names)): raise ArtifactValidationError("DUPLICATE_ZIP_MEMBER")
+        normalized = set()
         for name in names:
             p=PurePosixPath(name)
-            if p.is_absolute() or ".." in p.parts or "\\" in name: raise ArtifactValidationError("UNSAFE_ZIP_PATH")
+            parts=name.rstrip("/").split("/")
+            if (not name or p.is_absolute() or name.startswith("/") or "\\" in name
+                    or (len(name) >= 2 and name[1] == ":" and name[0].isalpha())
+                    or any(part in ("", ".", "..") for part in parts)):
+                raise ArtifactValidationError("UNSAFE_ZIP_PATH")
+            norm=p.as_posix()
+            if norm in normalized: raise ArtifactValidationError("DUPLICATE_NORMALIZED_ZIP_PATH")
+            normalized.add(norm)
             mode=(z.getinfo(name).external_attr >> 16) & 0o170000
             if mode == stat.S_IFLNK: raise ArtifactValidationError("ZIP_SYMLINK")
         bad=z.testzip()
