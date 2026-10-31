@@ -306,3 +306,8 @@ The status file itself is being committed by the next commit; its own final remo
 
 ### Exact-head and stage boundary
 D0 disposition is `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`. The exact final branch HEAD after the status update must be read from GitHub and the D0 files must be read back at that exact branch HEAD. D1 remains BLOCKED / REPORTED_ONLY and was not started by this session.
+
+
+### 10.1 تصحيح readback النهائي للحالة — 2026-10-31
+
+تم تنفيذ commit الحالة المشار إليه في الجملة الأخيرة من §10 أعلاه، ولم تعد تلك الجملة إجراءً مستقبليًا. GitHub أكد أن commit `6ae0507f5ac36484bff5dbf8f56d9981a9705b29` يحتوي نسخة الحالة التي كان SHA-256 لها `4887203da6fcfe1c3ce03522b2a0b2482afcc7532b204ab72b85c76e77b327fb`، Git blob SHA-1 `7e3e8f760cf38bd5552ee9a411116124d41f564d`، والحجم 32,792 bytes. تم جلبها مجددًا من GitHub وحساب البصمة من البايتات المسترجعة. يظل هذا التوثيق append-only؛ أي commit تصحيحي تالٍ سيُسجل في نهاية الجلسة ولا يغير التاريخ السابق.
