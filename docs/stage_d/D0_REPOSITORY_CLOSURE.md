@@ -27,7 +27,7 @@ All three local byte hashes and sizes match; ZIP CRC, duplicate member/path and 
 - SHA/fingerprint checks for 105 manifests match, but independent expected byte sizes are absent; all 105 normalized statuses remain `NOT_VERIFIED`; original pending states remain unchanged.
 - Preserve all open `K_SPEC` conflicts, including document status, historical reference hash, trial manifest status and S6 code mapping.
 
-**Disposition:** D0 is closed at the pinned-input audit and repository-documentation level only. It is not full production accounting acceptance or final project acceptance. No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge or Release was performed.
+**Disposition:** The historical D0 pinned-input audit was completed at scoped level, but current D0 gate status under the owner's remote-byte evidence contract is `REPORTED_ONLY / D0_REMOTE_SHA256_REVALIDATION_PENDING`. It is not reopened as PASS until the D0 Markdown, JSON and continuity source files each have a verified remote-byte SHA-256, URL and containing commit. It is not full production accounting acceptance or final project acceptance. No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge or Release was performed.
 
 
 ## Remote-byte verification update — 2026-10-31
