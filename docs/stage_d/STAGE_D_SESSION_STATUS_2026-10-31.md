@@ -68,7 +68,7 @@ The old bundled workflow `stage-d-deliverables-validation.yml` is absent. A new 
 - Local tests: 27 passed.
 - Local shared model: 4,387,332 bytes, SHA-256 `3c484ddead389e43a4da778a22e233448786ae09869e5a6737b9f53a3655b3a7`; 125 role assignments, 105 unique keys, 105 manifest resolutions, all normalized statuses `NOT_VERIFIED`.
 - Local Number Registry: 22,781,475 bytes, SHA-256 `53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73`; 13,954 entries, 13,946 VERIFIED_LOCAL, 8 REPORTED_ONLY, 10 unavailable, 1 missing source digest, 0 duplicates, 0 floats.
-- Local D0 reconciliation CSV: 83,949 bytes, SHA-256 `e2653552868606cbf905c84c379a16fb63be3972ce2426e2a8cee2a9a9b153e7`.
+- Local D0 reconciliation CSV: 83,949 bytes, SHA-256 `e2653552868606cbf905c84c379a16fb63be3972ce2426e2a8cee2a9a9b153e7`.\n- Local executive continuity report: 22,715 bytes, SHA-256 `01eb871fd9356e2c2ff6cb40d9632f64f5b3f7cf855788c53c63665ec6b2c16f`.
 - These local hashes are not remote SHA-256 and do not open D1/D2 gates.
 
 ## 5. Governance reference still to import
@@ -90,11 +90,11 @@ The importer and workflow are already published individually on the authorized b
 - [`.github/workflows/stage-d-d1-d2-validation.yml`](../../.github/workflows/stage-d-d1-d2-validation.yml)  
   Remote SHA-256: `1014df2abffdf5ffa5c7e7761e45f41e80accaee5408dcc111aa7b24589e776f`; Git blob SHA-1: `6960c7229793ef446e3cac0714bf19a7a59a0b79`; containing commit: `9d09e0ab33c5d65d8614eddd833f8c0e4f37c5e9`.
 
-The importer verifies the four already-provided ZIPs by exact SHA-256, extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
+The importer verifies four already-provided ZIPs by exact SHA-256:\n- D1/D2 source container: 50,734 bytes, `caa5d6d72cdc8588de104f24aa23499e85912921bce9a509e27e10e909d74dc6`.\n- v2.4.0 governing-reference archive: 14,507,701 bytes, `efb6a663a2fc63ac5c1f052048b3dfc945e233df9810d4fe0b21b892c533e52c`.\n- Historical source pack: 366,034 bytes, `4facbc9ed00cbbbaede83bfc65b8cdc8f0b335eabe13579f185b95a12a46ce5a`.\n- D0 local text evidence: 22,706 bytes, `b155d74bca7d16970dea06f77b876b2a97bcf6d240d21028234da07109a36fd2`.\n\nIt extracts their text files and individual source/test files, preserves archive provenance in `docs/governance/ARCHIVE_IMPORT_MANIFEST.json`, and pushes only this branch. The workflow then downloads the three pinned GitHub Actions artifacts itself, runs tests/build/representative validation, commits the generated shared model and registry, reads committed files back from GitHub, records remote SHA-256 + blob SHA-1 + commit, and tests the exact final head.
 
 **Not yet executed:** importer not run; workflow runs = 0. Therefore D1/D2 remain BLOCKED / REPORTED_ONLY.
 
-One-time command from a clean local clone of the authorized branch, using the three existing local archive files:
+One-time command from a clean local clone of the authorized branch, using the four existing local archive files:
 
 ```bash
 python scripts/import_stage_d_sources.py \
