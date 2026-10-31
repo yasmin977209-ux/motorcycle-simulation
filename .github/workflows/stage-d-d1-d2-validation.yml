@@ -139,12 +139,23 @@ jobs:
                  'docs/stage_d/D1_REPOSITORY_CLOSURE.md','docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md',
                  'docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json','docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md',
                  'docs/stage_d/D0_REPOSITORY_CLOSURE.md','docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-10-31.md']
+          manifest_path=pathlib.Path('docs/governance/ARCHIVE_IMPORT_MANIFEST.json')
+          if manifest_path.exists():
+            archive_manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
+            paths.extend(x['repository_path'] for x in archive_manifest.get('files',[]))
+            paths.extend(['docs/governance/ARCHIVE_IMPORT_MANIFEST.json',
+                          'docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md',
+                          'docs/governance/V2.4.0_OWNER_APPROVAL_SOURCE.md',
+                          'docs/governance/archive/MOTORCYCLE_SIMULATION_REFERENCE_V2.3_HISTORICAL.md',
+                          'docs/governance/archive/QUARANTINED_V2.3.1_CANDIDATE_NOT_AUTHORITATIVE.md'])
+          paths=sorted(set(paths))
           rows=[]
           for p in paths:
             url=f'https://raw.githubusercontent.com/{repo}/{commit}/{p}'
             with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
             local=pathlib.Path(p).read_bytes()
             if raw!=local: raise SystemExit(f'REMOTE_BYTES_DIFFER_FROM_CHECKOUT:{p}')
+            if p=='docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md' and hashlib.sha256(raw).hexdigest()!='225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b': raise SystemExit('GOVERNING_REFERENCE_REMOTE_SHA256_MISMATCH')
             blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\x00'+raw).hexdigest()
             git_blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
             if blob!=git_blob: raise SystemExit(f'GIT_BLOB_SHA1_MISMATCH:{p}')
