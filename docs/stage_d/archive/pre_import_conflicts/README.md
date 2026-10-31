@@ -5,3 +5,17 @@ The previous `scripts/s6_artifact_reader.py` and `scripts/s6_deliverables_model.
 The previous `scripts/s6_manifest_resolver.py` remains preserved in the parent branch history at blob SHA `55ba5e5f0657d2b5337af84eff6a01e3749f5491`; its previously recorded remote SHA-256 is `09396173a7ea7cddbce47d892580e9393b271b84b13558f554c920147fdeae19`. It was not overwritten on the original branch. Its byte content can be recovered from the parent commit/tree.
 
 No historical source file or artifact was deleted.
+
+## Byte-exact original resolver restoration — 2026-11-01
+
+The original `s6_manifest_resolver.py` is now also preserved as raw UTF-8 source at `s6_manifest_resolver.py`, not only as the prior base64 transport copy. Its bytes were read from the historical file at commit `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9`, compared with the base64 archive, decoded, and re-read from GitHub after publication.
+
+Historical source inventory (SHA-256 is over fetched raw file bytes):
+
+| Original path | SHA-256 | Git blob SHA-1 | Bytes | Original containing commit |
+|---|---|---|---:|---|
+| `scripts/s6_artifact_reader.py` | `7db68e7f0e41aabefbdff30667c6f4f8d626728c15c9bd1a2f5afc8b80858b09` | `35e644e22557eb6f3449571190c1c31e2af3d461` | 10,181 | `2ef20e9634d346d3b5a263f474a613415b47b996` |
+| `scripts/s6_deliverables_model.py` | `568c5c52be1c4399a849f617d919371126320af59aea7aa5369849d445f25891` | `670c10d39adcc732fe464437c1bf02f451b76f26` | 3,209 | `15e5a49fc1ff96d7106506103e1d35ee164879e0` |
+| `scripts/s6_manifest_resolver.py` | `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a` | `55ba5e5f0657d2b5337af84eff6a01e3749f5491` | 5,143 | `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9` |
+
+The three originals are historical evidence only. They do not replace the current rebuilt implementation under `scripts/`.
