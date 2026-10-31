@@ -118,20 +118,74 @@ jobs:
           git add results/shared_model.json results/number_registry.json results/representative_validation.json results/D1_D2_BUILD_SUMMARY.json results/D0_REMOTE_ARTIFACT_RECHECK.json docs/stage_d/D1_BUILDER_AUDIT.json docs/stage_d/D1_REPOSITORY_CLOSURE.md docs/stage_d/D1_BUILDER_DESIGN.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json
           git commit -m 'build(stage-d): publish S6 shared model and exact number registry'
           git push origin HEAD:refs/heads/$BRANCH
-      - name: Validate exact final build commit
+      - name: Read back committed files from GitHub and commit the remote evidence ledger
+        env:
+          BRANCH: tmp/cp-v240-stage-d-s6-deliverables-20261030
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess,urllib.request,os
+          repo='yasmin977209-ux/motorcycle-simulation'
+          branch=os.environ['BRANCH']
+          commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          paths=['scripts/import_stage_d_sources.py','scripts/s6_deliverables_builder.py','scripts/s6_deliverables_model.py',
+                 'scripts/s6_artifact_reader.py','scripts/s6_manifest_resolver.py','scripts/s6_number_registry.py',
+                 'scripts/s6_validate_representatives.py','tests/test_s6_deliverables_builder.py',
+                 'tests/test_s6_number_registry.py','.github/workflows/stage-d-d1-d2-validation.yml',
+                 'results/shared_model.json','results/number_registry.json','results/representative_validation.json',
+                 'results/D1_D2_BUILD_SUMMARY.json','results/D0_REMOTE_ARTIFACT_RECHECK.json',
+                 'docs/stage_d/D1_BUILDER_DESIGN.md','docs/stage_d/D1_BUILDER_AUDIT.json',
+                 'docs/stage_d/D1_REPOSITORY_CLOSURE.md','docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md',
+                 'docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json','docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md',
+                 'docs/stage_d/D0_REPOSITORY_CLOSURE.md','docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-10-31.md']
+          rows=[]
+          for p in paths:
+            url=f'https://raw.githubusercontent.com/{repo}/{commit}/{p}'
+            with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
+            local=pathlib.Path(p).read_bytes()
+            if raw!=local: raise SystemExit(f'REMOTE_BYTES_DIFFER_FROM_CHECKOUT:{p}')
+            blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest()
+            git_blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
+            if blob!=git_blob: raise SystemExit(f'GIT_BLOB_SHA1_MISMATCH:{p}')
+            rows.append({'path':p,'url':f'https://github.com/{repo}/blob/{commit}/{p}',
+                         'remote_sha256':hashlib.sha256(raw).hexdigest(),'git_blob_sha1':blob,
+                         'commit_sha':commit,'size_bytes':len(raw),'status':'VERIFIED_REMOTE_BYTES'})
+          ledger={'schema_version':'1.0','classification':'T2_INTERIM / NOT_FINAL_BLOCKED',
+                  'status':'REMOTE_BYTES_READBACK_PASS','branch':branch,'commit_sha':commit,
+                  'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),'files':rows,
+                  'limitations':['105 normalized trial-manifest records remain NOT_VERIFIED where independent expected byte sizes are absent.',
+                                 '48K historical accounting fields remain MISSING_EVIDENCE.',
+                                 'This ledger does not constitute final project acceptance or convergence.']}
+          pathlib.Path('docs/stage_d/D1_D2_REMOTE_EVIDENCE.json').write_text(json.dumps(ledger,ensure_ascii=False,indent=2,sort_keys=True)+'\\n',encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/stage_d/D1_D2_REMOTE_EVIDENCE.json
+          git commit -m 'audit(stage-d): record D1-D2 remote-byte evidence'
+          git push origin HEAD:refs/heads/$BRANCH
+      - name: Validate exact final evidence commit
         run: |
           set -euo pipefail
-          TESTED_SHA=$(git rev-parse HEAD)
           python -m compileall -q scripts tests
           python -m pytest -q | tee /tmp/stage-d-final-tests.log
           ! grep -R -nE 'scripts\\.(stage13_assemble|excel_builder)|run_simulation|monte_carlo|trial_runner' scripts/s6_*.py
           python - <<'PY'
-          import hashlib,json,os,pathlib,subprocess
+          import hashlib,json,pathlib,subprocess,urllib.request,os
+          repo='yasmin977209-ux/motorcycle-simulation'
           sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
-          paths=['scripts/s6_deliverables_builder.py','scripts/s6_deliverables_model.py','scripts/s6_artifact_reader.py','scripts/s6_manifest_resolver.py','scripts/s6_number_registry.py','scripts/s6_validate_representatives.py','tests/test_s6_deliverables_builder.py','tests/test_s6_number_registry.py','results/shared_model.json','results/number_registry.json','results/representative_validation.json','results/D1_D2_BUILD_SUMMARY.json','results/D0_REMOTE_ARTIFACT_RECHECK.json']
-          files={p:{'size_bytes':pathlib.Path(p).stat().st_size,'sha256':hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()} for p in paths}
-          evidence={'status':'EXACT_HEAD_TESTS_PASSED_LOCAL_TO_RUNNER','run_id':int(os.environ['GITHUB_RUN_ID']),'workflow_run_head_sha':os.environ['GITHUB_SHA'],'tested_sha':sha,'branch':os.environ['GITHUB_REF_NAME'],'pytest_log':'/tmp/stage-d-final-tests.log','files':files,'classification':'T2_INTERIM / NOT_FINAL_BLOCKED'}
-          pathlib.Path('/tmp/exact_head_evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
+          p='docs/stage_d/D1_D2_REMOTE_EVIDENCE.json'
+          url=f'https://raw.githubusercontent.com/{repo}/{sha}/{p}'
+          with urllib.request.urlopen(url,timeout=300) as r: raw=r.read()
+          if raw!=pathlib.Path(p).read_bytes(): raise SystemExit('REMOTE_LEDGER_READBACK_MISMATCH')
+          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest()
+          if blob!=subprocess.check_output(['git','hash-object',p],text=True).strip(): raise SystemExit('REMOTE_LEDGER_BLOB_MISMATCH')
+          evidence={'status':'EXACT_HEAD_TESTS_PASSED_AND_REMOTE_BYTES_VERIFIED',
+                    'run_id':int(os.environ['GITHUB_RUN_ID']),'workflow_run_head_sha':os.environ['GITHUB_SHA'],
+                    'tested_sha':sha,'branch':os.environ['GITHUB_REF_NAME'],
+                    'remote_ledger':{'url':f'https://github.com/{repo}/blob/{sha}/{p}',
+                                     'sha256':hashlib.sha256(raw).hexdigest(),'git_blob_sha1':blob,
+                                     'commit_sha':sha,'size_bytes':len(raw)},
+                    'pytest_log':'/tmp/stage-d-final-tests.log','classification':'T2_INTERIM / NOT_FINAL_BLOCKED'}
+          pathlib.Path('/tmp/exact_head_evidence.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\\n')
           print(json.dumps(evidence,indent=2))
           PY
       - name: Upload exact-head D1-D2 evidence
