@@ -2,7 +2,7 @@
 
 **Status:** `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS`  
 **Classification:** `T2_INTERIM / NOT_FINAL_BLOCKED`  
-**Current branch HEAD before this closure update:** `4cd0aa9afcdd3ca09a9cdf9cb75d68062dae33e0`  
+**Current branch HEAD before this closure update:** `e8d26cfcbe85ceaaa44312e6821621fa2ab7f80b`  
 **main:** `c6e54349a5e94f65d5aa9f83141f225d777bb474`
 
 ## D0 decision
@@ -10,8 +10,8 @@
 D0 is closed as a scoped input-verification and preflight stage. The three authorized immutable GitHub Actions artifacts were downloaded again from GitHub in this session. Their SHA-256 values were recalculated from the downloaded remote ZIP bytes, sizes matched, ZIP CRC checks passed, and duplicate names, unsafe paths, and symlink members were zero.
 
 The detailed evidence is recorded in [D0 Remote Evidence Ledger](D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md), remote content SHA-256:
-`fae96b8612934bbadf1f7d01834ac983cd048b1dc627c6e59dff20950d4d9623`,
-Git blob SHA-1 `d50c12a86be75b18434b92cc79a7b687204ffe60`,
+`4ac7b2c3acbddc297c289586b72117b115bb2695a90538b9550bf759ab17bb18`,
+Git blob SHA-1 `0ad14ec661b4823c5d3d2f1372029f4fe7e8a790`,
 containing commit `4cd0aa9afcdd3ca09a9cdf9cb75d68062dae33e0`.
 
 ## Pinned remote artifacts
@@ -54,3 +54,8 @@ D1 may proceed within the pinned source boundary only. The independent Builder m
 ## Prohibited actions
 
 No Trial, Simulation, Monte Carlo, N=4800, main update, PR, merge, or Release was performed. D0 does not grant final acceptance or statistical convergence.
+
+
+## Corrected remote evidence pointer — 2026-10-31
+
+The D0 remote evidence ledger was corrected after an independent SHA-256 implementation was validated against the standard test vector and Git blob SHA-1 readback. Use the corrected ledger triple above; superseded SHA-256 values are invalid. The closure document itself must be read back at its latest branch commit for its current SHA-256.
