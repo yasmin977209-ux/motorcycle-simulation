@@ -19,3 +19,8 @@ Historical source inventory (SHA-256 is over fetched raw file bytes):
 | `scripts/s6_manifest_resolver.py` | `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a` | `55ba5e5f0657d2b5337af84eff6a01e3749f5491` | 5,143 | `61532b9230f3162eb2f6cb0fa0da2ddbfe1a0dd9` |
 
 The three originals are historical evidence only. They do not replace the current rebuilt implementation under `scripts/`.
+
+
+## Correction record — 2026-11-01
+
+The SHA-256 values for the archived reader/model in the preceding inventory were produced by an earlier in-session digest implementation and are superseded by this correction. Recomputed from the exact UTF-8 bytes re-fetched from GitHub using SHA-256: `s6_artifact_reader.py` = `37d882bb793ad4b447918287b5969fb8481f6e8c5bce1defdafeb7660b693f57`; `s6_deliverables_model.py` = `1713b88ab0f619eb5a1747fc56eb3896a63e7cb8ac65b4e03142434dd03e13ea`. The resolver SHA-256 `562de41283efb473464f1b5f662690303739ec93677dcef10cf9e6d2a23c787a` is unchanged. Blob SHA-1, sizes and original commit SHAs in the table remain unchanged.
