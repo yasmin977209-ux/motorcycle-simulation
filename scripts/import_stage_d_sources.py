@@ -37,7 +37,7 @@ CLOSED_V231_SHA256 = "724a22aae9bb3caf55bf9de1f27c2edba79b453585bb863b72fe7c5e04
 
 def git_blob_sha1(raw: bytes) -> str:
     """Return the canonical Git blob SHA-1 for exact file bytes."""
-    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\x00" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + bytes([0]) + raw).hexdigest()
 
 IMPORT_PATHS = {
     "scripts/s6_deliverables_builder.py",
