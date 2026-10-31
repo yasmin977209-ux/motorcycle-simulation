@@ -75,6 +75,9 @@ def main() -> int:
         raise SystemExit(f"WRONG_BRANCH:{branch}; expected {BRANCH}")
     if run("git", "status", "--porcelain", cwd=root):
         raise SystemExit("WORKTREE_NOT_CLEAN")
+    origin = run("git", "remote", "get-url", "origin", cwd=root)
+    if REPOSITORY not in origin:
+        raise SystemExit(f"WRONG_ORIGIN:{origin}")
     run("git", "fetch", "origin", BRANCH, cwd=root)
     run("git", "pull", "--ff-only", "origin", BRANCH, cwd=root)
     if run("git", "rev-parse", "HEAD", cwd=root) != run("git", "rev-parse", f"origin/{BRANCH}", cwd=root):
@@ -88,6 +91,9 @@ def main() -> int:
             raise SystemExit(f"SOURCE_ARCHIVE_MEMBER_SET_MISMATCH:{sorted(set(names)^ARCHIVE_MEMBERS)}")
         if zf.testzip() is not None:
             raise SystemExit("SOURCE_ARCHIVE_CRC_FAILURE")
+        for info in zf.infolist():
+            if (info.external_attr >> 16) & 0o170000 == 0o120000:
+                raise SystemExit(f"SYMLINK_ARCHIVE_MEMBER:{info.filename}")
         for name in names:
             p = PurePosixPath(name)
             if p.is_absolute() or ".." in p.parts or "\\" in name:
@@ -114,9 +120,18 @@ def main() -> int:
     if set(changed) != IMPORT_PATHS:
         raise SystemExit(f"STAGED_PATH_SET_MISMATCH:{sorted(set(changed)^IMPORT_PATHS)}")
 
+    name = subprocess.run(["git", "config", "user.name"], cwd=root, text=True, stdout=subprocess.PIPE).stdout.strip()
+    email = subprocess.run(["git", "config", "user.email"], cwd=root, text=True, stdout=subprocess.PIPE).stdout.strip()
+    if not name:
+        run("git", "config", "user.name", "Stage D source importer", cwd=root)
+    if not email:
+        run("git", "config", "user.email", "stage-d-import@users.noreply.github.com", cwd=root)
     run("git", "commit", "-m", "feat(stage-d): publish independent S6 D1-D2 source and tests", cwd=root)
     commit = run("git", "rev-parse", "HEAD", cwd=root)
     run("git", "push", "origin", f"HEAD:refs/heads/{BRANCH}", cwd=root)
+    remote = run("git", "ls-remote", "origin", f"refs/heads/{BRANCH}", cwd=root).split()[0]
+    if remote != commit:
+        raise SystemExit(f"REMOTE_PUSH_HEAD_MISMATCH:{remote}:{commit}")
 
     print(json.dumps({
         "status": "SOURCE_FILES_PUSHED_AWAITING_GITHUB_WORKFLOW",
