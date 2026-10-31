@@ -77,3 +77,10 @@ The final report file after its digest-correction append was fetched again from 
 - The report file is present on the branch and contains the explicit `CANNOT_PUBLISH` determination and manual publication procedure.
 
 This triple proves the audit report's remote integrity only. It does not prove publication of v2.4.0, v2.3 or v2.3.1; all three source references remain `VERIFIED_LOCAL` only and canonical remote paths remain unpublished.
+
+
+## Publication transfer correction — 2026-11-01
+
+GitHub write actions were discovered and tested: Contents API `create_file` successfully committed a 10,000-character temporary fragment, which was immediately neutralized; no full reference bytes were transferred. The full packed payload (three references) is locally hash-checked but was not uploaded. Local GitHub network probes failed DNS/connectivity. The previous `CANNOT_PUBLISH` determination is superseded by `BLOCKED / PARTIAL_TRANSFER_ONLY`; all three canonical reference files remain MISSING_EVIDENCE. D1 remains BLOCKED; D2 not started.
+
+Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41251114795) succeeded at exact tested HEAD `76834d581c07d1bcfc5399044c759be13bdb2b63`: 26 passed, 0 failed, 0 skipped; three pinned artifact ZIPs downloaded and SHA-256 verified; compileall, real Parquet LossCase/MaxCase integration and final exact-head assertion all passed. This is not a D1 gate pass because governing/historical references are not remotely published.
