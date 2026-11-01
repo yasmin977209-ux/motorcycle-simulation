@@ -2709,3 +2709,6 @@ Run [41251975772](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
 - No Trial, Simulation, Monte Carlo, N expansion or main update.
 D2 final disposition `PASS_SCOPED_WITH_LIMITATIONS`; Run 41326662869 `SUCCESS` exact-head on 96a07b52485733115cf93875440ea99369a94fdb; live registry contains 2,640 entries, 1,000 daily series and 2,086,550 daily points; `main` unchanged.
+
+
+D2 registry resolver and corrected canonical audit verified in Run 41328486239; final registry commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad; status PASS_SCOPED_WITH_LIMITATIONS; D3 not started.
