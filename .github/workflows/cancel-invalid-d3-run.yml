@@ -1,0 +1,24 @@
+name: Cancel D3 Run Outside Permitted Source-Date Window
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - ops/cancel-run-41358971225.txt
+permissions:
+  actions: write
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel the noncompliant D3 run
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const result = await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: 41358971225
+            });
+            core.info("CANCEL_REQUESTED run_id=41358971225 status=" + result.status);
