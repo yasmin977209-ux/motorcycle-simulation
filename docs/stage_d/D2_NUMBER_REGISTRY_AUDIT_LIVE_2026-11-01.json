@@ -44,9 +44,10 @@
   "d2_status": "PASS_SCOPED_WITH_LIMITATIONS",
   "daily_distribution_rows": 2086550,
   "daily_point_count": 2086550,
+  "daily_points_resolved": 2086550,
   "daily_series_count": 1000,
   "entry_count": 2640,
-  "exact_head_validation": "PASS",
+  "exact_head_validation": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
   "full_logging_normalized_status": "NOT_VERIFIED_105_OF_105",
   "gate_statuses": {
     "c100_golden_revalidation": "NOT_RUN",
@@ -61,14 +62,14 @@
     "classification": "REPORTED_ONLY",
     "entry_count": 13954
   },
-  "registry_containing_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
-  "registry_git_blob_sha1": "824803e8543fff7c628586bd37ea6e3f706cf9ba",
+  "registry_containing_commit": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
+  "registry_git_blob_sha1": "b5b795eac48e2443f0fa734d0a2e40017a967832",
   "registry_path": "results/number_registry.json",
-  "registry_sha256": "d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb",
+  "registry_sha256": "2cb974586fb627fa8e6e4babcf370df146a61bc48ff2b9e087f8af8e066066d9",
   "registry_size_bytes": 24137036,
   "representative_numeric_entries": 1680,
   "representative_trial_count": 105,
-  "source_head": "8048e980951cb34e5c023c1b51e7a2ac5970171d",
+  "source_head": "2407a8e832aa8fa01ed8951ce8f89cc8548a8dea",
   "unavailable_evidence": [
     {
       "do_not_infer_or_zero_fill": true,
@@ -113,9 +114,5 @@
       "value": null
     }
   ],
-  "workflow_run_id": "41328486239",
-  "exact_head_validation_run_id": "41328486239",
-  "exact_head_validation_sha": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
-  "raw_readback_status": "PASS_ALL_SEVEN_FILES",
-  "raw_readback_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad"
+  "workflow_run_id": "41332273796"
 }
