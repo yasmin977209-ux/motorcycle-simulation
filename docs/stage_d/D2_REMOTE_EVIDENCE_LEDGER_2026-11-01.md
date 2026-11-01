@@ -106,3 +106,11 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - D2 completion workflow now fetches the v2.4.0 normative Markdown from GitHub Raw at the exact triggering SHA and checks its 401,397-byte size and owner-approved SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
 - The same gate fetches `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md` from that SHA and requires decision ID `D-2026-10-30-REFERENCE-V2.4.0`, status `APPROVED_BY_OWNER`, and the same digest.
 - Both governing-reference and owner-decision files are also added to the final exact-HEAD Raw byte readback list. The gate must succeed in the latest completion run before D2 is reconfirmed.
+
+
+## Completion workflow record
+
+- Workflow Run ID: 41334997604
+- Triggering source SHA: 8eb5da55fc9036f25e420dbd43ed925567ef7c2b
+- Registry-containing commit: f339bd063e2912b2d9b5afaec7d4ce9e24a6cbc6
+- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.

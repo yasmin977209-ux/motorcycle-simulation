@@ -147,3 +147,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Registry-containing commit: d33261154018e2710bd797dec5e5bb6b9981a5da
 - Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
 - D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.
+
+
+## D2 completion workflow record — 41334997604
+
+- Completion workflow Run: 41334997604
+- Triggering source SHA: 8eb5da55fc9036f25e420dbd43ed925567ef7c2b
+- Registry-containing commit: f339bd063e2912b2d9b5afaec7d4ce9e24a6cbc6
+- Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
+- D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.
