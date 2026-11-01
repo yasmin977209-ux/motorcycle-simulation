@@ -184,3 +184,11 @@ def test_build_extension_blocks_before_reading_registry_or_opening_archives(monk
             {"aggregate": "unused", "full_logging": "unused", "c100": "unused"},
             "this-file-must-not-be-read.json",
         )
+
+
+
+def test_missing_d3_requirements_block_gate():
+    from scripts.d3_excel_export_complete import d3_gate_status, d3_requirement_statuses
+    statuses = d3_requirement_statuses()
+    assert all(statuses[f'D3-{n:02d}'] == 'MISSING_EVIDENCE' for n in range(7, 14))
+    assert d3_gate_status(statuses) == 'BLOCKED_MISSING_EVIDENCE'
