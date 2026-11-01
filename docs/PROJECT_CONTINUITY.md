@@ -2696,3 +2696,5 @@ Run [41251975772](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - The library reflects the live baseline at its creation: D0 COMPLETE / PASS_SCOPED_WITH_LIMITATIONS; D1 PASS_SCOPED_WITH_LIMITATIONS; D2 NOT_STARTED. It preserves all known D1 limitations and does not authorize new Trials, Simulation, Monte Carlo, N=4800, main changes, merges or Releases.
 - Live branch HEAD at this append's parent was e9af9d4329216909120f67d406ddecc939237ee2; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The source-validation workflow ran successfully on the prompt-library commit (Run 41317106574; exact tested SHA e9af9d4329216909120f67d406ddecc939237ee2); the follow-up documentation commit requires its own exact-head validation.
 - This is a documentation-only continuity update. No phase was started or re-opened, and no project acceptance or gate status was promoted.
+
+- 2026-11-01: Append-only D1 closure corrections added to the two closure records, publication-attempt record, and Stage D session status; historical BLOCKED entries preserved.

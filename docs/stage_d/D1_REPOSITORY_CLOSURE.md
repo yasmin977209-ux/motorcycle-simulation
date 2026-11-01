@@ -83,3 +83,15 @@ Run 17 (`41249454018`) also completed the 26 tests successfully but failed only 
 Preserved limitations: 105 normalized manifest statuses remain `NOT_VERIFIED` where independent expected byte sizes are absent; C100 Golden revalidation remains `NOT_RUN`; Full Logging remains 105 representative keys, not 48,000; the five historical accounting fields remain `MISSING_EVIDENCE`; financial Gate A remains `PASS_SCOPED` only; production Gate A remains `NOT_DECLARED`; Gate B at N=2400 remains `FAIL_SCOPED (10/10)`; stability remains `NOT_CONVERGED (0/60)`; N=4800 remains `NOT_EXECUTED`.
 
 The D1 publication gate closed here is the current governing v2.4.0 reference. Keep `current_governing_reference_sha256` separate from `historical_execution_reference_sha256`: v2.3 remains the historical S6 execution reference; v2.3.1 remains `CLOSED_UNAPPROVED_CANDIDATE`. Earlier statements requiring all three as current D1 publication blockers are superseded by the active project instructions and owner decision. No importer, D2 registry, Trial, simulation, Monte Carlo, Excel/DOCX, PR, merge, Release or main update occurred. D2 remains `NOT_STARTED` pending the owner's separate D2 prompt.
+
+
+## Correction — D1 CLOSED (Appended 2026-11-01)
+
+D1 status corrected from BLOCKED to PASS_SCOPED_WITH_LIMITATIONS after successful reference publication.
+
+- Reference publication commit: `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
+- Successful publication workflow Run: [41313821118](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41313821118) (`SUCCESS`).
+- Exact-HEAD validation Run: [41317431499](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41317431499) (`SUCCESS`), tested SHA `b6e715c4387b7a9d708b11b9658c918c106149d2`.
+- Governing v2.4.0 reference triple: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; Git blob SHA-1 `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; publication commit `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
+
+Preserved limitations: 105 normalized manifest statuses `NOT_VERIFIED`; C100 Golden revalidation `NOT_RUN`; production Gate A `NOT_DECLARED`; Gate B at N=2400 `FAIL_SCOPED`; Stability `NOT_CONVERGED`; N=4800 `NOT_EXECUTED`; five historical accounting fields `MISSING_EVIDENCE` (`Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`). Financial Gate A remains `PASS_SCOPED` only. This append-only correction supersedes the earlier BLOCKED disposition without deleting its historical record.

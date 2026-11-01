@@ -38,3 +38,15 @@ This is not a D1 PASS. D1 remains blocked until the evidence is complete. D2 is 
 - Exact-head Run `41255932373` PASS on the final workflow-hardening HEAD: 26 passed, 0 failed, 0 skipped; compileall, all pinned artifact hash/size checks, Parquet LossCase/MaxCase integration and exact-head assertion passed.
 - Publication workflow is prepared but NOT_RUN. No payload chunks/READY marker exist; canonical v2.4.0 path remains absent. Local member remains VERIFIED_LOCAL only; remote publication remains CANNOT_PUBLISH / MISSING_EVIDENCE.
 - No evidence upgrades for the 105 manifest statuses, C100 Golden revalidation, financial/production gates or convergence. D1 remains BLOCKED; D2 NOT_STARTED.
+
+
+## Correction — D1 CLOSED (Appended 2026-11-01)
+
+D1 status corrected from BLOCKED to PASS_SCOPED_WITH_LIMITATIONS after successful reference publication.
+
+- Reference publication commit: `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
+- Successful publication workflow Run: [41313821118](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41313821118) (`SUCCESS`).
+- Exact-HEAD validation Run: [41317431499](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41317431499) (`SUCCESS`), tested SHA `b6e715c4387b7a9d708b11b9658c918c106149d2`.
+- Governing v2.4.0 reference triple: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; Git blob SHA-1 `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; publication commit `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
+
+Preserved limitations: 105 normalized manifest statuses `NOT_VERIFIED`; C100 Golden revalidation `NOT_RUN`; production Gate A `NOT_DECLARED`; Gate B at N=2400 `FAIL_SCOPED`; Stability `NOT_CONVERGED`; N=4800 `NOT_EXECUTED`; five historical accounting fields `MISSING_EVIDENCE` (`Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`). Financial Gate A remains `PASS_SCOPED` only. This append-only correction supersedes the earlier BLOCKED disposition without deleting its historical record.
