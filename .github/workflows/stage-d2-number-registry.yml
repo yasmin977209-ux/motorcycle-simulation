@@ -100,7 +100,7 @@ jobs:
               "registry_sha256": live.get("registry_sha256"),
               "registry_git_blob_sha1": live.get("registry_git_blob_sha1"),
               "registry_size_bytes": live.get("registry_size_bytes", 24136918),
-              "registry_containing_commit": "RECORDED_BY_EXACT_HEAD_WORKFLOW",
+              "registry_containing_commit": live.get("registry_containing_commit"),
               "workflow_run_id": str(live["workflow_run_id"]),
               "source_head": live.get("source_head"),
               "aggregate_checkpoint_entries": live["aggregate_checkpoint_entries"],
@@ -233,6 +233,7 @@ jobs:
           name: d2-number-registry
           path: |
             results/number_registry.json
+            docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md
             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json
             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json
           if-no-files-found: error
