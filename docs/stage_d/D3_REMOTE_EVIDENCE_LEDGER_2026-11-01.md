@@ -76,3 +76,20 @@ The following source, test and workflow files were fetched from the live branch 
 - Expected focused test inventory: 7 existing tests + 8 new tests = 15 tests.
 - Execution status: NOT_RUN / MISSING_EVIDENCE. No machine-readable success report has been read back from GitHub at this checkpoint.
 - D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+
+## Source-free D3 code and test fingerprints — 2026-11-02
+
+The following source, test and workflow files were fetched from the live branch at checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64. SHA-256 values were computed from fetched UTF-8 bytes; Git blob SHA-1 values were returned by GitHub for the same file versions. This validates file identity only and does not prove test execution or D3 closure.
+
+| Path | Bytes | SHA-256 | Git blob SHA-1 | Containing commit |
+|---|---:|---|---|---|
+| scripts/d3_registry_extension.py | 44701 | f3802f1af009619b0f9a6dde164611c4ec8d0bbfc8de412f15dd50bef7bb76aa | c7030bba582c6fad6e26dbb3c06c604402e5b16a | 479ca3889c07fcb4d82b86b23bef61d8760adb64 |
+| scripts/d3_excel_export_complete.py | 46489 | 46fdb5b24f5be8582eb6428eba2aaf524acdef64206c6f9f1a92986c12eeef30 | e62eda6f1731ce7fc0c4976fd3005341041f532a | 479ca3889c07fcb4d82b86b23bef61d8760adb64 |
+| tests/test_d3_registry_extension.py | 5854 | 12141998780a7fa31a1138e71e403a4b92627d17122f2f34694c8b321424c1e2 | 35d5b88e282878de862409c78db1a2e3cef43fc0 | 479ca3889c07fcb4d82b86b23bef61d8760adb64 |
+| tests/test_d3_excel_export_complete.py | 3707 | 54aae6e93c5ab3596e008e4365c3ae5b7fed5fbfff72dd898aea7685e73085b9 | 2e93a30c8f12137a12c6adf6252ef8d09ba30a23 | 479ca3889c07fcb4d82b86b23bef61d8760adb64 |
+| .github/workflows/d3-code-static-validation.yml | 5996 | 38cc0f11d223d479a9541cfaf55d0a7c3563c2492578ad938d5b1bb8c7d2b993 | 752178d28d3c54772127555c18b0eb7a03a0f3cc | 479ca3889c07fcb4d82b86b23bef61d8760adb64 |
+
+- The static workflow is configured to compile the two D3 implementation modules and run 15 focused tests without downloading or reading source artifacts.
+- No successful workflow run or machine-readable report has been verified. Execution status remains NOT_RUN / MISSING_EVIDENCE.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
