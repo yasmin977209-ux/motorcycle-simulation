@@ -8,12 +8,35 @@ from openpyxl import Workbook
 
 from scripts.d3_excel_export_complete import (
     load_extension,
+    validate_source_dates,
     numeric_pair,
     registry_scenarios,
     trace_ids,
 )
 from scripts.d3_registry_extension import build_extension
 
+
+
+def test_exporter_rejects_pre_cutoff_source_extension_even_without_archive_build():
+    from scripts.d3_registry_extension import SOURCE_RUN_CREATED_AT_UTC
+    from scripts.s6_artifact_reader import PINS
+
+    extension = {
+        "source_artifacts": {
+            role: {"run_created_at_utc": SOURCE_RUN_CREATED_AT_UTC[pin.run_id]}
+            for role, pin in PINS.items()
+        }
+    }
+    with pytest.raises(ValueError, match="D3_SOURCE_ARTIFACT_PRE_CUTOFF_OR_UNPINNED"):
+        validate_source_dates(extension)
+
+
+def test_exporter_rejects_missing_source_date_metadata():
+    from scripts.s6_artifact_reader import PINS
+
+    extension = {"source_artifacts": {role: {} for role in PINS}}
+    with pytest.raises(ValueError, match="D3_SOURCE_ARTIFACT_PRE_CUTOFF_OR_UNPINNED"):
+        validate_source_dates(extension)
 
 def test_registry_scenarios_requires_complete_five_by_five_grid():
     scenarios = [
