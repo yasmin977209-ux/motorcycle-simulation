@@ -5,9 +5,7 @@ on:
     branches:
       - tmp/d1-rebuild-20261101
     paths:
-      - "scripts/s6_number_registry.py"
-      - "tests/test_s6_number_registry.py"
-      - ".github/workflows/stage-d2-number-registry.yml"
+      - "docs/stage_d/D2_COMPLETION_TRIGGER_2026-11-01.md"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: stage-d2-number-registry-${{ github.sha }}
+  group: stage-d2-number-registry-tmp-d1-rebuild-20261101
   cancel-in-progress: false
 
 jobs:
