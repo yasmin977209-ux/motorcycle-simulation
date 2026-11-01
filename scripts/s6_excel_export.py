@@ -9,11 +9,13 @@ from openpyxl.styles import Font, PatternFill
 from scripts.s6_number_registry import validate_registry, daily_number_id, _daily_resolution_indexes, _resolve_daily_number, METRICS, QUANTILES
 
 GOVERNING="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+GOVERNING_BYTES=401397
 HISTORICAL="e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 SCENARIO_RE=re.compile(r"^C([0-9]{3})_G([0-9]{3})$")
 MODES=("ACTIVE_ONLY","ALL_TRIALS_CARRY_FORWARD")
 DETAILS={"ASSETS":{"owned_bikes","held_assets"},"ACCTG":{"bad_debt","cumulative_project_profit","final_cash","final_net_project_equity","operating_net_profit","total_operating_revenue"},"PARTNER":{"partner1_final_entitlement","partner2_final_entitlement"},"GUARANTEE":{"claims_created","guarantee_recovered","recovery_rate_pct"},"CONTRACTS":{"termination_count","secondary_cycle_count"}}
 GAPS={"DAILY":"Representative P50 daily raw ledger is not represented in Number Registry.","ASSETS":"Per-bike asset rows, purchase/delivery dates, gross cost and depreciation are not represented in Number Registry.","ACCTG":"Daily income statement and balance-sheet roll-forward fields are not represented in Number Registry.","PARTNER":"Daily Partner1/2_Reinvestment_Balance series are not represented in Number Registry.","GUARANTEE":"Per-claim source, amount, creation date and settlement outcome rows are not represented in Number Registry.","CONTRACTS":"Per-contract dates and status are not represented in Number Registry."}
+ACCOUNTING_MISSING_FIELDS=("Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets")
 H={"en":{"scenario":"Scenario","cohort":"Cohort","source":"Source","status":"Status","metric":"Metric","sample":"Checkpoint","value":"Value","id":"number_id","trial":"Trial key","roles":"Role assignments","date":"Date","mode":"Population mode","total":"Total trials","active":"Active trials","closed":"Closed trials","sample_count":"Sample trials","field":"Field","notes":"Notes","reason":"Reason","evidence":"Evidence status"},"ar":{"scenario":"السيناريو","cohort":"الفوج","source":"المصدر","status":"الحالة","metric":"المؤشر","sample":"نقطة الفحص","value":"القيمة","id":"number_id","trial":"مفتاح التكرار","roles":"الأدوار التمثيلية","date":"التاريخ","mode":"مجموعة السكان","total":"إجمالي التكرارات","active":"التكرارات النشطة","closed":"التكرارات المغلقة","sample_count":"حجم العينة","field":"الحقل","notes":"ملاحظات","reason":"السبب","evidence":"حالة الدليل"}}
 
 def exact_value(n,d):
@@ -71,6 +73,9 @@ def new_sheet(wb,name,lang):
     ws=wb.create_sheet(name); ws.sheet_view.rightToLeft=(lang=="ar"); ws.sheet_view.showGridLines=False; ws.freeze_panes="A2"; return ws
 def missing(ws,reason,lang):
     h=H[lang]; safe_append(ws,[h["status"],"MISSING_EVIDENCE",h["reason"],reason])
+def write_missing_accounting_fields(ws,sid):
+    for field in ACCOUNTING_MISSING_FIELDS:
+        safe_append(ws,[sid,"MISSING_EVIDENCE","MISSING_EVIDENCE","",field,"MISSING_EVIDENCE","","MISSING_EVIDENCE","Historical field absent; not inferred or zero-filled."])
 def max_rows(reg,sid):
     rows=[x for x in reg["entries"] if x.get("scenario_id")==sid and x.get("trial_id") is None]
     if not rows:return []
@@ -177,21 +182,24 @@ def build_one(reg,constants,ids,lang,path,source_head,run_id,regsha):
                     safe_append(ws,[sid,e.get("cohort_id"),e["metric_name"],"N="+str(e["sample_n"]),ev(e),e["number_id"],e["evidence_status"]])
                 if not rows: missing(ws,"No aggregate statistical checkpoint entries in Number Registry.",lang)
             elif suffix=="DAILY":
-                header(ws,[h["scenario"],h["status"],h["reason"]]); missing(ws,GAPS["DAILY"],lang)
+                header(ws,[h["scenario"],h["status"],h["reason"]]); safe_append(ws,[sid,"MISSING_EVIDENCE",GAPS["DAILY"]])
             else:
                 header(ws,[h["scenario"],h["cohort"],h["trial"],h["roles"],h["metric"],h["value"],h["id"],h["evidence"],h["notes"]])
                 rows=[x for x in reg["entries"] if x.get("scenario_id")==sid and x.get("trial_id") is not None and x["metric_name"] in DETAILS[suffix]]
                 for e in sorted(rows,key=lambda x:(x["trial_id"],x["metric_name"])):
                     safe_append(ws,[sid,e["cohort_id"],"trial_id="+str(e["trial_id"]),", ".join(e.get("role_assignments",[])),e["metric_name"],ev(e),e["number_id"],e["evidence_status"],"Summary metric only; detailed ledger missing."])
-                missing(ws,GAPS[suffix],lang)
+                safe_append(ws,[sid,"MISSING_EVIDENCE","MISSING_EVIDENCE","",suffix+"_DETAIL_LEDGER","MISSING_EVIDENCE","","MISSING_EVIDENCE",GAPS[suffix]])
+                if suffix=="ACCTG": write_missing_accounting_fields(ws,sid)
     path.parent.mkdir(parents=True,exist_ok=True); wb.save(path)
 
-def audit(path,expected):
+def audit(path,expected,expected_rtl=None):
     wb=load_workbook(path,read_only=True,data_only=False)
     try:
         if wb.sheetnames!=expected: raise ValueError("WORKSHEET_NAMES_OR_ORDER_MISMATCH")
-        formula_cells=[]; excel_error_cells=[]; numeric=0
+        formula_cells=[]; excel_error_cells=[]; direction_mismatches=[]; numeric=0
         for ws in wb.worksheets:
+            if expected_rtl is not None and bool(ws.sheet_view.rightToLeft)!=expected_rtl:
+                direction_mismatches.append({"sheet":ws.title,"expected":"RTL" if expected_rtl else "LTR","actual":"RTL" if ws.sheet_view.rightToLeft else "LTR"})
             for row in ws.iter_rows():
                 for c in row:
                     if c.data_type=="f":
@@ -202,6 +210,8 @@ def audit(path,expected):
         return {"sheet_count":len(wb.sheetnames),"formula_cell_count":len(formula_cells),"formula_cells":formula_cells,
             "excel_error_cell_count":len(excel_error_cells),"excel_error_cells":excel_error_cells,
             "excel_safety_status":"PASS" if not formula_cells and not excel_error_cells else "FAIL",
+            "sheet_direction_status":"NOT_CHECKED" if expected_rtl is None else ("PASS" if not direction_mismatches else "FAIL"),
+            "sheet_direction_mismatches":direction_mismatches,
             "numeric_cells":numeric,"bytes":path.stat().st_size,"sha256":sha(path)}
     finally: wb.close()
 def compare(ar,en,names):
@@ -238,26 +248,30 @@ def build(args):
     if len(raw)!=24137036 or regsha!="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87": raise ValueError("REGISTRY_PIN_MISMATCH")
     reg=json.loads(raw.decode("utf-8"),parse_float=Decimal); validation=validate_registry(reg)
     if reg["current_governing_reference_sha256"]!=GOVERNING or reg["historical_execution_reference_sha256"]!=HISTORICAL: raise ValueError("REFERENCE_IDENTITY_MISMATCH")
-    constants=constants_from_reference(Path(args.reference).read_text(encoding="utf-8")); ids=scenarios(reg)
+    reference_raw=Path(args.reference).read_bytes(); reference_sha=hashlib.sha256(reference_raw).hexdigest()
+    if len(reference_raw)!=GOVERNING_BYTES or reference_sha!=GOVERNING: raise ValueError("GOVERNING_REFERENCE_PIN_MISMATCH")
+    constants=constants_from_reference(reference_raw.decode("utf-8")); ids=scenarios(reg)
     names=["README","CONSTANTS","SCENARIO_MATRIX","HEATMAP","SENSITIVITY","VALIDATION_SUMMARY","ERROR_LOG","FINAL_CLOSURE_SUMMARY","DAILY_DISTRIBUTION","REPRESENTATIVE_CASES"]+scenario_sheet_names(ids)
     out=Path(args.output_dir); ar=out/"النتائج_الكاملة_AR.xlsx"; en=out/"Full_Results_EN.xlsx"
     build_one(reg,constants,ids,"ar",ar,args.source_head,args.run_id,regsha); build_one(reg,constants,ids,"en",en,args.source_head,args.run_id,regsha)
-    aa=audit(ar,names); ee=audit(en,names); parity=compare(ar,en,names); trace=trace_ids([ar,en])
-    missing_list=["C100 daily distributions absent from Number Registry.","Representative P50 raw daily ledgers absent from Number Registry.","Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.","Final closure-date distribution absent from Number Registry.","Five historical accounting fields remain MISSING_EVIDENCE.","Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.","C100 Golden revalidation remains NOT_RUN."]
+    aa=audit(ar,names,expected_rtl=True); ee=audit(en,names,expected_rtl=False); parity=compare(ar,en,names); trace=trace_ids([ar,en])
+    missing_list=["C100 daily distributions absent from Number Registry.","Representative P50 raw daily ledgers absent from Number Registry.","Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.","Final closure-date distribution absent from Number Registry.","Historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled: "+", ".join(ACCOUNTING_MISSING_FIELDS)+".","Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.","C100 Golden revalidation remains NOT_RUN."]
+    reference_info={"path":"Gist reference_v240.md","bytes":len(reference_raw),"sha256":reference_sha,"git_blob_sha1":blob_sha(reference_raw),"containing_commit":"384c27810e76572e77e79e9829c5f92c1c4165d7","url":"https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"}
     result={"d3_candidate_status":"T2_INTERIM / NOT_FINAL_BLOCKED","d3_gate_status":"BLOCKED_MISSING_EVIDENCE","source_head":args.source_head,"workflow_run_id":str(args.run_id),
+      "current_governing_reference":reference_info,"historical_execution_reference_sha256":HISTORICAL,
       "registry":{"bytes":len(raw),"sha256":regsha,"git_blob_sha1":blob_sha(raw),**validation},"scenario_count":len(ids),"worksheet_count_per_workbook":len(names),
       "arabic_workbook":aa,"english_workbook":ee,"bilingual_numeric_parity":parity,"number_id_traceability":trace,"missing_evidence":missing_list,"gate_statuses_preserved":reg["gate_statuses"],"no_trials_or_simulation_executed":True}
     out.mkdir(parents=True,exist_ok=True)
     (out/"D3_BUILD_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    safety_violations={"arabic":{"formula_cell_count":aa["formula_cell_count"],"formula_cells":aa["formula_cells"],"excel_error_cell_count":aa["excel_error_cell_count"],"excel_error_cells":aa["excel_error_cells"]},
-      "english":{"formula_cell_count":ee["formula_cell_count"],"formula_cells":ee["formula_cells"],"excel_error_cell_count":ee["excel_error_cell_count"],"excel_error_cells":ee["excel_error_cells"]}}
-    if any(v["formula_cell_count"] or v["excel_error_cell_count"] for v in safety_violations.values()):
+    safety_violations={"arabic":{"formula_cell_count":aa["formula_cell_count"],"formula_cells":aa["formula_cells"],"excel_error_cell_count":aa["excel_error_cell_count"],"excel_error_cells":aa["excel_error_cells"],"sheet_direction_mismatches":aa["sheet_direction_mismatches"]},
+      "english":{"formula_cell_count":ee["formula_cell_count"],"formula_cells":ee["formula_cells"],"excel_error_cell_count":ee["excel_error_cell_count"],"excel_error_cells":ee["excel_error_cells"],"sheet_direction_mismatches":ee["sheet_direction_mismatches"]}}
+    if any(v["formula_cell_count"] or v["excel_error_cell_count"] or v["sheet_direction_mismatches"] for v in safety_violations.values()):
         raise ValueError("EXCEL_SAFETY_VIOLATIONS:"+json.dumps(safety_violations,ensure_ascii=False,sort_keys=True))
-    manifest={"classification":result["d3_candidate_status"],"d3_gate_status":result["d3_gate_status"],"source_head":args.source_head,"workflow_run_id":str(args.run_id),"registry_sha256":regsha,
+    manifest={"classification":result["d3_candidate_status"],"d3_gate_status":result["d3_gate_status"],"source_head":args.source_head,"workflow_run_id":str(args.run_id),"current_governing_reference":reference_info,"historical_execution_reference_sha256":HISTORICAL,"registry_sha256":regsha,
       "master_seed":reg["scope"]["S6"]["master_seed"],"files":{ar.name:{"bytes":aa["bytes"],"sha256":aa["sha256"]},en.name:{"bytes":ee["bytes"],"sha256":ee["sha256"]}},
       "numeric_comparisons":parity["numeric_comparisons"],"number_id_traceability":trace,"missing_evidence":missing_list,"python_version":platform.python_version(),"openpyxl_version":__import__("openpyxl").__version__}
     (out/"D3_MANIFEST.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    report=["# D3 Excel Deliverables — Scoped Candidate Report","",f"- Candidate: {result['d3_candidate_status']}",f"- D3 gate: {result['d3_gate_status']}",f"- Source HEAD: {args.source_head}",f"- Workflow run: {args.run_id}",f"- Registry SHA-256: {regsha}",f"- Sheets per workbook: {len(names)}",f"- Daily points validated: {validation['daily_points_resolved']}",f"- Bilingual numeric comparisons: {parity['numeric_comparisons']}; mismatches: 0",f"- Number-ID traced numeric cells: {trace['numeric_cells_checked']}; untraced: 0","","## Missing evidence",*[f"- {x}" for x in missing_list],"","These workbooks are interim evidence views, not full D3 acceptance or final project acceptance. D4 must not start."]
+    report=["# D3 Excel Deliverables — Scoped Candidate Report","","- Candidate: "+result["d3_candidate_status"],f"- D3 gate: {result['d3_gate_status']}",f"- Source HEAD: {args.source_head}",f"- Workflow run: {args.run_id}",f"- Governing reference: {reference_info['url']}",f"- Governing reference SHA-256: {reference_sha}; bytes: {len(reference_raw)}; blob: {reference_info['git_blob_sha1']}; Gist commit: {reference_info['containing_commit']}",f"- Registry SHA-256: {regsha}",f"- Sheets per workbook: {len(names)}",f"- Arabic RTL / English LTR: {aa['sheet_direction_status']} / {ee['sheet_direction_status']}",f"- Excel formulas/errors: AR {aa['formula_cell_count']}/{aa['excel_error_cell_count']}; EN {ee['formula_cell_count']}/{ee['excel_error_cell_count']}",f"- Daily points validated: {validation['daily_points_resolved']}",f"- Bilingual numeric comparisons: {parity['numeric_comparisons']}; mismatches: 0",f"- Number-ID traced numeric cells: {trace['numeric_cells_checked']}; untraced: 0","","## Missing evidence",*[f"- {x}" for x in missing_list],"","These workbooks are interim evidence views, not full D3 acceptance or final project acceptance. D3 remains blocked; D4 must not start."]
     Path("docs/stage_d/D3_BUILD_REPORT_2026-11-01.md").write_text("\n".join(report)+"\n",encoding="utf-8")
     print(json.dumps(result,ensure_ascii=False,sort_keys=True))
 def main():

@@ -31,6 +31,18 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
+      - name: Download and verify exact owner-approved v2.4.0 reference from pinned GitHub Gist revision
+        id: governing_reference
+        run: |
+          set -euo pipefail
+          url="https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
+          expected_sha="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+          expected_size="401397"
+          curl --fail --location --silent --show-error "$url" --output /tmp/approved-v240.md
+          actual_size="$(wc -c < /tmp/approved-v240.md | tr -d ' ')"; actual_sha="$(sha256sum /tmp/approved-v240.md | awk '{print $1}')"
+          test "$actual_size" = "$expected_size"; test "$actual_sha" = "$expected_sha"
+          echo "REFERENCE_VERIFIED url=$url bytes=$actual_size sha256=$actual_sha gist_commit=384c27810e76572e77e79e9829c5f92c1c4165d7"
+
       - name: Install D3 test dependencies
         run: |
           python -m pip install --upgrade pip
@@ -44,7 +56,7 @@ jobs:
           SOURCE_HEAD: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          python -m scripts.s6_excel_export build --registry results/number_registry.json --reference docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md --output-dir deliverables --source-head "$SOURCE_HEAD" --run-id "$RUN_ID"
+          python -m scripts.s6_excel_export build --registry results/number_registry.json --reference /tmp/approved-v240.md --output-dir deliverables --source-head "$SOURCE_HEAD" --run-id "$RUN_ID"
       - name: Commit D3 candidate workbooks and build reports
         run: |
           set -euo pipefail
@@ -65,6 +77,11 @@ jobs:
           repo="yasmin977209-ux/motorcycle-simulation"
           head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
           audit=json.loads(pathlib.Path("deliverables/D3_BUILD_AUDIT.json").read_text(encoding="utf-8"))
+          reference_url="https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
+          reference_raw=requests.get(reference_url,timeout=180); reference_raw.raise_for_status()
+          reference_local=pathlib.Path("/tmp/approved-v240.md").read_bytes()
+          if reference_raw.content!=reference_local or hashlib.sha256(reference_raw.content).hexdigest()!="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b": raise SystemExit("GOVERNING_REFERENCE_RAW_READBACK_MISMATCH")
+          reference_blob=hashlib.sha1(b"blob "+str(len(reference_local)).encode()+bytes([0])+reference_local).hexdigest()
           paths=["deliverables/النتائج_الكاملة_AR.xlsx","deliverables/Full_Results_EN.xlsx","deliverables/D3_BUILD_AUDIT.json","deliverables/D3_MANIFEST.json","docs/stage_d/D3_BUILD_REPORT_2026-11-01.md"]
           rows=[]
           for path in paths:
@@ -75,14 +92,14 @@ jobs:
             rows.append((path,len(raw),hashlib.sha256(raw).hexdigest(),blob))
           ledger=["# D3 Remote Evidence Ledger — 2026-11-01","",f"- Output commit: {head}",f"- Triggering source HEAD: {os.environ['SOURCE_HEAD']}",f"- Workflow run: {os.environ['RUN_ID']}",f"- D3 status: {audit['d3_gate_status']} — interim candidate only.","","| Path | Bytes | SHA-256 | Git blob SHA-1 | Output commit |","|---|---:|---|---|---|"]
           ledger += [f"| {p} | {n} | {sha} | {blob} | {head} |" for p,n,sha,blob in rows]
-          ledger += ["","Raw bytes were downloaded from immutable URLs and compared byte-for-byte with runner outputs.",""]
+          ledger += ["","## Governing reference input","",f"- URL: {reference_url}",f"- Gist revision commit: 384c27810e76572e77e79e9829c5f92c1c4165d7",f"- Bytes: {len(reference_local)}",f"- SHA-256: {hashlib.sha256(reference_local).hexdigest()}",f"- Git blob SHA-1: {reference_blob}","","Raw bytes were downloaded from immutable URLs and compared byte-for-byte with runner outputs.",""]
           pathlib.Path("docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md").write_text("\n".join(ledger),encoding="utf-8")
           matrix=pathlib.Path("docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md")
           matrix.write_text(matrix.read_text(encoding="utf-8")+"\n## Live build result — append-only\n\n- 185 sheets per workbook: PASS_SCOPED.\n- Bilingual numeric parity: PASS_SCOPED.\n- Number-ID adjacency: PASS_SCOPED.\n- Excel formula/error cells: zero.\n- Detailed daily/asset/accounting/partner/guarantee/contracts/closure evidence: MISSING_EVIDENCE.\n- Overall D3 gate: BLOCKED_MISSING_EVIDENCE; D4 must not start.\n",encoding="utf-8")
           entry="\n\n## D3 candidate build — 2026-11-01\n\n- D2 was revalidated closed before D3; D3 candidate generation was explicitly requested in this session.\n- Output commit: "+head+"; workflow run: "+os.environ["RUN_ID"]+".\n- Candidate classification: T2_INTERIM / NOT_FINAL_BLOCKED.\n- Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.\n- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.\n- No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.\n"
           for path in ["docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md","docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md"]:
             p=pathlib.Path(path); p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
-          pathlib.Path("docs/stage_d/D3_FINAL_HANDOFF_ADDENDUM_2026-11-01.md").write_text("# D3 Final Handoff Addendum — 2026-11-01\n"+entry,encoding="utf-8")
+          addendum=["# D3 Repair and Candidate Publication Addendum — 2026-11-01","",f"- Triggering workflow run: {os.environ['RUN_ID']}",f"- Exact D3 source HEAD: {os.environ['SOURCE_HEAD']}", "- Approved v2.4.0 raw URL: https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md","- Approved reference Gist revision commit: 384c27810e76572e77e79e9829c5f92c1c4165d7; bytes 401397; SHA-256 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b.","- The pre-existing repository file MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md is retained unchanged as a conflicting historical candidate (269253 bytes; blob 9fe43bfbb2cbfd2bb7f7010866e7469506d22c33); D3 consumes the exact approved Gist bytes instead.","- Previous D3 run 41344528985 built candidates and committed JSON/Markdown, but .gitignore excluded both XLSX files. Raw readback then failed with 404 before evidence ledger creation. The workflow now force-adds the two intended workbook files before readback.","- The constants parser correction and separate formula/error audit were already present at source commit de12b42ee371ec12675b1110facd6d2da25eb781; this run revalidates them on the exact D3 source HEAD.","- Added whole-workbook RTL/LTR audit and explicit five-field MISSING_EVIDENCE rows; no missing values were inferred or zero-filled.","","## Remaining mandatory blockers","- C100 daily distributions and representative P50 raw daily ledgers are absent from the pinned Number Registry.","- Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS records and all-trial final close-date distribution are absent.","- The five historical accounting fields remain MISSING_EVIDENCE: Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets.","- Full Logging normalized 105/105 remains NOT_VERIFIED_105_OF_105; C100 Golden revalidation remains NOT_RUN.","","## Preserved gates","- Financial Gate A PASS_SCOPED only; Production Gate A NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS.","- Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED.","- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change, main update, PR, merge or Release.","","**Disposition:** D3 remains BLOCKED_MISSING_EVIDENCE. This addendum does not authorize D4 or any later phase.",""]; pathlib.Path("docs/stage_d/D3_REPAIR_AND_PUBLICATION_ADDENDUM_2026-11-01.md").write_text("\n".join(addendum),encoding="utf-8")
           PY
           set -euo pipefail
           git add docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/
@@ -98,11 +115,15 @@ jobs:
           head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
           r=requests.get(f"https://api.github.com/repos/{repo}/git/ref/heads/{branch}",headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],"Accept":"application/vnd.github+json"},timeout=60); r.raise_for_status()
           if r.json()["object"]["sha"]!=head: raise SystemExit("D3_EXACT_FINAL_HEAD_MISMATCH")
-          paths=["deliverables/النتائج_الكاملة_AR.xlsx","deliverables/Full_Results_EN.xlsx","deliverables/D3_BUILD_AUDIT.json","deliverables/D3_MANIFEST.json","docs/stage_d/D3_BUILD_REPORT_2026-11-01.md","docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md","docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md","docs/stage_d/D3_FINAL_HANDOFF_ADDENDUM_2026-11-01.md","docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md","docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md"]
+          paths=["deliverables/النتائج_الكاملة_AR.xlsx","deliverables/Full_Results_EN.xlsx","deliverables/D3_BUILD_AUDIT.json","deliverables/D3_MANIFEST.json","docs/stage_d/D3_BUILD_REPORT_2026-11-01.md","docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md","docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md","docs/stage_d/D3_REPAIR_AND_PUBLICATION_ADDENDUM_2026-11-01.md","docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md","docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md"]
           for path in paths:
             local=pathlib.Path(path).read_bytes(); raw=requests.get(f"https://raw.githubusercontent.com/{repo}/{head}/{path}",timeout=180); raw.raise_for_status()
             if raw.content!=local: raise SystemExit("D3_FINAL_RAW_MISMATCH:"+path)
             blob=hashlib.sha1(b"blob "+str(len(local)).encode()+bytes([0])+local).hexdigest()
             print(f"FINAL_VERIFIED_RAW path={path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob={blob} commit={head}")
+          gist="https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
+          rr=requests.get(gist,timeout=180); rr.raise_for_status()
+          if len(rr.content)!=401397 or hashlib.sha256(rr.content).hexdigest()!="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b": raise SystemExit("D3_FINAL_GOVERNING_REFERENCE_MISMATCH")
+          print(f"FINAL_VERIFIED_RAW path={gist} bytes={len(rr.content)} sha256={hashlib.sha256(rr.content).hexdigest()} gist_commit=384c27810e76572e77e79e9829c5f92c1c4165d7")
           print("D3_EXACT_FINAL_HEAD_PASS "+head)
           PY

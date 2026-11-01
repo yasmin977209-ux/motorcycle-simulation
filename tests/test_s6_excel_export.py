@@ -37,6 +37,32 @@ def test_reference_constants_parser():
     ]
 
 
+def test_sheet_direction_audit(tmp_path):
+    from openpyxl import Workbook
+    from scripts.s6_excel_export import audit
+    path=tmp_path / "direction.xlsx"
+    wb=Workbook(); ws=wb.active; ws.title="T"; ws.sheet_view.rightToLeft=True; wb.save(path); wb.close()
+    assert audit(path,["T"],expected_rtl=True)["sheet_direction_status"]=="PASS"
+    report=audit(path,["T"],expected_rtl=False)
+    assert report["sheet_direction_status"]=="FAIL"
+    assert report["sheet_direction_mismatches"]==[{"sheet":"T","expected":"LTR","actual":"RTL"}]
+
+
+def test_missing_accounting_fields_are_explicit_and_not_zero_filled(tmp_path):
+    from openpyxl import Workbook, load_workbook
+    from scripts.s6_excel_export import ACCOUNTING_MISSING_FIELDS, write_missing_accounting_fields
+    path=tmp_path / "accounting_missing.xlsx"
+    wb=Workbook(write_only=True); ws=wb.create_sheet("ACCTG")
+    write_missing_accounting_fields(ws,"C030_G000"); wb.save(path)
+    check=load_workbook(path,read_only=True,data_only=False)
+    try:
+        rows=list(check["ACCTG"].iter_rows(values_only=True))
+        assert [row[4] for row in rows]==list(ACCOUNTING_MISSING_FIELDS)
+        assert all(row[5]=="MISSING_EVIDENCE" and row[5] is not None for row in rows)
+        assert all(not isinstance(row[5],(int,float,Decimal)) for row in rows)
+    finally: check.close()
+
+
 def test_formula_like_strings_are_written_as_text(tmp_path):
     from openpyxl import Workbook, load_workbook
     from scripts.s6_excel_export import safe_append, audit
