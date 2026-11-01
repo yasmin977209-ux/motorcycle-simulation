@@ -2712,3 +2712,14 @@ D2 final disposition `PASS_SCOPED_WITH_LIMITATIONS`; Run 41326662869 `SUCCESS` e
 
 
 D2 registry resolver and corrected canonical audit verified in Run 41328486239; final registry commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad; status PASS_SCOPED_WITH_LIMITATIONS; D3 not started.
+
+
+## D2 corrective completion pass — 2026-11-01 (append-only)
+
+- Current D2 implementation work corrects the earlier spot-check limitation: validation now calls the indexed daily resolver for every one of the 2,086,550 addressable daily points, while retaining exact rational and provenance checks.
+- The resolver API and validator share a single O(1)-indexed implementation; new tests cover ALL_TRIALS_CARRY_FORWARD sample counts and malformed active-count provenance.
+- D2 workflow concurrency is branch-wide rather than per-commit. Execution is triggered only by an explicit D2 completion marker after the code, tests, matrix and evidence ledger are committed, preventing intermediate pushes from racing the build.
+- The D2 completion package now includes the requirements matrix and remote evidence ledger; workflow Raw readback covers these files along with the registry, audit JSON/Markdown and continuity records.
+- Historical workflow corrections: Runs 41328255273 and 41328349398 are superseded failed Push/non-fast-forward attempts; Run 41326515357 did not complete successfully. Run 41328486239 is the corrected successful build, and Run 41328814656 passed 31 source-integration tests. Do not describe stale runs as IN_PROGRESS/PENDING.
+- The latest pre-hardening branch HEAD was 82f43b4525f88d347e64e994bd24aa2399bd803a; the final completion HEAD must be taken from the subsequent successful D2 workflow's exact-head/raw-readback log. Main remains read-only.
+- No D3 start, no Trial/Simulation/Monte Carlo/N expansion, no historical backfill or zero-fill, and no main/Release/acceptance promotion.
