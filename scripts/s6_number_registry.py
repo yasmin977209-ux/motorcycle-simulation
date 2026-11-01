@@ -358,7 +358,7 @@ def build_registry(paths, source_head, workflow_run_id):
                     "gate_status": None, "evidence_status": "VERIFIED_LIVE",
                     "normalized_audit_status": "NOT_VERIFIED", "post_write_audit_status": audit["status"],
                     "reuse_classification": reuse, "locator": prefix + "trial_result.json#" + field,
-                }
+                })
             if len(entries) and len(entries) != len(set(x["number_id"] for x in entries)):
                 raise ValueError("DUPLICATE_NUMBER_ID")
         if cohort_counts != {S6_COHORT: 100, C100_COHORT: 5}:
