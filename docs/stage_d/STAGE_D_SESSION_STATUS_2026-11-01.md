@@ -159,3 +159,12 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - D0 and D1 retain their prior PASS_SCOPED_WITH_LIMITATIONS dispositions. No D3 work has begun.
 - Preserved: Gate A financial PASS_SCOPED; production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representatives only / statuses NOT_VERIFIED; C100 Golden NOT_RUN; five accounting fields MISSING_EVIDENCE.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill was performed.
+
+
+## D2 completion hardening — corrective record (2026-11-01)
+
+- Corrected stale workflow-status references in prior D2 handoff notes: Runs 41328255273 and 41328349398 are superseded failed attempts (Push/non-fast-forward race), not active or pending evidence. Run 41326515357 also did not complete successfully; Run 41326662869 succeeded on its own tested SHA but was superseded by Run 41328486239.
+- Run 41328486239 remains the successful corrected registry build on registry commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad. Run 41328814656 separately passed 31 source-integration tests on bcf5ed4efcd72b1fa7e9de5ae48f26331dc25611.
+- The later handoff commit 82f43b4525f88d347e64e994bd24aa2399bd803a is documentation-only relative to bcf5ed4; no exact-head validation was recorded for 82f43b at the time this correction was started.
+- D2 completion hardening is now in progress: indexed resolver validation for all 2,086,550 daily points; explicit unit tests for carry-forward sampling and invalid sample provenance; branch-wide Actions concurrency; complete requirements matrix/evidence ledger; corrected Artifact contents.
+- Final disposition and exact tested HEAD are intentionally pending the completion workflow. No D3 start; no Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update or historical Artifact mutation.
