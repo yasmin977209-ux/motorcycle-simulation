@@ -105,3 +105,11 @@ D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D
 - Workflow Run ID: 41332273796
 - Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.
 - Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.
+
+
+## D2 final evidence-package correction — 2026-11-01 (append-only)
+
+- The first completion Artifact (13094200249) passed ZIP CRC verification and contained all six audit/registry deliverables. Inspection identified that repeated reconciliation had nested the original 13,954-entry local-only audit one level too deeply; the original report remained present but was not the immediate `historical_local_report.original_report` value.
+- Added `original_historical_report()` and a regression test to unwrap the oldest preserved report without altering its contents. The next canonical audit build will retain the original 13,954-entry report directly under `historical_local_report.original_report`.
+- The D2 workflow now supplies the three pinned ZIP paths to the builder integration tests, so those nine artifact-backed tests run instead of being skipped. It also appends continuity records in binary mode to preserve historical CR bytes.
+- The next successful workflow is required to verify the revised audit structure, run all tests without integration skips, and upload the complete code/test/workflow/final-handoff evidence package.
