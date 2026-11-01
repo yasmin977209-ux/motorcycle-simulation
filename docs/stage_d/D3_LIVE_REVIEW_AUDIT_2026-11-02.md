@@ -54,3 +54,14 @@ The source runs identified for detailed reconstruction are all dated before the 
 - Added 8 source-free exporter/registry regression tests and a static workflow. The workflow is committed, but no successful run or report has been verified. Its status remains NOT_RUN.
 - No workbook rebuild or source-artifact download was performed in this continuation. No simulation, Trial, Monte Carlo, N expansion, backfill or zero-fill was performed.
 - D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07..D3-13 source records remain missing. D4 remains NOT_STARTED.
+
+
+## D3 continuation review — 2026-11-02 (append-only)
+
+- Revalidated live branch checkpoint: 479ca3889c07fcb4d82b86b23bef61d8760adb64; main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Owner continuation instruction received at 2026-11-01T23:02:43Z. It authorizes technical D3 remediation but does not waive the source-date cutoff.
+- Re-read the live D3 source-date audit and fail-closed source pipeline. The three pinned source runs remain pre-cutoff; no eligible post-cutoff source artifact is recorded. Run 41358971225 remains cancelled, with no published artifact or repository commit; all derived temporary output is excluded.
+- Rechecked run 41359344854 job steps and logs: it passed exact-head verification at 7aea74e774084fb7a622f411c5b1dbfad40a2d0d and fetched the Arabic/English workbooks, D3 audit, manifest, report, D2 registry and governing-reference repository copy from Raw, verifying their recorded sizes, SHA-256 and blob SHA-1. This evidence is scoped to that exact HEAD; it is not an exact-head check of the newer checkpoint.
+- Added 8 source-free exporter/registry regression tests and a static workflow. No successful run or report from that workflow has been verified; its status remains NOT_RUN.
+- No workbook rebuild or source-artifact download was performed in this continuation. No simulation, Trial, Monte Carlo, N expansion, backfill or zero-fill was performed.
+- D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 source records remain missing. D4 remains NOT_STARTED.
