@@ -605,7 +605,12 @@ def validate_registry(registry):
             if Fraction(n, d).numerator != n or Fraction(n, d).denominator != d:
                 raise ValueError("DAILY_SERIES_FRACTION_NOT_REDUCED")
             point_id = daily_number_id(item["series_id"], offset)
+            if DAILY_NUMBER_RE.fullmatch(point_id) is None:
+                raise ValueError("DAILY_NUMBER_ID_FORMAT_INVALID")
+        for offset in sorted({0, item["date_count"] - 1}):
+            point_id = daily_number_id(item["series_id"], offset)
             resolved = resolve_number(registry, point_id)
+            n, d = item["values"][offset]
             if resolved.get("numerator") != n or resolved.get("denominator") != d or resolved.get("scenario_id") != item["scenario_id"]:
                 raise ValueError("DAILY_NUMBER_ID_RESOLUTION_MISMATCH")
         points += item["date_count"]
