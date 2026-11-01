@@ -123,7 +123,7 @@ def verify_and_download_artifacts() -> dict:
             "artifact_id": spec["id"], "run_id": spec["run_id"],
             "size_bytes": total, "sha256": actual_sha,
             "workflow_run_head_sha": spec["head"], "filename": spec["filename"],
-            "artifact_name": spec["name"], "evidence_status": "VERIFIED_LIVE",
+            "evidence_status": "VERIFIED_LIVE",
         }
         print(
             f"VERIFIED_SOURCE_ARTIFACT name={key} id={spec['id']} run={spec['run_id']} "
