@@ -12,7 +12,7 @@ on:
       - .github/workflows/d3-code-static-validation.yml
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: d3-code-static-validation-${{ github.ref }}
@@ -51,14 +51,93 @@ jobs:
           python -m compileall -q tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
 
       - name: Run D3 source-free unit tests only
-        run: |
-          python -m pytest -q -rs tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
-
-      - name: Assert no source-data pipeline or simulation was invoked
         shell: bash
         run: |
           set -euo pipefail
-          echo "D3_STATIC_VALIDATION_ONLY=PASS"
-          echo "SOURCE_ARTIFACTS_DOWNLOADED=0"
-          echo "SIMULATIONS_OR_TRIALS_EXECUTED=0"
-          echo "D3_GATE_PROMOTED=0"
+          python -m pytest -q -rs tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py | tee /tmp/d3-pytest.txt
+
+      - name: Write a machine-readable validation record
+        env:
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, re
+          output = pathlib.Path("/tmp/d3-pytest.txt").read_text(encoding="utf-8")
+          match = re.search(r"(\d+) passed(?:, (\d+) skipped)?", output)
+          if not match:
+              raise SystemExit("D3_STATIC_TEST_SUMMARY_NOT_FOUND")
+          report = {
+              "schema_version": "d3-source-free-static-validation-v1",
+              "branch": "tmp/d1-rebuild-20261101",
+              "tested_source_head": os.environ["TESTED_SHA"],
+              "workflow_run_id": os.environ["RUN_ID"],
+              "workflow_run_attempt": int(os.environ["RUN_ATTEMPT"]),
+              "compile_status": "PASS",
+              "pytest_status": "PASS",
+              "tests_passed": int(match.group(1)),
+              "tests_skipped": int(match.group(2) or 0),
+              "test_files": [
+                  "tests/test_d3_registry_extension.py",
+                  "tests/test_d3_excel_export_complete.py"
+              ],
+              "source_artifacts_downloaded": 0,
+              "source_artifact_contents_read": 0,
+              "simulations_or_trials_executed": 0,
+              "d3_gate_promoted": False,
+              "d3_status": "BLOCKED_MISSING_EVIDENCE",
+              "d4_status": "NOT_STARTED"
+          }
+          path = pathlib.Path("docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(report, sort_keys=True))
+          PY
+
+      - name: Commit the successful source-free validation record
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${GITHUB_SHA}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json
+          git commit -m "docs(d3): record source-free static validation"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+
+      - name: Verify final branch HEAD and Raw report bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          import hashlib, os, pathlib, subprocess, requests
+          branch = "tmp/d1-rebuild-20261101"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          headers = {"Authorization": "Bearer " + os.environ["GH_TOKEN"], "Accept": "application/vnd.github+json"}
+          response = requests.get(
+              f"https://api.github.com/repos/{os.environ['REPOSITORY']}/git/ref/heads/{branch}",
+              headers=headers, timeout=60
+          )
+          response.raise_for_status()
+          if response.json()["object"]["sha"] != head:
+              raise SystemExit("D3_STATIC_FINAL_HEAD_MISMATCH")
+          path = "docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json"
+          local = pathlib.Path(path).read_bytes()
+          raw = requests.get(
+              f"https://raw.githubusercontent.com/{os.environ['REPOSITORY']}/{head}/{path}",
+              timeout=60
+          )
+          raw.raise_for_status()
+          if raw.content != local:
+              raise SystemExit("D3_STATIC_REPORT_RAW_READBACK_MISMATCH")
+          blob = hashlib.sha1(b"blob " + str(len(local)).encode() + bytes([0]) + local).hexdigest()
+          print(
+              "D3_STATIC_FINAL_HEAD_PASS "
+              + head
+              + " report_bytes=" + str(len(local))
+              + " report_sha256=" + hashlib.sha256(local).hexdigest()
+              + " report_blob_sha1=" + blob
+          )
+          PY
