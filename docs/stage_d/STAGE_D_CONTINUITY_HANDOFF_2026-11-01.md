@@ -184,3 +184,13 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 The old prompt library has been preserved and points to the comprehensive revised operational edition at `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`. Exact publication fingerprints and governance checks are in `docs/stage_d/PROJECT_PROMPT_LIBRARY_REV2_PUBLICATION_2026-11-01.md`.
 
 Next session: perform GitHub-first restoration, verify active branch and main HEAD, re-read the D3 live audit and exact evidence. Current phase disposition remains D3 `BLOCKED / BLOCKED_MISSING_EVIDENCE`; D4 is `NOT_STARTED`. Wait for explicit owner continuation before any D3 repair or rerun. Do not start D4.
+
+ 
+## Handoff correction — D1/D2 evidence reconciliation — 2026-11-01
+
+Before continuing, read `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`.
+
+- Treat D1 BLOCKED values in the older audit JSON files as historical pre-publication snapshots; current D1 disposition is `PASS_SCOPED_WITH_LIMITATIONS` per the later append-only closure correction.
+- Treat the older D2 registry triple `47e72e...` / `ba7ead...` / `50673bf...` as historical Run `41333300530` evidence. Current registry evidence is SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`, 24,137,036 bytes, containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`, Run `41335321803`.
+- Follow-up D1/D2 validation Run `41344528986`: 34 passed, 0 failed, 0 skipped on `de12b42ee371ec12675b1110facd6d2da25eb781`.
+- D3 remains `BLOCKED_MISSING_EVIDENCE`. Do not start D4. Do not run Trials, Simulation, Monte Carlo, N expansion, backfill or zero-fill.
