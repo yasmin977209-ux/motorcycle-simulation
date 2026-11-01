@@ -58,3 +58,21 @@ Raw bytes were downloaded from immutable URLs and compared byte-for-byte with ru
 - The run had already read three pre-cutoff artifact contents before cancellation. Its content-derived output is excluded and must not be cited.
 - Current branch HEAD at audit time: 7aea74e774084fb7a622f411c5b1dbfad40a2d0d; main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
 - D3 current gate remains BLOCKED_MISSING_EVIDENCE. The existing candidate workbook readback is verified by run 41359344854 at the above exact HEAD; this does not satisfy D3-05 or D3-07..D3-13.
+
+ 
+## Source-free D3 code and test fingerprints — 2026-11-02
+
+The following source, test and workflow files were fetched from the live branch at checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64. SHA-256 values below were computed from the fetched UTF-8 bytes; Git blob SHA-1 values were returned by GitHub for the same file versions. These records validate the code files only; they do not prove test execution or D3 closure.
+
+| Path | Bytes | SHA-256 | Git blob SHA-1 | Containing commit | GitHub URL |
+|---|---:|---|---|---|---|
+| `scripts/d3_registry_extension.py` | 44701 | `f3802f1af009619b0f9a6dde164611c4ec8d0bbfc8de412f15dd50bef7bb76aa` | `c7030bba582c6fad6e26dbb3c06c604402e5b16a` | `479ca3889c07fcb4d82b86b23bef61d8760adb64` | [GitHub](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/479ca3889c07fcb4d82b86b23bef61d8760adb64/scripts/d3_registry_extension.py) |
+| `scripts/d3_excel_export_complete.py` | 46489 | `46fdb5b24f5be8582eb6428eba2aaf524acdef64206c6f9f1a92986c12eeef30` | `e62eda6f1731ce7fc0c4976fd3005341041f532a` | `479ca3889c07fcb4d82b86b23bef61d8760adb64` | [GitHub](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/479ca3889c07fcb4d82b86b23bef61d8760adb64/scripts/d3_excel_export_complete.py) |
+| `tests/test_d3_registry_extension.py` | 5854 | `12141998780a7fa31a1138e71e403a4b92627d17122f2f34694c8b321424c1e2` | `35d5b88e282878de862409c78db1a2e3cef43fc0` | `479ca3889c07fcb4d82b86b23bef61d8760adb64` | [GitHub](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/479ca3889c07fcb4d82b86b23bef61d8760adb64/tests/test_d3_registry_extension.py) |
+| `tests/test_d3_excel_export_complete.py` | 3707 | `54aae6e93c5ab3596e008e4365c3ae5b7fed5fbfff72dd898aea7685e73085b9` | `2e93a30c8f12137a12c6adf6252ef8d09ba30a23` | `479ca3889c07fcb4d82b86b23bef61d8760adb64` | [GitHub](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/479ca3889c07fcb4d82b86b23bef61d8760adb64/tests/test_d3_excel_export_complete.py) |
+| `.github/workflows/d3-code-static-validation.yml` | 5996 | `38cc0f11d223d479a9541cfaf55d0a7c3563c2492578ad938d5b1bb8c7d2b993` | `752178d28d3c54772127555c18b0eb7a03a0f3cc` | `479ca3889c07fcb4d82b86b23bef61d8760adb64` | [GitHub](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/479ca3889c07fcb4d82b86b23bef61d8760adb64/.github/workflows/d3-code-static-validation.yml) |
+
+- Static workflow intent: compile `scripts/d3_registry_extension.py` and `scripts/d3_excel_export_complete.py`; run `tests/test_d3_registry_extension.py` and `tests/test_d3_excel_export_complete.py`; download/read no source artifacts; run no simulation/Trial/Monte Carlo.
+- Expected focused test inventory: 7 existing tests + 8 new tests = 15 tests.
+- Execution status: NOT_RUN / MISSING_EVIDENCE. No machine-readable success report has been read back from GitHub at this checkpoint.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
