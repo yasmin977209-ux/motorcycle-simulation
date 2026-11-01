@@ -63,13 +63,13 @@
     "entry_count": 13954
   },
   "registry_containing_commit": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
-  "registry_git_blob_sha1": "ba7ead51a67b244ebfcb87d35be59dbaf62fccfc",
+  "registry_git_blob_sha1": "9b7976b7adde94a0fdcb14cdb8ee6832f7a63bf7",
   "registry_path": "results/number_registry.json",
-  "registry_sha256": "47e72ecae6f8c9f8cff3c8599909c42bf5e8a4ddaa3d3bceb0be764717b7b321",
+  "registry_sha256": "10a93c1f1061ccaf2ee4a4bddd4a416adfae8745118a8debf4dbe7d427ebbd8b",
   "registry_size_bytes": 24137036,
   "representative_numeric_entries": 1680,
   "representative_trial_count": 105,
-  "source_head": "a830827c4977ba9b9121903225da5c42f8ca0959",
+  "source_head": "12d1d861cf9eb5022fb916f2b7d9a0b702badf1f",
   "unavailable_evidence": [
     {
       "do_not_infer_or_zero_fill": true,
@@ -114,5 +114,5 @@
       "value": null
     }
   ],
-  "workflow_run_id": "41333300530"
+  "workflow_run_id": "41334194323"
 }
