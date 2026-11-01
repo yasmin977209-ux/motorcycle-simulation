@@ -310,12 +310,22 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
         ["D1", "PASS_SCOPED_WITH_LIMITATIONS", "Approved v2.4.0 publication and exact-head evidence."],
         ["D2", "PASS_SCOPED_WITH_LIMITATIONS", "Pinned Number Registry exact-value and daily-series validation."],
         ["D3 structure", "PASS_SCOPED", "185 sheets per workbook; all 25 scenarios populated."],
-        ["D3 source coverage", "PASS_SCOPED", "25 P50 daily and detailed ledgers; 49,500 close dates; 105 representative keys."],
-        ["D3 bilingual parity", "PASS_SCOPED", "Arabic RTL and English LTR; numeric parity verified."],
+        ["D3 source coverage", "PASS_SCOPED_WITH_LIMITATIONS", "25 P50 detailed cases; 105 representative daily keys / 125 role assignments; 49,500 close dates."],
+        ["D3 bilingual parity", "PASS_SCOPED", "Arabic RTL and English LTR; all numeric cells compared."],
         ["Full model acceptance suite", "NOT_EXECUTED_HERE", "Do not infer 177 unique tests passed."],
         ["Final acceptance", "NOT_DECLARED", "D3 scoped closure is not project final acceptance."],
     ]:
         safe_append(ws, row)
+    for requirement_id, status in [
+        ("D3-01", "PASS_SCOPED"), ("D3-02", "PASS_SCOPED"), ("D3-03", "PASS_SCOPED"),
+        ("D3-04", "PASS_SCOPED"), ("D3-05", "PASS_SCOPED_WITH_LIMITATIONS"),
+        ("D3-06", "PASS_SCOPED_WITH_LIMITATIONS"), ("D3-07", "PASS_SCOPED"),
+        ("D3-08", "PASS_SCOPED"), ("D3-09", "PASS_SCOPED"), ("D3-10", "PASS_SCOPED"),
+        ("D3-11", "PASS_SCOPED"), ("D3-12", "PASS_SCOPED"), ("D3-13", "PASS_SCOPED"),
+        ("D3-14", "PASS_SCOPED"), ("D3-15", "PASS_SCOPED"), ("D3-16", "PASS_SCOPED"),
+        ("D3-17", "PASS_SCOPED_WITH_LIMITATIONS"), ("D3-18", "PASS_SCOPED"),
+    ]:
+        safe_append(ws, [requirement_id, status, "See D3 build audit, source extension audit, test run, and remote evidence ledger."])
 
     ws = new_sheet(wb, "ERROR_LOG", lang)
     header(ws, [h["field"], h["status"], h["reason"], h["notes"]])
@@ -328,9 +338,13 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
                      "125 role assignments verified; this is not 48,000-trial daily logging."])
     safe_append(ws, ["C100 Golden revalidation", "NOT_RUN", "C100 daily reuse path cross-checked",
                      "No new C100 trial or full Golden revalidation was executed."])
+    for field in ACCOUNTING_FIELDS:
+        safe_append(ws, [field, "MISSING_EVIDENCE",
+                         "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+                         "The full 48K historical cohort is unavailable; representative P50 case values are source-backed only."])
     safe_append(ws, ["Historical 48K accounting fields", "MISSING_EVIDENCE",
                      "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-                     "Representative P50 values are shown only for their source-backed cases."])
+                     "No field is inferred or zero-filled."])
     safe_append(ws, ["Production Gate A", "NOT_DECLARED",
                      "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
                      "Financial Gate A PASS_SCOPED does not imply production acceptance."])
@@ -683,6 +697,7 @@ def build(args) -> dict:
         "representative_accounting_fields": extension["representative_accounting_fields"],
         "representative_role_case_count": len(extension.get("representative_role_cases", [])),
         "representative_role_assignment_count": extension["full_logging_validation"]["role_assignments"],
+        "missing_historical_48k_accounting_fields": ACCOUNTING_FIELDS,
         "scenario_count": len(ids), "worksheet_count_per_workbook": len(names),
         "arabic_workbook": aa, "english_workbook": ee,
         "bilingual_numeric_parity": parity, "number_id_traceability": trace,
@@ -699,6 +714,9 @@ def build(args) -> dict:
         "current_governing_reference": reference_info, "historical_execution_reference_sha256": HISTORICAL,
         "registry_base_sha256": base_sha, "registry_extension": result["registry_extension"],
         "source_artifacts": extension["source_artifacts"], "requirement_statuses": requirements,
+        "representative_role_case_count": result["representative_role_case_count"],
+        "representative_role_assignment_count": result["representative_role_assignment_count"],
+        "missing_historical_48k_accounting_fields": list(ACCOUNTING_FIELDS),
         "master_seed": base_registry["scope"]["S6"]["master_seed"],
         "files": {
             ar.name: {"bytes": aa["bytes"], "sha256": aa["sha256"]},
