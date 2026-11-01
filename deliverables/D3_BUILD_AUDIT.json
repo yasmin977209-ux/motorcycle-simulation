@@ -1,0 +1,66 @@
+{
+  "arabic_workbook": {
+    "bytes": 27723804,
+    "excel_error_cell_count": 0,
+    "excel_error_cells": [],
+    "excel_safety_status": "PASS",
+    "formula_cell_count": 0,
+    "formula_cells": [],
+    "numeric_cells": 2425143,
+    "sha256": "7517287e01b4076ff97f6849c973373615e324afb1459acfc2fa3e8a67c90e34",
+    "sheet_count": 185
+  },
+  "bilingual_numeric_parity": {
+    "numeric_comparisons": 2425143,
+    "numeric_mismatches": 0
+  },
+  "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "english_workbook": {
+    "bytes": 27711236,
+    "excel_error_cell_count": 0,
+    "excel_error_cells": [],
+    "excel_safety_status": "PASS",
+    "formula_cell_count": 0,
+    "formula_cells": [],
+    "numeric_cells": 2425143,
+    "sha256": "f80379f7983f715f96bb10332a7c3e1b452463de30f1eeef21f98e52210e63d7",
+    "sheet_count": 185
+  },
+  "gate_statuses_preserved": {
+    "c100_golden_revalidation": "NOT_RUN",
+    "full_logging": "PASS_SCOPED_105_KEYS_ONLY",
+    "gate_a_financial": "PASS_SCOPED",
+    "gate_a_production": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "n4800": "NOT_EXECUTED",
+    "stability": "NOT_CONVERGED (0/60)"
+  },
+  "missing_evidence": [
+    "C100 daily distributions absent from Number Registry.",
+    "Representative P50 raw daily ledgers absent from Number Registry.",
+    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.",
+    "Final closure-date distribution absent from Number Registry.",
+    "Five historical accounting fields remain MISSING_EVIDENCE.",
+    "Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.",
+    "C100 Golden revalidation remains NOT_RUN."
+  ],
+  "no_trials_or_simulation_executed": true,
+  "number_id_traceability": {
+    "numeric_cells_checked": 4850286,
+    "untraced_numeric_cells": 0
+  },
+  "registry": {
+    "bytes": 24137036,
+    "daily_point_count": 2086550,
+    "daily_points_resolved": 2086550,
+    "daily_series_count": 1000,
+    "entry_count": 2640,
+    "git_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6",
+    "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+  },
+  "scenario_count": 25,
+  "source_head": "de12b42ee371ec12675b1110facd6d2da25eb781",
+  "workflow_run_id": "41344528985",
+  "worksheet_count_per_workbook": 185
+}

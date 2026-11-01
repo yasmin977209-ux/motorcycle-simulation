@@ -1,0 +1,34 @@
+{
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "files": {
+    "Full_Results_EN.xlsx": {
+      "bytes": 27711236,
+      "sha256": "f80379f7983f715f96bb10332a7c3e1b452463de30f1eeef21f98e52210e63d7"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "bytes": 27723804,
+      "sha256": "7517287e01b4076ff97f6849c973373615e324afb1459acfc2fa3e8a67c90e34"
+    }
+  },
+  "master_seed": 20270101,
+  "missing_evidence": [
+    "C100 daily distributions absent from Number Registry.",
+    "Representative P50 raw daily ledgers absent from Number Registry.",
+    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.",
+    "Final closure-date distribution absent from Number Registry.",
+    "Five historical accounting fields remain MISSING_EVIDENCE.",
+    "Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.",
+    "C100 Golden revalidation remains NOT_RUN."
+  ],
+  "number_id_traceability": {
+    "numeric_cells_checked": 4850286,
+    "untraced_numeric_cells": 0
+  },
+  "numeric_comparisons": 2425143,
+  "openpyxl_version": "3.1.5",
+  "python_version": "3.12.15",
+  "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+  "source_head": "de12b42ee371ec12675b1110facd6d2da25eb781",
+  "workflow_run_id": "41344528985"
+}
