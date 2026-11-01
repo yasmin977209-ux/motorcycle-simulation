@@ -232,7 +232,7 @@ def build_registry(paths, source_head, workflow_run_id):
 
     with zipfile.ZipFile(paths["aggregate"]) as agg, zipfile.ZipFile(paths["full_logging"]) as full, zipfile.ZipFile(paths["c100"]) as c100:
         manifest = read_json(agg, "manifest.json")
-        expected_manifest = (S6_SOURCE, S6_COHORT, MASTER_SEED, artifacts["aggregate"]["run_id"], "4f2f2cc16d0cb5125262088704febccbae6f50ed")
+        expected_manifest = (S6_SOURCE, S6_COHORT, MASTER_SEED, str(artifacts["aggregate"]["run_id"]), "4f2f2cc16d0cb5125262088704febccbae6f50ed")
         actual_manifest = (manifest.get("source_sha"), manifest.get("cohort_id"), manifest.get("master_seed"), manifest.get("run_id"), manifest.get("git_commit"))
         if actual_manifest != expected_manifest:
             raise ValueError("AGGREGATE_MANIFEST_IDENTITY_MISMATCH")
