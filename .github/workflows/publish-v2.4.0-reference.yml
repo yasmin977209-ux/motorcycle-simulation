@@ -1,6 +1,11 @@
 name: Publish approved v2.4.0 governing reference
 
 on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - .github/workflows/publish-v2.4.0-reference.yml
   workflow_dispatch:
 
 permissions:
