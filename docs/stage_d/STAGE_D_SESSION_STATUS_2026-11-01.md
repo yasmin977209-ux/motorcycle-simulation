@@ -107,3 +107,12 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Publisher workflow status: NOT_RUN. The transfer payload and READY marker are absent; canonical reference path remains absent. Local archive verification is VERIFIED_LOCAL only; remote publication remains MISSING_EVIDENCE / CANNOT_PUBLISH.
 - No D2, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release or main update.
 - D1 remains BLOCKED on the sole remaining v2.4.0 canonical publication and remote evidence triple. D2 NOT_STARTED.
+
+
+## Prompt-library update — 2026-11-01T14:37Z (append-only)
+
+- Created the consolidated Arabic GitHub-first prompt library at [docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md](stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md).
+- Prompt-library commit: e9af9d4329216909120f67d406ddecc939237ee2; Git blob SHA-1: 197ff616521deea3a812067df2a971b8a985173a; size: 58,572 bytes; SHA-256 from GitHub Raw bytes: 38f7c7744f171b80203d253c4f769be509f12e56abae56ed24b4eaa35feb1468.
+- The library reflects the live baseline at its creation: D0 COMPLETE / PASS_SCOPED_WITH_LIMITATIONS; D1 PASS_SCOPED_WITH_LIMITATIONS; D2 NOT_STARTED. It preserves all known D1 limitations and does not authorize new Trials, Simulation, Monte Carlo, N=4800, main changes, merges or Releases.
+- Live branch HEAD at this append's parent was e9af9d4329216909120f67d406ddecc939237ee2; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The source-validation workflow ran successfully on the prompt-library commit (Run 41317106574; exact tested SHA e9af9d4329216909120f67d406ddecc939237ee2); the follow-up documentation commit requires its own exact-head validation.
+- This is a documentation-only continuity update. No phase was started or re-opened, and no project acceptance or gate status was promoted.

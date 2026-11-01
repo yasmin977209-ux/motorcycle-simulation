@@ -116,3 +116,12 @@ Use a repository-first / CI-produced workflow:
 ## Correction to D0 status — 2026-10-31
 
 The current D0 closure note at docs/stage_d/D0_REPOSITORY_CLOSURE.md has been downgraded to REPORTED_ONLY / D0_REMOTE_SHA256_REVALIDATION_PENDING. The earlier scoped input-audit work remains historical evidence, but the remote-byte SHA-256 values for D0_INPUT_AUDIT.md, D0_INPUT_AUDIT.json and docs/PROJECT_CONTINUITY.md were not reliably recomputed in this execution. Do not use the old D0 PASS_SCOPED_WITH_LIMITATIONS label to open a gate under the owner's new three-part evidence rule. D1 and D2 remain blocked as previously stated. The latest D0 closure file itself is committed, but its referenced inputs still lack a fully revalidated remote SHA-256 + commit + URL triple.
+
+
+## Prompt-library update — 2026-11-01T14:37Z (append-only)
+
+- Created the consolidated Arabic GitHub-first prompt library at [docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md](stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md).
+- Prompt-library commit: e9af9d4329216909120f67d406ddecc939237ee2; Git blob SHA-1: 197ff616521deea3a812067df2a971b8a985173a; size: 58,572 bytes; SHA-256 from GitHub Raw bytes: 38f7c7744f171b80203d253c4f769be509f12e56abae56ed24b4eaa35feb1468.
+- The library reflects the live baseline at its creation: D0 COMPLETE / PASS_SCOPED_WITH_LIMITATIONS; D1 PASS_SCOPED_WITH_LIMITATIONS; D2 NOT_STARTED. It preserves all known D1 limitations and does not authorize new Trials, Simulation, Monte Carlo, N=4800, main changes, merges or Releases.
+- Live branch HEAD at this append's parent was e9af9d4329216909120f67d406ddecc939237ee2; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The source-validation workflow ran successfully on the prompt-library commit (Run 41317106574; exact tested SHA e9af9d4329216909120f67d406ddecc939237ee2); the follow-up documentation commit requires its own exact-head validation.
+- This is a documentation-only continuity update. No phase was started or re-opened, and no project acceptance or gate status was promoted.

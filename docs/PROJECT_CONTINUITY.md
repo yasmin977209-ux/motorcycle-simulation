@@ -2687,3 +2687,12 @@ Run [41251975772](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - `tmp/reference-payload/part-00.txt` remains absent; the entire `tmp/reference-payload/` directory is absent at this HEAD. No partial or placeholder payload was committed.
 - No PR targets this branch or current HEAD. The repository has unrelated open PRs, all left untouched. No Release, merge, main update, D2 work, importer, Trial, Simulation, Monte Carlo or N=4800 execution occurred.
 - Disposition: D1 remains BLOCKED only on canonical v2.4.0 publication and its remote evidence triple. D2 remains NOT_STARTED.
+
+
+## Prompt-library update — 2026-11-01T14:37Z (append-only)
+
+- Created the consolidated Arabic GitHub-first prompt library at [docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md](stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md).
+- Prompt-library commit: e9af9d4329216909120f67d406ddecc939237ee2; Git blob SHA-1: 197ff616521deea3a812067df2a971b8a985173a; size: 58,572 bytes; SHA-256 from GitHub Raw bytes: 38f7c7744f171b80203d253c4f769be509f12e56abae56ed24b4eaa35feb1468.
+- The library reflects the live baseline at its creation: D0 COMPLETE / PASS_SCOPED_WITH_LIMITATIONS; D1 PASS_SCOPED_WITH_LIMITATIONS; D2 NOT_STARTED. It preserves all known D1 limitations and does not authorize new Trials, Simulation, Monte Carlo, N=4800, main changes, merges or Releases.
+- Live branch HEAD at this append's parent was e9af9d4329216909120f67d406ddecc939237ee2; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The source-validation workflow ran successfully on the prompt-library commit (Run 41317106574; exact tested SHA e9af9d4329216909120f67d406ddecc939237ee2); the follow-up documentation commit requires its own exact-head validation.
+- This is a documentation-only continuity update. No phase was started or re-opened, and no project acceptance or gate status was promoted.
