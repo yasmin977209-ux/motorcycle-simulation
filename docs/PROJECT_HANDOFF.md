@@ -144,3 +144,13 @@ The current D0 closure note at docs/stage_d/D0_REPOSITORY_CLOSURE.md has been do
 The latest operational prompt library is `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`. The publication evidence and exact file fingerprint are recorded in `docs/stage_d/PROJECT_PROMPT_LIBRARY_REV2_PUBLICATION_2026-11-01.md`.
 
 Resume by re-reading GitHub live state. D0, D1 and D2 are closed within scoped limitations. D3 remains BLOCKED / BLOCKED_MISSING_EVIDENCE. Do not start D4. Do not repair or rerun D3 until the owner explicitly orders continuation. The previous prompt library remains preserved with an appended supersession notice.
+
+ 
+## D1/D2 documentation reconciliation — 2026-11-01 (append-only)
+
+Current D1/D2 record precedence and registry evidence are documented in `docs/stage_d/D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`.
+
+- D1: `PASS_SCOPED_WITH_LIMITATIONS`. Old BLOCKED JSON audits are historical snapshots; the later append-only closure correction supersedes their status without deleting them.
+- D2: `PASS_SCOPED_WITH_LIMITATIONS`. Latest registry SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`, size 24,137,036 bytes, registry-containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`, Run `41335321803`. Older `47e72e...` triple is historical for Run `41333300530`.
+- Validation Run `41344528986`: 34 passed, 0 failed, 0 skipped on `de12b42ee371ec12675b1110facd6d2da25eb781`.
+- D3 remains `BLOCKED_MISSING_EVIDENCE`; D4–D6 and E0–E6 remain `NOT_STARTED`. No simulation, Trials, N expansion, backfill, or zero-fill is authorized by this documentation correction.
