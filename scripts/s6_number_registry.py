@@ -401,7 +401,7 @@ def build_registry(paths, source_head, workflow_run_id):
         },
         "source_artifacts": artifacts,
         "aggregate_summary": {
-            "scenario_count": 20, "checkpoint_values": len(source_entries),
+            "scenario_count": 20, "checkpoint_values": len(raw_entries),
             "daily_distribution_rows": daily_summary["row_count"], "daily_series_count": daily_summary["series_count"],
             "daily_number_count": daily_summary["point_count"], "representative_trial_count": sum(cohort_counts.values()),
             "representative_numeric_entries": sum(cohort_counts.values()) * len(TRIAL_FIELDS),
