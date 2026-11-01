@@ -146,3 +146,16 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Registry coverage: 2,640 entries; 1,000 daily series; 2,086,550 addressable daily points; Full Logging 105 representative keys only (100 S6 + 5 C100).
 - Preserved limitations: normalized Full Logging statuses `NOT_VERIFIED`; C100 Golden `NOT_RUN`; Gate A financial `PASS_SCOPED`; production Gate A `NOT_DECLARED`; Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; five accounting fields `MISSING_EVIDENCE`.
 - No Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill. D3 has not started.
+
+
+## D2 Resolver Completion and Canonical Audit Reconciliation — 2026-11-01
+
+- Final corrected D2 workflow: [Run 41328486239](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41328486239) — SUCCESS.
+- D2: PASS_SCOPED_WITH_LIMITATIONS; exact registry/raw-readback commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad.
+- Registry SHA-256 d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb; Git blob 824803e8543fff7c628586bd37ea6e3f706cf9ba; 24,137,036 bytes.
+- Registry coverage: 2,640 entries; 1,000 daily series; 2,086,550 daily values. Daily number IDs are addressable using the implemented and tested resolve_number function.
+- D2 tests: 22 passed, 9 skipped; D1-D2 source validation on the triggering source commit: 31 passed. D2 Run exact-head/raw readback and evidence upload succeeded; Artifact 13092805269.
+- The old local-only audit snapshot (13,954 entries) is retained under historical_local_report in D2_NUMBER_REGISTRY_AUDIT.json; canonical current status is no longer REPORTED_ONLY_LOCAL_ONLY.
+- D0 and D1 retain their prior PASS_SCOPED_WITH_LIMITATIONS dispositions. No D3 work has begun.
+- Preserved: Gate A financial PASS_SCOPED; production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representatives only / statuses NOT_VERIFIED; C100 Golden NOT_RUN; five accounting fields MISSING_EVIDENCE.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill was performed.
