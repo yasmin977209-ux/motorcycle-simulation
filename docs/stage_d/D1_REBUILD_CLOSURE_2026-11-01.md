@@ -50,3 +50,7 @@ D1 status corrected from BLOCKED to PASS_SCOPED_WITH_LIMITATIONS after successfu
 - Governing v2.4.0 reference triple: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; Git blob SHA-1 `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; publication commit `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
 
 Preserved limitations: 105 normalized manifest statuses `NOT_VERIFIED`; C100 Golden revalidation `NOT_RUN`; production Gate A `NOT_DECLARED`; Gate B at N=2400 `FAIL_SCOPED`; Stability `NOT_CONVERGED`; N=4800 `NOT_EXECUTED`; five historical accounting fields `MISSING_EVIDENCE` (`Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`). Financial Gate A remains `PASS_SCOPED` only. This append-only correction supersedes the earlier BLOCKED disposition without deleting its historical record.
+
+## D1 historical-record precedence clarification — 2026-11-01 (append-only)
+
+See [D1–D2 Documentation Reconciliation Addendum](D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md). The earlier `BLOCKED` values in `D1_REBUILD_AUDIT_2026-11-01.json` and `D1_BUILDER_AUDIT.json` are preserved as historical pre-publication snapshots. The later correction already recorded above supersedes them for current stage disposition. Current D1 status remains `PASS_SCOPED_WITH_LIMITATIONS`; do not delete or rewrite the historical snapshots.
