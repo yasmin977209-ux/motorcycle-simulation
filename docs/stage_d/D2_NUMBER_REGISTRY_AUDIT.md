@@ -89,3 +89,12 @@ D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D
 - Exact Raw readback passed for all seven files in Run 41328486239; uploaded workflow evidence Artifact 13092805269.
 - The opening 13,954-entry REPORTED_ONLY_LOCAL report remains as historical evidence only. Its complete JSON payload is retained under historical_local_report in the canonical audit JSON; it is not a current repository result.
 - All earlier limitations remain unchanged. D3 has not started.
+
+
+## D2 completion hardening — 2026-11-01 (append-only)
+
+- A subsequent completion pass strengthens validation from first/last-point spot resolution to resolver execution for every addressable Daily Distribution point (2,086,550 points), using prebuilt O(1) indexes to avoid repeated linear scans.
+- The public `resolve_number` API now shares the same indexed daily-point resolution implementation used by full validation. Unit coverage adds `ALL_TRIALS_CARRY_FORWARD` sample-count semantics and invalid sample-provenance rejection.
+- The D2 workflow now serializes all runs on the working branch rather than grouping by commit SHA; it is gated by an explicit completion-trigger file to avoid racing intermediate documentation/code commits.
+- The complete D2 audit package now includes the requirements matrix and remote evidence ledger. Audit JSON no longer embeds a premature `PENDING_POST_COMMIT` claim; commit and exact-head evidence is authoritative in the successful workflow's Raw-readback log.
+- This addendum describes the implemented controls. Final result, test counts, exact HEAD and artifact ID must be taken only from the completion workflow after it succeeds.
