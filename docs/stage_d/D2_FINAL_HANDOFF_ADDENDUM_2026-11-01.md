@@ -22,3 +22,19 @@ This append-only addendum supersedes the older D2 run reference in the previous 
 - Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`.
 - The five historical accounting fields remain `MISSING_EVIDENCE`; do not infer, backfill or zero-fill.
 - No Trial, Simulation, Monte Carlo or N expansion was run. D3 has not started.
+
+
+## Final D2 resolver and canonical-audit correction — 2026-11-01
+
+- Definitive corrected D2 workflow: [Run 41328486239](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41328486239) — SUCCESS.
+- Registry commit and exact-head/raw-readback SHA: c5e9c862c161dea89651d27e3a4eb5f5f35211ad.
+- Current registry URL: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/c5e9c862c161dea89651d27e3a4eb5f5f35211ad/results/number_registry.json
+- Registry SHA-256: d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb.
+- Git blob SHA-1: 824803e8543fff7c628586bd37ea6e3f706cf9ba.
+- Registry size: 24,137,036 bytes.
+- Coverage remains 2,640 explicit entries, 1,000 daily series and 2,086,550 addressable daily points. Daily point IDs are now resolvable by scripts.s6_number_registry.resolve_number; the resolver returns the exact rational value and source provenance.
+- D2 tests: 22 passed, 9 skipped (the documented D1 artifact-integration tests are supplied only by their separate integration validation); D1-D2 Source Validation on source HEAD 8048e980951cb34e5c023c1b51e7a2ac5970171d: 31 passed; exact branch/Raw readback on registry commit c5e9...: PASS.
+- Uploaded D2 evidence Artifact 13092805269 (d2-number-registry), 3,583,890 bytes, ZIP SHA-256 ec6319663287d84e653a84d2398c23fea6e711652831015ff846ade467e1a1d7.
+- Canonical D2_NUMBER_REGISTRY_AUDIT.json now reports PASS_SCOPED_WITH_LIMITATIONS and retains its former 13,954-entry local-only report under historical_local_report; that historic report is not the current registry.
+- Scope restrictions remain: Full Logging 105 keys only and 105 normalized statuses NOT_VERIFIED; C100 remains separate as CROSS_COHORT_DETERMINISTIC_REUSE with Golden NOT_RUN; Gate A production NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE.
+- No new Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill was performed. D3 has not started.
