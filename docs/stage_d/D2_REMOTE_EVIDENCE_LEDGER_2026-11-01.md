@@ -33,3 +33,11 @@ The completion workflow is configured to:
 - upload the registry and complete D2 audit package only after all gates succeed.
 
 The exact completion Run ID, final HEAD, file evidence triples and Artifact ID are emitted in that Run's logs and artifact metadata. Do not treat this ledger's pre-run state as proof of completion.
+
+
+## Completion workflow record
+
+- Workflow Run ID: 41332273796
+- Triggering source SHA: 2407a8e832aa8fa01ed8951ce8f89cc8548a8dea
+- Registry-containing commit: 024c71a909328cec379f3628df25981310c64fe7
+- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.

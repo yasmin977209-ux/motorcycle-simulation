@@ -98,3 +98,10 @@ D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D
 - The D2 workflow now serializes all runs on the working branch rather than grouping by commit SHA; it is gated by an explicit completion-trigger file to avoid racing intermediate documentation/code commits.
 - The complete D2 audit package now includes the requirements matrix and remote evidence ledger. Audit JSON no longer embeds a premature `PENDING_POST_COMMIT` claim; commit and exact-head evidence is authoritative in the successful workflow's Raw-readback log.
 - This addendum describes the implemented controls. Final result, test counts, exact HEAD and artifact ID must be taken only from the completion workflow after it succeeds.
+
+
+## D2 completion workflow record
+
+- Workflow Run ID: 41332273796
+- Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.
+- Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.

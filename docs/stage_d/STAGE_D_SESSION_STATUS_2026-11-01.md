@@ -168,3 +168,12 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - The later handoff commit 82f43b4525f88d347e64e994bd24aa2399bd803a is documentation-only relative to bcf5ed4; no exact-head validation was recorded for 82f43b at the time this correction was started.
 - D2 completion hardening is now in progress: indexed resolver validation for all 2,086,550 daily points; explicit unit tests for carry-forward sampling and invalid sample provenance; branch-wide Actions concurrency; complete requirements matrix/evidence ledger; corrected Artifact contents.
 - Final disposition and exact tested HEAD are intentionally pending the completion workflow. No D3 start; no Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update or historical Artifact mutation.
+
+
+## D2 completion workflow record — 41332273796
+
+- Completion workflow Run: 41332273796
+- Triggering source SHA: 2407a8e832aa8fa01ed8951ce8f89cc8548a8dea
+- Registry-containing commit: 024c71a909328cec379f3628df25981310c64fe7
+- Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
+- D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.
