@@ -62,3 +62,11 @@ D2 is PASS_SCOPED_WITH_LIMITATIONS, not final project acceptance.
 - Canonical audit JSON is docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json; the old 13,954-entry local report is retained as historical evidence, not current registry state.
 - D2 tests 22 passed / 9 skipped; source validation 31 passed; seven-file Raw readback and exact-head assertion passed; D2 Artifact 13092805269 uploaded.
 - No D3 start. Keep every gate limitation as listed in the D2 audit. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill.
+
+
+## Superseded D2 workflow attempts — 2026-11-01
+
+- Run 41328255273 remains visible as IN_PROGRESS on obsolete source SHA af86f16d486634a57e2cb9d720077d45e2ae4e18; it is the early draft that attempted point-by-point resolver calls during the full 2,086,550-point registry validation and did not produce the definitive D2 result.
+- Run 41328349398 remains visible as PENDING on obsolete source SHA e1e6dd60b8d95cc2ae5b5f384f206aff1f19c4d7; it is an older queued duplicate.
+- Neither stale run is used as D2 evidence. The authoritative corrected D2 build is Run 41328486239 (SUCCESS), with registry/exact-head commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad. The latest branch HEAD bcf5ed4efcd72b1fa7e9de5ae48f26331dc25611 was independently validated by Run 41328814656 (SUCCESS, 31 passed).
+- The active branch and main were not changed by these stale run records; main remains c6e54349a5e94f65d5aa9f83141f225d777bb474.
