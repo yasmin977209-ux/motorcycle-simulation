@@ -277,6 +277,7 @@ jobs:
           matrix_path = pathlib.Path("docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md")
           matrix = matrix_path.read_text(encoding="utf-8")
           matrix = matrix.replace("PENDING_COMPLETION_RUN", "PASS_SCOPED (completion workflow must conclude SUCCESS)")
+          matrix = matrix.replace("PASS_SCOPED (pending successful revalidation run)", "PASS_SCOPED")
           matrix += (
               "\n\n## Completion workflow record\n\n"
               + "- Workflow Run: " + os.environ["GITHUB_RUN_ID"] + "\n"
