@@ -2738,3 +2738,12 @@ D2 registry resolver and corrected canonical audit verified in Run 41328486239; 
 
 - The D2 completion workflow's Python text-mode finalizer normalized one pre-existing carriage-return byte in a historical continuity row into a line break. The original byte sequence at that row was restored; no business rule, source data, Trial identity or prior evidence was changed.
 - Future continuity appends must preserve existing bytes or use a raw-byte-safe append path. The D2 completion Run 41332273796 remains successful for its own final HEAD `eb10e46244a7739ba8b986396c6beb96d9ae17fe`; this correction creates a later documentation HEAD and is independently read back below.
+
+
+## D2 completion workflow record — 41333300530
+
+- Completion workflow Run: 41333300530
+- Triggering source SHA: a830827c4977ba9b9121903225da5c42f8ca0959
+- Registry-containing commit: 50673bf094c38e8a73de2980df719df2963a3dc6
+- Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
+- D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.

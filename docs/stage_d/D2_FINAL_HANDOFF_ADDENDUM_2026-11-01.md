@@ -38,3 +38,12 @@ This append-only addendum supersedes the older D2 run reference in the previous 
 - Canonical D2_NUMBER_REGISTRY_AUDIT.json now reports PASS_SCOPED_WITH_LIMITATIONS and retains its former 13,954-entry local-only report under historical_local_report; that historic report is not the current registry.
 - Scope restrictions remain: Full Logging 105 keys only and 105 normalized statuses NOT_VERIFIED; C100 remains separate as CROSS_COHORT_DETERMINISTIC_REUSE with Golden NOT_RUN; Gate A production NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE.
 - No new Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill was performed. D3 has not started.
+
+
+## D2 completion workflow record — 41333300530
+
+- Completion workflow Run: 41333300530
+- Triggering source SHA: a830827c4977ba9b9121903225da5c42f8ca0959
+- Registry-containing commit: 50673bf094c38e8a73de2980df719df2963a3dc6
+- Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
+- D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.

@@ -49,3 +49,11 @@ The exact completion Run ID, final HEAD, file evidence triples and Artifact ID a
 - Artifact-backed builder integration tests are configured with the three downloaded pinned ZIPs (`STAGE_D_AGGREGATE`, `STAGE_D_FULL_LOGGING`, `STAGE_D_C100`) rather than being skipped for missing local paths.
 - Final readback package also includes `scripts/s6_number_registry.py`, `tests/test_s6_number_registry.py`, `.github/workflows/stage-d2-number-registry.yml`, and `D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md`.
 - Continuity records are appended as raw UTF-8 bytes so existing carriage-return bytes are preserved.
+
+
+## Completion workflow record
+
+- Workflow Run ID: 41333300530
+- Triggering source SHA: a830827c4977ba9b9121903225da5c42f8ca0959
+- Registry-containing commit: 50673bf094c38e8a73de2980df719df2963a3dc6
+- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.
