@@ -85,6 +85,72 @@ jobs:
           python -m scripts.s6_number_registry validate --registry results/number_registry.json
           test "$(wc -c < results/number_registry.json)" -lt 90000000
 
+      - name: Reconcile canonical D2 audit JSON without losing the local historical report
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          legacy_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json")
+          live_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json")
+          legacy = json.loads(legacy_path.read_text(encoding="utf-8"))
+          live = json.loads(live_path.read_text(encoding="utf-8"))
+          current = {
+              "audit_id": "D2-S6-NUMBER-REGISTRY-2026-11-01",
+              "status": "PASS_SCOPED_WITH_LIMITATIONS",
+              "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+              "registry_path": "results/number_registry.json",
+              "registry_sha256": live.get("registry_sha256"),
+              "registry_git_blob_sha1": live.get("registry_git_blob_sha1"),
+              "registry_size_bytes": live.get("registry_size_bytes", 24136918),
+              "registry_containing_commit": "RECORDED_BY_EXACT_HEAD_WORKFLOW",
+              "workflow_run_id": str(live["workflow_run_id"]),
+              "source_head": live.get("source_head"),
+              "aggregate_checkpoint_entries": live["aggregate_checkpoint_entries"],
+              "entry_count": live["entry_count"],
+              "daily_series_count": live["daily_series_count"],
+              "daily_point_count": live["daily_point_count"],
+              "daily_distribution_rows": live["daily_distribution_rows"],
+              "representative_trial_count": live["representative_trial_count"],
+              "representative_numeric_entries": live["representative_numeric_entries"],
+              "cohort_counts": live["cohort_counts"],
+              "artifact_pins": live["artifact_pins"],
+              "gate_statuses": live["gate_statuses"],
+              "unavailable_evidence": live["unavailable_evidence"],
+              "full_logging_normalized_status": live["full_logging_normalized_status"],
+              "c100_golden_revalidation": live["c100_golden_revalidation"],
+              "historical_local_report": {
+                  "status": "REPORTED_ONLY_LOCAL_ONLY",
+                  "classification": "HISTORICAL_REPORT_NOT_CURRENT_REGISTRY",
+                  "original_report": legacy
+              },
+              "limitations": [
+                  "Full Logging contains 105 representative keys only; normalized statuses remain NOT_VERIFIED.",
+                  "C100 remains separate as CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation remains NOT_RUN.",
+                  "Production Gate A remains NOT_DECLARED.",
+                  "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60).",
+                  "N=4800 remains NOT_EXECUTED.",
+                  "The five missing historical accounting fields remain MISSING_EVIDENCE and are not backfilled or zero-filled.",
+                  "No Trial, Simulation, Monte Carlo or N expansion was run."
+              ],
+              "audit_note": "This canonical audit JSON supersedes the original top-level local-only disposition while retaining the complete original report under historical_local_report."
+          }
+          legacy_path.write_text(json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          md_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md")
+          marker = "## Current D2 status correction — 2026-11-01"
+          md = md_path.read_text(encoding="utf-8")
+          if marker not in md:
+              block = (
+                  "\n\n" + marker + "\n\n"
+                  + "- Current canonical status: PASS_SCOPED_WITH_LIMITATIONS, proven by the successful exact-head D2 workflow in Run " + str(live["workflow_run_id"]) + ".\n"
+                  + "- The opening REPORTED_ONLY_LOCAL header and 13,954-entry count above are retained as historical local audit context only; they are not the current repository registry.\n"
+                  + "- Current repository registry: 2,640 entries (960 aggregate checkpoint values + 1,680 numeric values for 105 representative Full Logging keys), 1,000 daily series and 2,086,550 addressable daily points.\n"
+                  + "- Every daily point now has a deterministic D2D number_id scheme and a callable resolve_number lookup that returns its exact value and source provenance.\n"
+                  + "- Historical report contents were retained inside docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json under historical_local_report; no historical result was silently deleted.\n"
+              )
+              with md_path.open("a", encoding="utf-8") as output:
+                  output.write(block)
+          PY
+
       - name: Append continuity and handoff
         run: |
           set -euo pipefail
@@ -124,7 +190,7 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/tmp/d1-rebuild-20261101"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/number_registry.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
+          git add results/number_registry.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
           git commit -m "stage-d(d2): publish scoped number registry"
           git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
@@ -142,6 +208,7 @@ jobs:
               raise SystemExit("EXACT_HEAD_MISMATCH:" + head + ":" + remote)
           names = [
               "results/number_registry.json",
+              "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
               "docs/PROJECT_CONTINUITY.md",
@@ -168,6 +235,7 @@ jobs:
           name: d2-number-registry
           path: |
             results/number_registry.json
+            docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json
             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json
           if-no-files-found: error
           retention-days: 30
