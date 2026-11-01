@@ -136,3 +136,11 @@ The current D0 closure note at docs/stage_d/D0_REPOSITORY_CLOSURE.md has been do
 - Registry scope and limitations are unchanged: 20 S6 daily scenarios, 1,000 series, 2,086,550 daily points, 105 representative keys / 1,680 numeric entries; C100 daily distributions and representative raw P50 daily logs are missing, as are detailed ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and final close-date data. Five historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled.
 - Preserve all gates: financial Gate A PASS_SCOPED only; production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys only / NOT_VERIFIED_105_OF_105; C100 Golden NOT_RUN.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge, Release or D4 transition. Await the owner's explicit continuation instruction.
+
+
+
+## Prompt Library REV2 handoff — 2026-11-01 (append-only)
+
+The latest operational prompt library is `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`. The publication evidence and exact file fingerprint are recorded in `docs/stage_d/PROJECT_PROMPT_LIBRARY_REV2_PUBLICATION_2026-11-01.md`.
+
+Resume by re-reading GitHub live state. D0, D1 and D2 are closed within scoped limitations. D3 remains BLOCKED / BLOCKED_MISSING_EVIDENCE. Do not start D4. Do not repair or rerun D3 until the owner explicitly orders continuation. The previous prompt library remains preserved with an appended supersession notice.
