@@ -2830,3 +2830,15 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Historical library `PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md` was preserved; an append-only supersession notice points to REV2.
 - No D3 repair or rerun, D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge or Release was performed.
 - At publication review, branch HEAD was 736d445d3c33b94d2037b41074b2dbb2002d0ae5; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. Re-read branch HEAD after these continuity updates.
+
+ 
+## 2026-11-01 — D1/D2 documentation reconciliation (append-only)
+
+- Baseline branch HEAD before this correction: `b2ebce62491c7602c71b5312b7ea24986bbb89f4`; `main`: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Added `docs/stage_d/D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md` to explicitly reconcile old D1 BLOCKED snapshots and the latest D2 registry evidence.
+- D1 historical `BLOCKED` values in `D1_REBUILD_AUDIT_2026-11-01.json` and `D1_BUILDER_AUDIT.json` remain untouched historical snapshots. The later append-only correction in `D1_REBUILD_CLOSURE_2026-11-01.md` supersedes them for current disposition. D1 remains `PASS_SCOPED_WITH_LIMITATIONS`.
+- D1 validation Run `41344529037`: SUCCESS, 25 passed / 9 skipped. Combined D1/D2 Run `41344528986`: SUCCESS, 34 passed / 0 failed / 0 skipped. Both tested `de12b42ee371ec12675b1110facd6d2da25eb781`; compare to pre-correction HEAD showed only three D3 output/report files changed, no D1/D2 source or registry changes.
+- Latest D2 registry evidence is Run `41335321803`; registry containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`; SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`; blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`; 24,137,036 bytes; final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`; artifact `13094379705`. Older `47e72e...` / `ba7ead...` / `50673bf...` values are preserved as historical evidence for Run `41333300530`, not current registry identity.
+- D2 remains `PASS_SCOPED_WITH_LIMITATIONS`. Full Logging remains 105 representative keys only; normalized statuses `NOT_VERIFIED_105_OF_105`; C100 Golden `NOT_RUN`; Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; five historical accounting fields remain `MISSING_EVIDENCE`.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, or Release was performed. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4–D6 and E0–E6 remain `NOT_STARTED`.
+- No source code or simulation data changed in this reconciliation. Post-write GitHub readback and exact final HEAD validation are recorded separately after commit.
