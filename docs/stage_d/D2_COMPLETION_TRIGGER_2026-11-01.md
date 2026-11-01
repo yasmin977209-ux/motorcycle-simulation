@@ -20,3 +20,8 @@ The previous successful completion run validated HEAD `789b9017986cb240d9a824282
 ## Governing-reference integrity gate — 2026-11-01
 
 The next completion pass also verifies the normative v2.4.0 Raw byte length and owner-approved SHA-256 against the exact triggering commit, confirms the live owner decision ID/status/digest, and includes both files in final exact-HEAD Raw readback. D2 completion is not reconfirmed until this gate and all existing build/test/resolver/exact-head/artifact gates succeed.
+
+
+## Final post-documentation reference readback revalidation — 2026-11-01
+
+The next full D2 run verifies both the governing v2.4.0 reference and owner decision again at the triggering SHA, includes both in the final post-documentation exact-HEAD Raw readback, and changes D2-16 to PASS_SCOPED only after that gate succeeds.
