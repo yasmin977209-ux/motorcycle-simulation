@@ -244,3 +244,10 @@ D3 remains BLOCKED_MISSING_EVIDENCE. Use only post-2026-10-31 source files. The 
 - Full evidence: `docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md`. Continuity updated in `docs/PROJECT_CONTINUITY.md`.
 - Next step: only consume already-existing eligible post-cutoff source artifacts if they are found and their metadata is validated before opening. If none exist, request a separate explicit owner decision before any new Trial/Simulation/Monte Carlo generation. Do not relax the cutoff or change source identity/N.
 - D4 remains `NOT_STARTED`. No D4 work was started.
+
+
+## D3 continuation handoff — 2026-11-02
+
+D3 remains BLOCKED_MISSING_EVIDENCE. Branch checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64; main c6e54349a5e94f65d5aa9f83141f225d777bb474. The owner authorized technical D3 continuation, but the source-date cutoff remains binding. The three pinned sources are ineligible; cancelled run 41358971225 and all derived output are excluded. The completion workflow is disabled and the builder fails closed before archive reads.
+
+The candidate workbook Raw readback passed at exact HEAD 7aea74e774084fb7a622f411c5b1dbfad40a2d0d (Run 41359344854), not at the current checkpoint. Eight additional source-free tests and a static workflow were committed; no successful run/report has been verified. D3-07 through D3-13 remain MISSING_EVIDENCE. D4 remains NOT_STARTED.
