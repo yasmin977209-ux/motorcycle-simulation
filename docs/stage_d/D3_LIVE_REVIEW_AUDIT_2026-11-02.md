@@ -43,3 +43,14 @@ The output commit is not the final documentation HEAD: commit `a2030b431085b2c30
 ## D3 source-date eligibility and execution exception — 2026-11-02 (append-only)
 
 The source runs identified for detailed reconstruction are all dated before the 2026-10-31 cutoff and cannot be used under the current rule. Workflow 41358971225 did read those artifacts before cancellation; this was an execution error. It was cancelled, produced no published artifact or repository commit, and all derived temporary output is excluded. The D3 completion workflow is disabled, and the extension builder now blocks the currently pinned pre-cutoff runs before opening archives. The metadata-only search found no eligible post-cutoff D3 source artifacts. D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 detailed sources remain absent. D4 remains NOT_STARTED.
+
+ 
+## D3 continuation review — 2026-11-02 (append-only)
+
+- Revalidated live branch HEAD: 479ca3889c07fcb4d82b86b23bef61d8760adb64; main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- The owner explicitly ordered continuation of D3 at 2026-11-01T23:02:43Z. Technical remediation is authorized; the source-date cutoff remains in force.
+- Re-read the live D3 source-date audit and the fail-closed source pipeline. The three pinned artifacts remain ineligible; no new eligible post-cutoff source artifact is recorded. Run 41358971225 remains cancelled, with no published artifact or repository commit; its derived output is excluded.
+- Rechecked run 41359344854 job steps and logs: it passed exact-head verification at 7aea74e774084fb7a622f411c5b1dbfad40a2d0d and fetched the Arabic/English workbooks, D3 audit, manifest, report, D2 registry and governing-reference repository copy from Raw, verifying their recorded sizes, SHA-256 and blob SHA-1. This evidence is scoped to that exact HEAD; it is not an exact-head check of 479ca3889c07fcb4d82b86b23bef61d8760adb64.
+- Added 8 source-free exporter/registry regression tests and a static workflow. The workflow is committed, but no successful run or report has been verified. Its status remains NOT_RUN.
+- No workbook rebuild or source-artifact download was performed in this continuation. No simulation, Trial, Monte Carlo, N expansion, backfill or zero-fill was performed.
+- D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07..D3-13 source records remain missing. D4 remains NOT_STARTED.
