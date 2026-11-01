@@ -91,3 +91,14 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - Added source-free static tests and workflow. The workflow is configured to compile both D3 implementation modules and run 15 tests, but no successful workflow run/report has been verified at this checkpoint: NOT_RUN. No status promotion follows.
 - Candidate workbook Raw verification run 41359344854 passed at exact HEAD 7aea74e774084fb7a622f411c5b1dbfad40a2d0d. Current branch HEAD is newer; exact final-head verification at the current checkpoint remains NOT_RUN.
 - Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED.
+
+
+## Exact-head and static-code verification update — 2026-11-02
+
+- Source-free code validation: PASS. Run 41360740452 tested SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0; compileall PASS; 19 passed / 0 skipped. This validates code/test behavior only and is not a D3 gate pass.
+- Published-output verification: PASS_SCOPED at exact current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a, Run 41360991252. Exact branch/HEAD assertion and Raw readback of the existing bilingual candidate outputs, audit, manifest, report, D2 registry and governing reference passed. No rebuild was performed.
+- D3-05 remains PASS_SCOPED_WITH_LIMITATIONS for the 20 S6 daily series only; C100 daily distributions remain MISSING_EVIDENCE.
+- D3-06 remains PASS_SCOPED_WITH_LIMITATIONS for 105 representative keys / 1,680 numeric registry entries only; representative P50 raw daily logs remain MISSING_EVIDENCE.
+- D3-07 through D3-13 remain MISSING_EVIDENCE for the detailed ledgers and all-trial final close-date distribution.
+- D3-14 through D3-18 retain their scoped output/traceability evidence; exact-head no-rebuild validation now covers current HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a.
+- Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED. No status promotion is inferred from static tests or workbook publication.

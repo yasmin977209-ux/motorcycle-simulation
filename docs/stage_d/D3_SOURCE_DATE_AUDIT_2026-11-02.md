@@ -50,3 +50,13 @@ D4 remains NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill
 - D3 candidate no-rebuild verification Run [41360740382](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740382) and D1-D2 validation Run [41360740521](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740521) succeeded on source SHA `463a4ec53aaef3c2d4a70e1bac448efd326135a0`. D1-D2 is not D3 source coverage; the no-rebuild check validates the existing candidate outputs only.
 - Source-date cutoff remains `2026-10-31T00:00:00Z`; all three pinned D3 source runs remain pre-cutoff. No eligible post-cutoff D3 source artifacts were found in the reviewed inventory. D3-05 C100 daily and D3-07 through D3-13 remain `MISSING_EVIDENCE`.
 - Overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. No source-date exception, Trial/Simulation/Monte Carlo, N expansion, source/cohort/seed change, backfill, zero-fill, main update, merge, Release or D4 work was performed.
+
+
+## Full Actions inventory refresh — 2026-11-02 (append-only)
+
+- Rechecked the live branch Actions API inventory: 373 workflow runs across four pages.
+- Workflow categories include 54 D3 published-output verifications, 232 D1-D2 source validations, 7 D3 static validations, 34 D1 rebuilt-S6 source validations, and 5 D1 rebuilt-S6 builder validations. No Stage C/Trial generation, Monte Carlo, C100 Golden, Full Logging Build or S6 Aggregate Build run appears in the inventory.
+- Rechecked metadata only for the three source-producing pinned runs and their artifacts: run 40773412377 / artifact 12852969854 (2026-10-28); run 41098699740 / artifact 12998778418 (2026-10-30); run 40263424595 / artifact 12630457193 (2026-10-26). All predate 2026-10-31T00:00:00Z and remain unexpired.
+- No eligible post-cutoff D3 source artifact was found. No artifact archive was downloaded or opened in this refresh. The prior cancelled run 41358971225 remains excluded.
+- Source-free static tests passed separately (Run 41360740452, 19 passed / 0 skipped); this does not change source eligibility or D3 gate status.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

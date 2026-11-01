@@ -52,3 +52,15 @@ No pre-cutoff source content is used as evidence. No missing accounting values a
 - The published candidate audit and manifest both explicitly state d3_gate_status=BLOCKED_MISSING_EVIDENCE. The workbooks remain interim candidates only.
 - Missing eligible evidence remains C100 daily distributions and D3-07 through D3-13 source ledgers. Pre-cutoff source artifacts and all outputs derived from cancelled run 41358971225 remain excluded.
 - D4 remains NOT_STARTED. This is the final D3 continuation handoff for this session; do not promote D3 or start D4 without eligible evidence and a separately verified D3 gate.
+
+
+## Verified static and exact-head results — 2026-11-02 (append-only correction)
+
+This section supersedes the earlier checkpoint note that static validation was NOT_RUN. Subsequent live Actions evidence was found and rechecked:
+
+- Static validation Run 41360740452 succeeded on exact tested source SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0.
+- Compileall: PASS. Pytest: 19 passed, 0 skipped. The report records zero source artifacts downloaded/read, zero Trials/Simulations, and no D3 gate promotion.
+- Machine-readable report: docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json; 659 bytes; SHA-256 cb7f390a72d59a7a575a4430c52ee6f710f6f9e6b7bbf2189d431e2bb110bdc5; Git blob SHA-1 026b1e3f0b66145a9f8778e8734dd386b92d51b1. Its Raw readback and exact final report HEAD were verified by the static workflow.
+- D3 no-rebuild verification Run 41360991252 succeeded at exact branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. It reran exporter regression tests and read back the Arabic/English workbooks, D3 audit, manifest, report, D2 registry and governing reference from GitHub Raw. No workbook rebuild or source artifact download occurred.
+- Branch Actions inventory: 373 runs reviewed. The 34 Stage D1 rebuilt-S6 source validations and 5 builder validations are validation workflows, not new source-producing runs. No post-cutoff source-producing D3 artifact was found.
+- All three pinned source artifacts remain pre-cutoff. D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 source records remain missing. D4 remains NOT_STARTED.

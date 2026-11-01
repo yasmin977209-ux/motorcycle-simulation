@@ -65,3 +65,13 @@ The source runs identified for detailed reconstruction are all dated before the 
 - Added 8 source-free exporter/registry regression tests and a static workflow. No successful run or report from that workflow has been verified; its status remains NOT_RUN.
 - No workbook rebuild or source-artifact download was performed in this continuation. No simulation, Trial, Monte Carlo, N expansion, backfill or zero-fill was performed.
 - D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 source records remain missing. D4 remains NOT_STARTED.
+
+
+## Latest exact-head and source inventory review — 2026-11-02
+
+- Branch HEAD: 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Main: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Actions API inventory: 373 runs across four pages. Workflow grouping shows 54 D3 output verifications, 232 D1-D2 source validations, 7 D3 static validations, 34 D1 rebuilt-S6 source validations and 5 D1 rebuilt-S6 builder validations. No Stage C/Trial generation, Monte Carlo, C100 Golden, Full Logging Build or S6 Aggregate Build run appears.
+- Source artifact metadata rechecked: S6 aggregate run 40773412377 created 2026-10-28T21:36:57Z / artifact 12852969854; Full Logging run 41098699740 created 2026-10-30T17:25:30Z / artifact 12998778418; C100 run 40263424595 created 2026-10-26T03:18:29Z / artifact 12630457193. All are pre-cutoff and remain unexpired. No archive contents were read.
+- Static validation Run 41360740452 passed on tested SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0: compileall PASS, 19 passed / 0 skipped, no source artifacts downloaded/read, no Trial/Simulation.
+- Exact-head no-rebuild Run 41360991252 passed on current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Raw output verification passed; no workbook rebuild.
+- D3 candidate remains T2_INTERIM / NOT_FINAL_BLOCKED. D3 gate remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 ledgers remain missing. D4 remains NOT_STARTED.

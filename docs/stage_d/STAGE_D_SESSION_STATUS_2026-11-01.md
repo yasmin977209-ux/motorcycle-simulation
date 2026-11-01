@@ -354,3 +354,13 @@ D3: BLOCKED_MISSING_EVIDENCE. Existing 185-sheet candidates and exact-head readb
 - D3 candidate no-rebuild verification Run [41360740382](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740382) and D1-D2 validation Run [41360740521](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740521) succeeded on source SHA `463a4ec53aaef3c2d4a70e1bac448efd326135a0`. D1-D2 is not D3 source coverage; the no-rebuild check validates the existing candidate outputs only.
 - Source-date cutoff remains `2026-10-31T00:00:00Z`; all three pinned D3 source runs remain pre-cutoff. No eligible post-cutoff D3 source artifacts were found in the reviewed inventory. D3-05 C100 daily and D3-07 through D3-13 remain `MISSING_EVIDENCE`.
 - Overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. No source-date exception, Trial/Simulation/Monte Carlo, N expansion, source/cohort/seed change, backfill, zero-fill, main update, merge, Release or D4 work was performed.
+
+
+## Final D3 session status — 2026-11-02
+
+- Current branch HEAD: 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Main: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Source-free D3 validation: PASS (Run 41360740452; 19 passed / 0 skipped; compileall PASS; no source artifacts or simulations).
+- Published-output exact-head verification: PASS_SCOPED (Run 41360991252 at current exact HEAD; Raw readback succeeded; no rebuild).
+- Source-date audit: 373 branch workflow runs reviewed; three pinned source artifacts remain pre-cutoff; no eligible post-cutoff source artifact identified.
+- D3 overall: BLOCKED_MISSING_EVIDENCE. D3-05/06 remain scoped with limitations; D3-07 through D3-13 remain MISSING_EVIDENCE.
+- D4: NOT_STARTED.

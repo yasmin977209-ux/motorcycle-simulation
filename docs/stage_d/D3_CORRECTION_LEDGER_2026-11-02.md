@@ -68,3 +68,11 @@ The correction text and workflow file are committed. The new workflow's success 
 - D3 candidate no-rebuild verification Run [41360740382](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740382) and D1-D2 validation Run [41360740521](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740521) succeeded on source SHA `463a4ec53aaef3c2d4a70e1bac448efd326135a0`. D1-D2 is not D3 source coverage; the no-rebuild check validates the existing candidate outputs only.
 - Source-date cutoff remains `2026-10-31T00:00:00Z`; all three pinned D3 source runs remain pre-cutoff. No eligible post-cutoff D3 source artifacts were found in the reviewed inventory. D3-05 C100 daily and D3-07 through D3-13 remain `MISSING_EVIDENCE`.
 - Overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. No source-date exception, Trial/Simulation/Monte Carlo, N expansion, source/cohort/seed change, backfill, zero-fill, main update, merge, Release or D4 work was performed.
+
+
+## Correction to interim NOT_RUN and fingerprint entries — 2026-11-02 (append-only)
+
+- The earlier checkpoint note that the new static workflow had no verified run is superseded by Run 41360740452: SUCCESS at tested source SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0; compileall PASS; 19 passed / 0 skipped; zero source artifacts downloaded/read; no Trial/Simulation.
+- The earlier D3 no-rebuild verification checkpoint is superseded by Run 41360991252: SUCCESS at exact current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a; exact branch/HEAD assertion and Raw readback passed.
+- The earlier SHA-256 values in the code fingerprint table for checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64 are superseded. The corrected Raw SHA-256 values and corresponding Git blob SHA-1 values are appended in D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md.
+- These corrections do not close missing source evidence. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

@@ -93,3 +93,34 @@ The following source, test and workflow files were fetched from the live branch 
 - The static workflow is configured to compile the two D3 implementation modules and run 15 focused tests without downloading or reading source artifacts.
 - No successful workflow run or machine-readable report has been verified. Execution status remains NOT_RUN / MISSING_EVIDENCE.
 - D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+
+## Corrected Raw fingerprints and latest exact-head evidence — 2026-11-02
+
+**Correction:** the earlier code-fingerprint table for checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64 contained SHA-256 values computed by a defective local hash routine. Those SHA-256 values are superseded by this Raw-byte table. Git blob SHA-1 values remain GitHub-reported identities; all SHA-256 values below were recomputed from GitHub Raw UTF-8 bytes and validated against the successful workflow report where applicable.
+
+| Path | Bytes | SHA-256 | Git blob SHA-1 | Containing commit |
+|---|---:|---|---|---|
+| scripts/d3_registry_extension.py | 44701 | 244ae0c73f3198a3b195d87344eda66ffc4c42cd84fedbcf5fbc2177c42e9eb6 | c7030bba582c6fad6e26dbb3c06c604402e5b16a | 6e8b1654302c8e3a2b59827bd984ffe00a16397a |
+| scripts/d3_excel_export_complete.py | 48121 | 7cc89aca9e38d2f0e51e09d1f53a5ff5acceb22cf4bd9df719098efcfdab1a64 | 01f37346447f460cb506b1443e6945c1125cf3e0 | 6e8b1654302c8e3a2b59827bd984ffe00a16397a |
+| tests/test_d3_registry_extension.py | 5854 | c5692eb0b00d36b5bedc65f2c11566cfa53aaf61431469bf5d4872c5b4901e29 | 35d5b88e282878de862409c78db1a2e3cef43fc0 | 6e8b1654302c8e3a2b59827bd984ffe00a16397a |
+| tests/test_d3_excel_export_complete.py | 6954 | 54a96cb5f3108d3bb14945162338219d858708e882a76a123ada3053365ec6e7 | 420b595846da086b353dbac104a2e3211a5f10ac | 6e8b1654302c8e3a2b59827bd984ffe00a16397a |
+| .github/workflows/d3-code-static-validation.yml | 5996 | 12cf8d02fc0bebf1cb87dfb17e1aa3b34a06afc756023f9b72f129a7d31d4ced | 752178d28d3c54772127555c18b0eb7a03a0f3cc | 6e8b1654302c8e3a2b59827bd984ffe00a16397a |
+| docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json | 659 | cb7f390a72d59a7a575a4430c52ee6f710f6f9e6b7bbf2189d431e2bb110bdc5 | 026b1e3f0b66145a9f8778e8734dd386b92d51b1 | 04e3786d3ae2767e5add9c715ecd6394620b6ad0 |
+
+### Published-output Raw verification at exact branch HEAD
+
+Run 41360991252 passed at exact HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a:
+
+| File | Bytes | SHA-256 | Git blob SHA-1 |
+|---|---:|---|---|
+| deliverables/النتائج_الكاملة_AR.xlsx | 27734273 | 914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461 | 056b7f482bbb84583526f093ae886e13b8c01356 |
+| deliverables/Full_Results_EN.xlsx | 27722355 | 89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191 | a01c1f4061da731de24fcc8d061113bb195e65b1 |
+| deliverables/D3_BUILD_AUDIT.json | 3282 | e3a4702fbda9f220680e8a7347082c901865c105dd7df6aed2dea1f44a4565a2 | 89eebec229a0a4b7d5d233b9897a0518132a7e2c |
+| deliverables/D3_MANIFEST.json | 2090 | 754f8b5cfa24c7e6a767a0774bee89a25ba62c028c78431d30af52758748f552 | 706464550aaa7290f33a968e6ce608e90454dae3 |
+| docs/stage_d/D3_BUILD_REPORT_2026-11-02.md | 1693 | 16703bbcd673972d847a5d911942efa7ef6dfabc9690b5aff80bf7679771ae48 | 67926d0c87c89242292543bfeeb0007815d5128b |
+| results/number_registry.json | 24137036 | 743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87 | 8cf17de488c623f96c1961ca91d682fbbc7733d6 |
+| docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md | 401397 | 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b | 9fe43bfbb2cbfd2bb7f7010866e7469506d22c33 |
+
+- Static validation Run 41360740452: SUCCESS; 19 passed / 0 skipped; no source artifact bytes downloaded/read.
+- Overall D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
