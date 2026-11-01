@@ -1,0 +1,64 @@
+name: D3 Code Static Validation (No Source Artifacts)
+
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - scripts/d3_registry_extension.py
+      - scripts/d3_excel_export_complete.py
+      - tests/test_d3_registry_extension.py
+      - tests/test_d3_excel_export_complete.py
+      - .github/workflows/d3-code-static-validation.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d3-code-static-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  static-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact branch and HEAD
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
+          echo "D3_STATIC_EXACT_HEAD=$EXPECTED_SHA"
+
+      - name: Install source-free validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Compile D3 implementation and tests
+        run: |
+          python -m compileall -q scripts/d3_registry_extension.py scripts/d3_excel_export_complete.py
+          python -m compileall -q tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
+
+      - name: Run D3 source-free unit tests only
+        run: |
+          python -m pytest -q -rs tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
+
+      - name: Assert no source-data pipeline or simulation was invoked
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "D3_STATIC_VALIDATION_ONLY=PASS"
+          echo "SOURCE_ARTIFACTS_DOWNLOADED=0"
+          echo "SIMULATIONS_OR_TRIALS_EXECUTED=0"
+          echo "D3_GATE_PROMOTED=0"
