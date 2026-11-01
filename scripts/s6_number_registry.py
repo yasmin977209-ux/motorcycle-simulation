@@ -660,9 +660,9 @@ def main():
     Path(args.output).write_bytes(raw)
     audit.update({
         "registry_size_bytes": len(raw), "registry_sha256": sha256(raw), "registry_git_blob_sha1": blob_sha1(raw),
-        "registry_containing_commit": "PENDING_COMMIT_IN_WORKFLOW",
+        "registry_containing_commit": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
         "workflow_run_id": str(args.workflow_run_id), "source_head": args.source_head,
-        "exact_head_validation": "PENDING_POST_COMMIT",
+        "exact_head_validation": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
     })
     Path(args.audit_json).write_text(json.dumps(audit, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     md = Path(args.audit_md)
