@@ -229,6 +229,83 @@ jobs:
           print("EXACT_FINAL_HEAD_PASS " + head)
           PY
 
+      - name: Finalize D2 matrix and evidence ledger after first exact-head gate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, pathlib, subprocess
+          matrix_path = pathlib.Path("docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md")
+          matrix = matrix_path.read_text(encoding="utf-8")
+          matrix = matrix.replace("PENDING_COMPLETION_RUN", "PASS_SCOPED (completion workflow must conclude SUCCESS)")
+          matrix += (
+              "\\n\\n## Completion workflow record\\n\\n"
+              + "- Workflow Run: " + os.environ["GITHUB_RUN_ID"] + "\\n"
+              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\\n"
+              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\\n"
+              + "- First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.\\n"
+          )
+          matrix_path.write_text(matrix, encoding="utf-8")
+          ledger_path = pathlib.Path("docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md")
+          ledger = ledger_path.read_text(encoding="utf-8")
+          ledger += (
+              "\\n\\n## Completion workflow record\\n\\n"
+              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\\n"
+              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\\n"
+              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\\n"
+              + "- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.\\n"
+          )
+          ledger_path.write_text(ledger, encoding="utf-8")
+          audit_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md")
+          audit = audit_path.read_text(encoding="utf-8")
+          audit += (
+              "\\n\\n## D2 completion workflow record\\n\\n"
+              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\\n"
+              + "- Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.\\n"
+              + "- Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.\\n"
+          )
+          audit_path.write_text(audit, encoding="utf-8")
+          PY
+          git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md
+          git diff --cached --check
+          git commit -m "docs(d2): finalize requirements matrix and remote evidence ledger"
+          git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
+
+      - name: Verify exact final HEAD and all D2 Raw bytes after documentation finalization
+        run: |
+          set -euo pipefail
+          python -m scripts.s6_number_registry validate --registry results/number_registry.json
+          python - <<'PY'
+          import hashlib, pathlib, requests, subprocess
+          repo = "yasmin977209-ux/motorcycle-simulation"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          remote = subprocess.check_output(["git", "ls-remote", "origin", "refs/heads/tmp/d1-rebuild-20261101"], text=True).split()[0]
+          if head != remote:
+              raise SystemExit("FINAL_EXACT_HEAD_MISMATCH:" + head + ":" + remote)
+          names = [
+              "results/number_registry.json",
+              "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json",
+              "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
+              "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
+              "docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md",
+              "docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md",
+              "docs/PROJECT_CONTINUITY.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
+              "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
+          ]
+          for name in names:
+              raw = pathlib.Path(name).read_bytes()
+              url = f"https://raw.githubusercontent.com/{repo}/{head}/{name}"
+              response = requests.get(url, timeout=180)
+              response.raise_for_status()
+              if response.content != raw:
+                  raise SystemExit("FINAL_RAW_READBACK_MISMATCH:" + name)
+              blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
+              print(f"FINAL_VERIFIED_RAW path={name} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()} blob={blob} commit={head}")
+          if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], text=True).strip():
+              raise SystemExit("FINAL_WORKTREE_NOT_CLEAN")
+          print("EXACT_FINAL_HEAD_PASS " + head)
+          PY
+
       - name: Upload D2 evidence
         uses: actions/upload-artifact@v4
         with:
