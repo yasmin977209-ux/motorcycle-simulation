@@ -2697,3 +2697,14 @@ Run [41251975772](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Live branch HEAD at this append's parent was e9af9d4329216909120f67d406ddecc939237ee2; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The source-validation workflow ran successfully on the prompt-library commit (Run 41317106574; exact tested SHA e9af9d4329216909120f67d406ddecc939237ee2); the follow-up documentation commit requires its own exact-head validation.
 - This is a documentation-only continuity update. No phase was started or re-opened, and no project acceptance or gate status was promoted.
 - 2026-11-01: Append-only D1 closure corrections added to the two closure records, publication-attempt record, and Stage D session status; historical BLOCKED entries preserved.
+
+## D2 Number Registry — 2026-11-01 (append-only)
+
+- Build: PASS_SCOPED_WITH_LIMITATIONS; exact-head validation is recorded in workflow Run 41326515357.
+- Registry entries: 2640; daily series: 1000; addressable daily points: 2086550.
+- S6 identity: da1a9ea9b5cd789c944de3f07b08395bb67c49e7 / s6-v23-da1a9ea9.
+- C100 identity: 965281d52441cd0d4b744e211c9f68ee4cdc3753 / c100-v23-s4-20261026-965281d5; CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation NOT_RUN.
+- Full Logging: 105 representative keys only; normalized statuses NOT_VERIFIED.
+- Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
+- Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
+- No Trial, Simulation, Monte Carlo, N expansion or main update.

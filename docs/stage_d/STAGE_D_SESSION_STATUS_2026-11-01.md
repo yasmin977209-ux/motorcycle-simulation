@@ -125,3 +125,14 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - D2: `NOT_STARTED`.
 - Branch: `tmp/d1-rebuild-20261101`; pre-correction HEAD: `b6e715c4387b7a9d708b11b9658c918c106149d2`.
 - Exact-HEAD validation before this documentation-only correction: Run [41317431499](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41317431499) (`SUCCESS`). This correction commit requires its own exact-head validation.
+
+## D2 Number Registry — 2026-11-01 (append-only)
+
+- Build: PASS_SCOPED_WITH_LIMITATIONS; exact-head validation is recorded in workflow Run 41326515357.
+- Registry entries: 2640; daily series: 1000; addressable daily points: 2086550.
+- S6 identity: da1a9ea9b5cd789c944de3f07b08395bb67c49e7 / s6-v23-da1a9ea9.
+- C100 identity: 965281d52441cd0d4b744e211c9f68ee4cdc3753 / c100-v23-s4-20261026-965281d5; CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation NOT_RUN.
+- Full Logging: 105 representative keys only; normalized statuses NOT_VERIFIED.
+- Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
+- Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
+- No Trial, Simulation, Monte Carlo, N expansion or main update.

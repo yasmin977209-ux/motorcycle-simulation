@@ -45,3 +45,13 @@ Ten items remain unavailable: historical 48K daily ledger; Parquet schema/rows f
 - No reports/workbooks have been generated; future report numbers must resolve through the registry.
 
 D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D2 gate is open. D1 repository source publication/exact-head validation remains blocked; no D3/D4, Excel, Word or ZIP generation is authorized yet.
+
+
+## D2 live registry build — 2026-11-01
+
+- D2 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to exact-head validation in Run 41326515357.
+- Registry: 2640 entries; 1000 daily series; 2086550 addressable daily points.
+- Daily Distribution source rows validated: 2086550; aggregate checkpoint values: 960.
+- Historical local count 13,954 remains REPORTED_ONLY and is not the live registry count.
+- Preserved: Full Logging 105 representatives only; statuses NOT_VERIFIED; C100 Golden NOT_RUN; Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE.
+- No Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill was performed.
