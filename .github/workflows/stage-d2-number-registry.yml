@@ -339,6 +339,8 @@ jobs:
           if head != remote:
               raise SystemExit("FINAL_EXACT_HEAD_MISMATCH:" + head + ":" + remote)
           names = [
+              "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+              "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
               "results/number_registry.json",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
