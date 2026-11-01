@@ -214,7 +214,7 @@ def write_daily_distribution(ws, registry: dict, ids: list[str], lang: str) -> N
 
 
 def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str,
-                  constants: list, source_head: str, run_id: str, base_sha: str, extension_sha: str) -> None:
+                  constants: list, source_head: str, run_id: str, base_sha: str, extension_sha: str, input_manifest_sha256: str) -> None:
     h = H[lang]
     ws = new_sheet(wb, "README", lang)
     header(ws, [h["field"], h["value"]])
@@ -228,7 +228,7 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
         ["Historical execution reference SHA-256", registry["historical_execution_reference_sha256"]],
         ["D2 Number Registry SHA-256", base_sha],
         ["D3 Number Registry extension SHA-256", extension_sha],
-        ["Source commit", source_head], ["Workflow run", str(run_id)],
+        ["Source commit", source_head], ["Workflow run", str(run_id)], ["D3 input manifest SHA-256", input_manifest_sha256],
         ["MASTER_SEED", str(registry["scope"]["S6"]["master_seed"])],
         ["Scenario coverage", "25 scenarios: 20 S6 + 5 C100 deterministic reuse"],
         ["Full Logging", "VERIFIED_SCOPED_105_OF_105; 105 unique keys / 125 role assignments only"],
@@ -577,9 +577,9 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
 
 
 def build_one(registry: dict, extension: dict, constants: list, ids: list[str], lang: str,
-              path: Path, source_head: str, run_id: str, base_sha: str, extension_sha: str) -> None:
+              path: Path, source_head: str, run_id: str, base_sha: str, extension_sha: str, input_manifest_sha256: str) -> None:
     wb = Workbook(write_only=True)
-    write_globals(wb, registry, extension, ids, lang, constants, source_head, run_id, base_sha, extension_sha)
+    write_globals(wb, registry, extension, ids, lang, constants, source_head, run_id, base_sha, extension_sha, input_manifest_sha256)
     cases = {x["scenario_id"]: x for x in extension["representative_cases"]}
     for sid in ids:
         if sid not in cases:
@@ -650,8 +650,8 @@ def build(args) -> dict:
     out = Path(args.output_dir)
     ar = out / "النتائج_الكاملة_AR.xlsx"
     en = out / "Full_Results_EN.xlsx"
-    build_one(registry, extension, constants, ids, "ar", ar, args.source_head, args.run_id, base_sha, extension_sha)
-    build_one(registry, extension, constants, ids, "en", en, args.source_head, args.run_id, base_sha, extension_sha)
+    build_one(registry, extension, constants, ids, "ar", ar, args.source_head, args.run_id, base_sha, extension_sha, args.input_manifest_sha256)
+    build_one(registry, extension, constants, ids, "en", en, args.source_head, args.run_id, base_sha, extension_sha, args.input_manifest_sha256)
     aa = audit(ar, names, expected_rtl=True)
     ee = audit(en, names, expected_rtl=False)
     parity = compare(ar, en, names)
@@ -680,7 +680,7 @@ def build(args) -> dict:
     result = {
         "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
         "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
-        "source_head": args.source_head, "workflow_run_id": str(args.run_id),
+        "source_head": args.source_head, "workflow_run_id": str(args.run_id), "input_manifest_sha256": args.input_manifest_sha256,
         "current_governing_reference": reference_info,
         "historical_execution_reference_sha256": HISTORICAL,
         "registry_base": {"bytes": len(base_raw), "sha256": base_sha, "git_blob_sha1": blob_sha(base_raw), **validation},
@@ -712,7 +712,7 @@ def build(args) -> dict:
         "classification": result["d3_candidate_status"], "d3_gate_status": result["d3_gate_status"],
         "source_head": args.source_head, "workflow_run_id": str(args.run_id),
         "current_governing_reference": reference_info, "historical_execution_reference_sha256": HISTORICAL,
-        "registry_base_sha256": base_sha, "registry_extension": result["registry_extension"],
+        "registry_base_sha256": base_sha, "input_manifest_sha256": args.input_manifest_sha256, "registry_extension": result["registry_extension"],
         "source_artifacts": extension["source_artifacts"], "requirement_statuses": requirements,
         "representative_role_case_count": result["representative_role_case_count"],
         "representative_role_assignment_count": result["representative_role_assignment_count"],
@@ -730,7 +730,7 @@ def build(args) -> dict:
     report = [
         "# D3 Excel Deliverables — Scoped Closure Report", "",
         "- Candidate: " + result["d3_candidate_status"],
-        "- D3 gate: " + result["d3_gate_status"],
+        "- D3 gate: " + result["d3_gate_status"], "- D3 input manifest SHA-256: " + args.input_manifest_sha256,
         "- Source HEAD: " + args.source_head, "- Workflow run: " + str(args.run_id),
         "- Governing reference SHA-256: " + reference_sha + "; bytes: " + str(len(reference_raw)),
         "- D2 Number Registry SHA-256: " + base_sha,
@@ -759,7 +759,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     b = sub.add_parser("build")
-    for name in ("registry", "extension", "reference", "output-dir", "source-head", "run-id"):
+    for name in ("registry", "extension", "reference", "output-dir", "source-head", "run-id", "input-manifest-sha256"):
         b.add_argument("--" + name, required=True)
     args = parser.parse_args()
     build(args)
