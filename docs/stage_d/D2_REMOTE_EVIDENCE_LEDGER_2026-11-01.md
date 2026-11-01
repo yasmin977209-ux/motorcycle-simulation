@@ -99,3 +99,10 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Triggering source SHA: 12d1d861cf9eb5022fb916f2b7d9a0b702badf1f
 - Registry-containing commit: d33261154018e2710bd797dec5e5bb6b9981a5da
 - Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.
+
+
+## Governing reference and owner-decision verification gate — 2026-11-01
+
+- D2 completion workflow now fetches the v2.4.0 normative Markdown from GitHub Raw at the exact triggering SHA and checks its 401,397-byte size and owner-approved SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- The same gate fetches `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md` from that SHA and requires decision ID `D-2026-10-30-REFERENCE-V2.4.0`, status `APPROVED_BY_OWNER`, and the same digest.
+- Both governing-reference and owner-decision files are also added to the final exact-HEAD Raw byte readback list. The gate must succeed in the latest completion run before D2 is reconfirmed.
