@@ -2894,3 +2894,15 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - D3 no-rebuild verification Run [41360395218](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360395218) and D1-D2 validation Run [41360395274](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360395274) also succeeded on that exact SHA. The latter is not D3 source evidence.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`: no eligible post-cutoff source artifacts were identified in the reviewed 314-run branch Actions inventory. C100 daily and D3-07 through D3-13 remain missing; pre-cutoff runs and cancelled-run outputs remain prohibited/quarantined.
 - No Trial/Simulation/Monte Carlo, N expansion, source-date exception, identity change, backfill, zero-fill, main update, merge, Release or D4 was performed. D4 remains `NOT_STARTED`.
+
+ 
+## D3 continuation checkpoint — 2026-11-02 (append-only)
+
+- Owner instruction: continue technical completion/repair/documentation of D3, received 2026-11-01T23:02:43Z.
+- Live branch at checkpoint: `tmp/d1-rebuild-20261101` HEAD `479ca3889c07fcb4d82b86b23bef61d8760adb64`; main HEAD `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Re-read current prompt library REV2, D3 source-date audit, D3 requirements matrix, D3 remote evidence ledger, D3 repair/publication addendum, D3 live review audit, D3 completion workflow, fail-closed orchestration script, D3 registry extension builder, exporter, tests and published-output verification workflow.
+- Source cutoff remains `2026-10-31T00:00:00Z`. All three pinned source runs are pre-cutoff. Run 41358971225 was cancelled after reading them; no published artifact or repository commit resulted. All derived temporary output is excluded.
+- D3 completion workflow remains disabled and builder fails before opening archives. No eligible post-cutoff D3 source artifacts were found in the audited inventory.
+- Added `tests/test_d3_excel_export_complete.py` (8 source-free tests) and `.github/workflows/d3-code-static-validation.yml`. The static workflow is configured to compile and run the 15 focused tests without source artifacts, but no successful run/report has been verified yet.
+- Existing workbook Raw readback remains verified only at exact HEAD 7aea74e774084fb7a622f411c5b1dbfad40a2d0d (Run 41359344854); current checkpoint exact-head validation is NOT_RUN.
+- D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED. No source content, trial, simulation, Monte Carlo, N expansion, backfill, zero-fill, main write, PR, merge, Release or final acceptance was performed.
