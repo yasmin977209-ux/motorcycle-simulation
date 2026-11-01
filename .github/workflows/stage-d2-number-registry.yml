@@ -107,6 +107,7 @@ jobs:
               "entry_count": live["entry_count"],
               "daily_series_count": live["daily_series_count"],
               "daily_point_count": live["daily_point_count"],
+              "daily_points_resolved": live.get("daily_points_resolved"),
               "daily_distribution_rows": live["daily_distribution_rows"],
               "representative_trial_count": live["representative_trial_count"],
               "representative_numeric_entries": live["representative_numeric_entries"],
@@ -263,8 +264,23 @@ jobs:
               + "- Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.\n"
           )
           audit_path.write_text(audit, encoding="utf-8")
+          run_record = (
+              "\n\n## D2 completion workflow record — " + os.environ["GITHUB_RUN_ID"] + "\n\n"
+              + "- Completion workflow Run: " + os.environ["GITHUB_RUN_ID"] + "\n"
+              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\n"
+              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\n"
+              + "- Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.\n"
+              + "- D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.\n"
+          )
+          for name in (
+              "docs/PROJECT_CONTINUITY.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
+              "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
+          ):
+              path = pathlib.Path(name)
+              path.write_text(path.read_text(encoding="utf-8") + run_record, encoding="utf-8")
           PY
-          git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md
+          git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
           git commit -m "docs(d2): finalize requirements matrix and remote evidence ledger"
           git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
@@ -300,7 +316,8 @@ jobs:
                   raise SystemExit("FINAL_RAW_READBACK_MISMATCH:" + name)
               blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
               print(f"FINAL_VERIFIED_RAW path={name} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()} blob={blob} commit={head}")
-          if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], text=True).strip():
+          subprocess.run(["rm", "-rf", ".stage-d2"], check=True)
+          if subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
               raise SystemExit("FINAL_WORKTREE_NOT_CLEAN")
           print("EXACT_FINAL_HEAD_PASS " + head)
           PY
