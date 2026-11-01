@@ -129,3 +129,9 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Triggering source SHA: 8f876e4b4901e4a62ac250820f97e3874e18bd67
 - Registry-containing commit: cc94985454d6e5971947e53c8e0a2782ad2de12d
 - Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.
+
+## Latest registry evidence pointer — 2026-11-01 (append-only)
+
+The earlier registry triple and exact-head table in this ledger describe the historical completion Run `41333300530`; they are retained without alteration. The latest D2 completion is Run [41335321803](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41335321803), with registry-containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, Git blob SHA-1 `8cf17de488c623f96c1961ca91d682fbbc7733d6`, size `24,137,036` bytes, and final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`. Artifact [13094379705](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41335321803/artifacts/13094379705).
+
+Follow-up D1/D2 source validation Run [41344528986](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41344528986) succeeded with 34 passed, 0 failed, 0 skipped on tested SHA `de12b42ee371ec12675b1110facd6d2da25eb781`. This is the current registry evidence pointer; historical triples above remain valid only for their respective earlier commits. See `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`.
