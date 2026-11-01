@@ -278,3 +278,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - D4–D6 and E0–E6: not started.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, or Release was performed.
 - Revalidate branch HEAD and all phase states at the next session start.
+
+ 
+## Documentation reconciliation — 2026-11-01 (append-only)
+
+- D1 old BLOCKED JSON audits are historical snapshots. The later closure correction in `D1_REBUILD_CLOSURE_2026-11-01.md` supersedes them; D1 remains `PASS_SCOPED_WITH_LIMITATIONS`.
+- D2 older registry triple `47e72e...` / `ba7ead...` / `50673bf...` belongs to earlier Run `41333300530`. Latest D2 registry is SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`, size 24,137,036 bytes, containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`, Run `41335321803`.
+- D1/D2 validation Run `41344528986`: SUCCESS, 34 passed, 0 failed, 0 skipped, tested SHA `de12b42ee371ec12675b1110facd6d2da25eb781`.
+- D0/D1/D2 scope and limitations remain unchanged. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4–D6 and E0–E6 remain `NOT_STARTED`.
+- See `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`. This entry is append-only and does not rewrite historical logs.
