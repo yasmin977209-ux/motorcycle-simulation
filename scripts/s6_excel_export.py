@@ -38,7 +38,7 @@ def constants_from_reference(text):
         cells=[x.strip() for x in line.strip().strip("|").split("|")]
         if len(cells)<2 or all(re.fullmatch(r"[-: ]+",x or " ") for x in cells): continue
         if cells[0] in {"المعرّف","الثابت","#","مصدر المطالبة"}: continue
-        if cells[0].startswith(chr(96)) or cells[0].startswith("**"): rows.append((cells+["",""])[:3])
+        if cells[0].startswith(chr(96)) or cells[0].startswith("**") or re.fullmatch(r"[A-Z][A-Z0-9_]*",cells[0]): rows.append((cells+["",""])[:3])
     if not rows: raise ValueError("REFERENCE_CONSTANTS_NOT_FOUND")
     return rows
 def scenarios(reg):
