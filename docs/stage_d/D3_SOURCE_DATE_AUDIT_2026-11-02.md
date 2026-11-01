@@ -60,3 +60,12 @@ D4 remains NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill
 - No eligible post-cutoff D3 source artifact was found. No artifact archive was downloaded or opened in this refresh. The prior cancelled run 41358971225 remains excluded.
 - Source-free static tests passed separately (Run 41360740452, 19 passed / 0 skipped); this does not change source eligibility or D3 gate status.
 - D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+
+## Final exact-head refresh — 2026-11-02
+
+- Actions run inventory at this checkpoint: 373 runs across four pages. No Stage C/Trial Generation, Monte Carlo, C100 Golden, Full Logging Build or S6 Aggregate Build run appears.
+- Exact-head D3 output verification Run 41361423337 succeeded at branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c. This workflow reads only already-published workbook/audit/registry/reference files; it does not read source artifact archives.
+- Static D3 code validation Run 41360740452 succeeded with 19 passed / 0 skipped and no source artifacts downloaded/read.
+- The only three identified source-producing artifacts remain the pre-cutoff S6 aggregate (40773412377), representative Full Logging (41098699740) and C100 Golden (40263424595). Their metadata dates remain before 2026-10-31T00:00:00Z.
+- No eligible post-cutoff D3 source artifact was identified. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

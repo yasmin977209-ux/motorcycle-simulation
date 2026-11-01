@@ -2938,3 +2938,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - D3 no-rebuild exact-head verification Run 41360991252 passed on the current exact branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Raw readback verified both workbooks, D3 audit/manifest/report, D2 registry and governing reference; no rebuild occurred.
 - Actions inventory now totals 373 runs. The three pinned source artifacts remain pre-cutoff; no eligible post-cutoff source-producing run/artifact was found.
 - D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily and D3-07 through D3-13 source ledgers remain missing. D4 remains NOT_STARTED.
+
+
+## Latest D3 exact-head checkpoint — 2026-11-02
+
+- Branch HEAD: 1c2fb72359480cf861566ced5c66d744cd65c58c. Main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Static D3 validation Run 41360740452: compileall PASS; 19 passed / 0 skipped; no source artifact bytes downloaded/read and no Trial/Simulation.
+- D3 published-output exact-head verification Run 41361423337: SUCCESS at exact branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c; Raw readback of workbooks, D3 audit/manifest/report, D2 registry and governing reference passed.
+- The 373-run inventory contains no new source-producing Stage C/Trial/Monte Carlo/C100/Full Logging/S6 Aggregate workflow. All three pinned D3 source artifacts remain pre-cutoff.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

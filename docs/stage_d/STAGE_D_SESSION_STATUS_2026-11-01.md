@@ -364,3 +364,12 @@ D3: BLOCKED_MISSING_EVIDENCE. Existing 185-sheet candidates and exact-head readb
 - Source-date audit: 373 branch workflow runs reviewed; three pinned source artifacts remain pre-cutoff; no eligible post-cutoff source artifact identified.
 - D3 overall: BLOCKED_MISSING_EVIDENCE. D3-05/06 remain scoped with limitations; D3-07 through D3-13 remain MISSING_EVIDENCE.
 - D4: NOT_STARTED.
+
+
+## Latest exact-head status — 2026-11-02
+
+- Branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c; main HEAD c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- D3 static code validation: PASS, 19 passed / 0 skipped, compileall PASS (Run 41360740452).
+- D3 published-output exact-head verification: PASS_SCOPED at the exact current HEAD (Run 41361423337); Raw readback passed; no rebuild.
+- Source-date inventory: 373 workflow runs; three pinned source artifacts remain pre-cutoff; no eligible post-cutoff source artifact identified.
+- D3 overall: BLOCKED_MISSING_EVIDENCE. D4: NOT_STARTED.

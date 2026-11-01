@@ -102,3 +102,13 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - D3-07 through D3-13 remain MISSING_EVIDENCE for the detailed ledgers and all-trial final close-date distribution.
 - D3-14 through D3-18 retain their scoped output/traceability evidence; exact-head no-rebuild validation now covers current HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a.
 - Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED. No status promotion is inferred from static tests or workbook publication.
+
+
+## Final branch exact-head verification — 2026-11-02
+
+- Run 41361423337 passed at exact current branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c. Exact branch/HEAD assertion and Raw output readback passed.
+- D3-05: PASS_SCOPED_WITH_LIMITATIONS for 20 S6 daily series only; C100 daily remains MISSING_EVIDENCE.
+- D3-06: PASS_SCOPED_WITH_LIMITATIONS for 105 representative keys / 1,680 registry entries only; representative P50 raw daily logs remain MISSING_EVIDENCE.
+- D3-07 through D3-13 remain MISSING_EVIDENCE.
+- D3-14 through D3-18 retain scoped output and traceability evidence; exact-head verification passed at 1c2fb72359480cf861566ced5c66d744cd65c58c.
+- Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED.

@@ -109,3 +109,12 @@ If no such artifacts already exist, generating them may require new Trials/Simul
 - D3 no-rebuild verification Run 41360991252: SUCCESS on exact current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Raw verification passed for both workbooks, D3_BUILD_AUDIT, D3_MANIFEST, D3_BUILD_REPORT, results/number_registry.json and the governing-reference copy.
 - D3_BUILD_AUDIT.json and D3_MANIFEST.json both declare d3_gate_status=BLOCKED_MISSING_EVIDENCE. Missing evidence remains C100 daily distributions, representative P50 raw daily ledgers, ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and all-trial final close-date distribution. Full Logging remains 105 representative keys only; C100 Golden revalidation remains NOT_RUN; five historical accounting fields remain MISSING_EVIDENCE.
 - D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED. No source exception, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main write, merge, Release or final acceptance occurred.
+
+
+## Latest exact-head confirmation — 2026-11-02 (append-only)
+
+- Current branch HEAD: 1c2fb72359480cf861566ced5c66d744cd65c58c; main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- D3 Published Output Exact-HEAD Verification Run 41361423337 completed SUCCESS on exact HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c. Exact branch/HEAD assertion, exporter regression tests, and Raw readback all passed.
+- Verified Raw files and hashes are listed in D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md. No workbook rebuild or source artifact download/read occurred.
+- Static code validation remains Run 41360740452: compileall PASS; 19 passed / 0 skipped; source artifacts downloaded/read = 0; Trials/Simulations = 0.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

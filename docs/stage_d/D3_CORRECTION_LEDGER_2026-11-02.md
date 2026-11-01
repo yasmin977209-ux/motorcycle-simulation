@@ -76,3 +76,10 @@ The correction text and workflow file are committed. The new workflow's success 
 - The earlier D3 no-rebuild verification checkpoint is superseded by Run 41360991252: SUCCESS at exact current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a; exact branch/HEAD assertion and Raw readback passed.
 - The earlier SHA-256 values in the code fingerprint table for checkpoint 479ca3889c07fcb4d82b86b23bef61d8760adb64 are superseded. The corrected Raw SHA-256 values and corresponding Git blob SHA-1 values are appended in D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md.
 - These corrections do not close missing source evidence. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+
+## Latest exact-head correction — 2026-11-02 (append-only)
+
+The previous checkpoint exact-head result at 6e8b1654302c8e3a2b59827bd984ffe00a16397a is superseded by Run 41361423337, which passed at exact current branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c. Raw output readback passed for all published candidate outputs, the Number Registry and governing reference. No rebuild or source archive read occurred.
+
+The static code result remains Run 41360740452: compileall PASS, 19 passed / 0 skipped, no source artifact bytes read/downloaded, no Trial/Simulation. These checks do not resolve missing D3 source records and do not promote the D3 gate.

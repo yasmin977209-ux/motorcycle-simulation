@@ -64,3 +64,12 @@ This section supersedes the earlier checkpoint note that static validation was N
 - D3 no-rebuild verification Run 41360991252 succeeded at exact branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. It reran exporter regression tests and read back the Arabic/English workbooks, D3 audit, manifest, report, D2 registry and governing reference from GitHub Raw. No workbook rebuild or source artifact download occurred.
 - Branch Actions inventory: 373 runs reviewed. The 34 Stage D1 rebuilt-S6 source validations and 5 builder validations are validation workflows, not new source-producing runs. No post-cutoff source-producing D3 artifact was found.
 - All three pinned source artifacts remain pre-cutoff. D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 source records remain missing. D4 remains NOT_STARTED.
+
+
+## Current final branch verification — 2026-11-02
+
+- Final current branch HEAD at this checkpoint: 1c2fb72359480cf861566ced5c66d744cd65c58c.
+- Run 41361423337 succeeded at that exact HEAD: exact branch/HEAD assertion, exporter regression tests and Raw readback of published outputs all passed.
+- The source-free static suite remains 19 passed / 0 skipped (Run 41360740452, tested SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0).
+- No source artifact bytes were downloaded/read and no Trial/Simulation/Monte Carlo was executed.
+- The exact-head result validates the existing candidate files only. D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 evidence remain missing. D4 remains NOT_STARTED.

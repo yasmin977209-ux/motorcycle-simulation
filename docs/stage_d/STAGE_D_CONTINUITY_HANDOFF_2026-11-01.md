@@ -271,3 +271,12 @@ Branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a; main HEAD c6e54349a5e94f65
 Run 41360740452 passed source-free compile and 19 focused tests. Run 41360991252 passed the no-rebuild exact-head verification at the current branch HEAD, including Raw readback of the bilingual workbooks, D3 audit/manifest/report, Number Registry and governing reference. No source artifacts were downloaded/read and no Trial/Simulation was run.
 
 The 373-run inventory contains no new source-producing run. All three pinned source artifacts remain pre-cutoff. D3 remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 evidence remain missing. D4 remains NOT_STARTED.
+
+
+## Latest exact-head handoff — 2026-11-02
+
+Current branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c; main c6e54349a5e94f65d5aa9f83141f225d777bb474.
+
+Run 41360740452 passed the source-free static suite (compileall PASS; 19 passed / 0 skipped). Run 41361423337 passed the D3 published-output exact-head verification at this exact branch HEAD, including Raw readback of the bilingual workbooks, D3 audit/manifest/report, D2 registry and governing reference.
+
+No source artifact archive was downloaded/read in these checks. The three pinned D3 source artifacts remain pre-cutoff. C100 daily and D3-07 through D3-13 remain MISSING_EVIDENCE. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

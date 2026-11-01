@@ -75,3 +75,12 @@ The source runs identified for detailed reconstruction are all dated before the 
 - Static validation Run 41360740452 passed on tested SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0: compileall PASS, 19 passed / 0 skipped, no source artifacts downloaded/read, no Trial/Simulation.
 - Exact-head no-rebuild Run 41360991252 passed on current branch HEAD 6e8b1654302c8e3a2b59827bd984ffe00a16397a. Raw output verification passed; no workbook rebuild.
 - D3 candidate remains T2_INTERIM / NOT_FINAL_BLOCKED. D3 gate remains BLOCKED_MISSING_EVIDENCE because C100 daily and D3-07 through D3-13 ledgers remain missing. D4 remains NOT_STARTED.
+
+
+## Latest exact-head result — 2026-11-02
+
+- D3 Published Output Exact-HEAD Verification Run 41361423337 passed at current branch HEAD 1c2fb72359480cf861566ced5c66d744cd65c58c.
+- The job asserted the exact branch and SHA, ran exporter regression tests, and verified Raw bytes, SHA-256, size and Git blob SHA-1 for the two workbooks, D3 audit, manifest, report, D2 registry and governing reference.
+- Static validation Run 41360740452 passed compileall and 19 tests (0 skipped) on source SHA 463a4ec53aaef3c2d4a70e1bac448efd326135a0; no source artifacts were downloaded/read.
+- The 373-run inventory contains no new source-producing run. The three pinned source artifacts remain pre-cutoff.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
