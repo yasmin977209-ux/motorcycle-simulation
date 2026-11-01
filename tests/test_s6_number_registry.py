@@ -10,6 +10,7 @@ from scripts.s6_number_registry import (
     daily_number_id,
     display_fraction,
     no_floats,
+    original_historical_report,
     resolve_number,
     source_number,
     stable_id,
@@ -170,3 +171,10 @@ def test_daily_resolver_rejects_invalid_sample_provenance_and_unknown_id():
         _resolve_daily_number(registry, daily_number_id(series_id, 1), series_by_id, indexes_by_scenario)
     with pytest.raises(KeyError):
         resolve_number(registry, "D2D-" + "f" * 20 + "-000000")
+
+
+def test_historical_local_report_is_unwrapped_without_loss():
+    original = {"audit_id": "D2-LOCAL-2026-10-31", "entry_count": 13954, "status": "REPORTED_ONLY_LOCAL_ONLY"}
+    prior = {"audit_id": "D2-CANONICAL-OLD", "entry_count": 2640, "historical_local_report": {"original_report": original}}
+    current = {"audit_id": "D2-CANONICAL-NEW", "entry_count": 2640, "historical_local_report": {"original_report": prior}}
+    assert original_historical_report(current) == original
