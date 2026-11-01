@@ -227,7 +227,18 @@ def compare(ar,en,names):
     try:
         if a.sheetnames!=b.sheetnames or a.sheetnames!=names: raise ValueError("BILINGUAL_SHEET_ORDER_MISMATCH")
         for name in names:
-            for ra,rb in zip(a[name].iter_rows(),b[name].iter_rows()):
+            wa,wb=a[name],b[name]
+            if (wa.max_row,wa.max_column)!=(wb.max_row,wb.max_column):
+                raise ValueError("BILINGUAL_DIMENSION_MISMATCH:"+name)
+            rows_a,rows_b=wa.iter_rows(),wb.iter_rows()
+            row_index=0
+            while True:
+                ra=next(rows_a,None); rb=next(rows_b,None)
+                if ra is None or rb is None:
+                    if ra is not rb: raise ValueError("BILINGUAL_ROW_COUNT_MISMATCH:"+name)
+                    break
+                row_index+=1
+                if len(ra)!=len(rb): raise ValueError("BILINGUAL_ROW_WIDTH_MISMATCH:"+name+":"+str(row_index))
                 for x,y in zip(ra,rb):
                     nx=isinstance(x.value,(int,float,Decimal)) and not isinstance(x.value,bool); ny=isinstance(y.value,(int,float,Decimal)) and not isinstance(y.value,bool)
                     if nx or ny:
