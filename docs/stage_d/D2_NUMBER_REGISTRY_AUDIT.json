@@ -90,13 +90,13 @@
     "No Trial, Simulation, Monte Carlo or N expansion was run."
   ],
   "registry_containing_commit": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
-  "registry_git_blob_sha1": "e817e1be06b1bce7dea90caf9e2bc9e7779c3a76",
+  "registry_git_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6",
   "registry_path": "results/number_registry.json",
-  "registry_sha256": "704ee043b4520d18d58d6826c68f03ff9052692907e066d203c00ea46a0ea4c3",
+  "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
   "registry_size_bytes": 24137036,
   "representative_numeric_entries": 1680,
   "representative_trial_count": 105,
-  "source_head": "8eb5da55fc9036f25e420dbd43ed925567ef7c2b",
+  "source_head": "8f876e4b4901e4a62ac250820f97e3874e18bd67",
   "status": "PASS_SCOPED_WITH_LIMITATIONS",
   "unavailable_evidence": [
     {
@@ -142,5 +142,5 @@
       "value": null
     }
   ],
-  "workflow_run_id": "41334997604"
+  "workflow_run_id": "41335321803"
 }
