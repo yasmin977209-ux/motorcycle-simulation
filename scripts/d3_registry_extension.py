@@ -314,6 +314,48 @@ def extract_case(full, result: dict, role_map: dict, artifact: dict) -> dict:
     }
 
 
+def build_sensitivity_entries(entries: list[dict]) -> list[dict]:
+    mean_entries = {
+        item["scenario_id"]: item for item in entries
+        if item.get("metric_name", "").endswith(".mean.Cumulative_Project_Profit")
+    }
+    if len(mean_entries) != 25:
+        raise ValueError("D3_SENSITIVITY_MEAN_PROFIT_COVERAGE_INVALID")
+    output = []
+    c_levels, g_levels = (30, 50, 70, 85, 100), (0, 30, 50, 70, 100)
+
+    def add(dimension: str, held_fixed: str, left_sid: str, right_sid: str) -> None:
+        left, right = mean_entries[left_sid], mean_entries[right_sid]
+        left_value = Fraction(left["numerator"], left["denominator"])
+        right_value = Fraction(right["numerator"], right["denominator"])
+        delta = right_value - left_value
+        n, d = delta.numerator, delta.denominator
+        number_id = stable_id("NR-", [
+            "D3_SENSITIVITY_DELTA_V1", left["number_id"], right["number_id"],
+            dimension, held_fixed, n, d,
+        ])
+        output.append({
+            "number_id": number_id, "dimension": dimension, "held_fixed": held_fixed,
+            "from_scenario_id": left_sid, "to_scenario_id": right_sid,
+            "from_number_id": left["number_id"], "to_number_id": right["number_id"],
+            "numerator": n, "denominator": d, "exact_value": {"numerator": n, "denominator": d},
+            "display_value": display_fraction(n, d), "unit": "YER",
+            "calculation_method": "EXACT_FRACTION_DIFFERENCE_OF_REGISTERED_MEAN_CUMULATIVE_PROJECT_PROFIT",
+            "source_number_ids": [left["number_id"], right["number_id"]],
+            "evidence_status": "VERIFIED_LIVE",
+        })
+
+    for g in g_levels:
+        for left_c, right_c in zip(c_levels, c_levels[1:]):
+            add("COLLECTION", f"G={g:03d}", f"C{left_c:03d}_G{g:03d}", f"C{right_c:03d}_G{g:03d}")
+    for c_level in c_levels:
+        for left_g, right_g in zip(g_levels, g_levels[1:]):
+            add("GUARANTEE", f"C={c_level:03d}", f"C{c_level:03d}_G{left_g:03d}", f"C{c_level:03d}_G{right_g:03d}")
+    if len(output) != 40 or len({x["number_id"] for x in output}) != 40:
+        raise ValueError("D3_SENSITIVITY_ENTRY_COUNT_INVALID")
+    return output
+
+
 def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
     base_raw = Path(base_registry_path).read_bytes()
     if len(base_raw) != BASE_REGISTRY_BYTES or sha256(base_raw) != BASE_REGISTRY_SHA256:
@@ -547,6 +589,7 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
         ):
             raise ValueError("S6_FINAL_CLOSE_DATE_DISTRIBUTION_COVERAGE_INVALID")
 
+        sensitivity_entries = build_sensitivity_entries(aggregate_entries)
         extension = {
             "schema_version": "d3-number-registry-extension-v1",
             "extension_id": stable_id("D3NRX-", [BASE_REGISTRY_SHA256, PINS["aggregate"].sha256, PINS["full_logging"].sha256, PINS["c100"].sha256]),
@@ -555,6 +598,7 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
             "current_governing_reference_sha256": CURRENT_REFERENCE_SHA256,
             "source_artifacts": artifact_meta,
             "aggregate_entries": aggregate_entries,
+            "sensitivity_entries": sensitivity_entries,
             "representative_cases": cases,
             "final_close_date_distribution": sorted(close_dates, key=lambda x: (x["scenario_id"], x["final_close_date"])),
             "full_logging_validation": {
@@ -615,6 +659,7 @@ def build(args) -> dict:
         "extension_git_blob_sha1": blob_sha1(compressed),
         "uncompressed_bytes": len(raw),
         "extension_id": extension["extension_id"],
+        "sensitivity_entry_count": len(extension.get("sensitivity_entries", [])),
         "base_registry_sha256": extension["base_registry_sha256"],
         "source_artifacts": extension["source_artifacts"],
         "full_logging_validation": extension["full_logging_validation"],
