@@ -2863,3 +2863,14 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
 - D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
 - No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.
+
+
+## D3 publication correction and no-rebuild verification — 2026-11-02
+
+- Append-only correction ledger: `docs/stage_d/D3_CORRECTION_LEDGER_2026-11-02.md`.
+- Corrected Run 41352075552 workbook identities: AR 27,734,273 bytes / SHA-256 `914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461` / blob `056b7f482bbb84583526f093ae886e13b8c01356`; EN 27,722,355 bytes / SHA-256 `89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191` / blob `a01c1f4061da731de24fcc8d061113bb195e65b1`. Earlier values in the initial D3 review are stale; see correction appended there.
+- Withdraw the earlier classification of the repository v2.4.0 copy as a 269,253-byte conflicting candidate. Its tree size is 401,397 and Git blob matches the approved Gist blob; exact Raw SHA-256 verification is delegated to the new workflow and remains `NOT_RUN` until Actions evidence is inspected.
+- Hardened bilingual workbook comparison against worksheet dimension, row-count, and row-width mismatches; added a trailing-row regression test.
+- Added `.github/workflows/d3-published-output-verification.yml`: exact triggering SHA checkout, exact HEAD assertion, focused regression tests, and SHA-256/size/Git-blob Raw readback for both committed workbooks, D3 audit, manifest, report, Number Registry, and repository reference copy. It does not rebuild or rewrite the workbooks.
+- Correction ledger and workflow are committed on `tmp/d1-rebuild-20261101`. Verify the Actions run and Raw readback at the exact final commit before marking these new checks `VERIFIED_LIVE`.
+- D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains not authorized. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main update, merge, or Release.
