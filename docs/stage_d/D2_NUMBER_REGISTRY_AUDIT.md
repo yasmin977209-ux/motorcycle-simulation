@@ -75,3 +75,17 @@ D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D
 - Current repository registry: 2,640 entries (960 aggregate checkpoint values + 1,680 numeric values for 105 representative Full Logging keys), 1,000 daily series and 2,086,550 addressable daily points.
 - Every daily point now has a deterministic D2D number_id scheme and a callable resolve_number lookup that returns its exact value and source provenance.
 - Historical report contents were retained inside docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json under historical_local_report; no historical result was silently deleted.
+
+
+## Corrected D2 registry and resolvable daily number IDs — 2026-11-01
+
+- Current canonical audit file: docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json; status PASS_SCOPED_WITH_LIMITATIONS.
+- Corrected D2 build and exact-head workflow: Run 41328486239 — SUCCESS.
+- Registry-containing and exact-head/raw-readback commit: c5e9c862c161dea89651d27e3a4eb5f5f35211ad.
+- Registry triple: SHA-256 d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb; Git blob SHA-1 824803e8543fff7c628586bd37ea6e3f706cf9ba; size 24,137,036 bytes.
+- Registry: 2,640 entries = 960 Aggregate checkpoint values + 1,680 numeric values from 105 representative Full Logging keys; 1,000 daily series; 2,086,550 daily points.
+- Each compact daily point ID follows D2D-{series_sha20}-{zero_based_date_offset_6_digits} and resolves through scripts.s6_number_registry.resolve_number to its exact numerator/denominator, display value, date, sample count and source provenance. Validator checks ID format and series/offset resolution.
+- D2 unit/build test run: 22 passed, 9 skipped; D1-D2 source validation: 31 passed. The nine skips are the existing integration cases whose artifact inputs are supplied by a separate pinned-artifact integration workflow.
+- Exact Raw readback passed for all seven files in Run 41328486239; uploaded workflow evidence Artifact 13092805269.
+- The opening 13,954-entry REPORTED_ONLY_LOCAL report remains as historical evidence only. Its complete JSON payload is retained under historical_local_report in the canonical audit JSON; it is not a current repository result.
+- All earlier limitations remain unchanged. D3 has not started.
