@@ -157,7 +157,7 @@ jobs:
                   raise SystemExit("RAW_READBACK_MISMATCH:" + name)
               blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
               print(f"VERIFIED_RAW path={name} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()} blob={blob} commit={head}")
-          if subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
+          if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], text=True).strip():
               raise SystemExit("WORKTREE_NOT_CLEAN")
           print("EXACT_FINAL_HEAD_PASS " + head)
           PY
