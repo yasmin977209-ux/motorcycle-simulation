@@ -81,8 +81,8 @@ jobs:
       - name: Build the Number Registry
         run: |
           set -euo pipefail
-          python scripts/s6_number_registry.py build --aggregate .stage-d2/aggregate.zip --full-logging .stage-d2/full-logging.zip --c100 .stage-d2/c100.zip --source-head "$GITHUB_SHA" --workflow-run-id "$GITHUB_RUN_ID"
-          python scripts/s6_number_registry.py validate --registry results/number_registry.json
+          python -m scripts.s6_number_registry build --aggregate .stage-d2/aggregate.zip --full-logging .stage-d2/full-logging.zip --c100 .stage-d2/c100.zip --source-head "$GITHUB_SHA" --workflow-run-id "$GITHUB_RUN_ID"
+          python -m scripts.s6_number_registry validate --registry results/number_registry.json
           test "$(wc -c < results/number_registry.json)" -lt 90000000
 
       - name: Append continuity and handoff
@@ -132,7 +132,7 @@ jobs:
       - name: Verify final head and exact raw bytes
         run: |
           set -euo pipefail
-          python scripts/s6_number_registry.py validate --registry results/number_registry.json
+          python -m scripts.s6_number_registry validate --registry results/number_registry.json
           python - <<'PY'
           import hashlib, pathlib, requests, subprocess
           repo = "yasmin977209-ux/motorcycle-simulation"
