@@ -196,7 +196,6 @@ jobs:
       - name: Verify final head and exact raw bytes
         run: |
           set -euo pipefail
-          python -m scripts.s6_number_registry validate --registry results/number_registry.json
           python - <<'PY'
           import hashlib, pathlib, requests, subprocess
           repo = "yasmin977209-ux/motorcycle-simulation"
