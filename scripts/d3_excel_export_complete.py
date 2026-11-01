@@ -81,6 +81,8 @@ def load_extension(path: str, base_sha: str) -> tuple[dict, bytes, str]:
         or extension.get("c100_validation", {}).get("daily_reuse_status") != "PASS_SCOPED_C100_DAILY_REUSE"
         or extension.get("close_date_validation", {}).get("total_trial_count") != 49500
         or len(extension.get("representative_cases", [])) != 25
+        or len(extension.get("representative_role_cases", [])) != 105
+        or extension.get("full_logging_validation", {}).get("role_assignments") != 125
         or len(extension.get("final_close_date_distribution", [])) < 25
     ):
         raise ValueError("D3_REGISTRY_EXTENSION_COVERAGE_INVALID")
