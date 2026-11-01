@@ -194,7 +194,7 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/tmp/d1-rebuild-20261101"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/number_registry.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
+          git add results/number_registry.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
           git commit -m "stage-d(d2): publish scoped number registry"
           git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
@@ -216,6 +216,10 @@ jobs:
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
               "docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md",
               "docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md",
+              "docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md",
+              "scripts/s6_number_registry.py",
+              "tests/test_s6_number_registry.py",
+              ".github/workflows/stage-d2-number-registry.yml",
               "docs/PROJECT_CONTINUITY.md",
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
@@ -281,6 +285,7 @@ jobs:
               "docs/PROJECT_CONTINUITY.md",
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
+              "docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md",
           ):
               path = pathlib.Path(name)
               with path.open("ab") as output:
@@ -309,6 +314,10 @@ jobs:
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
               "docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md",
               "docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md",
+              "docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md",
+              "scripts/s6_number_registry.py",
+              "tests/test_s6_number_registry.py",
+              ".github/workflows/stage-d2-number-registry.yml",
               "docs/PROJECT_CONTINUITY.md",
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
@@ -339,5 +348,9 @@ jobs:
             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json
             docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md
             docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md
+            docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md
+            scripts/s6_number_registry.py
+            tests/test_s6_number_registry.py
+            .github/workflows/stage-d2-number-registry.yml
           if-no-files-found: error
           retention-days: 30
