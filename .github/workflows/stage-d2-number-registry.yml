@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: stage-d2-number-registry
+  group: stage-d2-number-registry-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
