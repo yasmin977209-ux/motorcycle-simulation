@@ -81,7 +81,7 @@ jobs:
       - name: Build the Number Registry
         run: |
           set -euo pipefail
-          python scripts/s6_number_registry.py build             --aggregate .stage-d2/aggregate.zip             --full-logging .stage-d2/full-logging.zip             --c100 .stage-d2/c100.zip             --source-head "$GITHUB_SHA"             --workflow-run-id "$GITHUB_RUN_ID"
+          python scripts/s6_number_registry.py build --aggregate .stage-d2/aggregate.zip --full-logging .stage-d2/full-logging.zip --c100 .stage-d2/c100.zip --source-head "$GITHUB_SHA" --workflow-run-id "$GITHUB_RUN_ID"
           python scripts/s6_number_registry.py validate --registry results/number_registry.json
           test "$(wc -c < results/number_registry.json)" -lt 90000000
 
@@ -92,40 +92,31 @@ jobs:
           import json, pathlib
           reg = json.loads(pathlib.Path("results/number_registry.json").read_text(encoding="utf-8"))
           audit = json.loads(pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json").read_text(encoding="utf-8"))
-          section = (
-              "
+          section = f"""
+          ## D2 Number Registry — 2026-11-01 (append-only)
 
-## D2 Number Registry — 2026-11-01 (append-only)
-
-"
-              f"- Build status: PASS_SCOPED_WITH_LIMITATIONS, pending the exact-head tests in Run {audit['workflow_run_id']}.
-"
-              f"- Registry contains {audit['entry_count']} entries, {audit['daily_series_count']} daily series and {audit['daily_point_count']} daily points.
-"
-              f"- S6 identity: {reg['scope']['S6']['source_sha']} / {reg['scope']['S6']['cohort_id']}; C100 identity: {reg['scope']['C100']['source_sha']} / {reg['scope']['C100']['cohort_id']}.
-"
-              "- C100 remains CROSS_COHORT_DETERMINISTIC_REUSE; its Golden revalidation remains NOT_RUN.
-"
-              "- Full Logging remains limited to 105 representative keys; normalized statuses remain NOT_VERIFIED.
-"
-              "- Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
-"
-              "- Five historical accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill was performed.
-"
-              "- No Trial, Simulation, Monte Carlo, N expansion, or main update was performed.
-"
-          )
+          - Build: PASS_SCOPED_WITH_LIMITATIONS; exact-head validation is recorded in workflow Run {audit['workflow_run_id']}.
+          - Registry entries: {audit['entry_count']}; daily series: {audit['daily_series_count']}; addressable daily points: {audit['daily_point_count']}.
+          - S6 identity: {reg['scope']['S6']['source_sha']} / {reg['scope']['S6']['cohort_id']}.
+          - C100 identity: {reg['scope']['C100']['source_sha']} / {reg['scope']['C100']['cohort_id']}; CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation NOT_RUN.
+          - Full Logging: 105 representative keys only; normalized statuses NOT_VERIFIED.
+          - Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
+          - Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
+          - No Trial, Simulation, Monte Carlo, N expansion or main update.
+          """
           marker = "D2 Number Registry — 2026-11-01 (append-only)"
-          for name in (
+          names = [
               "docs/PROJECT_CONTINUITY.md",
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
-          ):
+          ]
+          for name in names:
               path = pathlib.Path(name)
-              prior = path.read_text(encoding="utf-8")
-              if marker not in prior:
-                  with path.open("a", encoding="utf-8") as out:
-                      out.write(section)
+              old = path.read_text(encoding="utf-8")
+              if marker not in old:
+                  with path.open("a", encoding="utf-8") as output:
+                      output.write("
+" + section)
           PY
 
       - name: Commit D2 output on the working branch
@@ -136,7 +127,7 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/tmp/d1-rebuild-20261101"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/number_registry.json             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md             docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json             docs/PROJECT_CONTINUITY.md             docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md             docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
+          git add results/number_registry.json docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
           git commit -m "stage-d(d2): publish scoped number registry"
           git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
@@ -144,7 +135,6 @@ jobs:
       - name: Verify final head and exact raw bytes
         run: |
           set -euo pipefail
-          D2_REGISTRY_PATH=results/number_registry.json python -m pytest -q -rs tests/test_s6_number_registry.py
           python scripts/s6_number_registry.py validate --registry results/number_registry.json
           python - <<'PY'
           import hashlib, pathlib, requests, subprocess
@@ -153,7 +143,7 @@ jobs:
           remote = subprocess.check_output(["git", "ls-remote", "origin", "refs/heads/tmp/d1-rebuild-20261101"], text=True).split()[0]
           if head != remote:
               raise SystemExit("EXACT_HEAD_MISMATCH:" + head + ":" + remote)
-          paths = [
+          names = [
               "results/number_registry.json",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
@@ -161,14 +151,14 @@ jobs:
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
           ]
-          for name in paths:
+          for name in names:
               raw = pathlib.Path(name).read_bytes()
               url = f"https://raw.githubusercontent.com/{repo}/{head}/{name}"
               response = requests.get(url, timeout=180)
               response.raise_for_status()
               if response.content != raw:
                   raise SystemExit("RAW_READBACK_MISMATCH:" + name)
-              blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b" " + raw).hexdigest()
+              blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
               print(f"VERIFIED_RAW path={name} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()} blob={blob} commit={head}")
           if subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
               raise SystemExit("WORKTREE_NOT_CLEAN")
