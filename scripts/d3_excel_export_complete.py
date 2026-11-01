@@ -750,7 +750,7 @@ def build(args) -> dict:
     report += [f"- {key}: {value}" for key, value in requirements.items()]
     report += ["", "## Preserved limitations"] + [f"- {item}" for item in limitations]
     report += ["", "D3 is closed within scoped requirements with limitations. This is not final project acceptance and does not authorize D4."]
-    Path("docs/stage_d/D3_BUILD_REPORT_2026-11-02.md").write_text("\n".join(report) + "\n", encoding="utf-8")
+    Path("docs/stage_d/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md").write_text("\n".join(report) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return result
 
