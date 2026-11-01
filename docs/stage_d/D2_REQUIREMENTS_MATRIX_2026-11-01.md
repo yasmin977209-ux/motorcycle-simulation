@@ -99,3 +99,9 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Triggering source SHA: 8f876e4b4901e4a62ac250820f97e3874e18bd67
 - Registry-containing commit: cc94985454d6e5971947e53c8e0a2782ad2de12d
 - First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.
+
+## Registry evidence reconciliation — 2026-11-01 (append-only)
+
+The earlier completion table below remains historical evidence for Run `41333300530` and its then-current registry generation. It is superseded for current-registry identification by completion Run [41335321803](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41335321803): registry `results/number_registry.json`, containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, Git blob SHA-1 `8cf17de488c623f96c1961ca91d682fbbc7733d6`, size `24,137,036` bytes; final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`. Artifact: [13094379705](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41335321803/artifacts/13094379705).
+
+The canonical `D2_NUMBER_REGISTRY_AUDIT.json` records the latest registry SHA/blob/size and Run `41335321803`. Do not interpret the earlier table as the latest registry identity. D2 remains `PASS_SCOPED_WITH_LIMITATIONS`; all gate limitations remain unchanged. See `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`.
