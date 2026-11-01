@@ -17,3 +17,14 @@ Remaining D1 requirements: successful exact-head workflow; remote readback URL +
 - Canonical remote path `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` remains unpublished. No content-bearing GitHub write request was made because the local archive bytes are not available inside the GitHub connector execution context, while its Git Data/Contents write actions require the complete content string. The available tools expose no GraphQL createCommitOnBranch or workflow-dispatch action accepting this local file reference; the existing validation workflow has read-only contents permission and no base64 publication input. Therefore publication remains `CANNOT_PUBLISH / MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
 - No v2.4.0 remote blob, raw-byte SHA-256, or containing commit exists to report. Do not infer remote publication from the local digest.
 - No D2 registry, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release, or main update was performed. D1 remains BLOCKED solely on canonical reference publication and remote triple evidence.
+
+
+## Latest live handoff — 2026-11-01T00:16Z
+
+Resume only after re-reading live refs. Current reviewed branch HEAD: `c84da4611eee677dfc7cf381c3f831be09a01308`; `main`: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+
+Run `41255932373` passed on the exact current HEAD (26 passed, 0 failed, 0 skipped; pinned artifact hashes and Parquet LossCase/MaxCase integration passed; exact-head assertion passed). The publisher workflow `.github/workflows/publish-v2.4.0-reference.yml` is prepared but NOT_RUN because no transfer payload/READY marker exists. Canonical v2.4.0 reference is still absent remotely; local ZIP member remains VERIFIED_LOCAL only (401,397 bytes; SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`).
+
+D1 remains BLOCKED solely on this publication and remote triple. D2 remains NOT_STARTED. Do not run importer, Trials, Simulation, Monte Carlo or N=4800. Do not touch main, merge, PR or Release. Preserve 105/105 NOT_VERIFIED manifest states and C100 Golden revalidation NOT_RUN.
+
+State files are root `state.json` and `docs/STATE_SHA_SEMANTICS.md`; the root state is a historical Stage 12 snapshot, not the current D1 status. Do not infer branch HEAD from `state.sha`.

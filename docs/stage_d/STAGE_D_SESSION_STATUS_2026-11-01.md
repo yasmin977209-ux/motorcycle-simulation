@@ -95,3 +95,15 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Canonical remote path `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` remains unpublished. No content-bearing GitHub write request was made because the local archive bytes are not available inside the GitHub connector execution context, while its Git Data/Contents write actions require the complete content string. The available tools expose no GraphQL createCommitOnBranch or workflow-dispatch action accepting this local file reference; the existing validation workflow has read-only contents permission and no base64 publication input. Therefore publication remains `CANNOT_PUBLISH / MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
 - No v2.4.0 remote blob, raw-byte SHA-256, or containing commit exists to report. Do not infer remote publication from the local digest.
 - No D2 registry, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release, or main update was performed. D1 remains BLOCKED solely on canonical reference publication and remote triple evidence.
+
+
+## Live review and publication-path hardening — 2026-11-01T00:16Z
+
+- Verified branch HEAD: `c84da4611eee677dfc7cf381c3f831be09a01308`; `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Exact-head Run `41255932373` succeeded on this exact HEAD: compileall PASS; 26 passed, 0 failed, 0 skipped; three pinned artifact metadata/byte hashes matched; Parquet LossCase/MaxCase integration and exact live-head assertion passed. Uploaded workflow artifacts: 0.
+- Reviewed all six S6 scripts and both focused test modules. ZIP safety/pinning and frozen mapping checks are present. The builder remains read-only and does not execute or reselect Trials. 125 role assignments / 105 unique keys (100 S6 + 5 C100); all 105 normalized manifest statuses remain NOT_VERIFIED. C100 Golden revalidation remains NOT_RUN.
+- State files were located at repository root `state.json` and `docs/STATE_SHA_SEMANTICS.md`. Root state is a historical Stage 12 snapshot; it is not substituted for current D1 continuity. No state mutation was made.
+- Added a restricted publisher workflow at `.github/workflows/publish-v2.4.0-reference.yml` and a path-ignore for transfer-only payload commits in the source-validation workflow. The publisher validates exact source size 401,397 and SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, commits the canonical path, removes temporary chunks, and performs raw readback plus exact-head tests.
+- Publisher workflow status: NOT_RUN. The transfer payload and READY marker are absent; canonical reference path remains absent. Local archive verification is VERIFIED_LOCAL only; remote publication remains MISSING_EVIDENCE / CANNOT_PUBLISH.
+- No D2, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release or main update.
+- D1 remains BLOCKED on the sole remaining v2.4.0 canonical publication and remote evidence triple. D2 NOT_STARTED.

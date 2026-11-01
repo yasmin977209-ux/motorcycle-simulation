@@ -71,3 +71,17 @@ Source/test/workflow publication is evidenced by the per-file rows above. D1 as 
 - Canonical remote path `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` remains unpublished. No content-bearing GitHub write request was made because the local archive bytes are not available inside the GitHub connector execution context, while its Git Data/Contents write actions require the complete content string. The available tools expose no GraphQL createCommitOnBranch or workflow-dispatch action accepting this local file reference; the existing validation workflow has read-only contents permission and no base64 publication input. Therefore publication remains `CANNOT_PUBLISH / MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
 - No v2.4.0 remote blob, raw-byte SHA-256, or containing commit exists to report. Do not infer remote publication from the local digest.
 - No D2 registry, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release, or main update was performed. D1 remains BLOCKED solely on canonical reference publication and remote triple evidence.
+
+
+## Live workflow hardening evidence — containing commit c84da4611eee677dfc7cf381c3f831be09a01308
+
+The following workflow files were re-read from GitHub Raw at the immutable containing commit. SHA-256 values below are calculated from the returned UTF-8 bytes; Git blob SHA-1 and exact byte size are supporting evidence.
+
+| Path | Immutable GitHub URL | SHA-256 | Git blob SHA-1 | Bytes | Containing commit |
+|---|---|---|---|---:|---|
+| `.github/workflows/stage-d-d1-d2-validation.yml` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/c84da4611eee677dfc7cf381c3f831be09a01308/.github/workflows/stage-d-d1-d2-validation.yml | `492e4e72c57d0cf46ba0cbcc0460c269291c3be891efba839d40d049444b9f62` | `137037bdd1769ce069a39830fd02f99338702589` | 4,319 | `c84da4611eee677dfc7cf381c3f831be09a01308` |
+| `.github/workflows/publish-v2.4.0-reference.yml` | https://github.com/yasmin977209-ux/motorcycle-simulation/blob/c84da4611eee677dfc7cf381c3f831be09a01308/.github/workflows/publish-v2.4.0-reference.yml | `a3d83e3189ba2749ff8fd9f36adf459455586c54891cdc61a2bd4c062eb26016` | `69a72a57f7ccee4465b16be7f90c5dc05abb6510` | 8,655 | `c84da4611eee677dfc7cf381c3f831be09a01308` |
+
+Exact-head validation: [Run 41255932373](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41255932373), tested SHA `c84da4611eee677dfc7cf381c3f831be09a01308`, conclusion SUCCESS, 26 passed / 0 failed / 0 skipped, compileall PASS, all three pinned artifacts size+SHA-256 verified, Parquet LossCase/MaxCase integration PASS, exact live-head assertion PASS. Uploaded artifacts: 0.
+
+The canonical v2.4.0 path remains absent at this containing commit; no remote blob SHA-1, raw-byte SHA-256 or containing commit is available for the reference. The publisher workflow is NOT_RUN because the ten transfer chunks and READY marker are absent. This workflow evidence does not close D1.

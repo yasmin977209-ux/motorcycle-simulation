@@ -95,3 +95,12 @@ All earlier SHA-256 values for these three files in this session's appended reco
 - Canonical remote path `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` remains unpublished. No content-bearing GitHub write request was made because the local archive bytes are not available inside the GitHub connector execution context, while its Git Data/Contents write actions require the complete content string. The available tools expose no GraphQL createCommitOnBranch or workflow-dispatch action accepting this local file reference; the existing validation workflow has read-only contents permission and no base64 publication input. Therefore publication remains `CANNOT_PUBLISH / MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
 - No v2.4.0 remote blob, raw-byte SHA-256, or containing commit exists to report. Do not infer remote publication from the local digest.
 - No D2 registry, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release, or main update was performed. D1 remains BLOCKED solely on canonical reference publication and remote triple evidence.
+
+
+## Live repository and code review correction — 2026-11-01T00:16Z
+
+- The state files requested during bootstrap were not absent: `state.json` is at repository root; `STATE_SHA_SEMANTICS.md` is at `docs/STATE_SHA_SEMANTICS.md`. The initially tried `docs/stage_d/` paths return 404, but the actual files were located and read from the active branch.
+- Root `state.json` still represents a historical `stage=12-CLOSED` snapshot and declares `parent_state_commit_pointer`; it is not the D1 status source and its `sha` is not the branch HEAD. No change to this historical state file was made.
+- Code review of the six S6 scripts and two focused tests found the intended read-only behavior, exact artifact pins, ZIP path/duplicate/symlink/CRC checks, fixed cohort/source identities, preserved frozen assignments, and explicit NOT_VERIFIED/NOT_RUN limits. The test suite's LossCase/MaxCase check computes global min/max over the Parquet trial summary for each of the 20 S6 scenarios. It does not establish C100 Golden revalidation or 48,000-trial coverage.
+- Current exact-head CI Run `41255932373` succeeded on `c84da4611eee677dfc7cf381c3f831be09a01308`: 26 passed, 0 failed, 0 skipped; three artifact hashes/sizes and Parquet integration passed.
+- A restricted publication workflow was added, but remains NOT_RUN because no transfer payload reached the branch. Canonical reference publication and remote evidence remain missing. No D1 closure or D2 transition is authorized.

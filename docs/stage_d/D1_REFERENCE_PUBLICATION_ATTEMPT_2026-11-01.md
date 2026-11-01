@@ -204,3 +204,20 @@ Disposition: D1 remains `BLOCKED` solely on canonical reference publication and 
 - Canonical remote path `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` remains unpublished. No content-bearing GitHub write request was made because the local archive bytes are not available inside the GitHub connector execution context, while its Git Data/Contents write actions require the complete content string. The available tools expose no GraphQL createCommitOnBranch or workflow-dispatch action accepting this local file reference; the existing validation workflow has read-only contents permission and no base64 publication input. Therefore publication remains `CANNOT_PUBLISH / MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
 - No v2.4.0 remote blob, raw-byte SHA-256, or containing commit exists to report. Do not infer remote publication from the local digest.
 - No D2 registry, importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release, or main update was performed. D1 remains BLOCKED solely on canonical reference publication and remote triple evidence.
+
+
+## Additional live attempt — restricted GitHub Actions publisher (2026-11-01T00:16Z)
+
+### Preparation and controls
+
+- Revalidated starting branch HEAD `21fa1e9762bbe022833428dd61983dbc853134c9`; protected `main` remained `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Added path-ignore `tmp/reference-payload/**` to the source-validation workflow so transfer-only commits cannot race the exact-head source test (commit `3a96448afb9d8ff9b264a83e2f7eec4edda00210`).
+- Added `.github/workflows/publish-v2.4.0-reference.yml` (commit `b2477d23c804b6eeb5b86a91dbeb83f71206537e`) and corrected its final blob lookup at commit `c84da4611eee677dfc7cf381c3f831be09a01308`.
+- Publisher accepts ten complete base85 chunks and a final `tmp/reference-payload/READY` marker. It reconstructs the bzip2 payload, verifies exact 401,397 bytes and SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, writes the canonical path, removes the temporary transfer directory, pushes only to `tmp/d1-rebuild-20261101`, and verifies raw GitHub readback, Git blob SHA-1, size and containing commit. A second job downloads and re-verifies the three pinned artifacts and runs compileall, all tests, Parquet integration and exact-final-head assertion.
+
+### Result
+
+- The publisher workflow is committed but **NOT_RUN** because no transfer chunks or READY marker were committed. The current tree contains no `tmp/reference-payload/` files and no canonical v2.4.0 Markdown file.
+- This route avoids a partial or placeholder reference and will fail closed on any payload mismatch. It does not itself provide a bridge from the local uploaded ZIP bytes into GitHub; the connector execution context still cannot read the local filesystem. No content-bearing reference write has yet occurred.
+- Exact-head source validation Run `41255932373` succeeded on `c84da4611eee677dfc7cf381c3f831be09a01308`: 26 passed, 0 failed, 0 skipped; compileall, three pinned artifact checks, Parquet LossCase/MaxCase integration and exact-head assertion passed. Uploaded artifacts: 0.
+- Final status remains `CANNOT_PUBLISH / MISSING_EVIDENCE` for the canonical reference. No remote v2.4.0 blob SHA-1, raw SHA-256 or containing commit exists. D1 remains BLOCKED; D2 NOT_STARTED.
