@@ -31,6 +31,66 @@ def test_exporter_rejects_pre_cutoff_source_extension_even_without_archive_build
         validate_source_dates(extension)
 
 
+def test_exporter_accepts_only_post_cutoff_exact_pins(monkeypatch):
+    from scripts import d3_registry_extension as source_module
+    from scripts.d3_registry_extension import (
+        EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
+    )
+    from scripts.s6_artifact_reader import PINS
+
+    expected_heads = {
+        "aggregate": EXPECTED_AGGREGATE_HEAD,
+        "full_logging": EXPECTED_FULL_LOGGING_HEAD,
+        "c100": EXPECTED_C100_HEAD,
+    }
+    eligible_date = "2026-11-01T00:00:00Z"
+    sources = {}
+    for role, pin in PINS.items():
+        monkeypatch.setitem(source_module.SOURCE_RUN_CREATED_AT_UTC, pin.run_id, eligible_date)
+        sources[role] = {
+            "artifact_id": pin.artifact_id,
+            "run_id": pin.run_id,
+            "size_bytes": pin.size_bytes,
+            "sha256": pin.sha256,
+            "filename": pin.filename,
+            "workflow_run_head_sha": expected_heads[role],
+            "run_created_at_utc": eligible_date,
+            "evidence_status": "VERIFIED_LIVE",
+        }
+    assert validate_source_dates({"source_artifacts": sources}) is None
+
+
+def test_exporter_rejects_source_metadata_that_does_not_match_artifact_pin(monkeypatch):
+    from scripts import d3_registry_extension as source_module
+    from scripts.d3_registry_extension import (
+        EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
+    )
+    from scripts.s6_artifact_reader import PINS
+
+    expected_heads = {
+        "aggregate": EXPECTED_AGGREGATE_HEAD,
+        "full_logging": EXPECTED_FULL_LOGGING_HEAD,
+        "c100": EXPECTED_C100_HEAD,
+    }
+    eligible_date = "2026-11-01T00:00:00Z"
+    sources = {}
+    for role, pin in PINS.items():
+        monkeypatch.setitem(source_module.SOURCE_RUN_CREATED_AT_UTC, pin.run_id, eligible_date)
+        sources[role] = {
+            "artifact_id": pin.artifact_id,
+            "run_id": pin.run_id,
+            "size_bytes": pin.size_bytes,
+            "sha256": pin.sha256,
+            "filename": pin.filename,
+            "workflow_run_head_sha": expected_heads[role],
+            "run_created_at_utc": eligible_date,
+            "evidence_status": "VERIFIED_LIVE",
+        }
+    sources["aggregate"]["artifact_id"] += 1
+    with pytest.raises(ValueError, match="D3_SOURCE_ARTIFACT_PIN_MISMATCH:aggregate"):
+        validate_source_dates({"source_artifacts": sources})
+
+
 def test_exporter_rejects_missing_source_date_metadata():
     from scripts.s6_artifact_reader import PINS
 
