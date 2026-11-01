@@ -26,3 +26,15 @@
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, business-rule change, source/cohort/seed identity change, main update, PR, merge or Release.
 
 D3 remains blocked. This audit supersedes the stale initial review for current build/publication facts only; it does not promote missing evidence or authorize D4.
+
+
+## Append-only correction — publication identity (2026-11-02)
+
+The initial workbook fingerprints above were copied from the earlier candidate run and are stale for Run 41352075552. The exact published-output identities recorded in the D3 remote evidence ledger are:
+
+| File | Bytes | SHA-256 | Git blob SHA-1 | Output commit |
+|---|---:|---|---|---|
+| `deliverables/النتائج_الكاملة_AR.xlsx` | 27,734,273 | `914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461` | `056b7f482bbb84583526f093ae886e13b8c01356` | `3f063c62fbb0ea7e62f0882d709371856d071bef` |
+| `deliverables/Full_Results_EN.xlsx` | 27,722,355 | `89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191` | `a01c1f4061da731de24fcc8d061113bb195e65b1` | `3f063c62fbb0ea7e62f0882d709371856d071bef` |
+
+The output commit is not the final documentation HEAD: commit `a2030b431085b2c302f57ca84af4f4d50c4cf634` appended this review and handoff records. The correction does not change the workbook bytes and does not promote D3. Exact Raw readback at the post-correction final HEAD is delegated to the new no-rebuild verification workflow.
