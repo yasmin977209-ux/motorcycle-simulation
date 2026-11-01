@@ -1,31 +1,43 @@
 {
   "arabic_workbook": {
-    "bytes": 27723804,
+    "bytes": 27734276,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
     "numeric_cells": 2425143,
-    "sha256": "7517287e01b4076ff97f6849c973373615e324afb1459acfc2fa3e8a67c90e34",
-    "sheet_count": 185
+    "sha256": "d5163714716cdf810a00746d78c84da08a3be72706efcb0af1231104c0a50583",
+    "sheet_count": 185,
+    "sheet_direction_mismatches": [],
+    "sheet_direction_status": "PASS"
   },
   "bilingual_numeric_parity": {
     "numeric_comparisons": 2425143,
     "numeric_mismatches": 0
   },
+  "current_governing_reference": {
+    "bytes": 401397,
+    "containing_commit": "384c27810e76572e77e79e9829c5f92c1c4165d7",
+    "git_blob_sha1": "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33",
+    "path": "Gist reference_v240.md",
+    "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+    "url": "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
+  },
   "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
   "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
   "english_workbook": {
-    "bytes": 27711236,
+    "bytes": 27722355,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
     "numeric_cells": 2425143,
-    "sha256": "f80379f7983f715f96bb10332a7c3e1b452463de30f1eeef21f98e52210e63d7",
-    "sheet_count": 185
+    "sha256": "6fe30269abfe7d3eccc02303edb17706c8bcdbe046d9e4673452342375e5f036",
+    "sheet_count": 185,
+    "sheet_direction_mismatches": [],
+    "sheet_direction_status": "PASS"
   },
   "gate_statuses_preserved": {
     "c100_golden_revalidation": "NOT_RUN",
@@ -36,12 +48,13 @@
     "n4800": "NOT_EXECUTED",
     "stability": "NOT_CONVERGED (0/60)"
   },
+  "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
   "missing_evidence": [
     "C100 daily distributions absent from Number Registry.",
     "Representative P50 raw daily ledgers absent from Number Registry.",
     "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.",
     "Final closure-date distribution absent from Number Registry.",
-    "Five historical accounting fields remain MISSING_EVIDENCE.",
+    "Historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled: Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets.",
     "Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.",
     "C100 Golden revalidation remains NOT_RUN."
   ],
@@ -60,7 +73,7 @@
     "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
   },
   "scenario_count": 25,
-  "source_head": "de12b42ee371ec12675b1110facd6d2da25eb781",
-  "workflow_run_id": "41344528985",
+  "source_head": "9d5a2257846925fabe2b8e5bd1b2cc5a8e1b32a0",
+  "workflow_run_id": "41350404125",
   "worksheet_count_per_workbook": 185
 }
