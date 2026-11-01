@@ -31,3 +31,21 @@ def test_reference_constants_parser():
 # الباب الثالث: entities
 """
     assert constants_from_reference(sample)==[["TOTAL_CAPITAL","3,700,000","رأس المال"]]
+
+
+def test_formula_like_strings_are_written_as_text(tmp_path):
+    from openpyxl import Workbook, load_workbook
+    from scripts.s6_excel_export import safe_append
+    path=tmp_path / "safe.xlsx"
+    wb=Workbook(write_only=True)
+    ws=wb.create_sheet("T")
+    safe_append(ws, ["= 5 + 5", "+1000", "@name", 10])
+    wb.save(path)
+    check=load_workbook(path,read_only=True,data_only=False)
+    try:
+        row=next(check["T"].iter_rows())
+        assert row[0].data_type=="s" and row[0].value=="= 5 + 5"
+        assert row[3].value==10
+        assert all(cell.data_type!="f" for cell in row)
+    finally:
+        check.close()

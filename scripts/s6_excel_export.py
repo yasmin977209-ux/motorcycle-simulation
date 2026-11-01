@@ -23,6 +23,14 @@ def exact_value(n,d):
         ctx.prec=60
         return (Decimal(n)/Decimal(d)).quantize(Decimal("0.01"),rounding=ROUND_HALF_EVEN)
 def ev(e): return exact_value(e["numerator"],e["denominator"])
+
+def safe_append(ws, values):
+    cells=[]
+    for value in values:
+        cell=WriteOnlyCell(ws,value=value)
+        if isinstance(value,str): cell.data_type="s"
+        cells.append(cell)
+    ws.append(cells)
 def sha(path):
     h=hashlib.sha256()
     with Path(path).open("rb") as f:
@@ -38,7 +46,7 @@ def constants_from_reference(text):
         cells=[x.strip() for x in line.strip().strip("|").split("|")]
         if len(cells)<2 or all(re.fullmatch(r"[-: ]+",x or " ") for x in cells): continue
         if cells[0] in {"المعرّف","الثابت","#","مصدر المطالبة"}: continue
-        if cells[0].startswith(chr(96)) or cells[0].startswith("**") or re.fullmatch(r"[A-Z][A-Z0-9_]*",cells[0]): rows.append((cells+["",""])[:3])
+        if cells[0].startswith(chr(96)) or cells[0].startswith("**") or re.fullmatch(r"[A-Z][A-Z0-9_]*",cells[0]): rosafe_append(ws,(cells+["",""])[:3])
     if not rows: raise ValueError("REFERENCE_CONSTANTS_NOT_FOUND")
     return rows
 def scenarios(reg):
@@ -58,7 +66,7 @@ def header(ws,values):
 def new_sheet(wb,name,lang):
     ws=wb.create_sheet(name); ws.sheet_view.rightToLeft=(lang=="ar"); ws.sheet_view.showGridLines=False; ws.freeze_panes="A2"; return ws
 def missing(ws,reason,lang):
-    h=H[lang]; ws.append([h["status"],"MISSING_EVIDENCE",h["reason"],reason])
+    h=H[lang]; safe_append(ws,[h["status"],"MISSING_EVIDENCE",h["reason"],reason])
 def max_rows(reg,sid):
     rows=[x for x in reg["entries"] if x.get("scenario_id")==sid and x.get("trial_id") is None]
     if not rows:return []
@@ -78,7 +86,7 @@ def write_daily(ws,reg,ids,lang):
     series_by_id,indexes=_daily_resolution_indexes(reg); indexes={x["scenario_id"]:x for x in reg["daily_date_indexes"]}
     for sid in ids:
         if sid not in indexes:
-            ws.append([sid,"MISSING_EVIDENCE","MISSING_EVIDENCE"]+["MISSING_EVIDENCE"]*(len(cols)-3)); continue
+            safe_append(ws,[sid,"MISSING_EVIDENCE","MISSING_EVIDENCE"]+["MISSING_EVIDENCE"]*(len(cols)-3)); continue
         idx=indexes[sid]; first=date.fromisoformat(idx["first_date"])
         for mode in MODES:
             local={(m,q):smap[(sid,mode,m,q)] for m in METRICS for q in QUANTILES}; count_series=local[("Cash","P50")]
@@ -89,7 +97,7 @@ def write_daily(ws,reg,ids,lang):
                 for m in METRICS:
                     for q in QUANTILES:
                         s=local[(m,q)]; n,d=s["values"][offset]; row.extend([exact_value(n,d),daily_number_id(s["series_id"],offset)])
-                ws.append(row)
+                safe_append(ws,row)
 
 def write_globals(wb,reg,ids,lang,constants,source_head,run_id,regsha):
     h=H[lang]
@@ -103,9 +111,9 @@ def write_globals(wb,reg,ids,lang,constants,source_head,run_id,regsha):
       ["C100","CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation NOT_RUN"],["Financial Gate A","PASS_SCOPED only"],
       ["Production Gate A","NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS"],["Gate B N=2400","FAIL_SCOPED (10/10)"],
       ["Stability","NOT_CONVERGED (0/60)"],["N=4800","NOT_EXECUTED"],["Important","Missing evidence is not zero and is not estimated."]
-    ]: ws.append(row)
+    ]: safe_append(ws,row)
     ws=new_sheet(wb,"CONSTANTS",lang); header(ws,[h["field"],h["value"],h["notes"]])
-    for row in constants: ws.append(row)
+    for row in constants: safe_append(ws,row)
     metrics=sorted({x["metric_name"] for x in reg["entries"] if x.get("trial_id") is None})
     ws=new_sheet(wb,"SCENARIO_MATRIX",lang)
     cols=[h["scenario"],h["cohort"],h["source"],h["status"],"N_total","N_total_source_number_id","N_unique_paths","N_unique_paths_source_number_id",h["notes"]]
@@ -125,33 +133,33 @@ def write_globals(wb,reg,ids,lang,constants,source_head,run_id,regsha):
         row=[sid,co,src,status,nt,nti,nu,nui,"Available checkpoint values only; not convergence or final acceptance."]
         for m in metrics:
             e=by.get(m); row.extend([ev(e),e["number_id"]] if e else ["MISSING_EVIDENCE",""])
-        ws.append(row)
+        safe_append(ws,row)
     ws=new_sheet(wb,"HEATMAP",lang); header(ws,[h["metric"],"C-level","G-level values; each numeric value followed by number_id"])
     cs=sorted({SCENARIO_RE.fullmatch(x).group(1) for x in ids}); gs=sorted({SCENARIO_RE.fullmatch(x).group(2) for x in ids})
     for metric in metrics:
-        ws.append(["METRIC",metric,"5×5 registry-backed grid"])
+        safe_append(ws,["METRIC",metric,"5×5 registry-backed grid"])
         for c in cs:
             row=[metric,"C"+c]
             for g in gs:
                 e=next((x for x in max_rows(reg,f"C{c}_G{g}") if x["metric_name"]==metric),None)
                 row.extend([ev(e),e["number_id"]] if e else ["MISSING_EVIDENCE",""])
-            ws.append(row)
+            safe_append(ws,row)
     ws=new_sheet(wb,"SENSITIVITY",lang); header(ws,["Dimension","Held fixed","From","To","Derived delta","Source number_ids","Status"])
-    ws.append(["ALL","ALL","MISSING_EVIDENCE","MISSING_EVIDENCE","MISSING_EVIDENCE","","No registered mean-profit metric was promoted to a sensitivity result."])
+    safe_append(ws,["ALL","ALL","MISSING_EVIDENCE","MISSING_EVIDENCE","MISSING_EVIDENCE","","No registered mean-profit metric was promoted to a sensitivity result."])
     ws=new_sheet(wb,"VALIDATION_SUMMARY",lang); header(ws,[h["field"],h["status"],h["notes"]])
-    for row in [["D0","PASS_SCOPED_WITH_LIMITATIONS","Input identity and archive integrity scope only."],["D1","PASS_SCOPED_WITH_LIMITATIONS","Approved v2.4.0 publication and exact-head evidence."],["D2","PASS_SCOPED_WITH_LIMITATIONS","Number Registry exact-head readback; 34 focused tests passed."],["D3 structure","PENDING_POST_WRITE_VALIDATION","See D3 build audit."],["D3 bilingual parity","PENDING_POST_WRITE_VALIDATION","See D3 build audit."],["Full model acceptance suite","NOT_EXECUTED_HERE","Do not infer 177 unique tests passed."],["Final acceptance","NOT_DECLARED","D3 candidate is interim and blocked."]]: ws.append(row)
+    for row in [["D0","PASS_SCOPED_WITH_LIMITATIONS","Input identity and archive integrity scope only."],["D1","PASS_SCOPED_WITH_LIMITATIONS","Approved v2.4.0 publication and exact-head evidence."],["D2","PASS_SCOPED_WITH_LIMITATIONS","Number Registry exact-head readback; 34 focused tests passed."],["D3 structure","PENDING_POST_WRITE_VALIDATION","See D3 build audit."],["D3 bilingual parity","PENDING_POST_WRITE_VALIDATION","See D3 build audit."],["Full model acceptance suite","NOT_EXECUTED_HERE","Do not infer 177 unique tests passed."],["Final acceptance","NOT_DECLARED","D3 candidate is interim and blocked."]]: safe_append(ws,row)
     ws=new_sheet(wb,"ERROR_LOG",lang); header(ws,[h["field"],h["status"],h["reason"],h["notes"]])
-    for x in reg.get("unavailable_evidence",[]): ws.append([x.get("metric_name"),x.get("evidence_status"),x.get("reason"),"No inference or zero-fill."])
-    for key,reason in GAPS.items(): ws.append([key,"MISSING_EVIDENCE",reason,"Sheet is intentionally not represented as complete."])
-    ws.append(["C100 daily distribution","MISSING_EVIDENCE","No C100 daily series in Number Registry.","Golden revalidation NOT_RUN."])
-    ws.append(["Full Logging","NOT_VERIFIED_105_OF_105","105 representative keys only.","Not 48,000 trials."])
+    for x in reg.get("unavailable_evidence",[]): safe_append(ws,[x.get("metric_name"),x.get("evidence_status"),x.get("reason"),"No inference or zero-fill."])
+    for key,reason in GAPS.items(): safe_append(ws,[key,"MISSING_EVIDENCE",reason,"Sheet is intentionally not represented as complete."])
+    safe_append(ws,["C100 daily distribution","MISSING_EVIDENCE","No C100 daily series in Number Registry.","Golden revalidation NOT_RUN."])
+    safe_append(ws,["Full Logging","NOT_VERIFIED_105_OF_105","105 representative keys only.","Not 48,000 trials."])
     ws=new_sheet(wb,"FINAL_CLOSURE_SUMMARY",lang); header(ws,[h["scenario"],h["status"],"final_close_date",h["reason"]])
-    for sid in ids: ws.append([sid,"MISSING_EVIDENCE","MISSING_EVIDENCE","Full close-date distribution absent from Number Registry."])
+    for sid in ids: safe_append(ws,[sid,"MISSING_EVIDENCE","MISSING_EVIDENCE","Full close-date distribution absent from Number Registry."])
     ws=new_sheet(wb,"DAILY_DISTRIBUTION",lang); write_daily(ws,reg,ids,lang)
     ws=new_sheet(wb,"REPRESENTATIVE_CASES",lang); header(ws,[h["scenario"],h["cohort"],h["trial"],h["roles"],h["metric"],h["value"],h["id"],h["source"],h["evidence"]])
     reps=[x for x in reg["entries"] if x.get("trial_id") is not None]
     for e in sorted(reps,key=lambda x:(x["scenario_id"],x["trial_id"],x["metric_name"])):
-        ws.append([e["scenario_id"],e["cohort_id"],"trial_id="+str(e["trial_id"]),", ".join(e.get("role_assignments",[])),e["metric_name"],ev(e),e["number_id"],e.get("source_member"),e.get("evidence_status")])
+        safe_append(ws,[e["scenario_id"],e["cohort_id"],"trial_id="+str(e["trial_id"]),", ".join(e.get("role_assignments",[])),e["metric_name"],ev(e),e["number_id"],e.get("source_member"),e.get("evidence_status")])
 
 def build_one(reg,constants,ids,lang,path,source_head,run_id,regsha):
     wb=Workbook(write_only=True); write_globals(wb,reg,ids,lang,constants,source_head,run_id,regsha)
@@ -162,7 +170,7 @@ def build_one(reg,constants,ids,lang,path,source_head,run_id,regsha):
                 header(ws,[h["scenario"],h["cohort"],h["metric"],h["sample"],h["value"],h["id"],h["evidence"]])
                 rows=[x for x in reg["entries"] if x.get("scenario_id")==sid and x.get("trial_id") is None]
                 for e in sorted(rows,key=lambda x:(x.get("sample_n",0),x["metric_name"])):
-                    ws.append([sid,e.get("cohort_id"),e["metric_name"],"N="+str(e["sample_n"]),ev(e),e["number_id"],e["evidence_status"]])
+                    safe_append(ws,[sid,e.get("cohort_id"),e["metric_name"],"N="+str(e["sample_n"]),ev(e),e["number_id"],e["evidence_status"]])
                 if not rows: missing(ws,"No aggregate statistical checkpoint entries in Number Registry.",lang)
             elif suffix=="DAILY":
                 header(ws,[h["scenario"],h["status"],h["reason"]]); missing(ws,GAPS["DAILY"],lang)
@@ -170,7 +178,7 @@ def build_one(reg,constants,ids,lang,path,source_head,run_id,regsha):
                 header(ws,[h["scenario"],h["cohort"],h["trial"],h["roles"],h["metric"],h["value"],h["id"],h["evidence"],h["notes"]])
                 rows=[x for x in reg["entries"] if x.get("scenario_id")==sid and x.get("trial_id") is not None and x["metric_name"] in DETAILS[suffix]]
                 for e in sorted(rows,key=lambda x:(x["trial_id"],x["metric_name"])):
-                    ws.append([sid,e["cohort_id"],"trial_id="+str(e["trial_id"]),", ".join(e.get("role_assignments",[])),e["metric_name"],ev(e),e["number_id"],e["evidence_status"],"Summary metric only; detailed ledger missing."])
+                    safe_append(ws,[sid,e["cohort_id"],"trial_id="+str(e["trial_id"]),", ".join(e.get("role_assignments",[])),e["metric_name"],ev(e),e["number_id"],e["evidence_status"],"Summary metric only; detailed ledger missing."])
                 missing(ws,GAPS[suffix],lang)
     path.parent.mkdir(parents=True,exist_ok=True); wb.save(path)
 
