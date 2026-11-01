@@ -22,8 +22,10 @@ from scripts.s6_number_registry import (
     validate_registry, daily_number_id, _daily_resolution_indexes, _resolve_daily_number,
     METRICS, QUANTILES, stable_id, unit,
 )
-from scripts.d3_registry_extension import ledger_number_id, ACCOUNTING_FIELDS
-from scripts.s6_artifact_reader import S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT
+from scripts.d3_registry_extension import (
+    ledger_number_id, ACCOUNTING_FIELDS, SOURCE_DATE_CUTOFF_UTC, SOURCE_RUN_CREATED_AT_UTC,
+)
+from scripts.s6_artifact_reader import S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT, PINS
 from scripts.s6_excel_export import (
     exact_value, ev, safe_append, sha, blob_sha, constants_from_reference,
     scenario_sheet_names, header, new_sheet, audit, compare, H, MODES, SCENARIO_RE,
@@ -68,9 +70,25 @@ ACCTG_SUMMARY_FIELDS = (
 )
 
 
+def validate_source_dates(extension: dict) -> None:
+    """Bind every extension source role to the pinned, eligible GitHub run date."""
+    sources = extension.get("source_artifacts")
+    if not isinstance(sources, dict) or set(sources) != set(PINS):
+        raise ValueError("D3_SOURCE_ARTIFACT_SET_INVALID")
+    for role, pin in PINS.items():
+        meta = sources.get(role)
+        if not isinstance(meta, dict):
+            raise ValueError("D3_SOURCE_ARTIFACT_METADATA_MISSING:" + role)
+        created_at = meta.get("run_created_at_utc")
+        expected = SOURCE_RUN_CREATED_AT_UTC.get(pin.run_id)
+        if not isinstance(created_at, str) or created_at != expected or created_at < SOURCE_DATE_CUTOFF_UTC:
+            raise ValueError("D3_SOURCE_ARTIFACT_PRE_CUTOFF_OR_UNPINNED:" + role)
+
+
 def load_extension(path: str, base_sha: str) -> tuple[dict, bytes, str]:
     raw = Path(path).read_bytes()
     extension = json.loads(gzip.decompress(raw).decode("utf-8"))
+    validate_source_dates(extension)
     if extension.get("schema_version") != "d3-number-registry-extension-v1":
         raise ValueError("D3_REGISTRY_EXTENSION_SCHEMA_INVALID")
     if extension.get("base_registry_sha256") != base_sha or base_sha != BASE_REGISTRY_SHA256:
