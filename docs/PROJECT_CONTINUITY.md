@@ -2708,3 +2708,4 @@ Run [41251975772](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
 - Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
 - No Trial, Simulation, Monte Carlo, N expansion or main update.
+D2 final disposition `PASS_SCOPED_WITH_LIMITATIONS`; Run 41326662869 `SUCCESS` exact-head on 96a07b52485733115cf93875440ea99369a94fdb; live registry contains 2,640 entries, 1,000 daily series and 2,086,550 daily points; `main` unchanged.
