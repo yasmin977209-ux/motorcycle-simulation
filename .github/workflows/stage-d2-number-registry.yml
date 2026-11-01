@@ -74,6 +74,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m compileall -q scripts/s6_artifact_reader.py scripts/s6_deliverables_model.py scripts/s6_manifest_resolver.py scripts/s6_deliverables_builder.py scripts/s6_number_registry.py tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
+          export STAGE_D_AGGREGATE=.stage-d2/aggregate.zip
+          export STAGE_D_FULL_LOGGING=.stage-d2/full-logging.zip
+          export STAGE_D_C100=.stage-d2/c100.zip
           python -m pytest -q -rs tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
 
       - name: Build the Number Registry
@@ -88,9 +91,11 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import json, pathlib
+          from scripts.s6_number_registry import original_historical_report
           legacy_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json")
           live_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json")
           legacy = json.loads(legacy_path.read_text(encoding="utf-8"))
+          historical = original_historical_report(legacy)
           live = json.loads(live_path.read_text(encoding="utf-8"))
           current = {
               "audit_id": "D2-S6-NUMBER-REGISTRY-2026-11-01",
@@ -120,7 +125,7 @@ jobs:
               "historical_local_report": {
                   "status": "REPORTED_ONLY_LOCAL_ONLY",
                   "classification": "HISTORICAL_REPORT_NOT_CURRENT_REGISTRY",
-                  "original_report": legacy
+                  "original_report": historical
               },
               "limitations": [
                   "Full Logging contains 105 representative keys only; normalized statuses remain NOT_VERIFIED.",
@@ -278,7 +283,8 @@ jobs:
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
           ):
               path = pathlib.Path(name)
-              path.write_text(path.read_text(encoding="utf-8") + run_record, encoding="utf-8")
+              with path.open("ab") as output:
+                  output.write(run_record.encode("utf-8"))
           PY
           git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
