@@ -21,7 +21,7 @@ Governing decision: D-2026-10-30-REFERENCE-V2.4.0 (APPROVED_BY_OWNER)
 | D2-13 | Append session, handoff and project continuity without rewriting history | docs/PROJECT_CONTINUITY.md and Stage D status/handoff | PASS_SCOPED |
 | D2-14 | Preserve all governance limits; no Trials, Simulation, Monte Carlo, N expansion, backfill or zero-fill | Workflow contains pinned-source build only; explicit audit limitations | PASS_SCOPED |
 | D2-15 | Preserve the original local-only audit report without recursive wrapping | original_historical_report helper, regression test and canonical audit reconciliation | PASS_SCOPED |
-| D2-16 | Verify the current governing v2.4.0 Raw bytes against the owner-approved SHA-256 and confirm the owner decision on the same tested commit | Dedicated completion-workflow gate; exact Raw readback includes the governing reference and owner decision | PASS_SCOPED (pending successful revalidation run) |
+| D2-16 | Verify the current governing v2.4.0 Raw bytes against the owner-approved SHA-256 and confirm the owner decision on the same tested commit | Dedicated completion-workflow gate; exact Raw readback includes the governing reference and owner decision | PASS_SCOPED |
 
 ## Scope boundary
 D2 is a Number Registry phase, not project final acceptance. Full Logging covers 105 representative keys only. C100 Golden revalidation remains NOT_RUN. Financial Gate A remains PASS_SCOPED; production Gate A remains NOT_DECLARED; Gate B at N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. The five historical accounting fields remain MISSING_EVIDENCE. No new Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill is authorized by this phase.
@@ -90,4 +90,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Workflow Run: 41334997604
 - Triggering source SHA: 8eb5da55fc9036f25e420dbd43ed925567ef7c2b
 - Registry-containing commit: f339bd063e2912b2d9b5afaec7d4ce9e24a6cbc6
+- First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.
+
+
+## Completion workflow record
+
+- Workflow Run: 41335321803
+- Triggering source SHA: 8f876e4b4901e4a62ac250820f97e3874e18bd67
+- Registry-containing commit: cc94985454d6e5971947e53c8e0a2782ad2de12d
 - First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.

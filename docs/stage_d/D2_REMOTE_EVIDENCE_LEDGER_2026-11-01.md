@@ -121,3 +121,11 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - The preceding run 41334997604 successfully verified the governing reference bytes and owner decision at its triggering SHA, but inspection showed that the two paths had been inserted into the pre-finalization Raw list rather than the final post-documentation Raw list.
 - The D2 workflow now includes both paths in the final exact-HEAD Raw list and promotes D2-16 from pending to `PASS_SCOPED` only in its finalizer after the verification run is successful.
 - A fresh full D2 run is required; the prior successful run remains valid for the 13 D2 outputs but is not used alone to claim D2-16 final-head readback.
+
+
+## Completion workflow record
+
+- Workflow Run ID: 41335321803
+- Triggering source SHA: 8f876e4b4901e4a62ac250820f97e3874e18bd67
+- Registry-containing commit: cc94985454d6e5971947e53c8e0a2782ad2de12d
+- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.
