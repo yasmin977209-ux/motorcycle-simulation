@@ -65,3 +65,60 @@ def test_close_date_distribution_counts_every_trial_and_assigns_number_id():
 def test_json_bytes_rejects_float_values():
     with pytest.raises(ValueError, match="FLOAT_FORBIDDEN"):
         json_bytes({"not_exact": 1.25})
+
+
+
+def test_extract_daily_case_preserves_role_assignments_and_source_lineage():
+    from scripts.d3_registry_extension import extract_daily_case, ACCOUNTING_FIELDS, DAILY_METRICS
+
+    class FakeArchive:
+        def read_json(self, member):
+            if member.endswith("trial_manifest.json"):
+                return {
+                    "source_sha": "e" * 40,
+                    "cohort_id": "s6-test",
+                    "actual_trial_fingerprint": "f" * 64,
+                    "expected_trial_fingerprint": "f" * 64,
+                    "daily_rows": 1,
+                    "files": {"daily_snapshots.jsonl.gz": {"sha256": "a" * 64, "size_bytes": 321}},
+                }
+            if member.endswith("trial_result.json"):
+                return {
+                    "scenario_id": "C030_G000", "trial_id": 7,
+                    "source_sha": "e" * 40, "cohort_id": "s6-test",
+                    "trial_fingerprint": "f" * 64, "final_close_date": "2033-01-01",
+                    "execution_git_commit": "b" * 40,
+                    "bad_debt": 1, "claims_created": 2, "cumulative_project_profit": 3,
+                    "final_cash": 4, "final_net_project_equity": 5, "guarantee_recovered": 6,
+                    "held_assets": 7, "operating_net_profit": 8, "owned_bikes": 9,
+                    "partner1_final_entitlement": 10, "partner2_final_entitlement": 11,
+                    "secondary_cycle_count": 12, "termination_count": 13, "total_operating_revenue": 14,
+                }
+            if member.endswith("post_write_audit.json"):
+                return {"trial_fingerprint": "f" * 64}
+            raise AssertionError(member)
+
+        def iter_jsonl_gzip(self, member):
+            row = {
+                "scenario_id": "C030_G000", "trial_id": 7,
+                "source_sha": "e" * 40, "cohort_id": "s6-test", "date": "2033-01-01",
+            }
+            for field in ACCOUNTING_FIELDS + DAILY_METRICS + (
+                "Balance_Difference", "Capital", "Liabilities", "Net_Bike_Assets",
+                "Net_Equity", "Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance",
+                "Retained_Earnings", "Total_Equity",
+            ):
+                row[field] = 0
+            yield row
+
+    case = extract_daily_case(
+        FakeArchive(),
+        {"scenario_id": "C030_G000", "trial_id": 7, "folder": "fixture"},
+        {("C030_G000", 7): ["P50", "P10"]},
+        {"artifact_id": 1, "run_id": 2, "sha256": "c" * 64},
+    )
+    assert case["role_assignments"] == ["P10", "P50"]
+    assert case["source_member_sha256"] == "a" * 64
+    assert case["daily_rows"][0]["Cash"] == 0
+    assert case["trial_summary"]["cumulative_project_profit"] == 3
+    assert case["source_commit"] == "b" * 40
