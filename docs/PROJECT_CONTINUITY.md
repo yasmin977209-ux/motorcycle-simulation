@@ -2819,3 +2819,14 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Registry scope and limitations are unchanged: 20 S6 daily scenarios, 1,000 series, 2,086,550 daily points, 105 representative keys / 1,680 numeric entries; C100 daily distributions and representative raw P50 daily logs are missing, as are detailed ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and final close-date data. Five historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled.
 - Preserve all gates: financial Gate A PASS_SCOPED only; production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys only / NOT_VERIFIED_105_OF_105; C100 Golden NOT_RUN.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge, Release or D4 transition. Await the owner's explicit continuation instruction.
+
+
+
+## Prompt Library REV2 publication — 2026-11-01 (append-only)
+
+- Published comprehensive operational library: `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`.
+- Publication evidence is recorded in `docs/stage_d/PROJECT_PROMPT_LIBRARY_REV2_PUBLICATION_2026-11-01.md`.
+- REV2 corrects the stale D2 NOT_STARTED / start-D2 instructions. Current continuation point remains D3 BLOCKED / BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
+- Historical library `PROJECT_PROMPT_LIBRARY_AR_2026-11-01.md` was preserved; an append-only supersession notice points to REV2.
+- No D3 repair or rerun, D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge or Release was performed.
+- At publication review, branch HEAD was 736d445d3c33b94d2037b41074b2dbb2002d0ae5; main remained c6e54349a5e94f65d5aa9f83141f225d777bb474. Re-read branch HEAD after these continuity updates.
