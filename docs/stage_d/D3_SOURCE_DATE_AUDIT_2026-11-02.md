@@ -39,3 +39,14 @@ Financial Gate A remains PASS_SCOPED only. Production Gate A remains NOT_DECLARE
 Workflow run 41358971225 was cancelled after it had already downloaded and read the three pre-cutoff artifacts. This is recorded as a process exception, not evidence. Its content-derived temporary output is quarantined and excluded. No repository output commit or Actions artifact was published. The workflow and orchestration script are disabled/fail-closed.
 
 D4 remains NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final acceptance was performed.
+
+
+## D3 continuation — exporter provenance guard and source-free validation (2026-11-02, append-only)
+
+- Source-free exporter hardening is committed on the working branch: the D3 extension records the source run creation timestamp, and the workbook exporter now rejects extensions unless each source role has the pinned run date at/after the project cutoff and exact pinned artifact/run metadata. This does not make the existing pre-cutoff sources eligible.
+- Added regression coverage for pre-cutoff source dates, missing dates, acceptance of synthetic post-cutoff exact-pin metadata, and rejection of mismatched artifact pins. Synthetic tests are logic fixtures only; they are not project source evidence.
+- Static validation Run [41360740452](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740452) succeeded on tested source SHA `463a4ec53aaef3c2d4a70e1bac448efd326135a0`: compileall PASS; 19 passed / 0 skipped; no source artifacts downloaded/read; no Trial/Simulation; no D3 gate promotion.
+- The workflow committed `docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json` and verified its Raw readback at final report commit `04e3786d3ae2767e5add9c715ecd6394620b6ad0`: 659 bytes; SHA-256 `cb7f390a72d59a7a575a4430c52ee6f710f6f9e6b7bbf2189d431e2bb110bdc5`; Git blob SHA-1 `026b1e3f0b66145a9f8778e8734dd386b92d51b1`.
+- D3 candidate no-rebuild verification Run [41360740382](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740382) and D1-D2 validation Run [41360740521](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360740521) succeeded on source SHA `463a4ec53aaef3c2d4a70e1bac448efd326135a0`. D1-D2 is not D3 source coverage; the no-rebuild check validates the existing candidate outputs only.
+- Source-date cutoff remains `2026-10-31T00:00:00Z`; all three pinned D3 source runs remain pre-cutoff. No eligible post-cutoff D3 source artifacts were found in the reviewed inventory. D3-05 C100 daily and D3-07 through D3-13 remain `MISSING_EVIDENCE`.
+- Overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. No source-date exception, Trial/Simulation/Monte Carlo, N expansion, source/cohort/seed change, backfill, zero-fill, main update, merge, Release or D4 work was performed.
