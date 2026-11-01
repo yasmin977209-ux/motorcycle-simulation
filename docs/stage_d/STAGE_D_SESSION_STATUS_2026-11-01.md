@@ -136,3 +136,13 @@ Run [41251114795](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 - Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
 - Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
 - No Trial, Simulation, Monte Carlo, N expansion or main update.
+
+## D2 Exact-head closure — 2026-11-01 (append-only)
+
+- D0: `PASS_SCOPED_WITH_LIMITATIONS`; D1: `PASS_SCOPED_WITH_LIMITATIONS` (existing scoped dispositions retained).
+- D2: `PASS_SCOPED_WITH_LIMITATIONS`; the live Number Registry was built from the three pinned artifacts, committed, read back byte-for-byte from GitHub Raw and validated on the exact remote HEAD.
+- Definitive D2 workflow: [Run 41326662869](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41326662869) — `SUCCESS`; build, append-only session updates, branch commit, exact-head/raw readback and evidence upload all succeeded.
+- Registry commit / exact tested HEAD: `96a07b52485733115cf93875440ea99369a94fdb`; branch `tmp/d1-rebuild-20261101`; `main` unchanged at `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Registry coverage: 2,640 entries; 1,000 daily series; 2,086,550 addressable daily points; Full Logging 105 representative keys only (100 S6 + 5 C100).
+- Preserved limitations: normalized Full Logging statuses `NOT_VERIFIED`; C100 Golden `NOT_RUN`; Gate A financial `PASS_SCOPED`; production Gate A `NOT_DECLARED`; Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; five accounting fields `MISSING_EVIDENCE`.
+- No Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill. D3 has not started.
