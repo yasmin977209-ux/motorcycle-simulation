@@ -93,3 +93,27 @@ def test_formula_like_strings_are_written_as_text(tmp_path):
     assert report["excel_error_cell_count"]==1
     assert report["excel_error_cells"]==[{"sheet":"T","cell":"B1","classification":"EXCEL_ERROR_CELL","error_type":"#VALUE!"}]
     assert report["excel_safety_status"]=="FAIL"
+
+
+def test_bilingual_compare_rejects_trailing_dimension_mismatch(tmp_path):
+    import pytest
+    from openpyxl import Workbook
+    from scripts.s6_excel_export import compare
+
+    ar = tmp_path / "ar.xlsx"
+    en = tmp_path / "en.xlsx"
+    left = Workbook()
+    left.active.title = "T"
+    left.active["A1"] = 10
+    left.save(ar)
+    left.close()
+
+    right = Workbook()
+    right.active.title = "T"
+    right.active["A1"] = 10
+    right.active["A2"] = 20
+    right.save(en)
+    right.close()
+
+    with pytest.raises(ValueError, match="BILINGUAL_DIMENSION_MISMATCH:T"):
+        compare(ar, en, ["T"])
