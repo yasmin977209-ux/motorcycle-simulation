@@ -357,15 +357,56 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
     write_daily_distribution(ws, registry, ids, lang)
 
     ws = new_sheet(wb, "REPRESENTATIVE_CASES", lang)
-    header(ws, [h["scenario"], h["cohort"], h["trial"], h["roles"], h["metric"], h["value"],
-                h["id"], h["source"], h["evidence"]])
+    representative_summary_fields = (
+        "bad_debt", "claims_created", "cumulative_project_profit", "final_cash",
+        "final_net_project_equity", "guarantee_recovered", "held_assets",
+        "operating_net_profit", "owned_bikes", "partner1_final_entitlement",
+        "partner2_final_entitlement", "secondary_cycle_count", "termination_count",
+        "total_operating_revenue",
+    )
+    role_cases = extension.get("representative_role_cases", [])
+    if (
+        len(role_cases) != 105
+        or len({(x["scenario_id"], x["trial_id"]) for x in role_cases}) != 105
+        or sum(len(x["role_assignments"]) for x in role_cases) != 125
+    ):
+        raise ValueError("REPRESENTATIVE_CASES_ROLE_COVERAGE_INVALID")
+    cols = ["record_type", h["scenario"], h["cohort"], h["trial"], h["roles"], h["date"]]
+    for field in DAILY_DETAIL_FIELDS:
+        cols.extend([field, field + "_number_id"])
+    for field in representative_summary_fields:
+        cols.extend([field, field + "_number_id"])
+    cols.extend(["final_close_date", "source_member", "evidence_status",
+                 "registry_metric", "registry_value", "registry_number_id"])
+    header(ws, cols)
+    for case in sorted(role_cases, key=lambda x: (x["scenario_id"], x["trial_id"])):
+        sid, cohort, trial = case["scenario_id"], case["cohort_id"], case["trial_id"]
+        roles = ", ".join(case["role_assignments"])
+        for i, daily_row in enumerate(case["daily_rows"]):
+            out = ["DAILY_RAW", sid, cohort, "trial_id=" + str(trial), roles, daily_row["date"]]
+            for field in DAILY_DETAIL_FIELDS:
+                out.extend(numeric_pair(case, "daily_snapshots.jsonl.gz", i, field, daily_row[field]))
+            out.extend(["", ""] * len(representative_summary_fields))
+            out.extend([case["final_close_date"], case["source_member"], "VERIFIED_LIVE", "", "", ""])
+            safe_append(ws, out)
+        out = ["TRIAL_SUMMARY", sid, cohort, "trial_id=" + str(trial), roles, "FINAL_TRIAL_SUMMARY"]
+        out.extend(["", ""] * len(DAILY_DETAIL_FIELDS))
+        for field in representative_summary_fields:
+            out.extend(numeric_pair(case, "trial_result.json", 0, field, case["trial_summary"][field]))
+        out.extend([case["final_close_date"], case["source_member_prefix"] + "trial_result.json",
+                    "VERIFIED_LIVE", "", "", ""])
+        safe_append(ws, out)
+
     reps = [x for x in registry["entries"] if x.get("trial_id") is not None]
     for entry in sorted(reps, key=lambda x: (x["scenario_id"], x["trial_id"], x["metric_name"])):
-        safe_append(ws, [
-            entry["scenario_id"], entry["cohort_id"], "trial_id=" + str(entry["trial_id"]),
-            ", ".join(entry.get("role_assignments", [])), entry["metric_name"], ev(entry),
-            entry["number_id"], entry.get("source_member"), entry.get("evidence_status"),
-        ])
+        out = ["REGISTRY_METRIC", entry["scenario_id"], entry["cohort_id"],
+               "trial_id=" + str(entry["trial_id"]), ", ".join(entry.get("role_assignments", [])),
+               "REGISTERED_TRIAL_METRIC"]
+        out.extend(["", ""] * len(DAILY_DETAIL_FIELDS))
+        out.extend(["", ""] * len(representative_summary_fields))
+        out.extend(["", entry.get("source_member"), entry.get("evidence_status"),
+                    entry["metric_name"], ev(entry), entry["number_id"]])
+        safe_append(ws, out)
 
 
 def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
