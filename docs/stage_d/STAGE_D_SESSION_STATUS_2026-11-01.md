@@ -323,3 +323,14 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 ## D3 source-date status — 2026-11-02
 
 D3: BLOCKED_MISSING_EVIDENCE. Existing 185-sheet candidates and exact-head readback remain valid only within their scoped coverage. C100 daily and D3-07 through D3-13 detailed source records remain missing. The D3 completion workflow is disabled due to the source-date cutoff; no D3 closure or D4 transition.
+
+
+## D3 continuation checkpoint — 2026-11-02 (append-only, latest)
+
+- Branch HEAD at start of this checkpoint: `02237354a3a27a7dfb7aeaca340395d941e4885f`; main: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- New source-free static validation Run `41360395329`: SUCCESS on exact SHA `02237354a3a27a7dfb7aeaca340395d941e4885f`; compileall, source-free D3 unit tests, and explicit no-source/no-simulation assertion passed.
+- New exact-head no-rebuild verification Run `41360395218`: SUCCESS on the same SHA; committed D3 candidate outputs were re-read from Raw at exact HEAD. No workbook rebuild or missing-ledger generation occurred.
+- D1-D2 validation Run `41360395274`: SUCCESS on the same SHA; not D3 source-coverage evidence.
+- D3 continuation audit: `docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md`. No eligible post-cutoff D3 source artifacts were identified in the reviewed 314-run branch Actions inventory. The three pinned D3 source runs remain pre-cutoff; cancelled attempt `41358971225` remains quarantined.
+- D3-05 C100 daily and D3-07 through D3-13 remain `MISSING_EVIDENCE`; existing bilingual 185-sheet workbooks remain D2-Number-Registry-only candidates. Overall D3 remains `BLOCKED_MISSING_EVIDENCE`.
+- No Trial, Simulation, Monte Carlo, N expansion, source-date exception, source/cohort/seed change, backfill, zero-fill, main update, merge, Release or D4 execution occurred. D4 remains `NOT_STARTED`.
