@@ -88,7 +88,7 @@
     "The five missing historical accounting fields remain MISSING_EVIDENCE and are not backfilled or zero-filled.",
     "No Trial, Simulation, Monte Carlo or N expansion was run."
   ],
-  "registry_containing_commit": "RECORDED_BY_EXACT_HEAD_WORKFLOW",
+  "registry_containing_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
   "registry_git_blob_sha1": "824803e8543fff7c628586bd37ea6e3f706cf9ba",
   "registry_path": "results/number_registry.json",
   "registry_sha256": "d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb",
@@ -141,5 +141,9 @@
       "value": null
     }
   ],
-  "workflow_run_id": "41328486239"
+  "workflow_run_id": "41328486239",
+  "exact_head_validation_run_id": "41328486239",
+  "exact_head_validation_sha": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
+  "raw_readback_status": "PASS_ALL_SEVEN_FILES",
+  "raw_readback_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad"
 }
