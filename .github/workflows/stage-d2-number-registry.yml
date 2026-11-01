@@ -238,30 +238,30 @@ jobs:
           matrix = matrix_path.read_text(encoding="utf-8")
           matrix = matrix.replace("PENDING_COMPLETION_RUN", "PASS_SCOPED (completion workflow must conclude SUCCESS)")
           matrix += (
-              "\\n\\n## Completion workflow record\\n\\n"
-              + "- Workflow Run: " + os.environ["GITHUB_RUN_ID"] + "\\n"
-              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\\n"
-              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\\n"
-              + "- First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.\\n"
+              "\n\n## Completion workflow record\n\n"
+              + "- Workflow Run: " + os.environ["GITHUB_RUN_ID"] + "\n"
+              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\n"
+              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\n"
+              + "- First exact-head gate passed before this documentation finalization. The final post-finalization exact HEAD and all Raw byte triples are established by the last validation step and the SUCCESS conclusion of this same workflow Run.\n"
           )
           matrix_path.write_text(matrix, encoding="utf-8")
           ledger_path = pathlib.Path("docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md")
           ledger = ledger_path.read_text(encoding="utf-8")
           ledger += (
-              "\\n\\n## Completion workflow record\\n\\n"
-              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\\n"
-              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\\n"
-              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\\n"
-              + "- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.\\n"
+              "\n\n## Completion workflow record\n\n"
+              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\n"
+              + "- Triggering source SHA: " + os.environ["GITHUB_SHA"] + "\n"
+              + "- Registry-containing commit: " + subprocess.check_output(["git", "log", "-1", "--format=%H", "--", "results/number_registry.json"], text=True).strip() + "\n"
+              + "- Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.\n"
           )
           ledger_path.write_text(ledger, encoding="utf-8")
           audit_path = pathlib.Path("docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md")
           audit = audit_path.read_text(encoding="utf-8")
           audit += (
-              "\\n\\n## D2 completion workflow record\\n\\n"
-              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\\n"
-              + "- Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.\\n"
-              + "- Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.\\n"
+              "\n\n## D2 completion workflow record\n\n"
+              + "- Workflow Run ID: " + os.environ["GITHUB_RUN_ID"] + "\n"
+              + "- Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.\n"
+              + "- Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.\n"
           )
           audit_path.write_text(audit, encoding="utf-8")
           PY
