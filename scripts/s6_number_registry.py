@@ -655,6 +655,8 @@ def main():
         return
     paths = {"aggregate": args.aggregate, "full_logging": args.full_logging, "c100": args.c100}
     registry, audit = build_registry(paths, args.source_head, args.workflow_run_id)
+    validation = validate_registry(registry)
+    audit.update(validation)
     raw = (json.dumps(registry, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_bytes(raw)
@@ -679,7 +681,7 @@ def main():
                 + "- Preserved: Full Logging 105 representatives only; statuses NOT_VERIFIED; C100 Golden NOT_RUN; Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE.\n"
                 + "- No Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill was performed.\n"
             )
-    print(json.dumps({"status": audit["d2_status"], **validate_registry(registry), **audit}, ensure_ascii=False, sort_keys=True))
+    print(json.dumps({"status": audit["d2_status"], **validation, **audit}, ensure_ascii=False, sort_keys=True))
 
 
 if __name__ == "__main__":
