@@ -69,3 +69,17 @@ Run 17 (`41249454018`) also completed the 26 tests successfully but failed only 
 - The repository contains a narrowly scoped automated publisher workflow for the exact approved v2.4.0 bytes. It has not run because no complete transfer payload is present. The canonical reference path is still absent; remote triple evidence remains MISSING_EVIDENCE.
 - The 105 normalized manifest records remain NOT_VERIFIED; C100 Golden revalidation remains NOT_RUN. No additional acceptance is inferred from CI.
 - D1 remains BLOCKED on canonical v2.4.0 publication and remote readback. D2 remains NOT_STARTED. No importer, Trial, Simulation, Monte Carlo, N=4800, PR, merge, Release or main update.
+
+
+## Final live closure — 2026-11-01T14:02Z (append-only; supersedes earlier BLOCKED snapshots)
+
+**Disposition: `PASS_SCOPED_WITH_LIMITATIONS` for D1 source reconstruction, remote source publication/evidence, approved governing-reference publication, and exact-final-head validation.** This is not final project acceptance and does not promote any statistical or production accounting gate.
+
+- Current governing reference v2.4.0 is `VERIFIED_LIVE` at `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md`; raw URL: https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/f7c86dc087e5a964d9dfdb21a20d3f6c77758f8c/docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md; 401397 bytes; SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; commit `f7c86dc087e5a964d9dfdb21a20d3f6c77758f8c`.
+- Publisher Run https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41313821118 succeeded, verifying the pinned Gist revision and GitHub Raw readback.
+- Source validation Run https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41313821144 succeeded on exact tested/final HEAD `f7c86dc087e5a964d9dfdb21a20d3f6c77758f8c`: compileall PASS; 26 passed, 0 failed, 0 skipped; three pinned artifacts passed metadata/size/SHA-256 checks; pyarrow-backed S6 LossCase/MaxCase global argmin/argmax integration passed for 20 S6 scenarios; final live-head assertion passed. The run uploaded zero artifacts.
+- Six S6 source modules and two focused tests are present on this exact HEAD; their immutable raw-byte hashes, blob SHA-1 values, sizes and containing commit are recorded in the final refresh section of `D1_REMOTE_EVIDENCE_LEDGER_2026-11-01.md`.
+
+Preserved limitations: 105 normalized manifest statuses remain `NOT_VERIFIED` where independent expected byte sizes are absent; C100 Golden revalidation remains `NOT_RUN`; Full Logging remains 105 representative keys, not 48,000; the five historical accounting fields remain `MISSING_EVIDENCE`; financial Gate A remains `PASS_SCOPED` only; production Gate A remains `NOT_DECLARED`; Gate B at N=2400 remains `FAIL_SCOPED (10/10)`; stability remains `NOT_CONVERGED (0/60)`; N=4800 remains `NOT_EXECUTED`.
+
+The D1 publication gate closed here is the current governing v2.4.0 reference. Keep `current_governing_reference_sha256` separate from `historical_execution_reference_sha256`: v2.3 remains the historical S6 execution reference; v2.3.1 remains `CLOSED_UNAPPROVED_CANDIDATE`. Earlier statements requiring all three as current D1 publication blockers are superseded by the active project instructions and owner decision. No importer, D2 registry, Trial, simulation, Monte Carlo, Excel/DOCX, PR, merge, Release or main update occurred. D2 remains `NOT_STARTED` pending the owner's separate D2 prompt.
