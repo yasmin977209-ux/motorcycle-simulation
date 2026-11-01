@@ -661,6 +661,39 @@ def trace_ids(paths: list[Path]) -> dict:
     return {"numeric_cells_checked": checked, "untraced_numeric_cells": 0}
 
 
+def d3_requirement_statuses() -> dict[str, str]:
+    """Return evidence-honest D3 statuses; missing source ledgers cannot be marked PASS."""
+    return {
+        "D3-01": "PASS_SCOPED",
+        "D3-02": "PASS_SCOPED",
+        "D3-03": "PASS_SCOPED",
+        "D3-04": "PASS_SCOPED",
+        "D3-05": "PASS_SCOPED_WITH_LIMITATIONS",
+        "D3-06": "PASS_SCOPED_WITH_LIMITATIONS",
+        "D3-07": "MISSING_EVIDENCE",
+        "D3-08": "MISSING_EVIDENCE",
+        "D3-09": "MISSING_EVIDENCE",
+        "D3-10": "MISSING_EVIDENCE",
+        "D3-11": "MISSING_EVIDENCE",
+        "D3-12": "MISSING_EVIDENCE",
+        "D3-13": "MISSING_EVIDENCE",
+        "D3-14": "PASS_SCOPED",
+        "D3-15": "PASS_SCOPED",
+        "D3-16": "PASS_SCOPED",
+        "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
+        "D3-18": "PASS_SCOPED",
+    }
+
+
+def d3_gate_status(requirements: dict[str, str]) -> str:
+    """A D3 gate with any mandatory missing evidence remains blocked."""
+    if any(status in {"MISSING_EVIDENCE", "BLOCKED", "NOT_RUN"} for status in requirements.values()):
+        return "BLOCKED_MISSING_EVIDENCE"
+    if any(status == "PASS_SCOPED_WITH_LIMITATIONS" for status in requirements.values()):
+        return "PASS_SCOPED_WITH_LIMITATIONS"
+    return "PASS_SCOPED"
+
+
 def build(args) -> dict:
     base_raw = Path(args.registry).read_bytes()
     base_sha = hashlib.sha256(base_raw).hexdigest()
@@ -692,19 +725,14 @@ def build(args) -> dict:
     ee = audit(en, names, expected_rtl=False)
     parity = compare(ar, en, names)
     trace = trace_ids([ar, en])
-    requirements = {
-        "D3-01": "PASS_SCOPED", "D3-02": "PASS_SCOPED", "D3-03": "PASS_SCOPED",
-        "D3-04": "PASS_SCOPED", "D3-05": "PASS_SCOPED_WITH_LIMITATIONS",
-        "D3-06": "PASS_SCOPED", "D3-07": "PASS_SCOPED", "D3-08": "PASS_SCOPED",
-        "D3-09": "PASS_SCOPED", "D3-10": "PASS_SCOPED", "D3-11": "PASS_SCOPED",
-        "D3-12": "PASS_SCOPED", "D3-13": "PASS_SCOPED", "D3-14": "PASS_SCOPED",
-        "D3-15": "PASS_SCOPED", "D3-16": "PASS_SCOPED", "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
-        "D3-18": "PASS_SCOPED",
-    }
+    requirements = d3_requirement_statuses()
+    gate_status = d3_gate_status(requirements)
     limitations = [
         "Full Logging contains 105 representative keys only; it is not 48,000-trial full daily logging.",
-        "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort; representative P50 values are source-backed only.",
-        "C100 Golden revalidation remains NOT_RUN; the deterministic daily reuse path is separately identity- and content-checked.",
+        "C100 daily distributions and representative P50 raw daily ledgers remain MISSING_EVIDENCE unless supplied by eligible, pinned source artifacts.",
+        "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS records and the all-trial final close-date distribution remain MISSING_EVIDENCE unless supplied by eligible, pinned source artifacts.",
+        "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
+        "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse does not replace Golden revalidation.",
         "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
         "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED.",
     ]
@@ -715,7 +743,7 @@ def build(args) -> dict:
     }
     result = {
         "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
-        "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
+        "d3_gate_status": gate_status,
         "source_head": args.source_head, "workflow_run_id": str(args.run_id), "input_manifest_sha256": args.input_manifest_sha256,
         "current_governing_reference": reference_info,
         "historical_execution_reference_sha256": HISTORICAL,
