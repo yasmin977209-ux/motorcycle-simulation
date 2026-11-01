@@ -209,8 +209,8 @@ def audit(path,expected,expected_rtl=None):
             with zipfile.ZipFile(path,"r") as archive:
                 for index,name in enumerate(expected,1):
                     sheet_xml=archive.read(f"xl/worksheets/sheet{index}.xml")
-                    view=re.search(rb"<sheetView\\b([^>]*)>",sheet_xml)
-                    rtl=bool(view and re.search(rb'\\brightToLeft=["\\']1["\\']',view.group(1)))
+                    view=re.search(rb"<sheetView\b([^>]*)>",sheet_xml)
+                    rtl=bool(view and b'rightToLeft="1"' in view.group(1))
                     if rtl!=expected_rtl:
                         direction_mismatches.append({"sheet":name,"expected":"RTL" if expected_rtl else "LTR","actual":"RTL" if rtl else "LTR"})
         return {"sheet_count":len(wb.sheetnames),"formula_cell_count":len(formula_cells),"formula_cells":formula_cells,
