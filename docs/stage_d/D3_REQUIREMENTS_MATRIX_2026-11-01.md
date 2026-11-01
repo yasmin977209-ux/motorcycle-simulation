@@ -79,3 +79,15 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - D3-06 remains PASS_SCOPED_WITH_LIMITATIONS for 105 keys / 1,680 registry entries only; representative raw daily logs remain MISSING_EVIDENCE.
 - D3-07 through D3-13 remain MISSING_EVIDENCE.
 - D3-14 through D3-18 retain their previously recorded scoped evidence. Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED.
+
+ 
+## Source-date and source-free validation update — 2026-11-02 (append-only)
+
+- Owner continuation instruction received at 2026-11-01T23:02:43Z. This permits D3 technical remediation but does not waive the 2026-10-31 source-date cutoff.
+- Source-date audit confirms zero eligible post-cutoff D3 source artifacts in the audited inventory. The three pinned source runs remain pre-cutoff; cancelled run 41358971225 and all its derived temporary output are excluded.
+- D3-05 remains PASS_SCOPED_WITH_LIMITATIONS for 20 S6 daily series only; C100 daily is MISSING_EVIDENCE.
+- D3-06 remains PASS_SCOPED_WITH_LIMITATIONS for 105 representative keys / 1,680 numeric registry entries only; raw representative daily logs are MISSING_EVIDENCE.
+- D3-07 through D3-13 remain MISSING_EVIDENCE.
+- Added source-free static tests and workflow. The workflow is configured to compile both D3 implementation modules and run 15 tests, but no successful workflow run/report has been verified at this checkpoint: NOT_RUN. No status promotion follows.
+- Candidate workbook Raw verification run 41359344854 passed at exact HEAD 7aea74e774084fb7a622f411c5b1dbfad40a2d0d. Current branch HEAD is newer; exact final-head verification at the current checkpoint remains NOT_RUN.
+- Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED.
