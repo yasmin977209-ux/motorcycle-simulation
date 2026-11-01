@@ -1,0 +1,21 @@
+{
+  "branch": "tmp/d1-rebuild-20261101",
+  "compile_status": "PASS",
+  "d3_gate_promoted": false,
+  "d3_status": "BLOCKED_MISSING_EVIDENCE",
+  "d4_status": "NOT_STARTED",
+  "pytest_status": "PASS",
+  "schema_version": "d3-source-free-static-validation-v1",
+  "simulations_or_trials_executed": 0,
+  "source_artifact_contents_read": 0,
+  "source_artifacts_downloaded": 0,
+  "test_files": [
+    "tests/test_d3_registry_extension.py",
+    "tests/test_d3_excel_export_complete.py"
+  ],
+  "tested_source_head": "463a4ec53aaef3c2d4a70e1bac448efd326135a0",
+  "tests_passed": 19,
+  "tests_skipped": 0,
+  "workflow_run_attempt": 1,
+  "workflow_run_id": "41360740452"
+}
