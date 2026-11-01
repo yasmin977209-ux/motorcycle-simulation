@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - tmp/d1-rebuild-20261101
+    paths-ignore:
+      - tmp/reference-payload/**
   workflow_dispatch:
 permissions:
   actions: read
