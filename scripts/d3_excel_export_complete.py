@@ -88,11 +88,11 @@ def validate_source_dates(extension: dict) -> None:
 def load_extension(path: str, base_sha: str) -> tuple[dict, bytes, str]:
     raw = Path(path).read_bytes()
     extension = json.loads(gzip.decompress(raw).decode("utf-8"))
-    validate_source_dates(extension)
     if extension.get("schema_version") != "d3-number-registry-extension-v1":
         raise ValueError("D3_REGISTRY_EXTENSION_SCHEMA_INVALID")
     if extension.get("base_registry_sha256") != base_sha or base_sha != BASE_REGISTRY_SHA256:
         raise ValueError("D3_REGISTRY_EXTENSION_BASE_PIN_MISMATCH")
+    validate_source_dates(extension)
     if (
         extension.get("full_logging_validation", {}).get("normalized_status") != "VERIFIED_SCOPED_105_OF_105"
         or extension.get("full_logging_validation", {}).get("p50_scenario_coverage") != 25
