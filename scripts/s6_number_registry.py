@@ -53,6 +53,105 @@ def stable_id(prefix: str, value, digits: int = 24) -> str:
     return prefix + hashlib.sha256(raw).hexdigest()[:digits]
 
 
+DAILY_NUMBER_RE = re.compile(r"^D2D-([0-9a-f]{20})-([0-9]{6})$")
+
+
+def daily_number_id(series_id: str, offset: int) -> str:
+    if not isinstance(series_id, str) or not re.fullmatch(r"D2S6-[0-9a-f]{20}", series_id):
+        raise ValueError("DAILY_SERIES_ID_INVALID")
+    if type(offset) is not int or offset < 0 or offset > 999999:
+        raise ValueError("DAILY_NUMBER_OFFSET_INVALID")
+    return f"D2D-{series_id[5:]}-{offset:06d}"
+
+
+def resolve_number(registry: dict, number_id: str) -> dict:
+    """Resolve an explicit registry ID or a compact daily point ID to full provenance."""
+    if not isinstance(number_id, str) or not number_id:
+        raise KeyError(number_id)
+    for entry in registry.get("entries", []):
+        if entry.get("number_id") == number_id:
+            return dict(entry)
+
+    match = DAILY_NUMBER_RE.fullmatch(number_id)
+    if match is None:
+        raise KeyError(number_id)
+    suffix, offset_text = match.groups()
+    offset = int(offset_text)
+    expected_series_id = "D2S6-" + suffix
+    series = next(
+        (item for item in registry.get("daily_series", [])
+         if item.get("series_id") == expected_series_id),
+        None,
+    )
+    if series is None or type(series.get("date_count")) is not int:
+        raise KeyError(number_id)
+    if offset >= series["date_count"] or offset >= len(series.get("values", [])):
+        raise KeyError(number_id)
+
+    date_index = next(
+        (item for item in registry.get("daily_date_indexes", [])
+         if item.get("scenario_id") == series.get("scenario_id")),
+        None,
+    )
+    if date_index is None:
+        raise KeyError(number_id)
+    counts = date_index.get("active_trial_counts")
+    if not isinstance(counts, list) or offset >= len(counts):
+        raise KeyError(number_id)
+
+    active_count = counts[offset]
+    n_total = series.get("N_total")
+    mode = series.get("mode")
+    if type(active_count) is not int or type(n_total) is not int or n_total < 1:
+        raise ValueError("DAILY_NUMBER_SAMPLE_PROVENANCE_INVALID")
+    if mode not in MODES:
+        raise ValueError("DAILY_NUMBER_MODE_INVALID")
+    sample_count = active_count if mode == "ACTIVE_ONLY" else n_total
+    n, d = series["values"][offset]
+    display = display_fraction(n, d)
+    first_date = date.fromisoformat(series["first_date"])
+    point_date = first_date + timedelta(days=offset)
+
+    return {
+        "number_id": number_id,
+        "metric_name": series["metric_name"],
+        "scenario_id": series["scenario_id"],
+        "date": point_date.isoformat(),
+        "mode": mode,
+        "quantile_name": series["quantile_name"],
+        "numerator": n,
+        "denominator": d,
+        "exact_value": {"numerator": n, "denominator": d},
+        "display_value": display,
+        "active_trial_count": active_count,
+        "sample_trial_count": sample_count,
+        "unit": series.get("unit"),
+        "source_artifact_id": series["source_artifact_id"],
+        "source_run_id": series["source_run_id"],
+        "source_member": series["source_member"],
+        "source_member_sha256": series["source_member_sha256"],
+        "source_member_size_bytes": series.get("source_member_size_bytes"),
+        "source_artifact_sha256": series.get("source_artifact_sha256"),
+        "source_file_path": series["source_file_path"],
+        "source_commit": series["source_commit"],
+        "source_sha": series["source_sha"],
+        "cohort_id": series["cohort_id"],
+        "N_total": n_total,
+        "N_closed": series.get("N_closed"),
+        "N_censored": series.get("N_censored"),
+        "N_unique_paths": series.get("N_unique_paths"),
+        "gate_status": series.get("gate_status"),
+        "evidence_status": series["evidence_status"],
+        "calculation_method": series.get("calculation_method"),
+        "rounding_method": series.get("rounding_method"),
+        "locator": (
+            f"{series['source_member']}#{series['scenario_id']}/"
+            f"{point_date.isoformat()}/{mode}/{series['metric_name']}/"
+            f"{series['quantile_name']}"
+        ),
+    }
+
+
 def display_fraction(n: int, d: int) -> str:
     if type(n) is not int or type(d) is not int or d < 1:
         raise ValueError("EXACT_RATIONAL_FIELDS_INVALID")
@@ -412,6 +511,9 @@ def build_registry(paths, source_head, workflow_run_id):
             "rule": "D2D-{series_sha20}-{zero_based_date_offset_6_digits}",
             "date_rule": "first_date plus offset calendar days; all series checked gap-free",
             "lookup_function": "scripts.s6_number_registry.resolve_number",
+            "number_id_function": "scripts.s6_number_registry.daily_number_id",
+            "series_id_prefix": "D2S6-",
+            "point_id_prefix": "D2D-",
         },
         "gate_statuses": gates, "unavailable_evidence": missing,
         "legacy_local_audit": {"path": "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md", "reported_entry_count": 13954, "classification": "REPORTED_ONLY"},
@@ -454,30 +556,58 @@ def validate_registry(registry):
     if not isinstance(entries, list) or not isinstance(series, list):
         raise ValueError("REGISTRY_COLLECTION_INVALID")
     ids = [x.get("number_id") for x in entries]
-    if len(ids) != len(set(ids)):
-        raise ValueError("REGISTRY_NUMBER_ID_DUPLICATE")
+    if any(not isinstance(value, str) or not value.startswith("NR-") for value in ids) or len(ids) != len(set(ids)):
+        raise ValueError("REGISTRY_NUMBER_ID_DUPLICATE_OR_INVALID")
     for item in entries:
         n, d = item.get("numerator"), item.get("denominator")
         if type(n) is not int or type(d) is not int or d < 1 or item.get("exact_value") != {"numerator": n, "denominator": d}:
             raise ValueError("ENTRY_EXACT_VALUE_INVALID")
-        for field in ("source_artifact_id", "source_run_id", "source_member_sha256", "source_file_path", "locator", "evidence_status"):
+        if Fraction(n, d).numerator != n or Fraction(n, d).denominator != d:
+            raise ValueError("ENTRY_EXACT_VALUE_NOT_REDUCED")
+        for field in ("metric_name", "scenario_id", "source_artifact_id", "source_run_id", "source_member_sha256", "source_file_path", "locator", "evidence_status"):
             if item.get(field) is None:
                 raise ValueError("ENTRY_PROVENANCE_MISSING:" + field)
-    if len({x["series_id"] for x in series}) != len(series) or len(series) != 1000:
+    series_ids = [x.get("series_id") for x in series]
+    if any(not isinstance(value, str) or not re.fullmatch(r"D2S6-[0-9a-f]{20}", value) for value in series_ids):
+        raise ValueError("DAILY_SERIES_ID_INVALID")
+    if len(series_ids) != len(set(series_ids)) or len(series) != 1000:
         raise ValueError("DAILY_SERIES_ID_OR_COUNT_INVALID")
-    indexes = {x["scenario_id"]: x for x in registry.get("daily_date_indexes", [])}
+    indexes_list = registry.get("daily_date_indexes", [])
+    indexes = {x.get("scenario_id"): x for x in indexes_list}
+    if len(indexes) != len(indexes_list) or len(indexes) != 20:
+        raise ValueError("DAILY_DATE_INDEX_SCENARIO_COVERAGE_INVALID")
     points = 0
     for item in series:
-        if item["date_count"] != len(item["values"]) or not item.get("source_member_sha256"):
+        if item.get("mode") not in MODES or item.get("metric_name") not in METRICS or item.get("quantile_name") not in QUANTILES:
+            raise ValueError("DAILY_SERIES_DIMENSION_INVALID")
+        if item.get("date_count") != len(item.get("values", [])) or type(item.get("date_count")) is not int or item["date_count"] < 1:
             raise ValueError("DAILY_SERIES_METADATA_INVALID")
-        end = date.fromisoformat(item["first_date"]) + timedelta(days=item["date_count"] - 1)
-        if end.isoformat() != item["last_date"]:
+        if not item.get("source_member_sha256") or not item.get("source_artifact_id") or not item.get("source_run_id") or not item.get("source_file_path"):
+            raise ValueError("DAILY_SERIES_PROVENANCE_MISSING")
+        first = date.fromisoformat(item["first_date"])
+        end = first + timedelta(days=item["date_count"] - 1)
+        if end.isoformat() != item.get("last_date"):
             raise ValueError("DAILY_SERIES_DATE_RANGE_INVALID")
-        if item["scenario_id"] not in indexes or len(indexes[item["scenario_id"]]["active_trial_counts"]) != item["date_count"]:
+        index = indexes.get(item.get("scenario_id"))
+        if index is None or index.get("first_date") != item["first_date"] or index.get("date_count") != item["date_count"]:
             raise ValueError("DAILY_DATE_INDEX_INVALID")
-        for n, d in item["values"]:
+        active_counts = index.get("active_trial_counts")
+        if not isinstance(active_counts, list) or len(active_counts) != item["date_count"]:
+            raise ValueError("DAILY_ACTIVE_COUNT_INDEX_INVALID")
+        if any(type(value) is not int or value < 1 or value > item["N_total"] for value in active_counts):
+            raise ValueError("DAILY_ACTIVE_COUNT_VALUE_INVALID")
+        for offset, value in enumerate(item["values"]):
+            if not isinstance(value, list) or len(value) != 2:
+                raise ValueError("DAILY_SERIES_VALUE_SHAPE_INVALID")
+            n, d = value
             if type(n) is not int or type(d) is not int or d < 1:
                 raise ValueError("DAILY_SERIES_EXACT_VALUE_INVALID")
+            if Fraction(n, d).numerator != n or Fraction(n, d).denominator != d:
+                raise ValueError("DAILY_SERIES_FRACTION_NOT_REDUCED")
+            point_id = daily_number_id(item["series_id"], offset)
+            resolved = resolve_number(registry, point_id)
+            if resolved.get("numerator") != n or resolved.get("denominator") != d or resolved.get("scenario_id") != item["scenario_id"]:
+                raise ValueError("DAILY_NUMBER_ID_RESOLUTION_MISMATCH")
         points += item["date_count"]
     return {"entry_count": len(entries), "daily_series_count": len(series), "daily_point_count": points}
 
