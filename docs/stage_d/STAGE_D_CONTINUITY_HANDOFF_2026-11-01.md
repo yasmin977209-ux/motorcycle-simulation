@@ -176,3 +176,11 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Registry scope and limitations are unchanged: 20 S6 daily scenarios, 1,000 series, 2,086,550 daily points, 105 representative keys / 1,680 numeric entries; C100 daily distributions and representative raw P50 daily logs are missing, as are detailed ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and final close-date data. Five historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled.
 - Preserve all gates: financial Gate A PASS_SCOPED only; production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys only / NOT_VERIFIED_105_OF_105; C100 Golden NOT_RUN.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge, Release or D4 transition. Await the owner's explicit continuation instruction.
+
+
+
+## Prompt Library REV2 handoff — 2026-11-01 (append-only)
+
+The old prompt library has been preserved and points to the comprehensive revised operational edition at `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`. Exact publication fingerprints and governance checks are in `docs/stage_d/PROJECT_PROMPT_LIBRARY_REV2_PUBLICATION_2026-11-01.md`.
+
+Next session: perform GitHub-first restoration, verify active branch and main HEAD, re-read the D3 live audit and exact evidence. Current phase disposition remains D3 `BLOCKED / BLOCKED_MISSING_EVIDENCE`; D4 is `NOT_STARTED`. Wait for explicit owner continuation before any D3 repair or rerun. Do not start D4.
