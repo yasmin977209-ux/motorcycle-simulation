@@ -302,7 +302,15 @@ def build_registry(paths, source_head, workflow_run_id):
             role_map.setdefault((assignment["scenario_id"], int(assignment["trial_id"])), []).append(assignment["role"])
 
         cmeta = read_json(c100, "docs/audits/S4_C100_GOLDEN_MANIFEST_965281d52441cd0d4b744e211c9f68ee4cdc3753.json")
-        if (cmeta.get("source_sha"), cmeta.get("cohort_id"), cmeta.get("trial_count_total"), cmeta.get("trial_count_per_scenario"), cmeta.get("N_unique_paths"), cmeta.get("workflow_run_id")) != (C100_SOURCE, C100_COHORT, 1500, 300, 1, artifacts["c100"]["run_id"]):
+        if (
+            cmeta.get("source_sha") != C100_SOURCE
+            or cmeta.get("cohort_id") != C100_COHORT
+            or cmeta.get("trial_count_total") != 1500
+            or cmeta.get("trial_ids_per_scenario") != [1, 300]
+            or len(cmeta.get("scenario_ids", [])) != 5
+            or cmeta.get("N_unique_paths") != 1
+            or cmeta.get("workflow_run_id") != str(artifacts["c100"]["run_id"])
+        ):
             raise ValueError("C100_SOURCE_IDENTITY_INVALID")
 
         cohort_counts = {S6_COHORT: 0, C100_COHORT: 0}
