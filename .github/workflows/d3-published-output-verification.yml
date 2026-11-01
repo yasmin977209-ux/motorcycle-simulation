@@ -1,0 +1,105 @@
+name: D3 Published Output Exact-HEAD Verification
+
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d3-published-output-verification-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-published-output:
+    name: Verify committed D3 outputs without rebuilding workbooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact branch and HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          echo "D3_EXACT_FINAL_HEAD_PASS $actual"
+
+      - name: Install bounded verification dependencies
+        run: |
+          python -m pip install --disable-pip-version-check pytest openpyxl
+
+      - name: Run exporter regression tests only
+        run: |
+          python -m pytest -q tests/test_s6_excel_export.py
+
+      - name: Read back committed outputs from exact GitHub Raw SHA
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+          EXACT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          verify_raw() {
+            local path="$1" expected_sha="$2" expected_bytes="$3" expected_blob="$4"
+            local encoded_path="$5" target="$tmp/$(basename "$path")"
+            local url="https://raw.githubusercontent.com/${REPOSITORY}/${EXACT_SHA}/${encoded_path}"
+            curl --fail --silent --show-error --location "$url" --output "$target"
+            local actual_sha actual_bytes actual_blob
+            actual_sha="$(sha256sum "$target" | awk '{print $1}')"
+            actual_bytes="$(wc -c < "$target" | tr -d ' ')"
+            actual_blob="$(git hash-object "$target")"
+            test "$actual_sha" = "$expected_sha"
+            test "$actual_bytes" = "$expected_bytes"
+            test "$actual_blob" = "$expected_blob"
+            printf 'VERIFIED_RAW %s bytes=%s sha256=%s blob=%s\n' "$path" "$actual_bytes" "$actual_sha" "$actual_blob"
+          }
+
+          verify_raw "deliverables/النتائج_الكاملة_AR.xlsx" \
+            "914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461" \
+            "27734273" "056b7f482bbb84583526f093ae886e13b8c01356" \
+            "deliverables/%D8%A7%D9%84%D9%86%D8%AA%D8%A7%D8%A6%D8%AC_%D8%A7%D9%84%D9%83%D8%A7%D9%85%D9%84%D8%A9_AR.xlsx"
+
+          verify_raw "deliverables/Full_Results_EN.xlsx" \
+            "89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191" \
+            "27722355" "a01c1f4061da731de24fcc8d061113bb195e65b1" \
+            "deliverables/Full_Results_EN.xlsx"
+
+          verify_raw "deliverables/D3_BUILD_AUDIT.json" \
+            "e3a4702fbda9f220680e8a7347082c901865c105dd7df6aed2dea1f44a4565a2" \
+            "3282" "89eebec229a0a4b7d5d233b9897a0518132a7e2c" \
+            "deliverables/D3_BUILD_AUDIT.json"
+
+          verify_raw "deliverables/D3_MANIFEST.json" \
+            "754f8b5cfa24c7e6a767a0774bee89a25ba62c028c78431d30af52758748f552" \
+            "2090" "706464550aaa7290f33a968e6ce608e90454dae3" \
+            "deliverables/D3_MANIFEST.json"
+
+          verify_raw "docs/stage_d/D3_BUILD_REPORT_2026-11-02.md" \
+            "16703bbcd673972d847a5d911942efa7ef6dfabc9690b5aff80bf7679771ae48" \
+            "1693" "67926d0c87c89242292543bfeeb0007815d5128b" \
+            "docs/stage_d/D3_BUILD_REPORT_2026-11-02.md"
+
+          verify_raw "results/number_registry.json" \
+            "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87" \
+            "24137036" "8cf17de488c623f96c1961ca91d682fbbc7733d6" \
+            "results/number_registry.json"
+
+          verify_raw "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md" \
+            "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b" \
+            "401397" "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33" \
+            "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md"
+
+          echo "D3_PUBLISHED_OUTPUT_EXACT_HEAD_PASS ${EXACT_SHA}"
