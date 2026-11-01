@@ -55,3 +55,14 @@ D2 local implementation and audit claims remain `REPORTED_ONLY`; no repository D
 - Historical local count 13,954 remains REPORTED_ONLY and is not the live registry count.
 - Preserved: Full Logging 105 representatives only; statuses NOT_VERIFIED; C100 Golden NOT_RUN; Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE.
 - No Trial, Simulation, Monte Carlo, N expansion, historical backfill or zero-fill was performed.
+
+## Exact-head correction — 2026-11-01 (append-only)
+
+- The preceding live-build paragraph cites Run 41326515357. That run built and committed the registry and verified Raw bytes, but the overall workflow ended non-success because the runner clean-tree check included temporary untracked ZIP files. It is not the definitive successful exact-head run.
+- Final exact-head workflow: [Run 41326662869](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41326662869) — `SUCCESS`.
+- Registry-containing and exact-head-validated commit: `96a07b52485733115cf93875440ea99369a94fdb` on `tmp/d1-rebuild-20261101`; `main` remained `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Registry: 2,640 explicit entries (960 Aggregate checkpoint values + 1,680 representative Full Logging metric values); 1,000 daily series; 2,086,550 addressable Daily Distribution points.
+- S6 and C100 remain separate. Full Logging remains 105 representatives only and normalized statuses remain `NOT_VERIFIED`; C100 Golden revalidation remains `NOT_RUN`.
+- The five historical accounting fields remain `MISSING_EVIDENCE`; production Gate A remains `NOT_DECLARED`; Gate B remains `FAIL_SCOPED`; Stability remains `NOT_CONVERGED`; N=4800 remains `NOT_EXECUTED`.
+- Evidence triple: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/96a07b52485733115cf93875440ea99369a94fdb/results/number_registry.json ; SHA-256 `b271cb638c89f6ff14e22e1cfbf5f4d7acc803e00a89eef7ff716ed386b89e3e`; Git blob SHA-1 `81e8c7cedcec1e75f86f00a198d93c82f1c4e99b`; 24,136,918 bytes.
+- No new Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill was performed. D3 has not been started.
