@@ -1,68 +1,17 @@
-name: D3 Complete Source-Verified Closure
+name: D3 Complete Source-Verified Closure (Disabled Pending Eligible Sources)
 on:
-  push:
-    branches:
-      - tmp/d1-rebuild-20261101
-    paths:
-      - scripts/d3_registry_extension.py
-      - scripts/d3_excel_export_complete.py
-      - scripts/d3_complete_pipeline.py
-      - tests/test_d3_registry_extension.py
-      - tests/test_d3_sensitivity_entries.py
-      - .github/workflows/d3-complete-from-pinned-artifacts.yml
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
-concurrency:
-  group: d3-complete-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  complete-d3:
+  blocked:
+    if: false
     runs-on: ubuntu-latest
-    timeout-minutes: 120
     steps:
-      - name: Checkout exact triggering commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install project and D3 verification dependencies
+      - name: Fail closed until post-cutoff source artifacts are available
         run: |
-          python -m pip install --disable-pip-version-check --upgrade pip
-          python -m pip install --disable-pip-version-check -r requirements.txt requests
-
-      - name: Assert exact starting branch and HEAD
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
-          echo "D3_EXACT_START_HEAD_PASS $EXPECTED_SHA"
-
-      - name: Compile pipeline and execute D3 source-verified closure
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          python -m compileall -q scripts/d3_registry_extension.py scripts/d3_excel_export_complete.py scripts/d3_complete_pipeline.py tests/test_d3_registry_extension.py tests/test_d3_sensitivity_entries.py tests/test_s6_excel_export.py
-          python scripts/d3_complete_pipeline.py
-
-      - name: Preserve reproducible supplemental Number Registry extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: D3-Registry-Extension-${{ github.run_id }}
-          path: deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz
-          if-no-files-found: error
-          retention-days: 90
+          echo "BLOCKED: no eligible D3 source artifacts dated 2026-10-31 or later have been verified."
+          exit 1
