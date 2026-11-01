@@ -11,7 +11,6 @@ from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from fractions import Fraction
 from pathlib import Path
 
-import pyarrow.parquet as pq
 
 from scripts.s6_artifact_reader import PINS, S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT, MASTER_SEED
 from scripts.s6_deliverables_builder import build_shared_model
@@ -128,6 +127,7 @@ def no_floats(value, path="$"):
 
 
 def build_daily(aggregate_zip, manifest, artifact):
+    import pyarrow.parquet as pq
     raw, member_digest = verify_member(
         aggregate_zip, "daily_distribution.parquet", manifest["files"]["daily_distribution.parquet"],
     )
