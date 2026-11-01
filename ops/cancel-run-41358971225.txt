@@ -1,1 +1,2 @@
 Cancel workflow run 41358971225 immediately. It was started before enforcing the project rule that forbids reading source files dated before 2026-10-31. No artifact content may be consumed from the October 26, October 28, or October 30 source runs.
+Cancellation workflow installed; trigger it now to cancel run 41358971225.
