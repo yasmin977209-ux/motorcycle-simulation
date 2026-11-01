@@ -10,3 +10,8 @@ A successful workflow run is required before D2 completion can be reported. This
 ## Completion pass 2 — 2026-11-01
 
 This second run adds the historical-audit de-nesting regression, executes all artifact-backed builder integration tests using the three verified ZIP paths (no skip due to missing local fixture paths), preserves existing continuity bytes during append, and expands the exact-head Raw readback and Artifact package to include the source, test, workflow and final handoff addendum.
+
+
+## Exact-current-HEAD revalidation — 2026-11-01
+
+The previous successful completion run validated HEAD `789b9017986cb240d9a82428227f6a03adee6f3c`. Subsequent append-only documentation commits advanced the branch to `fae1f6f7bbe294e2d14e3abb7af7c1acb64a3dde`. This trigger requests a fresh complete D2 build, artifact-backed tests, registry resolver validation, final commit, exact remote HEAD comparison, Raw byte readback and evidence Artifact against the latest committed state. It does not authorize D3 or any simulation/trial expansion.
