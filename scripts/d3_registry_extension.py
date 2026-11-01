@@ -314,6 +314,81 @@ def extract_case(full, result: dict, role_map: dict, artifact: dict) -> dict:
     }
 
 
+
+def extract_daily_case(full, result: dict, role_map: dict, artifact: dict) -> dict:
+    """Read every selected representative role key's raw daily log and summary.
+
+    This is a read-only extraction from the pinned 105-key Full Logging artifact.
+    It does not create or replay any Trial.
+    """
+    scenario_id, trial_id, folder = result["scenario_id"], int(result["trial_id"]), result["folder"]
+    prefix = f"stagec-output/full_logging/{folder}/"
+    tm = full.read_json(prefix + "trial_manifest.json")
+    trial_result = full.read_json(prefix + "trial_result.json")
+    audit = full.read_json(prefix + "post_write_audit.json")
+    roles = sorted(role_map.get((scenario_id, trial_id), []))
+    if not roles:
+        raise ValueError("REPRESENTATIVE_ROLE_ASSIGNMENT_MISSING:" + scenario_id)
+    if (
+        trial_result.get("scenario_id") != scenario_id
+        or trial_result.get("trial_id") != trial_id
+        or trial_result.get("source_sha") != tm.get("source_sha")
+        or trial_result.get("cohort_id") != tm.get("cohort_id")
+        or trial_result.get("trial_fingerprint") != tm.get("actual_trial_fingerprint")
+        or tm.get("actual_trial_fingerprint") != tm.get("expected_trial_fingerprint")
+        or audit.get("trial_fingerprint") != trial_result.get("trial_fingerprint")
+    ):
+        raise ValueError("REPRESENTATIVE_TRIAL_IDENTITY_INVALID:" + scenario_id)
+    member = "daily_snapshots.jsonl.gz"
+    meta = tm.get("files", {}).get(member)
+    if not isinstance(meta, dict):
+        raise ValueError("REPRESENTATIVE_DAILY_MEMBER_METADATA_MISSING:" + scenario_id)
+    daily = read_rows(full, prefix + member)
+    if len(daily) != tm.get("daily_rows"):
+        raise ValueError("REPRESENTATIVE_DAILY_ROW_COUNT_INVALID:" + scenario_id)
+    dates = [row.get("date") for row in daily]
+    if not dates or dates != sorted(dates) or dates[-1] != trial_result.get("final_close_date"):
+        raise ValueError("REPRESENTATIVE_DAILY_DATE_RANGE_INVALID:" + scenario_id)
+    if any(not isinstance(x, str) or len(x) != 10 for x in dates):
+        raise ValueError("REPRESENTATIVE_DAILY_DATE_INVALID:" + scenario_id)
+    for row in daily:
+        if (
+            row.get("scenario_id") != scenario_id
+            or row.get("trial_id") != trial_id
+            or row.get("source_sha") != tm.get("source_sha")
+            or row.get("cohort_id") != tm.get("cohort_id")
+        ):
+            raise ValueError("REPRESENTATIVE_DAILY_IDENTITY_MISMATCH:" + scenario_id)
+    validate_int_fields(daily, ACCOUNTING_FIELDS + DAILY_METRICS + (
+        "Balance_Difference", "Capital", "Liabilities", "Net_Bike_Assets",
+        "Net_Equity", "Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance",
+        "Retained_Earnings", "Total_Equity",
+    ), scenario_id)
+    summary_fields = (
+        "bad_debt", "claims_created", "cumulative_project_profit", "final_cash",
+        "final_net_project_equity", "guarantee_recovered", "held_assets",
+        "operating_net_profit", "owned_bikes", "partner1_final_entitlement",
+        "partner2_final_entitlement", "secondary_cycle_count", "termination_count",
+        "total_operating_revenue",
+    )
+    summary = {key: trial_result.get(key) for key in summary_fields}
+    if any(type(value) is not int for value in summary.values()):
+        raise ValueError("REPRESENTATIVE_TRIAL_SUMMARY_FIELD_INVALID:" + scenario_id)
+    return {
+        "scenario_id": scenario_id, "cohort_id": tm["cohort_id"], "source_sha": tm["source_sha"],
+        "trial_id": trial_id, "role_assignments": roles,
+        "trial_fingerprint": trial_result["trial_fingerprint"],
+        "final_close_date": trial_result["final_close_date"],
+        "source_commit": trial_result.get("execution_git_commit") or EXPECTED_FULL_LOGGING_HEAD,
+        "source_artifact_id": artifact["artifact_id"], "source_run_id": artifact["run_id"],
+        "source_artifact_sha256": artifact["sha256"], "source_folder": folder,
+        "source_member_prefix": prefix,
+        "source_member": prefix + member, "source_member_sha256": meta["sha256"],
+        "source_member_size_bytes": meta["size_bytes"],
+        "daily_rows": daily, "trial_summary": summary,
+    }
+
+
 def build_sensitivity_entries(entries: list[dict]) -> list[dict]:
     mean_entries = {
         item["scenario_id"]: item for item in entries
@@ -550,6 +625,17 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
         root_by_key = {(x["scenario_id"], int(x["trial_id"])): x for x in root["results"]}
         if len(root_by_key) != 105:
             raise ValueError("FULL_LOGGING_ROOT_KEY_DUPLICATE")
+        representative_role_cases = [
+            extract_daily_case(full, result, role_map, artifact_meta["full_logging"])
+            for _, result in sorted(root_by_key.items())
+        ]
+        if (
+            len(representative_role_cases) != 105
+            or len({(x["scenario_id"], x["trial_id"]) for x in representative_role_cases}) != 105
+            or sum(len(x["role_assignments"]) for x in representative_role_cases) != 125
+        ):
+            raise ValueError("REPRESENTATIVE_ROLE_CASE_COVERAGE_INVALID")
+
         cases = []
         for sid in sorted(set(s["scenario_id"] for s in select["assignments"])):
             p50_assignments = [x for x in select["assignments"] if x["scenario_id"] == sid and x["role"] == "P50"]
@@ -600,11 +686,14 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
             "aggregate_entries": aggregate_entries,
             "sensitivity_entries": sensitivity_entries,
             "representative_cases": cases,
+            "representative_role_cases": representative_role_cases,
             "final_close_date_distribution": sorted(close_dates, key=lambda x: (x["scenario_id"], x["final_close_date"])),
             "full_logging_validation": {
                 "unique_trial_keys": 105, "role_assignments": 125, "completed_keys": 105,
                 "failed_keys": 0, "verified_member_count": verified_members,
                 "post_write_audit_pass_count": audit_pass, "p50_case_count": len(cases),
+                "representative_role_case_count": len(representative_role_cases),
+                "role_assignments_covered": sum(len(x["role_assignments"]) for x in representative_role_cases),
                 "p50_scenario_coverage": 25, "normalized_status": "VERIFIED_SCOPED_105_OF_105",
                 "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
             },
