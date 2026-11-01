@@ -348,7 +348,7 @@ def build_registry(paths, source_head, workflow_run_id):
                     "trial_id": trial_id, "sample_n": 1, "role_assignments": sorted(role_map.get((scenario, trial_id), [])),
                     "source_artifact_id": artifacts["full_logging"]["artifact_id"], "source_run_id": artifacts["full_logging"]["run_id"],
                     "origin_run_id": origin_run, "origin_artifact_id": artifacts["c100"]["artifact_id"] if cohort == C100_COHORT else artifacts["aggregate"]["artifact_id"],
-                    "source_member": prefix + "trial_result.json", "source_member_sha256": sha(result_raw),
+                    "source_member": prefix + "trial_result.json", "source_member_sha256": sha256(result_raw),
                     "source_member_size_bytes": len(result_raw), "source_artifact_sha256": artifacts["full_logging"]["sha256"],
                     "source_file_path": prefix + "trial_result.json", "source_commit": result.get("execution_git_commit"),
                     "numerator": n, "denominator": d, "exact_value": {"numerator": n, "denominator": d},
