@@ -15,3 +15,8 @@ This second run adds the historical-audit de-nesting regression, executes all ar
 ## Exact-current-HEAD revalidation — 2026-11-01
 
 The previous successful completion run validated HEAD `789b9017986cb240d9a82428227f6a03adee6f3c`. Subsequent append-only documentation commits advanced the branch to `fae1f6f7bbe294e2d14e3abb7af7c1acb64a3dde`. This trigger requests a fresh complete D2 build, artifact-backed tests, registry resolver validation, final commit, exact remote HEAD comparison, Raw byte readback and evidence Artifact against the latest committed state. It does not authorize D3 or any simulation/trial expansion.
+
+
+## Governing-reference integrity gate — 2026-11-01
+
+The next completion pass also verifies the normative v2.4.0 Raw byte length and owner-approved SHA-256 against the exact triggering commit, confirms the live owner decision ID/status/digest, and includes both files in final exact-HEAD Raw readback. D2 completion is not reconfirmed until this gate and all existing build/test/resolver/exact-head/artifact gates succeed.
