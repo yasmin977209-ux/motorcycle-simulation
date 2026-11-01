@@ -88,3 +88,10 @@ D2 is PASS_SCOPED_WITH_LIMITATIONS, not final project acceptance.
 - Registry-containing commit: 024c71a909328cec379f3628df25981310c64fe7
 - Final exact HEAD and nine-file Raw evidence triples are established by the final verification step of this successful Run.
 - D2 remains PASS_SCOPED_WITH_LIMITATIONS; no D3, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill is authorized by this record.
+
+
+## Post-completion documentation correction — 2026-11-01 (append-only)
+
+- The D2 completion workflow Run 41332273796 succeeded on its exact final HEAD `eb10e46244a7739ba8b986396c6beb96d9ae17fe`, validating all nine D2 files and uploading Artifact 13094200249.
+- A subsequent documentation-only correction restored one historical carriage-return byte in `docs/PROJECT_CONTINUITY.md` that was normalized by the workflow's text-mode append. This is not a source-data or business-rule change; the final branch HEAD after this correction must be independently read back and hashed.
+- D2 disposition remains `PASS_SCOPED_WITH_LIMITATIONS`; D3 remains `NOT_STARTED`. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge or Release.
