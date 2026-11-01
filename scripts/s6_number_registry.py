@@ -48,6 +48,18 @@ def blob_sha1(raw: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 
+def original_historical_report(audit: dict) -> dict:
+    """Return the oldest preserved local-only audit without nesting it repeatedly."""
+    if not isinstance(audit, dict):
+        raise ValueError("HISTORICAL_AUDIT_OBJECT_INVALID")
+    current = audit
+    while True:
+        wrapper = current.get("historical_local_report")
+        if not isinstance(wrapper, dict) or not isinstance(wrapper.get("original_report"), dict):
+            return current
+        current = wrapper["original_report"]
+
+
 def stable_id(prefix: str, value, digits: int = 24) -> str:
     raw = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
     return prefix + hashlib.sha256(raw).hexdigest()[:digits]
