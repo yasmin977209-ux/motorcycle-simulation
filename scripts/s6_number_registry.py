@@ -64,35 +64,29 @@ def daily_number_id(series_id: str, offset: int) -> str:
     return f"D2D-{series_id[5:]}-{offset:06d}"
 
 
-def resolve_number(registry: dict, number_id: str) -> dict:
-    """Resolve an explicit registry ID or a compact daily point ID to full provenance."""
-    if not isinstance(number_id, str) or not number_id:
-        raise KeyError(number_id)
-    for entry in registry.get("entries", []):
-        if entry.get("number_id") == number_id:
-            return dict(entry)
+def _daily_resolution_indexes(registry: dict):
+    """Build O(1) indexes for repeated resolution across the full daily registry."""
+    series_by_id = {item.get("series_id"): item for item in registry.get("daily_series", [])}
+    date_indexes_by_scenario = {
+        item.get("scenario_id"): item for item in registry.get("daily_date_indexes", [])
+    }
+    return series_by_id, date_indexes_by_scenario
 
+
+def _resolve_daily_number(registry: dict, number_id: str, series_by_id: dict, date_indexes_by_scenario: dict) -> dict:
     match = DAILY_NUMBER_RE.fullmatch(number_id)
     if match is None:
         raise KeyError(number_id)
     suffix, offset_text = match.groups()
     offset = int(offset_text)
     expected_series_id = "D2S6-" + suffix
-    series = next(
-        (item for item in registry.get("daily_series", [])
-         if item.get("series_id") == expected_series_id),
-        None,
-    )
+    series = series_by_id.get(expected_series_id)
     if series is None or type(series.get("date_count")) is not int:
         raise KeyError(number_id)
     if offset >= series["date_count"] or offset >= len(series.get("values", [])):
         raise KeyError(number_id)
 
-    date_index = next(
-        (item for item in registry.get("daily_date_indexes", [])
-         if item.get("scenario_id") == series.get("scenario_id")),
-        None,
-    )
+    date_index = date_indexes_by_scenario.get(series.get("scenario_id"))
     if date_index is None:
         raise KeyError(number_id)
     counts = date_index.get("active_trial_counts")
@@ -150,6 +144,17 @@ def resolve_number(registry: dict, number_id: str) -> dict:
             f"{series['quantile_name']}"
         ),
     }
+
+
+def resolve_number(registry: dict, number_id: str) -> dict:
+    """Resolve an explicit registry ID or a compact daily point ID to full provenance."""
+    if not isinstance(number_id, str) or not number_id:
+        raise KeyError(number_id)
+    for entry in registry.get("entries", []):
+        if entry.get("number_id") == number_id:
+            return dict(entry)
+    series_by_id, date_indexes_by_scenario = _daily_resolution_indexes(registry)
+    return _resolve_daily_number(registry, number_id, series_by_id, date_indexes_by_scenario)
 
 
 def display_fraction(n: int, d: int) -> str:
@@ -577,6 +582,8 @@ def validate_registry(registry):
     if len(indexes) != len(indexes_list) or len(indexes) != 20:
         raise ValueError("DAILY_DATE_INDEX_SCENARIO_COVERAGE_INVALID")
     points = 0
+    series_by_id, date_indexes_by_scenario = _daily_resolution_indexes(registry)
+    resolved_points = 0
     for item in series:
         if item.get("mode") not in MODES or item.get("metric_name") not in METRICS or item.get("quantile_name") not in QUANTILES:
             raise ValueError("DAILY_SERIES_DIMENSION_INVALID")
@@ -607,14 +614,28 @@ def validate_registry(registry):
             point_id = daily_number_id(item["series_id"], offset)
             if DAILY_NUMBER_RE.fullmatch(point_id) is None:
                 raise ValueError("DAILY_NUMBER_ID_FORMAT_INVALID")
-        for offset in sorted({0, item["date_count"] - 1}):
-            point_id = daily_number_id(item["series_id"], offset)
-            resolved = resolve_number(registry, point_id)
-            n, d = item["values"][offset]
-            if resolved.get("numerator") != n or resolved.get("denominator") != d or resolved.get("scenario_id") != item["scenario_id"]:
+            # Resolve every addressable point through the same indexed resolver used by callers.
+            resolved = _resolve_daily_number(registry, point_id, series_by_id, date_indexes_by_scenario)
+            point_date = (first + timedelta(days=offset)).isoformat()
+            if (
+                resolved.get("numerator") != n
+                or resolved.get("denominator") != d
+                or resolved.get("scenario_id") != item["scenario_id"]
+                or resolved.get("date") != point_date
+                or resolved.get("number_id") != point_id
+                or resolved.get("exact_value") != {"numerator": n, "denominator": d}
+            ):
                 raise ValueError("DAILY_NUMBER_ID_RESOLUTION_MISMATCH")
+            resolved_points += 1
         points += item["date_count"]
-    return {"entry_count": len(entries), "daily_series_count": len(series), "daily_point_count": points}
+    if resolved_points != points:
+        raise ValueError("DAILY_NUMBER_RESOLUTION_COVERAGE_MISMATCH")
+    return {
+        "entry_count": len(entries),
+        "daily_series_count": len(series),
+        "daily_point_count": points,
+        "daily_points_resolved": resolved_points,
+    }
 
 
 def main():
