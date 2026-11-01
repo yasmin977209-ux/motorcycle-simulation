@@ -204,3 +204,13 @@ Before continuing, read `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.
 - Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
 - D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
 - No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.
+
+
+## D3 candidate build — 2026-11-02
+
+- D2 was revalidated closed before D3; D3 candidate generation was explicitly requested in this session.
+- Output commit: 3f063c62fbb0ea7e62f0882d709371856d071bef; workflow run: 41352075552.
+- Candidate classification: T2_INTERIM / NOT_FINAL_BLOCKED.
+- Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
+- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
+- No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.

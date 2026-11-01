@@ -52,3 +52,19 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - D3-17 preserved gate and evidence limitations: PASS_SCOPED.
 - D3-18 manifest and remote raw readback: PASS_SCOPED after the exact final HEAD validation step succeeds.
 - Overall D3 gate remains BLOCKED_MISSING_EVIDENCE; D4 must not start.
+
+## Candidate publication and validation — append-only
+
+- D3-01 approved v2.4.0 bytes and Number Registry identity: PASS_SCOPED; the exact approved reference is fetched from its pinned GitHub Gist revision and hash-checked.
+- D3-02 S6/C100 cohort separation: PASS_SCOPED.
+- D3-03 185-sheet inventory per workbook: PASS_SCOPED.
+- D3-04 bilingual sheet order and numeric parity: PASS_SCOPED.
+- D3-05 20 S6 daily series / 2,086,550 points: PASS_SCOPED_WITH_LIMITATIONS; C100 daily series remain MISSING_EVIDENCE.
+- D3-06 105 representative keys / 1,680 numeric entries: PASS_SCOPED_WITH_LIMITATIONS.
+- D3-07 through D3-13 detailed P50, ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and close-date records: MISSING_EVIDENCE.
+- D3-14 Excel formula/error and RTL/LTR checks: PASS_SCOPED.
+- D3-15 Number-ID traceability: PASS_SCOPED.
+- D3-16 exact integer-ratio / Decimal arithmetic: PASS_SCOPED.
+- D3-17 preserved gate and evidence limitations: PASS_SCOPED.
+- D3-18 manifest and remote raw readback: PASS_SCOPED after the exact final HEAD validation step succeeds.
+- Overall D3 gate remains BLOCKED_MISSING_EVIDENCE; D4 must not start.
