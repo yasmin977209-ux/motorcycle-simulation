@@ -230,3 +230,17 @@ Before continuing, read `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.
 ## D3 source-date handoff — 2026-11-02
 
 D3 remains BLOCKED_MISSING_EVIDENCE. Use only post-2026-10-31 source files. The identified source runs are pre-cutoff and prohibited. The attempted workflow was cancelled after reading them; no published output resulted, and its temporary output is excluded. D4 has not started.
+
+
+## D3 continuation handoff — 2026-11-02 (latest append-only checkpoint)
+
+- Branch HEAD at start of this checkpoint: `02237354a3a27a7dfb7aeaca340395d941e4885f`; main: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Source-free D3 static validation [Run 41360395329](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360395329): SUCCESS on exact SHA `02237354a3a27a7dfb7aeaca340395d941e4885f`; compile, unit tests, and no source-artifact/simulation assertions passed.
+- Published-output no-rebuild verification [Run 41360395218](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360395218): SUCCESS on same exact SHA; committed candidate outputs read back from Raw. This is not a D3 source-completeness pass.
+- D1-D2 validation [Run 41360395274](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41360395274): SUCCESS on same exact SHA; not used as D3 source evidence.
+- D3 remains `BLOCKED_MISSING_EVIDENCE`. Source cutoff `2026-10-31T00:00:00Z`; the three pinned data runs are pre-cutoff. The cancelled run `41358971225` and its derived temporary data are quarantined/excluded. No eligible post-cutoff source-producing run/artifact was found in the reviewed 314-run branch inventory.
+- Missing D3 evidence: C100 daily distributions; representative P50 raw daily logs; detailed P50 DAILY, ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS; all-trial close-date distribution. Five historical accounting fields remain missing and must not be inferred or zero-filled.
+- Existing 185-sheet workbooks are D2-Number-Registry-only candidates. The D3 exporter is source-dependent; static tests do not make its source inputs available.
+- Full evidence: `docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md`. Continuity updated in `docs/PROJECT_CONTINUITY.md`.
+- Next step: only consume already-existing eligible post-cutoff source artifacts if they are found and their metadata is validated before opening. If none exist, request a separate explicit owner decision before any new Trial/Simulation/Monte Carlo generation. Do not relax the cutoff or change source identity/N.
+- D4 remains `NOT_STARTED`. No D4 work was started.
