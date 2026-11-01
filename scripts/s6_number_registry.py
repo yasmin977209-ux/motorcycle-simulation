@@ -326,9 +326,11 @@ def build_registry(paths, source_head, workflow_run_id):
             meta = tm.get("files", {}).get("trial_result.json", {})
             if meta.get("size_bytes") != len(result_raw) or meta.get("sha256") != sha256(result_raw):
                 raise ValueError("REPRESENTATIVE_RESULT_HASH_MISMATCH:" + folder)
-            for field in ("scenario_id", "trial_id", "source_sha", "cohort_id", "trial_fingerprint"):
+            for field in ("scenario_id", "trial_id", "source_sha", "cohort_id"):
                 if result.get(field) != tm.get(field):
                     raise ValueError("REPRESENTATIVE_IDENTITY_MISMATCH:" + folder + ":" + field)
+            if result.get("trial_fingerprint") != tm.get("actual_trial_fingerprint"):
+                raise ValueError("REPRESENTATIVE_ACTUAL_FINGERPRINT_MISMATCH:" + folder)
             if (rr.get("scenario_id"), rr.get("trial_id"), rr.get("trial_fingerprint")) != (scenario, trial_id, result.get("trial_fingerprint")):
                 raise ValueError("REPRESENTATIVE_ROOT_IDENTITY_MISMATCH:" + folder)
             if (tm.get("actual_trial_fingerprint") != tm.get("expected_trial_fingerprint") or audit.get("trial_fingerprint") != result.get("trial_fingerprint") or audit.get("trial_fingerprint_match") is not True or audit.get("status") != "PASS_SCOPED_REPRESENTATIVE_FULL_LOGGING" or audit.get("rollforward_mismatch_count") != 0 or audit.get("balance_mismatch_count") != 0):
