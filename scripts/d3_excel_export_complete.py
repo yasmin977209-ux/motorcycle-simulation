@@ -24,6 +24,7 @@ from scripts.s6_number_registry import (
 )
 from scripts.d3_registry_extension import (
     ledger_number_id, ACCOUNTING_FIELDS, SOURCE_DATE_CUTOFF_UTC, SOURCE_RUN_CREATED_AT_UTC,
+    EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
 )
 from scripts.s6_artifact_reader import S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT, PINS
 from scripts.s6_excel_export import (
@@ -75,6 +76,11 @@ def validate_source_dates(extension: dict) -> None:
     sources = extension.get("source_artifacts")
     if not isinstance(sources, dict) or set(sources) != set(PINS):
         raise ValueError("D3_SOURCE_ARTIFACT_SET_INVALID")
+    expected_heads = {
+        "aggregate": EXPECTED_AGGREGATE_HEAD,
+        "full_logging": EXPECTED_FULL_LOGGING_HEAD,
+        "c100": EXPECTED_C100_HEAD,
+    }
     for role, pin in PINS.items():
         meta = sources.get(role)
         if not isinstance(meta, dict):
@@ -83,6 +89,16 @@ def validate_source_dates(extension: dict) -> None:
         expected = SOURCE_RUN_CREATED_AT_UTC.get(pin.run_id)
         if not isinstance(created_at, str) or created_at != expected or created_at < SOURCE_DATE_CUTOFF_UTC:
             raise ValueError("D3_SOURCE_ARTIFACT_PRE_CUTOFF_OR_UNPINNED:" + role)
+        if (
+            meta.get("artifact_id") != pin.artifact_id
+            or meta.get("run_id") != pin.run_id
+            or meta.get("size_bytes") != pin.size_bytes
+            or meta.get("sha256") != pin.sha256
+            or meta.get("filename") != pin.filename
+            or meta.get("workflow_run_head_sha") != expected_heads[role]
+            or meta.get("evidence_status") != "VERIFIED_LIVE"
+        ):
+            raise ValueError("D3_SOURCE_ARTIFACT_PIN_MISMATCH:" + role)
 
 
 def load_extension(path: str, base_sha: str) -> tuple[dict, bytes, str]:
