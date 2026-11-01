@@ -318,3 +318,8 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Added `.github/workflows/d3-published-output-verification.yml`: exact triggering SHA checkout, exact HEAD assertion, focused regression tests, and SHA-256/size/Git-blob Raw readback for both committed workbooks, D3 audit, manifest, report, Number Registry, and repository reference copy. It does not rebuild or rewrite the workbooks.
 - Correction ledger and workflow are committed on `tmp/d1-rebuild-20261101`. Verify the Actions run and Raw readback at the exact final commit before marking these new checks `VERIFIED_LIVE`.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains not authorized. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main update, merge, or Release.
+
+
+## D3 source-date status — 2026-11-02
+
+D3: BLOCKED_MISSING_EVIDENCE. Existing 185-sheet candidates and exact-head readback remain valid only within their scoped coverage. C100 daily and D3-07 through D3-13 detailed source records remain missing. The D3 completion workflow is disabled due to the source-date cutoff; no D3 closure or D4 transition.

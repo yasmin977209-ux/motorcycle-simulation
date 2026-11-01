@@ -225,3 +225,8 @@ Before continuing, read `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.
 - Added `.github/workflows/d3-published-output-verification.yml`: exact triggering SHA checkout, exact HEAD assertion, focused regression tests, and SHA-256/size/Git-blob Raw readback for both committed workbooks, D3 audit, manifest, report, Number Registry, and repository reference copy. It does not rebuild or rewrite the workbooks.
 - Correction ledger and workflow are committed on `tmp/d1-rebuild-20261101`. Verify the Actions run and Raw readback at the exact final commit before marking these new checks `VERIFIED_LIVE`.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains not authorized. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main update, merge, or Release.
+
+
+## D3 source-date handoff — 2026-11-02
+
+D3 remains BLOCKED_MISSING_EVIDENCE. Use only post-2026-10-31 source files. The identified source runs are pre-cutoff and prohibited. The attempted workflow was cancelled after reading them; no published output resulted, and its temporary output is excluded. D4 has not started.

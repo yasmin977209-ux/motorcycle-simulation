@@ -122,3 +122,10 @@ def test_extract_daily_case_preserves_role_assignments_and_source_lineage():
     assert case["daily_rows"][0]["Cash"] == 0
     assert case["trial_summary"]["cumulative_project_profit"] == 3
     assert case["source_commit"] == "b" * 40
+
+
+def test_source_date_cutoff_blocks_pre_october_31_artifacts():
+    from scripts.d3_registry_extension import enforce_source_date_cutoff
+
+    with pytest.raises(ValueError, match="SOURCE_ARTIFACT_PRE_CUTOFF_PROHIBITED"):
+        enforce_source_date_cutoff()

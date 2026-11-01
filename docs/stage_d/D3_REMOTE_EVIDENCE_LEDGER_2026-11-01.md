@@ -48,3 +48,13 @@ Raw bytes were downloaded from immutable URLs and compared byte-for-byte with ru
 - Git blob SHA-1: 9fe43bfbb2cbfd2bb7f7010866e7469506d22c33
 
 Raw bytes were downloaded from immutable URLs and compared byte-for-byte with runner outputs.
+
+
+## D3 source-date restriction and cancelled run — 2026-11-02
+
+- Metadata-only eligibility audit: docs/stage_d/D3_SOURCE_DATE_AUDIT_2026-11-02.md and .json.
+- D3 completion run 41358971225: CANCELLED; no published Actions artifacts and no repository commit.
+- Cancellation run 41359264888: SUCCESS.
+- The run had already read three pre-cutoff artifact contents before cancellation. Its content-derived output is excluded and must not be cited.
+- Current branch HEAD at audit time: 7aea74e774084fb7a622f411c5b1dbfad40a2d0d; main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- D3 current gate remains BLOCKED_MISSING_EVIDENCE. The existing candidate workbook readback is verified by run 41359344854 at the above exact HEAD; this does not satisfy D3-05 or D3-07..D3-13.

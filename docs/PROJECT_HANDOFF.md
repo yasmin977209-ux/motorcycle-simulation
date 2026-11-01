@@ -185,3 +185,8 @@ Current D1/D2 record precedence and registry evidence are documented in `docs/st
 - Added `.github/workflows/d3-published-output-verification.yml`: exact triggering SHA checkout, exact HEAD assertion, focused regression tests, and SHA-256/size/Git-blob Raw readback for both committed workbooks, D3 audit, manifest, report, Number Registry, and repository reference copy. It does not rebuild or rewrite the workbooks.
 - Correction ledger and workflow are committed on `tmp/d1-rebuild-20261101`. Verify the Actions run and Raw readback at the exact final commit before marking these new checks `VERIFIED_LIVE`.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains not authorized. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main update, merge, or Release.
+
+
+## D3 handoff — source-date blocked — 2026-11-02
+
+D3 remains BLOCKED_MISSING_EVIDENCE. The current candidate workbook is published and exact-head readback passed, but C100 daily and the detailed P50/ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS/close-date evidence remains missing. The only pinned sources found for those items predate the 2026-10-31 cutoff and cannot be used. See D3_SOURCE_DATE_AUDIT_2026-11-02.md/.json. A processing attempt against those sources was cancelled after reading; no output was published, and all derived output is excluded. D4 remains NOT_STARTED.

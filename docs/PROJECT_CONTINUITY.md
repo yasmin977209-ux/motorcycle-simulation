@@ -2874,3 +2874,13 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Added `.github/workflows/d3-published-output-verification.yml`: exact triggering SHA checkout, exact HEAD assertion, focused regression tests, and SHA-256/size/Git-blob Raw readback for both committed workbooks, D3 audit, manifest, report, Number Registry, and repository reference copy. It does not rebuild or rewrite the workbooks.
 - Correction ledger and workflow are committed on `tmp/d1-rebuild-20261101`. Verify the Actions run and Raw readback at the exact final commit before marking these new checks `VERIFIED_LIVE`.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains not authorized. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main update, merge, or Release.
+
+
+## D3 continuation status — 2026-11-02
+
+- Live branch HEAD at this checkpoint: 7aea74e774084fb7a622f411c5b1dbfad40a2d0d. Main HEAD: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- The latest D3 candidate output exact-head verification run 41359344854 passed on the branch checkpoint; D1-D2 source validation run 41359344881 also passed on that exact HEAD.
+- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions and detailed P50 DAILY, ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and all-trial close-date sources are not available from eligible post-cutoff files.
+- Three pinned Actions source runs were found to predate the 2026-10-31 cutoff. A workflow attempt processed them before cancellation; the run was cancelled and produced no published artifact or repository commit. Its temporary derived output is quarantined and excluded.
+- D3 source-date audit: docs/stage_d/D3_SOURCE_DATE_AUDIT_2026-11-02.md/.json. The D3 completion workflow is disabled; the extension builder fails closed on the pre-cutoff pins.
+- Preserve all financial/production/statistical gate states and the five missing accounting fields. D4 remains NOT_STARTED.

@@ -969,3 +969,8 @@ Number Registry مورد خارجي مستقل، ولا تضفه عضواً تا
 - Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
 - D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
 - No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.
+
+
+## D3 source-date gate correction — 2026-11-02 (append-only)
+
+D3 remains BLOCKED_MISSING_EVIDENCE. Do not read or reuse source artifacts dated before 2026-10-31. The only three pinned source runs identified for the missing detailed ledgers are pre-cutoff and ineligible. The D3 completion workflow is disabled, and the extension builder rejects those pins before opening the archives. Any temporary output from the cancelled run is excluded from evidence. No D4 transition until eligible post-cutoff source evidence closes D3.

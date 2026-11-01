@@ -1,0 +1,55 @@
+{
+  "schema_version": "d3-source-date-audit-v1",
+  "audit_date_utc": "2026-11-02",
+  "source_cutoff_utc": "2026-10-31T00:00:00Z",
+  "metadata_only_inventory": [
+    {
+      "source_role": "S6 aggregate N=2400",
+      "artifact_id": 12852969854,
+      "run_id": 40773412377,
+      "created_at": "2026-10-28T21:36:57Z",
+      "head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed",
+      "eligible": false
+    },
+    {
+      "source_role": "Full Logging representative",
+      "artifact_id": 12998778418,
+      "run_id": 41098699740,
+      "created_at": "2026-10-30T17:25:30Z",
+      "head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70",
+      "eligible": false
+    },
+    {
+      "source_role": "C100 deterministic reuse",
+      "artifact_id": 12630457193,
+      "run_id": 40263424595,
+      "created_at": "2026-10-26T03:18:29Z",
+      "head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd",
+      "eligible": false
+    }
+  ],
+  "cancelled_processing_attempt": {
+    "run_id": 41358971225,
+    "status": "cancelled",
+    "cancelled_at": "2026-11-01T22:52:26Z",
+    "cancellation_workflow_run_id": 41359264888,
+    "cancellation_workflow_conclusion": "success",
+    "content_was_read_before_cancellation": true,
+    "published_artifacts": [],
+    "repository_commit_created": false,
+    "derived_results_accepted": false
+  },
+  "post_cutoff_source_search": {
+    "eligible_d3_source_artifacts_found": 0,
+    "recent_d3_candidate_runs_checked": [
+      41352075552,
+      41354098029
+    ],
+    "recent_exact_head_verification_run": 41359344854,
+    "recent_exact_head_verification_conclusion": "success"
+  },
+  "d3_status": "BLOCKED_MISSING_EVIDENCE",
+  "d4_status": "NOT_STARTED",
+  "no_trials_or_simulation_executed": true,
+  "note": "No source-content-derived values from the cancelled run are used as evidence."
+}

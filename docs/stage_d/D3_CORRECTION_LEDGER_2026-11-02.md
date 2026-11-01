@@ -44,3 +44,16 @@ Workflow file commit: `8ebbd4e730f9468cd205608d84e2cb63ab862c1b`.
 ## Evidence status
 
 The correction text and workflow file are committed. The new workflow's success and its final Raw readbacks must be established from the Actions run on the final correction HEAD. Until then, these additional checks are `NOT_RUN`, not `PASS`.
+
+
+## D3 pre-cutoff source-processing incident — 2026-11-02 (append-only)
+
+- The D3 completion workflow run 41358971225 was started against three pinned source runs whose GitHub metadata dates are earlier than the project cutoff 2026-10-31:
+  - Aggregate run 40773412377: created 2026-10-28T21:36:57Z; artifact 12852969854.
+  - Full Logging run 41098699740: created 2026-10-30T17:25:30Z; artifact 12998778418.
+  - C100 run 40263424595: created 2026-10-26T03:18:29Z; artifact 12630457193.
+- The workflow did download and read those source artifact contents before the cutoff rule was enforced. This was an execution error. Its content-derived temporary output is quarantined and MUST NOT be used as D3 evidence.
+- The workflow was cancelled at 2026-11-01T22:52:26Z. Cancellation workflow run 41359264888 completed successfully. The cancelled run has no published Actions artifacts, made no repository commit, did not publish workbooks/manifests, and did not change the D3 candidate deliverables.
+- The D3 completion workflow is now disabled; its orchestration script fails closed. The artifact reader also rejects all currently pinned pre-cutoff source runs before opening their archives.
+- The 17 D3-focused regression tests passed in the cancelled run, but that test result is not a D3 gate pass and does not validate any pre-cutoff source content.
+- No D3 status promotion is made. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.

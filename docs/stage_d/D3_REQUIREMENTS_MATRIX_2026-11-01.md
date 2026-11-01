@@ -68,3 +68,14 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - D3-17 preserved gate and evidence limitations: PASS_SCOPED.
 - D3-18 manifest and remote raw readback: PASS_SCOPED after the exact final HEAD validation step succeeds.
 - Overall D3 gate remains BLOCKED_MISSING_EVIDENCE; D4 must not start.
+
+
+## D3 source-date eligibility reassessment — 2026-11-02 (append-only)
+
+- The three source artifact runs previously considered for detailed D3 reconstruction were created before the 2026-10-31 cutoff and are ineligible for reading under the current project rule.
+- A processing attempt (workflow run 41358971225) was cancelled after those artifacts had already been downloaded and read. Its temporary derived output is quarantined, unpublished and excluded from evidence. No repository commit or Actions artifact was produced by that run.
+- The D3 completion workflow is disabled and the extension builder now fails closed on the currently pinned pre-cutoff runs.
+- D3-05 remains PASS_SCOPED_WITH_LIMITATIONS for 20 S6 series only; C100 daily remains MISSING_EVIDENCE.
+- D3-06 remains PASS_SCOPED_WITH_LIMITATIONS for 105 keys / 1,680 registry entries only; representative raw daily logs remain MISSING_EVIDENCE.
+- D3-07 through D3-13 remain MISSING_EVIDENCE.
+- D3-14 through D3-18 retain their previously recorded scoped evidence. Overall D3 remains BLOCKED_MISSING_EVIDENCE. D4 remains NOT_STARTED.

@@ -22,6 +22,27 @@ from scripts.s6_number_registry import (
     CURRENT_REFERENCE_SHA256, stable_id, display_fraction, unit, no_floats, blob_sha1,
 )
 
+SOURCE_DATE_CUTOFF_UTC = "2026-10-31T00:00:00Z"
+SOURCE_RUN_CREATED_AT_UTC = {
+    40773412377: "2026-10-28T21:36:57Z",
+    41098699740: "2026-10-30T17:25:30Z",
+    40263424595: "2026-10-26T03:18:29Z",
+}
+
+
+def enforce_source_date_cutoff() -> None:
+    """Fail closed before opening any source archive outside the allowed date window."""
+    for key, pin in PINS.items():
+        created_at = SOURCE_RUN_CREATED_AT_UTC.get(pin.run_id)
+        if created_at is None or created_at < SOURCE_DATE_CUTOFF_UTC:
+            raise ValueError(
+                "SOURCE_ARTIFACT_PRE_CUTOFF_PROHIBITED:"
+                + key + ":run_id=" + str(pin.run_id)
+                + ":created_at=" + str(created_at)
+                + ":cutoff=" + SOURCE_DATE_CUTOFF_UTC
+            )
+
+
 BASE_REGISTRY_SHA256 = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
 BASE_REGISTRY_BYTES = 24137036
 EXPECTED_AGGREGATE_HEAD = "4f2f2cc16d0cb5125262088704febccbae6f50ed"
@@ -432,6 +453,7 @@ def build_sensitivity_entries(entries: list[dict]) -> list[dict]:
 
 
 def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
+    enforce_source_date_cutoff()
     base_raw = Path(base_registry_path).read_bytes()
     if len(base_raw) != BASE_REGISTRY_BYTES or sha256(base_raw) != BASE_REGISTRY_SHA256:
         raise ValueError("BASE_NUMBER_REGISTRY_PIN_MISMATCH")
