@@ -41,3 +41,14 @@
 - D4: `NOT_STARTED`. No D4 work was initiated.
 
 No pre-cutoff source content is used as evidence. No missing accounting values are inferred or zero-filled. Financial Gate A, Production Gate A, Gate B, Stability, N=4800, Full Logging and C100 Golden statuses remain unchanged.
+
+
+## Final continuation checkpoint — 2026-11-02
+
+- Branch HEAD immediately before this handoff update: c55e2ca3136df559d1512c8420191975b01eb999.
+- Main HEAD remains c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- The D3 audit, requirements matrix, remote evidence ledger, project continuity, project handoff, Stage D session status and continuity handoff have append-only continuation records.
+- The source-free validation workflow and tests are present, but the expected report file is absent from the live branch. Therefore no successful run is claimed; static tests remain NOT_RUN / MISSING_EVIDENCE.
+- The published candidate audit and manifest both explicitly state d3_gate_status=BLOCKED_MISSING_EVIDENCE. The workbooks remain interim candidates only.
+- Missing eligible evidence remains C100 daily distributions and D3-07 through D3-13 source ledgers. Pre-cutoff source artifacts and all outputs derived from cancelled run 41358971225 remain excluded.
+- D4 remains NOT_STARTED. This is the final D3 continuation handoff for this session; do not promote D3 or start D4 without eligible evidence and a separately verified D3 gate.
