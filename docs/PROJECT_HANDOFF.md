@@ -154,3 +154,13 @@ Current D1/D2 record precedence and registry evidence are documented in `docs/st
 - D2: `PASS_SCOPED_WITH_LIMITATIONS`. Latest registry SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`, blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`, size 24,137,036 bytes, registry-containing commit `cc94985454d6e5971947e53c8e0a2782ad2de12d`, final raw readback commit `46c86795d64311b53106fb0b7a79f8bcde116112`, Run `41335321803`. Older `47e72e...` triple is historical for Run `41333300530`.
 - Validation Run `41344528986`: 34 passed, 0 failed, 0 skipped on `de12b42ee371ec12675b1110facd6d2da25eb781`.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`; D4–D6 and E0–E6 remain `NOT_STARTED`. No simulation, Trials, N expansion, backfill, or zero-fill is authorized by this documentation correction.
+
+
+## D3 candidate build — 2026-11-01
+
+- D2 was revalidated closed before D3; D3 candidate generation was explicitly requested in this session.
+- Output commit: ddf0e9c64066d3123f2b8a82900123f04986ea42; workflow run: 41350404125.
+- Candidate classification: T2_INTERIM / NOT_FINAL_BLOCKED.
+- Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
+- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
+- No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.

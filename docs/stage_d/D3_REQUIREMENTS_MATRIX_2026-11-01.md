@@ -36,3 +36,19 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - Registry scope and limitations are unchanged: 20 S6 daily scenarios, 1,000 series, 2,086,550 daily points, 105 representative keys / 1,680 numeric entries; C100 daily distributions and representative raw P50 daily logs are missing, as are detailed ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and final close-date data. Five historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled.
 - Preserve all gates: financial Gate A PASS_SCOPED only; production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys only / NOT_VERIFIED_105_OF_105; C100 Golden NOT_RUN.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge, Release or D4 transition. Await the owner's explicit continuation instruction.
+
+## Candidate publication and validation — append-only
+
+- D3-01 approved v2.4.0 bytes and Number Registry identity: PASS_SCOPED; the exact approved reference is fetched from its pinned GitHub Gist revision and hash-checked.
+- D3-02 S6/C100 cohort separation: PASS_SCOPED.
+- D3-03 185-sheet inventory per workbook: PASS_SCOPED.
+- D3-04 bilingual sheet order and numeric parity: PASS_SCOPED.
+- D3-05 20 S6 daily series / 2,086,550 points: PASS_SCOPED_WITH_LIMITATIONS; C100 daily series remain MISSING_EVIDENCE.
+- D3-06 105 representative keys / 1,680 numeric entries: PASS_SCOPED_WITH_LIMITATIONS.
+- D3-07 through D3-13 detailed P50, ASSETS, ACCTG, PARTNER, GUARANTEE, CONTRACTS and close-date records: MISSING_EVIDENCE.
+- D3-14 Excel formula/error and RTL/LTR checks: PASS_SCOPED.
+- D3-15 Number-ID traceability: PASS_SCOPED.
+- D3-16 exact integer-ratio / Decimal arithmetic: PASS_SCOPED.
+- D3-17 preserved gate and evidence limitations: PASS_SCOPED.
+- D3-18 manifest and remote raw readback: PASS_SCOPED after the exact final HEAD validation step succeeds.
+- Overall D3 gate remains BLOCKED_MISSING_EVIDENCE; D4 must not start.

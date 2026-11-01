@@ -287,3 +287,13 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - D1/D2 validation Run `41344528986`: SUCCESS, 34 passed, 0 failed, 0 skipped, tested SHA `de12b42ee371ec12675b1110facd6d2da25eb781`.
 - D0/D1/D2 scope and limitations remain unchanged. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4–D6 and E0–E6 remain `NOT_STARTED`.
 - See `D1_D2_DOCUMENTATION_RECONCILIATION_ADDENDUM_2026-11-01.md`. This entry is append-only and does not rewrite historical logs.
+
+
+## D3 candidate build — 2026-11-01
+
+- D2 was revalidated closed before D3; D3 candidate generation was explicitly requested in this session.
+- Output commit: ddf0e9c64066d3123f2b8a82900123f04986ea42; workflow run: 41350404125.
+- Candidate classification: T2_INTERIM / NOT_FINAL_BLOCKED.
+- Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
+- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
+- No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.

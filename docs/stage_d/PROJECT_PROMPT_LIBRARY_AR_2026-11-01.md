@@ -852,3 +852,13 @@ metric × scenario × checkpoint × method × threshold × result × evidence.
 سبب الإصدار الجديد: النسخة التاريخية أعلاه كانت ما تزال تصف D2 بأنها NOT_STARTED وتوجه إلى بدء D2، بينما سجل D3 الحي يثبت إغلاق D2 بحالة PASS_SCOPED_WITH_LIMITATIONS وأن D3 BLOCKED / BLOCKED_MISSING_EVIDENCE. كما أن محاولات D3 وأسباب فشلها وفجوات المخرجات لم تكن ممثلة في توجيه الاستئناف الأعلى أولوية.
 
 **قاعدة الاستخدام:** احتفظ بمحتوى هذه النسخة كما كان لأغراض التاريخ والتتبع. استخدم REV2 بوصفها المكتبة التشغيلية الأحدث. لا تعتبر هذا الإشعار وحده إثباتاً لحالة أي مرحلة؛ أعد التحقق من GitHub في كل جلسة.
+
+
+## D3 candidate build — 2026-11-01
+
+- D2 was revalidated closed before D3; D3 candidate generation was explicitly requested in this session.
+- Output commit: ddf0e9c64066d3123f2b8a82900123f04986ea42; workflow run: 41350404125.
+- Candidate classification: T2_INTERIM / NOT_FINAL_BLOCKED.
+- Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
+- D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
+- No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.
