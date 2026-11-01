@@ -428,7 +428,7 @@ def build_registry(paths, source_head, workflow_run_id):
         "d2_status": "PASS_SCOPED_WITH_LIMITATIONS", "registry_path": "results/number_registry.json",
         "entry_count": len(entries), "daily_series_count": daily_summary["series_count"],
         "daily_point_count": daily_summary["point_count"], "daily_distribution_rows": daily_summary["row_count"],
-        "aggregate_checkpoint_entries": len(source_entries), "representative_trial_count": sum(cohort_counts.values()),
+        "aggregate_checkpoint_entries": len(raw_entries), "representative_trial_count": sum(cohort_counts.values()),
         "representative_numeric_entries": sum(cohort_counts.values()) * len(TRIAL_FIELDS),
         "cohort_counts": {"S6_representative_keys": cohort_counts[S6_COHORT], "C100_representative_keys": cohort_counts[C100_COHORT]},
         "full_logging_normalized_status": "NOT_VERIFIED_105_OF_105", "c100_golden_revalidation": "NOT_RUN",
