@@ -291,7 +291,7 @@ jobs:
               with path.open("ab") as output:
                   output.write(run_record.encode("utf-8"))
           PY
-          git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
+          git add docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md docs/stage_d/D2_REMOTE_EVIDENCE_LEDGER_2026-11-01.md docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md docs/PROJECT_CONTINUITY.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md
           git diff --cached --check
           git commit -m "docs(d2): finalize requirements matrix and remote evidence ledger"
           git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
