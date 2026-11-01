@@ -52,153 +52,31 @@
   "historical_local_report": {
     "classification": "HISTORICAL_REPORT_NOT_CURRENT_REGISTRY",
     "original_report": {
-      "aggregate_checkpoint_entries": 960,
-      "artifact_pins": {
-        "aggregate": {
-          "artifact_id": 12852969854,
-          "evidence_status": "VERIFIED_LIVE",
-          "filename": "s6-n2400.zip",
-          "run_id": 40773412377,
-          "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
-          "size_bytes": 9357996
-        },
-        "c100": {
-          "artifact_id": 12630457193,
-          "evidence_status": "VERIFIED_LIVE",
-          "filename": "c100-reuse.zip",
-          "run_id": 40263424595,
-          "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
-          "size_bytes": 361733
-        },
-        "full_logging": {
-          "artifact_id": 12998778418,
-          "evidence_status": "VERIFIED_LIVE",
-          "filename": "full-logging.zip",
-          "run_id": 41098699740,
-          "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
-          "size_bytes": 310827203
-        }
-      },
-      "audit_id": "D2-S6-NUMBER-REGISTRY-2026-11-01",
-      "audit_note": "This canonical audit JSON supersedes the original top-level local-only disposition while retaining the complete original report under historical_local_report.",
-      "c100_golden_revalidation": "NOT_RUN",
+      "audit_id": "D2-S6-NUMBER-REGISTRY-2026-10-31",
       "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
-      "cohort_counts": {
-        "C100_representative_keys": 5,
-        "S6_representative_keys": 100
-      },
-      "daily_distribution_rows": 2086550,
-      "daily_point_count": 2086550,
-      "daily_series_count": 1000,
-      "entry_count": 2640,
-      "exact_head_validation_run_id": "41328486239",
-      "exact_head_validation_sha": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
-      "full_logging_normalized_status": "NOT_VERIFIED_105_OF_105",
+      "compileall": "REPORTED_ONLY_LOCAL_SUCCESS",
+      "duplicate_number_id_count": 0,
+      "entry_count": 13954,
+      "exact_head_workflow": "NOT_RUN",
+      "float_count": 0,
       "gate_statuses": {
-        "c100_golden_revalidation": "NOT_RUN",
         "full_logging": "PASS_SCOPED_105_KEYS_ONLY",
         "gate_a_financial": "PASS_SCOPED",
-        "gate_a_production": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-        "gate_b_n2400": "FAIL_SCOPED (10/10)",
+        "gate_a_production": "NOT_DECLARED",
+        "gate_b_n2400": "FAIL_SCOPED",
         "n4800": "NOT_EXECUTED",
-        "stability": "NOT_CONVERGED (0/60)"
+        "stability": "NOT_CONVERGED"
       },
-      "historical_local_report": {
-        "classification": "HISTORICAL_REPORT_NOT_CURRENT_REGISTRY",
-        "original_report": {
-          "audit_id": "D2-S6-NUMBER-REGISTRY-2026-10-31",
-          "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
-          "compileall": "REPORTED_ONLY_LOCAL_SUCCESS",
-          "duplicate_number_id_count": 0,
-          "entry_count": 13954,
-          "exact_head_workflow": "NOT_RUN",
-          "float_count": 0,
-          "gate_statuses": {
-            "full_logging": "PASS_SCOPED_105_KEYS_ONLY",
-            "gate_a_financial": "PASS_SCOPED",
-            "gate_a_production": "NOT_DECLARED",
-            "gate_b_n2400": "FAIL_SCOPED",
-            "n4800": "NOT_EXECUTED",
-            "stability": "NOT_CONVERGED"
-          },
-          "local_tests": "27 passed",
-          "missing_source_digest_count": 1,
-          "registry_path": "results/number_registry.json",
-          "reported_only_count": 8,
-          "reports_generated": false,
-          "sha256": "53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73",
-          "size_bytes": 22781475,
-          "status": "REPORTED_ONLY_LOCAL_ONLY",
-          "unavailable_record_count": 10,
-          "verified_local_count": 13946
-        },
-        "status": "REPORTED_ONLY_LOCAL_ONLY"
-      },
-      "limitations": [
-        "Full Logging contains 105 representative keys only; normalized statuses remain NOT_VERIFIED.",
-        "C100 remains separate as CROSS_COHORT_DETERMINISTIC_REUSE; Golden revalidation remains NOT_RUN.",
-        "Production Gate A remains NOT_DECLARED.",
-        "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60).",
-        "N=4800 remains NOT_EXECUTED.",
-        "The five missing historical accounting fields remain MISSING_EVIDENCE and are not backfilled or zero-filled.",
-        "No Trial, Simulation, Monte Carlo or N expansion was run."
-      ],
-      "raw_readback_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
-      "raw_readback_status": "PASS_ALL_SEVEN_FILES",
-      "registry_containing_commit": "c5e9c862c161dea89651d27e3a4eb5f5f35211ad",
-      "registry_git_blob_sha1": "824803e8543fff7c628586bd37ea6e3f706cf9ba",
+      "local_tests": "27 passed",
+      "missing_source_digest_count": 1,
       "registry_path": "results/number_registry.json",
-      "registry_sha256": "d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb",
-      "registry_size_bytes": 24137036,
-      "representative_numeric_entries": 1680,
-      "representative_trial_count": 105,
-      "source_head": "8048e980951cb34e5c023c1b51e7a2ac5970171d",
-      "status": "PASS_SCOPED_WITH_LIMITATIONS",
-      "unavailable_evidence": [
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "Accounts_Receivable",
-          "reason": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-          "value": null
-        },
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "Accumulated_Depreciation",
-          "reason": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-          "value": null
-        },
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "Gross_Bike_Assets",
-          "reason": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-          "value": null
-        },
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "Guarantee_Claim_Receivable",
-          "reason": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-          "value": null
-        },
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "Total_Assets",
-          "reason": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
-          "value": null
-        },
-        {
-          "do_not_infer_or_zero_fill": true,
-          "evidence_status": "MISSING_EVIDENCE",
-          "metric_name": "source_run_metadata.sha256",
-          "reason": "NULL_IN_PINNED_AGGREGATE_MANIFEST",
-          "value": null
-        }
-      ],
-      "workflow_run_id": "41328486239"
+      "reported_only_count": 8,
+      "reports_generated": false,
+      "sha256": "53ece080e0eeea1feefbdac3727997deece17670bff4ac8539ea01562a12af73",
+      "size_bytes": 22781475,
+      "status": "REPORTED_ONLY_LOCAL_ONLY",
+      "unavailable_record_count": 10,
+      "verified_local_count": 13946
     },
     "status": "REPORTED_ONLY_LOCAL_ONLY"
   },
@@ -212,13 +90,13 @@
     "No Trial, Simulation, Monte Carlo or N expansion was run."
   ],
   "registry_containing_commit": "RECORDED_IN_EXACT_HEAD_WORKFLOW_LOG",
-  "registry_git_blob_sha1": "b5b795eac48e2443f0fa734d0a2e40017a967832",
+  "registry_git_blob_sha1": "ba7ead51a67b244ebfcb87d35be59dbaf62fccfc",
   "registry_path": "results/number_registry.json",
-  "registry_sha256": "2cb974586fb627fa8e6e4babcf370df146a61bc48ff2b9e087f8af8e066066d9",
+  "registry_sha256": "47e72ecae6f8c9f8cff3c8599909c42bf5e8a4ddaa3d3bceb0be764717b7b321",
   "registry_size_bytes": 24137036,
   "representative_numeric_entries": 1680,
   "representative_trial_count": 105,
-  "source_head": "2407a8e832aa8fa01ed8951ce8f89cc8548a8dea",
+  "source_head": "a830827c4977ba9b9121903225da5c42f8ca0959",
   "status": "PASS_SCOPED_WITH_LIMITATIONS",
   "unavailable_evidence": [
     {
@@ -264,5 +142,5 @@
       "value": null
     }
   ],
-  "workflow_run_id": "41332273796"
+  "workflow_run_id": "41333300530"
 }
