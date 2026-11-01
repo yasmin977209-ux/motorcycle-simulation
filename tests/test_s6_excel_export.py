@@ -25,17 +25,21 @@ def test_missing_detail_scope_explicit():
 
 def test_reference_constants_parser():
     sample="""# الباب الثاني: الثوابت
-| المعرّف | القيمة | الوصف |
+| المعرّف | القيمة (ريال يمني) | الوصف |
 |---|---|---|
-| TOTAL_CAPITAL | 3,700,000 | رأس المال |
+| `TOTAL_CAPITAL` | `3,700,000` | رأس المال الكلي، مموَّل بالكامل من الشريك الأول |
+| `BIKE_BASE_PURCHASE_COST` | `350,000` | سعر شراء الدراجة الأساسي |
 # الباب الثالث: entities
 """
-    assert constants_from_reference(sample)==[["TOTAL_CAPITAL","3,700,000","رأس المال"]]
+    assert constants_from_reference(sample)==[
+        ["TOTAL_CAPITAL","3,700,000","رأس المال الكلي، مموَّل بالكامل من الشريك الأول"],
+        ["BIKE_BASE_PURCHASE_COST","350,000","سعر شراء الدراجة الأساسي"]
+    ]
 
 
 def test_formula_like_strings_are_written_as_text(tmp_path):
     from openpyxl import Workbook, load_workbook
-    from scripts.s6_excel_export import safe_append
+    from scripts.s6_excel_export import safe_append, audit
     path=tmp_path / "safe.xlsx"
     wb=Workbook(write_only=True)
     ws=wb.create_sheet("T")
@@ -49,3 +53,17 @@ def test_formula_like_strings_are_written_as_text(tmp_path):
         assert all(cell.data_type!="f" for cell in row)
     finally:
         check.close()
+    assert audit(path,["T"])["excel_safety_status"]=="PASS"
+
+    unsafe=tmp_path / "unsafe.xlsx"
+    bad=Workbook()
+    ws=bad.active; ws.title="T"
+    ws["A1"]="=1+1"
+    ws["B1"]="#VALUE!"; ws["B1"].data_type="e"
+    bad.save(unsafe); bad.close()
+    report=audit(unsafe,["T"])
+    assert report["formula_cell_count"]==1
+    assert report["formula_cells"]==[{"sheet":"T","cell":"A1","classification":"FORMULA_CELL","formula":"=1+1"}]
+    assert report["excel_error_cell_count"]==1
+    assert report["excel_error_cells"]==[{"sheet":"T","cell":"B1","classification":"EXCEL_ERROR_CELL","error_type":"#VALUE!"}]
+    assert report["excel_safety_status"]=="FAIL"

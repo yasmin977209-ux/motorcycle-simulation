@@ -38,6 +38,7 @@ def sha(path):
     return h.hexdigest()
 def blob_sha(raw): return hashlib.sha1(b"blob "+str(len(raw)).encode()+bytes([0])+raw).hexdigest()
 def constants_from_reference(text):
+    """Read identifier/value/description rows using the governing reference's Markdown table format."""
     active=False; rows=[]
     for line in text.splitlines():
         if line.startswith("# الباب الثاني") or line.startswith("## 2.1") or line.startswith("## 2.2"): active=True
@@ -45,8 +46,11 @@ def constants_from_reference(text):
         if not active or not line.strip().startswith("|"): continue
         cells=[x.strip() for x in line.strip().strip("|").split("|")]
         if len(cells)<2 or all(re.fullmatch(r"[-: ]+",x or " ") for x in cells): continue
-        if cells[0] in {"المعرّف","الثابت","#","مصدر المطالبة"}: continue
-        if cells[0].startswith(chr(96)) or cells[0].startswith("**") or re.fullmatch(r"[A-Z][A-Z0-9_]*",cells[0]): rosafe_append(ws,(cells+["",""])[:3])
+        identifier=cells[0].strip().strip("`").strip()
+        if identifier in {"المعرّف","الثابت","#","مصدر المطالبة"}: continue
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*",identifier): continue
+        normalized=[x.strip().strip("`").strip() for x in cells]
+        rows.append((normalized+["",""])[:3])
     if not rows: raise ValueError("REFERENCE_CONSTANTS_NOT_FOUND")
     return rows
 def scenarios(reg):
@@ -186,15 +190,19 @@ def audit(path,expected):
     wb=load_workbook(path,read_only=True,data_only=False)
     try:
         if wb.sheetnames!=expected: raise ValueError("WORKSHEET_NAMES_OR_ORDER_MISMATCH")
-        formulas=errors=numeric=0
+        formula_cells=[]; excel_error_cells=[]; numeric=0
         for ws in wb.worksheets:
             for row in ws.iter_rows():
                 for c in row:
-                    if c.data_type=="f": formulas+=1
-                    if c.data_type=="e": errors+=1
+                    if c.data_type=="f":
+                        formula_cells.append({"sheet":ws.title,"cell":c.coordinate,"classification":"FORMULA_CELL","formula":str(c.value)})
+                    elif c.data_type=="e":
+                        excel_error_cells.append({"sheet":ws.title,"cell":c.coordinate,"classification":"EXCEL_ERROR_CELL","error_type":str(c.value)})
                     if isinstance(c.value,(int,float,Decimal)) and not isinstance(c.value,bool): numeric+=1
-        if formulas or errors: raise ValueError("FORMULA_OR_ERROR_CELLS_FOUND")
-        return {"sheet_count":len(wb.sheetnames),"formula_cells":formulas,"excel_error_cells":errors,"numeric_cells":numeric,"bytes":path.stat().st_size,"sha256":sha(path)}
+        return {"sheet_count":len(wb.sheetnames),"formula_cell_count":len(formula_cells),"formula_cells":formula_cells,
+            "excel_error_cell_count":len(excel_error_cells),"excel_error_cells":excel_error_cells,
+            "excel_safety_status":"PASS" if not formula_cells and not excel_error_cells else "FAIL",
+            "numeric_cells":numeric,"bytes":path.stat().st_size,"sha256":sha(path)}
     finally: wb.close()
 def compare(ar,en,names):
     a=load_workbook(ar,read_only=True,data_only=False); b=load_workbook(en,read_only=True,data_only=False); n=0
@@ -239,7 +247,12 @@ def build(args):
     result={"d3_candidate_status":"T2_INTERIM / NOT_FINAL_BLOCKED","d3_gate_status":"BLOCKED_MISSING_EVIDENCE","source_head":args.source_head,"workflow_run_id":str(args.run_id),
       "registry":{"bytes":len(raw),"sha256":regsha,"git_blob_sha1":blob_sha(raw),**validation},"scenario_count":len(ids),"worksheet_count_per_workbook":len(names),
       "arabic_workbook":aa,"english_workbook":ee,"bilingual_numeric_parity":parity,"number_id_traceability":trace,"missing_evidence":missing_list,"gate_statuses_preserved":reg["gate_statuses"],"no_trials_or_simulation_executed":True}
-    out.mkdir(parents=True,exist_ok=True); (out/"D3_BUILD_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    out.mkdir(parents=True,exist_ok=True)
+    (out/"D3_BUILD_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    safety_violations={"arabic":{"formula_cell_count":aa["formula_cell_count"],"formula_cells":aa["formula_cells"],"excel_error_cell_count":aa["excel_error_cell_count"],"excel_error_cells":aa["excel_error_cells"]},
+      "english":{"formula_cell_count":ee["formula_cell_count"],"formula_cells":ee["formula_cells"],"excel_error_cell_count":ee["excel_error_cell_count"],"excel_error_cells":ee["excel_error_cells"]}}
+    if any(v["formula_cell_count"] or v["excel_error_cell_count"] for v in safety_violations.values()):
+        raise ValueError("EXCEL_SAFETY_VIOLATIONS:"+json.dumps(safety_violations,ensure_ascii=False,sort_keys=True))
     manifest={"classification":result["d3_candidate_status"],"d3_gate_status":result["d3_gate_status"],"source_head":args.source_head,"workflow_run_id":str(args.run_id),"registry_sha256":regsha,
       "master_seed":reg["scope"]["S6"]["master_seed"],"files":{ar.name:{"bytes":aa["bytes"],"sha256":aa["sha256"]},en.name:{"bytes":ee["bytes"],"sha256":ee["sha256"]}},
       "numeric_comparisons":parity["numeric_comparisons"],"number_id_traceability":trace,"missing_evidence":missing_list,"python_version":platform.python_version(),"openpyxl_version":__import__("openpyxl").__version__}
