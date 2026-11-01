@@ -4,6 +4,8 @@ import pytest
 
 from scripts.s6_number_registry import (
     CURRENT_REFERENCE_SHA256,
+    _daily_resolution_indexes,
+    _resolve_daily_number,
     HISTORICAL_EXECUTION_REFERENCE_SHA256,
     daily_number_id,
     display_fraction,
@@ -143,3 +145,28 @@ def test_governing_and_historical_reference_identities_are_separate():
     assert CURRENT_REFERENCE_SHA256 == "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
     assert HISTORICAL_EXECUTION_REFERENCE_SHA256 == "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
     assert CURRENT_REFERENCE_SHA256 != HISTORICAL_EXECUTION_REFERENCE_SHA256
+
+
+
+def test_daily_resolver_all_trials_mode_uses_total_sample_count():
+    registry, series_id = make_daily_registry()
+    registry["daily_series"][0]["mode"] = "ALL_TRIALS_CARRY_FORWARD"
+    series_by_id, indexes_by_scenario = _daily_resolution_indexes(registry)
+    number_id = daily_number_id(series_id, 1)
+    resolved = _resolve_daily_number(registry, number_id, series_by_id, indexes_by_scenario)
+    assert resolved["date"] == "2027-01-02"
+    assert resolved["active_trial_count"] == 2399
+    assert resolved["sample_trial_count"] == 2400
+    assert resolved["numerator"] == 25
+    assert resolved["denominator"] == 2
+    assert resolved["locator"].endswith("2027-01-02/ALL_TRIALS_CARRY_FORWARD/Cash/P50")
+
+
+def test_daily_resolver_rejects_invalid_sample_provenance_and_unknown_id():
+    registry, series_id = make_daily_registry()
+    series_by_id, indexes_by_scenario = _daily_resolution_indexes(registry)
+    registry["daily_date_indexes"][0]["active_trial_counts"][1] = True
+    with pytest.raises(ValueError, match="DAILY_NUMBER_SAMPLE_PROVENANCE_INVALID"):
+        _resolve_daily_number(registry, daily_number_id(series_id, 1), series_by_id, indexes_by_scenario)
+    with pytest.raises(KeyError):
+        resolve_number(registry, "D2D-" + "f" * 20 + "-000000")
