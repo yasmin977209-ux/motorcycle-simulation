@@ -21,3 +21,10 @@
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change, main update, PR, merge or Release.
 
 **Disposition:** D3 remains BLOCKED_MISSING_EVIDENCE. This addendum does not authorize D4 or any later phase.
+
+
+## Append-only correction — governing reference repository copy (2026-11-02)
+
+The earlier sentence classifying `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` as a conflicting 269,253-byte candidate was incorrect and is withdrawn. The live Git tree at the D3 output commit records this repository path as 401,397 bytes with Git blob SHA-1 `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`, the same blob SHA-1 recorded for the approved Gist revision. This is strong identity evidence, but Git blob identity alone is not a substitute for the required exact Raw-byte SHA-256 readback. The new no-rebuild verification workflow checks the repository copy against the approved v2.4.0 SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, byte size 401,397, and Git blob SHA-1. Until that workflow passes on the exact final HEAD, classify the repository copy as `MISSING_EVIDENCE`, not `VERIFIED_LIVE`.
+
+No reference content is changed by this correction. The approved Gist remains the governing input; the repository copy is only being independently verified.
