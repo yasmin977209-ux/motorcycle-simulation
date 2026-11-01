@@ -1,5 +1,5 @@
 """Stage D3 bilingual Excel candidate exporter. Numeric values are resolved only from D2 Number Registry."""
-import argparse, hashlib, json, re, platform
+import argparse, hashlib, json, re, platform, zipfile
 from datetime import date, timedelta, datetime, timezone
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 from pathlib import Path
@@ -198,8 +198,6 @@ def audit(path,expected,expected_rtl=None):
         if wb.sheetnames!=expected: raise ValueError("WORKSHEET_NAMES_OR_ORDER_MISMATCH")
         formula_cells=[]; excel_error_cells=[]; direction_mismatches=[]; numeric=0
         for ws in wb.worksheets:
-            if expected_rtl is not None and bool(ws.sheet_view.rightToLeft)!=expected_rtl:
-                direction_mismatches.append({"sheet":ws.title,"expected":"RTL" if expected_rtl else "LTR","actual":"RTL" if ws.sheet_view.rightToLeft else "LTR"})
             for row in ws.iter_rows():
                 for c in row:
                     if c.data_type=="f":
@@ -207,6 +205,14 @@ def audit(path,expected,expected_rtl=None):
                     elif c.data_type=="e":
                         excel_error_cells.append({"sheet":ws.title,"cell":c.coordinate,"classification":"EXCEL_ERROR_CELL","error_type":str(c.value)})
                     if isinstance(c.value,(int,float,Decimal)) and not isinstance(c.value,bool): numeric+=1
+        if expected_rtl is not None:
+            with zipfile.ZipFile(path,"r") as archive:
+                for index,name in enumerate(expected,1):
+                    sheet_xml=archive.read(f"xl/worksheets/sheet{index}.xml")
+                    view=re.search(rb"<sheetView\\b([^>]*)>",sheet_xml)
+                    rtl=bool(view and re.search(rb'\\brightToLeft=["\\']1["\\']',view.group(1)))
+                    if rtl!=expected_rtl:
+                        direction_mismatches.append({"sheet":name,"expected":"RTL" if expected_rtl else "LTR","actual":"RTL" if rtl else "LTR"})
         return {"sheet_count":len(wb.sheetnames),"formula_cell_count":len(formula_cells),"formula_cells":formula_cells,
             "excel_error_cell_count":len(excel_error_cells),"excel_error_cells":excel_error_cells,
             "excel_safety_status":"PASS" if not formula_cells and not excel_error_cells else "FAIL",
