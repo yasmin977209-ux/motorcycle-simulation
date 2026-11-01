@@ -50,3 +50,15 @@ State files are root `state.json` and `docs/STATE_SHA_SEMANTICS.md`; the root st
 - No Trial, Simulation, Monte Carlo, N expansion or main update.
 
 - Current D2 final handoff correction: `docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md` (Run 41326662869, SUCCESS).
+
+
+## Final D2 handoff — 2026-11-01
+
+D2 is PASS_SCOPED_WITH_LIMITATIONS, not final project acceptance.
+
+- Definitive D2 Run 41328486239 — SUCCESS; registry/exact-head commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad.
+- results/number_registry.json: 24,137,036 bytes; SHA-256 d8c701d0fc35cbd1566ebced5ccc4f40bb3dafe538d020dd7c89b1ec326c66bb; blob SHA-1 824803e8543fff7c628586bd37ea6e3f706cf9ba.
+- 2,640 entries, 1,000 daily series, 2,086,550 daily points. The daily number_id format is deterministic and implemented by scripts.s6_number_registry.daily_number_id / resolve_number.
+- Canonical audit JSON is docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.json; the old 13,954-entry local report is retained as historical evidence, not current registry state.
+- D2 tests 22 passed / 9 skipped; source validation 31 passed; seven-file Raw readback and exact-head assertion passed; D2 Artifact 13092805269 uploaded.
+- No D3 start. Keep every gate limitation as listed in the D2 audit. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill.
