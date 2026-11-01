@@ -45,21 +45,41 @@ jobs:
             exit 1
           fi
 
-          target="docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md"
-          mkdir -p "$(dirname "$target")"
-          cp /tmp/ref.md "$target"
-          echo "REFERENCE_VERIFIED_AND_STAGED path=$target"
+          echo "REFERENCE_DOWNLOAD_VERIFIED path=/tmp/ref.md"
 
-      - name: Commit and push verified governing reference
+      - name: Publish if absent and verify exact GitHub raw readback
         run: |
           set -euo pipefail
+          target="docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md"
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md
-          if git diff --cached --quiet; then
-            echo "::error::NO_REFERENCE_CHANGE_TO_COMMIT"
+
+          if [ -f "$target" ]; then
+            if ! cmp -s /tmp/ref.md "$target"; then
+              echo "::error::EXISTING_REFERENCE_BYTES_DIFFER_FROM_APPROVED_GIST"
+              exit 1
+            fi
+            echo "REFERENCE_ALREADY_PRESENT_AND_BYTE_IDENTICAL"
+          else
+            mkdir -p "$(dirname "$target")"
+            cp /tmp/ref.md "$target"
+            git add "$target"
+            git commit -m "docs(governance): publish v2.4.0 via gist"
+            git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
+          fi
+
+          published_commit="$(git rev-parse HEAD)"
+          raw_url="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${published_commit}/${target}"
+          curl --fail --location --silent --show-error "$raw_url" --output /tmp/remote-ref.md
+          remote_size="$(wc -c < /tmp/remote-ref.md | tr -d ' ')"
+          remote_sha="$(sha256sum /tmp/remote-ref.md | awk '{print $1}')"
+          expected_size="401397"
+          expected_sha="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+          blob_sha="$(git rev-parse "${published_commit}:${target}")"
+
+          echo "REMOTE_REFERENCE_READBACK bytes=$remote_size sha256=$remote_sha blob_sha1=$blob_sha commit=$published_commit"
+          if [ "$remote_size" != "$expected_size" ] || [ "$remote_sha" != "$expected_sha" ]; then
+            echo "::error::REMOTE_REFERENCE_READBACK_MISMATCH"
             exit 1
           fi
-          git commit -m "docs(governance): publish v2.4.0 via gist"
-          git push origin HEAD:refs/heads/tmp/d1-rebuild-20261101
-          echo "PUBLISHED_COMMIT=$(git rev-parse HEAD)"
+          echo "VERIFIED_LIVE_REFERENCE path=$target"
