@@ -41,3 +41,11 @@ The exact completion Run ID, final HEAD, file evidence triples and Artifact ID a
 - Triggering source SHA: 2407a8e832aa8fa01ed8951ce8f89cc8548a8dea
 - Registry-containing commit: 024c71a909328cec379f3628df25981310c64fe7
 - Final exact HEAD and file evidence triples are printed by the final Raw readback step of this Run; a failed Run is not accepted as evidence.
+
+
+## Additional completion controls — 2026-11-01
+
+- Regression test: `test_historical_local_report_is_unwrapped_without_loss` ensures the original 13,954-entry local-only report is preserved directly, without recursive canonical-audit nesting.
+- Artifact-backed builder integration tests are configured with the three downloaded pinned ZIPs (`STAGE_D_AGGREGATE`, `STAGE_D_FULL_LOGGING`, `STAGE_D_C100`) rather than being skipped for missing local paths.
+- Final readback package also includes `scripts/s6_number_registry.py`, `tests/test_s6_number_registry.py`, `.github/workflows/stage-d2-number-registry.yml`, and `D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md`.
+- Continuity records are appended as raw UTF-8 bytes so existing carriage-return bytes are preserved.
