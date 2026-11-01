@@ -160,7 +160,7 @@ jobs:
           curl -fsSL "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/$tested_head/$path" -o /tmp/v240-final.md
           bytes="$(wc -c < /tmp/v240-final.md | tr -d ' ')"
           sha="$(sha256sum /tmp/v240-final.md | awk '{print $1}')"
-          blob="$(git rev-parse "$path")"
+          blob="$(git rev-parse "$tested_head:$path")"
           test "$bytes" = "401397"
           test "$sha" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
           echo "PASS_EXACT_FINAL_HEAD=$tested_head"
