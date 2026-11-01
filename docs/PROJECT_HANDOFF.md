@@ -190,3 +190,14 @@ Current D1/D2 record precedence and registry evidence are documented in `docs/st
 ## D3 handoff — source-date blocked — 2026-11-02
 
 D3 remains BLOCKED_MISSING_EVIDENCE. The current candidate workbook is published and exact-head readback passed, but C100 daily and the detailed P50/ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS/close-date evidence remains missing. The only pinned sources found for those items predate the 2026-10-31 cutoff and cannot be used. See D3_SOURCE_DATE_AUDIT_2026-11-02.md/.json. A processing attempt against those sources was cancelled after reading; no output was published, and all derived output is excluded. D4 remains NOT_STARTED.
+
+
+## D3 continuation handoff — 2026-11-02
+
+Current live branch: tmp/d1-rebuild-20261101; checkpoint HEAD: 479ca3889c07fcb4d82b86b23bef61d8760adb64; main: c6e54349a5e94f65d5aa9f83141f225d777bb474.
+
+D3 remains BLOCKED_MISSING_EVIDENCE. The owner has authorized continued technical D3 work, but has not waived the source-date cutoff. Do not read or reuse the three pre-cutoff source artifacts or any output derived from cancelled run 41358971225. The D3 source completion workflow is disabled and the extension builder fails closed before opening archives.
+
+The existing 185-sheet bilingual candidate workbooks have verified Raw fingerprints at HEAD 7aea74e774084fb7a622f411c5b1dbfad40a2d0d (Run 41359344854); this does not fill C100 daily or D3-07 through D3-13 evidence. A source-free static workflow and 8 additional tests have been committed, but their successful execution has not been verified. See docs/stage_d/D3_CODE_STATIC_VALIDATION_HANDOFF_2026-11-02.md.
+
+Do not begin D4. Continue only by locating eligible post-2026-10-31 source evidence via metadata first, then verifying it before any content read. No guessing, backfill, zero-fill, Trial, Simulation, Monte Carlo, N expansion, main modification, merge, PR or Release.
