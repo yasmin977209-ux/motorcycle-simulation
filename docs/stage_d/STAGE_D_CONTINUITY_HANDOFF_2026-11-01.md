@@ -70,3 +70,12 @@ D2 is PASS_SCOPED_WITH_LIMITATIONS, not final project acceptance.
 - Run 41328349398 remains visible as PENDING on obsolete source SHA e1e6dd60b8d95cc2ae5b5f384f206aff1f19c4d7; it is an older queued duplicate.
 - Neither stale run is used as D2 evidence. The authoritative corrected D2 build is Run 41328486239 (SUCCESS), with registry/exact-head commit c5e9c862c161dea89651d27e3a4eb5f5f35211ad. The latest branch HEAD bcf5ed4efcd72b1fa7e9de5ae48f26331dc25611 was independently validated by Run 41328814656 (SUCCESS, 31 passed).
 - The active branch and main were not changed by these stale run records; main remains c6e54349a5e94f65d5aa9f83141f225d777bb474.
+
+
+## D2 status correction and completion hardening — 2026-11-01 (append-only)
+
+- Corrected stale status claims above: Runs 41328255273 and 41328349398 are superseded failed attempts, not IN_PROGRESS/PENDING. Run 41326515357 is also not a successful closure. Do not use any of them as final D2 evidence.
+- Run 41328486239 is the successful corrected registry build; its registry commit is c5e9c862c161dea89651d27e3a4eb5f5f35211ad. Run 41328814656 passed 31 source-integration tests on bcf5ed4efcd72b1fa7e9de5ae48f26331dc25611.
+- HEAD 82f43b4525f88d347e64e994bd24aa2399bd803a is a later documentation-only handoff commit. Exact-head validation of that HEAD had not been established.
+- The current completion pass adds full resolver validation across all 2,086,550 daily points, hardens the indexed resolver and its tests, serializes the D2 workflow at branch scope, and includes the requirements matrix/evidence ledger in Raw readback and the uploaded audit package.
+- Completion workflow evidence, exact final HEAD and Artifact identity will be appended after the workflow succeeds. Until then, do not claim the current HEAD is fully validated. D3 remains NOT_STARTED.
