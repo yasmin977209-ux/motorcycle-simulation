@@ -48,3 +48,5 @@ State files are root `state.json` and `docs/STATE_SHA_SEMANTICS.md`; the root st
 - Gate A financial PASS_SCOPED; production NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.
 - Five accounting fields remain MISSING_EVIDENCE; no backfill or zero-fill.
 - No Trial, Simulation, Monte Carlo, N expansion or main update.
+
+- Current D2 final handoff correction: `docs/stage_d/D2_FINAL_HANDOFF_ADDENDUM_2026-11-01.md` (Run 41326662869, SUCCESS).
