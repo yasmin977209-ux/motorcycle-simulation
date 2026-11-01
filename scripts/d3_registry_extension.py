@@ -472,7 +472,9 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
             artifact_meta[key] = {
                 "artifact_id": pin.artifact_id, "run_id": pin.run_id,
                 "size_bytes": pin.size_bytes, "sha256": pin.sha256,
-                "workflow_run_head_sha": expected_heads[key], "filename": pin.filename,
+                "workflow_run_head_sha": expected_heads[key],
+                "run_created_at_utc": SOURCE_RUN_CREATED_AT_UTC[pin.run_id],
+                "filename": pin.filename,
                 "evidence_status": "VERIFIED_LIVE",
             }
 
