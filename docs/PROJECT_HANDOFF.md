@@ -252,3 +252,10 @@ D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily and D3-07 through D3-13 source r
 - No eligible post-cutoff source artifacts were found in the audited recent Actions inventory. The missing source records cannot be reconstructed from the current pre-cutoff pins under the cutoff rule. Any new source identity, SOURCE_SHA/cohort/seed change, new Trials, or cutoff exception requires a separate owner decision. No such action was taken.
 - No D4 work, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final-acceptance declaration was performed.
 - Disposition: D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Stop before D4.
+
+
+## D3 remediation handoff — 2026-11-02
+
+The authorized D3 source-free code correction and validation are complete. Tested code SHA: `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`; Run 41365795167 passed compileall and 21 tests (0 skipped), with zero source archives read/downloaded and zero Trials/Simulations. Published-output no-rebuild Raw verification Run 41365795133 passed. The complete exporter now renders fail-closed D3 status rows; Full Logging remains `NOT_VERIFIED_105_OF_105` and D3-07..13 remain `MISSING_EVIDENCE`.
+
+No eligible post-cutoff D3 source producer was found in the latest 400 repository runs. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 `NOT_STARTED`. The forbidden source-read attempt Run 41358971225 remains quarantined and excluded. No source identity change, new Trial/Simulation, backfill, zero-fill, main write, merge, PR or Release.
