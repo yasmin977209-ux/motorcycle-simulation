@@ -25,6 +25,7 @@ from scripts.s6_number_registry import (
 from scripts.d3_registry_extension import (
     ledger_number_id, ACCOUNTING_FIELDS, SOURCE_DATE_CUTOFF_UTC, SOURCE_RUN_CREATED_AT_UTC,
     EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
+    FULL_LOGGING_NORMALIZED_STATUS,
 )
 from scripts.s6_artifact_reader import S6_SOURCE, S6_COHORT, C100_SOURCE, C100_COHORT, PINS
 from scripts.s6_excel_export import (
@@ -110,7 +111,7 @@ def load_extension(path: str, base_sha: str) -> tuple[dict, bytes, str]:
         raise ValueError("D3_REGISTRY_EXTENSION_BASE_PIN_MISMATCH")
     validate_source_dates(extension)
     if (
-        extension.get("full_logging_validation", {}).get("normalized_status") != "VERIFIED_SCOPED_105_OF_105"
+        extension.get("full_logging_validation", {}).get("normalized_status") != FULL_LOGGING_NORMALIZED_STATUS
         or extension.get("full_logging_validation", {}).get("p50_scenario_coverage") != 25
         or extension.get("c100_validation", {}).get("daily_reuse_status") != "PASS_SCOPED_C100_DAILY_REUSE"
         or extension.get("close_date_validation", {}).get("total_trial_count") != 49500
@@ -257,7 +258,6 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
     for row in [
         ["Project", "Motorcycle Rental Simulation"],
         ["Classification", "T2_INTERIM / NOT_FINAL_BLOCKED"],
-        ["D3 gate", "PASS_SCOPED_WITH_LIMITATIONS"],
         ["Generation date UTC", datetime.now(timezone.utc).date().isoformat()],
         ["Governing decision", registry["governing_decision_id"]],
         ["Current governing reference SHA-256", registry["current_governing_reference_sha256"]],
@@ -267,7 +267,6 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
         ["Source commit", source_head], ["Workflow run", str(run_id)], ["D3 input manifest SHA-256", input_manifest_sha256],
         ["MASTER_SEED", str(registry["scope"]["S6"]["master_seed"])],
         ["Scenario coverage", "25 scenarios: 20 S6 + 5 C100 deterministic reuse"],
-        ["Full Logging", "VERIFIED_SCOPED_105_OF_105; 105 unique keys / 125 role assignments only"],
         ["C100", "G_INERT; DEGENERATE_DETERMINISTIC; 300 trials per scenario; N_unique_paths=1"],
         ["C100 Golden revalidation", "NOT_RUN; daily reuse path separately cross-checked"],
         ["Representative accounting fields", "Source-backed for 25 P50 cases only"],
@@ -277,9 +276,9 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
         ["Gate B N=2400", "FAIL_SCOPED (10/10)"],
         ["Stability", "NOT_CONVERGED (0/60)"],
         ["N=4800", "NOT_EXECUTED"],
-        ["Important", "D3 scoped deliverables are complete; this is not final project acceptance."],
     ]:
         safe_append(ws, row)
+    write_d3_readme_status_rows(ws)
 
     ws = new_sheet(wb, "CONSTANTS", lang)
     header(ws, [h["field"], h["value"], h["notes"]])
@@ -339,29 +338,7 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
             entry["from_number_id"] + ";" + entry["to_number_id"], entry["calculation_method"],
         ])
 
-    ws = new_sheet(wb, "VALIDATION_SUMMARY", lang)
-    header(ws, [h["field"], h["status"], h["notes"]])
-    for row in [
-        ["D0", "PASS_SCOPED_WITH_LIMITATIONS", "Input identity and archive integrity scope only."],
-        ["D1", "PASS_SCOPED_WITH_LIMITATIONS", "Approved v2.4.0 publication and exact-head evidence."],
-        ["D2", "PASS_SCOPED_WITH_LIMITATIONS", "Pinned Number Registry exact-value and daily-series validation."],
-        ["D3 structure", "PASS_SCOPED", "185 sheets per workbook; all 25 scenarios populated."],
-        ["D3 source coverage", "PASS_SCOPED_WITH_LIMITATIONS", "25 P50 detailed cases; 105 representative daily keys / 125 role assignments; 49,500 close dates."],
-        ["D3 bilingual parity", "PASS_SCOPED", "Arabic RTL and English LTR; all numeric cells compared."],
-        ["Full model acceptance suite", "NOT_EXECUTED_HERE", "Do not infer 177 unique tests passed."],
-        ["Final acceptance", "NOT_DECLARED", "D3 scoped closure is not project final acceptance."],
-    ]:
-        safe_append(ws, row)
-    for requirement_id, status in [
-        ("D3-01", "PASS_SCOPED"), ("D3-02", "PASS_SCOPED"), ("D3-03", "PASS_SCOPED"),
-        ("D3-04", "PASS_SCOPED"), ("D3-05", "PASS_SCOPED_WITH_LIMITATIONS"),
-        ("D3-06", "PASS_SCOPED_WITH_LIMITATIONS"), ("D3-07", "PASS_SCOPED"),
-        ("D3-08", "PASS_SCOPED"), ("D3-09", "PASS_SCOPED"), ("D3-10", "PASS_SCOPED"),
-        ("D3-11", "PASS_SCOPED"), ("D3-12", "PASS_SCOPED"), ("D3-13", "PASS_SCOPED"),
-        ("D3-14", "PASS_SCOPED"), ("D3-15", "PASS_SCOPED"), ("D3-16", "PASS_SCOPED"),
-        ("D3-17", "PASS_SCOPED_WITH_LIMITATIONS"), ("D3-18", "PASS_SCOPED"),
-    ]:
-        safe_append(ws, [requirement_id, status, "See D3 build audit, source extension audit, test run, and remote evidence ledger."])
+    write_validation_summary(wb, lang)
 
     ws = new_sheet(wb, "ERROR_LOG", lang)
     header(ws, [h["field"], h["status"], h["reason"], h["notes"]])
@@ -681,7 +658,7 @@ def d3_requirement_statuses() -> dict[str, str]:
         "D3-15": "PASS_SCOPED",
         "D3-16": "PASS_SCOPED",
         "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
-        "D3-18": "PASS_SCOPED",
+        "D3-18": "NOT_RUN",
     }
 
 
@@ -792,7 +769,7 @@ def build(args) -> dict:
     }
     (out / "D3_MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     report = [
-        "# D3 Excel Deliverables — Scoped Closure Report", "",
+        "# D3 Excel Candidate Build Report — NOT CLOSED", "",
         "- Candidate: " + result["d3_candidate_status"],
         "- D3 gate: " + result["d3_gate_status"], "- D3 input manifest SHA-256: " + args.input_manifest_sha256,
         "- Source HEAD: " + args.source_head, "- Workflow run: " + str(args.run_id),
@@ -806,14 +783,14 @@ def build(args) -> dict:
         "- S6 daily distribution points: " + str(validation["daily_points_resolved"]),
         "- C100 daily reuse points: " + str(5 * 2 * len(METRICS) * len(QUANTILES) * 2198),
         "- P50 detailed scenarios: 25; all representative daily role keys: " + str(len(extension.get("representative_role_cases", []))) + "; role assignments: " + str(extension["full_logging_validation"]["role_assignments"]),
-        "- All-trial close-date records: 49,500 (48,000 S6 + 1,500 C100)",
+        "- All-trial close-date distribution: MISSING_EVIDENCE; do not infer from the 105 representative keys.",
         "- Bilingual numeric comparisons: " + str(parity["numeric_comparisons"]) + "; mismatches: 0",
         "- Number-ID traced numeric cells: " + str(trace["numeric_cells_checked"]) + "; untraced: 0",
         "", "## Requirement status",
     ]
     report += [f"- {key}: {value}" for key, value in requirements.items()]
     report += ["", "## Preserved limitations"] + [f"- {item}" for item in limitations]
-    report += ["", "D3 is closed within scoped requirements with limitations. This is not final project acceptance and does not authorize D4."]
+    report += ["", "D3 remains BLOCKED_MISSING_EVIDENCE. This candidate report is not a D3 closure record and does not authorize D4."]
     Path("docs/stage_d/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md").write_text("\n".join(report) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return result
