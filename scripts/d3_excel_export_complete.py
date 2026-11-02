@@ -671,6 +671,55 @@ def d3_gate_status(requirements: dict[str, str]) -> str:
     return "PASS_SCOPED"
 
 
+def d3_current_gate_status() -> str:
+    return d3_gate_status(d3_requirement_statuses())
+
+
+def d3_readme_status_rows() -> list[list[str]]:
+    return [
+        ["D3 gate", d3_current_gate_status()],
+        ["Full Logging", FULL_LOGGING_NORMALIZED_STATUS + "; 105 representative keys / 125 role assignments only; not 48,000-trial logging."],
+        ["Important", "D3 remains BLOCKED_MISSING_EVIDENCE; mandatory source ledgers are absent, so this candidate is not eligible for D4."],
+    ]
+
+
+def write_d3_readme_status_rows(ws) -> None:
+    for row in d3_readme_status_rows():
+        safe_append(ws, row)
+
+
+def d3_validation_summary_rows() -> list[list[str]]:
+    requirements = d3_requirement_statuses()
+    gate = d3_gate_status(requirements)
+    rows = [
+        ["D0", "PASS_SCOPED_WITH_LIMITATIONS", "Input identity and archive integrity scope only."],
+        ["D1", "PASS_SCOPED_WITH_LIMITATIONS", "Approved v2.4.0 publication and exact-head evidence."],
+        ["D2", "PASS_SCOPED_WITH_LIMITATIONS", "Pinned Number Registry exact-value and daily-series validation."],
+        ["D3 gate", gate, "D3-07 through D3-13 remain MISSING_EVIDENCE; the overall D3 gate must not be promoted."],
+        ["D3 structure", "PENDING_POST_WRITE_VALIDATION", "Workbook structure is checked after save; see the build audit."],
+        ["D3 source coverage", "BLOCKED_MISSING_EVIDENCE", "C100 daily, representative P50 raw daily, detailed ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS, and all-trial close-date sources remain missing."],
+        ["D3 bilingual parity", "PENDING_POST_WRITE_VALIDATION", "Arabic RTL / English LTR and numeric parity must be checked after both workbooks are written."],
+        ["D3 Excel safety", "PENDING_POST_WRITE_VALIDATION", "Formula cells and Excel error cells are separate post-write checks."],
+        ["D3 number-id traceability", "PENDING_POST_WRITE_VALIDATION", "All numeric cells require post-write Number-ID tracing."],
+        ["Full Logging", FULL_LOGGING_NORMALIZED_STATUS, "105 representative keys / 125 role assignments only; this does not establish complete 48,000-trial logging."],
+        ["Full model acceptance suite", "NOT_EXECUTED_HERE", "Do not infer 177 unique tests passed."],
+        ["Final acceptance", "NOT_DECLARED", "D3 candidate generation is not project final acceptance."],
+    ]
+    rows.extend([
+        [requirement_id, status, "See the exact-source evidence ledger; pending/missing states are not promoted."]
+        for requirement_id, status in requirements.items()
+    ])
+    return rows
+
+
+def write_validation_summary(wb, lang: str):
+    ws = new_sheet(wb, "VALIDATION_SUMMARY", lang)
+    header(ws, [H[lang]["field"], H[lang]["status"], H[lang]["notes"]])
+    for row in d3_validation_summary_rows():
+        safe_append(ws, row)
+    return ws
+
+
 def build(args) -> dict:
     base_raw = Path(args.registry).read_bytes()
     base_sha = hashlib.sha256(base_raw).hexdigest()
