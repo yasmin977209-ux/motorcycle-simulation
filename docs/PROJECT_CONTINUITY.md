@@ -2998,3 +2998,101 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - No eligible post-cutoff D3 detailed source payloads were identified. D2 Number Registry does not contain C100 daily distributions, P50 raw daily ledgers, detailed ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS or all-trial close-date records.
 - The owner has explicitly requested D3 completion, permitting technical remediation, but has not explicitly waived the source-date cutoff or authorized new Trials/Simulation/Monte Carlo or source/cohort/seed/Trial identity changes. Do not infer these permissions.
 - D3 remains BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED. Await an explicit owner decision: narrowly scoped exception for the exact three existing artifacts, or separately authorized new eligible source generation with defined identity changes. No source processing under either path has been done in this session.
+
+
+---
+
+## 2026-11-02 — Session continuity addendum: D3 path repair and pinned-artifact reprocessing
+
+**Recorded at:** 2026-11-02 (UTC; exact minute not independently captured in this file)  
+**Purpose:** Append-only handoff for the ChatGPT session that repaired the D3 closure-report output path and initiated the owner-authorized, exact-pinned-artifact reprocessing. This addendum does not close D3 or authorize D4.
+
+### 1. Live GitHub baseline observed during this session
+
+- Repository: `yasmin977209-ux/motorcycle-simulation`.
+- Original working branch: `tmp/d1-rebuild-20261101`.
+- Original branch HEAD observed after the source-free validation workflow committed its record: `3c4440557c69089c00c7275ce3114b7b1270d146`.
+- `main` HEAD observed: `c6e54349a5e94f65d5aa9f83141f225d777bb474`; no write to `main` was made.
+- Commit containing the D3 code fix: `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1`.
+- Commit containing the source-free static validation record: `3c4440557c69089c00c7275ce3114b7b1270d146`, parent `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1`.
+- A separate continuation branch was created from that observed HEAD for this handoff: `tmp/d3-session-handoff-20261102`. It is a documentation/continuity branch, not a declaration that the original D3 workflow has completed. Recheck both branches and all relevant runs before choosing the execution branch in the next session.
+
+### 2. D3 defect repaired
+
+The confirmed defect was a mismatch between the exporter output path and the workflow commit step:
+- The exporter had written `D3_SCOPED_CLOSURE_REPORT_2026-11-02.md` under `docs/stage_d/`.
+- The workflow expected the generated report under `deliverables/`.
+- The repair introduced `scoped_closure_report_path(output_dir: Path)` in `scripts/d3_excel_export_complete.py` and writes the report into the supplied output directory.
+- A regression test was added to `tests/test_d3_excel_export_complete.py` to assert the report path is under the specified `deliverables` directory.
+- The code/test repair is in commit `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1`.
+- The exact blob IDs recorded by the prior remote readback were exporter `99740a48cc36e748f09ed318edad232712005c60` and test `be4d8f2094f797d52aabea8f93f8b8abe0b84925`. SHA-256 and byte sizes were not independently recorded in this session; do not label these files `VERIFIED_LIVE` under the three-part evidence rule until raw bytes are fetched and hashed.
+
+### 3. Actions evidence and exact scope
+
+| Run ID | Workflow | Tested SHA | Live result observed |
+|---|---|---|---|
+| `41374602546` | Earlier D3 attempt | `4cbf6c28ad36f14294db1f3bcaa07569c146a959` | completed / failure; historical |
+| `41471229457` | Earlier D3 attempt | earlier SHA (see run) | failure; report path mismatch between `docs/stage_d/` and `deliverables/` |
+| `41472418514` | Earlier D3-related workflow | `1c2860bf5e8323ba0ae54eb3fd8e0102e6846aab` | completed / success on that SHA only |
+| `41472538590` | Earlier D3-related workflow | `b16068de1e8268b996190784ee6b6ae3b6051bed` | completed / success on that SHA only |
+| `41472538708` | Earlier D3-related workflow | `b16068de1e8268b996190784ee6b6ae3b6051bed` | completed / success on that SHA only |
+| `41480650466` | D3 Code Static Validation (No Source Artifacts) | `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1` | completed / success; machine-readable validation record committed |
+| `41480650491` | D3 Owner-Approved Exact Pinned Artifact Reprocessing | `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1` | in progress at last observation |
+| `41480650266` | D3 Published Output Exact-HEAD Verification | `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1` | completed / failure during exact Raw readback of committed D3 outputs |
+| `41480650328` | Stage D1-D2 Source Validation | `2f3cb05bf668cd003cdb5bcb121d2217d629d9f1` | completed / failure at final assertion that tested SHA remained exact live branch HEAD; compile, source tests and artifact integration tests had succeeded |
+
+Static validation run `41480650466` recorded 27 tests passed and 0 skipped, then committed `docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json` in commit `3c4440557c69089c00c7275ce3114b7b1270d146`. This is source-free code validation only; it is not D3 artifact acceptance or D3 closure.
+
+At the last live observation, run `41480650491` had completed:
+- checkout of exact triggering commit and branch/initial-HEAD assertion;
+- dependency installation and source-free D3 tests;
+- verification of the live owner decision, exact pinned artifact metadata and run lineage, and download of the original pinned ZIP bytes;
+- verification of the approved governing-reference decision and immutable D2 registry;
+- construction of the source-verified D3 registry extension from the pinned archives.
+
+Its bilingual workbook build/validation step was still in progress. Later steps (record source exception and limitations, upload package, commit outputs/append-only continuity, verify exact final HEAD and Raw bytes) were pending. Do not infer their outcome. The run's exact triggering SHA remains `2f3cb05...`, whereas the original branch had advanced to `3c444...` due to the independent static-validation record commit. Inspect the final run outcome and its exact-head checks before relying on any generated output.
+
+Run `41480650266` passed checkout, exact initial-head assertion, dependency setup, and source-free exporter/registry regression tests, but failed at the step reading back committed D3 outputs/evidence from exact GitHub Raw SHA. The exact failure detail was not recovered in this session; inspect its logs before diagnosing beyond the step-level failure.
+
+Run `41480650328` passed pinned artifact download/cryptographic verification, compile and unit/integration tests, but failed the final tested-SHA-versus-live-HEAD assertion. This is an exact-head/concurrency failure, not evidence that the preceding source tests failed.
+
+### 4. Owner-authorized historical artifact scope
+
+The reprocessing workflow is limited to the three previously owner-authorized historical artifacts, and only for the stated D3 purpose:
+- S6 Aggregate Artifact ID `12852969854`.
+- Full Logging Artifact ID `12998778418`.
+- C100 Artifact ID `12630457193`.
+
+Preserve the original `SOURCE_SHA`, `cohort_id`, `MASTER_SEED`, all trial identities and all historical lineage. This is not authorization for new Trials, Monte Carlo, increasing N, N=4800, backfill, changing historical artifacts/manifests, or guessing/zeroing missing accounting fields. The exception does not itself accept D3.
+
+### 5. Current stage judgement and immutable limitations
+
+- D0: `PASS_SCOPED_WITH_LIMITATIONS` per the current live Stage D continuity records; revalidate evidence if relying on closure.
+- D1: `PASS_SCOPED_WITH_LIMITATIONS` per the current live Stage D continuity records; revalidate evidence if relying on closure.
+- D2: `PASS_SCOPED_WITH_LIMITATIONS` per `PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md`; its current evidence remains the authority, not stale earlier snapshots.
+- D3: `BLOCKED / BLOCKED_MISSING_EVIDENCE` until exact deliverables, their source evidence, readback and all D3 requirements are proven. This session did not close D3.
+- D4–D6: `NOT_STARTED`; do not begin D4 before D3 closure is proven.
+- E0–E6: not eligible before the required D-stage sequence is complete.
+
+Preserve the following without promotion absent new evidence and owner authorization:
+- Financial Gate A: `PASS_SCOPED` only.
+- Production Gate A: `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Gate B at N=2400: `FAIL_SCOPED (10/10)`.
+- Stability: `NOT_CONVERGED (0/60)`.
+- N=4800: `NOT_EXECUTED`.
+- Full Logging: 105 representative keys only; not full 48,000-trial logging.
+- Missing accounting fields must not be guessed or zero-filled: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+- Keep S6, C100 and Stage 12/13 lineage separate.
+
+### 6. Next-session mandatory actions
+
+1. Read this addendum, `docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-02.md`, `docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-02.md`, the live REV2 prompt library, the governing-reference decision and all current D3 status/evidence records from the chosen branch.
+2. Query GitHub API for HEAD of `tmp/d1-rebuild-20261101`, `tmp/d3-session-handoff-20261102`, and `main`. Do not assume any SHA in this addendum remains current.
+3. Recheck runs `41480650491`, `41480650466`, `41480650328`, `41480650266`, their jobs, step outcomes, artifacts and exact tested SHAs. If run `41480650491` is still running, do not cancel it or mutate its tested branch until its state and workflow behavior are understood.
+4. Inspect the exact D3 output files, manifests, evidence ledger, workbook validation results, artifact contents and Raw readback. Calculate SHA-256 from fetched raw bytes, record Git blob SHA-1, byte size, exact path and containing commit. Do not infer a published output from a successful workflow alone.
+5. Check the exact final HEAD after every commit. Resolve any exact-head race without changing trial identity, historical inputs, business rules or acceptance thresholds.
+6. Update the append-only continuity, session status and handoff only with facts supported by current GitHub evidence. Do not start D4 until D3 closure is independently established.
+
+### 7. New continuation branch
+
+The branch `tmp/d3-session-handoff-20261102` was created from the observed original-branch HEAD `3c4440557c69089c00c7275ce3114b7b1270d146` solely to preserve this session handoff while the original D3 reprocessing run remained in progress. It must not be mistaken for the final D3 output branch. Before further execution, compare its HEAD with the original branch and choose/record the authorized working branch explicitly. No write was made to `main`.
