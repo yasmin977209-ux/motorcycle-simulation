@@ -1,17 +1,265 @@
-name: D3 Complete Source-Verified Closure (Disabled Pending Eligible Sources)
+name: D3 Owner-Approved Exact Pinned Artifact Reprocessing
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - .github/workflows/d3-complete-from-pinned-artifacts.yml
+      - scripts/d3_registry_extension.py
+      - scripts/d3_excel_export_complete.py
+      - scripts/s6_artifact_reader.py
+      - tests/test_d3_registry_extension.py
+      - tests/test_d3_excel_export_complete.py
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
+concurrency:
+  group: d3-owner-approved-source-reprocessing-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  blocked:
-    if: false
+  reprocess-exact-pins:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      REPOSITORY: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      OWNER_EXCEPTION: D3_ONLY_PINNED_ARTIFACTS_2026-11-02
     steps:
-      - name: Fail closed until post-cutoff source artifacts are available
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact branch and initial HEAD
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
-          echo "BLOCKED: no eligible D3 source artifacts dated 2026-10-31 or later have been verified."
-          exit 1
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
+          echo "D3_OWNER_EXCEPTION_INITIAL_HEAD=$EXPECTED_SHA"
+
+      - name: Install exact D3 dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check -r requirements.txt requests pytest
+
+      - name: Compile and run source-free D3 tests
+        run: |
+          python -m compileall -q scripts/d3_registry_extension.py scripts/d3_excel_export_complete.py
+          python -m pytest -q -rs tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
+
+      - name: Verify live owner decision, exact artifact metadata, run lineage and download original ZIP bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, pathlib, requests
+          repo=os.environ["REPOSITORY"]
+          token=os.environ["GH_TOKEN"]
+          auth={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}
+          pins={
+            "aggregate":{"artifact_id":12852969854,"run_id":40773412377,"size":9357996,"sha256":"ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54","name":"s6-n2400-status-reconciled-aggregate-40773412377","created_at":"2026-10-28T21:36:57Z","head_sha":"4f2f2cc16d0cb5125262088704febccbae6f50ed","filename":"s6-n2400.zip"},
+            "full_logging":{"artifact_id":12998778418,"run_id":41098699740,"size":310827203,"sha256":"403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb","name":"s6-stage-c-representative-full-logging-41098699740","created_at":"2026-10-30T17:25:30Z","head_sha":"e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70","filename":"full-logging.zip"},
+            "c100":{"artifact_id":12630457193,"run_id":40263424595,"size":361733,"sha256":"c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79","name":"s4-c100-v23-40263424595","created_at":"2026-10-26T03:18:29Z","head_sha":"24050f15bc7eb3097e20f76785a45c5d177643dd","filename":"c100-reuse.zip"},
+          }
+          pathlib.Path("/tmp/d3-source").mkdir(parents=True,exist_ok=True)
+          manifest={"schema_version":"d3-owner-approved-source-input-manifest-v1","owner_decision":"APPROVED_2026-11-02","exception":os.environ["OWNER_EXCEPTION"],"scope":"D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS","cutoff_utc":"2026-10-31T00:00:00Z","artifacts":{}}
+          for role,pin in pins.items():
+            ar=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{pin['artifact_id']}",headers=auth,timeout=60); ar.raise_for_status(); artifact=ar.json()
+            if artifact.get("id")!=pin["artifact_id"] or artifact.get("name")!=pin["name"] or artifact.get("size_in_bytes")!=pin["size"] or artifact.get("digest")!="sha256:"+pin["sha256"] or artifact.get("expired") is not False:
+              raise SystemExit("D3_ARTIFACT_METADATA_PIN_OR_EXPIRY_MISMATCH:"+role)
+            if artifact.get("workflow_run",{}).get("id")!=pin["run_id"] or artifact.get("workflow_run",{}).get("head_sha")!=pin["head_sha"]:
+              raise SystemExit("D3_ARTIFACT_WORKFLOW_LINEAGE_MISMATCH:"+role)
+            rr=requests.get(f"https://api.github.com/repos/{repo}/actions/runs/{pin['run_id']}",headers=auth,timeout=60); rr.raise_for_status(); run=rr.json()
+            if run.get("id")!=pin["run_id"] or run.get("created_at")!=pin["created_at"] or run.get("head_sha")!=pin["head_sha"] or run.get("conclusion")!="success":
+              raise SystemExit("D3_SOURCE_RUN_METADATA_MISMATCH:"+role)
+            if run["created_at"] >= "2026-10-31T00:00:00Z":
+              raise SystemExit("D3_SOURCE_EXCEPTION_NOT_NEEDED_OR_WRONG_RUN_DATE:"+role)
+            dest=pathlib.Path("/tmp/d3-source")/pin["filename"]
+            resp=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{pin['artifact_id']}/zip",headers=auth,stream=True,timeout=(60,300))
+            resp.raise_for_status()
+            digest=hashlib.sha256(); total=0
+            with dest.open("wb") as out:
+              for chunk in resp.iter_content(chunk_size=8*1024*1024):
+                if chunk:
+                  out.write(chunk); digest.update(chunk); total+=len(chunk)
+            if total!=pin["size"] or digest.hexdigest()!=pin["sha256"]:
+              raise SystemExit("D3_DOWNLOADED_ARTIFACT_BYTES_MISMATCH:"+role)
+            manifest["artifacts"][role]={**pin,"downloaded_bytes":total,"downloaded_sha256":digest.hexdigest(),"run_conclusion":run["conclusion"],"artifact_expired":artifact["expired"]}
+            print(f"D3_ORIGINAL_PIN_VERIFIED role={role} artifact_id={pin['artifact_id']} run_id={pin['run_id']} bytes={total} sha256={digest.hexdigest()} run_created_at={run['created_at']} source_head={pin['head_sha']}")
+          pathlib.Path("/tmp/d3-source/input_manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          print("D3_OWNER_APPROVED_EXCEPTION_SCOPE_VERIFIED "+os.environ["OWNER_EXCEPTION"])
+          PY
+
+      - name: Verify approved governing reference and immutable D2 registry
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md" --output /tmp/approved-v240.md
+          test "$(wc -c < /tmp/approved-v240.md | tr -d ' ')" = "401397"
+          test "$(sha256sum /tmp/approved-v240.md | awk '{print $1}')" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+          test "$(wc -c < results/number_registry.json | tr -d ' ')" = "24137036"
+          test "$(sha256sum results/number_registry.json | awk '{print $1}')" = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          echo "D3_GOVERNING_REFERENCE_AND_BASE_REGISTRY_PINS_PASS"
+
+      - name: Build source-verified D3 registry extension from original pinned archives
+        env:
+          INPUT_HEAD: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          manifest=pathlib.Path("/tmp/d3-source/input_manifest.json").read_bytes()
+          reference=pathlib.Path("/tmp/approved-v240.md").read_bytes()
+          registry=pathlib.Path("results/number_registry.json").read_bytes()
+          envelope={"source_manifest_sha256":hashlib.sha256(manifest).hexdigest(),"governing_reference_sha256":hashlib.sha256(reference).hexdigest(),"base_registry_sha256":hashlib.sha256(registry).hexdigest()}
+          raw=(json.dumps(envelope,sort_keys=True,separators=(",",":"))+"\n").encode()
+          pathlib.Path("/tmp/d3-source/input_envelope.json").write_bytes(raw)
+          pathlib.Path("/tmp/d3-source/input_envelope.sha256").write_text(hashlib.sha256(raw).hexdigest()+"\n")
+          PY
+          mkdir -p deliverables
+          python -m scripts.d3_registry_extension build \
+            --aggregate /tmp/d3-source/s6-n2400.zip \
+            --full-logging /tmp/d3-source/full-logging.zip \
+            --c100 /tmp/d3-source/c100-reuse.zip \
+            --base-registry results/number_registry.json \
+            --output deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz \
+            --audit deliverables/D3_EXTENSION_BUILD_AUDIT.json \
+            --source-date-exception "$OWNER_EXCEPTION"
+          cp /tmp/d3-source/input_manifest.json deliverables/D3_SOURCE_INPUT_MANIFEST.json
+          cp /tmp/d3-source/input_envelope.json deliverables/D3_SOURCE_INPUT_ENVELOPE.json
+          cp /tmp/approved-v240.md /tmp/d3-source/approved-v240.md
+
+      - name: Build and validate bilingual D3 workbooks from verified extension
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          INPUT_SHA="$(cat /tmp/d3-source/input_envelope.sha256)"
+          python -m scripts.d3_excel_export_complete build \
+            --registry results/number_registry.json \
+            --extension deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz \
+            --reference /tmp/approved-v240.md \
+            --output-dir deliverables \
+            --source-head "$SOURCE_HEAD" \
+            --run-id "$RUN_ID" \
+            --input-manifest-sha256 "$INPUT_SHA"
+
+      - name: Record source exception, outputs, exact identities and preserved limitations
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          out=pathlib.Path("deliverables")
+          files={}
+          for p in sorted(out.iterdir()):
+            if p.is_file():
+              raw=p.read_bytes()
+              files[p.name]={"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest()}
+          audit=json.loads((out/"D3_BUILD_AUDIT.json").read_text(encoding="utf-8"))
+          ext_audit=json.loads((out/"D3_EXTENSION_BUILD_AUDIT.json").read_text(encoding="utf-8"))
+          record={
+            "schema_version":"d3-owner-approved-source-reprocessing-record-v1",
+            "owner_approval":"APPROVED_2026-11-02",
+            "source_date_exception":os.environ["OWNER_EXCEPTION"],
+            "scope":"D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+            "source_head":os.environ["SOURCE_HEAD"],
+            "workflow_run_id":os.environ["RUN_ID"],
+            "extension_build_status":ext_audit["status"],
+            "d3_candidate_status":audit["d3_candidate_status"],
+            "d3_gate_status":audit["d3_gate_status"],
+            "source_artifacts":audit["source_artifacts"],
+            "full_logging_validation":audit["full_logging_validation"],
+            "c100_validation":audit["c100_validation"],
+            "close_date_validation":audit["close_date_validation"],
+            "representative_accounting_fields":audit["representative_accounting_fields"],
+            "preserved_gate_statuses":audit["gate_statuses_preserved"],
+            "missing_historical_48k_accounting_fields":["Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"],
+            "no_trials_or_simulation_executed":True,
+            "no_source_or_trial_identity_changed":True,
+            "quarantined_run_41358971225_reused":False,
+            "files":files
+          }
+          p=pathlib.Path("docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json")
+          p.write_text(json.dumps(record,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          entry=(
+            "\n\n## D3 owner-approved pinned-source reprocessing — 2026-11-02 (append-only)\n\n"
+            f"- Owner decision: {os.environ['OWNER_EXCEPTION']} (D3 only; exactly three pre-cutoff pinned artifacts).\n"
+            f"- Reprocessing workflow run: {os.environ['RUN_ID']}; input source HEAD: {os.environ['SOURCE_HEAD']}.\n"
+            f"- D3 candidate: {audit['d3_candidate_status']}; D3 gate: {audit['d3_gate_status']}.\n"
+            "- Original GitHub artifact ZIPs were re-downloaded and checked against exact artifact/run metadata, run creation dates, head SHAs, byte sizes and SHA-256 before archive readers opened them.\n"
+            "- ZIP/member CRC, path safety, member hashes/sizes, source/cohort/trial lineage and required field coverage were checked by the pinned reader and D3 builder.\n"
+            "- No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change or Trial identity change. The cancelled run 41358971225 outputs were not used.\n"
+            "- Missing historical 48k accounting fields remain MISSING_EVIDENCE; C100 Golden revalidation and Full Logging limitations remain explicitly scoped as recorded in the build audit.\n"
+            "- D4 remains NOT_STARTED unless the D3 gate is independently closed.\n"
+          )
+          for name in ["docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md","docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"]:
+            p=pathlib.Path(name)
+            if p.exists(): p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
+          p=pathlib.Path("docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md")
+          if p.exists(): p.write_text(p.read_text(encoding="utf-8")+"\n\n## Owner-approved source reprocessing outputs — 2026-11-02\n\n"+json.dumps(record,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          print(json.dumps({"d3_gate_status":audit["d3_gate_status"],"candidate":audit["d3_candidate_status"],"output_files":files},ensure_ascii=False,sort_keys=True))
+          PY
+
+      - name: Upload complete D3 reprocessing package
+        uses: actions/upload-artifact@v4
+        with:
+          name: D3-Owner-Approved-Source-Reprocessing-${{ github.run_id }}
+          path: |
+            deliverables/
+            docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Commit exact verified outputs and append-only continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${GITHUB_SHA}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/
+          git add deliverables/D3_BUILD_AUDIT.json deliverables/D3_MANIFEST.json deliverables/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md
+          git add deliverables/D3_EXTENSION_BUILD_AUDIT.json deliverables/D3_SOURCE_INPUT_MANIFEST.json deliverables/D3_SOURCE_INPUT_ENVELOPE.json
+          git add deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz
+          for f in "deliverables/النتائج_الكاملة_AR.xlsx" "deliverables/Full_Results_EN.xlsx"; do
+            if test -f "$f"; then
+              bytes="$(wc -c < "$f" | tr -d ' ')"
+              if test "$bytes" -lt 95000000; then git add -f -- "$f"; else echo "OUTPUT_RETAINED_IN_ACTIONS_ARTIFACT_ONLY path=$f bytes=$bytes"; fi
+            fi
+          done
+          git commit -m "build(d3): reprocess exact owner-approved pinned sources"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+
+      - name: Verify exact final HEAD and Raw bytes for committed deliverables
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import hashlib,os,pathlib,subprocess,requests
+          repo=os.environ["REPOSITORY"]; branch="tmp/d1-rebuild-20261101"; token=os.environ["GH_TOKEN"]
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          h={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json"}
+          r=requests.get(f"https://api.github.com/repos/{repo}/git/ref/heads/{branch}",headers=h,timeout=60); r.raise_for_status()
+          if r.json()["object"]["sha"]!=head: raise SystemExit("D3_REPROCESS_FINAL_HEAD_MISMATCH")
+          paths=subprocess.check_output(["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"],text=True).splitlines()
+          for path in paths:
+            if not pathlib.Path(path).is_file(): continue
+            local=pathlib.Path(path).read_bytes()
+            raw=requests.get(f"https://raw.githubusercontent.com/{repo}/{head}/{path}",timeout=240); raw.raise_for_status()
+            if raw.content!=local: raise SystemExit("D3_REPROCESS_RAW_READBACK_MISMATCH:"+path)
+            blob=hashlib.sha1(b"blob "+str(len(local)).encode()+bytes([0])+local).hexdigest()
+            print(f"D3_REPROCESS_VERIFIED_RAW path={path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob_sha1={blob} commit={head}")
+          print("D3_REPROCESS_EXACT_FINAL_HEAD_PASS "+head)
+          PY
