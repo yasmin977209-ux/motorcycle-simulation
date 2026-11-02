@@ -31,6 +31,36 @@ def test_exporter_rejects_pre_cutoff_source_extension_even_without_archive_build
         validate_source_dates(extension)
 
 
+def test_exporter_accepts_only_exact_three_pinned_artifacts_with_owner_exception():
+    from scripts.d3_registry_extension import (
+        SOURCE_RUN_CREATED_AT_UTC, OWNER_APPROVED_SOURCE_DATE_EXCEPTION,
+        EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
+    )
+    from scripts.s6_artifact_reader import PINS
+
+    expected_heads = {
+        "aggregate": EXPECTED_AGGREGATE_HEAD,
+        "full_logging": EXPECTED_FULL_LOGGING_HEAD,
+        "c100": EXPECTED_C100_HEAD,
+    }
+    sources = {}
+    for role, pin in PINS.items():
+        sources[role] = {
+            "artifact_id": pin.artifact_id,
+            "run_id": pin.run_id,
+            "size_bytes": pin.size_bytes,
+            "sha256": pin.sha256,
+            "filename": pin.filename,
+            "workflow_run_head_sha": expected_heads[role],
+            "run_created_at_utc": SOURCE_RUN_CREATED_AT_UTC[pin.run_id],
+            "source_date_exception": OWNER_APPROVED_SOURCE_DATE_EXCEPTION,
+            "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+            "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+            "evidence_status": "VERIFIED_LIVE",
+        }
+    assert validate_source_dates({"source_artifacts": sources}) is None
+
+
 def test_exporter_accepts_only_post_cutoff_exact_pins(monkeypatch):
     from scripts import d3_registry_extension as source_module
     from scripts.d3_registry_extension import (
