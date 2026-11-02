@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: d3-owner-approved-source-reprocessing-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   reprocess-exact-pins:
