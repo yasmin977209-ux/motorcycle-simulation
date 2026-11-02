@@ -395,3 +395,8 @@ D3: BLOCKED_MISSING_EVIDENCE. Existing 185-sheet candidates and exact-head readb
 - No eligible post-cutoff source artifacts were found in the audited recent Actions inventory. The missing source records cannot be reconstructed from the current pre-cutoff pins under the cutoff rule. Any new source identity, SOURCE_SHA/cohort/seed change, new Trials, or cutoff exception requires a separate owner decision. No such action was taken.
 - No D4 work, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final-acceptance declaration was performed.
 - Disposition: D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Stop before D4.
+
+
+## Session status addendum — 2026-11-02
+
+D3 technical remediation: source-free exporter status correction and saved-workbook regression test completed. Run 41365795167 passed compileall and 21 tests / 0 skipped against source SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`; no source artifacts were downloaded/read and no Trial/Simulation ran. Run 41365795133 passed the published-output no-rebuild readback. D3 stays `BLOCKED_MISSING_EVIDENCE` because D3-07..13 are missing; D4 remains `NOT_STARTED`.
