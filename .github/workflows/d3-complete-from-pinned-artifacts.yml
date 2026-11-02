@@ -42,8 +42,15 @@ jobs:
           set -euo pipefail
           test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
-          echo "D3_OWNER_EXCEPTION_INITIAL_HEAD=$EXPECTED_SHA"
+          git fetch origin tmp/d1-rebuild-20261101
+          git merge-base --is-ancestor "$EXPECTED_SHA" origin/tmp/d1-rebuild-20261101
+          changed="$(git diff --name-only "$EXPECTED_SHA" origin/tmp/d1-rebuild-20261101)"
+          while IFS= read -r path; do
+            test -z "$path" && continue
+            test "$path" = "docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json" || { echo "UNEXPECTED_CONCURRENT_BRANCH_CHANGE:$path"; exit 1; }
+          done <<< "$changed"
+          echo "D3_OWNER_EXCEPTION_CHECKED_OUT_SHA=$EXPECTED_SHA"
+          echo "D3_OWNER_EXCEPTION_REMOTE_DESCENDANT=$(git rev-parse origin/tmp/d1-rebuild-20261101)"
 
       - name: Install exact D3 dependencies
         run: |
