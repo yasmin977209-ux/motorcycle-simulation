@@ -147,3 +147,11 @@ Until that decision/evidence boundary is resolved and all missing requirement ro
 ## Exact-head verification qualification — append-only
 
 Run 41366779707 checked out the triggering commit and asserted the branch name plus local checkout HEAD = `GITHUB_SHA`; that workflow version did not independently query the live remote branch ref. At the start of this review, a separate live GitHub ref lookup confirmed the branch HEAD was exactly `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`, the same SHA whose Raw bytes Run 41366779707 verified. To remove this concurrency gap for subsequent checks, `.github/workflows/d3-published-output-verification.yml` has now been strengthened to compare `git ls-remote` with the triggering SHA before and after the Raw readback and to byte-compare/hash the current D3 audit, continuity, code and test files from Raw at that SHA. The next workflow run is the authoritative post-documentation exact-remote-HEAD check.
+
+## D3 completion blocker refresh — 2026-11-02 (append-only)
+
+- Corrected full live Actions inventory: 428 unique branch runs, all on/after 2026-10-31T00:00:00Z; the prior 424 count was incomplete pagination. Workflow counts and exact source blocker are in `docs/stage_d/D3_COMPLETION_BLOCKER_AND_OWNER_DECISION_2026-11-02.md`.
+- The three source artifact IDs remain live/not expired but source runs predate the D3 cutoff: aggregate 12852969854 / run 40773412377; Full Logging 12998778418 / run 41098699740; C100 12630457193 / run 40263424595. Availability does not confer D3 eligibility.
+- No eligible post-cutoff D3 detailed source payloads were identified. D2 Number Registry does not contain C100 daily distributions, P50 raw daily ledgers, detailed ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS or all-trial close-date records.
+- The owner has explicitly requested D3 completion, permitting technical remediation, but has not explicitly waived the source-date cutoff or authorized new Trials/Simulation/Monte Carlo or source/cohort/seed/Trial identity changes. Do not infer these permissions.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED. Await an explicit owner decision: narrowly scoped exception for the exact three existing artifacts, or separately authorized new eligible source generation with defined identity changes. No source processing under either path has been done in this session.

@@ -272,3 +272,10 @@ No eligible post-cutoff D3 source producer was found in the latest 400 repositor
 - No source exception, new Trial/Simulation/Monte Carlo, N expansion, identity change, backfill, zero-fill, main write, merge, Release, or D4 work was performed.
 - D3 technical remediation within current authority is complete; D3 stage gate is not. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Do not proceed to D4.
 
+## D3 completion blocker refresh — 2026-11-02 (append-only)
+
+- Corrected full live Actions inventory: 428 unique branch runs, all on/after 2026-10-31T00:00:00Z; the prior 424 count was incomplete pagination. Workflow counts and exact source blocker are in `docs/stage_d/D3_COMPLETION_BLOCKER_AND_OWNER_DECISION_2026-11-02.md`.
+- The three source artifact IDs remain live/not expired but source runs predate the D3 cutoff: aggregate 12852969854 / run 40773412377; Full Logging 12998778418 / run 41098699740; C100 12630457193 / run 40263424595. Availability does not confer D3 eligibility.
+- No eligible post-cutoff D3 detailed source payloads were identified. D2 Number Registry does not contain C100 daily distributions, P50 raw daily ledgers, detailed ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS or all-trial close-date records.
+- The owner has explicitly requested D3 completion, permitting technical remediation, but has not explicitly waived the source-date cutoff or authorized new Trials/Simulation/Monte Carlo or source/cohort/seed/Trial identity changes. Do not infer these permissions.
+- D3 remains BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED. Await an explicit owner decision: narrowly scoped exception for the exact three existing artifacts, or separately authorized new eligible source generation with defined identity changes. No source processing under either path has been done in this session.
