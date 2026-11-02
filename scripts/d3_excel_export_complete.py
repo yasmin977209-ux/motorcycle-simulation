@@ -832,6 +832,7 @@ def write_d3_readme_status_rows(ws, extension: dict | None = None) -> None:
 def d3_validation_summary_rows(extension: dict | None = None) -> list[list[str]]:
     requirements = d3_requirement_statuses(extension)
     gate = d3_gate_status(requirements)
+    c100 = extension.get("c100_validation", {}) if extension is not None else {}
     source_status = (
         "PASS_SCOPED_WITH_LIMITATIONS"
         if all(requirements[x] in {"PASS_SCOPED", "PASS_SCOPED_WITH_LIMITATIONS"} for x in ("D3-07", "D3-08", "D3-09", "D3-10", "D3-11", "D3-12"))
