@@ -13,6 +13,7 @@ from scripts.d3_excel_export_complete import (
     registry_scenarios,
     trace_ids,
     d3_limitations,
+    scoped_closure_report_path,
 )
 from scripts.d3_registry_extension import build_extension
 
@@ -359,3 +360,10 @@ def test_d3_limitations_separate_source_backed_scope_from_missing_full_cohort_da
     assert any("NOT_VERIFIED_105_OF_105" in item for item in limitations)
     assert "C100 daily distributions and representative P50 raw daily ledgers remain MISSING_EVIDENCE" not in joined
     assert "all-trial final close-date distribution remain MISSING_EVIDENCE" not in joined
+
+
+
+def test_scoped_closure_report_is_written_under_deliverables(tmp_path: Path):
+    report = scoped_closure_report_path(tmp_path / "deliverables")
+    assert report == tmp_path / "deliverables" / "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md"
+    assert report.parent.name == "deliverables"

@@ -884,6 +884,11 @@ def write_validation_summary(wb, lang: str, extension: dict | None = None):
         safe_append(ws, row)
     return ws
 
+def scoped_closure_report_path(output_dir: Path) -> Path:
+    """Place the generated candidate report alongside the other deliverables."""
+    return Path(output_dir) / "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md"
+
+
 def build(args) -> dict:
     base_raw = Path(args.registry).read_bytes()
     base_sha = hashlib.sha256(base_raw).hexdigest()
@@ -996,7 +1001,7 @@ def build(args) -> dict:
     report += [f"- {key}: {value}" for key, value in requirements.items()]
     report += ["", "## Preserved limitations"] + [f"- {item}" for item in limitations]
     report += ["", "D3 remains BLOCKED_MISSING_EVIDENCE. This candidate report is not a D3 closure record and does not authorize D4."]
-    Path("docs/stage_d/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md").write_text("\n".join(report) + "\n", encoding="utf-8")
+    scoped_closure_report_path(out).write_text("\n".join(report) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return result
 
