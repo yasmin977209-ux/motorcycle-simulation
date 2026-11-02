@@ -291,3 +291,21 @@ No eligible post-cutoff D3 source producer was found in the latest 400 repositor
 - No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change or Trial identity change. The cancelled run 41358971225 outputs were not used.
 - Missing historical 48k accounting fields remain MISSING_EVIDENCE; C100 Golden revalidation and Full Logging limitations remain explicitly scoped as recorded in the build audit.
 - D4 remains NOT_STARTED unless the D3 gate is independently closed.
+
+## Session handoff — 2026-11-03: D3 LFS / Artifact-acceptance
+
+Resume from live branch tmp/d1-rebuild-20261101; fetch current HEAD first. Baseline reviewed in this session: 3d1492106ecf2559099288191f62d4f99f7a7ec7. main: c6e54349a5e94f65d5aa9f83141f225d777bb474 (read-only).
+
+Latest source-specific run: 41480650491, tested SHA 2f3cb05bf668cd003cdb5bcb121d2217d629d9f1, final output commit 3d1492106ecf2559099288191f62d4f99f7a7ec7, success. Only the three previously owner-approved pinned artifacts were processed; no new Trial/Simulation/Monte Carlo or identity change.
+
+The latest D3 status is in deliverables/D3_BUILD_AUDIT.json and deliverables/D3_MANIFEST.json. Use the reconciled matrix, not stale earlier missing-evidence labels:
+- D3-07..12 now PASS_SCOPED_WITH_LIMITATIONS for 25 representative P50 cases.
+- D3-13 PASS_SCOPED for 49,500 close-date records.
+- D3-18 remains NOT_RUN.
+- D3 overall remains BLOCKED_MISSING_EVIDENCE.
+
+Output package: Actions Artifact 13160434943, 535,358,202 bytes, SHA-256 513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04, metadata expiry 2026-12-02T16:56:31Z. The two new workbooks (AR 259,443,380 bytes / SHA-256 bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2; EN 259,441,523 bytes / SHA-256 849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5) are Actions-Artifact-only, not committed Git files.
+
+Stop condition for Git LFS: first verify personal-account LFS storage/bandwidth remaining and an active $0 hard-stop budget. Account billing/usage is inaccessible via repository permissions. LFS transfer has not been started. Artifact-acceptance is also NOT_RUN until Artifact 13160434943 is independently downloaded and rehashed. After the zero-cost guard, publish the two LFS objects without destroying previous history, verify via a clean remote LFS checkout, and upload only a small evidence artifact.
+
+Do not promote D3 or start D4. Do not run new Trials/Simulation/Monte Carlo, N expansion, backfill/zero-fill, or source/cohort/seed/Trial identity changes. Preserve the five missing fields and all upstream gate states.

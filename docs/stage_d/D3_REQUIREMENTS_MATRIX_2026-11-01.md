@@ -158,3 +158,26 @@ The latest static check passed 21 tests / 0 skipped on tested code SHA `b3f04a00
 ### Matrix status clarification — published candidate D3-18
 
 The initial status column above is a historical baseline. For the already-published `T2_INTERIM` candidate, D3-18 (manifest and exact Raw readback) is now `PASS_SCOPED` on exact review baseline HEAD `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`, Run 41366779707. This does not execute or validate the separate source-dependent complete-exporter path; its pre-write status map continues to report D3-18 as `NOT_RUN` until that path creates and reads back its own output. Neither interpretation changes the overall D3 gate: D3-05 remains limited and D3-07..D3-13 remain `MISSING_EVIDENCE`. See the consolidated audit for exact hashes and full workflow reconciliation.
+
+## Post-reprocessing reconciliation — 2026-11-03 (append-only)
+
+Baseline: branch tmp/d1-rebuild-20261101, HEAD 3d1492106ecf2559099288191f62d4f99f7a7ec7; main c6e54349a5e94f65d5aa9f83141f225d777bb474. Current authoritative requirement dispositions for the candidate produced by [Run 41480650491](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41480650491) are in the exact-HEAD [D3_BUILD_AUDIT.json](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/3d1492106ecf2559099288191f62d4f99f7a7ec7/deliverables/D3_BUILD_AUDIT.json) and [D3_MANIFEST.json](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/3d1492106ecf2559099288191f62d4f99f7a7ec7/deliverables/D3_MANIFEST.json).
+
+| Requirement | Current disposition | Scope |
+|---|---|---|
+| D3-01 to D3-04 | PASS_SCOPED | Reference/registry, source identity separation, workbook structure and parity. |
+| D3-05 | PASS_SCOPED_WITH_LIMITATIONS | C100 daily deterministic reuse, 5 scenarios × 2,198 rows; Golden revalidation NOT_RUN. |
+| D3-06 | PASS_SCOPED_WITH_LIMITATIONS | 105 representative keys / 125 assignments only; normalized status NOT_VERIFIED_105_OF_105. |
+| D3-07 to D3-12 | PASS_SCOPED_WITH_LIMITATIONS | 25 selected representative P50 cases for each respective daily/detail ledger. |
+| D3-13 | PASS_SCOPED | 49,500 source-backed final close dates across 25 scenarios. |
+| D3-14 to D3-16 | PASS_SCOPED | Workbook safety, parity, Number-ID traceability. |
+| D3-17 | PASS_SCOPED_WITH_LIMITATIONS | Limitations retained. |
+| D3-18 | NOT_RUN | The current Build Audit / Manifest still say NOT_RUN; the newly built 259 MB workbook files have not had independent Git LFS and Artifact-acceptance verification. |
+
+The old table and old missing-evidence labels remain historical. D3-07..D3-13 are not wholly absent any longer, but only the bounded evidence described above is accepted. Full Logging, five 48K accounting fields, C100 Golden and upstream gates remain open. Overall D3 remains BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
+
+Workbook results recorded by the latest build:
+- AR 259,443,380 bytes; SHA-256 bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2.
+- EN 259,441,523 bytes; SHA-256 849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5.
+- 10,346,928 numeric comparisons; zero mismatches; 20,693,856 numeric cells traced, zero untraced.
+- Both are Actions-Artifact-only in this candidate; current Git paths still contain previous smaller files.

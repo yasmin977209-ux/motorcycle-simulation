@@ -1,0 +1,77 @@
+{
+  "report_date": "2026-11-03",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "working_branch": "tmp/d1-rebuild-20261101",
+  "baseline_head": "3d1492106ecf2559099288191f62d4f99f7a7ec7",
+  "main_head": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d4_status": "NOT_STARTED",
+  "source_reprocessing": {
+    "run_id": 41480650491,
+    "tested_sha": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
+    "output_head": "3d1492106ecf2559099288191f62d4f99f7a7ec7",
+    "conclusion": "success"
+  },
+  "output_artifact": {
+    "artifact_id": 13160434943,
+    "run_id": 41480650491,
+    "bytes": 535358202,
+    "sha256": "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
+    "expired": false,
+    "expires_at": "2026-12-02T16:56:31Z",
+    "independent_download": "NOT_RUN"
+  },
+  "workbooks": {
+    "ar": {
+      "path": "deliverables/النتائج_الكاملة_AR.xlsx",
+      "bytes": 259443380,
+      "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2"
+    },
+    "en": {
+      "path": "deliverables/Full_Results_EN.xlsx",
+      "bytes": 259441523,
+      "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5"
+    }
+  },
+  "requirement_statuses": {
+    "D3-01..04": "PASS_SCOPED",
+    "D3-05": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-06": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-07..12": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-13": "PASS_SCOPED",
+    "D3-14..16": "PASS_SCOPED",
+    "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-18": "NOT_RUN"
+  },
+  "git_lfs": {
+    "status": "BLOCKED_PENDING_ZERO_COST_GUARD",
+    "objects_uploaded": false,
+    "payload_bytes": 518884903,
+    "estimated_gib": 0.4834,
+    "account_usage_and_budget": "NOT_VISIBLE_VIA_REPOSITORY_PERMISSION"
+  },
+  "artifact_acceptance": {
+    "status": "NOT_RUN",
+    "independent_zip_download": false
+  },
+  "preserved_gates": {
+    "full_logging": "105_REPRESENTATIVE_KEYS_ONLY / NOT_VERIFIED_105_OF_105",
+    "missing_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "c100_golden": "NOT_RUN",
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED"
+  },
+  "no_new_trials": true,
+  "main_modified": false,
+  "merge_or_release": false
+}

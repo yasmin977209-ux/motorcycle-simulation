@@ -3010,3 +3010,15 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change or Trial identity change. The cancelled run 41358971225 outputs were not used.
 - Missing historical 48k accounting fields remain MISSING_EVIDENCE; C100 Golden revalidation and Full Logging limitations remain explicitly scoped as recorded in the build audit.
 - D4 remains NOT_STARTED unless the D3 gate is independently closed.
+
+## D3 post-reprocessing reconciliation and LFS / Artifact-acceptance preflight — 2026-11-03
+
+- Live review baseline: tmp/d1-rebuild-20261101 HEAD 3d1492106ecf2559099288191f62d4f99f7a7ec7; main c6e54349a5e94f65d5aa9f83141f225d777bb474 (unchanged).
+- Run 41480650491 succeeded on tested SHA 2f3cb05bf668cd003cdb5bcb121d2217d629d9f1 and committed the scoped D3 outputs at 3d1492106ecf2559099288191f62d4f99f7a7ec7.
+- Current requirement map: D3-01..04 PASS_SCOPED; D3-05/06 PASS_SCOPED_WITH_LIMITATIONS; D3-07..12 PASS_SCOPED_WITH_LIMITATIONS for 25 representative cases; D3-13 PASS_SCOPED for 49,500 close dates; D3-14..16 PASS_SCOPED; D3-17 PASS_SCOPED_WITH_LIMITATIONS; D3-18 NOT_RUN.
+- Both new 259 MB XLSX files remain inside Actions Artifact 13160434943 only; they are not Git blobs/LFS pointers. Candidate ZIP is 535,358,202 bytes and expires 2026-12-02.
+- Git LFS and Artifact-acceptance are not executed: no .gitattributes/LFS pointer exists, and Artifact 13160434943 was not independently downloaded and rehashed in this review.
+- LFS upload is BLOCKED_PENDING_ZERO_COST_GUARD until the owner verifies account-wide remaining quota and an active $0 hard-stop budget. No paid overage was authorized or initiated.
+- Preserved blockers: 105-key Full Logging only; five historical 48K accounting fields missing; C100 Golden NOT_RUN; Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED.
+- Overall D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED. Resume only with the narrow Artifact verification + Git LFS publication/readback after the cost guard; no new Trials, Simulation, Monte Carlo, backfill, zero-fill or identity changes.
+- Detailed report: docs/stage_d/D3_LFS_ARTIFACT_ACCEPTANCE_PREFLIGHT_2026-11-03.md.

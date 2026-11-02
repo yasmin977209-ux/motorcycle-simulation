@@ -116,6 +116,10 @@ jobs:
               "docs/PROJECT_HANDOFF.md",
               "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
               "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
+              "docs/stage_d/D3_LFS_ARTIFACT_ACCEPTANCE_PREFLIGHT_2026-11-03.md",
+              "docs/stage_d/D3_LFS_ARTIFACT_ACCEPTANCE_PREFLIGHT_2026-11-03.json",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md",
+              "docs/stage_d/D3_COMPLETION_BLOCKER_AND_OWNER_DECISION_2026-11-02.md",
           ]
           for path in optional_evidence:
               if pathlib.Path(path).is_file():

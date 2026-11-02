@@ -102,3 +102,22 @@ The owner explicitly approved **Option A** in this conversation on 2026-11-02. T
 The approved exception is `D3_ONLY_PINNED_ARTIFACTS_2026-11-02`, scoped to these three exact pins only. It does not authorize any other pre-cutoff input, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, or changes to `SOURCE_SHA`, `cohort_id`, `MASTER_SEED`, or Trial identity. The original GitHub artifact ZIP bytes must be downloaded and checked against the pins before opening. Run metadata, artifact metadata, ZIP CRC/path safety, member hashes/sizes, lineage, and coverage must all be verified. The cancelled run `41358971225` and all its outputs remain quarantined and excluded.
 
 If any required member or value is absent, it remains `MISSING_EVIDENCE`; this approval does not permit inference. D3 may remain `BLOCKED_MISSING_EVIDENCE` after reprocessing. D4 remains `NOT_STARTED` unless D3's full gate is independently proven closed.
+
+## Post-reprocessing correction and Git LFS / Artifact-acceptance — 2026-11-03 (append-only)
+
+The earlier blocker descriptions are preserved as history. The newer [D3_BUILD_AUDIT.json](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/3d1492106ecf2559099288191f62d4f99f7a7ec7/deliverables/D3_BUILD_AUDIT.json) and [D3_MANIFEST.json](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/3d1492106ecf2559099288191f62d4f99f7a7ec7/deliverables/D3_MANIFEST.json), produced by Run 41480650491, supersede the older requirement states only within their exact scopes:
+- D3-05: PASS_SCOPED_WITH_LIMITATIONS for 5 C100 deterministic daily-reuse series (2,198 rows each); Golden revalidation NOT_RUN.
+- D3-06: PASS_SCOPED_WITH_LIMITATIONS for 105 keys / 125 assignments; Full Logging is not 48K.
+- D3-07..D3-12: PASS_SCOPED_WITH_LIMITATIONS for 25 representative P50 cases only.
+- D3-13: PASS_SCOPED for 49,500 all-trial final close dates.
+- D3-18: NOT_RUN in the current Build Audit and Manifest.
+
+The two 259 MB workbooks were retained inside Actions Artifact 13160434943 only. The Job log confirms they were not added as Git blobs because each exceeded the 95,000,000-byte add threshold. Their current canonical Git paths still hold the older 27.7 MB files. Artifact metadata: 535,358,202 bytes; SHA-256 513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04; expiry 2026-12-02T16:56:31Z.
+
+Owner request on 2026-11-03 asked for joint Git LFS and Artifact-acceptance. Preflight found no .gitattributes, no LFS pointers, and no acceptance record on the working branch. The output Artifact has not been independently downloaded and rehashed in this review; Artifact-acceptance therefore remains NOT_RUN.
+
+Git LFS publication is BLOCKED_PENDING_ZERO_COST_GUARD. The proposed payload is 518,884,903 bytes (~0.484 GiB), plus approximately the same bandwidth for independent remote readback. GitHub documents 10 GiB LFS storage and bandwidth for Free/Pro accounts, but any overage may be charged unless a $0 budget is active. Repository permission does not expose the account's remaining quota or budget. Before upload, the owner must verify remaining allowance and configure/verify a $0 Git LFS hard-stop budget. No LFS transfer or potential overage was initiated.
+
+After that guard, the narrowly scoped next action is: download Artifact 13160434943; verify archive digest and both XLSX sizes/SHA-256 values; publish via LFS preserving historical bytes; fetch from a clean LFS-enabled checkout; verify the exact remote content and HEAD; then publish only a small acceptance-evidence Artifact rather than duplicating the full 535 MB package.
+
+This does not solve remaining source evidence: Full Logging 105 keys only; five 48K accounting fields still missing; C100 Golden NOT_RUN; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED. D3 remains BLOCKED_MISSING_EVIDENCE and D4 NOT_STARTED.
