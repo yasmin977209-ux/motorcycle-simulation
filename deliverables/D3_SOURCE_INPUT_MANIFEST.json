@@ -1,0 +1,51 @@
+{
+  "artifacts": {
+    "aggregate": {
+      "artifact_expired": false,
+      "artifact_id": 12852969854,
+      "created_at": "2026-10-28T21:36:57Z",
+      "downloaded_bytes": 9357996,
+      "downloaded_sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "filename": "s6-n2400.zip",
+      "head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed",
+      "name": "s6-n2400-status-reconciled-aggregate-40773412377",
+      "run_conclusion": "success",
+      "run_id": 40773412377,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "size": 9357996
+    },
+    "c100": {
+      "artifact_expired": false,
+      "artifact_id": 12630457193,
+      "created_at": "2026-10-26T03:18:29Z",
+      "downloaded_bytes": 361733,
+      "downloaded_sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "filename": "c100-reuse.zip",
+      "head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd",
+      "name": "s4-c100-v23-40263424595",
+      "run_conclusion": "success",
+      "run_id": 40263424595,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "size": 361733
+    },
+    "full_logging": {
+      "artifact_expired": false,
+      "artifact_id": 12998778418,
+      "created_at": "2026-10-30T17:25:30Z",
+      "downloaded_bytes": 310827203,
+      "downloaded_sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "filename": "full-logging.zip",
+      "head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70",
+      "name": "s6-stage-c-representative-full-logging-41098699740",
+      "run_conclusion": "success",
+      "run_id": 41098699740,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "size": 310827203
+    }
+  },
+  "cutoff_utc": "2026-10-31T00:00:00Z",
+  "exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+  "owner_decision": "APPROVED_2026-11-02",
+  "schema_version": "d3-owner-approved-source-input-manifest-v1",
+  "scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS"
+}

@@ -1,20 +1,42 @@
 {
   "arabic_workbook": {
-    "bytes": 27734273,
+    "bytes": 259443380,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
-    "numeric_cells": 2425143,
-    "sha256": "914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461",
+    "numeric_cells": 10346928,
+    "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2",
     "sheet_count": 185,
     "sheet_direction_mismatches": [],
     "sheet_direction_status": "PASS"
   },
   "bilingual_numeric_parity": {
-    "numeric_comparisons": 2425143,
+    "numeric_comparisons": 10346928,
     "numeric_mismatches": 0
+  },
+  "c100_validation": {
+    "G_status": "G_INERT",
+    "N_unique_paths": 1,
+    "daily_reuse_status": "PASS_SCOPED_C100_DAILY_REUSE",
+    "daily_rows_per_scenario": 2198,
+    "degeneracy_status": "DEGENERATE_DETERMINISTIC",
+    "golden_common_field_path_matches": 5,
+    "golden_revalidation": "NOT_RUN",
+    "golden_trial_fingerprint_matches": 5,
+    "scenario_count": 5,
+    "trial_count_per_scenario": 300
+  },
+  "close_date_validation": {
+    "C100_golden_member_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+    "C100_scenarios": 5,
+    "C100_trial_count": 1500,
+    "S6_scenarios": 20,
+    "S6_summary_member_sha256": "66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522",
+    "S6_trial_count": 48000,
+    "scenario_count": 25,
+    "total_trial_count": 49500
   },
   "current_governing_reference": {
     "bytes": 401397,
@@ -27,17 +49,32 @@
   "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
   "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
   "english_workbook": {
-    "bytes": 27722355,
+    "bytes": 259441523,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
-    "numeric_cells": 2425143,
-    "sha256": "89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191",
+    "numeric_cells": 10346928,
+    "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5",
     "sheet_count": 185,
     "sheet_direction_mismatches": [],
     "sheet_direction_status": "PASS"
+  },
+  "final_acceptance": "NOT_DECLARED",
+  "full_logging_validation": {
+    "completed_keys": 105,
+    "failed_keys": 0,
+    "normalized_status": "NOT_VERIFIED_105_OF_105",
+    "p50_case_count": 25,
+    "p50_scenario_coverage": 25,
+    "post_write_audit_pass_count": 105,
+    "representative_role_case_count": 105,
+    "role_assignments": 125,
+    "role_assignments_covered": 125,
+    "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
+    "unique_trial_keys": 105,
+    "verified_member_count": 1365
   },
   "gate_statuses_preserved": {
     "c100_golden_revalidation": "NOT_RUN",
@@ -49,21 +86,32 @@
     "stability": "NOT_CONVERGED (0/60)"
   },
   "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-  "missing_evidence": [
-    "C100 daily distributions absent from Number Registry.",
-    "Representative P50 raw daily ledgers absent from Number Registry.",
-    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers absent from Number Registry.",
-    "Final closure-date distribution absent from Number Registry.",
-    "Historical accounting fields remain MISSING_EVIDENCE and must not be inferred or zero-filled: Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets.",
-    "Full Logging normalized statuses remain NOT_VERIFIED_105_OF_105.",
-    "C100 Golden revalidation remains NOT_RUN."
+  "input_manifest_sha256": "80c58c30b61d6c68a984c2c06528a724b6b46cf655c6ca9f1752b071ba529bc7",
+  "limitations": [
+    "Full Logging contains 105 representative keys / 125 role assignments only; it is not 48,000-trial full daily logging.",
+    "C100 daily distributions are source-backed as deterministic reuse for five scenarios (2,198 rows each); C100 Golden revalidation remains NOT_RUN.",
+    "Representative P50 raw daily ledgers are source-backed for 25 selected cases only; this does not establish full 48,000-trial daily logging.",
+    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers are source-backed for 25 representative P50 cases only; this does not establish full-cohort detail.",
+    "The all-trial final close-date distribution is source-backed for 49,500 trials (48,000 S6 + 1,500 C100) across 25 scenarios and is not inferred from the 105 representative keys.",
+    "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
+    "Full Logging normalized status remains NOT_VERIFIED_105_OF_105; 105 representative keys do not prove all 48,000 trials.",
+    "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse and common-field comparisons do not replace the Golden revalidation gate.",
+    "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
+    "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED."
+  ],
+  "missing_historical_48k_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
   ],
   "no_trials_or_simulation_executed": true,
   "number_id_traceability": {
-    "numeric_cells_checked": 4850286,
+    "numeric_cells_checked": 20693856,
     "untraced_numeric_cells": 0
   },
-  "registry": {
+  "registry_base": {
     "bytes": 24137036,
     "daily_point_count": 2086550,
     "daily_points_resolved": 2086550,
@@ -72,8 +120,92 @@
     "git_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6",
     "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
   },
+  "registry_extension": {
+    "actions_artifact_name": "D3-Registry-Extension-41480650491",
+    "bytes": 16440292,
+    "extension_id": "D3NRX-f390f65b39afccff21ebf3fd",
+    "git_blob_sha1": "3aef5d153725e24341e8b49e08b3e6463e19a538",
+    "path": "deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz",
+    "representative_role_case_count": 105,
+    "sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+  },
+  "representative_accounting_fields": {
+    "do_not_infer_or_zero_fill": true,
+    "fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "historical_48k_status": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "status": "VERIFIED_SCOPED_25_P50_CASES"
+  },
+  "representative_role_assignment_count": 125,
+  "representative_role_case_count": 105,
+  "requirement_statuses": {
+    "D3-01": "PASS_SCOPED",
+    "D3-02": "PASS_SCOPED",
+    "D3-03": "PASS_SCOPED",
+    "D3-04": "PASS_SCOPED",
+    "D3-05": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-06": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-07": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-08": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-09": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-10": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-11": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-12": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-13": "PASS_SCOPED",
+    "D3-14": "PASS_SCOPED",
+    "D3-15": "PASS_SCOPED",
+    "D3-16": "PASS_SCOPED",
+    "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-18": "NOT_RUN"
+  },
   "scenario_count": 25,
-  "source_head": "3604ff2fabf2ba8b752b839094eec89835ff4e78",
-  "workflow_run_id": "41352075552",
+  "source_artifacts": {
+    "aggregate": {
+      "artifact_id": 12852969854,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "s6-n2400.zip",
+      "run_created_at_utc": "2026-10-28T21:36:57Z",
+      "run_id": 40773412377,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "size_bytes": 9357996,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed"
+    },
+    "c100": {
+      "artifact_id": 12630457193,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "c100-reuse.zip",
+      "run_created_at_utc": "2026-10-26T03:18:29Z",
+      "run_id": 40263424595,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "size_bytes": 361733,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd"
+    },
+    "full_logging": {
+      "artifact_id": 12998778418,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "full-logging.zip",
+      "run_created_at_utc": "2026-10-30T17:25:30Z",
+      "run_id": 41098699740,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "size_bytes": 310827203,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
+    }
+  },
+  "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
+  "workflow_run_id": "41480650491",
   "worksheet_count_per_workbook": 185
 }

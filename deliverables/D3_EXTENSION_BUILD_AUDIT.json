@@ -1,0 +1,101 @@
+{
+  "base_registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+  "c100_validation": {
+    "G_status": "G_INERT",
+    "N_unique_paths": 1,
+    "daily_reuse_status": "PASS_SCOPED_C100_DAILY_REUSE",
+    "daily_rows_per_scenario": 2198,
+    "degeneracy_status": "DEGENERATE_DETERMINISTIC",
+    "golden_common_field_path_matches": 5,
+    "golden_revalidation": "NOT_RUN",
+    "golden_trial_fingerprint_matches": 5,
+    "scenario_count": 5,
+    "trial_count_per_scenario": 300
+  },
+  "close_date_validation": {
+    "C100_golden_member_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+    "C100_scenarios": 5,
+    "C100_trial_count": 1500,
+    "S6_scenarios": 20,
+    "S6_summary_member_sha256": "66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522",
+    "S6_trial_count": 48000,
+    "scenario_count": 25,
+    "total_trial_count": 49500
+  },
+  "extension_bytes": 16440292,
+  "extension_git_blob_sha1": "3aef5d153725e24341e8b49e08b3e6463e19a538",
+  "extension_id": "D3NRX-f390f65b39afccff21ebf3fd",
+  "extension_path": "deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz",
+  "extension_sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024",
+  "full_logging_validation": {
+    "completed_keys": 105,
+    "failed_keys": 0,
+    "normalized_status": "NOT_VERIFIED_105_OF_105",
+    "p50_case_count": 25,
+    "p50_scenario_coverage": 25,
+    "post_write_audit_pass_count": 105,
+    "representative_role_case_count": 105,
+    "role_assignments": 125,
+    "role_assignments_covered": 125,
+    "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
+    "unique_trial_keys": 105,
+    "verified_member_count": 1365
+  },
+  "no_trials_or_simulation_executed": true,
+  "representative_accounting_fields": {
+    "do_not_infer_or_zero_fill": true,
+    "fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "historical_48k_status": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "status": "VERIFIED_SCOPED_25_P50_CASES"
+  },
+  "sensitivity_entry_count": 40,
+  "source_artifacts": {
+    "aggregate": {
+      "artifact_id": 12852969854,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "s6-n2400.zip",
+      "run_created_at_utc": "2026-10-28T21:36:57Z",
+      "run_id": 40773412377,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "size_bytes": 9357996,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed"
+    },
+    "c100": {
+      "artifact_id": 12630457193,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "c100-reuse.zip",
+      "run_created_at_utc": "2026-10-26T03:18:29Z",
+      "run_id": 40263424595,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "size_bytes": 361733,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd"
+    },
+    "full_logging": {
+      "artifact_id": 12998778418,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "full-logging.zip",
+      "run_created_at_utc": "2026-10-30T17:25:30Z",
+      "run_id": 41098699740,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "size_bytes": 310827203,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
+    }
+  },
+  "status": "PASS_SCOPED_D3_REGISTRY_EXTENSION",
+  "uncompressed_bytes": 251400177
+}

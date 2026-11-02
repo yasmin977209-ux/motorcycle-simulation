@@ -1,0 +1,157 @@
+{
+  "c100_validation": {
+    "G_status": "G_INERT",
+    "N_unique_paths": 1,
+    "daily_reuse_status": "PASS_SCOPED_C100_DAILY_REUSE",
+    "daily_rows_per_scenario": 2198,
+    "degeneracy_status": "DEGENERATE_DETERMINISTIC",
+    "golden_common_field_path_matches": 5,
+    "golden_revalidation": "NOT_RUN",
+    "golden_trial_fingerprint_matches": 5,
+    "scenario_count": 5,
+    "trial_count_per_scenario": 300
+  },
+  "close_date_validation": {
+    "C100_golden_member_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+    "C100_scenarios": 5,
+    "C100_trial_count": 1500,
+    "S6_scenarios": 20,
+    "S6_summary_member_sha256": "66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522",
+    "S6_trial_count": 48000,
+    "scenario_count": 25,
+    "total_trial_count": 49500
+  },
+  "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "extension_build_status": "PASS_SCOPED_D3_REGISTRY_EXTENSION",
+  "files": {
+    "D3_BUILD_AUDIT.json": {
+      "bytes": 9137,
+      "sha256": "5fe40ab589186e46aad10fddc1bca1c885b055d38635c92ae2a3db98c69080a9"
+    },
+    "D3_EXTENSION_BUILD_AUDIT.json": {
+      "bytes": 4125,
+      "sha256": "f112f84b5013ada381608b7d80786211142a5a80aa329eef0661c5e91d6c0d8b"
+    },
+    "D3_MANIFEST.json": {
+      "bytes": 6249,
+      "sha256": "f9bbd442592f9d1b95551a6ea09890fa1d38a98111efdadad06503efc1e7c894"
+    },
+    "D3_NUMBER_REGISTRY_EXTENSION.json.gz": {
+      "bytes": 16440292,
+      "sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+    },
+    "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md": {
+      "bytes": 3224,
+      "sha256": "2b044e32f51bb8af97932bc445288124814ef8f630576c195937a9c38e282e65"
+    },
+    "D3_SOURCE_INPUT_ENVELOPE.json": {
+      "bytes": 280,
+      "sha256": "80c58c30b61d6c68a984c2c06528a724b6b46cf655c6ca9f1752b071ba529bc7"
+    },
+    "D3_SOURCE_INPUT_MANIFEST.json": {
+      "bytes": 2058,
+      "sha256": "3b7b9ccdf37c879351c33ac7f34a4652e931525f6c30d51073297d9769d0a82a"
+    },
+    "Full_Results_EN.xlsx": {
+      "bytes": 259441523,
+      "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "bytes": 259443380,
+      "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2"
+    }
+  },
+  "full_logging_validation": {
+    "completed_keys": 105,
+    "failed_keys": 0,
+    "normalized_status": "NOT_VERIFIED_105_OF_105",
+    "p50_case_count": 25,
+    "p50_scenario_coverage": 25,
+    "post_write_audit_pass_count": 105,
+    "representative_role_case_count": 105,
+    "role_assignments": 125,
+    "role_assignments_covered": 125,
+    "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
+    "unique_trial_keys": 105,
+    "verified_member_count": 1365
+  },
+  "missing_historical_48k_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
+  ],
+  "no_source_or_trial_identity_changed": true,
+  "no_trials_or_simulation_executed": true,
+  "owner_approval": "APPROVED_2026-11-02",
+  "preserved_gate_statuses": {
+    "c100_golden_revalidation": "NOT_RUN",
+    "full_logging": "PASS_SCOPED_105_KEYS_ONLY",
+    "gate_a_financial": "PASS_SCOPED",
+    "gate_a_production": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "n4800": "NOT_EXECUTED",
+    "stability": "NOT_CONVERGED (0/60)"
+  },
+  "quarantined_run_41358971225_reused": false,
+  "representative_accounting_fields": {
+    "do_not_infer_or_zero_fill": true,
+    "fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "historical_48k_status": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "status": "VERIFIED_SCOPED_25_P50_CASES"
+  },
+  "schema_version": "d3-owner-approved-source-reprocessing-record-v1",
+  "scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+  "source_artifacts": {
+    "aggregate": {
+      "artifact_id": 12852969854,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "s6-n2400.zip",
+      "run_created_at_utc": "2026-10-28T21:36:57Z",
+      "run_id": 40773412377,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "size_bytes": 9357996,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed"
+    },
+    "c100": {
+      "artifact_id": 12630457193,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "c100-reuse.zip",
+      "run_created_at_utc": "2026-10-26T03:18:29Z",
+      "run_id": 40263424595,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "size_bytes": 361733,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd"
+    },
+    "full_logging": {
+      "artifact_id": 12998778418,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "full-logging.zip",
+      "run_created_at_utc": "2026-10-30T17:25:30Z",
+      "run_id": 41098699740,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "size_bytes": 310827203,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
+    }
+  },
+  "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+  "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
+  "workflow_run_id": "41480650491"
+}
