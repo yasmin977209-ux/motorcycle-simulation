@@ -119,3 +119,7 @@ Repository-wide metadata review covered the latest 1,000 of 2,854 Actions runs. 
 | D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json | 43df54034c52971ce71e2860ca64eab143da2dc9 | 659 | 4a8d63a0f1d7ba6a89693eeb09a6b45006e84f7858f0d671c2dc0b2aa9bdc643 | 6d3e83505d614a88ca0847bb1dadf301573580be |
 
 Run 41366335532 passed exact final HEAD c9bf2610f5b05828133c731aeb6bb4ed9bdbf028 and re-read the published Raw outputs, D3 audit, manifest, build report, Number Registry and governing v2.4.0 bytes. The D3 source-free code test remains Run 41365795167 (21 passed, 0 skipped) on tested code SHA b3f04a00732ffcac05e3af4f125e79aebe0b11ae.
+
+
+## Session HEAD addendum
+The `2e845...` HEAD shown in the original opening paragraph is an earlier historical checkpoint. The actual starting HEAD re-fetched for this remediation session was `153554dafeff628541eef6348835004b3dd898c5`; main was `c6e54349a5e94f65d5aa9f83141f225d777bb474`. The final work-branch HEAD is `0aee010a3f3917d03e783412e06919fb905c1fbb`; main is unchanged. Run 41366529907 passed exact-HEAD no-rebuild and Raw readback at `0aee010a3f3917d03e783412e06919fb905c1fbb` (9 regression tests); source-free implementation validation Run 41365795167 passed 21 tests / 0 skipped on source SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`.
