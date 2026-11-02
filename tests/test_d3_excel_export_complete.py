@@ -12,6 +12,7 @@ from scripts.d3_excel_export_complete import (
     numeric_pair,
     registry_scenarios,
     trace_ids,
+    d3_limitations,
 )
 from scripts.d3_registry_extension import build_extension
 
@@ -345,3 +346,16 @@ def test_write_detail_sheet_serializes_trial_id_as_text(tmp_path: Path):
         assert trace_ids([path]) == {"numeric_cells_checked": len(DAILY_DETAIL_FIELDS), "untraced_numeric_cells": 0}
     finally:
         checked.close()
+
+
+
+def test_d3_limitations_separate_source_backed_scope_from_missing_full_cohort_data():
+    limitations = d3_limitations()
+    joined = "\\n".join(limitations)
+    assert any("C100 daily distributions are source-backed" in item for item in limitations)
+    assert any("25 selected cases only" in item for item in limitations)
+    assert any("49,500 trials (48,000 S6 + 1,500 C100)" in item for item in limitations)
+    assert any("five historical accounting fields remain MISSING_EVIDENCE" in item for item in limitations)
+    assert any("NOT_VERIFIED_105_OF_105" in item for item in limitations)
+    assert "C100 daily distributions and representative P50 raw daily ledgers remain MISSING_EVIDENCE" not in joined
+    assert "all-trial final close-date distribution remain MISSING_EVIDENCE" not in joined

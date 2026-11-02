@@ -810,6 +810,22 @@ def d3_gate_status(requirements: dict[str, str]) -> str:
     return "PASS_SCOPED"
 
 
+def d3_limitations() -> list[str]:
+    """State source-backed scoped coverage separately from genuinely missing full-cohort evidence."""
+    return [
+        "Full Logging contains 105 representative keys / 125 role assignments only; it is not 48,000-trial full daily logging.",
+        "C100 daily distributions are source-backed as deterministic reuse for five scenarios (2,198 rows each); C100 Golden revalidation remains NOT_RUN.",
+        "Representative P50 raw daily ledgers are source-backed for 25 selected cases only; this does not establish full 48,000-trial daily logging.",
+        "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers are source-backed for 25 representative P50 cases only; this does not establish full-cohort detail.",
+        "The all-trial final close-date distribution is source-backed for 49,500 trials (48,000 S6 + 1,500 C100) across 25 scenarios and is not inferred from the 105 representative keys.",
+        "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
+        "Full Logging normalized status remains NOT_VERIFIED_105_OF_105; 105 representative keys do not prove all 48,000 trials.",
+        "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse and common-field comparisons do not replace the Golden revalidation gate.",
+        "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
+        "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED.",
+    ]
+
+
 def d3_current_gate_status(extension: dict | None = None) -> str:
     return d3_gate_status(d3_requirement_statuses(extension))
 
@@ -901,15 +917,7 @@ def build(args) -> dict:
     trace = trace_ids([ar, en])
     requirements = d3_requirement_statuses(extension)
     gate_status = d3_gate_status(requirements)
-    limitations = [
-        "Full Logging contains 105 representative keys only; it is not 48,000-trial full daily logging.",
-        "C100 daily distributions and representative P50 raw daily ledgers remain MISSING_EVIDENCE unless supplied by eligible, pinned source artifacts.",
-        "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS records and the all-trial final close-date distribution remain MISSING_EVIDENCE unless supplied by eligible, pinned source artifacts.",
-        "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
-        "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse does not replace Golden revalidation.",
-        "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
-        "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED.",
-    ]
+    limitations = d3_limitations()
     reference_info = {
         "path": "Gist reference_v240.md", "bytes": len(reference_raw), "sha256": reference_sha,
         "git_blob_sha1": blob_sha(reference_raw), "containing_commit": "384c27810e76572e77e79e9829c5f92c1c4165d7",
@@ -980,7 +988,7 @@ def build(args) -> dict:
         "- S6 daily distribution points: " + str(validation["daily_points_resolved"]),
         "- C100 daily reuse points: " + str(5 * 2 * len(METRICS) * len(QUANTILES) * 2198),
         "- P50 detailed scenarios: 25; all representative daily role keys: " + str(len(extension.get("representative_role_cases", []))) + "; role assignments: " + str(extension["full_logging_validation"]["role_assignments"]),
-        "- All-trial close-date distribution: MISSING_EVIDENCE; do not infer from the 105 representative keys.",
+        "- All-trial final close-date distribution: source-backed for 49,500 trials (48,000 S6 + 1,500 C100) across 25 scenarios; not inferred from the 105 representative keys.",
         "- Bilingual numeric comparisons: " + str(parity["numeric_comparisons"]) + "; mismatches: 0",
         "- Number-ID traced numeric cells: " + str(trace["numeric_cells_checked"]) + "; untraced: 0",
         "", "## Requirement status",
