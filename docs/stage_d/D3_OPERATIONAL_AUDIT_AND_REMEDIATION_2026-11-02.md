@@ -123,3 +123,6 @@ Run 41366335532 passed exact final HEAD c9bf2610f5b05828133c731aeb6bb4ed9bdbf028
 
 ## Session HEAD addendum
 The `2e845...` HEAD shown in the original opening paragraph is an earlier historical checkpoint. The actual starting HEAD re-fetched for this remediation session was `153554dafeff628541eef6348835004b3dd898c5`; main was `c6e54349a5e94f65d5aa9f83141f225d777bb474`. The final work-branch HEAD is `0aee010a3f3917d03e783412e06919fb905c1fbb`; main is unchanged. Run 41366529907 passed exact-HEAD no-rebuild and Raw readback at `0aee010a3f3917d03e783412e06919fb905c1fbb` (9 regression tests); source-free implementation validation Run 41365795167 passed 21 tests / 0 skipped on source SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`.
+
+
+Correction to session HEAD addendum: the preceding note records the successful no-rebuild validation at `0aee010a3f3917d03e783412e06919fb905c1fbb`. This append-only correction is contained in the next commit; the latest branch HEAD must be taken from the GitHub ref and its own triggered exact-head validation, not copied from that earlier checkpoint.
