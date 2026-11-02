@@ -124,8 +124,19 @@ def test_extract_daily_case_preserves_role_assignments_and_source_lineage():
     assert case["source_commit"] == "b" * 40
 
 
-def test_source_date_cutoff_blocks_pre_october_31_artifacts():
+def test_source_date_cutoff_blocks_pre_october_31_artifacts_without_owner_exception():
     from scripts.d3_registry_extension import enforce_source_date_cutoff
 
     with pytest.raises(ValueError, match="SOURCE_ARTIFACT_PRE_CUTOFF_PROHIBITED"):
         enforce_source_date_cutoff()
+
+
+def test_source_date_cutoff_allows_only_exact_d3_owner_exception_for_pinned_artifacts():
+    from scripts.d3_registry_extension import (
+        enforce_source_date_cutoff, OWNER_APPROVED_SOURCE_DATE_EXCEPTION, PINS,
+    )
+
+    assert set(PINS) == {"aggregate", "full_logging", "c100"}
+    enforce_source_date_cutoff(OWNER_APPROVED_SOURCE_DATE_EXCEPTION)
+    with pytest.raises(ValueError, match="D3_SOURCE_DATE_EXCEPTION_TOKEN_INVALID"):
+        enforce_source_date_cutoff("ALLOW_ALL_HISTORICAL_ARTIFACTS")
