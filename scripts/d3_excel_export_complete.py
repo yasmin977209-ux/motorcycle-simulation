@@ -24,6 +24,7 @@ from scripts.s6_number_registry import (
 )
 from scripts.d3_registry_extension import (
     ledger_number_id, ACCOUNTING_FIELDS, SOURCE_DATE_CUTOFF_UTC, SOURCE_RUN_CREATED_AT_UTC,
+    OWNER_APPROVED_SOURCE_DATE_EXCEPTION,
     EXPECTED_AGGREGATE_HEAD, EXPECTED_FULL_LOGGING_HEAD, EXPECTED_C100_HEAD,
     FULL_LOGGING_NORMALIZED_STATUS,
 )
@@ -88,8 +89,17 @@ def validate_source_dates(extension: dict) -> None:
             raise ValueError("D3_SOURCE_ARTIFACT_METADATA_MISSING:" + role)
         created_at = meta.get("run_created_at_utc")
         expected = SOURCE_RUN_CREATED_AT_UTC.get(pin.run_id)
-        if not isinstance(created_at, str) or created_at != expected or created_at < SOURCE_DATE_CUTOFF_UTC:
-            raise ValueError("D3_SOURCE_ARTIFACT_PRE_CUTOFF_OR_UNPINNED:" + role)
+        if not isinstance(created_at, str) or created_at != expected:
+            raise ValueError("D3_SOURCE_ARTIFACT_RUN_DATE_UNPINNED:" + role)
+        if created_at < SOURCE_DATE_CUTOFF_UTC:
+            if (
+                meta.get("source_date_exception") != OWNER_APPROVED_SOURCE_DATE_EXCEPTION
+                or meta.get("source_date_exception_scope") != "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS"
+                or meta.get("source_date_exception_owner_approval") != "APPROVED_2026-11-02"
+            ):
+                raise ValueError("D3_SOURCE_ARTIFACT_PRE_CUTOFF_WITHOUT_OWNER_EXCEPTION:" + role)
+        elif meta.get("source_date_exception") not in (None, "NONE"):
+            raise ValueError("D3_SOURCE_ARTIFACT_UNNECESSARY_EXCEPTION_METADATA:" + role)
         if (
             meta.get("artifact_id") != pin.artifact_id
             or meta.get("run_id") != pin.run_id
