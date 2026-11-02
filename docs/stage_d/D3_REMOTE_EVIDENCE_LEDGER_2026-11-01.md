@@ -141,3 +141,20 @@ Run 41361423337 passed at exact branch HEAD 1c2fb72359480cf861566ced5c66d744cd65
 | docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md | 401397 | 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b | 9fe43bfbb2cbfd2bb7f7010866e7469506d22c33 |
 
 The run did not rebuild workbooks, download source artifacts or execute Trials/Simulations. The verified workbooks remain T2_INTERIM / NOT_FINAL_BLOCKED; D3 remains BLOCKED_MISSING_EVIDENCE.
+
+## Final exact-head Raw evidence — 2026-11-02 (append-only)
+
+Run [41366779707](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41366779707) asserted exact branch HEAD `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` and verified raw bytes, SHA-256, size, and Git blob SHA-1:
+
+| Path | Bytes | SHA-256 | Git blob SHA-1 | Raw readback commit |
+|---|---:|---|---|---|
+| `deliverables/النتائج_الكاملة_AR.xlsx` | 27734273 | `914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461` | `056b7f482bbb84583526f093ae886e13b8c01356` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `deliverables/Full_Results_EN.xlsx` | 27722355 | `89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191` | `a01c1f4061da731de24fcc8d061113bb195e65b1` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `deliverables/D3_BUILD_AUDIT.json` | 3282 | `e3a4702fbda9f220680e8a7347082c901865c105dd7df6aed2dea1f44a4565a2` | `89eebec229a0a4b7d5d233b9897a0518132a7e2c` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `deliverables/D3_MANIFEST.json` | 2090 | `754f8b5cfa24c7e6a767a0774bee89a25ba62c028c78431d30af52758748f552` | `706464550aaa7290f33a968e6ce608e90454dae3` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `docs/stage_d/D3_BUILD_REPORT_2026-11-02.md` | 1693 | `16703bbcd673972d847a5d911942efa7ef6dfabc9690b5aff80bf7679771ae48` | `67926d0c87c89242292543bfeeb0007815d5128b` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `results/number_registry.json` | 24137036 | `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87` | `8cf17de488c623f96c1961ca91d682fbbc7733d6` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+| `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md` | 401397 | `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b` | `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33` | `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c` |
+
+Workbook output commit: `3f063c62fbb0ea7e62f0882d709371856d071bef`. The later readback commit above confirms the same bytes still existed at exact review HEAD. This is publication/readback evidence only; D3 remains `BLOCKED_MISSING_EVIDENCE`.
+

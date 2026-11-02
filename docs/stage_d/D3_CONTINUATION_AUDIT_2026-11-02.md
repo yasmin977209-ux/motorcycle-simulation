@@ -122,3 +122,18 @@ If no such artifacts already exist, generating them may require new Trials/Simul
 
 ## Latest continuation checkpoint — 2026-11-02
 A second review found that the unused complete-exporter writer still hardcoded positive workbook status rows; it now derives README and VALIDATION_SUMMARY from the fail-closed requirement map. The Full Logging normalized status remains NOT_VERIFIED_105_OF_105. Run 41365795167 passed compileall and 21 tests / 0 skipped on tested source SHA b3f04a00732ffcac05e3af4f125e79aebe0b11ae. Published candidate no-rebuild Raw verification Run 41365795133 passed. D3-07..13 remain MISSING_EVIDENCE; D3 BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
+
+## Final live D3 review — 2026-11-02 (append-only)
+
+- Review baseline work-branch HEAD: `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`; `main` HEAD: `c6e54349a5e94f65d5aa9f83141f225d777bb474` (unchanged).
+- The final consolidated audit is `docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md`.
+- Live inventory: 424 post-cutoff runs on the active branch; the latest 1,000 repository-wide runs contain those same 424 post-cutoff runs and no new Stage C/Trial, S6 Aggregate, Full Logging, C100 Golden, or Monte Carlo source-producing workflow.
+- Current D3 candidate: `T2_INTERIM / NOT_FINAL_BLOCKED`; overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`.
+- D3-07 through D3-13 remain `MISSING_EVIDENCE`; C100 daily distribution remains missing; Full Logging normalized status remains `NOT_VERIFIED_105_OF_105`.
+- Do not use any output derived by cancelled Run 41358971225. That run read pre-cutoff source archives, was cancelled, published no artifact and made no repository commit; its temporary derived output remains quarantined/excluded.
+- Exact published-output no-rebuild verification Run 41366779707 passed at the review baseline HEAD. Source-free D3 static validation Run 41365795167 passed compileall and 21 tests / 0 skipped on source SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`; D3 implementation/test blobs are unchanged between that SHA and the review baseline.
+- Full Logging label clarification: preserved `gate_statuses_preserved.full_logging = PASS_SCOPED_105_KEYS_ONLY` is the limited registry-scope gate; it is not current normalization evidence. Current normalized status remains `NOT_VERIFIED_105_OF_105`. No historical audit/manifest was rewritten.
+- No Trial, Simulation, Monte Carlo, N expansion, source/cohort/seed change, cutoff exception, backfill, zero-fill, main write, merge, PR, Release, or D4 work was performed.
+- Final disposition: engineering remediation within existing authority is complete; D3 stage closure is not. Do not promote D3 or start D4.
+
+This checkpoint supersedes the earlier 373-run/older-HEAD snapshots for current inventory and readback only; it does not supersede historical evidence or promote missing data. The exact-head test split is 9 published-output regression tests in Run 41366779707 and 21 D3 source-free implementation tests in Run 41365795167.

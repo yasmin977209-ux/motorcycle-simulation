@@ -69,3 +69,20 @@ D4 remains NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill
 - Static D3 code validation Run 41360740452 succeeded with 19 passed / 0 skipped and no source artifacts downloaded/read.
 - The only three identified source-producing artifacts remain the pre-cutoff S6 aggregate (40773412377), representative Full Logging (41098699740) and C100 Golden (40263424595). Their metadata dates remain before 2026-10-31T00:00:00Z.
 - No eligible post-cutoff D3 source artifact was identified. D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+## Final live D3 review — 2026-11-02 (append-only)
+
+- Review baseline work-branch HEAD: `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`; `main` HEAD: `c6e54349a5e94f65d5aa9f83141f225d777bb474` (unchanged).
+- The final consolidated audit is `docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md`.
+- Live inventory: 424 post-cutoff runs on the active branch; the latest 1,000 repository-wide runs contain those same 424 post-cutoff runs and no new Stage C/Trial, S6 Aggregate, Full Logging, C100 Golden, or Monte Carlo source-producing workflow.
+- Current D3 candidate: `T2_INTERIM / NOT_FINAL_BLOCKED`; overall D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`.
+- D3-07 through D3-13 remain `MISSING_EVIDENCE`; C100 daily distribution remains missing; Full Logging normalized status remains `NOT_VERIFIED_105_OF_105`.
+- Do not use any output derived by cancelled Run 41358971225. That run read pre-cutoff source archives, was cancelled, published no artifact and made no repository commit; its temporary derived output remains quarantined/excluded.
+- Exact published-output no-rebuild verification Run 41366779707 passed at the review baseline HEAD. Source-free D3 static validation Run 41365795167 passed compileall and 21 tests / 0 skipped on source SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`; D3 implementation/test blobs are unchanged between that SHA and the review baseline.
+- Full Logging label clarification: preserved `gate_statuses_preserved.full_logging = PASS_SCOPED_105_KEYS_ONLY` is the limited registry-scope gate; it is not current normalization evidence. Current normalized status remains `NOT_VERIFIED_105_OF_105`. No historical audit/manifest was rewritten.
+- No Trial, Simulation, Monte Carlo, N expansion, source/cohort/seed change, cutoff exception, backfill, zero-fill, main write, merge, PR, Release, or D4 work was performed.
+- Final disposition: engineering remediation within existing authority is complete; D3 stage closure is not. Do not promote D3 or start D4.
+
+### Post-cutoff run inventory refresh — final review
+
+The branch Actions API returned 424 runs for `tmp/d1-rebuild-20261101`. The latest 1,000 repository-wide Actions records contained exactly 424 runs created on/after the cutoff; all 424 were on that active branch. No post-cutoff Stage C/Trial Generation, S6 Aggregate Build, Full Logging Build, C100 Golden, or Monte Carlo source-producing run was identified. The 3 pinned source runs listed earlier remain pre-cutoff by GitHub run creation metadata. No source archive was downloaded or opened in this review. The single cancelled read attempt 41358971225 remains a process violation; all of its derived output is quarantined.
