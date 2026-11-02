@@ -457,7 +457,7 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
         cols.append("Final_Close_Date")
         header(ws, cols)
         for i, row in enumerate(case["daily_rows"]):
-            out = [sid, case["cohort_id"], case["trial_id"], row["date"]]
+            out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row["date"]]
             for field in DAILY_DETAIL_FIELDS:
                 out.extend(numeric_pair(case, "daily_snapshots.jsonl.gz", i, field, row[field]))
             out.append(row.get("Final_Close_Date"))
@@ -475,7 +475,7 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
                      "Pending_Writeoff_Today", "Source"])
         header(ws, cols)
         for i, row in enumerate(case["assets"]):
-            out = [sid, case["cohort_id"], case["trial_id"], row.get("bike_id"), row.get("purchase_date"),
+            out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row.get("bike_id"), row.get("purchase_date"),
                    row.get("funding_completion_date"), row.get("actual_ready_date"),
                    row.get("scheduled_ready_date"), row.get("delivery_date")]
             for field in ASSET_NUMERIC_FIELDS:
@@ -509,7 +509,7 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
             cols.extend([field, field + "_number_id"])
         header(ws, cols)
         for i, row in enumerate(case["daily_rows"]):
-            out = [sid, case["cohort_id"], case["trial_id"], row["date"]]
+            out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row["date"]]
             for field in snapshot_fields:
                 out.extend(numeric_pair(case, "daily_snapshots.jsonl.gz", i, field, row[field]))
             for key, fields in roll_specs:
@@ -520,7 +520,7 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
             out.extend(["", ""] * len(ACCTG_SUMMARY_FIELDS))
             safe_append(ws, out)
         summary = case["trial_summary"]
-        out = [sid, case["cohort_id"], case["trial_id"], "FINAL_TRIAL_SUMMARY"]
+        out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), "FINAL_TRIAL_SUMMARY"]
         out.extend(["", ""] * len(snapshot_fields))
         for _, fields in roll_specs:
             out.extend(["", ""] * len(fields))
@@ -538,13 +538,13 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
                 "Partner2_Final_Entitlement", "Partner2_Final_Entitlement_number_id"]
         header(ws, cols)
         for i, row in enumerate(case["daily_rows"]):
-            out = [sid, case["cohort_id"], case["trial_id"], row["date"]]
+            out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row["date"]]
             out.extend(numeric_pair(case, "daily_snapshots.jsonl.gz", i, "Partner1_Reinvestment_Balance", row["Partner1_Reinvestment_Balance"]))
             out.extend(numeric_pair(case, "daily_snapshots.jsonl.gz", i, "Partner2_Reinvestment_Balance", row["Partner2_Reinvestment_Balance"]))
             out.extend(["", "", "", ""])
             safe_append(ws, out)
         summary = case["trial_summary"]
-        out = [sid, case["cohort_id"], case["trial_id"], "FINAL_TRIAL_SUMMARY", "", "", "", ""]
+        out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), "FINAL_TRIAL_SUMMARY", "", "", "", ""]
         out.extend(numeric_pair(case, "trial_result.json", 0, "partner1_final_entitlement", summary["partner1_final_entitlement"]))
         out.extend(numeric_pair(case, "trial_result.json", 0, "partner2_final_entitlement", summary["partner2_final_entitlement"]))
         safe_append(ws, out)
@@ -560,12 +560,12 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
         if not case["claims"]:
             count_id = ledger_number_id(case["source_artifact_sha256"], sid, case["trial_id"],
                                         prefix + "trial_result.json", 0, "claims_created")
-            safe_append(ws, [sid, case["cohort_id"], case["trial_id"], "NO_CLAIMS_RECORDED",
+            safe_append(ws, [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), "NO_CLAIMS_RECORDED",
                              "Verified empty source ledger", "", "", "", "", "", "", "", "NO_CLAIMS",
                              0, count_id, "", "", "", "", ""])
         else:
             for i, row in enumerate(case["claims"]):
-                out = [sid, case["cohort_id"], case["trial_id"], row.get("claim_id"), row.get("claim_source"),
+                out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row.get("claim_id"), row.get("claim_source"),
                        row.get("bike_id"), row.get("contract_id"), row.get("tenant_id"), row.get("guarantor_id"),
                        row.get("created_date"), row.get("settlement_due_date"), row.get("settlement_date"), row.get("status")]
                 for field in fields:
@@ -585,7 +585,7 @@ def write_detail_sheet(wb, suffix: str, case: dict, lang: str) -> None:
             cols.extend([field, field + "_number_id"])
         header(ws, cols)
         for i, row in enumerate(case["contracts"]):
-            out = [sid, case["cohort_id"], case["trial_id"], row.get("contract_id"), row.get("bike_id"),
+            out = [sid, case["cohort_id"], "trial_id=" + str(case["trial_id"]), row.get("contract_id"), row.get("bike_id"),
                    row.get("tenant_id"), row.get("guarantor_id"), row.get("contract_type"),
                    row.get("start_date"), row.get("first_eligible_friday_date"), row.get("maturity_date"),
                    row.get("status")]

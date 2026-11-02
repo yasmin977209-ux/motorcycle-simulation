@@ -314,3 +314,34 @@ def test_saved_d3_status_sheets_match_blocked_gate(tmp_path: Path):
         assert summary["D3-18"] == "NOT_RUN"
     finally:
         checked.close()
+
+
+
+def test_write_detail_sheet_serializes_trial_id_as_text(tmp_path: Path):
+    from scripts.d3_excel_export_complete import DAILY_DETAIL_FIELDS, write_detail_sheet
+
+    case = {
+        "scenario_id": "C030_G000",
+        "cohort_id": "s6-v23-test",
+        "trial_id": 17,
+        "source_member_prefix": "stagec-output/full_logging/fixture/",
+        "source_artifact_sha256": "a" * 64,
+        "daily_rows": [{
+            "date": "2026-10-30",
+            **{field: index + 1 for index, field in enumerate(DAILY_DETAIL_FIELDS)},
+        }],
+    }
+    wb = Workbook(write_only=True)
+    write_detail_sheet(wb, "DAILY", case, "en")
+    path = tmp_path / "trial-id-text.xlsx"
+    wb.save(path)
+    wb.close()
+
+    checked = load_workbook(path, read_only=True, data_only=False)
+    try:
+        ws = checked["C030_G000_DAILY"]
+        assert ws["C2"].value == "trial_id=17"
+        assert ws["C2"].data_type == "s"
+        assert trace_ids([path]) == {"numeric_cells_checked": len(DAILY_DETAIL_FIELDS), "untraced_numeric_cells": 0}
+    finally:
+        checked.close()
