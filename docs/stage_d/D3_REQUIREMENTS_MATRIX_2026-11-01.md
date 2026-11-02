@@ -134,3 +134,10 @@ Gate rule: structural candidate generation may succeed while D3 remains BLOCKED_
 - No eligible post-cutoff source artifacts were found in the audited recent Actions inventory. The missing source records cannot be reconstructed from the current pre-cutoff pins under the cutoff rule. Any new source identity, SOURCE_SHA/cohort/seed change, new Trials, or cutoff exception requires a separate owner decision. No such action was taken.
 - No D4 work, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final-acceptance declaration was performed.
 - Disposition: D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Stop before D4.
+
+
+## D3 supplemental disposition — 2026-11-02 (append-only)
+
+The complete-exporter workbook writer was corrected after a deeper review found hardcoded README/VALIDATION_SUMMARY statuses that contradicted the requirement map. D3-07..D3-13 remain `MISSING_EVIDENCE`; Full Logging remains `NOT_VERIFIED_105_OF_105`. A saved-XLSX readback regression test is included in the source-free validation.
+
+The latest static check passed 21 tests / 0 skipped on tested code SHA `b3f04a00732ffcac05e3af4f125e79aebe0b11ae` (Run 41365795167). Published-candidate Raw no-rebuild verification passed in Run 41365795133. D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Candidate workbook D3-18 readback and the complete-exporter path's D3-18 status are distinct: the latter remains `NOT_RUN` until its own Raw readback.
