@@ -23,6 +23,7 @@ from scripts.s6_number_registry import (
 )
 
 SOURCE_DATE_CUTOFF_UTC = "2026-10-31T00:00:00Z"
+OWNER_APPROVED_SOURCE_DATE_EXCEPTION = "D3_ONLY_PINNED_ARTIFACTS_2026-11-02"
 SOURCE_RUN_CREATED_AT_UTC = {
     40773412377: "2026-10-28T21:36:57Z",
     41098699740: "2026-10-30T17:25:30Z",
@@ -30,11 +31,15 @@ SOURCE_RUN_CREATED_AT_UTC = {
 }
 
 
-def enforce_source_date_cutoff() -> None:
-    """Fail closed before opening any source archive outside the allowed date window."""
+def enforce_source_date_cutoff(source_date_exception: str | None = None) -> None:
+    """Fail closed unless the exact three pinned artifacts have an explicit D3-only owner waiver."""
+    if source_date_exception not in (None, OWNER_APPROVED_SOURCE_DATE_EXCEPTION):
+        raise ValueError("D3_SOURCE_DATE_EXCEPTION_TOKEN_INVALID")
     for key, pin in PINS.items():
         created_at = SOURCE_RUN_CREATED_AT_UTC.get(pin.run_id)
-        if created_at is None or created_at < SOURCE_DATE_CUTOFF_UTC:
+        if created_at is None:
+            raise ValueError("SOURCE_ARTIFACT_RUN_DATE_MISSING:" + key)
+        if created_at < SOURCE_DATE_CUTOFF_UTC and source_date_exception != OWNER_APPROVED_SOURCE_DATE_EXCEPTION:
             raise ValueError(
                 "SOURCE_ARTIFACT_PRE_CUTOFF_PROHIBITED:"
                 + key + ":run_id=" + str(pin.run_id)
@@ -453,8 +458,8 @@ def build_sensitivity_entries(entries: list[dict]) -> list[dict]:
     return output
 
 
-def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
-    enforce_source_date_cutoff()
+def build_extension(paths: dict[str, str], base_registry_path: str, source_date_exception: str | None = None) -> dict:
+    enforce_source_date_cutoff(source_date_exception)
     base_raw = Path(base_registry_path).read_bytes()
     if len(base_raw) != BASE_REGISTRY_BYTES or sha256(base_raw) != BASE_REGISTRY_SHA256:
         raise ValueError("BASE_NUMBER_REGISTRY_PIN_MISMATCH")
@@ -475,6 +480,9 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
                 "size_bytes": pin.size_bytes, "sha256": pin.sha256,
                 "workflow_run_head_sha": expected_heads[key],
                 "run_created_at_utc": SOURCE_RUN_CREATED_AT_UTC[pin.run_id],
+                "source_date_exception": source_date_exception or "NONE",
+                "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS" if source_date_exception else "NONE",
+                "source_date_exception_owner_approval": "APPROVED_2026-11-02" if source_date_exception else "NONE",
                 "filename": pin.filename,
                 "evidence_status": "VERIFIED_LIVE",
             }
@@ -760,6 +768,7 @@ def build(args) -> dict:
     extension = build_extension(
         {"aggregate": args.aggregate, "full_logging": args.full_logging, "c100": args.c100},
         args.base_registry,
+        args.source_date_exception,
     )
     raw = json_bytes(extension)
     compressed = gzip.compress(raw, compresslevel=9, mtime=0)
@@ -794,6 +803,7 @@ def main() -> None:
     b = sub.add_parser("build")
     for name in ("aggregate", "full-logging", "c100", "base-registry", "output", "audit"):
         b.add_argument("--" + name, required=True)
+    b.add_argument("--source-date-exception", choices=(OWNER_APPROVED_SOURCE_DATE_EXCEPTION,), default=None)
     args = parser.parse_args()
     build(args)
 
