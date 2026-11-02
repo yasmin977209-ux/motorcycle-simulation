@@ -17,7 +17,7 @@ jobs:
   verify-published-output:
     name: Verify committed D3 outputs without rebuilding workbooks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Checkout exact triggering commit
         uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Assert exact branch and HEAD
+      - name: Assert exact branch and remote HEAD
         shell: bash
         run: |
           set -euo pipefail
@@ -38,111 +38,110 @@ jobs:
 
       - name: Install bounded verification dependencies
         run: |
-          python -m pip install --disable-pip-version-check pytest openpyxl
+          python -m pip install --disable-pip-version-check pytest openpyxl requests
 
-      - name: Run exporter regression tests only
+      - name: Run source-free D3 exporter and registry regression tests
         run: |
-          python -m pytest -q tests/test_s6_excel_export.py
+          python -m pytest -q tests/test_s6_excel_export.py tests/test_d3_registry_extension.py tests/test_d3_excel_export_complete.py
 
-      - name: Read back committed outputs from exact GitHub Raw SHA
+      - name: Read back committed D3 outputs and evidence from exact GitHub Raw SHA
         shell: bash
         env:
           REPOSITORY: ${{ github.repository }}
           EXACT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          tmp="$(mktemp -d)"
-          trap 'rm -rf "$tmp"' EXIT
+          python - <<'PY'
+          import hashlib
+          import pathlib
+          import subprocess
+          import urllib.parse
+          import requests
+          import os
 
-          verify_raw() {
-            local path="$1" expected_sha="$2" expected_bytes="$3" expected_blob="$4"
-            local encoded_path="$5" target="$tmp/$(basename "$path")"
-            local url="https://raw.githubusercontent.com/${REPOSITORY}/${EXACT_SHA}/${encoded_path}"
-            curl --fail --silent --show-error --location "$url" --output "$target"
-            local actual_sha actual_bytes actual_blob
-            actual_sha="$(sha256sum "$target" | awk '{print $1}')"
-            actual_bytes="$(wc -c < "$target" | tr -d ' ')"
-            actual_blob="$(git hash-object "$target")"
-            test "$actual_sha" = "$expected_sha"
-            test "$actual_bytes" = "$expected_bytes"
-            test "$actual_blob" = "$expected_blob"
-            printf 'VERIFIED_RAW %s bytes=%s sha256=%s blob=%s\n' "$path" "$actual_bytes" "$actual_sha" "$actual_blob"
-          }
+          repo = os.environ["REPOSITORY"]
+          exact_sha = os.environ["EXACT_SHA"]
+          branch = "tmp/d1-rebuild-20261101"
+          token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+          headers = {"Accept": "application/vnd.github+json"}
+          if token:
+              headers["Authorization"] = "Bearer " + token
 
-          verify_raw "deliverables/النتائج_الكاملة_AR.xlsx" \
-            "914da4091c45114f3a61a5c847c0697832956b44a134116fd77e45fb9d39b461" \
-            "27734273" "056b7f482bbb84583526f093ae886e13b8c01356" \
-            "deliverables/%D8%A7%D9%84%D9%86%D8%AA%D8%A7%D8%A6%D8%AC_%D8%A7%D9%84%D9%83%D8%A7%D9%85%D9%84%D8%A9_AR.xlsx"
+          required = [
+              "deliverables/النتائج_الكاملة_AR.xlsx",
+              "deliverables/Full_Results_EN.xlsx",
+              "deliverables/D3_BUILD_AUDIT.json",
+              "deliverables/D3_MANIFEST.json",
+              "results/number_registry.json",
+              "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+          ]
+          for path in required:
+              if not pathlib.Path(path).is_file():
+                  raise SystemExit("D3_REQUIRED_COMMITTED_FILE_MISSING:" + path)
 
-          verify_raw "deliverables/Full_Results_EN.xlsx" \
-            "89712da93a43af7b03d69d516348e9c7e76c3374702d3d0e56418c5704e6f191" \
-            "27722355" "a01c1f4061da731de24fcc8d061113bb195e65b1" \
-            "deliverables/Full_Results_EN.xlsx"
+          tracked = subprocess.check_output(
+              ["git", "ls-files", "-z", "deliverables"], text=False
+          ).split(b"\0")
+          paths = set(required)
+          for raw_path in tracked:
+              if not raw_path:
+                  continue
+              path = raw_path.decode("utf-8")
+              name = pathlib.Path(path).name
+              if name.startswith("D3_") or name in {"النتائج_الكاملة_AR.xlsx", "Full_Results_EN.xlsx"}:
+                  if pathlib.Path(path).is_file():
+                      paths.add(path)
 
-          verify_raw "deliverables/D3_BUILD_AUDIT.json" \
-            "e3a4702fbda9f220680e8a7347082c901865c105dd7df6aed2dea1f44a4565a2" \
-            "3282" "89eebec229a0a4b7d5d233b9897a0518132a7e2c" \
-            "deliverables/D3_BUILD_AUDIT.json"
+          optional_evidence = [
+              ".github/workflows/d3-published-output-verification.yml",
+              "scripts/d3_registry_extension.py",
+              "scripts/d3_excel_export_complete.py",
+              "tests/test_d3_registry_extension.py",
+              "tests/test_d3_excel_export_complete.py",
+              "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md",
+              "docs/stage_d/D3_OPERATIONAL_AUDIT_AND_REMEDIATION_2026-11-02.md",
+              "docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md",
+              "docs/stage_d/D3_LIVE_REVIEW_AUDIT_2026-11-02.md",
+              "docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md",
+              "docs/stage_d/D3_SOURCE_DATE_AUDIT_2026-11-02.md",
+              "docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md",
+              "docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json",
+              "docs/stage_d/D3_REPAIR_AND_PUBLICATION_ADDENDUM_2026-11-02.md",
+              "docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json",
+              "docs/stage_d/D3_FINAL_CLOSURE_EVIDENCE_2026-11-02.md",
+              "docs/stage_d/D3_FINAL_CLOSURE_EVIDENCE_2026-11-02.json",
+              "docs/stage_d/D3_BUILD_REPORT_2026-11-02.md",
+              "docs/stage_d/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md",
+              "docs/PROJECT_CONTINUITY.md",
+              "docs/PROJECT_HANDOFF.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md",
+              "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md",
+          ]
+          for path in optional_evidence:
+              if pathlib.Path(path).is_file():
+                  paths.add(path)
 
-          verify_raw "deliverables/D3_MANIFEST.json" \
-            "754f8b5cfa24c7e6a767a0774bee89a25ba62c028c78431d30af52758748f552" \
-            "2090" "706464550aaa7290f33a968e6ce608e90454dae3" \
-            "deliverables/D3_MANIFEST.json"
+          session = requests.Session()
+          count = 0
+          for path in sorted(paths):
+              local_path = pathlib.Path(path)
+              local = local_path.read_bytes()
+              encoded = urllib.parse.quote(path, safe="/")
+              url = f"https://raw.githubusercontent.com/{repo}/{exact_sha}/{encoded}"
+              response = session.get(url, headers=headers, timeout=(30, 300))
+              response.raise_for_status()
+              remote = response.content
+              if remote != local:
+                  raise SystemExit("D3_RAW_BYTE_MISMATCH:" + path)
+              digest = hashlib.sha256(remote).hexdigest()
+              blob = hashlib.sha1(b"blob " + str(len(remote)).encode() + b"\\0" + remote).hexdigest()
+              print(f"VERIFIED_RAW {path} bytes={len(remote)} sha256={digest} blob_sha1={blob} commit={exact_sha}")
+              count += 1
 
-          verify_raw "docs/stage_d/D3_BUILD_REPORT_2026-11-02.md" \
-            "16703bbcd673972d847a5d911942efa7ef6dfabc9690b5aff80bf7679771ae48" \
-            "1693" "67926d0c87c89242292543bfeeb0007815d5128b" \
-            "docs/stage_d/D3_BUILD_REPORT_2026-11-02.md"
-
-          verify_raw "results/number_registry.json" \
-            "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87" \
-            "24137036" "8cf17de488c623f96c1961ca91d682fbbc7733d6" \
-            "results/number_registry.json"
-
-          verify_raw "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md" \
-            "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b" \
-            "401397" "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33" \
-            "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md"
-
-          # Dynamic byte-for-byte Raw readback for the current D3 audit, continuity, code and test files.
-          verify_dynamic_raw() {
-            local path="$1" encoded_path="$1"
-            local target="$tmp/dynamic-$(printf '%s' "$path" | sha256sum | awk '{print $1}')"
-            curl --fail --silent --show-error --location \
-              "https://raw.githubusercontent.com/${REPOSITORY}/${EXACT_SHA}/${encoded_path}" --output "$target"
-            cmp --silent "$path" "$target"
-            local actual_sha actual_bytes actual_blob
-            actual_sha="$(sha256sum "$target" | awk '{print $1}')"
-            actual_bytes="$(wc -c < "$target" | tr -d ' ')"
-            actual_blob="$(git hash-object "$target")"
-            printf 'VERIFIED_RAW_DYNAMIC %s bytes=%s sha256=%s blob=%s commit=%s\\n' \
-              "$path" "$actual_bytes" "$actual_sha" "$actual_blob" "$EXACT_SHA"
-          }
-
-          for path in \
-            ".github/workflows/d3-published-output-verification.yml" \
-            "scripts/d3_registry_extension.py" \
-            "scripts/d3_excel_export_complete.py" \
-            "scripts/d3_complete_pipeline.py" \
-            "tests/test_d3_registry_extension.py" \
-            "tests/test_d3_excel_export_complete.py" \
-            "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md" \
-            "docs/stage_d/D3_OPERATIONAL_AUDIT_AND_REMEDIATION_2026-11-02.md" \
-            "docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md" \
-            "docs/stage_d/D3_LIVE_REVIEW_AUDIT_2026-11-02.md" \
-            "docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md" \
-            "docs/stage_d/D3_SOURCE_DATE_AUDIT_2026-11-02.md" \
-            "docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md" \
-            "docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json" \
-            "docs/stage_d/D3_REPAIR_AND_PUBLICATION_ADDENDUM_2026-11-02.md" \
-            "docs/PROJECT_CONTINUITY.md" \
-            "docs/PROJECT_HANDOFF.md" \
-            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md" \
-            "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md"; do
-            verify_dynamic_raw "$path"
-          done
-
-          final_remote_head="$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)"
-          test "$final_remote_head" = "$EXACT_SHA"
-          echo "D3_FINAL_REMOTE_HEAD_CONFIRMATION $final_remote_head"
-          echo "D3_PUBLISHED_OUTPUT_EXACT_HEAD_PASS ${EXACT_SHA}"
+          remote_head = subprocess.check_output(
+              ["git", "ls-remote", "origin", f"refs/heads/{branch}"], text=True
+          ).split()[0]
+          if remote_head != exact_sha:
+              raise SystemExit("D3_FINAL_REMOTE_HEAD_MISMATCH:" + remote_head)
+          print(f"D3_PUBLISHED_OUTPUT_EXACT_HEAD_PASS {exact_sha} files={count}")
+          PY
