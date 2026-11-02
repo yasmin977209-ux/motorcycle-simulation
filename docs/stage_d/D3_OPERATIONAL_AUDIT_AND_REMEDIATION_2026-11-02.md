@@ -100,3 +100,10 @@ No D4 implementation, Trial, Simulation, Monte Carlo, N expansion, backfill, zer
 
 
 Supplemental validation: D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED. The latest source-free validation passed 21 tests on the tested code commit.
+
+
+## D3 workflow log reconciliation — append-only
+
+A separate review of the candidate workflow job logs confirmed the exact failure causes. Run 41340409949 failed because the reference-constants parser found no rows; 41340511093 failed the formula/error-cell audit; 41341008368 failed on the misspelling `rosafe_append`; 41344528985 built/committed candidate workbooks but its Raw readback returned 404 because the XLSX paths were excluded by gitignore; 41349553906 and 41349591683 both failed because `ReadOnlyWorksheet` has no `sheet_view`; 41349656647 failed Python compilation on a mismatched bracket; 41354098029 failed its exact-start SHA assertion after the branch advanced before the job began. The valid later candidate is Run 41352075552. The 14 cancelled no-rebuild attempts were superseded by later pushes and are not treated as content passes.
+
+Repository-wide metadata review covered the latest 1,000 of 2,854 Actions runs. The 400 runs created since the source cutoff all belong to the active work branch; no new eligible Stage C, Aggregate, Full Logging, C100, Trial or Monte Carlo source producer was found. This was a metadata review only; no source archives were downloaded or opened.
