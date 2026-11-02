@@ -107,3 +107,15 @@ Supplemental validation: D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STA
 A separate review of the candidate workflow job logs confirmed the exact failure causes. Run 41340409949 failed because the reference-constants parser found no rows; 41340511093 failed the formula/error-cell audit; 41341008368 failed on the misspelling `rosafe_append`; 41344528985 built/committed candidate workbooks but its Raw readback returned 404 because the XLSX paths were excluded by gitignore; 41349553906 and 41349591683 both failed because `ReadOnlyWorksheet` has no `sheet_view`; 41349656647 failed Python compilation on a mismatched bracket; 41354098029 failed its exact-start SHA assertion after the branch advanced before the job began. The valid later candidate is Run 41352075552. The 14 cancelled no-rebuild attempts were superseded by later pushes and are not treated as content passes.
 
 Repository-wide metadata review covered the latest 1,000 of 2,854 Actions runs. The 400 runs created since the source cutoff all belong to the active work branch; no new eligible Stage C, Aggregate, Full Logging, C100, Trial or Monte Carlo source producer was found. This was a metadata review only; no source archives were downloaded or opened.
+
+
+## Corrective code fingerprints (GitHub Raw, 2026-11-02)
+
+| File | Commit | Bytes | SHA-256 | Git blob SHA-1 |
+|---|---|---:|---|---|
+| scripts/d3_excel_export_complete.py | ba34ef7cff589d9dbd2527bbd2d1d95ea424ab58 | 50,130 | 56c6efc06fe4815a2c4f10b2a5edba65aa6ba61bfe2d57f7c216f68022f33ed4 | df630940c8c08db8988ae79013078450c29bba0e |
+| scripts/d3_registry_extension.py | d9d58176587336b8e9b2b9308894bd87b34c18b2 | 44,762 | 07d2e9311d54ac5098a4fc29ae3d4514b5c8c64a9a68ddf10bf429b1f4255ec9 | 5a68ea9531d60d55811ae0cc6835c5463ccd6133 |
+| tests/test_d3_excel_export_complete.py | b3f04a00732ffcac05e3af4f125e79aebe0b11ae | 8,416 | 4bb52265a5e5fd0ad672bb53f7d31a0a6ceff1c3b2caf328de7c5caf11cdf612 | a122ec4ccc9d67a9c2a3458c451c4ed053d5dac2 |
+| D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json | 43df54034c52971ce71e2860ca64eab143da2dc9 | 659 | 4a8d63a0f1d7ba6a89693eeb09a6b45006e84f7858f0d671c2dc0b2aa9bdc643 | 6d3e83505d614a88ca0847bb1dadf301573580be |
+
+Run 41366335532 passed exact final HEAD c9bf2610f5b05828133c731aeb6bb4ed9bdbf028 and re-read the published Raw outputs, D3 audit, manifest, build report, Number Registry and governing v2.4.0 bytes. The D3 source-free code test remains Run 41365795167 (21 passed, 0 skipped) on tested code SHA b3f04a00732ffcac05e3af4f125e79aebe0b11ae.
