@@ -225,6 +225,70 @@ def test_missing_d3_requirements_block_gate():
 
 
 
+def test_verified_extension_promotes_only_source_backed_scoped_requirements():
+    from scripts.d3_excel_export_complete import d3_requirement_statuses, d3_gate_status
+    from scripts.d3_registry_extension import LEDGER_FILES, ROLLFORWARD_KEYS, FULL_LOGGING_NORMALIZED_STATUS
+    from scripts.s6_artifact_reader import S6_COHORT, C100_COHORT
+
+    scenarios = [
+        f"C{c:03d}_G{g:03d}"
+        for c in (30, 50, 70, 85, 100)
+        for g in (0, 30, 50, 70, 100)
+    ]
+    member_meta = {"sha256": "a" * 64, "size_bytes": 10}
+    cases = []
+    distribution = []
+    for sid in scenarios:
+        is_c100 = sid.startswith("C100_")
+        cohort = C100_COHORT if is_c100 else S6_COHORT
+        trial_count = 300 if is_c100 else 2400
+        cases.append({
+            "scenario_id": sid,
+            "cohort_id": cohort,
+            "daily_rows": [{
+                "Partner1_Reinvestment_Balance": 0,
+                "Partner2_Reinvestment_Balance": 0,
+            }],
+            "source_members": {name: dict(member_meta) for name in LEDGER_FILES + ("trial_result.json",)},
+            "assets": [],
+            "claims": [],
+            "contracts": [],
+            "rollforwards": {key: [{}] for key in ROLLFORWARD_KEYS},
+        })
+        distribution.append({
+            "scenario_id": sid,
+            "trial_count": trial_count,
+            "evidence_status": "VERIFIED_LIVE",
+            "source_member_sha256": "b" * 64,
+            "source_member_size_bytes": 20,
+        })
+    extension = {
+        "representative_cases": cases,
+        "representative_role_cases": [{} for _ in range(105)],
+        "full_logging_validation": {
+            "unique_trial_keys": 105, "role_assignments": 125, "completed_keys": 105,
+            "failed_keys": 0, "post_write_audit_pass_count": 105,
+            "normalized_status": FULL_LOGGING_NORMALIZED_STATUS,
+        },
+        "c100_validation": {
+            "daily_reuse_status": "PASS_SCOPED_C100_DAILY_REUSE",
+            "daily_rows_per_scenario": 2198, "golden_common_field_path_matches": 5,
+            "golden_revalidation": "NOT_RUN",
+        },
+        "final_close_date_distribution": distribution,
+        "close_date_validation": {
+            "total_trial_count": 49500, "scenario_count": 25,
+            "S6_trial_count": 48000, "C100_trial_count": 1500,
+        },
+    }
+    statuses = d3_requirement_statuses(extension)
+    assert all(statuses[f"D3-{n:02d}"] == "PASS_SCOPED_WITH_LIMITATIONS" for n in range(5, 13))
+    assert statuses["D3-13"] == "PASS_SCOPED"
+    assert statuses["D3-18"] == "NOT_RUN"
+    assert d3_gate_status(statuses) == "BLOCKED_MISSING_EVIDENCE"
+
+
+
 def test_saved_d3_status_sheets_match_blocked_gate(tmp_path: Path):
     from scripts import d3_excel_export_complete as exporter
 
