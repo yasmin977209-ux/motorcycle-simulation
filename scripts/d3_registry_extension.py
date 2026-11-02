@@ -57,6 +57,7 @@ ROOT_MANIFEST_MEMBER = "stagec-output/representative_full_logging_manifest.json"
 SELECTION_MEMBER = "stagec-output/representative_selection_map.json"
 UNIQUE_MEMBER = "stagec-output/representative_unique_keys.json"
 ROLES = ("P50", "P10", "P90", "LossCase", "MaxCase")
+FULL_LOGGING_NORMALIZED_STATUS = "NOT_VERIFIED_105_OF_105"
 DAILY_METRICS = ("Cash", "Net_Equity", "Active_Bikes", "Owned_Transferred_Bikes", "Pending_Claims")
 ACCOUNTING_FIELDS = (
     "Accounts_Receivable", "Accumulated_Depreciation", "Gross_Bike_Assets",
@@ -718,7 +719,7 @@ def build_extension(paths: dict[str, str], base_registry_path: str) -> dict:
                 "post_write_audit_pass_count": audit_pass, "p50_case_count": len(cases),
                 "representative_role_case_count": len(representative_role_cases),
                 "role_assignments_covered": sum(len(x["role_assignments"]) for x in representative_role_cases),
-                "p50_scenario_coverage": 25, "normalized_status": "VERIFIED_SCOPED_105_OF_105",
+                "p50_scenario_coverage": 25, "normalized_status": FULL_LOGGING_NORMALIZED_STATUS,
                 "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
             },
             "c100_validation": {
