@@ -302,3 +302,7 @@ No source artifact archive was downloaded/read in these checks. The three pinned
 - No eligible post-cutoff source artifacts were found in the audited recent Actions inventory. The missing source records cannot be reconstructed from the current pre-cutoff pins under the cutoff rule. Any new source identity, SOURCE_SHA/cohort/seed change, new Trials, or cutoff exception requires a separate owner decision. No such action was taken.
 - No D4 work, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final-acceptance declaration was performed.
 - Disposition: D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Stop before D4.
+
+
+## Addendum 2026-11-02
+D3 source-free exporter correction validated in Run 41365795167 (compile PASS; 21 tests passed; zero skipped; no source archives read; no Trials/Simulations). Published-output Raw no-rebuild verification passed in Run 41365795133. Tested code SHA: b3f04a00732ffcac05e3af4f125e79aebe0b11ae. Full Logging remains NOT_VERIFIED_105_OF_105; D3-07..13 remain MISSING_EVIDENCE. D3 remains BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
