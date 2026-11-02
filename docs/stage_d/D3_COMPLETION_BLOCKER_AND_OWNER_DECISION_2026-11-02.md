@@ -89,3 +89,16 @@ The broad instruction to complete D3 authorizes technical remediation, but under
 ## 7. Final disposition
 
 **D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`.** This is a genuine evidence blocker, not a code-test blocker. No honest technical operation can turn the absent source ledgers into source-backed evidence. Await the owner's explicit selection of Option A or Option B; then execute only the authorized path and preserve all failed/missing checks as such.
+
+
+## 8. Owner decision received — 2026-11-02 (append-only)
+
+The owner explicitly approved **Option A** in this conversation on 2026-11-02. This approval is limited to one-time D3-only reprocessing of exactly these pinned GitHub Actions artifacts:
+
+- Aggregate: artifact `12852969854`, run `40773412377`, pinned SHA-256 `ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54`.
+- Representative Full Logging: artifact `12998778418`, run `41098699740`, pinned SHA-256 `403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb`.
+- C100 deterministic reuse: artifact `12630457193`, run `40263424595`, pinned SHA-256 `c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79`.
+
+The approved exception is `D3_ONLY_PINNED_ARTIFACTS_2026-11-02`, scoped to these three exact pins only. It does not authorize any other pre-cutoff input, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, or changes to `SOURCE_SHA`, `cohort_id`, `MASTER_SEED`, or Trial identity. The original GitHub artifact ZIP bytes must be downloaded and checked against the pins before opening. Run metadata, artifact metadata, ZIP CRC/path safety, member hashes/sizes, lineage, and coverage must all be verified. The cancelled run `41358971225` and all its outputs remain quarantined and excluded.
+
+If any required member or value is absent, it remains `MISSING_EVIDENCE`; this approval does not permit inference. D3 may remain `BLOCKED_MISSING_EVIDENCE` after reprocessing. D4 remains `NOT_STARTED` unless D3's full gate is independently proven closed.
