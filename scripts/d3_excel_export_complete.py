@@ -288,7 +288,7 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
         ["N=4800", "NOT_EXECUTED"],
     ]:
         safe_append(ws, row)
-    write_d3_readme_status_rows(ws)
+    write_d3_readme_status_rows(ws, extension)
 
     ws = new_sheet(wb, "CONSTANTS", lang)
     header(ws, [h["field"], h["value"], h["notes"]])
@@ -348,7 +348,7 @@ def write_globals(wb, registry: dict, extension: dict, ids: list[str], lang: str
             entry["from_number_id"] + ";" + entry["to_number_id"], entry["calculation_method"],
         ])
 
-    write_validation_summary(wb, lang)
+    write_validation_summary(wb, lang, extension)
 
     ws = new_sheet(wb, "ERROR_LOG", lang)
     header(ws, [h["field"], h["status"], h["reason"], h["notes"]])
@@ -648,9 +648,9 @@ def trace_ids(paths: list[Path]) -> dict:
     return {"numeric_cells_checked": checked, "untraced_numeric_cells": 0}
 
 
-def d3_requirement_statuses() -> dict[str, str]:
-    """Return evidence-honest D3 statuses; missing source ledgers cannot be marked PASS."""
-    return {
+def d3_requirement_statuses(extension: dict | None = None) -> dict[str, str]:
+    """Derive D3 source-coverage statuses only from the validated extension payload."""
+    requirements = {
         "D3-01": "PASS_SCOPED",
         "D3-02": "PASS_SCOPED",
         "D3-03": "PASS_SCOPED",
@@ -670,10 +670,139 @@ def d3_requirement_statuses() -> dict[str, str]:
         "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
         "D3-18": "NOT_RUN",
     }
+    if extension is None:
+        return requirements
+
+    cases = extension.get("representative_cases", [])
+    unique_cases = {x.get("scenario_id"): x for x in cases if isinstance(x, dict) and x.get("scenario_id")}
+    full = extension.get("full_logging_validation", {})
+    c100 = extension.get("c100_validation", {})
+    close = extension.get("close_date_validation", {})
+    role_cases = extension.get("representative_role_cases", [])
+    distribution = extension.get("final_close_date_distribution", [])
+
+    def member_is_pinned(case: dict, member: str) -> bool:
+        meta = case.get("source_members", {}).get(member)
+        return (
+            isinstance(meta, dict)
+            and isinstance(meta.get("sha256"), str)
+            and len(meta["sha256"]) == 64
+            and type(meta.get("size_bytes")) is int
+            and meta["size_bytes"] >= 0
+        )
+
+    complete_grid = len(cases) == 25 and len(unique_cases) == 25
+    c100_cases = [x for x in cases if x.get("cohort_id") == C100_COHORT]
+    c100_daily_ok = (
+        len(c100_cases) == 5
+        and c100.get("daily_reuse_status") == "PASS_SCOPED_C100_DAILY_REUSE"
+        and c100.get("daily_rows_per_scenario") == 2198
+        and c100.get("golden_common_field_path_matches") == 5
+        and all(
+            len(x.get("daily_rows", [])) == 2198
+            and member_is_pinned(x, "daily_snapshots.jsonl.gz")
+            for x in c100_cases
+        )
+    )
+    if c100_daily_ok:
+        requirements["D3-05"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    full_logging_ok = (
+        full.get("unique_trial_keys") == 105
+        and full.get("role_assignments") == 125
+        and full.get("completed_keys") == 105
+        and full.get("failed_keys") == 0
+        and full.get("post_write_audit_pass_count") == 105
+        and len(role_cases) == 105
+        and full.get("normalized_status") == FULL_LOGGING_NORMALIZED_STATUS
+    )
+    if full_logging_ok:
+        requirements["D3-06"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    p50_daily_ok = complete_grid and all(
+        bool(x.get("daily_rows")) and member_is_pinned(x, "daily_snapshots.jsonl.gz")
+        for x in cases
+    )
+    if p50_daily_ok:
+        requirements["D3-07"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    assets_ok = complete_grid and all(
+        isinstance(x.get("assets"), list) and member_is_pinned(x, "assets.jsonl.gz")
+        for x in cases
+    )
+    if assets_ok:
+        requirements["D3-08"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    acctg_ok = complete_grid and all(
+        isinstance(x.get("rollforwards"), dict)
+        and set(x["rollforwards"]) == set(ROLLFORWARD_KEYS)
+        and all(
+            len(x["rollforwards"][key]) == len(x.get("daily_rows", []))
+            and member_is_pinned(x, key + ".jsonl.gz")
+            for key in ROLLFORWARD_KEYS
+        )
+        for x in cases
+    )
+    if acctg_ok:
+        requirements["D3-09"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    partner_fields = ("Partner1_Reinvestment_Balance", "Partner2_Reinvestment_Balance")
+    partner_ok = complete_grid and all(
+        x.get("daily_rows")
+        and all(type(row.get(field)) is int for row in x["daily_rows"] for field in partner_fields)
+        for x in cases
+    )
+    if partner_ok:
+        requirements["D3-10"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    guarantee_ok = complete_grid and all(
+        isinstance(x.get("claims"), list) and member_is_pinned(x, "claims.jsonl.gz")
+        for x in cases
+    )
+    if guarantee_ok:
+        requirements["D3-11"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    contracts_ok = complete_grid and all(
+        isinstance(x.get("contracts"), list) and member_is_pinned(x, "contracts.jsonl.gz")
+        for x in cases
+    )
+    if contracts_ok:
+        requirements["D3-12"] = "PASS_SCOPED_WITH_LIMITATIONS"
+
+    close_counts = defaultdict(int)
+    close_evidence_ok = bool(distribution)
+    for item in distribution:
+        if (
+            not isinstance(item, dict)
+            or item.get("evidence_status") != "VERIFIED_LIVE"
+            or not isinstance(item.get("source_member_sha256"), str)
+            or len(item["source_member_sha256"]) != 64
+            or type(item.get("source_member_size_bytes")) is not int
+        ):
+            close_evidence_ok = False
+            break
+        close_counts[item.get("scenario_id")] += item.get("trial_count", 0)
+    expected_close_counts = {
+        sid: (2400 if sid.startswith("C") and sid[1:4] != "100" else 300)
+        for sid in unique_cases
+    }
+    if (
+        close_evidence_ok
+        and len(close_counts) == 25
+        and all(close_counts.get(sid) == n for sid, n in expected_close_counts.items())
+        and sum(close_counts.values()) == 49500
+        and close.get("total_trial_count") == 49500
+        and close.get("scenario_count") == 25
+        and close.get("S6_trial_count") == 48000
+        and close.get("C100_trial_count") == 1500
+    ):
+        requirements["D3-13"] = "PASS_SCOPED"
+
+    return requirements
 
 
 def d3_gate_status(requirements: dict[str, str]) -> str:
-    """A D3 gate with any mandatory missing evidence remains blocked."""
+    """A D3 gate with any mandatory missing or unrun evidence remains blocked."""
     if any(status in {"MISSING_EVIDENCE", "BLOCKED", "NOT_RUN"} for status in requirements.values()):
         return "BLOCKED_MISSING_EVIDENCE"
     if any(status == "PASS_SCOPED_WITH_LIMITATIONS" for status in requirements.values()):
@@ -681,54 +810,62 @@ def d3_gate_status(requirements: dict[str, str]) -> str:
     return "PASS_SCOPED"
 
 
-def d3_current_gate_status() -> str:
-    return d3_gate_status(d3_requirement_statuses())
+def d3_current_gate_status(extension: dict | None = None) -> str:
+    return d3_gate_status(d3_requirement_statuses(extension))
 
 
-def d3_readme_status_rows() -> list[list[str]]:
+def d3_readme_status_rows(extension: dict | None = None) -> list[list[str]]:
+    requirements = d3_requirement_statuses(extension)
+    gate = d3_gate_status(requirements)
     return [
-        ["D3 gate", d3_current_gate_status()],
+        ["D3 gate", gate],
         ["Full Logging", FULL_LOGGING_NORMALIZED_STATUS + "; 105 representative keys / 125 role assignments only; not 48,000-trial logging."],
-        ["Important", "D3 remains BLOCKED_MISSING_EVIDENCE; mandatory source ledgers are absent, so this candidate is not eligible for D4."],
+        ["Important", "D3-18 exact final remote readback remains NOT_RUN at workbook build time; historical 48K accounting fields remain MISSING_EVIDENCE and are not inferred or zero-filled."],
     ]
 
 
-def write_d3_readme_status_rows(ws) -> None:
-    for row in d3_readme_status_rows():
+def write_d3_readme_status_rows(ws, extension: dict | None = None) -> None:
+    for row in d3_readme_status_rows(extension):
         safe_append(ws, row)
 
 
-def d3_validation_summary_rows() -> list[list[str]]:
-    requirements = d3_requirement_statuses()
+def d3_validation_summary_rows(extension: dict | None = None) -> list[list[str]]:
+    requirements = d3_requirement_statuses(extension)
     gate = d3_gate_status(requirements)
+    source_status = (
+        "PASS_SCOPED_WITH_LIMITATIONS"
+        if all(requirements[x] in {"PASS_SCOPED", "PASS_SCOPED_WITH_LIMITATIONS"} for x in ("D3-07", "D3-08", "D3-09", "D3-10", "D3-11", "D3-12"))
+        and requirements["D3-13"] == "PASS_SCOPED"
+        else "BLOCKED_MISSING_EVIDENCE"
+    )
     rows = [
         ["D0", "PASS_SCOPED_WITH_LIMITATIONS", "Input identity and archive integrity scope only."],
         ["D1", "PASS_SCOPED_WITH_LIMITATIONS", "Approved v2.4.0 publication and exact-head evidence."],
         ["D2", "PASS_SCOPED_WITH_LIMITATIONS", "Pinned Number Registry exact-value and daily-series validation."],
-        ["D3 gate", gate, "D3-07 through D3-13 remain MISSING_EVIDENCE; the overall D3 gate must not be promoted."],
-        ["D3 structure", "PENDING_POST_WRITE_VALIDATION", "Workbook structure is checked after save; see the build audit."],
-        ["D3 source coverage", "BLOCKED_MISSING_EVIDENCE", "C100 daily, representative P50 raw daily, detailed ASSETS/ACCTG/PARTNER/GUARANTEE/CONTRACTS, and all-trial close-date sources remain missing."],
-        ["D3 bilingual parity", "PENDING_POST_WRITE_VALIDATION", "Arabic RTL / English LTR and numeric parity must be checked after both workbooks are written."],
+        ["D3 gate", gate, "D3-18 exact final remote readback remains NOT_RUN until the outputs are committed and re-read from GitHub Raw."],
+        ["D3 source coverage", source_status, "P50 detail is scoped to 25 representative scenarios; historical full-48K accounting fields remain MISSING_EVIDENCE."],
+        ["D3 bilingual parity", "PENDING_POST_WRITE_VALIDATION", "Arabic RTL / English LTR and numeric parity are checked after both workbooks are written."],
         ["D3 Excel safety", "PENDING_POST_WRITE_VALIDATION", "Formula cells and Excel error cells are separate post-write checks."],
         ["D3 number-id traceability", "PENDING_POST_WRITE_VALIDATION", "All numeric cells require post-write Number-ID tracing."],
         ["Full Logging", FULL_LOGGING_NORMALIZED_STATUS, "105 representative keys / 125 role assignments only; this does not establish complete 48,000-trial logging."],
+        ["C100 Golden revalidation", c100.get("golden_revalidation", "NOT_RUN"), "C100 daily reuse is separately identity- and content-checked; no new Trial or Golden replay was executed."],
+        ["Historical 48K accounting fields", "MISSING_EVIDENCE", "Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets are not inferred or zero-filled."],
         ["Full model acceptance suite", "NOT_EXECUTED_HERE", "Do not infer 177 unique tests passed."],
         ["Final acceptance", "NOT_DECLARED", "D3 candidate generation is not project final acceptance."],
     ]
     rows.extend([
-        [requirement_id, status, "See the exact-source evidence ledger; pending/missing states are not promoted."]
+        [requirement_id, status, "See the exact-source evidence ledger; scope and limitations are retained."]
         for requirement_id, status in requirements.items()
     ])
     return rows
 
 
-def write_validation_summary(wb, lang: str):
+def write_validation_summary(wb, lang: str, extension: dict | None = None):
     ws = new_sheet(wb, "VALIDATION_SUMMARY", lang)
     header(ws, [H[lang]["field"], H[lang]["status"], H[lang]["notes"]])
-    for row in d3_validation_summary_rows():
+    for row in d3_validation_summary_rows(extension):
         safe_append(ws, row)
     return ws
-
 
 def build(args) -> dict:
     base_raw = Path(args.registry).read_bytes()
@@ -761,7 +898,7 @@ def build(args) -> dict:
     ee = audit(en, names, expected_rtl=False)
     parity = compare(ar, en, names)
     trace = trace_ids([ar, en])
-    requirements = d3_requirement_statuses()
+    requirements = d3_requirement_statuses(extension)
     gate_status = d3_gate_status(requirements)
     limitations = [
         "Full Logging contains 105 representative keys only; it is not 48,000-trial full daily logging.",
