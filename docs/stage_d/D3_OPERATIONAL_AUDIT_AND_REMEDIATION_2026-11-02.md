@@ -126,3 +126,15 @@ The `2e845...` HEAD shown in the original opening paragraph is an earlier histor
 
 
 Correction to session HEAD addendum: the preceding note records the successful no-rebuild validation at `0aee010a3f3917d03e783412e06919fb905c1fbb`. This append-only correction is contained in the next commit; the latest branch HEAD must be taken from the GitHub ref and its own triggered exact-head validation, not copied from that earlier checkpoint.
+
+
+## Supporting continuity-document fingerprints (GitHub Raw)
+
+| File | Commit | Bytes | SHA-256 | Git blob SHA-1 |
+|---|---|---:|---|---|
+| docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md | af596613d0702c93686a970510a1e443d66a33df | 18,429 | ee8ab5d137818d716cfeeb1b40a905c78652539d8f32d2a97f8e45b874ea34ac | 4a2f5c98ab758311c76e5d18c4feb993cc7ff9c4 |
+| docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md | c9bf2610f5b05828133c731aeb6bb4ed9bdbf028 | 13,952 | ef3b8959608224ad82d7a410a6fd6d08df124e94dc8b27bacf13c5e46b561ffc | e3bb3f085bd4a41c306caf60518e915138e7c735 |
+| docs/PROJECT_CONTINUITY.md | 2b783a688ebec2b5a8e6bd045b714d6230119332 | 502,867 | 32bf4e963b08e8e236c0e7b951652626fbc53a2291039dd4c03337b228123a5d | b39c87eeed15b674e84349129da6ca4b5bb48f86 |
+| docs/PROJECT_HANDOFF.md | 8652ebfb4e819e071da966ae8efdc864ff108676 | 35,635 | 032a625216dfc08863d15e156d4d36f31b1cacce61219952f9d3d8cef6ef36c5 | d67240a528c017d06c63a0475b948cc00635188c |
+| docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md | 537066102d35e3ff097986deee9ac8c95480088f | 50,358 | 770170c5ed71e3b6556f8d34e9cebd04467e77c81351d23caaef46664d1033a8 | a7b7ca37cbe6508ddce9c236852a9e66c0127b46 |
+| docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md | 2c5157cca9792f3286d4f3aca59c822a69bb5c5d | 38,854 | 90d7ecf5f277e3d4bd49b4b75a5efa32aadc12f0b3a4eafea72e7ae5af88af1f | f353ea6f60a0ef03c63fc25b67a924a15d132c2f |
