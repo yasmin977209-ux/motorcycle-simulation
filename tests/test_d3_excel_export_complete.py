@@ -4,7 +4,7 @@ import gzip
 from pathlib import Path
 
 import pytest
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from scripts.d3_excel_export_complete import (
     load_extension,
