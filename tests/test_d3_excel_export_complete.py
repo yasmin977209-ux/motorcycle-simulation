@@ -125,7 +125,7 @@ def test_exporter_rejects_missing_source_date_metadata():
     from scripts.s6_artifact_reader import PINS
 
     extension = {"source_artifacts": {role: {} for role in PINS}}
-    with pytest.raises(ValueError, match="D3_SOURCE_ARTIFACT_PRE_CUTOFF_WITHOUT_OWNER_EXCEPTION"):
+    with pytest.raises(ValueError, match="D3_SOURCE_ARTIFACT_RUN_DATE_UNPINNED"):
         validate_source_dates(extension)
 
 def test_registry_scenarios_requires_complete_five_by_five_grid():
