@@ -2969,3 +2969,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - No eligible post-cutoff source artifacts were found in the audited recent Actions inventory. The missing source records cannot be reconstructed from the current pre-cutoff pins under the cutoff rule. Any new source identity, SOURCE_SHA/cohort/seed change, new Trials, or cutoff exception requires a separate owner decision. No such action was taken.
 - No D4 work, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, merge, PR, Release or final-acceptance declaration was performed.
 - Disposition: D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 remains `NOT_STARTED`. Stop before D4.
+
+
+## D3 remediation checkpoint — 2026-11-02 (append-only)
+
+- Current review branch at this checkpoint: `tmp/d1-rebuild-20261101`; D3 source-free code/test SHA: `b3f04a00732ffcac05e3af4f125e79aebe0b11ae`; static-report containing commit: `43df54034c52971ce71e2860ca64eab143da2dc9`.
+- Run 41365795167: compile PASS; 21 passed / 0 skipped; source artifacts downloaded/read 0/0; Trial/Simulation 0. Run 41365795133: D3 published-output no-rebuild exact readback PASS on the tested code SHA. D1/D2 source validation Run 41365795163 also passed; it is not a D3 gate promotion.
+- Complete-exporter workbook status rows were corrected to use fail-closed requirement states; Full Logging remains `NOT_VERIFIED_105_OF_105`; D3-07..D3-13 remain `MISSING_EVIDENCE` and D3-18 in the separate complete-exporter path remains `NOT_RUN` before its own Raw readback.
+- Latest 1,000 repository Actions records were inspected (2,854 total); the 400 runs since the source cutoff are on the active work branch and reveal no eligible new Stage C/Aggregate/Full Logging/C100/Trial/Monte Carlo sources.
+- D3 remains `BLOCKED_MISSING_EVIDENCE`; D4 `NOT_STARTED`. No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, PR or Release.
