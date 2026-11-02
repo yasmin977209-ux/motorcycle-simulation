@@ -118,3 +118,7 @@ If no such artifacts already exist, generating them may require new Trials/Simul
 - Verified Raw files and hashes are listed in D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md. No workbook rebuild or source artifact download/read occurred.
 - Static code validation remains Run 41360740452: compileall PASS; 19 passed / 0 skipped; source artifacts downloaded/read = 0; Trials/Simulations = 0.
 - D3 remains BLOCKED_MISSING_EVIDENCE; D4 remains NOT_STARTED.
+
+
+## Latest continuation checkpoint — 2026-11-02
+A second review found that the unused complete-exporter writer still hardcoded positive workbook status rows; it now derives README and VALIDATION_SUMMARY from the fail-closed requirement map. The Full Logging normalized status remains NOT_VERIFIED_105_OF_105. Run 41365795167 passed compileall and 21 tests / 0 skipped on tested source SHA b3f04a00732ffcac05e3af4f125e79aebe0b11ae. Published candidate no-rebuild Raw verification Run 41365795133 passed. D3-07..13 remain MISSING_EVIDENCE; D3 BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
