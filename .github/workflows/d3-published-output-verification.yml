@@ -32,7 +32,9 @@ jobs:
           test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$GITHUB_SHA"
-          echo "D3_EXACT_FINAL_HEAD_PASS $actual"
+          remote_head="$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)"
+          test "$remote_head" = "$GITHUB_SHA"
+          echo "D3_EXACT_BRANCH_AND_REMOTE_HEAD_PASS local=$actual remote=$remote_head"
 
       - name: Install bounded verification dependencies
         run: |
@@ -102,4 +104,45 @@ jobs:
             "401397" "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33" \
             "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md"
 
+          # Dynamic byte-for-byte Raw readback for the current D3 audit, continuity, code and test files.
+          verify_dynamic_raw() {
+            local path="$1" encoded_path="$1"
+            local target="$tmp/dynamic-$(printf '%s' "$path" | sha256sum | awk '{print $1}')"
+            curl --fail --silent --show-error --location \
+              "https://raw.githubusercontent.com/${REPOSITORY}/${EXACT_SHA}/${encoded_path}" --output "$target"
+            cmp --silent "$path" "$target"
+            local actual_sha actual_bytes actual_blob
+            actual_sha="$(sha256sum "$target" | awk '{print $1}')"
+            actual_bytes="$(wc -c < "$target" | tr -d ' ')"
+            actual_blob="$(git hash-object "$target")"
+            printf 'VERIFIED_RAW_DYNAMIC %s bytes=%s sha256=%s blob=%s commit=%s\\n' \
+              "$path" "$actual_bytes" "$actual_sha" "$actual_blob" "$EXACT_SHA"
+          }
+
+          for path in \
+            ".github/workflows/d3-published-output-verification.yml" \
+            "scripts/d3_registry_extension.py" \
+            "scripts/d3_excel_export_complete.py" \
+            "scripts/d3_complete_pipeline.py" \
+            "tests/test_d3_registry_extension.py" \
+            "tests/test_d3_excel_export_complete.py" \
+            "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md" \
+            "docs/stage_d/D3_OPERATIONAL_AUDIT_AND_REMEDIATION_2026-11-02.md" \
+            "docs/stage_d/D3_CONTINUATION_AUDIT_2026-11-02.md" \
+            "docs/stage_d/D3_LIVE_REVIEW_AUDIT_2026-11-02.md" \
+            "docs/stage_d/D3_REQUIREMENTS_MATRIX_2026-11-01.md" \
+            "docs/stage_d/D3_SOURCE_DATE_AUDIT_2026-11-02.md" \
+            "docs/stage_d/D3_REMOTE_EVIDENCE_LEDGER_2026-11-01.md" \
+            "docs/stage_d/D3_CODE_STATIC_VALIDATION_REPORT_2026-11-02.json" \
+            "docs/stage_d/D3_REPAIR_AND_PUBLICATION_ADDENDUM_2026-11-02.md" \
+            "docs/PROJECT_CONTINUITY.md" \
+            "docs/PROJECT_HANDOFF.md" \
+            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-01.md" \
+            "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-01.md"; do
+            verify_dynamic_raw "$path"
+          done
+
+          final_remote_head="$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)"
+          test "$final_remote_head" = "$EXACT_SHA"
+          echo "D3_FINAL_REMOTE_HEAD_CONFIRMATION $final_remote_head"
           echo "D3_PUBLISHED_OUTPUT_EXACT_HEAD_PASS ${EXACT_SHA}"

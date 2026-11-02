@@ -158,3 +158,6 @@ Run [41366779707](https://github.com/yasmin977209-ux/motorcycle-simulation/actio
 
 Workbook output commit: `3f063c62fbb0ea7e62f0882d709371856d071bef`. The later readback commit above confirms the same bytes still existed at exact review HEAD. This is publication/readback evidence only; D3 remains `BLOCKED_MISSING_EVIDENCE`.
 
+## Exact-head verification qualification — append-only
+
+Run 41366779707 checked out the triggering commit and asserted the branch name plus local checkout HEAD = `GITHUB_SHA`; that workflow version did not independently query the live remote branch ref. At the start of this review, a separate live GitHub ref lookup confirmed the branch HEAD was exactly `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`, the same SHA whose Raw bytes Run 41366779707 verified. To remove this concurrency gap for subsequent checks, `.github/workflows/d3-published-output-verification.yml` has now been strengthened to compare `git ls-remote` with the triggering SHA before and after the Raw readback and to byte-compare/hash the current D3 audit, continuity, code and test files from Raw at that SHA. The next workflow run is the authoritative post-documentation exact-remote-HEAD check.

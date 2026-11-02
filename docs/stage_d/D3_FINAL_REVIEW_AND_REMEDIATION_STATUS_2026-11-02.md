@@ -143,3 +143,7 @@ Until that decision/evidence boundary is resolved and all missing requirement ro
 ## 10. Final disposition
 
 **Technical D3 remediation that can be performed without new source data or owner-only actions is complete and documented. D3 stage acceptance is not complete.** The exact output and code checks are scoped passes; source evidence blockers remain. Do not declare D3 closed, do not start D4, and do not describe this interim candidate as final or accepted.
+
+## Exact-head verification qualification — append-only
+
+Run 41366779707 checked out the triggering commit and asserted the branch name plus local checkout HEAD = `GITHUB_SHA`; that workflow version did not independently query the live remote branch ref. At the start of this review, a separate live GitHub ref lookup confirmed the branch HEAD was exactly `fd2b6fddaa1e73527d81c2e8a55d5d8967b39c9c`, the same SHA whose Raw bytes Run 41366779707 verified. To remove this concurrency gap for subsequent checks, `.github/workflows/d3-published-output-verification.yml` has now been strengthened to compare `git ls-remote` with the triggering SHA before and after the Raw readback and to byte-compare/hash the current D3 audit, continuity, code and test files from Raw at that SHA. The next workflow run is the authoritative post-documentation exact-remote-HEAD check.
