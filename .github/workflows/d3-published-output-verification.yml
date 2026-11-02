@@ -134,7 +134,7 @@ jobs:
               if remote != local:
                   raise SystemExit("D3_RAW_BYTE_MISMATCH:" + path)
               digest = hashlib.sha256(remote).hexdigest()
-              blob = hashlib.sha1(b"blob " + str(len(remote)).encode() + b"\\0" + remote).hexdigest()
+              blob = hashlib.sha1(b"blob " + str(len(remote)).encode() + bytes([0]) + remote).hexdigest()
               print(f"VERIFIED_RAW {path} bytes={len(remote)} sha256={digest} blob_sha1={blob} commit={exact_sha}")
               count += 1
 
