@@ -192,3 +192,31 @@ def test_missing_d3_requirements_block_gate():
     statuses = d3_requirement_statuses()
     assert all(statuses[f'D3-{n:02d}'] == 'MISSING_EVIDENCE' for n in range(7, 14))
     assert d3_gate_status(statuses) == 'BLOCKED_MISSING_EVIDENCE'
+
+
+
+def test_saved_d3_status_sheets_match_blocked_gate(tmp_path: Path):
+    from scripts import d3_excel_export_complete as exporter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "README"
+    ws.append(["field", "value"])
+    exporter.write_d3_readme_status_rows(ws)
+    exporter.write_validation_summary(wb, "en")
+    path = tmp_path / "d3-status.xlsx"
+    wb.save(path)
+    wb.close()
+
+    checked = load_workbook(path, read_only=True, data_only=True)
+    try:
+        readme = {r[0]: r[1] for r in checked["README"].iter_rows(values_only=True) if r[0]}
+        summary = {r[0]: r[1] for r in checked["VALIDATION_SUMMARY"].iter_rows(values_only=True) if r[0]}
+        assert readme["D3 gate"] == "BLOCKED_MISSING_EVIDENCE"
+        assert readme["Full Logging"].startswith("NOT_VERIFIED_105_OF_105")
+        assert summary["D3 gate"] == "BLOCKED_MISSING_EVIDENCE"
+        assert summary["D3 source coverage"] == "BLOCKED_MISSING_EVIDENCE"
+        assert all(summary[f"D3-{i:02d}"] == "MISSING_EVIDENCE" for i in range(7, 14))
+        assert summary["D3-18"] == "NOT_RUN"
+    finally:
+        checked.close()
