@@ -63,7 +63,10 @@ def test_sha256sums_validator_rejects_unexpected_inventory(tmp_path):
         "package_member_count": 8,
         "package_status": "T2_INTERIM / NOT_FINAL_BLOCKED"
     }), encoding="utf-8")
-    (out / PACKAGE_NAME).write_bytes(b"zip-placeholder")
+    with zipfile.ZipFile(out / PACKAGE_NAME, "w", compression=zipfile.ZIP_STORED) as z:
+        for name in MEMBERS:
+            z.writestr(name, (out / name).read_bytes())
+        z.writestr("manifest.json", (out / "manifest.json").read_bytes())
     (out / "SHA256SUMS.txt").write_text("0"*64+"  unexpected.txt\n", encoding="utf-8")
     args = SimpleNamespace(package_name=PACKAGE_NAME, root=str(root))
     with pytest.raises(ValueError, match="D5_SHA256SUMS_COVERAGE_MISMATCH"):
