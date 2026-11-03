@@ -301,7 +301,7 @@ def audit(a):
    numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
   finally: p.unlink(missing_ok=True)
   print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']}",flush=True)
-checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
  for name in [x for x in FILES if x.endswith(".docx")]:
