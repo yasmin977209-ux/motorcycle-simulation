@@ -1,0 +1,59 @@
+{
+  "limitations": [
+    "No unsupported values were inferred; absent registry metrics are labelled MISSING_EVIDENCE.",
+    "C100 Golden revalidation remains NOT_RUN.",
+    "Daily detailed ledgers, final close-date distributions and some partner/accounting details remain outside the available registry scope.",
+    "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
+    "Gate B remains FAIL_SCOPED; Stability remains NOT_CONVERGED; N=4800 remains NOT_EXECUTED.",
+    "Five historical accounting fields remain MISSING_EVIDENCE and were not inferred or zero-filled.",
+    "This D4 report build is not D5 package acceptance, D6 independent audit, P17 acceptance, or FINAL_ACCEPTED."
+  ],
+  "manifest_sha256": "f6092f6bcd4bc45594c845c94f46e36d277fdb0ace7838daa4bd9e4b5e79337b",
+  "number_ids": [
+    "NR-04a2f4814c925732e0a76342",
+    "NR-0fe5e2402dda387f18941581",
+    "NR-1cbafa6eea008d7f62bbe2f8",
+    "NR-2afbb5cf47485542a1362f55",
+    "NR-32a0a773f9d59411417c71fe",
+    "NR-3d1e5ca3200e10f7229943eb",
+    "NR-3e7d6fa090176f621fa6f2e5",
+    "NR-4941aa6d391358fa130951a4",
+    "NR-5c4340eb49bf750db53248fa",
+    "NR-7187e61c0e96b9da20d76e6f",
+    "NR-7666a74d48709e0dfb370fcb",
+    "NR-9f5c718b47edb36404fc8d5a",
+    "NR-b1a9e33a316e422461ab3b27",
+    "NR-c4b1fb966c3a993d8c50186d",
+    "NR-e8678420ba9934a15358d97d",
+    "NR-ff559a56596ad7d63c49d760"
+  ],
+  "number_ids_rendered": 16,
+  "outputs": {
+    "Full_Report_EN.docx": {
+      "bytes": 41643,
+      "sha256": "19d7f6c0875dd4bc2854cd314194bf703951743f96b4835ea061d9a1df86809a"
+    },
+    "Summary_EN.docx": {
+      "bytes": 39965,
+      "sha256": "fca90d40cea95a002356db8b342f5b2ba39298b5fc91f1896a7ef53c3a00451f"
+    },
+    "التقرير_الكامل_AR.docx": {
+      "bytes": 42246,
+      "sha256": "cbab2a9b8352714f9a28ec2b7c89a5c51e3dcebb32d46960eeed6fc2b84ad714"
+    },
+    "الملخص_AR.docx": {
+      "bytes": 40432,
+      "sha256": "8a6cbd6ef7ed89a94f795dc1b6769d124f480479c178d88649ada25c435880b5"
+    },
+    "دراسة_الجدوى_AR.docx": {
+      "bytes": 40758,
+      "sha256": "1c386970ddd4aa5b68da1db9985731a908ca6335d01a25d11ebf7803cd26b244"
+    }
+  },
+  "registry_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6",
+  "registry_bytes": 24137036,
+  "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+  "status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "tested_sha": "e39549034af3ce360cab3e57b120bf6ef47d88bc",
+  "workflow_run_id": "41691787043"
+}

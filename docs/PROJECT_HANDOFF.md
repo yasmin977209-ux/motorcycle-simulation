@@ -320,3 +320,14 @@ Do not promote D3 or start D4. Do not run new Trials/Simulation/Monte Carlo, N e
 - Git LFS is not required under the owner decision; no LFS upload or paid transfer was made.
 - Retention warning: this Actions Artifact is temporary and expires at the date above; this is not permanent archival.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance occurred.
+
+
+## D4 DOCX report build — 2026-11-03 (append-only)
+
+- Triggering tested SHA: e39549034af3ce360cab3e57b120bf6ef47d88bc; workflow Run: 41691787043.
+- D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+- Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+- Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+- Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+- Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+- D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
