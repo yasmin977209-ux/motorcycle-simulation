@@ -146,3 +146,15 @@ After final D6 commit, perform Raw readback for every changed evidence file, cal
 ## 9. Required stop point
 
 Complete only D6 when the user sends the second prompt. Stop immediately after D6 evidence-backed closure. Do not start E0 or later stages until separately instructed. Do not infer permission for any restricted action from the D6 request.
+
+
+## Documentation discrepancy register — preserve, do not silently rewrite (2026-11-03)
+
+1. `docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json` still carries `final_exact_head_validation.workflow_run_id=41696774858` and tested SHA `7aa6e165567b3adb3c5b7bb34e8557b5e05ed05c`. The later live consolidated exact-head run is `41697223043`, SUCCESS on `00dfa15934780271a9be98d55d4cdd83f10e3740`; use the later run as current consolidated-gate evidence and preserve the JSON value as historical/stale metadata.
+2. `D0_D4_GATE_CLOSURE_2026-11-03.md/.json` state D5 `NOT_STARTED`, which was accurate when those records were produced. It is superseded by D5 Run `41704252218` and the D5 report/matrix.
+3. `D1_REBUILD_CLOSURE_2026-11-01.md` begins with the old `BLOCKED / REPORTED_ONLY` snapshot. Later append-only evidence and live D1-D2 validation Runs `41694461194`, `41697222992`, and `41704252084` supersede that opening snapshot for current D1 status.
+4. `D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md` contains a historical `D4 NOT_STARTED` statement; D4 subsequently completed under Run `41694460895` and the consolidated gate Run `41697223043`.
+5. `D4_BUILD_REPORT_2026-11-03.md` says D5 is next after D4; D5 subsequently completed under Run `41704252218`.
+6. The D5 report field `publication_commit_sha=4aa8172...` is the workflow's triggering/tested SHA (environment `github.sha`), while commit `5fad8f...` contains the publication report and evidence readback. The final handoff clarifies this without mutating the original record.
+
+These are chronology/documentation mismatches, not evidence that the later successful runs failed. Use append-only corrections and live run/commit evidence. Do not delete or silently edit historical snapshots.
