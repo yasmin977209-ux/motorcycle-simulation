@@ -142,7 +142,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib, pathlib, subprocess, urllib.request
+          import hashlib, pathlib, subprocess, urllib.request, urllib.parse
           repo="yasmin977209-ux/motorcycle-simulation"
           branch="tmp/d1-rebuild-20261101"
           head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
@@ -155,7 +155,8 @@ jobs:
           ]
           for path in paths:
             local=pathlib.Path(path).read_bytes()
-            url=f"https://raw.githubusercontent.com/{repo}/{head}/{path}"
+            encoded_path=urllib.parse.quote(path, safe="/")
+    url=f"https://raw.githubusercontent.com/{repo}/{head}/{encoded_path}"
             with urllib.request.urlopen(url, timeout=180) as response:
               remote_bytes=response.read()
             if remote_bytes!=local: raise SystemExit("D4_RAW_READBACK_MISMATCH:"+path)
