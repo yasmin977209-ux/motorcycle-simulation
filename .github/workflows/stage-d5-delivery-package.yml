@@ -1,0 +1,145 @@
+name: Stage D5 Delivery Package Preflight
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - scripts/d5_package.py
+      - tests/test_d5_package.py
+      - .github/workflows/stage-d5-delivery-package.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: stage-d5-\${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package validation dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install openpyxl python-docx pytest
+      - name: Assert exact starting HEAD and download exact approved governing reference
+        env:
+          EXPECTED_SHA: \${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
+          curl --fail --location --silent --show-error "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md" -o /tmp/approved-v240.md
+          test "$(wc -c < /tmp/approved-v240.md | tr -d ' ')" = "401397"
+          test "$(sha256sum /tmp/approved-v240.md | awk '{print $1}')" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+      - name: Download owner-approved D3 artifact by exact Artifact ID
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer \${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/\${GITHUB_REPOSITORY}/actions/artifacts/13160434943/zip" \
+            -o /tmp/d3-owner-approved-artifact.zip
+          test "$(wc -c < /tmp/d3-owner-approved-artifact.zip | tr -d ' ')" = "535358202"
+          test "$(sha256sum /tmp/d3-owner-approved-artifact.zip | awk '{print $1}')" = "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04"
+      - name: Extract and verify the two exact D3 workbooks
+        run: |
+          set -euo pipefail
+          python scripts/d5_package.py extract --artifact-zip /tmp/d3-owner-approved-artifact.zip --output-dir deliverables
+      - name: Build, reopen and verify the eight-member D5 package (preflight only)
+        env:
+          TESTED_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python scripts/d5_package.py build --root . --reference /tmp/approved-v240.md --tested-sha "$TESTED_SHA" --run-id "$RUN_ID" --report docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json
+      - name: Run D5 package safety and checksum unit tests
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/d5_package.py tests/test_d5_package.py
+          python -m pytest -q -rs tests/test_d5_package.py
+      - name: Write D5 preflight matrix and append-only continuity
+        env:
+          TESTED_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, os
+          report=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json").read_text(encoding="utf-8"))
+          pkg=report["package"]; man=report["manifest"]; sums=report["sha256sums"]
+          rows=[
+            ("D5-01 Exact approved D3 Artifact ID/bytes/SHA-256","PASS_PREFLIGHT","Artifact 13160434943 independently downloaded by API and byte-verified."),
+            ("D5-02 Governing reference identity","PASS_PREFLIGHT","Pinned immutable Gist bytes: 401397 / SHA-256 225de838...65c2b0."),
+            ("D5-03 Two Excel workbooks","PASS_PREFLIGHT","Exact expected sizes/SHA-256 and 185 sheets per workbook."),
+            ("D5-04 Five DOCX reports","PASS_PREFLIGHT","Exact D4 sizes/SHA-256; each archive reopened and parsed."),
+            ("D5-05 Number Registry external resource","PASS_PREFLIGHT","24,137,036 bytes and SHA-256 743ffcc...e4f87."),
+            ("D5-06 Eight-member ZIP and safe paths","PASS_PREFLIGHT","ZIP reopened; exactly seven deliverables plus manifest; no duplicate/unsafe paths; CRC passed."),
+            ("D5-07 SHA256SUMS coverage","PASS_PREFLIGHT","ZIP + manifest + seven members + external Number Registry, 10 entries."),
+            ("D5-08 Publish package","BLOCKED_PENDING_OWNER_APPROVAL","New D5 GitHub Actions Artifact is not covered by the earlier D3-only owner decision; no upload performed."),
+            ("D5-09 Remote readback of published ZIP","BLOCKED_PENDING_PUBLICATION","No package artifact published during preflight."),
+          ]
+          md=["# D5 Requirements Matrix — 2026-11-03","","Overall: PREFLIGHT_PASS / D5 BLOCKED_PENDING_OWNER_APPROVAL_FOR_NEW_ARTIFACT_PUBLICATION.","","| Requirement | Status | Evidence |","|---|---|---|"]
+          md += [f"| {a} | {b} | {c} |" for a,b,c in rows]
+          md += ["","## Preflight fingerprints","",f"- Tested source SHA: {report['tested_sha']}.",f"- Workflow Run: {report['workflow_run_id']}.",f"- ZIP: {pkg['bytes']} bytes; SHA-256 {pkg['sha256']}.",f"- manifest.json: {man['bytes']} bytes; SHA-256 {man['sha256']}.",f"- SHA256SUMS.txt: {sums['bytes']} bytes; SHA-256 {sums['sha256']}.","- These are preflight-only fingerprints; the ZIP/manifest/SHA256SUMS are not committed or published as final D5 outputs.","- Package classification: T2_INTERIM / NOT_FINAL_BLOCKED.","- Full 177-unique-test acceptance suite: NOT_RUN.","- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release, D6 or FINAL_ACCEPTED."]
+          pathlib.Path("docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md").write_text("\n".join(md)+"\n",encoding="utf-8")
+          entry=(
+            "\n\n## D5 package preflight — 2026-11-03 (append-only)\n\n"
+            f"- Workflow Run {os.environ['RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}.\n"
+            f"- Preflight package: {pkg['bytes']} bytes; SHA-256 {pkg['sha256']}; 8 members; CRC and exact inventory PASS.\n"
+            f"- Preflight manifest SHA-256 {man['sha256']}; external SHA256SUMS SHA-256 {sums['sha256']} (10 covered objects).\n"
+            "- D3 Artifact 13160434943 was downloaded by exact ID and its 535,358,202 bytes / SHA-256 513f2a2e... verified; the two extracted workbooks matched the D3 manifest.\n"
+            "- Five D4 DOCX files matched their recorded sizes and SHA-256; Number Registry matched 24,137,036 bytes and SHA-256 743ffcc...e4f87.\n"
+            "- Preflight is not final publication: the earlier owner authorization is scoped to D3 Artifact 13160434943. No new D5 Artifact was uploaded; D5 remains BLOCKED_PENDING_OWNER_APPROVAL_FOR_NEW_ARTIFACT_PUBLICATION.\n"
+            "- Full 177-unique-test acceptance suite NOT_RUN; no new Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6/final acceptance.\n"
+          )
+          for path in ["docs/PROJECT_CONTINUITY.md","docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"]:
+            p=pathlib.Path(path)
+            p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
+          PY
+      - name: Remove unpublished package and temporary workbooks from runner workspace
+        run: |
+          rm -f deliverables/Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03.zip deliverables/manifest.json deliverables/SHA256SUMS.txt deliverables/Full_Results_EN.xlsx "deliverables/النتائج_الكاملة_AR.xlsx"
+      - name: Commit preflight evidence only (no D5 package publication)
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "\${{ github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
+          git commit -m "docs(d5): record package preflight and publication blocker"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+      - name: Remote Raw readback and exact final branch HEAD validation
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$head"
+          python - <<'PY'
+          import hashlib, os, pathlib, urllib.parse, urllib.request, subprocess
+          repo=os.environ["GITHUB_REPOSITORY"]; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          paths=[
+            "scripts/d5_package.py","tests/test_d5_package.py",".github/workflows/stage-d5-delivery-package.yml",
+            "docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json","docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md",
+            "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"
+          ]
+          for path in paths:
+            local=pathlib.Path(path).read_bytes()
+            url=f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path,safe='/')}"
+            with urllib.request.urlopen(url,timeout=180) as r: remote=r.read()
+            if remote!=local: raise SystemExit("D5_RAW_READBACK_MISMATCH:"+path)
+            blob=hashlib.sha1(b"blob "+str(len(remote)).encode()+bytes([0])+remote).hexdigest()
+            print(f"VERIFIED_RAW {path} bytes={len(remote)} sha256={hashlib.sha256(remote).hexdigest()} blob_sha1={blob} commit={sha} url={url}")
+          print("D5_PREFLIGHT_EXACT_FINAL_HEAD_PASS",sha)
+          PY
