@@ -47,3 +47,24 @@ def test_worksheet_rtl_flags_reads_xlsx_xml_without_readonly_sheet_view(tmp_path
     ar.sheet_view.rightToLeft=True
     wb.save(path)
     assert worksheet_rtl_flags(path)==[False, True]
+
+def test_excel_numeric_float_representation_is_checked_against_exact_registry_display():
+    from scripts.audit_s6_deliverables_bundle import financial_value_matches
+    assert financial_value_matches(25052760.65, "25052760.65")
+    assert financial_value_matches(25052760, "25052760")
+    assert not financial_value_matches(25052760.650000002, "25052760.65")
+    assert not financial_value_matches(25052760.65, "25052760.66")
+
+
+def test_registry_display_uses_reduced_exact_rational_and_two_decimal_half_even():
+    from scripts.audit_s6_deliverables_bundle import exact_display, registry_display
+    assert exact_display(501055213, 20) == "25052760.65"
+    assert exact_display(10, 4) == "2.50"
+    assert exact_display(5, 2) == "2.50"
+    with pytest.raises(ValueError, match="REGISTRY_EXACT_VALUE_NOT_REDUCED"):
+        exact_display(10, 2)
+    registry = {"entries": [{
+        "number_id": "NR-test", "numerator": 501055213, "denominator": 20,
+        "display_value": "25052760.65"
+    }], "daily_series": []}
+    assert registry_display(registry, "NR-test") == "25052760.65"

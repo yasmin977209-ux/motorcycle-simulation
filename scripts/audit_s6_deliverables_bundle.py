@@ -72,6 +72,45 @@ def parse_sums(raw):
   if m.group(2) in out: raise ValueError("SHA256SUMS_DUPLICATE")
   out[m.group(2)]=m.group(1).lower()
  return out
+REGISTRY_SIZE=24137036
+REGISTRY_SHA="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+FINANCIAL_WORDS=("cash","equity","asset","depreciation","receivable","revenue","expense","balance","amount","إيراد","مصروف","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم","نقد")
+
+def exact_display(n,d):
+ if type(n) is not int or type(d) is not int or d<1: raise ValueError("REGISTRY_EXACT_VALUE_INVALID")
+ from fractions import Fraction
+ from decimal import Decimal, ROUND_HALF_EVEN, localcontext
+ f=Fraction(n,d)
+ if (f.numerator,f.denominator)!=(n,d): raise ValueError("REGISTRY_EXACT_VALUE_NOT_REDUCED")
+ if d==1: return str(n)
+ with localcontext() as ctx:
+  ctx.prec=50
+  return format((Decimal(n)/Decimal(d)).quantize(Decimal("0.01"),rounding=ROUND_HALF_EVEN),"f")
+
+def registry_display(registry, number_id):
+ for entry in registry.get("entries",[]):
+  if entry.get("number_id")==number_id:
+   n,d=entry.get("numerator"),entry.get("denominator")
+   shown=exact_display(n,d)
+   if entry.get("display_value")!=shown: raise ValueError("REGISTRY_DISPLAY_VALUE_MISMATCH:"+number_id)
+   return shown
+ m=re.fullmatch(r"D2D-([0-9a-f]{20})-([0-9]{6})",str(number_id))
+ if not m: raise ValueError("FINANCIAL_NUMBER_ID_INVALID:"+str(number_id))
+ series_id="D2S6-"+m.group(1); offset=int(m.group(2))
+ series=next((x for x in registry.get("daily_series",[]) if x.get("series_id")==series_id),None)
+ if series is None or offset>=len(series.get("values",[])): raise ValueError("FINANCIAL_DAILY_NUMBER_ID_UNRESOLVED:"+number_id)
+ pair=series["values"][offset]
+ if not isinstance(pair,list) or len(pair)!=2: raise ValueError("REGISTRY_DAILY_EXACT_VALUE_INVALID:"+number_id)
+ return exact_display(pair[0],pair[1])
+
+def financial_value_matches(value, expected_display):
+ from decimal import Decimal, InvalidOperation
+ try:
+  actual=Decimal(str(value)); expected=Decimal(expected_display)
+ except (InvalidOperation, ValueError, TypeError):
+  return False
+ return actual.is_finite() and expected.is_finite() and actual==expected
+
 def audit(a):
  root=Path(a.root); artifact=Path(a.artifact); checks={}
  outer=artifact.read_bytes()
@@ -112,8 +151,14 @@ def audit(a):
   if manifest.get("gate_statuses",{}).get(k)!=v: raise ValueError("GATE_PROMOTION_OR_MISMATCH:"+k)
  if set(manifest.get("missing_accounting_fields",[]))!=set(MISSING): raise ValueError("MISSING_ACCOUNTING_FIELDS_MISMATCH")
  checks["identities_gates"]={"status":"PASS","S6":S6,"C100":C100,"gate_statuses":gates,"missing_accounting_fields":MISSING}
+ # Verify the pinned Number Registry bytes used for exact-rational financial checks.
+ reg_path=root/"results/number_registry.json"
+ if not reg_path.exists(): raise ValueError("NUMBER_REGISTRY_MISSING")
+ reg_raw=reg_path.read_bytes()
+ if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
+ registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
  # Workbook structure, ordering, numeric parity, formulas/errors and directional layout
- nums=None; sheetnames=None; numeric_count=0
+ nums=None; sheetnames=None; numeric_count=0; financial_count=0
  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
   p=root/("d6_"+name); p.write_bytes(payload[name])
   wb=load_workbook(p,read_only=True,data_only=False); wbv=load_workbook(p,read_only=True,data_only=True)
@@ -137,14 +182,20 @@ def audit(a):
        current[(ws.title,c.coordinate)]=c.value
        numeric_count+=1
        h=header.get(c.column-1,"")
-       if isinstance(c.value,float) and any(w in h for w in ("cash","equity","asset","depreciation","receivable","revenue","expense","balance","amount","إيراد","مصروف","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم")):
-        raise ValueError("EXCEL_FINANCIAL_FLOAT:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":type="+type(c.value).__name__)
+       if any(w in h for w in FINANCIAL_WORDS):
+        number_id=row[c.column].value if c.column<len(row) else None
+        if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
+         raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h))
+        expected=registry_display(registry,number_id)
+        if not financial_value_matches(c.value,expected):
+         raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":registry="+repr(expected)+":number_id="+number_id)
+        financial_count+=1
   finally: wb.close(); wbv.close(); p.unlink(missing_ok=True)
   if nums is not None:
    if set(nums)!=set(current): raise ValueError("EXCEL_NUMERIC_INVENTORY_MISMATCH")
    if any(nums[k]!=current[k] for k in nums): raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
   nums=current
- checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
  for name in [x for x in FILES if x.endswith(".docx")]:
