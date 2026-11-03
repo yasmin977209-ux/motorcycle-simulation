@@ -138,7 +138,7 @@ def audit(a):
        numeric_count+=1
        h=header.get(c.column-1,"")
        if isinstance(c.value,float) and any(w in h for w in ("cash","equity","asset","depreciation","receivable","revenue","expense","balance","amount","إيراد","مصروف","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم")):
-        raise ValueError("EXCEL_FINANCIAL_FLOAT:"+name+":"+ws.title+":"+c.coordinate)
+        raise ValueError("EXCEL_FINANCIAL_FLOAT:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":type="+type(c.value).__name__)
   finally: wb.close(); wbv.close(); p.unlink(missing_ok=True)
   if nums is not None:
    if set(nums)!=set(current): raise ValueError("EXCEL_NUMERIC_INVENTORY_MISMATCH")
