@@ -5,6 +5,7 @@ import json
 import tempfile
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -64,8 +65,6 @@ def test_sha256sums_validator_rejects_unexpected_inventory(tmp_path):
     }), encoding="utf-8")
     (out / PACKAGE_NAME).write_bytes(b"zip-placeholder")
     (out / "SHA256SUMS.txt").write_text("0"*64+"  unexpected.txt\n", encoding="utf-8")
-    class Args:
-        package_name = PACKAGE_NAME
-        root = str(root)
+    args = SimpleNamespace(package_name=PACKAGE_NAME, root=str(root))
     with pytest.raises(ValueError, match="D5_SHA256SUMS_COVERAGE_MISMATCH"):
-        verify(Args())
+        verify(args)
