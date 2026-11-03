@@ -87,9 +87,11 @@ def exact_display(n,d):
   ctx.prec=50
   return format((Decimal(n)/Decimal(d)).quantize(Decimal("0.01"),rounding=ROUND_HALF_EVEN),"f")
 
-def registry_display(registry, number_id):
- for entry in registry.get("entries",[]):
-  if entry.get("number_id")==number_id:
+def registry_display(registry, number_id, entries_by_id=None, series_by_id=None):
+ if entries_by_id is None: entries_by_id={x.get("number_id"):x for x in registry.get("entries",[])}
+ if series_by_id is None: series_by_id={x.get("series_id"):x for x in registry.get("daily_series",[])}
+ entry=entries_by_id.get(number_id)
+ if entry is not None:
    n,d=entry.get("numerator"),entry.get("denominator")
    shown=exact_display(n,d)
    if entry.get("display_value")!=shown: raise ValueError("REGISTRY_DISPLAY_VALUE_MISMATCH:"+number_id)
@@ -97,7 +99,7 @@ def registry_display(registry, number_id):
  m=re.fullmatch(r"D2D-([0-9a-f]{20})-([0-9]{6})",str(number_id))
  if not m: raise ValueError("FINANCIAL_NUMBER_ID_INVALID:"+str(number_id))
  series_id="D2S6-"+m.group(1); offset=int(m.group(2))
- series=next((x for x in registry.get("daily_series",[]) if x.get("series_id")==series_id),None)
+ series=series_by_id.get(series_id)
  if series is None or offset>=len(series.get("values",[])): raise ValueError("FINANCIAL_DAILY_NUMBER_ID_UNRESOLVED:"+number_id)
  pair=series["values"][offset]
  if not isinstance(pair,list) or len(pair)!=2: raise ValueError("REGISTRY_DAILY_EXACT_VALUE_INVALID:"+number_id)
@@ -157,6 +159,8 @@ def audit(a):
  reg_raw=reg_path.read_bytes()
  if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
+ entries_by_id={x.get("number_id"):x for x in registry.get("entries",[])}
+ series_by_id={x.get("series_id"):x for x in registry.get("daily_series",[])}
  # Workbook structure, ordering, numeric parity, formulas/errors and directional layout
  nums=None; sheetnames=None; numeric_count=0; financial_count=0
  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
@@ -186,7 +190,7 @@ def audit(a):
         number_id=row[c.column].value if c.column<len(row) else None
         if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
          raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h))
-        expected=registry_display(registry,number_id)
+        expected=registry_display(registry,number_id,entries_by_id,series_by_id)
         if not financial_value_matches(c.value,expected):
          raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":registry="+repr(expected)+":number_id="+number_id)
         financial_count+=1
