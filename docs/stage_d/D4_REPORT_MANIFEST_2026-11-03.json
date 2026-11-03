@@ -9,6 +9,6 @@
   "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
   "schema_version": "d4-report-input-manifest-v1",
   "scope": "REFERENCE_COMPLIANT_BASELINE_ONLY",
-  "tested_sha": "13a23122e44240760b461df9d269509218592fd3",
-  "workflow_run_id": "41692077060"
+  "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e",
+  "workflow_run_id": "41694460895"
 }
