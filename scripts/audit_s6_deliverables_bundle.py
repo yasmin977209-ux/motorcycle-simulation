@@ -64,22 +64,25 @@ def worksheet_rtl_flags(xlsx_path):
         return flags
 
 def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
-    """Stream worksheet XML to avoid millions of openpyxl Cell objects."""
+    """Fast bounded-memory worksheet XML audit using lxml streaming."""
     import posixpath
     from decimal import Decimal, InvalidOperation
+    from lxml import etree as LET
     ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships"}
     q=lambda tag:"{"+ns["m"]+"}"+tag
-    digest=hashlib.sha256(); numeric_count=financial_count=0; financial_mismatches=[]
+    digest=hashlib.sha256(); numeric_count=financial_count=0
+    mismatch_count=0; mismatch_samples=[]
     with zipfile.ZipFile(path) as archive:
-        workbook=ET.fromstring(archive.read("xl/workbook.xml"))
-        rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+        workbook=LET.fromstring(archive.read("xl/workbook.xml"))
+        rels=LET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
         targets={x.attrib["Id"]:x.attrib["Target"] for x in rels}
         shared=[]
         if "xl/sharedStrings.xml" in archive.namelist():
             with archive.open("xl/sharedStrings.xml") as stream:
-                for _,item in ET.iterparse(stream,events=("end",)):
-                    if item.tag==q("si"):
-                        shared.append("".join(t.text or "" for t in item.iter(q("t")))); item.clear()
+                for _,item in LET.iterparse(stream,events=("end",),tag=q("si"),huge_tree=True):
+                    shared.append("".join(t.text or "" for t in item.iter(q("t"))))
+                    item.clear()
+                    while item.getprevious() is not None: del item.getparent()[0]
         sheets=[]
         for sheet in workbook.findall("m:sheets/m:sheet",ns):
             target=targets[sheet.attrib["{"+ns["r"]+"}id"]]
@@ -88,8 +91,8 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
         for title,member in sheets:
             header={}
             with archive.open(member) as stream:
-                for _,row_elem in ET.iterparse(stream,events=("end",)):
-                    if row_elem.tag!=q("row"): continue
+                context=LET.iterparse(stream,events=("end",),tag=q("row"),huge_tree=True)
+                for _,row_elem in context:
                     cells={}; cell_refs={}
                     for cell in row_elem.findall("m:c",ns):
                         ref=cell.attrib.get("r",""); match=re.fullmatch(r"([A-Z]+)([0-9]+)",ref)
@@ -113,6 +116,8 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
                             digest.update((title+"|"+ref+"|"+canonical+"\n").encode("utf-8")); numeric_count+=1
                             continue
                         else: value=None
+                        if isinstance(value,str) and value in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}:
+                            raise ValueError("EXCEL_ERROR_CELL:"+title+":"+ref)
                         cells[col]=("value",value)
                     if row_elem.attrib.get("r")=="1":
                         header={col:str(value).lower() for col,(kind,value) in cells.items() if kind=="value" and value is not None}
@@ -121,16 +126,21 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
                         h=header.get(col,"")
                         if any(word in h for word in FINANCIAL_WORDS):
                             rec=cells.get(col+1); number_id=rec[1] if rec and rec[0]=="value" else None
+                            error=None; expected=None
                             if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
-                                financial_mismatches.append({"sheet":title,"cell":cell_refs.get(col,str(col)),"header":h,"actual":str(value),"error":"NUMBER_ID_MISSING"})
-                                continue
-                            expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
-                            if not financial_value_matches(value,expected):
-                                financial_mismatches.append({"sheet":title,"cell":cell_refs.get(col,str(col)),"header":h,"actual":str(value),"expected":expected,"number_id":number_id,"error":"EXACT_VALUE_MISMATCH"})
-                                continue
-                            financial_count+=1
+                                error="NUMBER_ID_MISSING"
+                            else:
+                                expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
+                                if not financial_value_matches(value,expected): error="EXACT_VALUE_MISMATCH"
+                            if error:
+                                mismatch_count+=1
+                                if len(mismatch_samples)<1000:
+                                    mismatch_samples.append({"sheet":title,"cell":cell_refs.get(col,str(col)),"header":h,"actual":str(value),"expected":expected,"number_id":number_id,"error":error})
+                            else: financial_count+=1
                     row_elem.clear()
-    return {"sheetnames":[x[0] for x in sheets],"numeric_count":numeric_count,"financial_count":financial_count,"numeric_digest":digest.hexdigest(),"financial_mismatches":financial_mismatches}
+                    while row_elem.getprevious() is not None: del row_elem.getparent()[0]
+    return {"sheetnames":[x[0] for x in sheets],"numeric_count":numeric_count,"financial_count":financial_count,"numeric_digest":digest.hexdigest(),"financial_mismatch_count":mismatch_count,"financial_mismatch_samples":mismatch_samples}
+
 
 def parse_sums(raw):
  out={}
@@ -286,8 +296,8 @@ def audit(a):
  if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
  entries_by_id,series_by_id,ledger_by_id=build_d3_evidence_indexes(root,registry)
- # Stream worksheet XML directly: bounded memory and no millions of openpyxl Cell objects.
- prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None
+ # Stream worksheet XML directly: bounded memory and lxml parser.
+ prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None; financial_mismatch_count=0; financial_mismatch_samples=[]
  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
   p=root/("d6_"+name); p.write_bytes(payload[name])
   try:
@@ -301,13 +311,12 @@ def audit(a):
    if prior_digest is not None and result["numeric_digest"]!=prior_digest: raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
    prior_digest=result["numeric_digest"]
    numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
+   financial_mismatch_count+=result["financial_mismatch_count"]
+   for item in result["financial_mismatch_samples"]:
+    if len(financial_mismatch_samples)<1000: financial_mismatch_samples.append({"workbook":name,**item})
   finally: p.unlink(missing_ok=True)
-  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={len(result['financial_mismatches'])}",flush=True)
-  if result["financial_mismatches"]:
-   checks.setdefault("excel_financial_mismatches",[]).extend([{"workbook":name,**item} for item in result["financial_mismatches"]])
- if checks.get("excel_financial_mismatches"):
-  raise ValueError("EXCEL_FINANCIAL_MISMATCHES:"+json.dumps(checks["excel_financial_mismatches"],ensure_ascii=False))
- checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={result['financial_mismatch_count']}",flush=True)
+ checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
  for name in [x for x in FILES if x.endswith(".docx")]:
@@ -322,7 +331,7 @@ def audit(a):
  for tid,contract in CONTRACTS.items():
   status="PASS_SCOPED" if tid=="181" else ("PASS_SCOPED" if tid=="176" else "PASS")
   checks["test_"+tid]={"status":status,"contract":contract,"run_id":a.run_id,"tested_sha":a.tested_sha,"detail":"D6 independent artifact audit mapping; original historical test is not rerun."}
- result={"schema_version":"d6-independent-post-write-audit-v1","status":"PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 181 is PASS_SCOPED only; no original historical 48K daily partner-balance ledgers are claimed or reconstructed.","DOCX page count is not independently re-rendered; D4 record reports three pages for each summary.","Test 176 validates disclosure/manifest and document parse but does not recompute every displayed number against the full Number Registry lineage.","The original tests 175, 176, 179, 180, 181, 182, 183 and 186 are mapped, not re-executed as historical suite tests.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+ result={"schema_version":"d6-independent-post-write-audit-v1","status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 181 is PASS_SCOPED only; no original historical 48K daily partner-balance ledgers are claimed or reconstructed.","DOCX page count is not independently re-rendered; D4 record reports three pages for each summary.","Test 176 validates disclosure/manifest and document parse but does not recompute every displayed number against the full Number Registry lineage.","The original tests 175, 176, 179, 180, 181, 182, 183 and 186 are mapped, not re-executed as historical suite tests.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=root/"docs"; out.mkdir(exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
