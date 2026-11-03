@@ -1,0 +1,176 @@
+name: Stage D4 Registry-Backed DOCX Reports
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths:
+      - scripts/s6_docx_reports.py
+      - tests/test_s6_docx_reports.py
+      - .github/workflows/stage-d4-docx-reports.yml
+permissions:
+  contents: write
+concurrency:
+  group: stage-d4-docx-\${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install report and pagination dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install python-docx pypdf pytest
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-writer fonts-noto-core
+      - name: Assert exact starting branch HEAD and verify governing inputs
+        env:
+          EXPECTED_SHA: \${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
+          curl --fail --location --silent --show-error "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md" --output /tmp/approved-v240.md
+          test "$(wc -c < /tmp/approved-v240.md | tr -d ' ')" = "401397"
+          test "$(sha256sum /tmp/approved-v240.md | awk '{print $1}')" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+          test "$(wc -c < results/number_registry.json | tr -d ' ')" = "24137036"
+          test "$(sha256sum results/number_registry.json | awk '{print $1}')" = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+      - name: Generate five DOCX reports from the Number Registry
+        env:
+          TESTED_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python -m scripts.s6_docx_reports --registry results/number_registry.json --reference /tmp/approved-v240.md --output-dir deliverables --evidence-dir docs/stage_d --tested-sha "$TESTED_SHA" --run-id "$RUN_ID"
+      - name: Render summaries and enforce actual two-to-three-page pagination
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/d4-pdf
+          libreoffice --headless --convert-to pdf --outdir /tmp/d4-pdf "deliverables/الملخص_AR.docx" "deliverables/Summary_EN.docx"
+          python - <<'PY'
+          from pathlib import Path
+          from pypdf import PdfReader
+          for name in ("الملخص_AR.pdf", "Summary_EN.pdf"):
+              path=Path("/tmp/d4-pdf")/name
+              if not path.is_file(): raise SystemExit("SUMMARY_PDF_MISSING:"+name)
+              pages=len(PdfReader(str(path)).pages)
+              print(f"SUMMARY_PAGINATION {name} pages={pages}")
+              if not 2 <= pages <= 3: raise SystemExit(f"SUMMARY_PAGE_COUNT_INVALID:{name}:{pages}")
+          PY
+      - name: Run D4 document, provenance, disclosure and RTL tests
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/s6_docx_reports.py tests/test_s6_docx_reports.py
+          python -m pytest -q -rs tests/test_s6_docx_reports.py
+      - name: Write D4 requirements matrix and scoped build report
+        env:
+          TESTED_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, hashlib, os
+          audit=json.loads(pathlib.Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+          names=["deliverables/التقرير_الكامل_AR.docx","deliverables/Full_Report_EN.docx","deliverables/الملخص_AR.docx","deliverables/Summary_EN.docx","deliverables/دراسة_الجدوى_AR.docx"]
+          rows=[
+            ("Five fixed DOCX deliverables","PASS_SCOPED","All five files generated and opened by python-docx."),
+            ("Arabic RTL / English LTR","PASS_SCOPED","RTL properties checked for Arabic outputs; English outputs are LTR."),
+            ("Executive summary pagination","PASS_SCOPED","Both summaries rendered to PDF and constrained to two or three actual pages."),
+            ("Number provenance","PASS_SCOPED","Every displayed registry value carries a number_id resolved against the pinned Number Registry."),
+            ("Mandatory section 17.3 disclosures","PASS_SCOPED","Arabic source disclosure and faithful English rendering included."),
+            ("Gate and limitation preservation","PASS_SCOPED_WITH_LIMITATIONS","No upstream gate was promoted; missing accounting fields remain explicit."),
+            ("External market assumptions","PASS_SCOPED","No market, inflation, FX, demand, maintenance or external financing assumptions added."),
+            ("D4 final status","PASS_SCOPED_WITH_LIMITATIONS","D4 report generation only; not D5, D6, P17 or FINAL_ACCEPTED."),
+          ]
+          md=["# D4 Requirements Matrix — 2026-11-03","","| Requirement | Disposition | Evidence |","|---|---|---|"]
+          md += [f"| {a} | {b} | {c} |" for a,b,c in rows]
+          md += ["","## Output inventory",""]
+          for n in names:
+              p=pathlib.Path(n); raw=p.read_bytes()
+              md.append(f"- {n} — {len(raw)} bytes; SHA-256 {hashlib.sha256(raw).hexdigest()}.")
+          md += ["",f"- Triggering tested SHA: {os.environ['TESTED_SHA']}.",f"- Workflow Run: {os.environ['RUN_ID']}.",f"- Number Registry IDs rendered: {audit['number_ids_rendered']}.","- Preserved limitations: C100 Golden NOT_RUN; Full Logging representative-only; five historical accounting fields MISSING_EVIDENCE; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED; Stability NOT_CONVERGED; N=4800 NOT_EXECUTED.","- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."]
+          pathlib.Path("docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md").write_text("\n".join(md)+"\n",encoding="utf-8")
+          report=["# D4 DOCX Report Build — 2026-11-03","","Status: PASS_SCOPED_WITH_LIMITATIONS.","",f"- Tested source commit: {os.environ['TESTED_SHA']}.",f"- Workflow Run: {os.environ['RUN_ID']}.",f"- D4 report manifest SHA-256: {audit['manifest_sha256']}.",f"- Number Registry SHA-256: {audit['registry_sha256']}; bytes: {audit['registry_bytes']}.",f"- Registry-backed number IDs rendered: {audit['number_ids_rendered']}.","","## Deliverables",""]
+          for n in names:
+              p=pathlib.Path(n); report.append(f"- {n} — {p.stat().st_size} bytes; SHA-256 {hashlib.sha256(p.read_bytes()).hexdigest()}.")
+          report += ["","## Scope and limitations","", "- Reports use REFERENCE_COMPLIANT_BASELINE only; no external market assumptions were introduced.","- Every displayed financial/statistical value is registry-backed and carries its number_id; unavailable values remain MISSING_EVIDENCE.","- D3 remains PASS_SCOPED_WITH_LIMITATIONS; D4 does not change any upstream gate.","- C100 Golden revalidation remains NOT_RUN; Full Logging remains representative-only; the five historical accounting fields remain MISSING_EVIDENCE.","- Financial Gate A remains PASS_SCOPED; Production Gate A remains NOT_DECLARED; Gate B remains FAIL_SCOPED; Stability remains NOT_CONVERGED; N=4800 remains NOT_EXECUTED.","- FINAL_ACCEPTED remains NOT_DECLARED. D5 is the next stage only after D4 exact-head and remote readback pass.",""]
+          pathlib.Path("docs/stage_d/D4_BUILD_REPORT_2026-11-03.md").write_text("\n".join(report),encoding="utf-8")
+          PY
+      - name: Append D4 continuity and session status
+        env:
+          TESTED_SHA: \${{ github.sha }}
+          RUN_ID: \${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib, os
+          entry=f"""
+          
+          ## D4 DOCX report build — 2026-11-03 (append-only)
+          
+          - Triggering tested SHA: {os.environ['TESTED_SHA']}; workflow Run: {os.environ['RUN_ID']}.
+          - D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+          - Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+          - Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+          - Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+          - Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+          - D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
+          """
+          for path in ["docs/PROJECT_CONTINUITY.md","docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"]:
+              p=pathlib.Path(path)
+              if not p.is_file(): raise SystemExit("CONTINUITY_FILE_MISSING:"+path)
+              with p.open("a",encoding="utf-8") as f: f.write(entry)
+          PY
+      - name: Commit D4 outputs and append-only evidence
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "\${{ github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f -- "deliverables/التقرير_الكامل_AR.docx" "deliverables/Full_Report_EN.docx" "deliverables/الملخص_AR.docx" "deliverables/Summary_EN.docx" "deliverables/دراسة_الجدوى_AR.docx"
+          git add -- docs/stage_d/D4_REPORT_MANIFEST_2026-11-03.json docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md docs/stage_d/D4_BUILD_REPORT_2026-11-03.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
+          git commit -m "build(d4): publish registry-backed DOCX reports"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+      - name: Verify remote Raw bytes, evidence triples and exact final HEAD
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, pathlib, subprocess, requests
+          repo="yasmin977209-ux/motorcycle-simulation"
+          branch="tmp/d1-rebuild-20261101"
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          remote=subprocess.check_output(["git","ls-remote","origin",f"refs/heads/{branch}"],text=True).split()[0]
+          if remote!=head: raise SystemExit("D4_FINAL_HEAD_MISMATCH")
+          paths=[
+            "deliverables/التقرير_الكامل_AR.docx","deliverables/Full_Report_EN.docx","deliverables/الملخص_AR.docx","deliverables/Summary_EN.docx","deliverables/دراسة_الجدوى_AR.docx",
+            "docs/stage_d/D4_REPORT_MANIFEST_2026-11-03.json","docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json","docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md","docs/stage_d/D4_BUILD_REPORT_2026-11-03.md",
+            "docs/PROJECT_CONTINUITY.md","docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"
+          ]
+          for path in paths:
+            local=pathlib.Path(path).read_bytes()
+            url=f"https://raw.githubusercontent.com/{repo}/{head}/{path}"
+            r=requests.get(url,timeout=180); r.raise_for_status()
+            if r.content!=local: raise SystemExit("D4_RAW_READBACK_MISMATCH:"+path)
+            blob=hashlib.sha1(b"blob "+str(len(local)).encode()+bytes([0])+local).hexdigest()
+            print(f"VERIFIED_RAW {path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob_sha1={blob} commit={head} url={url}")
+          if subprocess.check_output(["git","ls-remote","origin",f"refs/heads/{branch}"],text=True).split()[0]!=head:
+            raise SystemExit("D4_FINAL_EXACT_HEAD_MISMATCH")
+          print("D4_FINAL_EXACT_HEAD_PASS "+head)
+          PY
+      - name: Upload D4 report evidence bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: D4-DOCX-Report-Evidence
+          path: |
+            docs/stage_d/D4_REPORT_MANIFEST_2026-11-03.json
+            docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json
+            docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md
+            docs/stage_d/D4_BUILD_REPORT_2026-11-03.md
+          retention-days: 30
