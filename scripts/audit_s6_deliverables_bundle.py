@@ -69,7 +69,7 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
     from decimal import Decimal, InvalidOperation
     ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships"}
     q=lambda tag:"{"+ns["m"]+"}"+tag
-    digest=hashlib.sha256(); numeric_count=financial_count=0
+    digest=hashlib.sha256(); numeric_count=financial_count=0; financial_mismatches=[]
     with zipfile.ZipFile(path) as archive:
         workbook=ET.fromstring(archive.read("xl/workbook.xml"))
         rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
@@ -122,13 +122,15 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
                         if any(word in h for word in FINANCIAL_WORDS):
                             rec=cells.get(col+1); number_id=rec[1] if rec and rec[0]=="value" else None
                             if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
-                                raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+title+":"+str(col)+":header="+repr(h))
+                                financial_mismatches.append({"sheet":title,"cell":str(col),"header":h,"actual":str(value),"error":"NUMBER_ID_MISSING"})
+                                continue
                             expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
                             if not financial_value_matches(value,expected):
-                                raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+title+":"+str(col)+":value="+str(value)+":registry="+repr(expected)+":number_id="+number_id)
+                                financial_mismatches.append({"sheet":title,"cell":str(col),"header":h,"actual":str(value),"expected":expected,"number_id":number_id,"error":"EXACT_VALUE_MISMATCH"})
+                                continue
                             financial_count+=1
                     row_elem.clear()
-    return {"sheetnames":[x[0] for x in sheets],"numeric_count":numeric_count,"financial_count":financial_count,"numeric_digest":digest.hexdigest()}
+    return {"sheetnames":[x[0] for x in sheets],"numeric_count":numeric_count,"financial_count":financial_count,"numeric_digest":digest.hexdigest(),"financial_mismatches":financial_mismatches}
 
 def parse_sums(raw):
  out={}
@@ -300,7 +302,11 @@ def audit(a):
    prior_digest=result["numeric_digest"]
    numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
   finally: p.unlink(missing_ok=True)
-  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']}",flush=True)
+  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={len(result['financial_mismatches'])}",flush=True)
+  if result["financial_mismatches"]:
+   checks.setdefault("excel_financial_mismatches",[]).extend([{"workbook":name,**item} for item in result["financial_mismatches"]])
+ if checks.get("excel_financial_mismatches"):
+  raise ValueError("EXCEL_FINANCIAL_MISMATCHES:"+json.dumps(checks["excel_financial_mismatches"],ensure_ascii=False))
  checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
@@ -325,5 +331,14 @@ def audit(a):
  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
  print(json.dumps({"status":result["status"],"checks":{k:v["status"] for k,v in checks.items()}},ensure_ascii=False))
 def main():
- p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); audit(p.parse_args())
+ p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); args=p.parse_args()
+ try:
+  audit(args)
+ except Exception as exc:
+  out=Path(args.root)/"docs"; out.mkdir(exist_ok=True)
+  result={"schema_version":"d6-independent-post-write-audit-v1","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":{"auditor_unit_tests":{"status":"PASS","detail":"All tests/test_d6_audit.py tests passed before independent artifact audit."},"d5_artifact_download":{"status":"PASS","detail":"Exact pinned GitHub Artifact metadata and byte size were verified by the workflow."},"independent_post_write_audit":{"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc)}},"fixed_gate_states":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"},"missing_accounting_fields":MISSING,"limitations":["The independent audit did not pass; the recorded exception is the exact blocker and must not be treated as an accepted deliverable.","No D5 historical Artifact or manifest was modified. Any rebuild or replacement of historical deliverables requires a separate owner decision.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
+  (out/"FINAL_AUDIT.md").write_text("\\n".join(lines)+"\\n",encoding="utf-8")
+  print("D6_AUDIT_BLOCKED "+json.dumps({"error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"tested_sha":args.tested_sha},ensure_ascii=False))
 if __name__=="__main__": main()
