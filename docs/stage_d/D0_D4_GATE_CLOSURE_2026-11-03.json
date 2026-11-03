@@ -82,5 +82,14 @@
   },
   "d5": "NOT_STARTED",
   "final_accepted": "NOT_DECLARED",
-  "final_exact_head_validation": "PENDING_ON_CONSOLIDATED_DOCUMENTATION_COMMIT"
+  "final_exact_head_validation": {
+    "status": "PASS_ON_EXACT_TESTED_HEAD",
+    "workflow_run_id": 41696774858,
+    "tested_sha": "7aa6e165567b3adb3c5b7bb34e8557b5e05ed05c",
+    "conclusion": "success",
+    "evidence_artifact_id": 13260678875,
+    "evidence_artifact_sha256": "a635462bf062c9d799682496e6f376d7cfff0a9eae5fa9f6171a9daec70d6d98",
+    "evidence_artifact_expires_at": "2026-12-03T18:46:57Z",
+    "subsequent_record_commit_recheck": "TRIGGERED_BY_THIS_APPEND_ONLY_UPDATE"
+  }
 }
