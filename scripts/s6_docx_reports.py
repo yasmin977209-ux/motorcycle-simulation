@@ -287,7 +287,7 @@ def make_summary(path, rtl, title, registry, disclosure, matrix, sources, seal):
     for r in risks:
         add_p(doc, "• " + r, rtl, size=8)
     add_p(doc, "Conclusion: the registry supports a scoped interim description only. It does not support an investment forecast, scenario ranking, production Gate A, convergence, or FINAL_ACCEPTED." if not rtl else "الاستنتاج: يدعم السجل وصفاً مرحلياً محدوداً فقط. ولا يدعم توقعاً استثمارياً أو ترتيب السيناريوهات أو إعلان Gate A الإنتاجية أو التقارب أو FINAL_ACCEPTED.", rtl, bold=True, size=8)
-    disclosure_text = reference_disclosure if rtl else english_disclosure()
+    disclosure_text = disclosure if rtl else english_disclosure()
     for line in disclosure_text.splitlines():
         if line.startswith("## 17.3"):
             continue
