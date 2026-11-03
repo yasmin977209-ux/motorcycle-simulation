@@ -285,22 +285,22 @@ def audit(a):
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
  entries_by_id,series_by_id,ledger_by_id=build_d3_evidence_indexes(root,registry)
  # Stream worksheet XML directly: bounded memory and no millions of openpyxl Cell objects.
-  prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None
-  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
-   p=root/("d6_"+name); p.write_bytes(payload[name])
-   try:
-    result=scan_xlsx_xml(p,entries_by_id,series_by_id,ledger_by_id,registry)
-    if prior_sheetnames is not None and result["sheetnames"]!=prior_sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
-    prior_sheetnames=result["sheetnames"]
-    rtl_flags=worksheet_rtl_flags(p)
-    if len(rtl_flags)!=len(result["sheetnames"]): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
-    if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
-    if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
-    if prior_digest is not None and result["numeric_digest"]!=prior_digest: raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
-    prior_digest=result["numeric_digest"]
-    numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
-   finally: p.unlink(missing_ok=True)
-   print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']}",flush=True)
+ prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None
+ for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
+  p=root/("d6_"+name); p.write_bytes(payload[name])
+  try:
+   result=scan_xlsx_xml(p,entries_by_id,series_by_id,ledger_by_id,registry)
+   if prior_sheetnames is not None and result["sheetnames"]!=prior_sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
+   prior_sheetnames=result["sheetnames"]
+   rtl_flags=worksheet_rtl_flags(p)
+   if len(rtl_flags)!=len(result["sheetnames"]): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
+   if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
+   if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
+   if prior_digest is not None and result["numeric_digest"]!=prior_digest: raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
+   prior_digest=result["numeric_digest"]
+   numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
+  finally: p.unlink(missing_ok=True)
+  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']}",flush=True)
 checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
