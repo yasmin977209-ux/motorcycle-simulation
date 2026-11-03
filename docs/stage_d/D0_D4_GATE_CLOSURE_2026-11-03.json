@@ -1,0 +1,86 @@
+{
+  "schema_version": "d0-d4-consolidated-gate-closure-v1",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "main_head": "c6e54349a5e94f65d5aa9f83141f225d777bb474",
+  "d0": {
+    "status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "artifact_revalidation_run": 41694461194
+  },
+  "d1": {
+    "status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "source_validation_run": 41694461194,
+    "tests_passed": 34,
+    "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e"
+  },
+  "d2": {
+    "status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "source_validation_run": 41694461194,
+    "registry_path": "results/number_registry.json",
+    "entries": 2640,
+    "daily_series": 1000,
+    "daily_points": 2086550,
+    "registry_bytes": 24137036,
+    "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+    "registry_git_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6"
+  },
+  "d3": {
+    "status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "artifact_id": 13160434943,
+    "artifact_bytes": 535358202,
+    "artifact_sha256": "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
+    "artifact_source_run": 41480650491,
+    "artifact_acceptance_run": 41682389098,
+    "exact_head_run": 41694461171,
+    "exact_head_tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e",
+    "exact_head_tests_passed": 36,
+    "raw_files_verified": 35,
+    "artifact_expires_at": "2026-12-02T16:56:31Z"
+  },
+  "d4": {
+    "status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "workflow_run": 41694460895,
+    "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e",
+    "output_commit": "c0bfcbadac8d90932d52eb4ecaec2e72e6b4b909",
+    "tests_passed": 5,
+    "arabic_summary_pages": 3,
+    "english_summary_pages": 3,
+    "raw_files_verified": 13,
+    "evidence_artifact_id": 13260326514,
+    "evidence_artifact_sha256": "2e8e1ded9331cc8f5a15888880a692d2ead41b0c1d46d950d318519b6bd0e7e6",
+    "evidence_artifact_expires_at": "2026-12-03T18:32:00Z",
+    "number_ids_rendered": 16
+  },
+  "fixed_findings": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "full_logging": "105 representative keys only",
+    "c100_golden": "NOT_RUN",
+    "missing_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ]
+  },
+  "prohibitions_observed": {
+    "trial": false,
+    "simulation": false,
+    "monte_carlo": false,
+    "n_expansion": false,
+    "historical_backfill": false,
+    "zero_fill": false,
+    "identity_change": false,
+    "main_write": false,
+    "merge": false,
+    "release": false,
+    "final_acceptance": false
+  },
+  "d5": "NOT_STARTED",
+  "final_accepted": "NOT_DECLARED",
+  "final_exact_head_validation": "PENDING_ON_CONSOLIDATED_DOCUMENTATION_COMMIT"
+}
