@@ -1,0 +1,196 @@
+name: D0-D4 Final Exact-HEAD Gate Verification
+
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - .github/workflows/d0-d4-final-gate-validation.yml
+      - docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md
+      - docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: d0-d4-final-gate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  final-gates:
+    name: Verify committed D4 deliverables at exact final HEAD
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Assert branch, exact HEAD, governing reference and registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "tmp/d1-rebuild-20261101"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$GITHUB_SHA"
+          test "$(wc -c < docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md | tr -d ' ')" = "401397"
+          test "$(sha256sum docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md | awk '{print $1}')" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+          test "$(wc -c < results/number_registry.json | tr -d ' ')" = "24137036"
+          test "$(sha256sum results/number_registry.json | awk '{print $1}')" = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          echo "D0_D4_FINAL_INPUTS_AND_HEAD_PASS $GITHUB_SHA"
+
+      - name: Install DOCX validation and pagination dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check python-docx pypdf pytest
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-writer fonts-noto-core
+
+      - name: Run D4 compile and document provenance tests
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/s6_docx_reports.py tests/test_s6_docx_reports.py
+          python -m pytest -q -rs tests/test_s6_docx_reports.py
+
+      - name: Re-open all DOCX files and check actual summary pagination
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from docx import Document
+          from pypdf import PdfReader
+          import subprocess
+
+          names = [
+              "deliverables/التقرير_الكامل_AR.docx",
+              "deliverables/Full_Report_EN.docx",
+              "deliverables/الملخص_AR.docx",
+              "deliverables/Summary_EN.docx",
+              "deliverables/دراسة_الجدوى_AR.docx",
+          ]
+          audit = json.loads(Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+          for path in names:
+              p = Path(path)
+              if not p.is_file():
+                  raise SystemExit("D4_DOCX_MISSING:" + path)
+              Document(str(p))
+              expected = audit["outputs"][p.name]
+              import hashlib
+              raw = p.read_bytes()
+              if len(raw) != expected["bytes"] or hashlib.sha256(raw).hexdigest() != expected["sha256"]:
+                  raise SystemExit("D4_DOCX_AUDIT_FINGERPRINT_MISMATCH:" + path)
+
+          Path("/tmp/d4-pdf").mkdir(exist_ok=True)
+          subprocess.run(
+              ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", "/tmp/d4-pdf",
+               "deliverables/الملخص_AR.docx", "deliverables/Summary_EN.docx"],
+              check=True,
+          )
+          for name in ("الملخص_AR.pdf", "Summary_EN.pdf"):
+              pages = len(PdfReader(str(Path("/tmp/d4-pdf") / name)).pages)
+              print(f"FINAL_SUMMARY_PAGINATION {name} pages={pages}")
+              if not 2 <= pages <= 3:
+                  raise SystemExit("D4_SUMMARY_PAGINATION_INVALID:" + name)
+          print("D4_ALL_FIVE_DOCX_OPEN_AND_FINGERPRINT_PASS")
+          PY
+
+      - name: Read back D0-D4 closure and D4 deliverables from exact GitHub Raw SHA
+        env:
+          REPOSITORY: ${{ github.repository }}
+          EXACT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import urllib.parse
+          import urllib.request
+
+          repo = os.environ["REPOSITORY"]
+          sha = os.environ["EXACT_SHA"]
+          paths = [
+              "docs/stage_d/D0_INPUT_AUDIT.json",
+              "docs/stage_d/D0_INPUT_AUDIT.md",
+              "docs/stage_d/D1_BUILDER_AUDIT.json",
+              "docs/stage_d/D1_REBUILD_AUDIT_2026-11-01.json",
+              "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
+              "docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md",
+              "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json",
+              "docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json",
+              "docs/stage_d/D4_BUILD_REPORT_2026-11-03.md",
+              "docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md",
+              "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md",
+              "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json",
+              "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+              "docs/PROJECT_CONTINUITY.md",
+              "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md",
+              "docs/PROJECT_HANDOFF.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md",
+              "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+              "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+              "results/number_registry.json",
+              "deliverables/التقرير_الكامل_AR.docx",
+              "deliverables/Full_Report_EN.docx",
+              "deliverables/الملخص_AR.docx",
+              "deliverables/Summary_EN.docx",
+              "deliverables/دراسة_الجدوى_AR.docx",
+          ]
+          evidence = []
+          for path in paths:
+              local = pathlib.Path(path).read_bytes()
+              encoded = urllib.parse.quote(path, safe="/")
+              url = f"https://raw.githubusercontent.com/{repo}/{sha}/{encoded}"
+              with urllib.request.urlopen(url, timeout=180) as response:
+                  remote = response.read()
+              if remote != local:
+                  raise SystemExit("D0_D4_RAW_BYTE_MISMATCH:" + path)
+              blob = hashlib.sha1(b"blob " + str(len(remote)).encode() + bytes([0]) + remote).hexdigest()
+              digest = hashlib.sha256(remote).hexdigest()
+              print(f"VERIFIED_RAW {path} bytes={len(remote)} sha256={digest} blob_sha1={blob} commit={sha} url={url}")
+              evidence.append({"path": path, "bytes": len(remote), "sha256": digest, "git_blob_sha1": blob, "commit_sha": sha, "url": url})
+
+          audit = json.loads(pathlib.Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+          artifact_acceptance = json.loads(pathlib.Path("docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json").read_text(encoding="utf-8"))
+          result = {
+              "schema_version": "d0-d4-final-exact-head-evidence-v1",
+              "repository": repo,
+              "branch": "tmp/d1-rebuild-20261101",
+              "tested_sha": sha,
+              "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+              "d0": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d1": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d2": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d3": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d4": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d3_artifact_id": artifact_acceptance["artifact"]["id"],
+              "d3_artifact_expires_at": artifact_acceptance["artifact"]["expires_at"],
+              "d4_tested_sha": audit["tested_sha"],
+              "d4_source_run_id": audit["workflow_run_id"],
+              "d4_number_ids_rendered": audit["number_ids_rendered"],
+              "evidence": evidence,
+              "main_modified": False,
+              "d5": "NOT_STARTED",
+              "final_accepted": "NOT_DECLARED",
+              "limitations_preserved": True
+          }
+          pathlib.Path("d0-d4-final-exact-head-evidence.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          remote_head = subprocess.check_output(["git", "ls-remote", "origin", "refs/heads/tmp/d1-rebuild-20261101"], text=True).split()[0]
+          if remote_head != sha:
+              raise SystemExit("D0_D4_FINAL_EXACT_HEAD_MISMATCH:" + remote_head)
+          print("D0_D4_FINAL_EXACT_HEAD_PASS " + sha)
+          PY
+
+      - name: Upload final exact-head evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: D0-D4-Final-Exact-HEAD-Evidence
+          path: d0-d4-final-exact-head-evidence.json
+          retention-days: 30
