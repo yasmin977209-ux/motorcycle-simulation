@@ -8,6 +8,13 @@ on:
       - .github/workflows/d0-d4-final-gate-validation.yml
       - docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md
       - docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json
+      - docs/stage_d/D0_REPOSITORY_CLOSURE.md
+      - docs/stage_d/D1_REPOSITORY_CLOSURE.md
+      - docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md
+      - docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md
+      - docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md
+      - docs/PROJECT_HANDOFF.md
+      - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
   workflow_dispatch:
 
 permissions:
