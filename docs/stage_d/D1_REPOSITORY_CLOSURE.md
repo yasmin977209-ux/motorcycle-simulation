@@ -95,3 +95,11 @@ D1 status corrected from BLOCKED to PASS_SCOPED_WITH_LIMITATIONS after successfu
 - Governing v2.4.0 reference triple: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; Git blob SHA-1 `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; publication commit `b4420f2469f8f675f2e9cae6940ddbb16be86f1b`.
 
 Preserved limitations: 105 normalized manifest statuses `NOT_VERIFIED`; C100 Golden revalidation `NOT_RUN`; production Gate A `NOT_DECLARED`; Gate B at N=2400 `FAIL_SCOPED`; Stability `NOT_CONVERGED`; N=4800 `NOT_EXECUTED`; five historical accounting fields `MISSING_EVIDENCE` (`Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`). Financial Gate A remains `PASS_SCOPED` only. This append-only correction supersedes the earlier BLOCKED disposition without deleting its historical record.
+
+
+## Current live D1 source validation — 2026-11-03 (append-only)
+
+- D1-D2 Source Validation Run 41694461194 tested 17696ec48557a33f2c231634ba25f26cf831800e and completed SUCCESS.
+- All three pinned historical artifacts were downloaded and exact size/SHA-256 verified. Six D1 source modules and two test modules compiled; actual artifact-backed tests: 34 passed, 0 failed; exact live branch-head assertion passed.
+- Current disposition: PASS_SCOPED_WITH_LIMITATIONS. Full Logging remains 105 representative keys only; 105 normalized manifest states remain NOT_VERIFIED where independent expected byte sizes are absent; five historical accounting fields remain MISSING_EVIDENCE; C100 Golden remains NOT_RUN.
+- No Trial, Simulation, Monte Carlo, N expansion, identity change, backfill, zero-fill, main update, merge or Release.
