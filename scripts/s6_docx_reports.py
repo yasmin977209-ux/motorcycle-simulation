@@ -235,7 +235,7 @@ def make_full_report(path, rtl, title, registry, reference_disclosure, matrix, s
     for item in limitations:
         add_p(doc, "• " + item, rtl, size=8)
     add_h(doc, "Required interpretive disclosures" if not rtl else "الإفصاحات التفسيرية الإلزامية", rtl)
-    disclosure_text = reference_disclosure if rtl else english_disclosure()
+    disclosure_text = disclosure if rtl else english_disclosure()
     for line in disclosure_text.splitlines():
         if line.startswith("## 17.3"):
             continue
@@ -306,7 +306,7 @@ def make_feasibility(path, registry, disclosure, matrix, sources, seal):
     add_p(doc, "لا تتضمن Number Registry المتاحة سجلاً تفصيلياً كاملاً لكل دراجة أو جميع التكاليف والأحداث اليومية اللازمة لحساب فترة استرداد مستقلة أو قيمة سوقية. لذلك لا تُختلق قيمة تكلفة أو مدة استرداد. تُعرض القيم الموثقة فقط في ملحق سلسلة النسب.", True)
     c100 = [e for e in registry["entries"] if e.get("cohort_id","").startswith("c100") and e.get("trial_id") is not None]
     if c100:
-        add_p(doc, "C100 is treated as deterministic cross-cohort reuse, not an independent random cohort. Its Golden revalidation remains NOT_RUN.", True)
+        add_p(doc, "يُعامل C100 بوصفه إعادة استخدام حتمية عابرة للأفواج، لا فوجاً عشوائياً مستقلاً. وتبقى إعادة التحقق الذهبي NOT_RUN.", True)
     else:
         add_p(doc, "C100 daily and Golden validation detail is MISSING_EVIDENCE in this report.", True)
     add_h(doc, "المخاطر ومؤشرات القرار", True)
