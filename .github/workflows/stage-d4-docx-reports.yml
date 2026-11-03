@@ -156,7 +156,7 @@ jobs:
           for path in paths:
             local=pathlib.Path(path).read_bytes()
             encoded_path=urllib.parse.quote(path, safe="/")
-    url=f"https://raw.githubusercontent.com/{repo}/{head}/{encoded_path}"
+            url=f"https://raw.githubusercontent.com/{repo}/{head}/{encoded_path}"
             with urllib.request.urlopen(url, timeout=180) as response:
               remote_bytes=response.read()
             if remote_bytes!=local: raise SystemExit("D4_RAW_READBACK_MISMATCH:"+path)
