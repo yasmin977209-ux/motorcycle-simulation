@@ -69,8 +69,8 @@ def audit(a):
  if payload["manifest.json"]!=outer_manifest: raise ValueError("MANIFEST_OUTER_INNER_MISMATCH")
  manifest=json.loads(payload["manifest.json"])
  if manifest.get("package_member_count")!=8 or manifest.get("package_status")!="T2_INTERIM / NOT_FINAL_BLOCKED": raise ValueError("MANIFEST_STATUS_MISMATCH")
- for name,data in payload.items():
-  rec=manifest.get("package_members",{}).get(name,{})
+ for name in FILES:
+  data=payload[name]; rec=manifest.get("package_members",{}).get(name,{})
   if rec.get("bytes")!=len(data) or rec.get("sha256")!=sha(data): raise ValueError("MANIFEST_MEMBER_MISMATCH:"+name)
  sums=parse_sums(sums_raw)
  if len(sums)!=10: raise ValueError("SHA256SUMS_COUNT_MISMATCH")
