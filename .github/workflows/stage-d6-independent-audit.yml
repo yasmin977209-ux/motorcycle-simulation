@@ -12,7 +12,7 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: stage-d6-${{ github.ref }}
+  group: stage-d6-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 jobs:
   independent-post-write-audit:
