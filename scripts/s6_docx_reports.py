@@ -194,6 +194,9 @@ def add_evidence_seal(doc, rtl, tested_sha, run_id, manifest_sha, build_date):
     add_p(doc, f"current_governing_reference_sha256: {GOVERNING_SHA}", rtl, size=7)
     add_p(doc, f"historical_execution_reference_sha256: {HISTORICAL_SHA}", rtl, size=7)
 
+def english_disclosure():
+    return """## 17.3 Mandatory interpretive disclosures\n\n**Reality gap (must be stated explicitly):** The model assumes unlimited demand and immediate re-rental on the following day, no fleet-size ceiling, no operating, maintenance, theft, or inflation costs, no tenant heterogeneity, and deterministic Friday fees and settlement rent. Therefore the large return produced (multiples of capital) is **not a realistic forecast**; it is a consequence of these assumptions and must be presented as such without exaggeration.\n\nBecause the model excludes many items, every report and feasibility study must state that results are **conditional on model limitations**, especially: (1) retained assets are valued at book value, not market value; (2) no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; (4) the guarantee is a deterministic multiplier and does not represent variability in actual recovery capacity; (5) non-monotonic scenario results may occur for structural reasons and lower collection must not be read as better merely because net entitlements are higher; (6) zero accounting-loss probability is not a guarantee, but a result of model assumptions. No value may be inferred for an unexecuted scenario."""
+
 def make_full_report(path, rtl, title, registry, reference_disclosure, matrix, sources, seal):
     doc = setup_doc(rtl)
     add_h(doc, title, rtl, 0)
@@ -232,7 +235,8 @@ def make_full_report(path, rtl, title, registry, reference_disclosure, matrix, s
     for item in limitations:
         add_p(doc, "• " + item, rtl, size=8)
     add_h(doc, "Required interpretive disclosures" if not rtl else "الإفصاحات التفسيرية الإلزامية", rtl)
-    for line in reference_disclosure.splitlines():
+    disclosure_text = reference_disclosure if rtl else english_disclosure()
+    for line in disclosure_text.splitlines():
         if line.startswith("## 17.3"):
             continue
         if line.strip():
@@ -281,7 +285,8 @@ def make_summary(path, rtl, title, registry, disclosure, matrix, sources, seal):
     for r in risks:
         add_p(doc, "• " + r, rtl, size=8)
     add_p(doc, "Conclusion: the registry supports a scoped interim description only. It does not support an investment forecast, scenario ranking, production Gate A, convergence, or FINAL_ACCEPTED." if not rtl else "الاستنتاج: يدعم السجل وصفاً مرحلياً محدوداً فقط. ولا يدعم توقعاً استثمارياً أو ترتيب السيناريوهات أو إعلان Gate A الإنتاجية أو التقارب أو FINAL_ACCEPTED.", rtl, bold=True, size=8)
-    for line in reference_disclosure.splitlines():
+    disclosure_text = reference_disclosure if rtl else english_disclosure()
+    for line in disclosure_text.splitlines():
         if line.startswith("## 17.3"):
             continue
         if line.strip():
@@ -338,6 +343,8 @@ def main():
     raw_reg, raw_ref = reg_path.read_bytes(), ref_path.read_bytes()
     registry = json.loads(raw_reg.decode("utf-8"))
     validate_registry(registry)
+    if len(raw_reg) != 24137036 or digest(raw_reg) != "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87":
+        raise ValueError("NUMBER_REGISTRY_PIN_MISMATCH")
     if digest(raw_ref) != GOVERNING_SHA or len(raw_ref) != 401397:
         raise ValueError("GOVERNING_REFERENCE_PIN_MISMATCH")
     reference = raw_ref.decode("utf-8")
