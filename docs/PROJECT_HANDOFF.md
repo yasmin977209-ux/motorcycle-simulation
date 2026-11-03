@@ -364,3 +364,14 @@ Do not promote D3 or start D4. Do not run new Trials/Simulation/Monte Carlo, N e
 - D4 Run 41694460895: five DOCX generated; summaries 3 pages; 5 tests passed; 13 Raw readbacks and exact output commit c0bfcbadac8d90932d52eb4ecaec2e72e6b4b909 passed. Evidence Artifact 13260326514 expires 2026-12-03T18:32:00Z.
 - Final consolidated exact-head workflow is required on the final documentation commit; wait for it and the triggered D1-D2/D3 workflows to succeed on the same SHA.
 - D5 NOT_STARTED. Stop after D0-D4 and await explicit owner instruction. Preserve all Gate A/B/Stability/N=4800 and missing accounting-field limitations. No Trial, Simulation, Monte Carlo, backfill, zero-fill, identity change, main write, merge, Release or FINAL_ACCEPTED.
+
+
+## D5 package publication — 2026-11-03 (append-only)
+
+- Workflow Run 41704252218; tested source SHA 4aa8172c829f1545e4509f5196cd2a23e24ec0ad; publication commit 4aa8172c829f1545e4509f5196cd2a23e24ec0ad.
+- D5 package ZIP: 519102426 bytes; SHA-256 300720a318864fb3969a8813a76c65473be3c8648bea7fb359de23230a8ff4f5; 8 members; reopened, exact inventory and CRC PASS.
+- manifest SHA-256 db41532d87791da707a512e65a689ddad2066bb8bfceead53633a18fd66710c7; external SHA256SUMS SHA-256 1354c8e8283ac6fd14b8345153f5fb61d16190d959eaa6a474be8eecc4a18a5f (10 entries).
+- New GitHub Actions Artifact ID 13264003231; size 519115272; digest sha256:7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5; downloaded ZIP SHA-256 7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5; expires 2026-12-03T19:37:05Z; retention 30 days.
+- Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
+- Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.

@@ -55,3 +55,14 @@
 - The final exact-head validation workflow and the dedicated D1-D2/D3 workflows are triggered by the consolidated documentation commits. Do not treat the final combined closure as exact-head validated until all three runs succeed on the same SHA.
 - Preserve all fixed findings: financial Gate A PASS_SCOPED; production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys only; C100 Golden NOT_RUN; five historical accounting fields MISSING_EVIDENCE.
 - D5 NOT_STARTED; wait for explicit owner instruction. FINAL_ACCEPTED NOT_DECLARED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge or Release.
+
+
+## D5 package publication — 2026-11-03 (append-only)
+
+- Workflow Run 41704252218; tested source SHA 4aa8172c829f1545e4509f5196cd2a23e24ec0ad; publication commit 4aa8172c829f1545e4509f5196cd2a23e24ec0ad.
+- D5 package ZIP: 519102426 bytes; SHA-256 300720a318864fb3969a8813a76c65473be3c8648bea7fb359de23230a8ff4f5; 8 members; reopened, exact inventory and CRC PASS.
+- manifest SHA-256 db41532d87791da707a512e65a689ddad2066bb8bfceead53633a18fd66710c7; external SHA256SUMS SHA-256 1354c8e8283ac6fd14b8345153f5fb61d16190d959eaa6a474be8eecc4a18a5f (10 entries).
+- New GitHub Actions Artifact ID 13264003231; size 519115272; digest sha256:7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5; downloaded ZIP SHA-256 7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5; expires 2026-12-03T19:37:05Z; retention 30 days.
+- Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
+- Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
