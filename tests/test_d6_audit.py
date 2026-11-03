@@ -85,3 +85,43 @@ def test_extension_entries_and_daily_series_are_supported_by_exact_resolver():
     registry = {"entries": [], "daily_series": []}
     assert registry_display(registry, "NR-test", {"NR-test": entry}, {}, {}) == "25052760.65"
     assert registry_display(registry, "NR-ledger", {}, {}, {"NR-ledger": "25052760.65"}) == "25052760.65"
+
+
+def test_streamed_xlsx_xml_audit_reads_185_sheets_and_numeric_values(tmp_path):
+    from openpyxl import Workbook
+    from scripts.audit_s6_deliverables_bundle import scan_xlsx_xml
+    path = tmp_path / "stream.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sheet001"
+    ws["A1"] = "amount"
+    ws["B1"] = "number_id"
+    ws["A2"] = 12.5
+    for i in range(2, 186):
+        wb.create_sheet(f"Sheet{i:03d}")
+    wb.save(path)
+    result = scan_xlsx_xml(path, {}, {}, {}, {"entries": [], "daily_series": []})
+    assert len(result["sheetnames"]) == 185
+    assert result["numeric_count"] == 1
+    assert result["financial_count"] == 0
+    assert len(result["numeric_digest"]) == 64
+
+
+def test_streamed_xlsx_xml_audit_rejects_formula_and_error_cells(tmp_path):
+    from openpyxl import Workbook
+    from scripts.audit_s6_deliverables_bundle import scan_xlsx_xml
+    path = tmp_path / "bad.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws["A1"] = "=1+1"
+    for i in range(2, 186):
+        wb.create_sheet(f"Sheet{i:03d}")
+    wb.save(path)
+    with pytest.raises(ValueError, match="EXCEL_FORMULA_CELL"):
+        scan_xlsx_xml(path, {}, {}, {}, {"entries": [], "daily_series": []})
+    ws = wb.active
+    ws["A1"] = "#DIV/0!"
+    ws["A1"].data_type = "e"
+    wb.save(path)
+    with pytest.raises(ValueError, match="EXCEL_ERROR_CELL"):
+        scan_xlsx_xml(path, {}, {}, {}, {"entries": [], "daily_series": []})
