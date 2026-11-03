@@ -74,12 +74,14 @@ def audit(a):
   if rec.get("bytes")!=len(data) or rec.get("sha256")!=sha(data): raise ValueError("MANIFEST_MEMBER_MISMATCH:"+name)
  sums=parse_sums(sums_raw)
  if len(sums)!=10: raise ValueError("SHA256SUMS_COUNT_MISMATCH")
+ required_sums={PACKAGE,"manifest.json",*FILES,"results/number_registry.json"}
+ if set(sums)!=required_sums: raise ValueError("SHA256SUMS_COVERAGE_MISMATCH")
  for name,digest in sums.items():
-  if name in (PACKAGE,"deliverables/"+PACKAGE):
+  if name==PACKAGE:
    if digest!=PACKAGE_SHA: raise ValueError("SUMS_PACKAGE_MISMATCH")
   elif name in payload:
    if digest!=sha(payload[name]): raise ValueError("SUMS_MEMBER_MISMATCH:"+name)
-  elif name.endswith("number_registry.json"):
+  elif name=="results/number_registry.json":
    reg=root/"results/number_registry.json"
    if not reg.exists() or file_sha(reg)!=digest: raise ValueError("SUMS_REGISTRY_MISMATCH")
   else: raise ValueError("SUMS_UNKNOWN_PATH:"+name)
@@ -107,13 +109,18 @@ def audit(a):
    if is_ar and not all(bool(wb[s].sheet_view.rightToLeft) for s in wb.sheetnames): raise ValueError("ARABIC_RTL_MISSING")
    if not is_ar and any(bool(wb[s].sheet_view.rightToLeft) for s in wb.sheetnames): raise ValueError("ENGLISH_RTL_UNEXPECTED")
    for ws,wsv in zip(wb.worksheets,wbv.worksheets):
-    for row,rowv in zip(ws.iter_rows(),wsv.iter_rows()):
+    header={}
+    for ri,(row,rowv) in enumerate(zip(ws.iter_rows(),wsv.iter_rows())):
+     if ri==0: header={c.column-1:str(c.value).lower() for c in row if c.value is not None}
      for c,cv in zip(row,rowv):
       if c.data_type=="f": raise ValueError("EXCEL_FORMULA_CELL:"+name+":"+ws.title+":"+c.coordinate)
       if c.data_type=="e" or (isinstance(cv.value,str) and cv.value in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}): raise ValueError("EXCEL_ERROR_CELL:"+name+":"+ws.title+":"+c.coordinate)
       if isinstance(c.value,(int,float)) and not isinstance(c.value,bool):
        current[(ws.title,c.coordinate)]=c.value
        numeric_count+=1
+       h=header.get(c.column-1,"")
+       if isinstance(c.value,float) and any(w in h for w in ("cash","equity","asset","depreciation","receivable","revenue","expense","balance","amount","إيراد","مصروف","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم")):
+        raise ValueError("EXCEL_FINANCIAL_FLOAT:"+name+":"+ws.title+":"+c.coordinate)
   finally: wb.close(); wbv.close(); p.unlink(missing_ok=True)
   if nums is not None:
    if set(nums)!=set(current): raise ValueError("EXCEL_NUMERIC_INVENTORY_MISMATCH")
