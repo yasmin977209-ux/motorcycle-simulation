@@ -46,9 +46,9 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --location --silent --show-error \
-            -H "Authorization: Bearer \${GH_TOKEN}" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/\${GITHUB_REPOSITORY}/actions/artifacts/13160434943/zip" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/13160434943/zip" \
             -o /tmp/d3-owner-approved-artifact.zip
           test "$(wc -c < /tmp/d3-owner-approved-artifact.zip | tr -d ' ')" = "535358202"
           test "$(sha256sum /tmp/d3-owner-approved-artifact.zip | awk '{print $1}')" = "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04"
