@@ -293,6 +293,25 @@ def make_summary(path, rtl, title, registry, disclosure, matrix, sources, seal):
             continue
         if line.strip():
             add_p(doc, line, rtl, size=6)
+    # Compact landscape layout: keep the executive summary within three rendered pages.
+    sec = doc.sections[0]
+    sec.top_margin = Cm(0.55)
+    sec.bottom_margin = Cm(0.55)
+    sec.left_margin = Cm(0.6)
+    sec.right_margin = Cm(0.6)
+    for paragraph in doc.paragraphs:
+        paragraph.paragraph_format.space_after = Pt(1)
+        paragraph.paragraph_format.line_spacing = 0.9
+        for run in paragraph.runs:
+            run.font.size = Pt(7 if paragraph.style.name.startswith('Heading') else 6)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.paragraph_format.space_after = Pt(0)
+                    paragraph.paragraph_format.line_spacing = 0.85
+                    for run in paragraph.runs:
+                        run.font.size = Pt(4.5)
     doc.save(path)
 
 def make_feasibility(path, registry, disclosure, matrix, sources, seal):
