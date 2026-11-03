@@ -175,3 +175,12 @@ The following 13 files were fetched from GitHub Raw at the exact final HEAD; the
 - Workflow Run ID: 41335321803
 - Full Daily resolver validation and all D2 gates are required to pass before the Artifact upload.
 - Final exact HEAD and Raw evidence triples are authoritative in this Run's final validation log.
+
+
+## Current live D2 registry validation — 2026-11-03 (append-only)
+
+- Current disposition: PASS_SCOPED_WITH_LIMITATIONS. Registry results/number_registry.json: 2,640 entries (960 aggregate + 1,680 representative numeric), 1,000 daily series, 2,086,550 addressable daily points, 105 representative records (100 S6 + 5 C100).
+- Registry bytes 24,137,036; SHA-256 743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87; Git blob SHA-1 8cf17de488c623f96c1961ca91d682fbbc7733d6.
+- D1-D2 source validation Run 41694461194 tested 17696ec48557a33f2c231634ba25f26cf831800e, downloaded and verified all three pinned artifacts, compiled D1/D2 sources, passed 34 tests and passed exact branch-head assertion.
+- Preserve Full Logging 105 representatives only; 105 normalized manifest statuses NOT_VERIFIED; C100 Golden NOT_RUN; financial Gate A PASS_SCOPED; production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; five accounting fields MISSING_EVIDENCE. Historical 13,954-entry claim remains REPORTED_ONLY.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill.
