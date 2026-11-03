@@ -164,13 +164,13 @@ def validate_inputs(root: Path, reference: Path) -> tuple[dict, dict, dict, dict
             raise ValueError("D4_DOCX_FINGERPRINT_MISMATCH:" + name)
         verify_zip_safety(p)
         Document(str(p))
-    return d3, d3audit, d4audit, d4manifest
+    return d3, d3audit, d3accept, d4audit, d4manifest
 
 def build(args) -> None:
     root = Path(args.root).resolve()
     out = root / "deliverables"
     reference = Path(args.reference).resolve()
-    d3, d3audit, d4audit, d4manifest = validate_inputs(root, reference)
+    d3, d3audit, d3accept, d4audit, d4manifest = validate_inputs(root, reference)
     registry = root / REGISTRY_PATH
     for name, expected_sha in [
         ("Full_Results_EN.xlsx", d3["files"]["Full_Results_EN.xlsx"]["sha256"]),
@@ -244,10 +244,11 @@ def build(args) -> None:
             "python_docx": __import__("docx").__version__
         },
         "validation_runs": [
-            {"stage": "D1-D2", "run_id": 41694461194, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "result": "PASS", "tests_passed": 34},
+            {"stage": "D1-D2", "run_id": 41697222992, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
             {"stage": "D3 artifact acceptance", "run_id": 41682389098, "tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4", "result": "PASS_SCOPED", "artifact_id": D3_ARTIFACT_ID},
-            {"stage": "D3 exact-head", "run_id": 41694461171, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "result": "PASS", "tests_passed": 36},
+            {"stage": "D3 exact-head", "run_id": 41697222991, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
             {"stage": "D4 report build", "run_id": 41694460895, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "result": "PASS_SCOPED_WITH_LIMITATIONS", "tests_passed": 5},
+            {"stage": "D4 exact-head", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
             {"stage": "D0-D4 final exact-head", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"}
         ],
         "gate_statuses": {
@@ -282,7 +283,7 @@ def build(args) -> None:
             "D3_exact_head_validation": {"status": "PASS", "run_id": 41694461171, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "tests_passed": 36},
             "D4_docx_tests": {"status": "PASS", "run_id": 41694460895, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "tests_passed": 5},
             "D0_D4_final_exact_head": {"status": "PASS", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740"},
-            "D5_package_integrity": {"status": "PENDING_LOCAL_VALIDATION"}
+            "D5_package_integrity": {"status": "PASS_BUILDER_REOPEN_AND_CHECKSUM_VALIDATION", "scope": "builder-generated ZIP, embedded manifest, 10-entry SHA256SUMS"}
         },
         "limitations": d3.get("limitations", []),
         "final_acceptance": "NOT_DECLARED",
@@ -308,13 +309,13 @@ def build(args) -> None:
     verify(args)
     report = {
         "schema_version": "d5-package-preflight-v1",
-        "status": "PREFLIGHT_PASS_PENDING_OWNER_APPROVAL_FOR_NEW_ARTIFACT_PUBLICATION",
+        "status": "PACKAGE_BUILD_AND_REOPEN_PASS_PENDING_ARTIFACT_PUBLICATION",
         "repository": REPO, "branch": args.branch, "tested_sha": args.tested_sha,
         "workflow_run_id": int(args.run_id),
         "package": {"path": "deliverables/" + args.package_name, **file_record(package), "members": 8},
         "manifest": {"path": "deliverables/manifest.json", **file_record(manifest_path)},
         "sha256sums": {"path": "deliverables/SHA256SUMS.txt", **file_record(sums_path)},
-        "publication": "NOT_PUBLISHED_OWNER_APPROVAL_REQUIRED_FOR_NEW_D5_ARTIFACT",
+        "publication": "PENDING_GITHUB_ACTIONS_ARTIFACT_UPLOAD_AND_REMOTE_READBACK",
         "main_modified": False, "d6_started": False
     }
     Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
