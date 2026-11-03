@@ -11,7 +11,7 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: stage-d5-\${{ github.ref }}
+  group: stage-d5-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   preflight:
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -32,7 +32,7 @@ jobs:
           python -m pip install openpyxl python-docx pytest
       - name: Assert exact starting HEAD and download exact approved governing reference
         env:
-          EXPECTED_SHA: \${{ github.sha }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
@@ -42,7 +42,7 @@ jobs:
           test "$(sha256sum /tmp/approved-v240.md | awk '{print $1}')" = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
       - name: Download owner-approved D3 artifact by exact Artifact ID
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           curl --fail --location --silent --show-error \
@@ -58,8 +58,8 @@ jobs:
           python scripts/d5_package.py extract --artifact-zip /tmp/d3-owner-approved-artifact.zip --output-dir deliverables
       - name: Build, reopen and verify the eight-member D5 package (preflight only)
         env:
-          TESTED_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python scripts/d5_package.py build --root . --reference /tmp/approved-v240.md --tested-sha "$TESTED_SHA" --run-id "$RUN_ID" --report docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json
@@ -70,8 +70,8 @@ jobs:
           python -m pytest -q -rs tests/test_d5_package.py
       - name: Write D5 preflight matrix and append-only continuity
         env:
-          TESTED_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -113,7 +113,7 @@ jobs:
       - name: Commit preflight evidence only (no D5 package publication)
         run: |
           set -euo pipefail
-          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "\${{ github.sha }}"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
@@ -121,7 +121,7 @@ jobs:
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final branch HEAD validation
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           head="$(git rev-parse HEAD)"
