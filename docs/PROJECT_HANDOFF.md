@@ -353,3 +353,14 @@ Do not promote D3 or start D4. Do not run new Trials/Simulation/Monte Carlo, N e
 - Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
 - Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 - D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
+
+
+## Current D0-D4 handoff — 2026-11-03
+
+- Active branch tmp/d1-rebuild-20261101. Main remains c6e54349a5e94f65d5aa9f83141f225d777bb474 (unchanged).
+- D0-D4 scoped statuses: D0 PASS_SCOPED_WITH_LIMITATIONS; D1 PASS_SCOPED_WITH_LIMITATIONS; D2 PASS_SCOPED_WITH_LIMITATIONS; D3 PASS_SCOPED_WITH_LIMITATIONS; D4 PASS_SCOPED_WITH_LIMITATIONS.
+- D1-D2 validation Run 41694461194: three pinned artifact byte hashes/sizes verified; 34 tests passed; exact tested-head assertion passed.
+- D3 acceptance Run 41682389098; exact-head Run 41694461171: 36 tests and 35 Raw files passed. Artifact 13160434943 expires 2026-12-02T16:56:31Z.
+- D4 Run 41694460895: five DOCX generated; summaries 3 pages; 5 tests passed; 13 Raw readbacks and exact output commit c0bfcbadac8d90932d52eb4ecaec2e72e6b4b909 passed. Evidence Artifact 13260326514 expires 2026-12-03T18:32:00Z.
+- Final consolidated exact-head workflow is required on the final documentation commit; wait for it and the triggered D1-D2/D3 workflows to succeed on the same SHA.
+- D5 NOT_STARTED. Stop after D0-D4 and await explicit owner instruction. Preserve all Gate A/B/Stability/N=4800 and missing accounting-field limitations. No Trial, Simulation, Monte Carlo, backfill, zero-fill, identity change, main write, merge, Release or FINAL_ACCEPTED.
