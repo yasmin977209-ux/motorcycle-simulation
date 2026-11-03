@@ -33,3 +33,17 @@ def test_sha256sums_parser_rejects_duplicate_and_bad_lines():
 def test_required_historical_test_contracts_are_present():
     assert set(CONTRACTS)=={"175","176","179","180","181","182","183","186"}
     assert len(EXPECTED)==8
+
+
+def test_worksheet_rtl_flags_reads_xlsx_xml_without_readonly_sheet_view(tmp_path):
+    from openpyxl import Workbook
+    from scripts.audit_s6_deliverables_bundle import worksheet_rtl_flags
+    path=tmp_path/"layout.xlsx"
+    wb=Workbook()
+    ws=wb.active
+    ws.title="EN"
+    ws.sheet_view.rightToLeft=False
+    ar=wb.create_sheet("AR")
+    ar.sheet_view.rightToLeft=True
+    wb.save(path)
+    assert worksheet_rtl_flags(path)==[False, True]
