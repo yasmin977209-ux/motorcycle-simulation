@@ -63,6 +63,73 @@ def worksheet_rtl_flags(xlsx_path):
             flags.append(bool(view is not None and view.attrib.get("rightToLeft") in ("1","true","True")))
         return flags
 
+def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
+    """Stream worksheet XML to avoid millions of openpyxl Cell objects."""
+    import posixpath
+    from decimal import Decimal, InvalidOperation
+    ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships"}
+    q=lambda tag:"{"+ns["m"]+"}"+tag
+    digest=hashlib.sha256(); numeric_count=financial_count=0
+    with zipfile.ZipFile(path) as archive:
+        workbook=ET.fromstring(archive.read("xl/workbook.xml"))
+        rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+        targets={x.attrib["Id"]:x.attrib["Target"] for x in rels}
+        shared=[]
+        if "xl/sharedStrings.xml" in archive.namelist():
+            with archive.open("xl/sharedStrings.xml") as stream:
+                for _,item in ET.iterparse(stream,events=("end",)):
+                    if item.tag==q("si"):
+                        shared.append("".join(t.text or "" for t in item.iter(q("t")))); item.clear()
+        sheets=[]
+        for sheet in workbook.findall("m:sheets/m:sheet",ns):
+            target=targets[sheet.attrib["{"+ns["r"]+"}id"]]
+            sheets.append((sheet.attrib["name"],posixpath.normpath(target.lstrip("/") if target.startswith("/") else "xl/"+target)))
+        if len(sheets)!=185: raise ValueError("EXCEL_SHEET_COUNT:"+str(len(sheets)))
+        for title,member in sheets:
+            header={}
+            with archive.open(member) as stream:
+                for _,row_elem in ET.iterparse(stream,events=("end",)):
+                    if row_elem.tag!=q("row"): continue
+                    cells={}
+                    for cell in row_elem.findall("m:c",ns):
+                        ref=cell.attrib.get("r",""); match=re.fullmatch(r"([A-Z]+)([0-9]+)",ref)
+                        if not match: continue
+                        col=0
+                        for ch in match.group(1): col=col*26+ord(ch)-64
+                        typ=cell.attrib.get("t"); vn=cell.find("m:v",ns); raw=vn.text if vn is not None else None
+                        if cell.find("m:f",ns) is not None: raise ValueError("EXCEL_FORMULA_CELL:"+title+":"+ref)
+                        if typ=="e" or (typ in ("str","inlineStr") and raw in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}):
+                            raise ValueError("EXCEL_ERROR_CELL:"+title+":"+ref)
+                        if typ=="s" and raw is not None: value=shared[int(raw)]
+                        elif typ=="inlineStr": value="".join(t.text or "" for t in cell.iter(q("t")))
+                        elif typ=="str": value=raw or ""
+                        elif typ=="b": value=raw=="1"
+                        elif typ in (None,"n") and raw is not None:
+                            try: number=Decimal(raw)
+                            except InvalidOperation as exc: raise ValueError("EXCEL_NUMERIC_PARSE:"+title+":"+ref) from exc
+                            if not number.is_finite(): raise ValueError("EXCEL_NUMERIC_NONFINITE:"+title+":"+ref)
+                            cells[col]=("number",number)
+                            canonical=str(number.normalize()) if number else "0"
+                            digest.update((title+"|"+ref+"|"+canonical+"\\n").encode("utf-8")); numeric_count+=1
+                            continue
+                        else: value=None
+                        cells[col]=("value",value)
+                    if row_elem.attrib.get("r")=="1":
+                        header={col:str(value).lower() for col,(kind,value) in cells.items() if kind=="value" and value is not None}
+                    for col,(kind,value) in cells.items():
+                        if kind!="number": continue
+                        h=header.get(col,"")
+                        if any(word in h for word in FINANCIAL_WORDS):
+                            rec=cells.get(col+1); number_id=rec[1] if rec and rec[0]=="value" else None
+                            if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
+                                raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+title+":"+str(col)+":header="+repr(h))
+                            expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
+                            if not financial_value_matches(value,expected):
+                                raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+title+":"+str(col)+":value="+str(value)+":registry="+repr(expected)+":number_id="+number_id)
+                            financial_count+=1
+                    row_elem.clear()
+    return {"sheetnames":[x[0] for x in sheets],"numeric_count":numeric_count,"financial_count":financial_count,"numeric_digest":digest.hexdigest()}
+
 def parse_sums(raw):
  out={}
  for line in raw.decode("utf-8").splitlines():
@@ -217,47 +284,24 @@ def audit(a):
  if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
  entries_by_id,series_by_id,ledger_by_id=build_d3_evidence_indexes(root,registry)
- # Workbook structure, ordering, numeric parity, formulas/errors and directional layout
- nums=None; sheetnames=None; numeric_count=0; financial_count=0
- for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
-  p=root/("d6_"+name); p.write_bytes(payload[name])
-  wb=load_workbook(p,read_only=True,data_only=False)
-  current={}; workbook_started=time.monotonic()
-  print(f"D6_EXCEL_SCAN_START file={name} sheets={len(wb.sheetnames)}",flush=True)
-  try:
-   if len(wb.sheetnames)!=185: raise ValueError("EXCEL_SHEET_COUNT:"+name)
-   if sheetnames is not None and wb.sheetnames!=sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
-   sheetnames=wb.sheetnames
-   rtl_flags=worksheet_rtl_flags(p)
-   if len(rtl_flags)!=len(wb.sheetnames): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
-   if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
-   if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
-   for ws in wb.worksheets:
-    header={}
-    for ri,row in enumerate(ws.iter_rows()):
-     if ri==0: header={c.column-1:str(c.value).lower() for c in row if c.value is not None}
-     for c in row:
-      if c.data_type=="f": raise ValueError("EXCEL_FORMULA_CELL:"+name+":"+ws.title+":"+c.coordinate)
-      if c.data_type=="e" or (isinstance(c.value,str) and c.value in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}): raise ValueError("EXCEL_ERROR_CELL:"+name+":"+ws.title+":"+c.coordinate)
-      if isinstance(c.value,(int,float)) and not isinstance(c.value,bool):
-       current[(ws.title,c.coordinate)]=c.value
-       numeric_count+=1
-       h=header.get(c.column-1,"")
-       if any(w in h for w in FINANCIAL_WORDS):
-        number_id=row[c.column].value if c.column<len(row) else None
-        if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
-         raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h))
-        expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
-        if not financial_value_matches(c.value,expected):
-         raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":registry="+repr(expected)+":number_id="+number_id)
-        financial_count+=1
-  finally: wb.close(); p.unlink(missing_ok=True)
-  print(f"D6_EXCEL_SCAN_DONE file={name} numeric_cells={len(current)} elapsed_seconds={time.monotonic()-workbook_started:.1f}",flush=True)
-  if nums is not None:
-   if set(nums)!=set(current): raise ValueError("EXCEL_NUMERIC_INVENTORY_MISMATCH")
-   if any(nums[k]!=current[k] for k in nums): raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
-  nums=current
- checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ # Stream worksheet XML directly: bounded memory and no millions of openpyxl Cell objects.
+  prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None
+  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
+   p=root/("d6_"+name); p.write_bytes(payload[name])
+   try:
+    result=scan_xlsx_xml(p,entries_by_id,series_by_id,ledger_by_id,registry)
+    if prior_sheetnames is not None and result["sheetnames"]!=prior_sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
+    prior_sheetnames=result["sheetnames"]
+    rtl_flags=worksheet_rtl_flags(p)
+    if len(rtl_flags)!=len(result["sheetnames"]): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
+    if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
+    if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
+    if prior_digest is not None and result["numeric_digest"]!=prior_digest: raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
+    prior_digest=result["numeric_digest"]
+    numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
+   finally: p.unlink(missing_ok=True)
+   print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']}",flush=True)
+checks["excel_175_180_182"]={"status":"PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
  texts={}
  for name in [x for x in FILES if x.endswith(".docx")]:
