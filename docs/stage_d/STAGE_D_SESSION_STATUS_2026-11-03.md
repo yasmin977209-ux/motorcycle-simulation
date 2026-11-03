@@ -118,3 +118,11 @@ The final consolidated exact-head workflow and the D1-D2/D3 runs triggered by th
 ## D0-D5 handoff discrepancy clarification — 2026-11-03 (append-only)
 
 See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence map and two-prompt continuation plan. Historical snapshots remain intact: D0-D4 closure JSON still references earlier exact-head Run 41696774858 on 7aa..., while later consolidated Run 41697223043 passed on 00dfa...; older D0-D4 docs saying D5 NOT_STARTED and D3/D4 NOT_STARTED are superseded by later live runs. D1/D2 later validation Run 41704252084 and D3 exact-head Run 41704252069 passed on 4aa...; D5 Run 41704252218 published Artifact 13264003231 and passed exact-final-head Raw readback on 5fad.... D5 JSON field publication_commit_sha=4aa... denotes triggering/tested source SHA, not the later evidence commit 5fad.... Preserve this chronology; do not silently rewrite history. Current D6 status remains NOT_STARTED.
+
+
+## D6 independent post-write audit — 2026-11-03 (append-only)
+
+- Run 41739851553; tested source SHA f73c9c78f035f02bd19975c0fc52e0a3c9bbf90e; D5 Artifact 13264003231 from Run 41704252218.
+- Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
+- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
+- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
