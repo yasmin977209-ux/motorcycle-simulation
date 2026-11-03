@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, gzip, hashlib, io, json, os, re, stat, zipfile, xml.etree.ElementTree as ET
+import argparse, gzip, hashlib, io, json, os, re, stat, time, zipfile, xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from openpyxl import load_workbook
 from docx import Document
@@ -221,8 +221,9 @@ def audit(a):
  nums=None; sheetnames=None; numeric_count=0; financial_count=0
  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
   p=root/("d6_"+name); p.write_bytes(payload[name])
-  wb=load_workbook(p,read_only=True,data_only=False); wbv=load_workbook(p,read_only=True,data_only=True)
-  current={}
+  wb=load_workbook(p,read_only=True,data_only=False)
+  current={}; workbook_started=time.monotonic()
+  print(f"D6_EXCEL_SCAN_START file={name} sheets={len(wb.sheetnames)}",flush=True)
   try:
    if len(wb.sheetnames)!=185: raise ValueError("EXCEL_SHEET_COUNT:"+name)
    if sheetnames is not None and wb.sheetnames!=sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
@@ -231,13 +232,13 @@ def audit(a):
    if len(rtl_flags)!=len(wb.sheetnames): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
    if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
    if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
-   for ws,wsv in zip(wb.worksheets,wbv.worksheets):
+   for ws in wb.worksheets:
     header={}
-    for ri,(row,rowv) in enumerate(zip(ws.iter_rows(),wsv.iter_rows())):
+    for ri,row in enumerate(ws.iter_rows()):
      if ri==0: header={c.column-1:str(c.value).lower() for c in row if c.value is not None}
-     for c,cv in zip(row,rowv):
+     for c in row:
       if c.data_type=="f": raise ValueError("EXCEL_FORMULA_CELL:"+name+":"+ws.title+":"+c.coordinate)
-      if c.data_type=="e" or (isinstance(cv.value,str) and cv.value in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}): raise ValueError("EXCEL_ERROR_CELL:"+name+":"+ws.title+":"+c.coordinate)
+      if c.data_type=="e" or (isinstance(c.value,str) and c.value in {"#REF!","#DIV/0!","#VALUE!","#NAME?","#N/A","#NUM!","#NULL!"}): raise ValueError("EXCEL_ERROR_CELL:"+name+":"+ws.title+":"+c.coordinate)
       if isinstance(c.value,(int,float)) and not isinstance(c.value,bool):
        current[(ws.title,c.coordinate)]=c.value
        numeric_count+=1
@@ -250,7 +251,8 @@ def audit(a):
         if not financial_value_matches(c.value,expected):
          raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":registry="+repr(expected)+":number_id="+number_id)
         financial_count+=1
-  finally: wb.close(); wbv.close(); p.unlink(missing_ok=True)
+  finally: wb.close(); p.unlink(missing_ok=True)
+  print(f"D6_EXCEL_SCAN_DONE file={name} numeric_cells={len(current)} elapsed_seconds={time.monotonic()-workbook_started:.1f}",flush=True)
   if nums is not None:
    if set(nums)!=set(current): raise ValueError("EXCEL_NUMERIC_INVENTORY_MISMATCH")
    if any(nums[k]!=current[k] for k in nums): raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
