@@ -90,7 +90,7 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
             with archive.open(member) as stream:
                 for _,row_elem in ET.iterparse(stream,events=("end",)):
                     if row_elem.tag!=q("row"): continue
-                    cells={}
+                    cells={}; cell_refs={}
                     for cell in row_elem.findall("m:c",ns):
                         ref=cell.attrib.get("r",""); match=re.fullmatch(r"([A-Z]+)([0-9]+)",ref)
                         if not match: continue
@@ -108,9 +108,9 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
                             try: number=Decimal(raw)
                             except InvalidOperation as exc: raise ValueError("EXCEL_NUMERIC_PARSE:"+title+":"+ref) from exc
                             if not number.is_finite(): raise ValueError("EXCEL_NUMERIC_NONFINITE:"+title+":"+ref)
-                            cells[col]=("number",number)
+                            cells[col]=("number",number); cell_refs[col]=ref
                             canonical=str(number.normalize()) if number else "0"
-                            digest.update((title+"|"+ref+"|"+canonical+"\\n").encode("utf-8")); numeric_count+=1
+                            digest.update((title+"|"+ref+"|"+canonical+"\n").encode("utf-8")); numeric_count+=1
                             continue
                         else: value=None
                         cells[col]=("value",value)
@@ -122,11 +122,11 @@ def scan_xlsx_xml(path, entries_by_id, series_by_id, ledger_by_id, registry):
                         if any(word in h for word in FINANCIAL_WORDS):
                             rec=cells.get(col+1); number_id=rec[1] if rec and rec[0]=="value" else None
                             if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
-                                financial_mismatches.append({"sheet":title,"cell":str(col),"header":h,"actual":str(value),"error":"NUMBER_ID_MISSING"})
+                                financial_mismatches.append({"sheet":title,"cell":cell_refs.get(col,str(col)),"header":h,"actual":str(value),"error":"NUMBER_ID_MISSING"})
                                 continue
                             expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
                             if not financial_value_matches(value,expected):
-                                financial_mismatches.append({"sheet":title,"cell":str(col),"header":h,"actual":str(value),"expected":expected,"number_id":number_id,"error":"EXACT_VALUE_MISMATCH"})
+                                financial_mismatches.append({"sheet":title,"cell":cell_refs.get(col,str(col)),"header":h,"actual":str(value),"expected":expected,"number_id":number_id,"error":"EXACT_VALUE_MISMATCH"})
                                 continue
                             financial_count+=1
                     row_elem.clear()
@@ -337,8 +337,8 @@ def main():
  except Exception as exc:
   out=Path(args.root)/"docs"; out.mkdir(exist_ok=True)
   result={"schema_version":"d6-independent-post-write-audit-v1","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":{"auditor_unit_tests":{"status":"PASS","detail":"All tests/test_d6_audit.py tests passed before independent artifact audit."},"d5_artifact_download":{"status":"PASS","detail":"Exact pinned GitHub Artifact metadata and byte size were verified by the workflow."},"independent_post_write_audit":{"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc)}},"fixed_gate_states":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"},"missing_accounting_fields":MISSING,"limitations":["The independent audit did not pass; the recorded exception is the exact blocker and must not be treated as an accepted deliverable.","No D5 historical Artifact or manifest was modified. Any rebuild or replacement of historical deliverables requires a separate owner decision.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
-  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
   lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
-  (out/"FINAL_AUDIT.md").write_text("\\n".join(lines)+"\\n",encoding="utf-8")
+  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
   print("D6_AUDIT_BLOCKED "+json.dumps({"error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"tested_sha":args.tested_sha},ensure_ascii=False))
 if __name__=="__main__": main()
