@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: stage-d4-docx-\${{ github.ref }}
+  group: stage-d4-docx-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -32,7 +32,7 @@ jobs:
           sudo apt-get install -y libreoffice-writer fonts-noto-core
       - name: Assert exact starting branch HEAD and verify governing inputs
         env:
-          EXPECTED_SHA: \${{ github.sha }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
@@ -44,8 +44,8 @@ jobs:
           test "$(sha256sum results/number_registry.json | awk '{print $1}')" = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
       - name: Generate five DOCX reports from the Number Registry
         env:
-          TESTED_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python -m scripts.s6_docx_reports --registry results/number_registry.json --reference /tmp/approved-v240.md --output-dir deliverables --evidence-dir docs/stage_d --tested-sha "$TESTED_SHA" --run-id "$RUN_ID"
@@ -71,8 +71,8 @@ jobs:
           python -m pytest -q -rs tests/test_s6_docx_reports.py
       - name: Write D4 requirements matrix and scoped build report
         env:
-          TESTED_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -105,8 +105,8 @@ jobs:
           PY
       - name: Append D4 continuity and session status
         env:
-          TESTED_SHA: \${{ github.sha }}
-          RUN_ID: \${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -131,7 +131,7 @@ jobs:
       - name: Commit D4 outputs and append-only evidence
         run: |
           set -euo pipefail
-          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "\${{ github.sha }}"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f -- "deliverables/التقرير_الكامل_AR.docx" "deliverables/Full_Report_EN.docx" "deliverables/الملخص_AR.docx" "deliverables/Summary_EN.docx" "deliverables/دراسة_الجدوى_AR.docx"
