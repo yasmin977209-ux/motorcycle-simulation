@@ -237,7 +237,7 @@ def make_full_report(path, rtl, title, registry, reference_disclosure, matrix, s
         add_p(doc, "• " + item, rtl, size=8)
     add_p(doc, "Missing historical accounting fields: " + ", ".join(MISSING_FIELDS), rtl, size=8)
     add_h(doc, "Required interpretive disclosures" if not rtl else "الإفصاحات التفسيرية الإلزامية", rtl)
-    disclosure_text = disclosure if rtl else english_disclosure()
+    disclosure_text = reference_disclosure if rtl else english_disclosure()
     for line in disclosure_text.splitlines():
         if line.startswith("## 17.3"):
             continue
