@@ -67,3 +67,21 @@ def test_registry_display_uses_reduced_exact_rational_and_two_decimal_half_even(
         "display_value": "25052760.65"
     }], "daily_series": []}
     assert registry_display(registry, "NR-test") == "25052760.65"
+
+def test_d3_ledger_number_id_is_deterministic_and_source_bound():
+    from scripts.audit_s6_deliverables_bundle import ledger_number_id
+    case = {"source_member_prefix": "stagec-output/full_logging/X/",
+            "source_artifact_sha256": "a" * 64, "scenario_id": "C030_G000", "trial_id": 7}
+    first = ledger_number_id(case, "daily_snapshots.jsonl.gz", 0, "Cash")
+    assert first.startswith("NR-") and len(first) == 27
+    assert first == ledger_number_id(case, "daily_snapshots.jsonl.gz", 0, "Cash")
+    assert first != ledger_number_id(case, "daily_snapshots.jsonl.gz", 1, "Cash")
+
+
+def test_extension_entries_and_daily_series_are_supported_by_exact_resolver():
+    from scripts.audit_s6_deliverables_bundle import registry_display
+    entry = {"number_id": "NR-test", "numerator": 1202532511,
+             "denominator": 48, "display_value": "25052760.65"}
+    registry = {"entries": [], "daily_series": []}
+    assert registry_display(registry, "NR-test", {"NR-test": entry}, {}, {}) == "25052760.65"
+    assert registry_display(registry, "NR-ledger", {}, {}, {"NR-ledger": "25052760.65"}) == "25052760.65"

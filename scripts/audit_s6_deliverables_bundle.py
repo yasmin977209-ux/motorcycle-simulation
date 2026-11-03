@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, io, json, os, re, stat, zipfile, xml.etree.ElementTree as ET
+import argparse, gzip, hashlib, io, json, os, re, stat, zipfile, xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from openpyxl import load_workbook
 from docx import Document
@@ -74,7 +74,9 @@ def parse_sums(raw):
  return out
 REGISTRY_SIZE=24137036
 REGISTRY_SHA="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
-FINANCIAL_WORDS=("cash","equity","asset","depreciation","receivable","revenue","expense","balance","amount","إيراد","مصروف","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم","نقد")
+EXTENSION_SIZE=16440292
+EXTENSION_SHA="7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+FINANCIAL_WORDS=("cash","equity","asset","depreciation","receivable","revenue","expense","profit","entitlement","debt","recovered","balance","amount","إيراد","مصروف","ربح","استحقاق","دين","مسترد","أصل","رصيد","مبلغ","تحصيل","إهلاك","ذمم","نقد")
 
 def exact_display(n,d):
  if type(n) is not int or type(d) is not int or d<1: raise ValueError("REGISTRY_EXACT_VALUE_INVALID")
@@ -87,15 +89,70 @@ def exact_display(n,d):
   ctx.prec=50
   return format((Decimal(n)/Decimal(d)).quantize(Decimal("0.01"),rounding=ROUND_HALF_EVEN),"f")
 
-def registry_display(registry, number_id, entries_by_id=None, series_by_id=None):
+def stable_registry_id(prefix, value, digits=24):
+ raw=json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(",",":")).encode()
+ return prefix+hashlib.sha256(raw).hexdigest()[:digits]
+
+def ledger_number_id(case, member, row_index, field):
+ source_member=case["source_member_prefix"]+member
+ return stable_registry_id("NR-",["D3_LEDGER_NUMBER_V1",case["source_artifact_sha256"],case["scenario_id"],case["trial_id"],source_member,row_index,field])
+
+def add_ledger_rows(target, case, rows_key, member):
+ for i,row in enumerate(case.get(rows_key,[])):
+  for field,value in row.items():
+   if type(value) is int:
+    target[ledger_number_id(case,member,i,field)]=str(value)
+
+def build_d3_evidence_indexes(root, registry):
+ ext_path=root/"deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz"
+ if not ext_path.exists(): raise ValueError("D3_REGISTRY_EXTENSION_MISSING")
+ ext_raw=ext_path.read_bytes()
+ if len(ext_raw)!=EXTENSION_SIZE or sha(ext_raw)!=EXTENSION_SHA: raise ValueError("D3_REGISTRY_EXTENSION_FINGERPRINT_MISMATCH")
+ extension=json.loads(gzip.decompress(ext_raw).decode("utf-8"))
+ if extension.get("schema_version")!="d3-number-registry-extension-v1" or extension.get("base_registry_sha256")!=REGISTRY_SHA: raise ValueError("D3_REGISTRY_EXTENSION_BASE_MISMATCH")
+ entries_by_id={x.get("number_id"):x for x in registry.get("entries",[])}
+ for entry in extension.get("aggregate_entries",[])+extension.get("sensitivity_entries",[]):
+  if entry.get("number_id") in entries_by_id: raise ValueError("D3_REGISTRY_EXTENSION_ID_COLLISION")
+  entries_by_id[entry.get("number_id")]=entry
+ series_by_id={x.get("series_id"):x for x in registry.get("daily_series",[])}
+ ledger_by_id={}
+ c100=registry.get("scope",{}).get("C100",{})
+ modes=sorted({x.get("mode") for x in registry.get("daily_series",[])})
+ metrics=sorted({x.get("metric_name") for x in registry.get("daily_series",[])})
+ quantiles=sorted({x.get("quantile_name") for x in registry.get("daily_series",[])})
+ full_sha=extension.get("source_artifacts",{}).get("full_logging",{}).get("sha256")
+ for case in extension.get("representative_cases",[]):
+  if case.get("cohort_id")!=c100.get("cohort_id"): continue
+  dates=[row.get("date") for row in case.get("daily_rows",[])]
+  for mode in modes:
+   for metric in metrics:
+    for quantile in quantiles:
+     sid=stable_registry_id("D2S6-",[case["scenario_id"],c100.get("source_sha"),c100.get("cohort_id"),mode,metric,quantile,full_sha],20)
+     vals=[[int(row[metric]),1] for row in case.get("daily_rows",[])]
+     series_by_id[sid]={"series_id":sid,"values":vals,"date_count":len(dates)}
+ for case in extension.get("representative_cases",[])+extension.get("representative_role_cases",[]):
+  add_ledger_rows(ledger_by_id,case,"daily_rows","daily_snapshots.jsonl.gz")
+  add_ledger_rows(ledger_by_id,case,"assets","assets.jsonl.gz")
+  add_ledger_rows(ledger_by_id,case,"claims","claims.jsonl.gz")
+  add_ledger_rows(ledger_by_id,case,"contracts","contracts.jsonl.gz")
+  for key,rows in case.get("rollforwards",{}).items():
+   for i,row in enumerate(rows):
+    for field,value in row.items():
+     if type(value) is int: ledger_by_id[ledger_number_id(case,key+".jsonl.gz",i,field)]=str(value)
+  for field,value in case.get("trial_summary",{}).items():
+   if type(value) is int: ledger_by_id[ledger_number_id(case,"trial_result.json",0,field)]=str(value)
+ return entries_by_id,series_by_id,ledger_by_id
+
+def registry_display(registry, number_id, entries_by_id=None, series_by_id=None, ledger_by_id=None):
  if entries_by_id is None: entries_by_id={x.get("number_id"):x for x in registry.get("entries",[])}
  if series_by_id is None: series_by_id={x.get("series_id"):x for x in registry.get("daily_series",[])}
  entry=entries_by_id.get(number_id)
  if entry is not None:
-   n,d=entry.get("numerator"),entry.get("denominator")
-   shown=exact_display(n,d)
-   if entry.get("display_value")!=shown: raise ValueError("REGISTRY_DISPLAY_VALUE_MISMATCH:"+number_id)
-   return shown
+  n,d=entry.get("numerator"),entry.get("denominator")
+  shown=exact_display(n,d)
+  if entry.get("display_value")!=shown: raise ValueError("REGISTRY_DISPLAY_VALUE_MISMATCH:"+number_id)
+  return shown
+ if ledger_by_id and number_id in ledger_by_id: return ledger_by_id[number_id]
  m=re.fullmatch(r"D2D-([0-9a-f]{20})-([0-9]{6})",str(number_id))
  if not m: raise ValueError("FINANCIAL_NUMBER_ID_INVALID:"+str(number_id))
  series_id="D2S6-"+m.group(1); offset=int(m.group(2))
@@ -159,8 +216,7 @@ def audit(a):
  reg_raw=reg_path.read_bytes()
  if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
- entries_by_id={x.get("number_id"):x for x in registry.get("entries",[])}
- series_by_id={x.get("series_id"):x for x in registry.get("daily_series",[])}
+ entries_by_id,series_by_id,ledger_by_id=build_d3_evidence_indexes(root,registry)
  # Workbook structure, ordering, numeric parity, formulas/errors and directional layout
  nums=None; sheetnames=None; numeric_count=0; financial_count=0
  for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
@@ -190,7 +246,7 @@ def audit(a):
         number_id=row[c.column].value if c.column<len(row) else None
         if not isinstance(number_id,str) or not (number_id.startswith("NR-") or number_id.startswith("D2D-")):
          raise ValueError("EXCEL_FINANCIAL_NUMBER_ID_MISSING:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h))
-        expected=registry_display(registry,number_id,entries_by_id,series_by_id)
+        expected=registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
         if not financial_value_matches(c.value,expected):
          raise ValueError("EXCEL_FINANCIAL_EXACT_VALUE_MISMATCH:"+name+":"+ws.title+":"+c.coordinate+":header="+repr(h)+":value="+repr(c.value)+":registry="+repr(expected)+":number_id="+number_id)
         financial_count+=1
