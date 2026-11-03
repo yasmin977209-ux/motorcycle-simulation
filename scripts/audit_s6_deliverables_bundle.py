@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, io, json, os, re, stat, zipfile
+import argparse, hashlib, io, json, os, re, stat, zipfile, xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from openpyxl import load_workbook
 from docx import Document
@@ -47,6 +47,22 @@ def zip_check(z, expected):
  bad=z.testzip()
  if bad: raise ValueError("ZIP_CRC_FAILURE:"+bad)
  return names
+def worksheet_rtl_flags(xlsx_path):
+    ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships","p":"http://schemas.openxmlformats.org/package/2006/relationships"}
+    with zipfile.ZipFile(xlsx_path) as archive:
+        workbook=ET.fromstring(archive.read("xl/workbook.xml"))
+        rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+        targets={item.attrib["Id"]:item.attrib["Target"] for item in rels}
+        flags=[]
+        for sheet in workbook.findall("m:sheets/m:sheet",ns):
+            target=targets[sheet.attrib["{"+ns["r"]+"}id"]]
+            path=target.lstrip("/") if target.startswith("/") else "xl/"+target
+            path=path.replace("xl/../","")
+            root=ET.fromstring(archive.read(path))
+            view=root.find("m:sheetViews/m:sheetView",ns)
+            flags.append(bool(view is not None and view.attrib.get("rightToLeft") in ("1","true","True")))
+        return flags
+
 def parse_sums(raw):
  out={}
  for line in raw.decode("utf-8").splitlines():
