@@ -75,3 +75,16 @@ Next permitted action: after zero-cost billing guard confirmation, verify Artifa
 - Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
 - Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 - D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
+
+
+## Consolidated D0-D4 status — 2026-11-03 (append-only)
+
+| Stage | Disposition | Supporting evidence |
+|---|---|---|
+| D0 | PASS_SCOPED_WITH_LIMITATIONS | Three pinned artifact byte checks in Run 41694461194; historical limits preserved |
+| D1 | PASS_SCOPED_WITH_LIMITATIONS | Run 41694461194; 34 artifact-backed tests passed; exact tested-head assertion |
+| D2 | PASS_SCOPED_WITH_LIMITATIONS | Registry 2,640 entries / 1,000 series / 2,086,550 points; Run 41694461194 |
+| D3 | PASS_SCOPED_WITH_LIMITATIONS | Artifact acceptance Run 41682389098; exact-head Run 41694461171, 36 tests and 35 Raw files |
+| D4 | PASS_SCOPED_WITH_LIMITATIONS | Run 41694460895; five DOCX; summaries 3 pages; 5 tests; 13 Raw readbacks; output commit c0bfcbadac8d90932d52eb4ecaec2e72e6b4b909 |
+
+The final consolidated exact-head workflow and the D1-D2/D3 runs triggered by the final documentation commit must all succeed on the same final SHA before this session is considered fully closed. D5 remains NOT_STARTED and must not begin until the owner explicitly instructs it. FINAL_ACCEPTED remains NOT_DECLARED.
