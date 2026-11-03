@@ -94,7 +94,7 @@ def test_streamed_xlsx_xml_audit_reads_185_sheets_and_numeric_values(tmp_path):
     wb = Workbook()
     ws = wb.active
     ws.title = "Sheet001"
-    ws["A1"] = "amount"
+    ws["A1"] = "metric"
     ws["B1"] = "number_id"
     ws["A2"] = 12.5
     for i in range(2, 186):
