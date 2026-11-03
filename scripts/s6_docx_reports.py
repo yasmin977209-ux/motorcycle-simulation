@@ -235,6 +235,7 @@ def make_full_report(path, rtl, title, registry, reference_disclosure, matrix, s
         ]
     for item in limitations:
         add_p(doc, "• " + item, rtl, size=8)
+    add_p(doc, "Missing historical accounting fields: " + ", ".join(MISSING_FIELDS), rtl, size=8)
     add_h(doc, "Required interpretive disclosures" if not rtl else "الإفصاحات التفسيرية الإلزامية", rtl)
     disclosure_text = disclosure if rtl else english_disclosure()
     for line in disclosure_text.splitlines():
@@ -319,6 +320,7 @@ def make_feasibility(path, registry, disclosure, matrix, sources, seal):
         "لا يصدر ترتيب أفضلية بين السيناريوهات دون فواصل فروق صالحة زمنياً.",
     ]:
         add_p(doc, "• " + item, True, size=8)
+    add_p(doc, "الحقول المحاسبية التاريخية المفقودة: " + ", ".join(MISSING_FIELDS), True, size=8)
     add_h(doc, "النتيجة المشروطة", True)
     add_p(doc, "لا تكفي الأدلة الحالية لإعلان جدوى استثمارية واقعية أو التوصية بتوسع فعلي. النتيجة مشروطة بافتراضات المرجع وبحدود التغطية المسجلة؛ يلزم استكمال أدلة المحاسبة الإنتاجية وإعادة التحقق الذهبي والبوابات الإحصائية قبل أي قرار نهائي.", True, bold=True)
     add_h(doc, "الإفصاحات الإلزامية وفق §17.3", True)
