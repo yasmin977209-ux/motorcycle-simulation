@@ -122,8 +122,10 @@ def audit(a):
    if len(wb.sheetnames)!=185: raise ValueError("EXCEL_SHEET_COUNT:"+name)
    if sheetnames is not None and wb.sheetnames!=sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
    sheetnames=wb.sheetnames
-   if is_ar and not all(bool(wb[s].sheet_view.rightToLeft) for s in wb.sheetnames): raise ValueError("ARABIC_RTL_MISSING")
-   if not is_ar and any(bool(wb[s].sheet_view.rightToLeft) for s in wb.sheetnames): raise ValueError("ENGLISH_RTL_UNEXPECTED")
+   rtl_flags=worksheet_rtl_flags(p)
+   if len(rtl_flags)!=len(wb.sheetnames): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
+   if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
+   if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
    for ws,wsv in zip(wb.worksheets,wbv.worksheets):
     header={}
     for ri,(row,rowv) in enumerate(zip(ws.iter_rows(),wsv.iter_rows())):
