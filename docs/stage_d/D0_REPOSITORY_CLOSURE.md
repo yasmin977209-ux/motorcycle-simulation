@@ -78,3 +78,12 @@ This addendum supersedes any stale pre-audit HEAD wording above; it does not del
 **D0 disposition:** `COMPLETE / PASS_SCOPED_WITH_LIMITATIONS` for input identity, archive integrity/path safety, source/cohort separation, representative role/key reconciliation, and the stated evidence boundaries only. No production Gate A, full historical 48K accounting, Parquet value-level validation, Gate B pass, convergence, or final acceptance is declared.
 
 No Trial, Simulation, Monte Carlo, N=4800, D1 execution, main update, PR, merge, or Release was performed.
+
+
+## Current live D0 revalidation — 2026-11-03 (append-only)
+
+- Cross-stage pinned-artifact byte revalidation: D1-D2 Run 41694461194, tested SHA 17696ec48557a33f2c231634ba25f26cf831800e, downloaded and recomputed size/SHA-256 for all three pinned artifacts: Aggregate 12852969854 (9,357,996 bytes; ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54), Full Logging 12998778418 (310,827,203 bytes; 403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb), C100 12630457193 (361,733 bytes; c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79).
+- The D1/D2 integration suite completed 34 passed / 0 failed after those downloads. This revalidates the pinned bytes, not the historical-data limitations.
+- D0 remains COMPLETE / PASS_SCOPED_WITH_LIMITATIONS for input identity, artifact integrity and cohort/representative boundaries.
+- Preserved limits: historical 48K detailed ledgers absent; five historical accounting fields MISSING_EVIDENCE; Full Logging is 105 representative keys only; aggregate source_run_metadata.sha256 remains missing; C100 Golden revalidation NOT_RUN.
+- No inferred values, zero-fill, backfill, historical Artifact/manifest mutation, Trial, Simulation, Monte Carlo, N=4800, main write, merge or Release.
