@@ -158,3 +158,12 @@ Complete only D6 when the user sends the second prompt. Stop immediately after D
 6. The D5 report field `publication_commit_sha=4aa8172...` is the workflow's triggering/tested SHA (environment `github.sha`), while commit `5fad8f...` contains the publication report and evidence readback. The final handoff clarifies this without mutating the original record.
 
 These are chronology/documentation mismatches, not evidence that the later successful runs failed. Use append-only corrections and live run/commit evidence. Do not delete or silently edit historical snapshots.
+
+
+## D5 implementation details and superseded attempts (2026-11-03)
+
+- `scripts/d5_package.py` pins the approved governing v2.4.0 Gist URL, 401,397-byte size and SHA-256; it keeps the historical v2.3 execution-reference SHA separate. The script currently declares the fixed S6/C100 identities as constants: S6 `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, `cohort_id=s6-v23-da1a9ea9`, `MASTER_SEED=20270101`; C100 `SOURCE_SHA=965281d52441cd0d4b744e211c9f68ee4cdc3753`, `cohort_id=c100-v23-s4-20261026-965281d5`. D6 must independently compare them with the governing reference, source manifests and upstream evidence; do not change them.
+- D5 manifest reports source trial counts as `S6_source_trial_count_reported=48000` and `C100_source_trial_count_reported=1500`; it explicitly leaves `trial_completed_count` and `trial_incomplete_count` as `NOT_DECLARED_BY_D3_ACCEPTANCE_EVIDENCE`. Do not reinterpret source-reported cohort counts as complete logging or completed-trial evidence.
+- Earlier D5 attempts were superseded: Run 41700929911 failed due escaped workflow expressions; Run 41700974360 stopped at exact-head mismatch after branch movement; Run 41701104233 failed due escaped shell environment variables; Run 41701383137 failed with `NameError: d3accept`. The final implementation passed Run 41704252218. These failed attempts are history, not current blockers.
+- The D5 test suite passed 5 tests. One warning is expected from the negative test that intentionally inserts a duplicate `manifest.json` member to verify the validator rejects duplicate members; it was not a failed test.
+- The final D5 workflow's old step label `Build, reopen and verify ... (preflight only)` and commit message wording are historical labels; the actual workflow subsequently publishes Artifact 13264003231, independently downloads it, records publication evidence and passes final-head Raw verification.
