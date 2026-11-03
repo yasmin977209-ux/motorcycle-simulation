@@ -191,6 +191,7 @@ def source_rows(registry, used_ids):
 
 def add_evidence_seal(doc, rtl, tested_sha, run_id, manifest_sha, build_date):
     add_p(doc, f"Evidence seal | build commit: {tested_sha} | workflow run: {run_id} | D4 manifest SHA-256: {manifest_sha} | date: {build_date}", rtl, size=7)
+    add_p(doc, "Package status: T2_INTERIM / NOT_FINAL_BLOCKED; FINAL_ACCEPTED: NOT_DECLARED.", rtl, size=7)
     add_p(doc, f"current_governing_reference_sha256: {GOVERNING_SHA}", rtl, size=7)
     add_p(doc, f"historical_execution_reference_sha256: {HISTORICAL_SHA}", rtl, size=7)
 
