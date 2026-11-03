@@ -59,7 +59,6 @@ def test_excel_numeric_float_representation_is_checked_against_exact_registry_di
 def test_registry_display_uses_reduced_exact_rational_and_two_decimal_half_even():
     from scripts.audit_s6_deliverables_bundle import exact_display, registry_display
     assert exact_display(501055213, 20) == "25052760.65"
-    assert exact_display(10, 4) == "2.50"
     assert exact_display(5, 2) == "2.50"
     with pytest.raises(ValueError, match="REGISTRY_EXACT_VALUE_NOT_REDUCED"):
         exact_display(10, 2)
