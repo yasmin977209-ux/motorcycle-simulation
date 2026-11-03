@@ -31,3 +31,14 @@ Next permitted action: after zero-cost billing guard confirmation, verify Artifa
 - D3 requirements remain as in live Build Audit/Manifest: D3-01..04 PASS_SCOPED; D3-05..06 PASS_SCOPED_WITH_LIMITATIONS; D3-07..12 PASS_SCOPED_WITH_LIMITATIONS for 25 representative P50 cases; D3-13 PASS_SCOPED for 49,500 close dates; D3-14..16 PASS_SCOPED; D3-17 PASS_SCOPED_WITH_LIMITATIONS; D3-18 NOT_RUN. Overall D3 BLOCKED_MISSING_EVIDENCE; D4 NOT_STARTED.
 - Preserve 105-key Full Logging limitation, C100 Golden NOT_RUN, five missing 48K accounting fields, Gate A/B/Stability/N=4800 statuses. No Trial/Simulation/Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 - Detailed checkpoint: docs/stage_d/D3_EXECUTION_CHECKPOINT_2026-11-03.md. Next action: account-owner confirms sufficient LFS quota and an active $0 hard-stop budget; then independent Artifact acceptance and LFS clean-checkout readback. Do not start D4 before all mandatory D3 requirements close.
+
+## D3 owner decision and Artifact acceptance — 2026-11-03 (append-only)
+
+- Owner explicitly accepted GitHub Actions Artifact 13160434943 as the final immediate D3 workbook delivery mechanism in place of Git LFS.
+- Independent acceptance Run 41682389098 tested commit a05d71adb3d45140ebc07f523dad2569e560c7c4; source Run 41480650491, source SHA 2f3cb05bf668cd003cdb5bcb121d2217d629d9f1.
+- Artifact: 535358202 bytes; SHA-256 513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04; expiry 2026-12-02T16:56:31Z.
+- Arabic and English workbook byte sizes and SHA-256 fingerprints, ZIP CRC, XLSX CRC, 185-sheet structure, zero formula cells and zero Excel error cells independently verified.
+- D3-18: PASS_SCOPED. Overall D3: PASS_SCOPED_WITH_LIMITATIONS. Existing scoped limitations and upstream gate states remain unchanged. D4 NOT_STARTED; FINAL_ACCEPTED NOT_DECLARED.
+- Git LFS is not required under the owner decision; no LFS upload or paid transfer was made.
+- Retention warning: this Actions Artifact is temporary and expires at the date above; this is not permanent archival.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance occurred.

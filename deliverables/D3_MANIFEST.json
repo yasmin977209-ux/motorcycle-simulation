@@ -1,5 +1,5 @@
 {
-  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "classification": "T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS",
   "current_governing_reference": {
     "bytes": 401397,
     "containing_commit": "384c27810e76572e77e79e9829c5f92c1c4165d7",
@@ -8,7 +8,21 @@
     "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
     "url": "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
   },
-  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "delivery_solution": {
+    "acceptance_report": "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json",
+    "acceptance_run_id": 41682389098,
+    "acceptance_tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4",
+    "artifact_bytes": 535358202,
+    "artifact_expires_at": "2026-12-02T16:56:31Z",
+    "artifact_id": 13160434943,
+    "artifact_sha256": "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
+    "git_lfs": "NOT_REQUIRED_BY_OWNER_DECISION",
+    "method": "GITHUB_ACTIONS_ARTIFACT",
+    "owner_decision": "ACCEPTED_BY_OWNER_2026-11-03",
+    "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
+    "source_run_id": 41480650491
+  },
   "files": {
     "Full_Results_EN.xlsx": {
       "bytes": 259441523,
@@ -78,7 +92,7 @@
     "D3-15": "PASS_SCOPED",
     "D3-16": "PASS_SCOPED",
     "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
-    "D3-18": "NOT_RUN"
+    "D3-18": "PASS_SCOPED"
   },
   "source_artifacts": {
     "aggregate": {

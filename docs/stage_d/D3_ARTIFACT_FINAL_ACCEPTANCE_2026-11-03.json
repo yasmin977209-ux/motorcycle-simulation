@@ -1,0 +1,65 @@
+{
+  "acceptance_run_id": 41682389098,
+  "acceptance_tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4",
+  "artifact": {
+    "bytes": 535358202,
+    "created_at": "2026-11-02T16:56:36Z",
+    "expired": false,
+    "expires_at": "2026-12-02T16:56:31Z",
+    "id": 13160434943,
+    "lineage_checks": {
+      "artifact_bytes": true,
+      "artifact_digest": true,
+      "artifact_head": true,
+      "artifact_id": true,
+      "not_expired": true,
+      "run_head": true,
+      "run_id": true,
+      "run_success": true,
+      "source_run": true
+    },
+    "member_count": 10,
+    "metadata_digest": "sha256:513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
+    "name": "D3-Owner-Approved-Source-Reprocessing-41480650491",
+    "sha256": "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
+    "zip_crc": "PASS"
+  },
+  "branch": "tmp/d1-rebuild-20261101",
+  "classification": "VERIFIED_LIVE",
+  "d3_18": "PASS_SCOPED",
+  "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "d4_status": "NOT_STARTED",
+  "delivery_method": "GITHUB_ACTIONS_ARTIFACT_FINAL_IMMEDIATE",
+  "final_acceptance": "NOT_DECLARED",
+  "git_lfs": "NOT_REQUIRED_BY_OWNER_DECISION; NO_UPLOAD_PERFORMED",
+  "limitations_preserved": true,
+  "no_trial_simulation_monte_carlo_or_n_expansion": true,
+  "owner_decision": "ACCEPTED_BY_OWNER_2026-11-03",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "retention_boundary": "Temporary GitHub Actions Artifact; availability ends at recorded expiry unless separately renewed.",
+  "schema_version": "d3-actions-artifact-final-acceptance-v1",
+  "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
+  "source_run_id": 41480650491,
+  "workbooks": {
+    "Full_Results_EN.xlsx": {
+      "artifact_member": "deliverables/Full_Results_EN.xlsx",
+      "bytes": 259441523,
+      "excel_error_cell_count": 0,
+      "formula_cell_count": 0,
+      "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5",
+      "sheet_count": 185,
+      "worksheet_xml_count": 185,
+      "xlsx_crc": "PASS"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "artifact_member": "deliverables/النتائج_الكاملة_AR.xlsx",
+      "bytes": 259443380,
+      "excel_error_cell_count": 0,
+      "formula_cell_count": 0,
+      "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2",
+      "sheet_count": 185,
+      "worksheet_xml_count": 185,
+      "xlsx_crc": "PASS"
+    }
+  }
+}
