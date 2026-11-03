@@ -1,0 +1,214 @@
+name: D3 Final Actions Artifact Acceptance
+
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths: [.github/workflows/d3-artifact-final-acceptance.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: d3-final-artifact-acceptance
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      REPOSITORY: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      ARTIFACT_ID: "13160434943"
+      SOURCE_RUN_ID: "41480650491"
+      SOURCE_HEAD: "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1"
+      EXPECTED_ZIP_BYTES: "535358202"
+      EXPECTED_ZIP_SHA256: "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04"
+      EXPECTED_AR_BYTES: "259443380"
+      EXPECTED_AR_SHA256: "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2"
+      EXPECTED_EN_BYTES: "259441523"
+      EXPECTED_EN_SHA256: "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5"
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Independently download and verify accepted Artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "tmp/d1-rebuild-20261101"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib,json,os,pathlib,tempfile,zipfile,xml.etree.ElementTree as ET
+          import requests
+          repo=os.environ["REPOSITORY"]; token=os.environ["GH_TOKEN"]
+          aid=int(os.environ["ARTIFACT_ID"]); rid=int(os.environ["SOURCE_RUN_ID"])
+          headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}
+          base=f"https://api.github.com/repos/{repo}"
+          mr=requests.get(f"{base}/actions/artifacts/{aid}",headers=headers,timeout=60); mr.raise_for_status(); a=mr.json()
+          rr=requests.get(f"{base}/actions/runs/{rid}",headers=headers,timeout=60); rr.raise_for_status(); r=rr.json()
+          checks={"artifact_id":a.get("id")==aid,"artifact_bytes":a.get("size_in_bytes")==int(os.environ["EXPECTED_ZIP_BYTES"]),
+            "artifact_digest":a.get("digest")=="sha256:"+os.environ["EXPECTED_ZIP_SHA256"],"not_expired":a.get("expired") is False,
+            "source_run":a.get("workflow_run",{}).get("id")==rid,"artifact_head":a.get("workflow_run",{}).get("head_sha")==os.environ["SOURCE_HEAD"],
+            "run_id":r.get("id")==rid,"run_head":r.get("head_sha")==os.environ["SOURCE_HEAD"],"run_success":r.get("conclusion")=="success"}
+          if not all(checks.values()): raise SystemExit("D3_ARTIFACT_LINEAGE_MISMATCH "+json.dumps(checks,sort_keys=True))
+          tmp=pathlib.Path(tempfile.mkdtemp(prefix="d3-artifact-acceptance-")); archive=tmp/"artifact.zip"
+          resp=requests.get(f"{base}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=(60,300)); resp.raise_for_status()
+          h=hashlib.sha256(); total=0
+          with archive.open("wb") as out:
+            for chunk in resp.iter_content(8*1024*1024):
+              if chunk: out.write(chunk); h.update(chunk); total+=len(chunk)
+          zip_sha=h.hexdigest()
+          if total!=int(os.environ["EXPECTED_ZIP_BYTES"]) or zip_sha!=os.environ["EXPECTED_ZIP_SHA256"]:
+            raise SystemExit(f"D3_ARTIFACT_ZIP_FINGERPRINT_MISMATCH:{total}:{zip_sha}")
+          expected={"النتائج_الكاملة_AR.xlsx":(int(os.environ["EXPECTED_AR_BYTES"]),os.environ["EXPECTED_AR_SHA256"]),
+            "Full_Results_EN.xlsx":(int(os.environ["EXPECTED_EN_BYTES"]),os.environ["EXPECTED_EN_SHA256"])}
+          with zipfile.ZipFile(archive) as z:
+            bad=z.testzip()
+            if bad: raise SystemExit("D3_ARTIFACT_ZIP_CRC_FAILURE:"+bad)
+            members={}
+            for info in z.infolist():
+              p=pathlib.PurePosixPath(info.filename)
+              if p.is_absolute() or ".." in p.parts: raise SystemExit("D3_UNSAFE_ZIP_MEMBER:"+info.filename)
+              if not info.is_dir(): members.setdefault(p.name,[]).append(info.filename)
+            member_count=len(z.infolist())
+            results={}
+            for name,(expected_bytes,expected_sha) in expected.items():
+              hits=members.get(name,[])
+              if len(hits)!=1: raise SystemExit("D3_REQUIRED_MEMBER_NOT_UNIQUE:"+name)
+              target=tmp/name; wh=hashlib.sha256(); n=0
+              with z.open(hits[0]) as src,target.open("wb") as dst:
+                while True:
+                  chunk=src.read(8*1024*1024)
+                  if not chunk: break
+                  dst.write(chunk); wh.update(chunk); n+=len(chunk)
+              sha=wh.hexdigest()
+              if n!=expected_bytes or sha!=expected_sha: raise SystemExit("D3_WORKBOOK_FINGERPRINT_MISMATCH:"+name)
+              with zipfile.ZipFile(target) as x:
+                bad=x.testzip()
+                if bad: raise SystemExit("D3_XLSX_CRC_FAILURE:"+name+":"+bad)
+                wb=ET.fromstring(x.read("xl/workbook.xml"))
+                sheets=sum(1 for e in wb.iter() if e.tag.rsplit("}",1)[-1]=="sheet")
+                formulas=errors=worksheet_xml=0
+                for entry in x.namelist():
+                  if entry.startswith("xl/worksheets/") and entry.endswith(".xml"):
+                    worksheet_xml+=1
+                    with x.open(entry) as stream:
+                      for _,elem in ET.iterparse(stream,events=("end",)):
+                        tag=elem.tag.rsplit("}",1)[-1]
+                        if tag=="f": formulas+=1
+                        elif tag=="c" and elem.attrib.get("t")=="e": errors+=1
+                        elem.clear()
+                if sheets!=185 or worksheet_xml!=185 or formulas!=0 or errors!=0:
+                  raise SystemExit(f"D3_XLSX_XML_AUDIT_FAILURE:{name}:{sheets}:{worksheet_xml}:{formulas}:{errors}")
+              results[name]={"artifact_member":hits[0],"bytes":n,"sha256":sha,"sheet_count":sheets,
+                "worksheet_xml_count":worksheet_xml,"formula_cell_count":formulas,"excel_error_cell_count":errors,"xlsx_crc":"PASS"}
+              print("D3_WORKBOOK_ACCEPTED "+json.dumps(results[name],ensure_ascii=False,sort_keys=True))
+          report={"schema_version":"d3-actions-artifact-final-acceptance-v1","classification":"VERIFIED_LIVE",
+            "owner_decision":"ACCEPTED_BY_OWNER_2026-11-03","delivery_method":"GITHUB_ACTIONS_ARTIFACT_FINAL_IMMEDIATE",
+            "repository":repo,"branch":"tmp/d1-rebuild-20261101","acceptance_run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "acceptance_tested_sha":os.environ["GITHUB_SHA"],"source_run_id":rid,"source_head":os.environ["SOURCE_HEAD"],
+            "artifact":{"id":aid,"name":a.get("name"),"bytes":total,"sha256":zip_sha,"created_at":a.get("created_at"),
+              "expires_at":a.get("expires_at"),"expired":a.get("expired"),"metadata_digest":a.get("digest"),
+              "lineage_checks":checks,"zip_crc":"PASS","member_count":member_count},
+            "workbooks":results,"git_lfs":"NOT_REQUIRED_BY_OWNER_DECISION; NO_UPLOAD_PERFORMED",
+            "retention_boundary":"Temporary GitHub Actions Artifact; availability ends at recorded expiry unless separately renewed.",
+            "d3_18":"PASS_SCOPED","d3_gate_status":"PASS_SCOPED_WITH_LIMITATIONS","d4_status":"NOT_STARTED",
+            "final_acceptance":"NOT_DECLARED","limitations_preserved":True,
+            "no_trial_simulation_monte_carlo_or_n_expansion":True}
+          out=pathlib.Path("docs/stage_d"); out.mkdir(parents=True,exist_ok=True)
+          (out/"D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json").write_text(json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          lines=["# D3 Final Actions Artifact Acceptance — 2026-11-03","",
+            "- Owner decision: Actions Artifact accepted as final immediate delivery in place of Git LFS.",
+            f"- Acceptance run: {report['acceptance_run_id']}; tested commit: {report['acceptance_tested_sha']}.",
+            f"- Source run: {rid}; source commit: {os.environ['SOURCE_HEAD']}.",
+            f"- Artifact {aid}: {total} bytes; SHA-256 {zip_sha}; ZIP CRC PASS.",
+            f"- Artifact expiry: {a.get('expires_at')}. Temporary Actions retention; not permanent archival."]
+          for name,v in results.items():
+            lines += ["",f"## {name}",f"- Bytes: {v['bytes']}",f"- SHA-256: {v['sha256']}",
+              f"- Sheets: {v['sheet_count']}; formulas: {v['formula_cell_count']}; Excel errors: {v['excel_error_cell_count']}; XLSX CRC PASS."]
+          lines += ["","## Gate disposition","- D3-18: PASS_SCOPED after independent ZIP and workbook byte/XML verification.",
+            "- Overall D3: PASS_SCOPED_WITH_LIMITATIONS; all prior scoped limitations and upstream gate states remain unchanged.",
+            "- Git LFS: NOT_REQUIRED_BY_OWNER_DECISION; no LFS upload was performed.",
+            "- D4: NOT_STARTED. FINAL_ACCEPTED: NOT_DECLARED.",""]
+          (out/"D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md").write_text("\n".join(lines),encoding="utf-8")
+          delivery={"method":"GITHUB_ACTIONS_ARTIFACT","owner_decision":"ACCEPTED_BY_OWNER_2026-11-03",
+            "artifact_id":aid,"source_run_id":rid,"source_head":os.environ["SOURCE_HEAD"],"artifact_bytes":total,
+            "artifact_sha256":zip_sha,"artifact_expires_at":a.get("expires_at"),"acceptance_run_id":report["acceptance_run_id"],
+            "acceptance_tested_sha":report["acceptance_tested_sha"],
+            "acceptance_report":"docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json",
+            "git_lfs":"NOT_REQUIRED_BY_OWNER_DECISION"}
+          for path in ["deliverables/D3_BUILD_AUDIT.json","deliverables/D3_MANIFEST.json"]:
+            obj=json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+            obj["delivery_solution"]=delivery
+            obj["requirement_statuses"]["D3-18"]="PASS_SCOPED"
+            obj["d3_gate_status"]="PASS_SCOPED_WITH_LIMITATIONS"
+            if path.endswith("D3_BUILD_AUDIT.json"):
+              obj["d3_candidate_status"]="T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS"
+              obj["final_acceptance"]="NOT_DECLARED"
+            else:
+              obj["classification"]="T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS"
+            pathlib.Path(path).write_text(json.dumps(obj,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          block=f"""## D3 owner decision and Artifact acceptance — 2026-11-03 (append-only)
+
+          - Owner explicitly accepted GitHub Actions Artifact 13160434943 as the final immediate D3 workbook delivery mechanism in place of Git LFS.
+          - Independent acceptance Run {report['acceptance_run_id']} tested commit {report['acceptance_tested_sha']}; source Run {rid}, source SHA {os.environ['SOURCE_HEAD']}.
+          - Artifact: {total} bytes; SHA-256 {zip_sha}; expiry {a.get('expires_at')}.
+          - Arabic and English workbook byte sizes and SHA-256 fingerprints, ZIP CRC, XLSX CRC, 185-sheet structure, zero formula cells and zero Excel error cells independently verified.
+          - D3-18: PASS_SCOPED. Overall D3: PASS_SCOPED_WITH_LIMITATIONS. Existing scoped limitations and upstream gate states remain unchanged. D4 NOT_STARTED; FINAL_ACCEPTED NOT_DECLARED.
+          - Git LFS is not required under the owner decision; no LFS upload or paid transfer was made.
+          - Retention warning: this Actions Artifact is temporary and expires at the date above; this is not permanent archival.
+          - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance occurred."""
+          for path in ["docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md","docs/stage_d/D3_EXECUTION_CHECKPOINT_2026-11-03.md",
+            "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md"]:
+            p=pathlib.Path(path); old=p.read_text(encoding="utf-8") if p.exists() else ""
+            if "D3 owner decision and Artifact acceptance — 2026-11-03" not in old:
+              p.write_text(old.rstrip()+"\n\n"+block.strip()+"\n",encoding="utf-8")
+          print("D3_FINAL_ARTIFACT_ACCEPTANCE_PASS "+json.dumps({"artifact_id":aid,"bytes":total,"sha256":zip_sha,"workbooks":results},ensure_ascii=False,sort_keys=True))
+          PY
+
+      - name: Commit evidence and verify exact remote readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$GITHUB_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deliverables/D3_BUILD_AUDIT.json deliverables/D3_MANIFEST.json docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md docs/stage_d/D3_EXECUTION_CHECKPOINT_2026-11-03.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md docs/PROJECT_HANDOFF.md
+          git commit -m "docs(d3): accept final Actions artifact delivery with limitations"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+          head="$(git rev-parse HEAD)"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$head"
+          python - <<'PY'
+          import hashlib,os,pathlib,requests,subprocess
+          repo=os.environ["REPOSITORY"]; head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          paths=["deliverables/D3_BUILD_AUDIT.json","deliverables/D3_MANIFEST.json",
+            "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json","docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md",
+            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md","docs/stage_d/D3_EXECUTION_CHECKPOINT_2026-11-03.md",
+            "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md"]
+          for path in paths:
+            local=pathlib.Path(path).read_bytes(); url=f"https://raw.githubusercontent.com/{repo}/{head}/{path}"
+            response=requests.get(url,timeout=180); response.raise_for_status()
+            if response.content!=local: raise SystemExit("D3_RAW_READBACK_MISMATCH:"+path)
+            blob=hashlib.sha1(b"blob "+str(len(local)).encode()+bytes([0])+local).hexdigest()
+            print(f"VERIFIED_RAW {path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob_sha1={blob} commit={head} url={url}")
+          if subprocess.check_output(["git","ls-remote","origin","refs/heads/tmp/d1-rebuild-20261101"],text=True).split()[0]!=head:
+            raise SystemExit("D3_FINAL_HEAD_MISMATCH")
+          print("D3_FINAL_EXACT_HEAD_PASS "+head)
+          PY
+
+      - name: Upload compact acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: D3-Final-Artifact-Acceptance-Evidence
+          path: |
+            docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json
+            docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md
+          if-no-files-found: error
+          retention-days: 30
