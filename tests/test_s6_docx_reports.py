@@ -38,6 +38,7 @@ def test_all_rendered_number_ids_resolve_to_registry_and_are_present():
     registry = json.loads(Path("results/number_registry.json").read_text(encoding="utf-8"))
     ids = {entry["number_id"] for entry in registry["entries"]}
     used = set(audit["number_ids"])
+    assert audit["number_ids_rendered"] > 0
     assert used <= ids
     for name in FILES:
         text = document_text(Document(OUT / name))
