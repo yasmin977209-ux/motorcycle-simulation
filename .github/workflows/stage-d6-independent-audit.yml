@@ -1,0 +1,131 @@
+name: D6 Independent Post-Write Audit
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - scripts/audit_s6_deliverables_bundle.py
+      - tests/test_d6_audit.py
+      - .github/workflows/stage-d6-independent-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: stage-d6-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  independent-post-write-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install audit dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install openpyxl python-docx pytest
+      - name: Run independent auditor unit tests
+        run: python -m pytest -q -rs tests/test_d6_audit.py
+      - name: Download exact D5 Artifact and verify GitHub metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          artifact_id=13264003231
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api" -o /tmp/d5-meta.json; then break; fi
+            sleep 5
+          done
+          python - <<'PY'
+          import json,pathlib
+          m=json.loads(pathlib.Path("/tmp/d5-meta.json").read_text())
+          assert m["id"]==13264003231 and m["expired"] is False
+          assert m["size_in_bytes"]==519115272
+          assert m["digest"]=="sha256:7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5"
+          print(json.dumps({k:m.get(k) for k in ("id","name","size_in_bytes","digest","expires_at")},indent=2))
+          PY
+          curl --fail --location --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d5-artifact.zip
+          test "$(stat -c %s /tmp/d5-artifact.zip)" = "519115272"
+          echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
+      - name: Independent post-write audit
+        env:
+          AUDIT_RUN_ID: ${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-artifact.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME"
+      - name: Append D6 session and continuity evidence
+        env:
+          AUDIT_RUN_ID: ${{ github.run_id }}
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import json,pathlib,os
+          r=json.loads(pathlib.Path("docs/FINAL_AUDIT.json").read_text(encoding="utf-8"))
+          lines=[
+            "# D6 Session Record — 2026-11-03","",
+            f"- Disposition: {r['status']}",
+            f"- D6 workflow run: {os.environ['AUDIT_RUN_ID']}",
+            f"- Tested source SHA: {os.environ['TESTED_SHA']}",
+            f"- D5 source Run: {r['source_d5_run_id']}; Artifact: {r['source_d5_artifact_id']}",
+            "- Scope: independent read-only post-write audit of the published D5 package and embedded deliverables.",
+            "- D6 does not change D3/D4/D5 artifacts, business rules, thresholds, identities, or historical evidence.",
+            "- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main write, merge, Release or final acceptance.",
+            "",
+            "## Check dispositions",""
+          ]
+          for k,v in r["checks"].items(): lines.append(f"- {k}: {v['status']}")
+          lines += ["","## Limitations",""]+[f"- {x}" for x in r["limitations"]]
+          pathlib.Path("docs/stage_d/D6_SESSION_RECORD_2026-11-03.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+          entry="\n\n## D6 independent post-write audit — 2026-11-03 (append-only)\n\n"+f"- Run {os.environ['AUDIT_RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}; D5 Artifact {r['source_d5_artifact_id']} from Run {r['source_d5_run_id']}.\n"+f"- Disposition {r['status']}; classification T2_INTERIM / NOT_FINAL_BLOCKED.\n"+"- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.\n"+"- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.\n"
+          for name in ("docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"):
+            p=pathlib.Path(name); p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
+          PY
+      - name: Commit D6 audit reports and append-only handoff
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/FINAL_AUDIT.md docs/FINAL_AUDIT.json docs/stage_d/D6_SESSION_RECORD_2026-11-03.md docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
+          git commit -m "docs(d6): record independent post-write audit"
+          git push origin HEAD:tmp/d1-rebuild-20261101
+      - name: Remote Raw readback and exact final HEAD validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$head"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+          python - <<'PY'
+          import hashlib,os,pathlib,urllib.request,urllib.parse,subprocess
+          repo=os.environ["GITHUB_REPOSITORY"]; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          paths=["docs/FINAL_AUDIT.md","docs/FINAL_AUDIT.json","docs/stage_d/D6_SESSION_RECORD_2026-11-03.md","docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"]
+          for path in paths:
+            local=pathlib.Path(path).read_bytes()
+            url=f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path,safe='/')}"
+            req=urllib.request.Request(url,headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"]})
+            with urllib.request.urlopen(req,timeout=180) as response: remote=response.read()
+            if local!=remote: raise SystemExit("D6_RAW_READBACK_MISMATCH:"+path)
+            blob=hashlib.sha1(b"blob "+str(len(remote)).encode()+b"\0"+remote).hexdigest()
+            print(f"VERIFIED_LIVE {path} bytes={len(remote)} sha256={hashlib.sha256(remote).hexdigest()} blob_sha1={blob} commit={sha} url={url}")
+          print("D6_EXACT_FINAL_HEAD_PASS",sha)
+          PY
+      - name: Publish D6 audit evidence Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Motorcycle_Simulation_D6_Post_Write_Audit_2026-11-03
+          path: |
+            docs/FINAL_AUDIT.md
+            docs/FINAL_AUDIT.json
+            docs/stage_d/D6_SESSION_RECORD_2026-11-03.md
+          if-no-files-found: error
+          retention-days: 30
