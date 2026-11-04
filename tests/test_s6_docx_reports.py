@@ -22,7 +22,7 @@ def document_text(doc):
     return "\n".join(parts)
 
 def test_five_required_docx_outputs_open_and_have_evidence_seal():
-    audit = json.loads((EVIDENCE / "D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+    audit = json.loads((EVIDENCE / "D4_BUILD_AUDIT_2026-11-05.json").read_text(encoding="utf-8"))
     manifest_sha = audit["manifest_sha256"]
     for name in FILES:
         path = OUT / name
@@ -34,7 +34,7 @@ def test_five_required_docx_outputs_open_and_have_evidence_seal():
         assert "FINAL_ACCEPTED" in text or "NOT_FINAL_BLOCKED" in text
 
 def test_all_rendered_number_ids_resolve_to_registry_and_are_present():
-    audit = json.loads((EVIDENCE / "D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+    audit = json.loads((EVIDENCE / "D4_BUILD_AUDIT_2026-11-05.json").read_text(encoding="utf-8"))
     registry = json.loads(Path("results/number_registry.json").read_text(encoding="utf-8"))
     ids = {entry["number_id"] for entry in registry["entries"]}
     used = set(audit["number_ids"])
