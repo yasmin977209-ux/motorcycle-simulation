@@ -3161,3 +3161,11 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+## D3 candidate exact financial Registry audit — 2026-11-04 (append-only)
+
+- Audit Run 41900246587; tested commit d323300abaa361413091b3062e3417db62c18f56.
+- Candidate source Run 41754147172 / SHA 3325fd961005c2c47de071d25904a748af7a21a6; Artifact 13288779998.
+- Exact workbook financial Registry comparison and bilingual numeric parity are recorded in docs/stage_d/D3_CANDIDATE_FINANCIAL_AUDIT_2026-11-04.md/.json.
+- This candidate-specific audit does not itself promote D3 or authorize D4/D5; preserve the separate gate and owner-approved sequence.

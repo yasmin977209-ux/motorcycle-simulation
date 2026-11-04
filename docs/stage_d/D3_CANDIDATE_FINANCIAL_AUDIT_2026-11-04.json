@@ -1,0 +1,80 @@
+{
+  "audit_run_id": 41900246587,
+  "audit_tested_sha": "d323300abaa361413091b3062e3417db62c18f56",
+  "base_number_registry": {
+    "bytes": 24137036,
+    "path": "results/number_registry.json",
+    "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+  },
+  "bilingual_numeric_parity": "PASS_SCOPED",
+  "branch": "tmp/d1-rebuild-20261101",
+  "candidate_artifact_bytes": 535567142,
+  "candidate_artifact_id": 13288779998,
+  "candidate_artifact_metadata": {
+    "artifact_id": 13288779998,
+    "bytes": 535567142,
+    "expires_at": "2026-12-04T02:07:02Z",
+    "lineage_checks": {
+      "artifact_digest": true,
+      "artifact_id": true,
+      "artifact_name": true,
+      "artifact_not_expired": true,
+      "artifact_size": true,
+      "artifact_source_run": true,
+      "artifact_source_sha": true,
+      "source_run_id": true,
+      "source_run_sha": true,
+      "source_run_success": true
+    },
+    "metadata_digest": "sha256:e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+    "sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+    "source_run_id": 41754147172,
+    "source_sha": "3325fd961005c2c47de071d25904a748af7a21a6"
+  },
+  "candidate_artifact_sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+  "candidate_source_run_id": 41754147172,
+  "candidate_source_sha": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "NOT_PROMOTED_PENDING_SEPARATE_D3_ACCEPTANCE_AND_D4_RERUN",
+  "exact_financial_cells": {
+    "SCENARIO_MATRIX!AFJ10": {
+      "expected": "91969804.71",
+      "number_id": "NR-b48c8eb8a49a603dc4fbf63d"
+    },
+    "SCENARIO_MATRIX!UB7": {
+      "expected": "83735327.68",
+      "number_id": "NR-e51bacd2a4c626dbc4c5e832"
+    }
+  },
+  "no_trial_simulation_monte_carlo_n_expansion_backfill_zero_fill": true,
+  "registry_extension": {
+    "bytes": 16440292,
+    "member": "deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz",
+    "sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+  },
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "schema_version": "d3-candidate-exact-financial-registry-audit-v1",
+  "status": "PASS_SCOPED",
+  "workbooks": {
+    "Full_Results_EN.xlsx": {
+      "bytes": 259442692,
+      "financial_cells_registry_matched": 5953640,
+      "financial_mismatch_count": 0,
+      "numeric_cells": 10452370,
+      "numeric_digest": "6dd61c60a26d61687132406123ac654153fbdab578a8ceceed66cc0693f3f886",
+      "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+      "sheet_count": 185,
+      "status": "PASS_SCOPED"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "bytes": 259444534,
+      "financial_cells_registry_matched": 5953640,
+      "financial_mismatch_count": 0,
+      "numeric_cells": 10452370,
+      "numeric_digest": "6dd61c60a26d61687132406123ac654153fbdab578a8ceceed66cc0693f3f886",
+      "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d",
+      "sheet_count": 185,
+      "status": "PASS_SCOPED"
+    }
+  }
+}
