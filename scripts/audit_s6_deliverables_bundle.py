@@ -249,8 +249,24 @@ def financial_value_matches(value, expected_display):
   return False
  return actual.is_finite() and expected.is_finite() and actual==expected
 
+def disclosure_173_findings(text):
+ value=" ".join(str(text).lower().split())
+ def has(*terms): return any(term in value for term in terms)
+ requirements={
+  "realism_gap":has("not a realistic forecast","not realistic","ليس توقعاً واقعياً","ليس توقعا واقعيا"),
+  "book_value_not_market_value":has("book value","القيمة الدفترية") and has("market value","القيمة السوقية"),
+  "excluded_costs":has("operating costs","تكاليف تشغيل") and has("maintenance","صيانة") and has("theft","سرقة") and has("inflation","تضخم"),
+  "no_external_financing":has("no external financing","لا تمويل خارجي","دون تمويل خارجي"),
+  "guarantee_deterministic":has("deterministic multiplier","مضاعف حتمي","مضاعفاً حتمياً"),
+  "non_monotonic":has("non-monotonic","غير رتيبة","غير رتيب"),
+  "zero_loss_not_guarantee":(has("zero probability of accounting loss","zero accounting loss") and has("not a guarantee","does not guarantee")) or (has("احتمال الخسارة المحاسبية الصفري","احتمال الخسارة صفري") and has("ليس ضماناً","ليس ضمانا","لا يمثل ضماناً","لا يمثل ضمانا")),
+ }
+ return [k for k,v in requirements.items() if not v]
+
 def audit(a):
  root=Path(a.root); artifact=Path(a.artifact); checks={}
+ a.audit_checks=checks
+ a.audit_gates={}
  outer=artifact.read_bytes()
  if len(outer)!=ARTIFACT_SIZE or sha(outer)!=ARTIFACT_SHA: raise ValueError("ACTIONS_ARTIFACT_FINGERPRINT_MISMATCH")
  with zipfile.ZipFile(io.BytesIO(outer)) as z:
@@ -317,21 +333,32 @@ def audit(a):
   finally: p.unlink(missing_ok=True)
   print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={result['financial_mismatch_count']}",flush=True)
  checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
- # Parse all DOCX; page counts are reported from D4 only unless libreoffice is available
- texts={}
+ # Parse DOCX independently; preserve every file result and all preceding Excel findings.
+ docx_results={}
  for name in [x for x in FILES if x.endswith(".docx")]:
-  p=root/("d6_"+name); p.write_bytes(payload[name]); doc=Document(str(p))
-  t="\n".join(x.text for x in doc.paragraphs)+"\n"+"\n".join(" ".join(c.text for c in row.cells) for tb in doc.tables for row in tb.rows)
-  if not t.strip(): raise ValueError("DOCX_EMPTY:"+name)
-  if "T2_INTERIM" not in t and "NOT_FINAL_BLOCKED" not in t: raise ValueError("DOCX_T2_DISCLOSURE_MISSING:"+name)
-  if "MISSING_EVIDENCE" not in t: raise ValueError("DOCX_MISSING_EVIDENCE_DISCLOSURE:"+name)
-  texts[name]=t; p.unlink(missing_ok=True)
- checks["docx_176"]={"status":"PASS_SCOPED","docx_files":5,"detail":"All five DOCX archives parsed; T2 and MISSING_EVIDENCE disclosures present. Page count and semantic numeric-to-registry recomputation are not independently established by python-docx."}
- # Contract mapping is recorded without pretending that test IDs were re-executed.
+  p=root/("d6_"+name)
+  try:
+   p.write_bytes(payload[name]); doc=Document(str(p))
+   t="\n".join(x.text for x in doc.paragraphs)+"\n"+"\n".join(" ".join(c.text for c in row.cells) for tb in doc.tables for row in tb.rows)
+   findings=[]
+   if not t.strip(): findings.append("DOCX_EMPTY")
+   if "T2_INTERIM" not in t and "NOT_FINAL_BLOCKED" not in t: findings.append("DOCX_T2_DISCLOSURE_MISSING")
+   missing_173=disclosure_173_findings(t)
+   if missing_173: findings.append("DOCX_SECTION_17_3_DISCLOSURES_MISSING:"+",".join(missing_173))
+   docx_results[name]={"status":"BLOCKED" if findings else "PASS_SCOPED","findings":findings,"text_characters":len(t),"missing_evidence_literal_present":"MISSING_EVIDENCE" in t,"section_17_3_missing_items":missing_173}
+  except Exception as exc:
+   docx_results[name]={"status":"BLOCKED","findings":["DOCX_PARSE_ERROR:"+type(exc).__name__+":"+str(exc)]}
+  finally:
+   p.unlink(missing_ok=True)
+  checks["docx_files"]=docx_results
+  a.audit_checks=checks
+ docx_blocked=[name for name,item in docx_results.items() if item["status"]=="BLOCKED"]
+ checks["docx_176"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file parse, T2 state, and substantive §17.3 disclosure checks; MISSING_EVIDENCE literal is informational only."}
+ a.audit_checks=checks
  for tid,contract in CONTRACTS.items():
-  status="PASS_SCOPED" if tid=="181" else ("PASS_SCOPED" if tid=="176" else "PASS")
-  checks["test_"+tid]={"status":status,"contract":contract,"run_id":a.run_id,"tested_sha":a.tested_sha,"detail":"D6 independent artifact audit mapping; original historical test is not rerun."}
- result={"schema_version":"d6-independent-post-write-audit-v1","status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 181 is PASS_SCOPED only; no original historical 48K daily partner-balance ledgers are claimed or reconstructed.","DOCX page count is not independently re-rendered; D4 record reports three pages for each summary.","Test 176 validates disclosure/manifest and document parse but does not recompute every displayed number against the full Number Registry lineage.","The original tests 175, 176, 179, 180, 181, 182, 183 and 186 are mapped, not re-executed as historical suite tests.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+  checks["test_"+tid]={"status":"NOT_RUN","contract":contract,"run_id":a.run_id,"tested_sha":a.tested_sha,"detail":"Historical acceptance test ID mapped for traceability only; D6 did not execute that test."}
+ a.audit_checks=checks
+ result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 181 is PASS_SCOPED only; no original historical 48K daily partner-balance ledgers are claimed or reconstructed.","DOCX page count is not independently re-rendered; D4 record reports three pages for each summary.","Test 176 validates disclosure/manifest and document parse but does not recompute every displayed number against the full Number Registry lineage.","The original tests 175, 176, 179, 180, 181, 182, 183 and 186 are mapped, not re-executed as historical suite tests.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=root/"docs"; out.mkdir(exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]

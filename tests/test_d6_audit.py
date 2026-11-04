@@ -125,3 +125,13 @@ def test_streamed_xlsx_xml_audit_rejects_formula_and_error_cells(tmp_path):
     wb.save(path)
     with pytest.raises(ValueError, match="EXCEL_ERROR_CELL"):
         scan_xlsx_xml(path, {}, {}, {}, {"entries": [], "daily_series": []})
+
+
+def test_section_17_3_disclosure_checks_substance_not_generic_missing_evidence_token():
+    from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
+    complete = """Not a realistic forecast. Assets are measured at book value, not market value.
+    No operating costs, maintenance, theft, or inflation. No external financing.
+    The guarantee is a deterministic multiplier. Results are non-monotonic.
+    Zero probability of accounting loss is not a guarantee."""
+    assert disclosure_173_findings(complete) == []
+    assert "book_value_not_market_value" in disclosure_173_findings("MISSING_EVIDENCE only")
