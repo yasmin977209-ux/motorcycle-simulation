@@ -280,7 +280,7 @@ def disclosure_173_findings(text):
 def docx_directionality(path):
  """Inspect explicit paragraph/run direction on every Word text-story part."""
  ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
- story=re.compile(r"^word/(?:document|header[0-9]+|footer[0-9]+|footnotes|endnotes|comments)\\.xml$")
+ story=re.compile(r"^word/(?:document|header[0-9]+|footer[0-9]+|footnotes|endnotes|comments)\.xml$")
  paragraphs=0; text_runs=0; bidi_true=bidi_false=bidi_missing=0
  rtl_true=rtl_false=rtl_missing=0; parts=[]
  with zipfile.ZipFile(path) as archive:
