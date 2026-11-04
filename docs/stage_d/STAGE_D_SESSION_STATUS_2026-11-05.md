@@ -117,3 +117,20 @@ No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity ch
 - D1-D2 exact-head Run 41935049292 success; D3 output exact-head Run 41935049260 success; D0-D4 exact-head Run 41935049455 failed because workflow compared current DOCX against stale 2026-11-03 audit fingerprints. Workflow baseline updated in this commit to current 2026-11-05 D3/D4 evidence paths; inspect its next Run before calling exact-head gate passed.
 - Main Run 41935664221 (Job 126943358779) was in_progress at last inspection; stop rather than wait for long Stage 5 Round 3 validation.
 - D0-D6 scoped status and all gate limitations remain unchanged; E0 not started. No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity changes, merge or Release.
+
+
+---
+
+## Final session status and handoff — 2026-11-05
+
+- Review-start branch HEAD: `c447a5b5c3162b23e21ca8ea5befdd6541409113`.
+- Review-start main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D0–D6: `PASS_SCOPED_WITH_LIMITATIONS` individually, within documented scopes only.
+- D3-18: owner-accepted artifact/run supports `PASS_SCOPED`; requirement-map field remains stale `NOT_RUN` and is a documentation conflict.
+- D5 publication-evidence commit correction: `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`; tested SHA remains `baf696af1e951cbf4a79e8a9e009c60c6b053b2d`.
+- D6: Run `41929888796`, Job `126923812128`, tested SHA `48ae9fbf5a7264834a523504706a7c04b654061b`, Artifact `13371094066`; status `PASS_SCOPED_WITH_LIMITATIONS`.
+- D6 tests 176/179/180/181/183 remain `NOT_RUN`; historical acceptance invocations 175/182/186 also `NOT_RUN`; full 177-test suite `NOT_RUN`.
+- Owner-authorized main Revert: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; no force-push. Main remains read-only.
+- Invariant gates and five missing accounting fields unchanged. `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, `CONVERGED` remain `NOT_DECLARED`. E0–E6 remain `NOT_STARTED`.
+
+See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) for complete run/artifact evidence and next-session checklist.
