@@ -138,3 +138,19 @@ Keep S6, C100, and Stage 12/13 lineage separate. S6 identity remains SOURCE_SHA 
 ## 7. Last-session execution declaration
 
 This session revalidated live refs, prompt library, continuity/status/handoff, owner decision and reference payload, D0-D6 audit records, Actions runs/jobs/artifacts, open PRs, branches and Releases. It performed the already-authorized normal Revert on main in the preceding session; this session made no new main write, no merge, no Release, no simulation, no Trial, no Monte Carlo and no N expansion. All status claims remain scoped to the evidence and limitations above.
+
+
+---
+
+## 8. Remote Raw evidence ledger for this handoff update
+
+The following exact Raw URLs were fetched at their containing commits after the writes. SHA-256 was computed over the fetched UTF-8 bytes; Git blob SHA-1 and byte size are independently recorded from the GitHub file response. These entries meet the file-evidence triple for the listed files.
+
+| File | Containing commit | Git blob SHA-1 | Bytes | Raw SHA-256 |
+|---|---|---|---:|---|
+| `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md` | `6743f1d864b83a634143016f773825fdc220c795` | `da2feb5f3ad7cca6b08b3a11f4e4e91978f6f999` | 69,991 | `e8c12e76a13a6f33f198f55152ddb682d8273fb91d8d893959e305a5d4059c6d` |
+| `docs/PROJECT_CONTINUITY.md` | `82fbd67aa664c74d05979ef85435894eafc1b091` | `5f53cfbb14e49798b86d94a1084f6a10f1dcf32c` | 540,384 | `45f2dd3a015fa898ee8612615501f6ca29f24e76b1124220c7c477237d4dd0f5` |
+| `docs/PROJECT_HANDOFF.md` | `59e3004c7f34a8d32c5647766d06b183132f28ae` | `116376cc99ddd3e2a23ebd2459ad01cf8f5a6d54` | 75,414 | `d7fb002f0caf711e9baba9b142a56354e1d8ef027f470046d11b33b1c1e60566` |
+| `docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md` | `60707875f7ecedbbe55ff28de4f8b64961711aad` | `b6f788c3eec0865d4ad7943e4ca81198069a8310` | 11,403 | `5e1b583e2937f5818734f39edd4d55874581ef985d695716664dcf4a7942c82e` |
+
+The master handoff file itself was created at `fe8723a7dfed6b06c26fce5b5d879de736c9567b`, Git blob `c5b165ad353b5c6dee1d51df511e74dc84694f08`, 14,730 bytes. Its exact Raw SHA-256 and containing commit are to be recorded in the final session response after the last append-only evidence update. The branch HEAD must be re-read after that update; no historical review-start SHA is a substitute for the exact final HEAD.
