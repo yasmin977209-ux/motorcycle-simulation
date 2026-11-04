@@ -314,7 +314,7 @@ def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, 
     for tid in ("176","179","180","181","183"):
         out["test_"+tid]={**base,"status":"NOT_RUN","contract":CONTRACTS[tid],
             "detail":"The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."}
-    out["test_182"]={**base,"status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED",
+    out["test_182"]={**base,"status":"BLOCKED" if (not excel_sheets_verified or not numeric_parity_verified or financial_mismatch_count) else "PASS_SCOPED",
         "contract":CONTRACTS["182"],"financial_mismatch_count":financial_mismatch_count,
         "detail":"Exact registry-value comparisons were performed for the financial cells resolved by the pinned Registry. Any mismatch blocks this scoped result; this is not a claim that the separate historical acceptance test was invoked."}
     out["test_186"]={**base,"status":"PASS_SCOPED" if package_inventory_verified and artifact_fingerprint_verified else "BLOCKED",
