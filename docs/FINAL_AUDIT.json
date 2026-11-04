@@ -4,23 +4,23 @@
   "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
   "repository": "yasmin977209-ux/motorcycle-simulation",
   "branch": "tmp/d1-rebuild-20261101",
-  "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
-  "run_id": "41868591128",
+  "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
+  "run_id": "41874399640",
   "source_d5_run_id": 41704252218,
   "source_d5_artifact_id": 13264003231,
   "checks": {
     "auditor_unit_tests": {
       "status": "PASS",
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "detail": "Focused D6 auditor unit suite completed before this audit step."
     },
     "d5_artifact_download": {
       "status": "PASS",
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "detail": "Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."
     },
     "artifact_outer": {
@@ -257,28 +257,14 @@
     },
     "docx_rendering": {
       "status": "BLOCKED",
-      "page_counts": {},
+      "page_counts": {
+        "d6_التقرير_الكامل_AR.docx": 4,
+        "d6_Full_Report_EN.docx": 3,
+        "d6_الملخص_AR.docx": 3,
+        "d6_Summary_EN.docx": 3,
+        "d6_دراسة_الجدوى_AR.docx": 3
+      },
       "file_failures": {
-        "d6_التقرير_الكامل_AR.docx": {
-          "error_type": "TimeoutExpired",
-          "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile-00', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_التقرير_الكامل_AR.docx']' timed out after 120 seconds"
-        },
-        "d6_Full_Report_EN.docx": {
-          "error_type": "TimeoutExpired",
-          "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile-01', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_Full_Report_EN.docx']' timed out after 120 seconds"
-        },
-        "d6_الملخص_AR.docx": {
-          "error_type": "TimeoutExpired",
-          "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile-02', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_الملخص_AR.docx']' timed out after 120 seconds"
-        },
-        "d6_Summary_EN.docx": {
-          "error_type": "TimeoutExpired",
-          "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile-03', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_Summary_EN.docx']' timed out after 120 seconds"
-        },
-        "d6_دراسة_الجدوى_AR.docx": {
-          "error_type": "TimeoutExpired",
-          "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile-04', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_دراسة_الجدوى_AR.docx']' timed out after 120 seconds"
-        },
         "الملخص_AR.docx": {
           "error_type": "ValueError",
           "error": "DOCX_SUMMARY_PAGE_COUNT_INVALID:None"
@@ -298,66 +284,66 @@
       "detail": "Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."
     },
     "test_175": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "PASS_SCOPED",
       "contract": "185 sheets per workbook; identical sheet order; numeric parity; no Excel errors",
       "detail": "D6 independently verified 185 worksheets per workbook, matching worksheet order, cross-workbook numeric parity, and rejected formula/error cells. This is scoped evidence, not a claim that the separately numbered historical test suite was invoked."
     },
     "test_176": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "NOT_RUN",
       "contract": "Every report numeric value has Number Registry lineage; no manual unregistered number",
       "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_179": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "NOT_RUN",
       "contract": "manifest fingerprints and provenance/commit/command/library/MASTER_SEED",
       "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_180": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "NOT_RUN",
       "contract": "DAILY worksheet ordered round-trip; dates and numbers preserved",
       "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_181": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "NOT_RUN",
       "contract": "Daily partner balances exist for representative trials; absence is MISSING_EVIDENCE, never inferred",
       "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_183": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "NOT_RUN",
       "contract": "All package rows belong to one cohort; reject mixed cohort identities",
       "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_182": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "BLOCKED",
       "contract": "No float leakage into financial statistics; exact rational recomputation",
       "financial_mismatch_count": 4,
       "detail": "Exact registry-value comparisons were performed for the financial cells resolved by the pinned Registry. Any mismatch blocks this scoped result; this is not a claim that the separate historical acceptance test was invoked."
     },
     "test_186": {
-      "run_id": "41868591128",
-      "job_id": "126709173484",
-      "tested_sha": "bd01f908d8e957863f5085e018069ce9a9a3553d",
+      "run_id": "41874399640",
+      "job_id": "126729763878",
+      "tested_sha": "6de7ef4d801b31ee324d814474bfa318cd05ab03",
       "status": "PASS_SCOPED",
       "contract": "Seven deliverables plus manifest in exactly eight-member ZIP; external SHA256SUMS and remote bytes",
       "detail": "D6 verified the exact outer GitHub Artifact fingerprint, inner package fingerprint, eight-member ZIP inventory, CRC/path safety, manifest member hashes, and SHA256SUMS coverage. This is scoped package evidence, not a claim that the separately numbered historical test suite was invoked."
