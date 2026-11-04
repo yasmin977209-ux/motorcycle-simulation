@@ -17,6 +17,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.cell import WriteOnlyCell
 
 from scripts.s6_number_registry import (
     validate_registry, daily_number_id, _daily_resolution_indexes, _resolve_daily_number,
@@ -33,6 +34,25 @@ from scripts.s6_excel_export import (
     exact_value, ev, safe_append, sha, blob_sha, constants_from_reference,
     scenario_sheet_names, header, new_sheet, audit, compare, H, MODES, SCENARIO_RE,
 )
+
+def safe_append(ws, values):
+    """Serialize Decimal values as exact numeric XML text without float coercion."""
+    cells = []
+    for value in values:
+        if isinstance(value, Decimal):
+            if not value.is_finite():
+                raise ValueError("D3_NONFINITE_DECIMAL")
+            cell = WriteOnlyCell(ws, value=format(value, "f"))
+            cell.data_type = "n"
+        else:
+            if isinstance(value, float):
+                raise ValueError("D3_FLOAT_NUMERIC_VALUE_PROHIBITED")
+            cell = WriteOnlyCell(ws, value=value)
+            if isinstance(value, str):
+                cell.data_type = "s"
+        cells.append(cell)
+    ws.append(cells)
+
 
 GOVERNING = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
 GOVERNING_BYTES = 401397

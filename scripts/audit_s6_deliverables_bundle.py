@@ -1,16 +1,10 @@
 from __future__ import annotations
-import argparse, gzip, hashlib, io, json, os, re, stat, time, zipfile, xml.etree.ElementTree as ET
+import argparse, gzip, hashlib, io, json, os, re, stat, subprocess, time, zipfile, xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from openpyxl import load_workbook
 from docx import Document
 
-ARTIFACT_ID=13264003231
-ARTIFACT_RUN=41704252218
-ARTIFACT_SIZE=519115272
-ARTIFACT_SHA="7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5"
 PACKAGE="Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03.zip"
-PACKAGE_SIZE=519102426
-PACKAGE_SHA="300720a318864fb3969a8813a76c65473be3c8648bea7fb359de23230a8ff4f5"
 GOV_SHA="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
 HIST_SHA="e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 S6={"SOURCE_SHA":"da1a9ea9b5cd789c944de3f07b08395bb67c49e7","cohort_id":"s6-v23-da1a9ea9","MASTER_SEED":20270101}
@@ -29,6 +23,18 @@ CONTRACTS={
 "186":"Seven deliverables plus manifest in exactly eight-member ZIP; external SHA256SUMS and remote bytes"
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
+def load_d5_pin(root):
+ path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json"
+ if not path.is_file(): raise ValueError("D5_PREFLIGHT_MISSING")
+ report=json.loads(path.read_text(encoding="utf-8"))
+ if report.get("status")!="PUBLISHED_AND_REMOTE_READBACK_VERIFIED": raise ValueError("D5_NOT_PUBLISHED_OR_READBACK_VERIFIED")
+ art=report.get("artifact",{}); pkg=report.get("package",{})
+ if any(k not in art for k in ("id","size_in_bytes","downloaded_zip_sha256","digest","url")): raise ValueError("D5_ARTIFACT_PIN_INCOMPLETE")
+ if art.get("digest")!="sha256:"+str(art["downloaded_zip_sha256"]): raise ValueError("D5_ARTIFACT_DIGEST_CONFLICT")
+ if not pkg.get("path") or not pkg.get("bytes") or not pkg.get("sha256"): raise ValueError("D5_PACKAGE_PIN_INCOMPLETE")
+ return {"artifact_id":int(art["id"]),"artifact_run_id":int(report["workflow_run_id"]),
+  "artifact_bytes":int(art["size_in_bytes"]),"artifact_sha256":str(art["downloaded_zip_sha256"]),
+  "package_bytes":int(pkg["bytes"]),"package_sha256":str(pkg["sha256"])}
 def file_sha(p):
  h=hashlib.sha256()
  with open(p,"rb") as f:
@@ -251,37 +257,67 @@ def financial_value_matches(value, expected_display):
 
 def disclosure_173_findings(text):
  value=" ".join(str(text).lower().split())
- def has(*terms): return any(term in value for term in terms)
+ def has(*terms): return any(term.lower() in value for term in terms)
  requirements={
+  "conditional_on_model_limitations":has("conditional on model limitations","مشروطة بحدود النموذج"),
   "realism_gap":has("not a realistic forecast","not a realistic prediction","not realistic","ليس توقعاً واقعياً","ليس توقعا واقعيا","ليست توقعاً واقعياً","ليست توقعا واقعيا"),
   "unlimited_demand":has("unlimited demand","demand is unlimited","الطلب غير محدود","طلباً غير محدود","طلب غير محدود"),
-  "immediate_next_day_rerent":has("immediate re-rent","re-rent the next day","re-renting the next day","إعادة التأجير الفورية","إعادة التأجير في اليوم التالي","إعادة تأجير فورية"),
-  "no_fleet_cap":has("no fleet cap","no cap on fleet","no limit on fleet size","لا سقف لحجم الأسطول","لا يوجد سقف لحجم الأسطول"),
-  "no_operating_costs_maintenance_theft_inflation":has("operating costs","operating expenses","تكاليف تشغيل") and has("maintenance","صيانة") and has("theft","سرقة") and has("inflation","تضخم"),
-  "no_renter_variation":has("no variation between renters","no variation among renters","لا تباين بين المستأجرين","لا اختلاف بين المستأجرين"),
-  "deterministic_friday_and_settlement_fees":has("friday fee","friday charge","رسم الجمعة") and has("settlement rent","settlement rental","إيجار التسوية") and has("deterministic","حتمي","حتميان","حتمية"),
-  "book_value_not_market_value":has("book value","carrying value","القيمة الدفترية") and has("market value","القيمة السوقية"),
-  "excluded_repairs_fines_theft_accidents_admin_taxes":has("repairs","repair","إصلاحات","إصلاح") and has("fines","violations","مخالفات","غرامات") and has("theft","سرقة") and has("accidents","حوادث") and has("administrative expenses","administrative costs","مصاريف إدارية","مصروفات إدارية") and has("taxes","tax","ضرائب"),
+  "immediate_next_day_rerent":has("immediate re-rental on the following day","immediate re-rental","immediate re-rent","re-rent the next day","re-renting the next day","إعادة التأجير الفورية","إعادة التأجير في اليوم التالي","إعادة تأجير فورية"),
+  "no_fleet_cap":has("no fleet-size ceiling","no fleet cap","no cap on fleet","no limit on fleet size","لا سقف لحجم الأسطول","لا يوجد سقف لحجم الأسطول"),
+  "no_operating_costs_maintenance_theft_inflation":(has("no operating, maintenance, theft, or inflation costs") or has("operating costs","operating expenses","تكاليف تشغيل")) and has("maintenance","صيانة") and has("theft","سرقة") and has("inflation","تضخم"),
+  "no_renter_variation":has("no tenant heterogeneity","no variation between renters","no variation among renters","لا تباين بين المستأجرين","لا اختلاف بين المستأجرين"),
+  "deterministic_friday_and_settlement_fees":has("deterministic friday fees and settlement rent","friday fee","friday charge","رسم الجمعة") and has("settlement rent","settlement rental","إيجار التسوية") and has("deterministic","حتمي","حتميان","حتمية"),
+  "book_value_not_market_value":has("book value, not market value","book value not market value","carrying value, not market value") or (has("القيمة الدفترية") and has("السوقية")),
+  "excluded_repairs_fines_theft_accidents_admin_taxes":has("no repairs, fines, theft/accidents, administrative expenses, or taxes") or (has("repairs","repair","إصلاحات","إصلاح") and has("fines","violations","مخالفات","غرامات") and has("theft","سرقة") and has("accidents","حوادث") and has("administrative expenses","administrative costs","مصاريف إدارية","مصروفات إدارية") and has("taxes","tax","ضرائب")),
   "no_external_financing":has("no external financing","without external financing","لا تمويل خارجي","دون تمويل خارجي"),
-  "guarantee_is_deterministic_not_actual_recovery_variability":has("deterministic multiplier","deterministic multiple","مضاعف حتمي","مضاعفاً حتمياً","مضاعفا حتميا") and has("actual recovery","recovery capacity","القدرة الفعلية على الاسترداد","الاسترداد الفعلي"),
-  "non_monotonic_structural_explanation":has("non-monotonic","nonmonotonic","غير رتيبة","غير رتيب") and has("held assets","owned bikes","الأصول المحتفظ بها","الدراجات المملوكة") and (has("book value","القيمة الدفترية")),
-  "zero_loss_not_guarantee":(has("zero probability of accounting loss","zero accounting loss") and has("not a guarantee","does not guarantee")) or (has("احتمال الخسارة المحاسبية الصفري","احتمال الخسارة صفري") and has("ليس ضماناً","ليس ضمانا","لا يمثل ضماناً","لا يمثل ضمانا")),
-  "partner_funded_capital_and_70_30_net_equity":(has("partner 1 funded all capital","first partner funded all capital","الشريك الأول موّل رأس المال كاملاً","الشريك الاول مول راس المال كاملا") and has("70/30","70 / 30") and has("net position","net equity","صافي مركز")),
+  "guarantee_is_deterministic_not_actual_recovery_variability":(has("deterministic multiplier") and has("does not represent variability in actual recovery capacity")) or (has("مضاعف حتمي","مضاعفاً حتمياً","مضاعفا حتميا") and has("القدرة الفعلية على الاسترداد","الاسترداد الفعلي")),
+  "non_monotonic_structural_explanation":(has("non-monotonic scenario results may occur for structural reasons") and has("lower collection must not be read as better")) or (has("نتائج غير رتيبة") and has("لأسباب بنيوية") and has("التحصيل الأقل") and has("أفضل")),
+  "zero_loss_not_guarantee":(has("zero accounting-loss probability is not a guarantee","zero probability of accounting loss","zero accounting loss") and has("not a guarantee","does not guarantee")) or (has("احتمال الخسارة المحاسبية الصفري","احتمال الخسارة صفري") and has("ليس ضماناً","ليس ضمانا","لا يمثل ضماناً","لا يمثل ضمانا")),
+  "no_inference_for_unexecuted_scenario":has("no value may be inferred for an unexecuted scenario","لا يجوز استنتاج أي رقم لسيناريو لم يُشغَّل","لا يجوز استنتاج أي رقم لسيناريو لم يشغل"),
  }
  return [k for k,v in requirements.items() if not v]
 
+def docx_directionality(path):
+ ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+ with zipfile.ZipFile(path) as archive: root=ET.fromstring(archive.read("word/document.xml"))
+ paragraphs=root.findall(".//w:p",ns); bidi=[]; rtl=[]
+ for paragraph in paragraphs:
+  el=paragraph.find("./w:pPr/w:bidi",ns)
+  if el is not None: bidi.append(el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"))
+ for run in root.findall(".//w:r",ns):
+  el=run.find("./w:rPr/w:rtl",ns)
+  if el is not None: rtl.append(el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"))
+ return {"paragraphs":len(paragraphs),"bidi_true":sum(bidi),"bidi_false":len(bidi)-sum(bidi),"rtl_runs_true":sum(rtl),"rtl_runs_false":len(rtl)-sum(rtl)}
+
+def render_docx_files(docx_paths, output_dir):
+ output_dir.mkdir(parents=True,exist_ok=True)
+ profile=output_dir/"lo-profile"
+ cmd=["libreoffice",f"-env:UserInstallation=file://{profile}","--headless","--convert-to","pdf","--outdir",str(output_dir)]+[str(p) for p in docx_paths]
+ run=subprocess.run(cmd,capture_output=True,text=True,timeout=600)
+ if run.returncode!=0: raise RuntimeError("DOCX_RENDER_FAILED:"+run.stderr[-2000:])
+ from pypdf import PdfReader
+ pages={}
+ for path in docx_paths:
+  pdf=output_dir/(path.stem+".pdf")
+  if not pdf.is_file(): raise RuntimeError("DOCX_RENDER_OUTPUT_MISSING:"+path.name)
+  count=len(PdfReader(str(pdf)).pages)
+  if count<1: raise RuntimeError("DOCX_RENDER_ZERO_PAGES:"+path.name)
+  pages[path.name]=count
+ return pages
+
 def audit(a):
  root=Path(a.root); artifact=Path(a.artifact); checks={}
+ pin=load_d5_pin(root); a.d5_pin=pin
  a.audit_checks=checks
  a.audit_gates={}
  checks["auditor_unit_tests"]={"status":"PASS","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Focused D6 auditor unit suite completed before this audit step."}
  checks["d5_artifact_download"]={"status":"PASS","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."}
  outer=artifact.read_bytes()
- if len(outer)!=ARTIFACT_SIZE or sha(outer)!=ARTIFACT_SHA: raise ValueError("ACTIONS_ARTIFACT_FINGERPRINT_MISMATCH")
+ if len(outer)!=pin["artifact_bytes"] or sha(outer)!=pin["artifact_sha256"]: raise ValueError("ACTIONS_ARTIFACT_FINGERPRINT_MISMATCH")
  with zipfile.ZipFile(io.BytesIO(outer)) as z:
   zip_check(z,{PACKAGE,"manifest.json","SHA256SUMS.txt"})
   outer_manifest=z.read("manifest.json"); sums_raw=z.read("SHA256SUMS.txt"); pkg=z.read(PACKAGE)
- if len(pkg)!=PACKAGE_SIZE or sha(pkg)!=PACKAGE_SHA: raise ValueError("D5_PACKAGE_FINGERPRINT_MISMATCH")
+ if len(pkg)!=pin["package_bytes"] or sha(pkg)!=pin["package_sha256"]: raise ValueError("D5_PACKAGE_FINGERPRINT_MISMATCH")
  with zipfile.ZipFile(io.BytesIO(pkg)) as z:
   zip_check(z,EXPECTED); payload={n:z.read(n) for n in z.namelist()}
  if payload["manifest.json"]!=outer_manifest: raise ValueError("MANIFEST_OUTER_INNER_MISMATCH")
@@ -296,14 +332,14 @@ def audit(a):
  if set(sums)!=required_sums: raise ValueError("SHA256SUMS_COVERAGE_MISMATCH")
  for name,digest in sums.items():
   if name==PACKAGE:
-   if digest!=PACKAGE_SHA: raise ValueError("SUMS_PACKAGE_MISMATCH")
+   if digest!=pin["package_sha256"]: raise ValueError("SUMS_PACKAGE_MISMATCH")
   elif name in payload:
    if digest!=sha(payload[name]): raise ValueError("SUMS_MEMBER_MISMATCH:"+name)
   elif name=="results/number_registry.json":
    reg=root/"results/number_registry.json"
    if not reg.exists() or file_sha(reg)!=digest: raise ValueError("SUMS_REGISTRY_MISMATCH")
   else: raise ValueError("SUMS_UNKNOWN_PATH:"+name)
- checks["artifact_outer"]={"status":"PASS","artifact_id":ARTIFACT_ID,"run_id":ARTIFACT_RUN,"bytes":len(outer),"sha256":sha(outer)}
+ checks["artifact_outer"]={"status":"PASS","artifact_id":pin["artifact_id"],"run_id":pin["artifact_run_id"],"bytes":len(outer),"sha256":sha(outer)}
  checks["zip_inventory_crc_paths"]={"status":"PASS","inner_members":sorted(EXPECTED),"bytes":len(pkg),"sha256":sha(pkg)}
  checks["manifest_sha256sums"]={"status":"PASS","manifest_sha256":sha(payload["manifest.json"]),"sha256sums_entries":len(sums),"sha256sums_sha256":sha(sums_raw)}
  ids=manifest.get("source_identities",{})
@@ -344,34 +380,55 @@ def audit(a):
  checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
  a.audit_checks=checks
  # Parse DOCX independently; preserve every file result and all preceding Excel findings.
- docx_results={}
+ docx_results={}; docx_paths=[]; rtl_names={"التقرير_الكامل_AR.docx","الملخص_AR.docx","دراسة_الجدوى_AR.docx"}
+ docx_id_occurrences=0; docx_unknown_ids=[]
+ number_pattern=re.compile(r"(?<![A-Za-z0-9])(?:NR-[0-9a-f]{24}|D2D-[0-9a-f]{20}-[0-9]{6})(?![A-Za-z0-9])")
  for name in [x for x in FILES if x.endswith(".docx")]:
   p=root/("d6_"+name)
   try:
-   p.write_bytes(payload[name]); doc=Document(str(p))
+   p.write_bytes(payload[name]); doc=Document(str(p)); docx_paths.append(p)
    t="\n".join(x.text for x in doc.paragraphs)+"\n"+"\n".join(" ".join(c.text for c in row.cells) for tb in doc.tables for row in tb.rows)
    findings=[]
    if not t.strip(): findings.append("DOCX_EMPTY")
    if "T2_INTERIM" not in t and "NOT_FINAL_BLOCKED" not in t: findings.append("DOCX_T2_DISCLOSURE_MISSING")
    missing_173=disclosure_173_findings(t)
    if missing_173: findings.append("DOCX_SECTION_17_3_DISCLOSURES_MISSING:"+",".join(missing_173))
-   docx_results[name]={"status":"BLOCKED" if findings else "PASS_SCOPED","findings":findings,"text_characters":len(t),"missing_evidence_literal_present":"MISSING_EVIDENCE" in t,"section_17_3_missing_items":missing_173}
+   direction=docx_directionality(p); expect_rtl=name in rtl_names
+   direction_ok=(direction["bidi_true"]>0 and direction["bidi_false"]==0 and direction["rtl_runs_true"]>0 and direction["rtl_runs_false"]==0) if expect_rtl else (direction["bidi_false"]>0 and direction["bidi_true"]==0 and direction["rtl_runs_true"]==0)
+   if not direction_ok: findings.append("DOCX_DIRECTIONALITY_MISMATCH")
+   ids=number_pattern.findall(t); docx_id_occurrences+=len(ids); unresolved=[]
+   for number_id in ids:
+    try: registry_display(registry,number_id,entries_by_id,series_by_id,ledger_by_id)
+    except Exception: unresolved.append(number_id)
+   docx_unknown_ids.extend(unresolved)
+   if unresolved: findings.append("DOCX_NUMBER_REGISTRY_ID_UNRESOLVED")
+   docx_results[name]={"status":"BLOCKED" if findings else "PASS_SCOPED","findings":findings,"text_characters":len(t),"missing_evidence_literal_present":"MISSING_EVIDENCE" in t,"section_17_3_missing_items":missing_173,"directionality":direction,"number_id_occurrences":len(ids),"unresolved_number_ids":unresolved}
   except Exception as exc:
    docx_results[name]={"status":"BLOCKED","findings":["DOCX_PARSE_ERROR:"+type(exc).__name__+":"+str(exc)]}
-  finally:
-   p.unlink(missing_ok=True)
   a.audit_checks=checks
  docx_blocked=[name for name,item in docx_results.items() if item["status"]=="BLOCKED"]
- checks["docx_files"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","files":docx_results,"docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file DOCX parse, T2 state, and substantive §17.3 disclosure findings; literal MISSING_EVIDENCE is informational only. Pagination, rendered layout, directionality and complete numeric-to-registry lineage are separate checks."}
- checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 is a separate acceptance test for complete Number Registry lineage; DOCX screening is not Test 176 execution."}
+ checks["docx_files"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","files":docx_results,"docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file DOCX parse, T2, §17.3 substance, OOXML directionality and resolution of every explicit Number Registry ID; full numeric-token lineage remains a separate acceptance test."}
+ checks["docx_number_registry_traceability"]={"status":"BLOCKED" if docx_unknown_ids or docx_id_occurrences==0 else "PASS_SCOPED","number_id_occurrences":docx_id_occurrences,"unresolved_number_ids":sorted(set(docx_unknown_ids)),"detail":"Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."}
+ render_blocked=None; page_counts={}
+ try:
+  page_counts=render_docx_files(docx_paths,root/"d6_rendered")
+  for summary in ("الملخص_AR.docx","Summary_EN.docx"):
+   if not 2<=page_counts.get(summary,0)<=3: raise ValueError("DOCX_SUMMARY_PAGE_COUNT_INVALID:"+summary+":"+str(page_counts.get(summary)))
+  checks["docx_rendering"]={"status":"PASS_SCOPED","page_counts":page_counts,"detail":"All five DOCX files rendered independently with LibreOffice; both summaries verified at 2–3 pages."}
+ except Exception as exc:
+  render_blocked={"error_type":type(exc).__name__,"error":str(exc)}
+  checks["docx_rendering"]={"status":"BLOCKED","page_counts":page_counts,"error":render_blocked}
+ finally:
+  for path in docx_paths: path.unlink(missing_ok=True)
+ checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."}
  a.audit_checks=checks
  for tid,contract in CONTRACTS.items():
   checks["test_"+tid]={"status":"NOT_RUN","contract":contract,"run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."}
  a.audit_checks=checks
- result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["DOCX page count and rendered pagination are NOT_RUN in this D6 job; D4-reported page counts are not substituted for an independent render.","Full numeric-to-Number-Registry recomputation for every DOCX numeric token is NOT_RUN; no lineage pass is claimed.","DOCX RTL/LTR directionality and layout render are NOT_RUN unless separately reported by an independent rendering check.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+ result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=root/"docs"; out.mkdir(exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
- lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
+ lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {pin['artifact_id']} / Run {pin['artifact_run_id']}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
  for k,v in checks.items(): lines.append(f"| {k} | {v['status']} | {v.get('detail',v.get('contract',''))} |")
  lines+=["","## Preserved gate states",""]+[f"- {k}: {v}" for k,v in gates.items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED, or release authorization."]
  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
@@ -385,9 +442,9 @@ def main():
   checks=getattr(args,"audit_checks",{})
   checks["independent_post_write_audit"]={"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"job_id":args.job_id,"tested_sha":args.tested_sha}
   gates=getattr(args,"audit_gates",{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"})
-  result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"job_id":args.job_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["The independent audit did not complete successfully; exact exception is recorded and must not be treated as acceptance.","Completed partial findings are preserved; checks not reached remain absent or NOT_RUN.","No D5 historical Artifact or manifest was modified.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+  result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"job_id":args.job_id,"source_d5_run_id":getattr(args,"d5_pin",{}).get("artifact_run_id"),"source_d5_artifact_id":getattr(args,"d5_pin",{}).get("artifact_id"),"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["The independent audit did not complete successfully; exact exception is recorded and must not be treated as acceptance.","Completed partial findings are preserved; checks not reached remain absent or NOT_RUN.","No D5 historical Artifact or manifest was modified.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
   (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
+  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {getattr(args,'d5_pin',{}).get('artifact_id')} / Run {getattr(args,'d5_pin',{}).get('artifact_run_id')}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
   (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
   print("D6_AUDIT_BLOCKED "+json.dumps({"error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"tested_sha":args.tested_sha},ensure_ascii=False))
 if __name__=="__main__": main()

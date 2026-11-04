@@ -127,14 +127,49 @@ def test_streamed_xlsx_xml_audit_rejects_formula_and_error_cells(tmp_path):
         scan_xlsx_xml(path, {}, {}, {}, {"entries": [], "daily_series": []})
 
 
-def test_section_17_3_disclosure_checks_substance_not_generic_missing_evidence_token():
+def test_section_17_3_accepts_the_actual_english_generator_disclosure():
     from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
-    complete = """Not a realistic forecast. Demand is unlimited and immediate re-rent the next day is assumed.
-    There is no fleet cap and no variation between renters. Operating costs, maintenance, theft, and inflation are excluded.
-    The Friday fee and settlement rent are deterministic. Held assets are measured at book value, not market value.
-    Repairs, fines, theft, accidents, administrative expenses, and taxes are excluded. There is no external financing.
-    The guarantee is a deterministic multiplier and does not reflect actual recovery capacity.
-    Results are non-monotonic: owned bikes leave the fleet while held assets remain at book value.
-    Zero probability of accounting loss is not a guarantee. Partner 1 funded all capital; the 70/30 split applies to net equity and the net position is disclosed."""
-    assert disclosure_173_findings(complete) == []
-    assert "book_value_not_market_value" in disclosure_173_findings("MISSING_EVIDENCE only")
+    from scripts.s6_docx_reports import english_disclosure
+    assert disclosure_173_findings(english_disclosure()) == []
+
+
+def test_section_17_3_accepts_the_exact_arabic_governing_reference_wording():
+    from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
+    arabic = """فجوة الواقعية (إلزامية الذكر نصاً): يفترض النموذج طلباً غير محدود وإعادة تأجير فورية في اليوم التالي، ولا سقف لحجم الأسطول، ولا تكاليف تشغيل أو صيانة أو سرقة أو تضخم، ولا تباين بين المستأجرين، ورسم الجمعة وإيجار التسوية حتميان. لذلك العائد الكبير الناتج (أضعاف رأس المال) ليس توقعاً واقعياً بل نتيجة هذه الافتراضات ويُعرض بهذا المعنى دون تضخيم.
+    لأن النموذج يستبعد بنوداً كثيرة، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج مشروطة بحدود النموذج، خصوصاً: الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ لا تمويل خارجي؛ الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية، فلا يُقرأ التحصيل الأقل على أنه أفضل لمجرد ارتفاع صافي الحقوق؛ احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج. ولا يجوز استنتاج أي رقم لسيناريو لم يُشغَّل."""
+    assert disclosure_173_findings(arabic) == []
+
+
+def test_section_17_3_does_not_misclassify_partner_structure_as_a_173_requirement():
+    from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
+    from scripts.s6_docx_reports import english_disclosure
+    assert "partner_funded_capital_and_70_30_net_equity" not in disclosure_173_findings(english_disclosure())
+
+
+def test_section_17_3_still_fails_closed_when_required_disclosures_are_missing():
+    from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
+    findings = disclosure_173_findings("MISSING_EVIDENCE only")
+    assert "book_value_not_market_value" in findings
+    assert "no_inference_for_unexecuted_scenario" in findings
+
+
+def test_docx_directionality_detects_arabic_and_english_ooxml(tmp_path):
+    from docx import Document
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from scripts.audit_s6_deliverables_bundle import docx_directionality
+    ar = Document()
+    p = ar.add_paragraph("عربي")
+    ppr = p._p.get_or_add_pPr()
+    bidi = OxmlElement("w:bidi"); bidi.set(qn("w:val"), "1"); ppr.append(bidi)
+    rpr = p.runs[0]._r.get_or_add_rPr()
+    rtl = OxmlElement("w:rtl"); rtl.set(qn("w:val"), "1"); rpr.append(rtl)
+    ar_path = tmp_path / "ar.docx"; ar.save(ar_path)
+    en = Document(); en.add_paragraph("English")
+    ppr = en.paragraphs[0]._p.get_or_add_pPr()
+    bidi = OxmlElement("w:bidi"); bidi.set(qn("w:val"), "0"); ppr.append(bidi)
+    rpr = en.paragraphs[0].runs[0]._r.get_or_add_rPr()
+    rtl = OxmlElement("w:rtl"); rtl.set(qn("w:val"), "0"); rpr.append(rtl)
+    en_path = tmp_path / "en.docx"; en.save(en_path)
+    assert docx_directionality(ar_path)["bidi_true"] == 1
+    assert docx_directionality(en_path)["bidi_false"] == 1

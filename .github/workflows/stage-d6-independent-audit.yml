@@ -1,12 +1,5 @@
 name: D6 Independent Post-Write Audit
 on:
-  push:
-    branches:
-      - tmp/d1-rebuild-20261101
-    paths:
-      - scripts/audit_s6_deliverables_bundle.py
-      - tests/test_d6_audit.py
-      - .github/workflows/stage-d6-independent-audit.yml
   workflow_dispatch:
 permissions:
   contents: write
@@ -29,7 +22,9 @@ jobs:
       - name: Install audit dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install openpyxl python-docx pytest
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-writer fonts-noto-core
+          python -m pip install openpyxl python-docx pytest pypdf
       - name: Resolve D6 GitHub Job ID
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,7 +42,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          artifact_id=13264003231
+          artifact_id="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json")); print(d["artifact"]["id"])')"
+          expected_size="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json")); print(d["artifact"]["size_in_bytes"])')"
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
           for attempt in $(seq 1 12); do
             if curl --fail --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api" -o /tmp/d5-meta.json; then break; fi
@@ -56,13 +52,16 @@ jobs:
           python - <<'PY'
           import json,pathlib
           m=json.loads(pathlib.Path("/tmp/d5-meta.json").read_text())
-          assert m["id"]==13264003231 and m["expired"] is False
-          assert m["size_in_bytes"]==519115272
-          assert m["digest"]=="sha256:7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5"
-          print(json.dumps({k:m.get(k) for k in ("id","name","size_in_bytes","digest","expires_at")},indent=2))
+          d=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json").read_text())
+          a=d["artifact"]
+          assert m["id"]==int(a["id"]) and m["expired"] is False
+          assert m["size_in_bytes"]==int(a["size_in_bytes"])
+          assert m["digest"]==a["digest"]==("sha256:"+a["downloaded_zip_sha256"])
+          assert m.get("workflow_run",{}).get("id")==int(d["workflow_run_id"])
+          print(json.dumps({k:m.get(k) for k in ("id","name","size_in_bytes","digest","expires_at","workflow_run")},indent=2))
           PY
           curl --fail --location --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d5-artifact.zip
-          test "$(stat -c %s /tmp/d5-artifact.zip)" = "519115272"
+          test "$(stat -c %s /tmp/d5-artifact.zip)" = "$expected_size"
           echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
       - name: Independent post-write audit
         env:
@@ -96,7 +95,7 @@ jobs:
           lines += ["","## Limitations",""]+[f"- {x}" for x in r["limitations"]]
           session_path=pathlib.Path(f"docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_{os.environ['AUDIT_RUN_ID']}.md")
           session_path.write_text("\n".join(lines)+"\n",encoding="utf-8")
-          entry="\n\n## D6 independent post-write audit — 2026-11-03 (append-only)\n\n"+f"- Run {os.environ['AUDIT_RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}; D5 Artifact {r['source_d5_artifact_id']} from Run {r['source_d5_run_id']}.\n"+f"- Disposition {r['status']}; classification T2_INTERIM / NOT_FINAL_BLOCKED.\n"+"- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.\n"+"- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.\n"
+          entry="\n\n## D6 independent post-write audit — 2026-11-04 (append-only)\n\n"+f"- Run {os.environ['AUDIT_RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}; D5 Artifact {r['source_d5_artifact_id']} from Run {r['source_d5_run_id']}.\n"+f"- Disposition {r['status']}; classification T2_INTERIM / NOT_FINAL_BLOCKED.\n"+"- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.\n"+"- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.\n"
           for name in ("docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"):
             p=pathlib.Path(name); p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
           PY
@@ -135,7 +134,7 @@ jobs:
       - name: Publish D6 audit evidence Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Motorcycle_Simulation_D6_Post_Write_Audit_2026-11-03
+          name: Motorcycle_Simulation_D6_Post_Write_Audit_2026-11-04
           path: |
             docs/FINAL_AUDIT.md
             docs/FINAL_AUDIT.json

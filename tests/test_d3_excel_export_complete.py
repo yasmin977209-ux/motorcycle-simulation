@@ -367,3 +367,38 @@ def test_scoped_closure_report_is_written_under_deliverables(tmp_path: Path):
     report = scoped_closure_report_path(tmp_path / "deliverables")
     assert report == tmp_path / "deliverables" / "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md"
     assert report.parent.name == "deliverables"
+
+
+def test_decimal_financial_values_are_serialized_as_exact_numeric_xml(tmp_path: Path):
+    from decimal import Decimal
+    from xml.etree import ElementTree as ET
+    from scripts.d3_excel_export_complete import safe_append
+
+    path = tmp_path / "exact-decimal.xlsx"
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet("SCENARIO_MATRIX")
+    safe_append(ws, [Decimal("83735327.68"), "NR-e51bacd2a4c626dbc4c5e832"])
+    wb.save(path)
+    wb.close()
+
+    with zipfile.ZipFile(path) as archive:
+        root = ET.fromstring(archive.read("xl/worksheets/sheet1.xml"))
+    ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    cell = root.find(".//m:c[@r='A1']", ns)
+    assert cell is not None and cell.attrib.get("t") == "n"
+    assert cell.find("m:v", ns).text == "83735327.68"
+
+    checked = load_workbook(path, read_only=True, data_only=False)
+    try:
+        assert checked["SCENARIO_MATRIX"]["A1"].data_type == "n"
+    finally:
+        checked.close()
+
+
+def test_decimal_writer_rejects_float_leakage(tmp_path: Path):
+    from scripts.d3_excel_export_complete import safe_append
+
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet("SCENARIO_MATRIX")
+    with pytest.raises(ValueError, match="D3_FLOAT_NUMERIC_VALUE_PROHIBITED"):
+        safe_append(ws, [83735327.68000001])
