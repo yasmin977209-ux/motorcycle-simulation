@@ -142,3 +142,19 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+## D6 remediation checkpoint — 2026-11-04 (append-only)
+
+- Live branch checkpoint before this documentation append: `7dbe4308b3943d05be8b8275c632d783fd2c1a45`; `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- D5 audit target remains the existing, immutable Artifact `13264003231` from Run `41704252218`; no historical D5 Artifact, manifest, or deliverable was changed.
+- Prior D6 Run `41747887447`, tested SHA `75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252`, remains `BLOCKED`. It found four exact financial-value mismatches (two distinct cells duplicated across the two workbooks) and blocked all five DOCX files under its earlier §17.3 matcher. Historical acceptance IDs 175, 176, 179, 180, 181, 182, 183 and 186 were individually `NOT_RUN`.
+- The current D6 auditor and tests on the live branch contain the subsequent technical corrections: match the governing §17.3 wording in Arabic/English, exclude the separate partner-capital/70-30 structure from the §17.3 checklist, retain per-file DOCX findings, inspect OOXML RTL/LTR, independently render all five DOCX files and verify summary pagination, and resolve explicit NR-/D2D- references against the pinned registry. This is a code change only; it does not change the D5 package.
+- Current D6 auditor source: `scripts/audit_s6_deliverables_bundle.py`, 38,747 bytes, SHA-256 `95910a8b0357b9558f56f48ba705a1fd39f781f53813bcf57b0b104a06781f2a`, blob `f5c68ef2106c251e1acb7208db086ee31bdb46dc`.
+- Current D6 tests: `tests/test_d6_audit.py`, 9,427 bytes, SHA-256 `c8b5d5c397980c02dc457a1eaf7d3e4dfbd8a297edd9e7cb6a91007e5f12c52a`, blob `ad0686c4f12bdef09a7c25f718b5056f2031bd2a`.
+- D6 workflow was updated in commit `7dbe4308b3943d05be8b8275c632d783fd2c1a45` to retain manual dispatch and add a narrowly path-filtered push trigger for D6 workflow/auditor/test changes. Workflow file: `.github/workflows/stage-d6-independent-audit.yml`, 9,019 bytes, SHA-256 `732c03bb244161348dd3c4717437420230b18f048e4f9caae7a8030fbabfd260`, blob `5e1c32f1a05f015fbbe74b91aad10003a2161710`.
+- The available GitHub run/status listing did not return a new D6 Run ID for commit `7dbe4308...`; therefore the revised auditor execution remains `NOT_RUN / MISSING_EVIDENCE` until a corresponding Actions Run and exact tested SHA are observed. Do not treat the previous Run `41747887447` as validation of the revised code.
+- A separate D3 pinned-source reprocessing Run `41754147172` produced Artifact `13288779998`, but its D3 candidate and gate remain `T2_INTERIM / NOT_FINAL_BLOCKED` and `BLOCKED_MISSING_EVIDENCE`; it is not a replacement D5 package and does not authorize D4/D5 rebuilding.
+- Preserved gates: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; C100 Golden `NOT_RUN`; five historical accounting fields remain `MISSING_EVIDENCE`.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed/Trial identity change, D5 Artifact mutation, main write, merge, Release, or final-acceptance declaration occurred.
+- Disposition: D6 remains `BLOCKED` on its last executed audit. The revised auditor is committed but its new execution is not yet evidenced. `main` remains unchanged.
