@@ -278,16 +278,35 @@ def disclosure_173_findings(text):
  return [k for k,v in requirements.items() if not v]
 
 def docx_directionality(path):
+ """Inspect explicit paragraph/run direction on every Word text-story part."""
  ns={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
- with zipfile.ZipFile(path) as archive: root=ET.fromstring(archive.read("word/document.xml"))
- paragraphs=root.findall(".//w:p",ns); bidi=[]; rtl=[]
- for paragraph in paragraphs:
-  el=paragraph.find("./w:pPr/w:bidi",ns)
-  if el is not None: bidi.append(el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"))
- for run in root.findall(".//w:r",ns):
-  el=run.find("./w:rPr/w:rtl",ns)
-  if el is not None: rtl.append(el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"))
- return {"paragraphs":len(paragraphs),"bidi_true":sum(bidi),"bidi_false":len(bidi)-sum(bidi),"rtl_runs_true":sum(rtl),"rtl_runs_false":len(rtl)-sum(rtl)}
+ story=re.compile(r"^word/(?:document|header[0-9]+|footer[0-9]+|footnotes|endnotes|comments)\\.xml$")
+ paragraphs=0; text_runs=0; bidi_true=bidi_false=bidi_missing=0
+ rtl_true=rtl_false=rtl_missing=0; parts=[]
+ with zipfile.ZipFile(path) as archive:
+  names=sorted(name for name in archive.namelist() if story.fullmatch(name))
+  if "word/document.xml" not in names: raise ValueError("DOCX_DOCUMENT_XML_MISSING")
+  for name in names:
+   root=ET.fromstring(archive.read(name)); parts.append(name)
+   for paragraph in root.findall(".//w:p",ns):
+    paragraph_text="".join(node.text or "" for node in paragraph.findall(".//w:t",ns))
+    if not paragraph_text.strip(): continue
+    paragraphs+=1
+    el=paragraph.find("./w:pPr/w:bidi",ns)
+    if el is None: bidi_missing+=1
+    elif el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"): bidi_true+=1
+    else: bidi_false+=1
+    for run in paragraph.findall(".//w:r",ns):
+     run_text="".join(node.text or "" for node in run.findall(".//w:t",ns))
+     if not run_text: continue
+     text_runs+=1
+     rtl_el=run.find("./w:rPr/w:rtl",ns)
+     if rtl_el is None: rtl_missing+=1
+     elif rtl_el.attrib.get("{"+ns["w"]+"}val","1") not in ("0","false","False"): rtl_true+=1
+     else: rtl_false+=1
+ return {"story_parts":parts,"paragraphs":paragraphs,"text_runs":text_runs,
+  "bidi_true":bidi_true,"bidi_false":bidi_false,"bidi_missing":bidi_missing,
+  "rtl_runs_true":rtl_true,"rtl_runs_false":rtl_false,"rtl_runs_missing":rtl_missing}
 
 def render_docx_files(docx_paths, output_dir):
  output_dir.mkdir(parents=True,exist_ok=True)
@@ -411,7 +430,7 @@ def audit(a):
    missing_173=disclosure_173_findings(t)
    if missing_173: findings.append("DOCX_SECTION_17_3_DISCLOSURES_MISSING:"+",".join(missing_173))
    direction=docx_directionality(p); expect_rtl=name in rtl_names
-   direction_ok=(direction["bidi_true"]>0 and direction["bidi_false"]==0 and direction["rtl_runs_true"]>0 and direction["rtl_runs_false"]==0) if expect_rtl else (direction["bidi_false"]>0 and direction["bidi_true"]==0 and direction["rtl_runs_true"]==0)
+   direction_ok=(direction["paragraphs"]>0 and direction["text_runs"]>0 and direction["bidi_missing"]==0 and direction["rtl_runs_missing"]==0 and direction["bidi_true"]==direction["paragraphs"] and direction["bidi_false"]==0 and direction["rtl_runs_true"]==direction["text_runs"] and direction["rtl_runs_false"]==0) if expect_rtl else (direction["paragraphs"]>0 and direction["text_runs"]>0 and direction["bidi_missing"]==0 and direction["rtl_runs_missing"]==0 and direction["bidi_false"]==direction["paragraphs"] and direction["bidi_true"]==0 and direction["rtl_runs_false"]==direction["text_runs"] and direction["rtl_runs_true"]==0)
    if not direction_ok: findings.append("DOCX_DIRECTIONALITY_MISMATCH")
    ids=number_pattern.findall(t); docx_id_occurrences+=len(ids); unresolved=[]
    for number_id in ids:
