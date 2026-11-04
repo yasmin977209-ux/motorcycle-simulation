@@ -171,8 +171,30 @@ def test_docx_directionality_detects_arabic_and_english_ooxml(tmp_path):
     rpr = en.paragraphs[0].runs[0]._r.get_or_add_rPr()
     rtl = OxmlElement("w:rtl"); rtl.set(qn("w:val"), "0"); rpr.append(rtl)
     en_path = tmp_path / "en.docx"; en.save(en_path)
-    assert docx_directionality(ar_path)["bidi_true"] == 1
+    # A text-bearing header is part of the DOCX story and must be checked too.
+    header_p = ar.sections[0].header.paragraphs[0]
+    header_run = header_p.add_run("عنوان")
+    header_ppr = header_p._p.get_or_add_pPr()
+    header_bidi = OxmlElement("w:bidi"); header_bidi.set(qn("w:val"), "1"); header_ppr.append(header_bidi)
+    header_rpr = header_run._r.get_or_add_rPr()
+    header_rtl = OxmlElement("w:rtl"); header_rtl.set(qn("w:val"), "1"); header_rpr.append(header_rtl)
+    ar.save(ar_path)
+    ar_result = docx_directionality(ar_path)
+    assert ar_result["bidi_true"] == 2
+    assert ar_result["rtl_runs_true"] == 2
+    assert any(name.startswith("word/header") for name in ar_result["story_parts"])
+    assert ar_result["bidi_missing"] == 0
+    assert ar_result["rtl_runs_missing"] == 0
     assert docx_directionality(en_path)["bidi_false"] == 1
+
+    # Missing explicit flags on visible text must fail closed, not disappear from counts.
+    plain = Document(); plain.add_paragraph("Unmarked visible text")
+    plain_path = tmp_path / "plain.docx"; plain.save(plain_path)
+    plain_result = docx_directionality(plain_path)
+    assert plain_result["paragraphs"] == 1
+    assert plain_result["text_runs"] == 1
+    assert plain_result["bidi_missing"] == 1
+    assert plain_result["rtl_runs_missing"] == 1
 
 
 def test_d6_acceptance_statuses_distinguish_scoped_checks_from_unrun_contracts():
