@@ -598,3 +598,20 @@ The accidental main documentation commit was reverted normally in `01a6f79eedc52
 At prior branch HEAD `c447a5b5c3162b23e21ca8ea5befdd6541409113`, D1-D2 exact-head validation Run 41935049292 and D3 published-output exact-head Run 41935049260 succeeded. D0-D4 exact-head gate Run 41935049455 failed because workflow loaded stale `D4_BUILD_AUDIT_2026-11-03.json`; the log shows mismatch against current deliverable. Workflow path references were updated to 2026-11-05 current D3/D4 audit/report/matrix files in the session-wrap commit. Re-check the triggered Run before asserting exact-head PASS.
 
 Main Run 41935664221 / Job 126943358779 was in_progress at last inspection. Do not wait for long-running workflow; monitor later. D0-D6 remain PASS_SCOPED_WITH_LIMITATIONS within individual scope; all production/statistical/accounting limitations remain. E0 not started; no Trials/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/merge/Release authorized.
+
+
+---
+
+# Current handoff override — 2026-11-05
+
+This append-only block supersedes the dated 2026-10-31 snapshot above for current Stage D disposition and branch refs. It does not rewrite the old record.
+
+Read first: [Final Session Handoff 2026-11-05](stage_d/SESSION_HANDOFF_2026-11-05_FINAL.md), [live prompt library REV2](stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md), and the latest D0-D6 evidence records.
+
+Review-start refs (must be revalidated in the next session):
+- Working branch `tmp/d1-rebuild-20261101`: `c447a5b5c3162b23e21ca8ea5befdd6541409113`.
+- `main`: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+
+D0–D6 are currently recorded as `PASS_SCOPED_WITH_LIMITATIONS` within scoped evidence. D6 is not final acceptance. D3-18 requirement-map and v2.4.0 header/owner-decision inconsistencies are explicitly preserved for append-only reconciliation. D5 publication evidence commit is `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`; tested SHA is `baf696af1e951cbf4a79e8a9e009c60c6b053b2d`.
+
+The owner-authorized Revert of the accidental main write is `01a6f79eedc522bb734ed9c5ea31beee581f2468`. Do not write main again absent new explicit owner authorization. E0–E6 remain NOT_STARTED; do not infer permission to run trials, simulations, Monte Carlo, N expansion, backfill, identity changes, release or final acceptance.
