@@ -389,7 +389,7 @@ def main():
         "scope": "REFERENCE_COMPLIANT_BASELINE_ONLY",
         "no_trials_or_simulation": True,
     }
-    manifest_path = evidence / "D4_REPORT_MANIFEST_2026-11-03.json"
+    manifest_path = evidence / "D4_REPORT_MANIFEST_2026-11-05.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     manifest_sha = digest(manifest_path.read_bytes())
     seal = (args.tested_sha, args.run_id, manifest_sha, build_date)
@@ -436,7 +436,7 @@ def main():
             "This D4 report build is not D5 package acceptance, D6 independent audit, P17 acceptance, or FINAL_ACCEPTED.",
         ],
     }
-    (evidence / "D4_BUILD_AUDIT_2026-11-03.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (evidence / "D4_BUILD_AUDIT_2026-11-05.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"D4":"GENERATED","outputs":{k:str(v) for k,v in outputs.items()},"number_ids_rendered":len(used_ids),"manifest_sha256":manifest_sha},ensure_ascii=False))
 
 if __name__ == "__main__":
