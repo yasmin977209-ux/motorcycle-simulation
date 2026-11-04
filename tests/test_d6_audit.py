@@ -173,3 +173,37 @@ def test_docx_directionality_detects_arabic_and_english_ooxml(tmp_path):
     en_path = tmp_path / "en.docx"; en.save(en_path)
     assert docx_directionality(ar_path)["bidi_true"] == 1
     assert docx_directionality(en_path)["bidi_false"] == 1
+
+
+def test_d6_acceptance_statuses_distinguish_scoped_checks_from_unrun_contracts():
+    from scripts.audit_s6_deliverables_bundle import acceptance_test_statuses
+    result = acceptance_test_statuses(
+        excel_sheets_verified=True,
+        numeric_parity_verified=True,
+        financial_mismatch_count=4,
+        package_inventory_verified=True,
+        artifact_fingerprint_verified=True,
+        run_id="run-1", job_id="job-1", tested_sha="abc123",
+    )
+    assert result["test_175"]["status"] == "PASS_SCOPED"
+    assert result["test_182"]["status"] == "BLOCKED"
+    assert result["test_186"]["status"] == "PASS_SCOPED"
+    for test_id in ("176", "179", "180", "181", "183"):
+        assert result["test_" + test_id]["status"] == "NOT_RUN"
+        assert result["test_" + test_id]["tested_sha"] == "abc123"
+
+
+def test_d6_acceptance_statuses_fail_closed_when_scoped_prerequisites_missing():
+    from scripts.audit_s6_deliverables_bundle import acceptance_test_statuses
+    result = acceptance_test_statuses(
+        excel_sheets_verified=False,
+        numeric_parity_verified=False,
+        financial_mismatch_count=0,
+        package_inventory_verified=False,
+        artifact_fingerprint_verified=False,
+        run_id="run-2", job_id="job-2", tested_sha="def456",
+    )
+    assert result["test_175"]["status"] == "BLOCKED"
+    assert result["test_182"]["status"] == "PASS_SCOPED"
+    assert result["test_186"]["status"] == "BLOCKED"
+
