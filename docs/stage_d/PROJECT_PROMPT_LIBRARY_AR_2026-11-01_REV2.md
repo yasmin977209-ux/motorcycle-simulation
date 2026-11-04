@@ -974,3 +974,24 @@ Number Registry مورد خارجي مستقل، ولا تضفه عضواً تا
 ## D3 source-date gate correction — 2026-11-02 (append-only)
 
 D3 remains BLOCKED_MISSING_EVIDENCE. Do not read or reuse source artifacts dated before 2026-10-31. The only three pinned source runs identified for the missing detailed ledgers are pre-cutoff and ineligible. The D3 completion workflow is disabled, and the extension builder rejects those pins before opening the archives. Any temporary output from the cancelled run is excluded from evidence. No D4 transition until eligible post-cutoff source evidence closes D3.
+
+
+---
+
+# Current-state override — 2026-11-05 (append-only; supersedes stale opening snapshot)
+
+The opening status in sections 0.2 and 0.3 above is a historical 2026-11-01 snapshot. It is not the current stage status. After the subsequent D3 owner acceptance, D4/D5 builds and D6 independent audit, the latest scoped dispositions are:
+
+- D0–D6: each `PASS_SCOPED_WITH_LIMITATIONS` within its own evidence boundary.
+- D3-18: owner-approved Artifact 13288779998 and Run 41914970361 support `PASS_SCOPED`; the per-requirement JSON map still contains a stale `NOT_RUN` entry and must be corrected append-only.
+- D4: Run 41916830283, `PASS_SCOPED_WITH_LIMITATIONS`.
+- D5: Run 41928234377, package published and exact Artifact-ID remote readback passed; full 177-test suite remains `NOT_RUN`.
+- D6: Run 41929888796, Job 126923812128, `PASS_SCOPED_WITH_LIMITATIONS`; tests 176/179/180/181/183 remain `NOT_RUN`, and historical invocations 175/182/186 remain `NOT_RUN` despite scoped audit checks.
+
+Current working branch at this addendum: `tmp/d1-rebuild-20261101`. Current review-start HEAD: `c447a5b5c3162b23e21ca8ea5befdd6541409113`. Current main review-start HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`. Re-fetch both refs in every later session.
+
+Owner decision `D-2026-10-30-REFERENCE-V2.4.0` remains `APPROVED_BY_OWNER` and controls the governing reference. The published reference text still contains a stale `PROPOSED_FOR_OWNER_ADOPTION — NOT_EFFECTIVE_YET` header; preserve and reconcile this text conflict append-only, without downgrading the owner decision.
+
+Main incident: owner authorized a normal Revert, commit `01a6f79eedc522bb734ed9c5ea31beee581f2468`, which removes only the accidentally added master report. No force-push or history rewrite. Main is read-only henceforth absent a new owner decision.
+
+For the full evidence matrix, run IDs, artifact IDs/digests/retention, gate limitations, open PR/release inspection and next steps, read [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md). This addendum does not authorize E0, final acceptance, release, trials, Monte Carlo or N expansion.
