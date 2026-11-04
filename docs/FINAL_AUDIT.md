@@ -1,14 +1,14 @@
 # D6 Independent Post-Write Audit
 
 - Disposition: BLOCKED
-- D6 Run: 41739851553
-- Tested SHA: f73c9c78f035f02bd19975c0fc52e0a3c9bbf90e
+- D6 Run: 41744523199
+- Tested SHA: 50ed6f58e1909afafcc9ddc0e65b4832cf782914
 - D5 Artifact: 13264003231 / Run 41704252218
 - Classification: T2_INTERIM / NOT_FINAL_BLOCKED
 
 ## Blocking evidence
 
-- ValueError: DOCX_MISSING_EVIDENCE_DISCLOSURE:دراسة_الجدوى_AR.docx
+- KeyError: 'status'
 
 ## Fixed gate states
 

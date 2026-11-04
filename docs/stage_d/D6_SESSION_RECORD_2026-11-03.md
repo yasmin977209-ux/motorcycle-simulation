@@ -1,8 +1,8 @@
 # D6 Session Record — 2026-11-03
 
 - Disposition: BLOCKED
-- D6 workflow run: 41739851553
-- Tested source SHA: f73c9c78f035f02bd19975c0fc52e0a3c9bbf90e
+- D6 workflow run: 41744523199
+- Tested source SHA: 50ed6f58e1909afafcc9ddc0e65b4832cf782914
 - D5 source Run: 41704252218; Artifact: 13264003231
 - Scope: independent read-only post-write audit of the published D5 package and embedded deliverables.
 - D6 does not change D3/D4/D5 artifacts, business rules, thresholds, identities, or historical evidence.
