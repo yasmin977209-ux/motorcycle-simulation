@@ -123,7 +123,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import json,pathlib,os,hashlib
-          report_path=pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json")
+          report_path=pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json")
           report=json.loads(report_path.read_text(encoding="utf-8"))
           meta=json.loads(pathlib.Path("/tmp/d5-artifact-metadata.json").read_text())
           outer=pathlib.Path("/tmp/d5-published-artifact.zip")
@@ -148,7 +148,7 @@ jobs:
           md += [f"| {a} | {b} | {c} |" for a,b,c in rows]
           md += ["","## Verified fingerprints","",f"- Tested source SHA: {report['tested_sha']}.",f"- Workflow Run: {report['workflow_run_id']}.",f"- D5 ZIP: {pkg['bytes']} bytes; SHA-256 {pkg['sha256']}.",f"- manifest.json: {man['bytes']} bytes; SHA-256 {man['sha256']}.",f"- SHA256SUMS.txt: {sums['bytes']} bytes; SHA-256 {sums['sha256']}.",f"- Artifact ID: {art['id']}; size {art['size_in_bytes']} bytes; digest {art['digest']}; expires {art['expires_at']}; retention 30 days.",f"- Artifact download URL: {art['url']}.","- Package classification: T2_INTERIM / NOT_FINAL_BLOCKED.","- Full 177-unique-test acceptance suite: NOT_RUN.","- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release, D6 or FINAL_ACCEPTED."]
           pathlib.Path("docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-05.md").write_text("\n".join(md)+"\n",encoding="utf-8")
-          entry=("\n\n## D5 package publication — 2026-11-03 (append-only)\n\n"
+          entry=("\n\n## D5 package publication — 2026-11-05 (append-only)\n\n"
             f"- Workflow Run {report['workflow_run_id']}; tested source SHA {report['tested_sha']}; publication commit {os.environ['TESTED_SHA']}.\n"
             f"- D5 package ZIP: {pkg['bytes']} bytes; SHA-256 {pkg['sha256']}; 8 members; reopened, exact inventory and CRC PASS.\n"
             f"- manifest SHA-256 {man['sha256']}; external SHA256SUMS SHA-256 {sums['sha256']} (10 entries).\n"
@@ -168,8 +168,8 @@ jobs:
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
-          git commit -m "docs(d5): record package preflight and publication blocker"
+          git add docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-05.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
+          git commit -m "docs(d5): record package publication and readback evidence"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final branch HEAD validation
         env:
@@ -183,8 +183,8 @@ jobs:
           repo=os.environ["GITHUB_REPOSITORY"]; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
           paths=[
             "scripts/d5_package.py","tests/test_d5_package.py",".github/workflows/stage-d5-delivery-package.yml",
-            "docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json","docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-03.md",
-            "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"
+            "docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json","docs/stage_d/D5_REQUIREMENTS_MATRIX_2026-11-05.md",
+            "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"
           ]
           for path in paths:
             local=pathlib.Path(path).read_bytes()
