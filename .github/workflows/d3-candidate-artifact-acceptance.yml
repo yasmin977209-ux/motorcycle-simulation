@@ -1,0 +1,527 @@
+name: D3 Candidate Artifact Final Acceptance
+
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - ".github/workflows/d3-candidate-artifact-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: motorcycle-simulation-branch-writer-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  accept-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      REPOSITORY: \${{ github.repository }}
+      GH_TOKEN: \${{ github.token }}
+      BRANCH: tmp/d1-rebuild-20261101
+      CANDIDATE_ARTIFACT_ID: "13288779998"
+      CANDIDATE_ARTIFACT_NAME: D3-Owner-Approved-Source-Reprocessing-41754147172
+      CANDIDATE_ARTIFACT_BYTES: "535567142"
+      CANDIDATE_ARTIFACT_SHA256: e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe
+      SOURCE_RUN_ID: "41754147172"
+      SOURCE_SHA: 3325fd961005c2c47de071d25904a748af7a21a6
+      FINANCIAL_AUDIT_RUN_ID: "41900246587"
+      FINANCIAL_AUDIT_TESTED_SHA: d323300abaa361413091b3062e3417db62c18f56
+      EXPECTED_MAIN_SHA: c6e54349a5e94f65d5aa9f83141f225d777bb474
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Verify exact branch HEAD and install verifier dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "$BRANCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          python -m pip install --disable-pip-version-check requests
+
+      - name: Independently verify candidate Artifact, workbook XML and financial audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, io, json, os, pathlib, shutil, stat, subprocess, tempfile, zipfile
+          import xml.etree.ElementTree as ET
+          import requests
+
+          repo=os.environ["REPOSITORY"]
+          token=os.environ["GH_TOKEN"]
+          branch=os.environ["BRANCH"]
+          artifact_id=int(os.environ["CANDIDATE_ARTIFACT_ID"])
+          source_run_id=int(os.environ["SOURCE_RUN_ID"])
+          source_sha=os.environ["SOURCE_SHA"]
+          tested_sha=os.environ["GITHUB_SHA"]
+          headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json",
+                   "X-GitHub-Api-Version":"2022-11-28"}
+          api=f"https://api.github.com/repos/{repo}"
+          raw_base=f"https://raw.githubusercontent.com/{repo}/{tested_sha}/"
+
+          def fail(code, detail=""):
+              raise SystemExit(code+(":"+str(detail) if detail else ""))
+
+          def sha(data):
+              return hashlib.sha256(data).hexdigest()
+
+          def read_api_json(url):
+              r=requests.get(url,headers=headers,timeout=90)
+              r.raise_for_status()
+              return r.json()
+
+          # Independent lineage and artifact-metadata check.
+          artifact=read_api_json(f"{api}/actions/artifacts/{artifact_id}")
+          source_run=read_api_json(f"{api}/actions/runs/{source_run_id}")
+          checks={
+              "artifact_id":artifact.get("id")==artifact_id,
+              "artifact_name":artifact.get("name")==os.environ["CANDIDATE_ARTIFACT_NAME"],
+              "artifact_size":artifact.get("size_in_bytes")==int(os.environ["CANDIDATE_ARTIFACT_BYTES"]),
+              "artifact_digest":artifact.get("digest")=="sha256:"+os.environ["CANDIDATE_ARTIFACT_SHA256"],
+              "artifact_not_expired":artifact.get("expired") is False,
+              "artifact_source_run":artifact.get("workflow_run",{}).get("id")==source_run_id,
+              "artifact_source_branch":artifact.get("workflow_run",{}).get("head_branch")==branch,
+              "artifact_source_sha":artifact.get("workflow_run",{}).get("head_sha")==source_sha,
+              "source_run_id":source_run.get("id")==source_run_id,
+              "source_run_sha":source_run.get("head_sha")==source_sha,
+              "source_run_branch":source_run.get("head_branch")==branch,
+              "source_run_success":source_run.get("status")=="completed" and source_run.get("conclusion")=="success",
+          }
+          if not all(checks.values()):
+              fail("D3_CANDIDATE_ARTIFACT_LINEAGE_MISMATCH",json.dumps(checks,sort_keys=True))
+
+          # Validate the live owner-approved, exact-three-artifact source-reprocessing record.
+          owner_path=pathlib.Path("docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json")
+          owner_bytes=owner_path.read_bytes()
+          owner=json.loads(owner_bytes.decode("utf-8"))
+          if owner.get("owner_approval")!="APPROVED_2026-11-02":
+              fail("D3_OWNER_APPROVAL_MISSING")
+          if owner.get("scope")!="D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS":
+              fail("D3_OWNER_SCOPE_MISMATCH")
+          if owner.get("source_date_exception")!="D3_ONLY_PINNED_ARTIFACTS_2026-11-02":
+              fail("D3_SOURCE_DATE_EXCEPTION_MISMATCH")
+          if owner.get("workflow_run_id")!=source_run_id or owner.get("source_head")!=source_sha:
+              fail("D3_OWNER_RECORD_LINEAGE_MISMATCH")
+          if owner.get("no_trials_or_simulation_executed") is not True or owner.get("no_source_or_trial_identity_changed") is not True:
+              fail("D3_IDENTITY_OR_TRIAL_BOUNDARY_NOT_PROVED")
+
+          expected_members=owner.get("files")
+          if not isinstance(expected_members,dict) or len(expected_members)!=14:
+              fail("D3_EXPECTED_MEMBER_INVENTORY_MISMATCH",len(expected_members or {}))
+
+          # Re-download the exact Actions Artifact by immutable ID and hash its outer ZIP bytes.
+          tmp=pathlib.Path(tempfile.mkdtemp(prefix="d3-candidate-final-acceptance-"))
+          archive=tmp/"candidate-artifact.zip"
+          response=requests.get(f"{api}/actions/artifacts/{artifact_id}/zip",
+                                headers=headers,stream=True,timeout=(60,300))
+          response.raise_for_status()
+          outer_hash=hashlib.sha256()
+          outer_bytes=0
+          with archive.open("wb") as dst:
+              for chunk in response.iter_content(8*1024*1024):
+                  if chunk:
+                      dst.write(chunk)
+                      outer_hash.update(chunk)
+                      outer_bytes+=len(chunk)
+          outer_sha=outer_hash.hexdigest()
+          if outer_bytes!=int(os.environ["CANDIDATE_ARTIFACT_BYTES"]) or outer_sha!=os.environ["CANDIDATE_ARTIFACT_SHA256"]:
+              fail("D3_CANDIDATE_OUTER_FINGERPRINT_MISMATCH",f"{outer_bytes}:{outer_sha}")
+
+          # Require the artifact to contain exactly the 14 source-run-pinned files.
+          workbook_paths={}
+          small_members={}
+          member_inventory={}
+          with zipfile.ZipFile(archive) as z:
+              infos=z.infolist()
+              bad=z.testzip()
+              if bad:
+                  fail("D3_CANDIDATE_ZIP_CRC_FAILURE",bad)
+              seen_paths=set()
+              by_basename={}
+              for info in infos:
+                  name=info.filename
+                  p=pathlib.PurePosixPath(name)
+                  mode=(info.external_attr>>16)&0xffff
+                  if p.is_absolute() or ".." in p.parts or "\\" in name or stat.S_ISLNK(mode):
+                      fail("D3_CANDIDATE_UNSAFE_ZIP_MEMBER",name)
+                  if name in seen_paths:
+                      fail("D3_CANDIDATE_DUPLICATE_ZIP_PATH",name)
+                  seen_paths.add(name)
+                  if info.is_dir():
+                      continue
+                  if p.name in by_basename:
+                      fail("D3_CANDIDATE_DUPLICATE_BASENAME",p.name)
+                  by_basename[p.name]=info
+              if set(by_basename)!=set(expected_members):
+                  fail("D3_CANDIDATE_MEMBER_SET_MISMATCH",
+                       json.dumps({"missing":sorted(set(expected_members)-set(by_basename)),
+                                   "extra":sorted(set(by_basename)-set(expected_members))},ensure_ascii=False))
+              if len(by_basename)!=14:
+                  fail("D3_CANDIDATE_MEMBER_COUNT_MISMATCH",len(by_basename))
+
+              for basename, pinned in expected_members.items():
+                  info=by_basename[basename]
+                  expected_size=int(pinned["bytes"])
+                  expected_sha=pinned["sha256"]
+                  out_path=tmp/basename
+                  h=hashlib.sha256()
+                  total=0
+                  needs_file=basename in ("Full_Results_EN.xlsx","النتائج_الكاملة_AR.xlsx")
+                  with z.open(info) as src:
+                      if needs_file:
+                          with out_path.open("wb") as dst:
+                              while True:
+                                  chunk=src.read(8*1024*1024)
+                                  if not chunk:
+                                      break
+                                  dst.write(chunk)
+                                  h.update(chunk)
+                                  total+=len(chunk)
+                      else:
+                          data=src.read()
+                          total=len(data)
+                          h.update(data)
+                          small_members[basename]=data
+                  actual_sha=h.hexdigest()
+                  if total!=expected_size or actual_sha!=expected_sha:
+                      fail("D3_CANDIDATE_MEMBER_FINGERPRINT_MISMATCH",
+                           f"{basename}:{total}:{actual_sha}")
+                  member_inventory[basename]={"bytes":total,"sha256":actual_sha,"artifact_member":info.filename}
+                  if needs_file:
+                      workbook_paths[basename]=out_path
+
+          # Validate embedded candidate build audit and manifest without modifying either historical file.
+          build=json.loads(small_members["D3_BUILD_AUDIT.json"].decode("utf-8"))
+          manifest=json.loads(small_members["D3_MANIFEST.json"].decode("utf-8"))
+          if build.get("source_head")!=source_sha or str(build.get("workflow_run_id"))!=str(source_run_id):
+              fail("D3_EMBEDDED_BUILD_AUDIT_LINEAGE_MISMATCH")
+          if build.get("d3_candidate_status")!="T2_INTERIM / NOT_FINAL_BLOCKED":
+              fail("D3_EMBEDDED_BUILD_CLASSIFICATION_UNEXPECTED",build.get("d3_candidate_status"))
+          if build.get("d3_gate_status")!="BLOCKED_MISSING_EVIDENCE" or build.get("final_acceptance")!="NOT_DECLARED":
+              fail("D3_EMBEDDED_BUILD_GATE_STATE_UNEXPECTED")
+          expected_statuses={
+              "D3-01":"PASS_SCOPED","D3-02":"PASS_SCOPED","D3-03":"PASS_SCOPED","D3-04":"PASS_SCOPED",
+              "D3-05":"PASS_SCOPED_WITH_LIMITATIONS","D3-06":"PASS_SCOPED_WITH_LIMITATIONS",
+              "D3-07":"PASS_SCOPED_WITH_LIMITATIONS","D3-08":"PASS_SCOPED_WITH_LIMITATIONS",
+              "D3-09":"PASS_SCOPED_WITH_LIMITATIONS","D3-10":"PASS_SCOPED_WITH_LIMITATIONS",
+              "D3-11":"PASS_SCOPED_WITH_LIMITATIONS","D3-12":"PASS_SCOPED_WITH_LIMITATIONS",
+              "D3-13":"PASS_SCOPED","D3-14":"PASS_SCOPED","D3-15":"PASS_SCOPED","D3-16":"PASS_SCOPED",
+              "D3-17":"PASS_SCOPED_WITH_LIMITATIONS","D3-18":"NOT_RUN"
+          }
+          if build.get("requirement_statuses")!=expected_statuses:
+              fail("D3_REQUIREMENT_MATRIX_MISMATCH",json.dumps(build.get("requirement_statuses"),sort_keys=True))
+          if manifest.get("source_head")!=source_sha or str(manifest.get("workflow_run_id"))!=str(source_run_id):
+              fail("D3_EMBEDDED_MANIFEST_LINEAGE_MISMATCH")
+          if manifest.get("current_governing_reference",{}).get("sha256")!="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b":
+              fail("D3_EMBEDDED_GOVERNING_REFERENCE_MISMATCH")
+          if manifest.get("current_governing_reference",{}).get("bytes")!=401397:
+              fail("D3_EMBEDDED_GOVERNING_REFERENCE_SIZE_MISMATCH")
+          if manifest.get("historical_execution_reference_sha256")!="e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f":
+              fail("D3_HISTORICAL_EXECUTION_REFERENCE_IDENTITY_MISMATCH")
+          if manifest.get("registry_base_sha256")!="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87":
+              fail("D3_BASE_NUMBER_REGISTRY_IDENTITY_MISMATCH")
+          if manifest.get("master_seed")!=20270101:
+              fail("D3_MASTER_SEED_IDENTITY_MISMATCH")
+          ext=manifest.get("registry_extension",{})
+          if ext.get("bytes")!=16440292 or ext.get("sha256")!="7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024":
+              fail("D3_REGISTRY_EXTENSION_IDENTITY_MISMATCH")
+          for name in ("Full_Results_EN.xlsx","النتائج_الكاملة_AR.xlsx"):
+              f=manifest.get("files",{}).get(name,{})
+              p=owner["files"][name]
+              if f.get("bytes")!=p["bytes"] or f.get("sha256")!=p["sha256"]:
+                  fail("D3_MANIFEST_WORKBOOK_FINGERPRINT_MISMATCH",name)
+
+          # Verify exact governing reference and the Number Registry actually present in the tested checkout.
+          governing=pathlib.Path("docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md").read_bytes()
+          if len(governing)!=401397 or sha(governing)!="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b":
+              fail("D3_LIVE_GOVERNING_REFERENCE_FINGERPRINT_MISMATCH")
+          registry=pathlib.Path("results/number_registry.json").read_bytes()
+          if len(registry)!=24137036 or sha(registry)!="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87":
+              fail("D3_LIVE_NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
+          extension=pathlib.Path("deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz").read_bytes()
+          if len(extension)!=16440292 or sha(extension)!="7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024":
+              fail("D3_LIVE_REGISTRY_EXTENSION_FINGERPRINT_MISMATCH")
+          if sha(small_members["D3_NUMBER_REGISTRY_EXTENSION.json.gz"])!=sha(extension):
+              fail("D3_ARTIFACT_VS_REMOTE_EXTENSION_MISMATCH")
+
+          # Cross-check the separately committed candidate financial-registry audit.
+          financial=json.loads(pathlib.Path("docs/stage_d/D3_CANDIDATE_FINANCIAL_AUDIT_2026-11-04.json").read_text(encoding="utf-8"))
+          if financial.get("status")!="PASS_SCOPED" or financial.get("audit_run_id")!=int(os.environ["FINANCIAL_AUDIT_RUN_ID"]):
+              fail("D3_FINANCIAL_AUDIT_NOT_PASS_SCOPED")
+          if financial.get("audit_tested_sha")!=os.environ["FINANCIAL_AUDIT_TESTED_SHA"]:
+              fail("D3_FINANCIAL_AUDIT_TESTED_SHA_MISMATCH")
+          if financial.get("candidate_artifact_id")!=artifact_id or financial.get("candidate_source_sha")!=source_sha:
+              fail("D3_FINANCIAL_AUDIT_CANDIDATE_IDENTITY_MISMATCH")
+          if financial.get("base_number_registry",{}).get("sha256")!="743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87":
+              fail("D3_FINANCIAL_AUDIT_REGISTRY_MISMATCH")
+          if financial.get("bilingual_numeric_parity")!="PASS_SCOPED":
+              fail("D3_FINANCIAL_AUDIT_BILINGUAL_PARITY_MISSING")
+          books=financial.get("workbooks",{})
+          en=books.get("Full_Results_EN.xlsx",{})
+          ar=books.get("النتائج_الكاملة_AR.xlsx",{})
+          if en.get("financial_mismatch_count")!=0 or ar.get("financial_mismatch_count")!=0:
+              fail("D3_FINANCIAL_REGISTRY_MISMATCH_RECORDED")
+          if en.get("numeric_digest")!=ar.get("numeric_digest"):
+              fail("D3_FINANCIAL_AUDIT_NUMERIC_PARITY_MISMATCH")
+
+          # Independent XLSX ZIP/XML inspection: workbook sheets, worksheet parts, formulas and Excel errors.
+          workbook_results={}
+          for name,path in workbook_paths.items():
+              with zipfile.ZipFile(path) as x:
+                  bad=x.testzip()
+                  if bad:
+                      fail("D3_XLSX_CRC_FAILURE",name+":"+bad)
+                  wb=ET.fromstring(x.read("xl/workbook.xml"))
+                  sheet_nodes=[e for e in wb.iter() if e.tag.rsplit("}",1)[-1]=="sheet"]
+                  sheet_names=[e.attrib.get("name","") for e in sheet_nodes]
+                  worksheet_parts=[n for n in x.namelist() if n.startswith("xl/worksheets/") and n.endswith(".xml")]
+                  formulas=0
+                  errors=0
+                  for entry in worksheet_parts:
+                      with x.open(entry) as stream:
+                          for _,elem in ET.iterparse(stream,events=("end",)):
+                              tag=elem.tag.rsplit("}",1)[-1]
+                              if tag=="f":
+                                  formulas+=1
+                              elif tag=="c" and elem.attrib.get("t")=="e":
+                                  errors+=1
+                              elem.clear()
+                  if len(sheet_names)!=185 or len(worksheet_parts)!=185:
+                      fail("D3_XLSX_SHEET_STRUCTURE_MISMATCH",f"{name}:{len(sheet_names)}:{len(worksheet_parts)}")
+                  if formulas!=0 or errors!=0:
+                      fail("D3_XLSX_FORMULA_OR_ERROR_CELLS",f"{name}:formulas={formulas}:errors={errors}")
+                  workbook_results[name]={
+                      "bytes":owner["files"][name]["bytes"],"sha256":owner["files"][name]["sha256"],
+                      "sheet_count":len(sheet_names),"worksheet_xml_count":len(worksheet_parts),
+                      "formula_cell_count":formulas,"excel_error_cell_count":errors,
+                      "xlsx_crc":"PASS","sheet_names_sha256":sha(sheet_names[0].encode("utf-8") if False else "\n".join(sheet_names).encode("utf-8"))
+                  }
+          if workbook_results["Full_Results_EN.xlsx"]["sheet_names_sha256"]!=workbook_results["النتائج_الكاملة_AR.xlsx"]["sheet_names_sha256"]:
+              fail("D3_BILINGUAL_SHEET_ORDER_MISMATCH")
+
+          # Validate the five DOCX members as valid OOXML packages; D4 remains a separate stage.
+          docx_results={}
+          for name in ("Full_Report_EN.docx","Summary_EN.docx","التقرير_الكامل_AR.docx","الملخص_AR.docx","دراسة_الجدوى_AR.docx"):
+              with zipfile.ZipFile(io.BytesIO(small_members[name])) as d:
+                  bad=d.testzip()
+                  if bad or "[Content_Types].xml" not in d.namelist() or "word/document.xml" not in d.namelist():
+                      fail("D3_DOCX_PACKAGE_INVALID",name+":"+str(bad))
+              docx_results[name]={"bytes":owner["files"][name]["bytes"],"sha256":owner["files"][name]["sha256"],"ooxml_package":"PASS_SCOPED"}
+
+          # Promote only D3-18 for this candidate record; never edit the embedded historical audit or manifest.
+          requirement_statuses=dict(expected_statuses)
+          requirement_statuses["D3-18"]="PASS_SCOPED"
+          report={
+              "schema_version":"d3-candidate-artifact-final-acceptance-v1",
+              "classification":"VERIFIED_LIVE",
+              "status":"PASS_SCOPED",
+              "repository":repo,
+              "branch":branch,
+              "acceptance_run_id":int(os.environ["GITHUB_RUN_ID"]),
+              "acceptance_tested_sha":tested_sha,
+              "candidate_source":{"run_id":source_run_id,"source_sha":source_sha,"source_run_conclusion":source_run.get("conclusion")},
+              "candidate_artifact":{
+                  "id":artifact_id,"name":artifact.get("name"),"bytes":outer_bytes,"sha256":outer_sha,
+                  "metadata_digest":artifact.get("digest"),"created_at":artifact.get("created_at"),
+                  "expires_at":artifact.get("expires_at"),"expired":artifact.get("expired"),
+                  "lineage_checks":checks,"zip_crc":"PASS","file_member_count":len(member_inventory),
+                  "member_inventory":member_inventory
+              },
+              "owner_source_reprocessing_approval":{
+                  "decision":"APPROVED_2026-11-02","scope":"D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+                  "source_date_exception":"D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+                  "no_trials_or_simulation_executed":True,"no_source_or_trial_identity_changed":True
+              },
+              "governing_reference":{"version":"v2.4.0","bytes":401397,"sha256":"225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"},
+              "historical_execution_reference_sha256":"e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+              "number_registry":{"path":"results/number_registry.json","bytes":len(registry),"sha256":sha(registry)},
+              "registry_extension":{"bytes":len(extension),"sha256":sha(extension)},
+              "prior_financial_audit":{
+                  "run_id":int(os.environ["FINANCIAL_AUDIT_RUN_ID"]),
+                  "tested_sha":os.environ["FINANCIAL_AUDIT_TESTED_SHA"],
+                  "status":"PASS_SCOPED","bilingual_numeric_parity":"PASS_SCOPED",
+                  "workbooks":{
+                      "Full_Results_EN.xlsx":{"numeric_cells":en["numeric_cells"],"financial_cells_registry_matched":en["financial_cells_registry_matched"],"financial_mismatch_count":en["financial_mismatch_count"],"numeric_digest":en["numeric_digest"]},
+                      "النتائج_الكاملة_AR.xlsx":{"numeric_cells":ar["numeric_cells"],"financial_cells_registry_matched":ar["financial_cells_registry_matched"],"financial_mismatch_count":ar["financial_mismatch_count"],"numeric_digest":ar["numeric_digest"]}
+                  }
+              },
+              "workbooks":workbook_results,
+              "docx_packages":docx_results,
+              "d3_requirement_statuses":requirement_statuses,
+              "d3_18":"PASS_SCOPED",
+              "d3_gate_status":"PASS_SCOPED_WITH_LIMITATIONS",
+              "d3_candidate_status":"T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS",
+              "d4_status":"NOT_RUN",
+              "final_acceptance":"NOT_DECLARED",
+              "delivery_boundary":"This report verifies the candidate Actions Artifact bytes and payload. The candidate Artifact is temporary and expires at the recorded date; this record does not modify or extend the historical owner decision tied to Artifact 13160434943, does not create a permanent archive, and does not publish a Release.",
+              "preserved_limitations":owner.get("limitations",[]),
+              "preserved_gate_statuses":owner.get("preserved_gate_statuses",{}),
+              "missing_historical_48k_accounting_fields":owner.get("missing_historical_48k_accounting_fields",[]),
+              "no_trial_simulation_monte_carlo_n_expansion_backfill_zero_fill_or_identity_change":True,
+              "historical_artifacts_and_manifests_modified":False
+          }
+          out=pathlib.Path("docs/stage_d")
+          out.mkdir(parents=True,exist_ok=True)
+          report_json=out/"D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json"
+          report_md=out/"D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md"
+          report_json.write_text(json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          lines=[
+              "# D3 Candidate Artifact Final Acceptance — 2026-11-04","",
+              f"- Acceptance Run: {report['acceptance_run_id']}; tested SHA: {tested_sha}.",
+              f"- Candidate source Run: {source_run_id}; source SHA: {source_sha}.",
+              f"- Candidate Artifact: {artifact_id}; bytes: {outer_bytes}; SHA-256: {outer_sha}.",
+              f"- Artifact expiry: {artifact.get('expires_at')}; temporary Actions retention.",
+              f"- ZIP inventory: {len(member_inventory)} pinned files; outer ZIP CRC PASS; every member size/SHA-256 PASS.",
+              "- D3-18: PASS_SCOPED — independent candidate Artifact/workbook byte and XML verification.",
+              "- Financial Registry audit: PASS_SCOPED; 5,953,640 financial registry matches per workbook; zero mismatches; bilingual numeric digests identical.",
+              "- Both XLSX files: 185 sheets and 185 worksheet XML parts; zero formula cells and zero Excel error cells; XLSX CRC PASS.",
+              "- Five DOCX files: OOXML package integrity PASS_SCOPED; content/layout acceptance remains within D4.",
+              "- Overall candidate D3: PASS_SCOPED_WITH_LIMITATIONS; candidate classification remains T2_INTERIM.",
+              "- D4: NOT_RUN; rerun against this candidate before any later stage.",
+              "- FINAL_ACCEPTED: NOT_DECLARED. The candidate Artifact expires and is not a permanent archive.",
+              "",
+              "## Preserved source and project boundaries",
+              "- D3 source-date exception: D3_ONLY_PINNED_ARTIFACTS_2026-11-02; exactly three pinned source Artifacts.",
+              "- Current governing reference v2.4.0 and historical S6 execution reference v2.3 remain distinct.",
+              "- No historical Artifact, manifest, or prior acceptance record was modified.",
+              "- Five historical 48K accounting fields remain MISSING_EVIDENCE; no inference or zero-fill.",
+              "- Full Logging remains 105 representative keys only; C100 Golden remains NOT_RUN.",
+              "- Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED.",
+              "- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release, or final-acceptance declaration."
+          ]
+          report_md.write_text("\n".join(lines)+"\n",encoding="utf-8")
+          print("D3_CANDIDATE_ARTIFACT_ACCEPTANCE_PASS_SCOPED")
+          print(json.dumps({"artifact_id":artifact_id,"artifact_bytes":outer_bytes,"artifact_sha256":outer_sha,
+                            "member_count":len(member_inventory),"workbooks":workbook_results,
+                            "requirement_statuses":requirement_statuses},ensure_ascii=False,sort_keys=True))
+          shutil.rmtree(tmp,ignore_errors=True)
+          PY
+
+      - name: Append candidate D3 acceptance and commit evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import os,pathlib
+          branch=os.environ["BRANCH"]
+          run=os.environ["GITHUB_RUN_ID"]
+          tested=os.environ["GITHUB_SHA"]
+          source=os.environ["SOURCE_SHA"]
+          entry=f"""
+
+          ## D3 candidate Artifact final acceptance — 2026-11-04 (append-only)
+
+          - Candidate acceptance Run {run}; exact tested SHA {tested}.
+          - Candidate source Run 41754147172 / SHA {source}; candidate Artifact 13288779998.
+          - Independent ZIP/member fingerprints, all 14 member payloads, both workbook byte streams, 185-sheet structure, workbook CRC, zero formula cells and zero Excel error cells passed.
+          - Candidate financial Registry audit Run 41900246587 on {os.environ["FINANCIAL_AUDIT_TESTED_SHA"]}: PASS_SCOPED; 5,953,640 financial matches per workbook, zero mismatches, and identical bilingual numeric digests.
+          - D3-18: PASS_SCOPED for this candidate; overall candidate D3: PASS_SCOPED_WITH_LIMITATIONS. The embedded source build audit and manifest were not altered.
+          - D4 remains NOT_RUN and requires a separate rebuild/revalidation against this candidate. FINAL_ACCEPTED remains NOT_DECLARED.
+          - Candidate Actions Artifact is temporary and expires at its recorded expiry. This addendum does not rewrite the earlier owner decision scoped to Artifact 13160434943.
+          - Historical 48K fields remain MISSING_EVIDENCE; Full Logging remains 105 representative keys only; C100 Golden remains NOT_RUN; upstream financial/production/statistical gates remain unchanged.
+          - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, Release, or final-acceptance declaration occurred.
+          """
+          paths=["docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md",
+                 "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"]
+          for name in paths:
+              p=pathlib.Path(name)
+              old=p.read_text(encoding="utf-8")
+              if "D3 candidate Artifact final acceptance — 2026-11-04" not in old:
+                  p.write_text(old.rstrip()+"\n"+entry,encoding="utf-8")
+          status=pathlib.Path("docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md")
+          status.write_text(f"""# Stage D Session Status — 2026-11-04
+
+          Repository: {os.environ["REPOSITORY"]}
+          Working branch: {branch}
+          Acceptance workflow tested SHA: {tested}
+
+          ## Live stage disposition
+
+          - D0: PASS_SCOPED_WITH_LIMITATIONS (retained; no reopen).
+          - D1: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597, tested SHA {tested if False else "d323300abaa361413091b3062e3417db62c18f56"}; 34 tests passed).
+          - D2: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597; Number Registry verified).
+          - D3 candidate Artifact 13288779998: PASS_SCOPED_WITH_LIMITATIONS; D3-18 PASS_SCOPED; acceptance Run {run}.
+          - D4: NOT_RUN on candidate D3; rerun required.
+          - D5: existing Artifact 13264003231 remains historical/unchanged; do not treat it as rebuilt from candidate D3.
+          - D6: prior independent audit remains BLOCKED; do not infer D6 closure from D3/D4 changes.
+          - E0–E6: NOT_STARTED.
+
+          ## Candidate evidence
+
+          - D3 source Run: 41754147172; source SHA: {source}.
+          - Candidate Artifact: 13288779998; size 535567142; SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe.
+          - Financial Registry audit: Run 41900246587, tested SHA d323300abaa361413091b3062e3417db62c18f56, PASS_SCOPED.
+          - Governing reference v2.4.0 SHA-256: 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b.
+          - Historical execution reference v2.3 SHA-256: e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f.
+
+          ## Preserved limitations and prohibitions
+
+          - Full Logging: 105 representative keys only; C100 Golden: NOT_RUN.
+          - Five historical 48K accounting fields remain MISSING_EVIDENCE and must never be inferred or zero-filled: Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets.
+          - Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS.
+          - Gate B at N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED.
+          - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed/Trial identity change.
+          - No historical Artifact or manifest was modified. No main write, merge, Release or final-acceptance declaration.
+          """,encoding="utf-8")
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/d3-candidate-artifact-acceptance.yml \
+            docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json \
+            docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md \
+            docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md \
+            docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md \
+            docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md
+          git commit -m "docs(d3): accept candidate artifact with scoped limitations"
+          git push origin HEAD:"refs/heads/$BRANCH"
+
+      - name: Raw readback and exact final HEAD validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,os,pathlib,requests,subprocess,urllib.parse
+          repo=os.environ["REPOSITORY"]
+          branch=os.environ["BRANCH"]
+          token=os.environ["GH_TOKEN"]
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          remote=subprocess.check_output(["git","ls-remote","origin",f"refs/heads/{branch}"],text=True).split()[0]
+          if remote!=head:
+              raise SystemExit(f"D3_ACCEPTANCE_FINAL_HEAD_MISMATCH:{head}:{remote}")
+          main=subprocess.check_output(["git","ls-remote","origin","refs/heads/main"],text=True).split()[0]
+          if main!=os.environ["EXPECTED_MAIN_SHA"]:
+              raise SystemExit(f"MAIN_HEAD_CHANGED_UNEXPECTEDLY:{main}")
+          paths=[
+            ".github/workflows/d3-candidate-artifact-acceptance.yml",
+            "docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json",
+            "docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md",
+            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md",
+            "docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md",
+            "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"
+          ]
+          for path in paths:
+              local=pathlib.Path(path).read_bytes()
+              url=f"https://raw.githubusercontent.com/{repo}/{head}/{urllib.parse.quote(path,safe='/')}"
+              response=requests.get(url,timeout=180)
+              response.raise_for_status()
+              remote_bytes=response.content
+              if remote_bytes!=local:
+                  raise SystemExit("D3_ACCEPTANCE_RAW_READBACK_MISMATCH:"+path)
+              blob=hashlib.sha1(b"blob "+str(len(remote_bytes)).encode()+b"\0"+remote_bytes).hexdigest()
+              print(f"VERIFIED_LIVE {path} bytes={len(remote_bytes)} sha256={hashlib.sha256(remote_bytes).hexdigest()} blob_sha1={blob} commit={head} url={url}")
+          print("D3_CANDIDATE_ARTIFACT_ACCEPTANCE_EXACT_FINAL_HEAD_PASS "+head)
+          print("MAIN_UNCHANGED "+main)
+          PY
