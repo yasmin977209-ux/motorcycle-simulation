@@ -2,14 +2,14 @@
 
 Repository: yasmin977209-ux/motorcycle-simulation
 Working branch: tmp/d1-rebuild-20261101
-Integrity audit workflow tested SHA: b4bad1931b11b81c514b5a3a5e75ff5c120e90c7
+Integrity audit workflow tested SHA: 9196b332b068a0db232420dcdf684f25542db34a
 
 ## Live stage disposition
 
 - D0: PASS_SCOPED_WITH_LIMITATIONS (retained; no reopen).
 - D1: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597, tested SHA d323300abaa361413091b3062e3417db62c18f56; 34 tests passed).
 - D2: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597; Number Registry verified).
-- D3 candidate Artifact 13288779998 integrity: PASS_SCOPED; D3-18 NOT_RUN; D3 gate BLOCKED_MISSING_EVIDENCE; integrity audit Run 41909314935.
+- D3 candidate Artifact 13288779998 integrity: PASS_SCOPED; D3-18 NOT_RUN; D3 gate BLOCKED_MISSING_EVIDENCE; integrity audit Run 41911722372.
 - D4: NOT_STARTED; candidate D3 has not passed its delivery gate.
 - D5: existing Artifact 13264003231 remains historical/unchanged; do not treat it as rebuilt from candidate D3.
 - D6: prior independent audit remains BLOCKED; do not infer D6 closure from D3/D4 changes.

@@ -1,6 +1,6 @@
 # D3 Candidate Artifact Integrity Audit — 2026-11-04
 
-- Integrity audit Run: 41909314935; tested SHA: b4bad1931b11b81c514b5a3a5e75ff5c120e90c7.
+- Integrity audit Run: 41911722372; tested SHA: 9196b332b068a0db232420dcdf684f25542db34a.
 - Candidate source Run: 41754147172; source SHA: 3325fd961005c2c47de071d25904a748af7a21a6.
 - Candidate Artifact: 13288779998; bytes: 535567142; SHA-256: e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe.
 - Artifact expiry: 2026-12-04T02:07:02Z; temporary Actions retention.

@@ -1,5 +1,5 @@
 {
-  "audit_tested_sha": "b4bad1931b11b81c514b5a3a5e75ff5c120e90c7",
+  "audit_tested_sha": "9196b332b068a0db232420dcdf684f25542db34a",
   "branch": "tmp/d1-rebuild-20261101",
   "candidate_artifact": {
     "bytes": 535567142,
@@ -173,7 +173,7 @@
   },
   "historical_artifacts_and_manifests_modified": false,
   "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-  "integrity_audit_run_id": 41909314935,
+  "integrity_audit_run_id": 41911722372,
   "missing_historical_48k_accounting_fields": [
     "Accounts_Receivable",
     "Accumulated_Depreciation",
@@ -203,7 +203,18 @@
     "n4800": "NOT_EXECUTED",
     "stability": "NOT_CONVERGED (0/60)"
   },
-  "preserved_limitations": [],
+  "preserved_limitations": [
+    "Full Logging contains 105 representative keys / 125 role assignments only; it is not 48,000-trial full daily logging.",
+    "C100 daily distributions are source-backed as deterministic reuse for five scenarios (2,198 rows each); C100 Golden revalidation remains NOT_RUN.",
+    "Representative P50 raw daily ledgers are source-backed for 25 selected cases only; this does not establish full 48,000-trial daily logging.",
+    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers are source-backed for 25 representative P50 cases only; this does not establish full-cohort detail.",
+    "The all-trial final close-date distribution is source-backed for 49,500 trials (48,000 S6 + 1,500 C100) across 25 scenarios and is not inferred from the 105 representative keys.",
+    "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
+    "Full Logging normalized status remains NOT_VERIFIED_105_OF_105; 105 representative keys do not prove all 48,000 trials.",
+    "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse and common-field comparisons do not replace the Golden revalidation gate.",
+    "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
+    "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED."
+  ],
   "prior_financial_audit": {
     "bilingual_numeric_parity": "PASS_SCOPED",
     "run_id": 41900246587,
