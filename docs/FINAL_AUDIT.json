@@ -4,23 +4,23 @@
   "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
   "repository": "yasmin977209-ux/motorcycle-simulation",
   "branch": "tmp/d1-rebuild-20261101",
-  "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-  "run_id": "41747887447",
+  "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
+  "run_id": "41761284030",
   "source_d5_run_id": 41704252218,
   "source_d5_artifact_id": 13264003231,
   "checks": {
     "auditor_unit_tests": {
       "status": "PASS",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "detail": "Focused D6 auditor unit suite completed before this audit step."
     },
     "d5_artifact_download": {
       "status": "PASS",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "detail": "Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."
     },
     "artifact_outer": {
@@ -132,161 +132,207 @@
       "error_cells": 0
     },
     "docx_files": {
-      "status": "BLOCKED",
+      "status": "PASS_SCOPED",
       "files": {
         "التقرير_الكامل_AR.docx": {
-          "status": "BLOCKED",
-          "findings": [
-            "DOCX_SECTION_17_3_DISCLOSURES_MISSING:book_value_not_market_value,partner_funded_capital_and_70_30_net_equity"
-          ],
+          "status": "PASS_SCOPED",
+          "findings": [],
           "text_characters": 12993,
           "missing_evidence_literal_present": true,
-          "section_17_3_missing_items": [
-            "book_value_not_market_value",
-            "partner_funded_capital_and_70_30_net_equity"
-          ]
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 252,
+            "text_runs": 252,
+            "bidi_true": 252,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 252,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
         },
         "Full_Report_EN.docx": {
-          "status": "BLOCKED",
-          "findings": [
-            "DOCX_SECTION_17_3_DISCLOSURES_MISSING:no_fleet_cap,no_operating_costs_maintenance_theft_inflation,no_renter_variation,non_monotonic_structural_explanation,zero_loss_not_guarantee,partner_funded_capital_and_70_30_net_equity"
-          ],
+          "status": "PASS_SCOPED",
+          "findings": [],
           "text_characters": 13457,
           "missing_evidence_literal_present": true,
-          "section_17_3_missing_items": [
-            "no_fleet_cap",
-            "no_operating_costs_maintenance_theft_inflation",
-            "no_renter_variation",
-            "non_monotonic_structural_explanation",
-            "zero_loss_not_guarantee",
-            "partner_funded_capital_and_70_30_net_equity"
-          ]
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 250,
+            "text_runs": 250,
+            "bidi_true": 0,
+            "bidi_false": 250,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 250,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
         },
         "الملخص_AR.docx": {
-          "status": "BLOCKED",
-          "findings": [
-            "DOCX_SECTION_17_3_DISCLOSURES_MISSING:book_value_not_market_value,partner_funded_capital_and_70_30_net_equity"
-          ],
+          "status": "PASS_SCOPED",
+          "findings": [],
           "text_characters": 8694,
           "missing_evidence_literal_present": true,
-          "section_17_3_missing_items": [
-            "book_value_not_market_value",
-            "partner_funded_capital_and_70_30_net_equity"
-          ]
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 127,
+            "text_runs": 127,
+            "bidi_true": 127,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 127,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
         },
         "Summary_EN.docx": {
-          "status": "BLOCKED",
-          "findings": [
-            "DOCX_SECTION_17_3_DISCLOSURES_MISSING:no_fleet_cap,no_operating_costs_maintenance_theft_inflation,no_renter_variation,non_monotonic_structural_explanation,zero_loss_not_guarantee,partner_funded_capital_and_70_30_net_equity"
-          ],
+          "status": "PASS_SCOPED",
+          "findings": [],
           "text_characters": 9025,
           "missing_evidence_literal_present": true,
-          "section_17_3_missing_items": [
-            "no_fleet_cap",
-            "no_operating_costs_maintenance_theft_inflation",
-            "no_renter_variation",
-            "non_monotonic_structural_explanation",
-            "zero_loss_not_guarantee",
-            "partner_funded_capital_and_70_30_net_equity"
-          ]
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 125,
+            "text_runs": 125,
+            "bidi_true": 0,
+            "bidi_false": 125,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 125,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
         },
         "دراسة_الجدوى_AR.docx": {
-          "status": "BLOCKED",
-          "findings": [
-            "DOCX_SECTION_17_3_DISCLOSURES_MISSING:book_value_not_market_value"
-          ],
+          "status": "PASS_SCOPED",
+          "findings": [],
           "text_characters": 6826,
           "missing_evidence_literal_present": false,
-          "section_17_3_missing_items": [
-            "book_value_not_market_value"
-          ]
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 147,
+            "text_runs": 147,
+            "bidi_true": 147,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 147,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
         }
       },
       "docx_files": 5,
-      "blocked_files": [
-        "التقرير_الكامل_AR.docx",
-        "Full_Report_EN.docx",
-        "الملخص_AR.docx",
-        "Summary_EN.docx",
-        "دراسة_الجدوى_AR.docx"
-      ],
-      "detail": "Per-file DOCX parse, T2 state, and substantive §17.3 disclosure findings; literal MISSING_EVIDENCE is informational only. Pagination, rendered layout, directionality and complete numeric-to-registry lineage are separate checks."
+      "blocked_files": [],
+      "detail": "Per-file DOCX parse, T2, §17.3 substance, OOXML directionality and resolution of every explicit Number Registry ID; full numeric-token lineage remains a separate acceptance test."
+    },
+    "docx_number_registry_traceability": {
+      "status": "PASS_SCOPED",
+      "number_id_occurrences": 112,
+      "unresolved_number_ids": [],
+      "detail": "Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."
+    },
+    "docx_rendering": {
+      "status": "BLOCKED",
+      "page_counts": {},
+      "error": {
+        "error_type": "TimeoutExpired",
+        "error": "Command '['libreoffice', '-env:UserInstallation=file://d6_rendered/lo-profile', '--headless', '--convert-to', 'pdf', '--outdir', 'd6_rendered', 'd6_التقرير_الكامل_AR.docx', 'd6_Full_Report_EN.docx', 'd6_الملخص_AR.docx', 'd6_Summary_EN.docx', 'd6_دراسة_الجدوى_AR.docx']' timed out after 600 seconds"
+      }
     },
     "docx_176": {
       "status": "NOT_RUN",
       "docx_files": 5,
-      "blocked_files": [
-        "التقرير_الكامل_AR.docx",
-        "Full_Report_EN.docx",
-        "الملخص_AR.docx",
-        "Summary_EN.docx",
-        "دراسة_الجدوى_AR.docx"
-      ],
-      "detail": "Test 176 is a separate acceptance test for complete Number Registry lineage; DOCX screening is not Test 176 execution."
+      "blocked_files": [],
+      "detail": "Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."
     },
     "test_175": {
-      "status": "NOT_RUN",
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
+      "status": "PASS_SCOPED",
       "contract": "185 sheets per workbook; identical sheet order; numeric parity; no Excel errors",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "D6 independently verified 185 worksheets per workbook, matching worksheet order, cross-workbook numeric parity, and rejected formula/error cells. This is scoped evidence, not a claim that the separately numbered historical test suite was invoked."
     },
     "test_176": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "status": "NOT_RUN",
       "contract": "Every report numeric value has Number Registry lineage; no manual unregistered number",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_179": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "status": "NOT_RUN",
       "contract": "manifest fingerprints and provenance/commit/command/library/MASTER_SEED",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_180": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "status": "NOT_RUN",
       "contract": "DAILY worksheet ordered round-trip; dates and numbers preserved",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_181": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "status": "NOT_RUN",
       "contract": "Daily partner balances exist for representative trials; absence is MISSING_EVIDENCE, never inferred",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
-    },
-    "test_182": {
-      "status": "NOT_RUN",
-      "contract": "No float leakage into financial statistics; exact rational recomputation",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
     },
     "test_183": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
       "status": "NOT_RUN",
       "contract": "All package rows belong to one cohort; reject mixed cohort identities",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted."
+    },
+    "test_182": {
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
+      "status": "BLOCKED",
+      "contract": "No float leakage into financial statistics; exact rational recomputation",
+      "financial_mismatch_count": 4,
+      "detail": "Exact registry-value comparisons were performed for the financial cells resolved by the pinned Registry. Any mismatch blocks this scoped result; this is not a claim that the separate historical acceptance test was invoked."
     },
     "test_186": {
-      "status": "NOT_RUN",
+      "run_id": "41761284030",
+      "job_id": "126349320408",
+      "tested_sha": "b27449cc76f7f343b2076a6ca52bbe814aa02b9f",
+      "status": "PASS_SCOPED",
       "contract": "Seven deliverables plus manifest in exactly eight-member ZIP; external SHA256SUMS and remote bytes",
-      "run_id": "41747887447",
-      "job_id": "126305366568",
-      "tested_sha": "75c7a1ed71a2c1f1e81fab6e4e0cab930b5ea252",
-      "detail": "Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."
+      "detail": "D6 verified the exact outer GitHub Artifact fingerprint, inner package fingerprint, eight-member ZIP inventory, CRC/path safety, manifest member hashes, and SHA256SUMS coverage. This is scoped package evidence, not a claim that the separately numbered historical test suite was invoked."
     }
   },
   "fixed_gate_states": {
@@ -305,9 +351,8 @@
     "Total_Assets"
   ],
   "limitations": [
-    "DOCX page count and rendered pagination are NOT_RUN in this D6 job; D4-reported page counts are not substituted for an independent render.",
-    "Full numeric-to-Number-Registry recomputation for every DOCX numeric token is NOT_RUN; no lineage pass is claimed.",
-    "DOCX RTL/LTR directionality and layout render are NOT_RUN unless separately reported by an independent rendering check.",
+    "Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.",
+    "DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.",
     "Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.",
     "Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.",
     "No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."

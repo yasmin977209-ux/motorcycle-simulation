@@ -446,3 +446,11 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Preserved gates: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; C100 Golden `NOT_RUN`; five historical accounting fields remain `MISSING_EVIDENCE`.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed/Trial identity change, D5 Artifact mutation, main write, merge, Release, or final-acceptance declaration occurred.
 - Disposition: D6 remains `BLOCKED` on its last executed audit. The revised auditor is committed but its new execution is not yet evidenced. `main` remains unchanged.
+
+
+## D6 independent post-write audit — 2026-11-04 (append-only)
+
+- Run 41761284030; tested source SHA b27449cc76f7f343b2076a6ca52bbe814aa02b9f; D5 Artifact 13264003231 from Run 41704252218.
+- Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
+- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
+- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
