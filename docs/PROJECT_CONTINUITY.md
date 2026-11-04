@@ -3169,3 +3169,16 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Candidate source Run 41754147172 / SHA 3325fd961005c2c47de071d25904a748af7a21a6; Artifact 13288779998.
 - Exact workbook financial Registry comparison and bilingual numeric parity are recorded in docs/stage_d/D3_CANDIDATE_FINANCIAL_AUDIT_2026-11-04.md/.json.
 - This candidate-specific audit does not itself promote D3 or authorize D4/D5; preserve the separate gate and owner-approved sequence.
+
+
+## D3 candidate Artifact integrity audit — 2026-11-04 (append-only)
+
+- Candidate acceptance Run 41909314935; exact tested SHA b4bad1931b11b81c514b5a3a5e75ff5c120e90c7.
+- Candidate source Run 41754147172 / SHA 3325fd961005c2c47de071d25904a748af7a21a6; candidate Artifact 13288779998.
+- Independent ZIP/member fingerprints, all 15 members (14 generated outputs plus the included owner-approval record), both workbook byte streams, 185-sheet structure, workbook CRC, zero formula cells and zero Excel error cells passed.
+- Candidate financial Registry audit Run 41900246587 on d323300abaa361413091b3062e3417db62c18f56: PASS_SCOPED; 5,953,640 financial matches per workbook, zero mismatches, and identical bilingual numeric digests.
+- Candidate Artifact payload integrity: PASS_SCOPED. D3-18 remains NOT_RUN and overall D3 remains BLOCKED_MISSING_EVIDENCE because the owner-approved final-delivery decision is specific to Artifact 13160434943, not candidate Artifact 13288779998.
+- D4 remains NOT_STARTED; no stage transition is authorized by this payload-integrity audit. FINAL_ACCEPTED remains NOT_DECLARED.
+- Candidate Actions Artifact is temporary and expires at its recorded expiry. No owner delivery decision for this exact candidate Artifact has been inferred.
+- Historical 48K fields remain MISSING_EVIDENCE; Full Logging remains 105 representative keys only; C100 Golden remains NOT_RUN; upstream financial/production/statistical gates remain unchanged.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, Release, or final-acceptance declaration occurred.
