@@ -512,3 +512,14 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
 - Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 - D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
+
+
+## D5 package publication — 2026-11-03 (append-only)
+
+- Workflow Run 41704252218; tested source SHA 4aa8172c829f1545e4509f5196cd2a23e24ec0ad; publication commit c18a188e26fa1a146fe97b7bab396f42c2a5f8fc.
+- D5 package ZIP: 519102426 bytes; SHA-256 300720a318864fb3969a8813a76c65473be3c8648bea7fb359de23230a8ff4f5; 8 members; reopened, exact inventory and CRC PASS.
+- manifest SHA-256 db41532d87791da707a512e65a689ddad2066bb8bfceead53633a18fd66710c7; external SHA256SUMS SHA-256 1354c8e8283ac6fd14b8345153f5fb61d16190d959eaa6a474be8eecc4a18a5f (10 entries).
+- New GitHub Actions Artifact ID 13369301108; size 519116689; digest sha256:0fda4d88a9d8557b1028aaef65d3af4244db77d84b7d1a66b52273c294460301; downloaded ZIP SHA-256 0fda4d88a9d8557b1028aaef65d3af4244db77d84b7d1a66b52273c294460301; expires 2026-12-04T22:22:21Z; retention 30 days.
+- Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
+- Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.

@@ -28,15 +28,15 @@
   "main_modified": false,
   "d6_started": false,
   "artifact": {
-    "id": 13264003231,
-    "name": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03",
-    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41704252218/artifacts/13264003231",
-    "size_in_bytes": 519115272,
-    "digest": "sha256:7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5",
-    "downloaded_zip_sha256": "7da3dc1bba9972854536b3615f567029e66a0988e90c79da2a555b10b85b9fe5",
-    "expires_at": "2026-12-03T19:37:05Z",
+    "id": 13369301108,
+    "name": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05",
+    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41924238167/artifacts/13369301108",
+    "size_in_bytes": 519116689,
+    "digest": "sha256:0fda4d88a9d8557b1028aaef65d3af4244db77d84b7d1a66b52273c294460301",
+    "downloaded_zip_sha256": "0fda4d88a9d8557b1028aaef65d3af4244db77d84b7d1a66b52273c294460301",
+    "expires_at": "2026-12-04T22:22:21Z",
     "retention_days": 30,
     "remote_readback": "PASS"
   },
-  "publication_commit_sha": "4aa8172c829f1545e4509f5196cd2a23e24ec0ad"
+  "publication_commit_sha": "c18a188e26fa1a146fe97b7bab396f42c2a5f8fc"
 }
