@@ -13,7 +13,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: motorcycle-simulation-branch-writer-\${{ github.ref }}
+  group: motorcycle-simulation-branch-writer-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      REPOSITORY: \${{ github.repository }}
-      GH_TOKEN: \${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
       BRANCH: tmp/d1-rebuild-20261101
       CANDIDATE_ARTIFACT_ID: "13288779998"
       CANDIDATE_ARTIFACT_NAME: D3-Owner-Approved-Source-Reprocessing-41754147172
@@ -37,7 +37,7 @@ jobs:
       - name: Checkout exact triggering commit
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Verify exact branch HEAD and install verifier dependency
