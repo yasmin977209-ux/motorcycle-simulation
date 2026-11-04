@@ -315,9 +315,11 @@ def render_docx_files(docx_paths, output_dir):
  pages={}; failures={}
  for index,path in enumerate(docx_paths):
   profile=output_dir/f"lo-profile-{index:02d}"
+  profile.mkdir(parents=True,exist_ok=True)
   pdf=output_dir/(path.stem+".pdf")
   pdf.unlink(missing_ok=True)
-  cmd=["libreoffice",f"-env:UserInstallation=file://{profile}","--headless","--convert-to","pdf","--outdir",str(output_dir),str(path)]
+  profile_uri=profile.resolve().as_uri()
+  cmd=["libreoffice",f"-env:UserInstallation={profile_uri}","--headless","--convert-to","pdf","--outdir",str(output_dir.resolve()),str(path.resolve())]
   try:
    run=subprocess.run(cmd,capture_output=True,text=True,timeout=120)
    if run.returncode!=0:

@@ -262,4 +262,7 @@ def test_docx_renderer_isolates_each_file_and_continues_after_timeout(tmp_path, 
     assert all(call[1] == 120 for call in calls)
     profiles = [next(arg for arg in call[0] if arg.startswith("-env:UserInstallation=")) for call in calls]
     assert profiles[0] != profiles[1]
+    assert all(arg.startswith("-env:UserInstallation=file:///") for arg in profiles)
+    assert all(pathlib.Path(arg.split("=", 1)[1].removeprefix("file://")).is_absolute() for arg in profiles)
+    assert all(pathlib.Path(arg.split("=", 1)[1].removeprefix("file://")).is_dir() for arg in profiles)
 
