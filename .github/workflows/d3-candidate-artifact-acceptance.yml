@@ -372,7 +372,7 @@ jobs:
               "d4_status":"NOT_STARTED",
               "final_acceptance":"NOT_DECLARED",
               "delivery_boundary":"This report verifies only the candidate Actions Artifact bytes and payload. The candidate Artifact is temporary and expires at the recorded date. The owner-approved final-delivery decision is scoped to Artifact 13160434943; it does not extend to candidate Artifact 13288779998. Therefore D3-18 remains NOT_RUN and the D3 stage gate remains BLOCKED_MISSING_EVIDENCE pending a specific owner delivery decision for this candidate or another approved publication route.",
-              "preserved_limitations":owner.get("limitations",[]),
+              "preserved_limitations":build.get("limitations",[]),
               "preserved_gate_statuses":owner.get("preserved_gate_statuses",{}),
               "missing_historical_48k_accounting_fields":owner.get("missing_historical_48k_accounting_fields",[]),
               "no_trial_simulation_monte_carlo_n_expansion_backfill_zero_fill_or_identity_change":True,
