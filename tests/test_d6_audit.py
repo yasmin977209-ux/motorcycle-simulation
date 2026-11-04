@@ -266,3 +266,21 @@ def test_docx_renderer_isolates_each_file_and_continues_after_timeout(tmp_path, 
     assert all(pathlib.Path(arg.split("=", 1)[1].removeprefix("file://")).is_absolute() for arg in profiles)
     assert all(pathlib.Path(arg.split("=", 1)[1].removeprefix("file://")).is_dir() for arg in profiles)
 
+def test_summary_page_count_validation_normalizes_d6_temporary_prefixes():
+    from scripts.audit_s6_deliverables_bundle import summary_page_count_failures
+
+    failures = summary_page_count_failures(
+        {"d6_الملخص_AR.docx": 3, "d6_Summary_EN.docx": 2},
+        {},
+        ("الملخص_AR.docx", "Summary_EN.docx"),
+    )
+    assert failures == {}
+
+    invalid = summary_page_count_failures(
+        {"d6_الملخص_AR.docx": 4, "d6_Summary_EN.docx": 2},
+        {},
+        ("الملخص_AR.docx", "Summary_EN.docx"),
+    )
+    assert invalid["الملخص_AR.docx"]["error"] == "DOCX_SUMMARY_PAGE_COUNT_INVALID:4"
+    assert "Summary_EN.docx" not in invalid
+
