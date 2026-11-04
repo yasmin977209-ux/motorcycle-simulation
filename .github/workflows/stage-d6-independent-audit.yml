@@ -108,6 +108,7 @@ jobs:
           PY
       - name: Commit D6 audit reports and append-only handoff
         env:
+          D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
           SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
         run: |
           set -euo pipefail
