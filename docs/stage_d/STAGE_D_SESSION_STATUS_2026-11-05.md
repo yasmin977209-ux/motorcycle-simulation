@@ -61,3 +61,25 @@ D3 acceptance Run: 41914970361 (tested SHA b3dfd886ec57308c0bf68f5eec4cc8417faaa
 - Disposition PASS_SCOPED_WITH_LIMITATIONS; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md and FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+---
+
+## CURRENT VERIFIED STATE — D6 CLOSURE ADDENDUM — 2026-11-05
+
+**This addendum supersedes the historical “Live stage disposition before D4 rebuild” snapshot above for current D5/D6 status only. It does not erase or rewrite that historical record.**
+
+- Current working branch at start of closure: `tmp/d1-rebuild-20261101`, HEAD `73ce736f35e530f25fd4636904b11e1df2009b07`.
+- `main` remains `c6e54349a5e94f65d5aa9f83141f225d777bb474`; no write to `main`.
+- D3: `PASS_SCOPED_WITH_LIMITATIONS` (see D3 owner-approved artifact acceptance record).
+- D4: `PASS_SCOPED_WITH_LIMITATIONS` (see D4 build record).
+- D5: `PASS_SCOPED_WITH_LIMITATIONS` for package publication/integrity only; classification `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- D6: `PASS_SCOPED_WITH_LIMITATIONS` — independent post-write audit Run `41929888796`, Job `126923812128`, tested SHA `48ae9fbf5a7264834a523504706a7c04b654061b`.
+- D6 Artifact: `13371094066`, digest `sha256:f8ed5e1f516a3a6d34086c2ef4f5fb2a84670c9907fabd503b994086426ca112`.
+- Detailed disposition: `docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md`; session record: `docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md`.
+- D6 tests 176, 179, 180, 181, 183 remain `NOT_RUN`; historical acceptance test invocations 175, 182, 186 also remain `NOT_RUN` (scoped audit checks only). Full 177-unique-test suite remains `NOT_RUN`.
+- Preserved gates: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; C100 Golden `NOT_RUN`.
+- The five missing accounting fields remain missing and are not inferred or zero-filled.
+- `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, and `CONVERGED` remain `NOT_DECLARED`.
+
+D6 is administratively closed only at `PASS_SCOPED_WITH_LIMITATIONS`. E0 has not been started by this closure action.
