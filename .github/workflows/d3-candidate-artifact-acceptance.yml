@@ -111,7 +111,7 @@ jobs:
               fail("D3_OWNER_SCOPE_MISMATCH")
           if owner.get("source_date_exception")!="D3_ONLY_PINNED_ARTIFACTS_2026-11-02":
               fail("D3_SOURCE_DATE_EXCEPTION_MISMATCH")
-          if owner.get("workflow_run_id")!=source_run_id or owner.get("source_head")!=source_sha:
+          if str(owner.get("workflow_run_id"))!=str(source_run_id) or owner.get("source_head")!=source_sha:
               fail("D3_OWNER_RECORD_LINEAGE_MISMATCH")
           if owner.get("no_trials_or_simulation_executed") is not True or owner.get("no_source_or_trial_identity_changed") is not True:
               fail("D3_IDENTITY_OR_TRIAL_BOUNDARY_NOT_PROVED")
