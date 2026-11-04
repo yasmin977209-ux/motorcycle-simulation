@@ -1,0 +1,211 @@
+{
+  "acceptance_run_id": 41914970361,
+  "acceptance_tested_sha": "b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1",
+  "artifact": {
+    "bytes": 535567142,
+    "created_at": "2026-11-04T02:07:07Z",
+    "expired": false,
+    "expires_at": "2026-12-04T02:07:02Z",
+    "id": 13288779998,
+    "lineage_checks": {
+      "artifact_bytes": true,
+      "artifact_digest": true,
+      "artifact_id": true,
+      "artifact_name": true,
+      "artifact_not_expired": true,
+      "artifact_source_branch": true,
+      "artifact_source_run": true,
+      "artifact_source_sha": true,
+      "source_run_branch": true,
+      "source_run_id": true,
+      "source_run_sha": true,
+      "source_run_success": true
+    },
+    "member_count": 15,
+    "member_inventory": {
+      "D3_BUILD_AUDIT.json": {
+        "artifact_member": "deliverables/D3_BUILD_AUDIT.json",
+        "bytes": 9137,
+        "sha256": "422ee932594f8869cf4d0c5b5af76d18579219c47defee74f340197f21d702b5"
+      },
+      "D3_EXTENSION_BUILD_AUDIT.json": {
+        "artifact_member": "deliverables/D3_EXTENSION_BUILD_AUDIT.json",
+        "bytes": 4125,
+        "sha256": "f112f84b5013ada381608b7d80786211142a5a80aa329eef0661c5e91d6c0d8b"
+      },
+      "D3_MANIFEST.json": {
+        "artifact_member": "deliverables/D3_MANIFEST.json",
+        "bytes": 6249,
+        "sha256": "45777f4e446da0290847a78e20c964361853fdb69413503ba1febca08d08550c"
+      },
+      "D3_NUMBER_REGISTRY_EXTENSION.json.gz": {
+        "artifact_member": "deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz",
+        "bytes": 16440292,
+        "sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+      },
+      "D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json": {
+        "artifact_member": "docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json",
+        "bytes": 6850,
+        "sha256": "653b0da79716527c97e9891e980dde1a85d1255109bf35f9891b6b31757ca5d1"
+      },
+      "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md": {
+        "artifact_member": "deliverables/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md",
+        "bytes": 3224,
+        "sha256": "3a26e258c18978b5657f67c483d31740e20854195fe3359c49c751c37ad7e3a0"
+      },
+      "D3_SOURCE_INPUT_ENVELOPE.json": {
+        "artifact_member": "deliverables/D3_SOURCE_INPUT_ENVELOPE.json",
+        "bytes": 280,
+        "sha256": "80c58c30b61d6c68a984c2c06528a724b6b46cf655c6ca9f1752b071ba529bc7"
+      },
+      "D3_SOURCE_INPUT_MANIFEST.json": {
+        "artifact_member": "deliverables/D3_SOURCE_INPUT_MANIFEST.json",
+        "bytes": 2058,
+        "sha256": "3b7b9ccdf37c879351c33ac7f34a4652e931525f6c30d51073297d9769d0a82a"
+      },
+      "Full_Report_EN.docx": {
+        "artifact_member": "deliverables/Full_Report_EN.docx",
+        "bytes": 41645,
+        "sha256": "927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"
+      },
+      "Full_Results_EN.xlsx": {
+        "artifact_member": "deliverables/Full_Results_EN.xlsx",
+        "bytes": 259442692,
+        "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"
+      },
+      "Summary_EN.docx": {
+        "artifact_member": "deliverables/Summary_EN.docx",
+        "bytes": 39968,
+        "sha256": "e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"
+      },
+      "التقرير_الكامل_AR.docx": {
+        "artifact_member": "deliverables/التقرير_الكامل_AR.docx",
+        "bytes": 42248,
+        "sha256": "e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"
+      },
+      "الملخص_AR.docx": {
+        "artifact_member": "deliverables/الملخص_AR.docx",
+        "bytes": 40435,
+        "sha256": "874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"
+      },
+      "النتائج_الكاملة_AR.xlsx": {
+        "artifact_member": "deliverables/النتائج_الكاملة_AR.xlsx",
+        "bytes": 259444534,
+        "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+      },
+      "دراسة_الجدوى_AR.docx": {
+        "artifact_member": "deliverables/دراسة_الجدوى_AR.docx",
+        "bytes": 40761,
+        "sha256": "08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"
+      }
+    },
+    "metadata_digest": "sha256:e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+    "name": "D3-Owner-Approved-Source-Reprocessing-41754147172",
+    "sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+    "zip_crc": "PASS"
+  },
+  "branch": "tmp/d1-rebuild-20261101",
+  "classification": "PASS_SCOPED",
+  "d3_18": "PASS_SCOPED",
+  "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "d3_requirement_statuses": {
+    "D3-01": "PASS_SCOPED",
+    "D3-02": "PASS_SCOPED",
+    "D3-03": "PASS_SCOPED",
+    "D3-04": "PASS_SCOPED",
+    "D3-05": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-06": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-07": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-08": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-09": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-10": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-11": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-12": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-13": "PASS_SCOPED",
+    "D3-14": "PASS_SCOPED",
+    "D3-15": "PASS_SCOPED",
+    "D3-16": "PASS_SCOPED",
+    "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3-18": "NOT_RUN"
+  },
+  "d4_status": "NOT_STARTED",
+  "delivery_method": "GITHUB_ACTIONS_ARTIFACT_FINAL_IMMEDIATE",
+  "docx_packages": {
+    "Full_Report_EN.docx": {
+      "bytes": 41645,
+      "ooxml_package": "PASS_SCOPED",
+      "sha256": "927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"
+    },
+    "Summary_EN.docx": {
+      "bytes": 39968,
+      "ooxml_package": "PASS_SCOPED",
+      "sha256": "e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"
+    },
+    "التقرير_الكامل_AR.docx": {
+      "bytes": 42248,
+      "ooxml_package": "PASS_SCOPED",
+      "sha256": "e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"
+    },
+    "الملخص_AR.docx": {
+      "bytes": 40435,
+      "ooxml_package": "PASS_SCOPED",
+      "sha256": "874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"
+    },
+    "دراسة_الجدوى_AR.docx": {
+      "bytes": 40761,
+      "ooxml_package": "PASS_SCOPED",
+      "sha256": "08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"
+    }
+  },
+  "final_acceptance": "NOT_DECLARED",
+  "git_lfs": "NOT_REQUIRED_BY_OWNER_DECISION; NO_UPLOAD_PERFORMED",
+  "historical_artifacts_and_manifests_modified": false,
+  "missing_historical_48k_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
+  ],
+  "no_trial_simulation_monte_carlo_n_expansion_backfill_zero_fill_or_identity_change": true,
+  "owner_decision": "ACCEPTED_BY_OWNER_2026-11-05",
+  "owner_instruction": "Owner explicitly approved Artifact 13288779998 as the final immediate D3 delivery object, replacing Artifact 13160434943.",
+  "preserved_gate_statuses": {},
+  "preserved_limitations": [
+    "Full Logging contains 105 representative keys / 125 role assignments only; it is not 48,000-trial full daily logging.",
+    "C100 daily distributions are source-backed as deterministic reuse for five scenarios (2,198 rows each); C100 Golden revalidation remains NOT_RUN.",
+    "Representative P50 raw daily ledgers are source-backed for 25 selected cases only; this does not establish full 48,000-trial daily logging.",
+    "Detailed ASSETS, ACCTG, PARTNER, GUARANTEE and CONTRACTS ledgers are source-backed for 25 representative P50 cases only; this does not establish full-cohort detail.",
+    "The all-trial final close-date distribution is source-backed for 49,500 trials (48,000 S6 + 1,500 C100) across 25 scenarios and is not inferred from the 105 representative keys.",
+    "The five historical accounting fields remain MISSING_EVIDENCE for the full 48,000-trial cohort and must not be inferred or zero-filled.",
+    "Full Logging normalized status remains NOT_VERIFIED_105_OF_105; 105 representative keys do not prove all 48,000 trials.",
+    "C100 Golden revalidation remains NOT_RUN; deterministic daily reuse and common-field comparisons do not replace the Golden revalidation gate.",
+    "Financial Gate A remains PASS_SCOPED only; Production Gate A remains NOT_DECLARED.",
+    "Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED."
+  ],
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "retention_boundary": "Temporary Actions Artifact; availability ends at recorded expiry; not a permanent archive.",
+  "schema_version": "d3-candidate-actions-artifact-final-acceptance-v1",
+  "source_run_id": 41754147172,
+  "source_sha": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "workbooks": {
+    "Full_Results_EN.xlsx": {
+      "bytes": 259442692,
+      "excel_error_cell_count": 0,
+      "formula_cell_count": 0,
+      "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+      "sheet_count": 185,
+      "worksheet_xml_count": 185,
+      "xlsx_crc": "PASS"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "bytes": 259444534,
+      "excel_error_cell_count": 0,
+      "formula_cell_count": 0,
+      "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d",
+      "sheet_count": 185,
+      "worksheet_xml_count": 185,
+      "xlsx_crc": "PASS"
+    }
+  }
+}

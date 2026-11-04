@@ -192,3 +192,13 @@ Run 41366779707 checked out the triggering commit and asserted the branch name p
 - Candidate Actions Artifact is temporary and expires at its recorded expiry. No owner delivery decision for this exact candidate Artifact has been inferred.
 - Historical 48K fields remain MISSING_EVIDENCE; Full Logging remains 105 representative keys only; C100 Golden remains NOT_RUN; upstream financial/production/statistical gates remain unchanged.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, Release, or final-acceptance declaration occurred.
+
+
+## D3 candidate Artifact owner acceptance — 2026-11-05 (append-only)
+
+- Owner explicitly approved GitHub Actions Artifact 13288779998 (SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe; 535567142 bytes) as the final immediate D3 delivery object, replacing Artifact 13160434943.
+- Independent acceptance Run 41914970361; tested SHA b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1; source Run 41754147172 / source SHA 3325fd961005c2c47de071d25904a748af7a21a6.
+- D3-18 PASS_SCOPED after artifact lineage, outer ZIP digest/CRC, all 15 member sizes and SHA-256 values, both workbook byte fingerprints, 185-sheet/XML structure, zero formulas and zero Excel error cells were independently verified.
+- Overall D3 PASS_SCOPED_WITH_LIMITATIONS. Existing D3 limitations and upstream gate states are retained without promotion. D4 NOT_STARTED; FINAL_ACCEPTED NOT_DECLARED.
+- Artifact is temporary and expires 2026-12-04T02:07:02Z; not permanent archival. Git LFS is not required by this owner decision; no LFS upload was performed.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed/Trial identity change, historical Artifact/manifest mutation, main write, merge, Release, or final acceptance occurred.
