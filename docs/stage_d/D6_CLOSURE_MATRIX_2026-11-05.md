@@ -109,7 +109,7 @@ These are explicit scope limitations, not hidden failures and not grounds to sil
 
 ## 7. Closure-document evidence and exact-head readback
 
-This section is completed by the append-only closure commit that contains this matrix, the D6 closure record, and the continuity/status/handoff addenda. For every closure file, record:
+This section is completed by the dedicated append-only evidence ledger `docs/stage_d/D6_CLOSURE_EVIDENCE_2026-11-05.json`, which records the GitHub Raw SHA-256, Git blob SHA-1, byte size, exact URL and containing commit for this matrix, session record, session status, Project Continuity and Project Handoff. For every closure file, record:
 
 - exact GitHub URL at the final commit;
 - SHA-256 computed from fetched GitHub Raw UTF-8 bytes;
@@ -117,7 +117,7 @@ This section is completed by the append-only closure commit that contains this m
 - byte size;
 - containing commit SHA.
 
-The final closure evidence block is appended below after remote readback. Do not label a file `VERIFIED_LIVE` until all five fields above are present.
+The evidence ledger is the final remote-readback record. Do not label a file `VERIFIED_LIVE` until all required evidence fields are present.
 
 ## 8. Formal D6 disposition
 
