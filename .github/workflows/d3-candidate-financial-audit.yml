@@ -35,6 +35,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install openpyxl lxml python-docx pypdf pytest
+          python -m pip check
+          python -c "import numpy, pandas, pyarrow, scipy; print('D3_AUDIT_DEPENDENCIES_READY')"
 
       - name: Assert exact branch and candidate source identity
         env:
