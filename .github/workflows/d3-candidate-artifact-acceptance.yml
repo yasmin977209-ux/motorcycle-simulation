@@ -119,6 +119,10 @@ jobs:
           expected_members=owner.get("files")
           if not isinstance(expected_members,dict) or len(expected_members)!=14:
               fail("D3_EXPECTED_MEMBER_INVENTORY_MISMATCH",len(expected_members or {}))
+          expected_members=dict(expected_members)
+          expected_members["D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json"]={
+              "bytes":len(owner_bytes),"sha256":sha(owner_bytes)
+          }
 
           # Re-download the exact Actions Artifact by immutable ID and hash its outer ZIP bytes.
           tmp=pathlib.Path(tempfile.mkdtemp(prefix="d3-candidate-final-acceptance-"))
@@ -167,7 +171,7 @@ jobs:
                   fail("D3_CANDIDATE_MEMBER_SET_MISMATCH",
                        json.dumps({"missing":sorted(set(expected_members)-set(by_basename)),
                                    "extra":sorted(set(by_basename)-set(expected_members))},ensure_ascii=False))
-              if len(by_basename)!=14:
+              if len(by_basename)!=15:
                   fail("D3_CANDIDATE_MEMBER_COUNT_MISMATCH",len(by_basename))
 
               for basename, pinned in expected_members.items():
@@ -382,7 +386,7 @@ jobs:
               f"- Candidate source Run: {source_run_id}; source SHA: {source_sha}.",
               f"- Candidate Artifact: {artifact_id}; bytes: {outer_bytes}; SHA-256: {outer_sha}.",
               f"- Artifact expiry: {artifact.get('expires_at')}; temporary Actions retention.",
-              f"- ZIP inventory: {len(member_inventory)} pinned files; outer ZIP CRC PASS; every member size/SHA-256 PASS.",
+              f"- ZIP inventory: {len(member_inventory)} pinned files (14 generated outputs plus the owner-approval record); outer ZIP CRC PASS; every member size/SHA-256 PASS.",
               "- D3-18: PASS_SCOPED — independent candidate Artifact/workbook byte and XML verification.",
               "- Financial Registry audit: PASS_SCOPED; 5,953,640 financial registry matches per workbook; zero mismatches; bilingual numeric digests identical.",
               "- Both XLSX files: 185 sheets and 185 worksheet XML parts; zero formula cells and zero Excel error cells; XLSX CRC PASS.",
@@ -425,7 +429,7 @@ jobs:
 
           - Candidate acceptance Run {run}; exact tested SHA {tested}.
           - Candidate source Run 41754147172 / SHA {source}; candidate Artifact 13288779998.
-          - Independent ZIP/member fingerprints, all 14 member payloads, both workbook byte streams, 185-sheet structure, workbook CRC, zero formula cells and zero Excel error cells passed.
+          - Independent ZIP/member fingerprints, all 15 members (14 generated outputs plus the included owner-approval record), both workbook byte streams, 185-sheet structure, workbook CRC, zero formula cells and zero Excel error cells passed.
           - Candidate financial Registry audit Run 41900246587 on {os.environ["FINANCIAL_AUDIT_TESTED_SHA"]}: PASS_SCOPED; 5,953,640 financial matches per workbook, zero mismatches, and identical bilingual numeric digests.
           - D3-18: PASS_SCOPED for this candidate; overall candidate D3: PASS_SCOPED_WITH_LIMITATIONS. The embedded source build audit and manifest were not altered.
           - D4 remains NOT_RUN and requires a separate rebuild/revalidation against this candidate. FINAL_ACCEPTED remains NOT_DECLARED.
