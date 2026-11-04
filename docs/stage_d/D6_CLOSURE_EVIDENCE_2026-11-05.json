@@ -1,0 +1,56 @@
+{
+  "schema": "d6-closure-evidence-v1",
+  "recorded_at": "2026-11-05",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "commit_containing_all_listed_file_bytes": "830a932b9a873f8332cc5dacce309150d1e1623b",
+  "evidence_method": "Fetched each exact raw.githubusercontent.com URL at the containing commit; SHA-256 calculated over UTF-8 bytes; Git blob SHA-1 independently recomputed as SHA1('blob '+byte_size+'\\0'+bytes).",
+  "files": [
+    {
+      "path": "docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "sha256": "dc0f27449261f09b4d29d178e2e5ec9e9a6a011a45ffc9979da21831cff6bd3f",
+      "git_blob_sha1": "008d23f57562d52271482e3401f21e4bd76c1acf",
+      "bytes": 11562,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md",
+      "sha256": "938ff03a623554a0b231eace112f263542fa31725987038325f4bc6cffa8df2c",
+      "git_blob_sha1": "0f085274816ddb352a662dfba01456c48d876b7b",
+      "bytes": 2730,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md",
+      "sha256": "6c4d9e272132ca1a936178a4128619ea2ddddf1759c17435d90cef8aff27e71d",
+      "git_blob_sha1": "e63047f79e3e40045ffb0190b9e682714efb461c",
+      "bytes": 7111,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/PROJECT_CONTINUITY.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/PROJECT_CONTINUITY.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/PROJECT_CONTINUITY.md",
+      "sha256": "9840bb641797ea582b8f5b80e617e66239044311ef592454c6b3797ad5d1fd14",
+      "git_blob_sha1": "bfebd9c95af222dbb65abff5170ea5f8b76c247b",
+      "bytes": 535040,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/PROJECT_HANDOFF.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/PROJECT_HANDOFF.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/PROJECT_HANDOFF.md",
+      "sha256": "586971fbc57d1eef6ec622d3998fe7ff31eb1db810bd0c3440a5ceed2e238901",
+      "git_blob_sha1": "fe36529a3edbe6bb4c6489903f8942b4fc4739bf",
+      "bytes": 71068,
+      "classification": "VERIFIED_LIVE"
+    }
+  ],
+  "final_head_validation": "Performed separately after publishing this ledger; see final session result. The ledger intentionally does not self-hash."
+}
