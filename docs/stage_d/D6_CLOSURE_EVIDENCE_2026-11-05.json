@@ -3,16 +3,16 @@
   "recorded_at": "2026-11-05",
   "repository": "yasmin977209-ux/motorcycle-simulation",
   "branch": "tmp/d1-rebuild-20261101",
-  "commit_containing_all_listed_file_bytes": "830a932b9a873f8332cc5dacce309150d1e1623b",
+  "commit_containing_all_listed_file_bytes": "802ee519f3a8cfc724bb9cc45efe2b8d6672a86c",
   "evidence_method": "Fetched each exact raw.githubusercontent.com URL at the containing commit; SHA-256 calculated over UTF-8 bytes; Git blob SHA-1 independently recomputed as SHA1('blob '+byte_size+'\\0'+bytes).",
   "files": [
     {
       "path": "docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
-      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
-      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/830a932b9a873f8332cc5dacce309150d1e1623b/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
-      "sha256": "dc0f27449261f09b4d29d178e2e5ec9e9a6a011a45ffc9979da21831cff6bd3f",
-      "git_blob_sha1": "008d23f57562d52271482e3401f21e4bd76c1acf",
-      "bytes": 11562,
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "sha256": "5ddd4cd181f986b4f8ce547f3a1d21eda8ceaec3626ef45833ea4488f3965628",
+      "git_blob_sha1": "00d6bd18cf808d0fd0d1afe2483c5f0425a5450b",
+      "bytes": 12164,
       "classification": "VERIFIED_LIVE"
     },
     {
@@ -77,7 +77,25 @@
       "git_blob_sha1": "2824bd2f1ac2b37f20fa8168e3c01dcf6d0f1f42",
       "bytes": 67855,
       "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_CURRENT_AUDIT.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CURRENT_AUDIT.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CURRENT_AUDIT.md",
+      "sha256": "f347ff48a1db751e064d2bc3bbb9239880c4b424f963206681f24a82a619df7a",
+      "git_blob_sha1": "085915be8f9e4f5b03d2f44137038cb4eef96a59",
+      "bytes": 2241,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_CURRENT_AUDIT.json",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CURRENT_AUDIT.json",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/802ee519f3a8cfc724bb9cc45efe2b8d6672a86c/docs/stage_d/D6_CURRENT_AUDIT.json",
+      "sha256": "1fc563c73222185bbd26c6ed32c2d3b0eadfcec2f68de72bdb3eb80537868d0c",
+      "git_blob_sha1": "755bea94af200e84cb47649254a9a8722be443a7",
+      "bytes": 1020,
+      "classification": "VERIFIED_LIVE"
     }
   ],
-  "final_head_validation": "After this evidence-ledger update, branch ref was re-read from GitHub API and matched the returned commit SHA; main was re-read and remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The evidence ledger intentionally does not self-hash."
+  "final_head_validation": "After publishing the final evidence ledger commit, re-read the active branch HEAD and main HEAD from GitHub API; verify all closure/pointer/report files by GitHub contents API at the exact final branch HEAD. Final branch HEAD will be recorded in the session response."
 }
