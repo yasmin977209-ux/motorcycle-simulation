@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install openpyxl lxml python-docx pypdf pytest
+          python -m pip install openpyxl lxml python-docx pypdf pytest requests
           python -m pip check
           python -c "import numpy, pandas, pyarrow, scipy; print('D3_AUDIT_DEPENDENCIES_READY')"
 
