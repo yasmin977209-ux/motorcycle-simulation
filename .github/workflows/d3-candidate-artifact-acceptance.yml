@@ -328,12 +328,12 @@ jobs:
           requirement_statuses["D3-18"]="NOT_RUN"
           report={
               "schema_version":"d3-candidate-artifact-final-acceptance-v1",
-              "classification":"VERIFIED_LIVE",
+              "classification":"PASS_SCOPED",
               "status":"PASS_SCOPED",
               "repository":repo,
               "branch":branch,
-              "acceptance_run_id":int(os.environ["GITHUB_RUN_ID"]),
-              "acceptance_tested_sha":tested_sha,
+              "integrity_audit_run_id":int(os.environ["GITHUB_RUN_ID"]),
+              "audit_tested_sha":tested_sha,
               "candidate_source":{"run_id":source_run_id,"source_sha":source_sha,"source_run_conclusion":source_run.get("conclusion")},
               "candidate_artifact":{
                   "id":artifact_id,"name":artifact.get("name"),"bytes":outer_bytes,"sha256":outer_sha,
@@ -385,7 +385,7 @@ jobs:
           report_json.write_text(json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
           lines=[
               "# D3 Candidate Artifact Integrity Audit — 2026-11-04","",
-              f"- Acceptance Run: {report['acceptance_run_id']}; tested SHA: {tested_sha}.",
+              f"- Integrity audit Run: {report['integrity_audit_run_id']}; tested SHA: {tested_sha}.",
               f"- Candidate source Run: {source_run_id}; source SHA: {source_sha}.",
               f"- Candidate Artifact: {artifact_id}; bytes: {outer_bytes}; SHA-256: {outer_sha}.",
               f"- Artifact expiry: {artifact.get('expires_at')}; temporary Actions retention.",
