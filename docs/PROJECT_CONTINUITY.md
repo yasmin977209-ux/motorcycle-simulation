@@ -3290,3 +3290,18 @@ Missing accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Acc
 - D0-D6 remain scoped only. Gates unchanged: Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED/MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 representative keys; C100 Golden NOT_RUN.
 - Five accounting fields remain MISSING_EVIDENCE; no inference or zero-fill. FINAL_ACCEPTED/P17_FINAL_ACCEPTED/P18_RELEASED/CONVERGED NOT_DECLARED. E0 not started.
 - No Trial/Simulation/Monte Carlo/N expansion/backfill/identity change/Release/merge was performed.
+
+
+---
+
+## Final session handoff — 2026-11-05
+
+The authoritative current session report is [SESSION_HANDOFF_2026-11-05_FINAL.md](stage_d/SESSION_HANDOFF_2026-11-05_FINAL.md) on `tmp/d1-rebuild-20261101`. It supersedes stale opening status snapshots only where it cites later dated evidence; historical entries remain intact.
+
+Review-start exact refs: working branch `c447a5b5c3162b23e21ca8ea5befdd6541409113`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`. Re-fetch before any later action.
+
+Scoped dispositions D0–D6: `PASS_SCOPED_WITH_LIMITATIONS` each, subject to the per-stage limits and two explicit documentation inconsistencies: D3-18 is PASS_SCOPED in the top-level owner-accepted record but stale NOT_RUN in its requirement map; the v2.4.0 remote document header says PROPOSED although owner decision D-2026-10-30-REFERENCE-V2.4.0 says APPROVED_BY_OWNER. Owner decision governs; reconcile both conflicts append-only.
+
+D5 tested SHA `baf696af1e951cbf4a79e8a9e009c60c6b053b2d` is not its evidence publication commit; the corrected publication-evidence commit is `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`.
+
+Main accidental-write incident is resolved by owner-authorized normal Revert `01a6f79eedc522bb734ed9c5ea31beee581f2468`; main remains read-only. E0 remains NOT_STARTED. All fixed gates, missing accounting fields, artifact retention and prohibitions are detailed in the linked final session report.
