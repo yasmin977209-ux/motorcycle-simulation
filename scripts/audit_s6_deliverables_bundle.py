@@ -334,6 +334,22 @@ def render_docx_files(docx_paths, output_dir):
    failures[path.name]={"error_type":type(exc).__name__,"error":str(exc)}
  return {"page_counts":pages,"failures":failures}
 
+def summary_page_count_failures(page_counts, failures, summary_names):
+ """Validate summary page counts independent of temporary D6 filename prefixes."""
+ result=dict(failures)
+ normalized={}
+ for rendered_name,count in page_counts.items():
+  name=Path(rendered_name).name
+  if name.startswith("d6_"):
+   name=name[3:]
+  normalized[name]=count
+ for summary in summary_names:
+  count=normalized.get(summary)
+  if count is None or not 2<=count<=3:
+   result[summary]=result.get(summary,{"error_type":"ValueError","error":"DOCX_SUMMARY_PAGE_COUNT_INVALID:"+str(count)})
+ return result
+
+
 def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, financial_mismatch_count, package_inventory_verified, artifact_fingerprint_verified, run_id, job_id, tested_sha):
     """Report scoped execution separately from historical acceptance-test completion."""
     base={"run_id":run_id,"job_id":job_id,"tested_sha":tested_sha}
@@ -457,10 +473,9 @@ def audit(a):
  checks["docx_number_registry_traceability"]={"status":"BLOCKED" if docx_unknown_ids or docx_id_occurrences==0 else "PASS_SCOPED","number_id_occurrences":docx_id_occurrences,"unresolved_number_ids":sorted(set(docx_unknown_ids)),"detail":"Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."}
  render_result=render_docx_files(docx_paths,root/"d6_rendered")
  page_counts=render_result["page_counts"]
- render_failures=dict(render_result["failures"])
- for summary in ("الملخص_AR.docx","Summary_EN.docx"):
-  if summary not in page_counts or not 2<=page_counts[summary]<=3:
-   render_failures[summary]=render_failures.get(summary,{"error_type":"ValueError","error":"DOCX_SUMMARY_PAGE_COUNT_INVALID:"+str(page_counts.get(summary))})
+ render_failures=summary_page_count_failures(
+  page_counts, render_result["failures"], ("الملخص_AR.docx","Summary_EN.docx")
+ )
  render_blocked=render_failures or None
  checks["docx_rendering"]={"status":"BLOCKED" if render_blocked else "PASS_SCOPED","page_counts":page_counts,"file_failures":render_failures,"timeout_seconds_per_file":120,"detail":"Each DOCX was rendered in a separate LibreOffice process with an isolated profile and 120-second timeout; both summaries must be 2–3 pages."}
  for path in docx_paths: path.unlink(missing_ok=True)
