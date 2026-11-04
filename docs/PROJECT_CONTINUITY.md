@@ -3261,3 +3261,20 @@ This is the latest current-state addendum; earlier status snapshots in this file
 - Missing accounting fields remain: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
 
 The stale top-of-file snapshots remain preserved for historical context. This current addendum is authoritative for D6 disposition as of this commit. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change, historical Artifact mutation, main write, merge, Release, or final acceptance occurred.
+
+
+# CURRENT D0–D6 CONSOLIDATED CLOSURE — 2026-11-05 (APPEND-ONLY)
+
+Current working branch: `tmp/d1-rebuild-20261101`. Review baseline HEAD before this documentation update: `bd64c72593755b97867665a0cb587966dee699b2`. Main HEAD at review: `c6e54349a5e94f65d5aa9f83141f225d777bb474` (unchanged).
+
+The consolidated stage report is `docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md`; machine-readable index: `docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json`.
+
+Current dispositions, each limited to its recorded scope: D0 `PASS_SCOPED_WITH_LIMITATIONS`; D1 `PASS_SCOPED_WITH_LIMITATIONS`; D2 `PASS_SCOPED_WITH_LIMITATIONS`; D3 `PASS_SCOPED_WITH_LIMITATIONS` (D3-18 `PASS_SCOPED`); D4 `PASS_SCOPED_WITH_LIMITATIONS`; D5 `PASS_SCOPED_WITH_LIMITATIONS`; D6 `PASS_SCOPED_WITH_LIMITATIONS`. Overall classification remains `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+Key run evidence: D1/D2 source validation Run 41694461194; D2 completion Run 41333300530; D3 owner-approved artifact acceptance Run 41914970361 (Artifact 13288779998); D4 Run 41916830283; D5 Run 41928234377 (Artifact 13369179742); D6 independent audit Run 41929888796 / Job 126923812128.
+
+Unchanged limits: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only; C100 Golden `NOT_RUN`; D5 full 177-test suite `NOT_RUN`; D6 tests 176/179/180/181/183 `NOT_RUN`; historical acceptance invocations 175/182/186 `NOT_RUN` (scoped checks are not historical test invocations).
+
+Missing accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. No inferred values or zero-fill.
+
+`FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, and `CONVERGED` remain `NOT_DECLARED`. E0 has not started. This addendum does not grant owner-only permissions or authorize Trials, Simulation, Monte Carlo, N expansion, backfill, identity changes, main writes, merges or Release.
