@@ -548,3 +548,27 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition PASS_SCOPED_WITH_LIMITATIONS; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md and FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+ 
+---
+
+## CURRENT CONTINUITY HANDOFF — 2026-11-05 — D6 CLOSED WITH LIMITATIONS
+
+The 2026-10-31 header and earlier handoff entries are historical snapshots. For the current D6 disposition, use this append-only addendum and the exact evidence links below.
+
+- Repository: `yasmin977209-ux/motorcycle-simulation`
+- Working branch: `tmp/d1-rebuild-20261101`
+- Pre-closure branch HEAD: `73ce736f35e530f25fd4636904b11e1df2009b07`
+- `main` HEAD: `c6e54349a5e94f65d5aa9f83141f225d777bb474` (unchanged; read-only)
+- D6 Run: [41929888796](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41929888796)
+- D6 Job: [126923812128](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41929888796/job/126923812128)
+- Tested SHA: `48ae9fbf5a7264834a523504706a7c04b654061b`
+- D6 Artifact: `13371094066`; SHA-256 `f8ed5e1f516a3a6d34086c2ef4f5fb2a84670c9907fabd503b994086426ca112`; 6,635 bytes.
+- Audit reports: [FINAL_AUDIT.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/73ce736f35e530f25fd4636904b11e1df2009b07/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md) and [FINAL_AUDIT.json](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/73ce736f35e530f25fd4636904b11e1df2009b07/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json).
+- D6 disposition: `PASS_SCOPED_WITH_LIMITATIONS`; classification `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- Closure matrix: `docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md`.
+- Closure session record: `docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md`.
+
+**Do not infer:** historical tests 176/179/180/181/183 remain NOT_RUN; historical invocations 175/182/186 also remain NOT_RUN (only scoped checks passed). Full 177-unique-test suite is NOT_RUN. Financial/production/statistical gates remain unchanged. Five historical accounting fields remain MISSING_EVIDENCE. FINAL_ACCEPTED, P17_FINAL_ACCEPTED, P18_RELEASED and CONVERGED remain NOT_DECLARED.
+
+D6 is closed within its executed audit scope; this does not constitute P17 acceptance or release authorization. Do not begin E0 unless its separate start instruction is received and the complete live prerequisites are revalidated. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/final acceptance was performed.
