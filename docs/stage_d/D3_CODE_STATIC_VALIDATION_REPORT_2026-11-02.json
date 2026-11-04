@@ -13,9 +13,9 @@
     "tests/test_d3_registry_extension.py",
     "tests/test_d3_excel_export_complete.py"
   ],
-  "tested_source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
-  "tests_passed": 27,
+  "tested_source_head": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "tests_passed": 29,
   "tests_skipped": 0,
   "workflow_run_attempt": 1,
-  "workflow_run_id": "41480650466"
+  "workflow_run_id": "41754147124"
 }
