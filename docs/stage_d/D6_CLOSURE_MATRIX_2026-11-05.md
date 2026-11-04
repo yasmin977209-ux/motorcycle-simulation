@@ -126,3 +126,8 @@ The evidence ledger is the final remote-readback record. Do not label a file `VE
 This closes the D6 audit and its administrative continuity record. It does not close the upstream production/statistical/accounting gaps, execute `NOT_RUN` acceptance tests, or authorize E0 automatically if any separate project-level prerequisite or owner decision remains unresolved. The D6-to-E0 sequence may be considered only after revalidating the D6 evidence and the exact live state; this matrix itself does not start E0.
 
 No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, `main` write, merge, Release, `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, or `CONVERGED` is performed or authorized by this closure.
+
+
+## 9. Audit path conflict resolution — append-only
+
+The prompt's conventional root paths `docs/FINAL_AUDIT.md` and `docs/FINAL_AUDIT.json` already existed and contained the earlier D6 Run `41874399640` disposition `BLOCKED`. Those files are preserved as historical evidence and were not overwritten. The current run-specific report pair for Run `41929888796` is authoritative for this D6 close. The explicit current pointers are `docs/stage_d/D6_CURRENT_AUDIT.md` and `docs/stage_d/D6_CURRENT_AUDIT.json`. This is the append-only path resolution; it avoids silently replacing prior audit evidence.
