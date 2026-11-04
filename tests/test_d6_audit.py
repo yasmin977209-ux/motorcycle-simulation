@@ -229,3 +229,37 @@ def test_d6_acceptance_statuses_fail_closed_when_scoped_prerequisites_missing():
     assert result["test_182"]["status"] == "BLOCKED"
     assert result["test_186"]["status"] == "BLOCKED"
 
+
+def test_docx_renderer_isolates_each_file_and_continues_after_timeout(tmp_path, monkeypatch):
+    import subprocess
+    from types import SimpleNamespace
+    from pypdf import PdfWriter
+    from scripts import audit_s6_deliverables_bundle as auditor
+
+    paths = [tmp_path / "first.docx", tmp_path / "second.docx"]
+    for path in paths:
+        path.write_bytes(b"fixture")
+    calls = []
+
+    def fake_run(cmd, capture_output, text, timeout):
+        calls.append((cmd, timeout))
+        if len(calls) == 1:
+            raise subprocess.TimeoutExpired(cmd, timeout)
+        outdir = pathlib.Path(cmd[cmd.index("--outdir") + 1])
+        source = pathlib.Path(cmd[-1])
+        writer = PdfWriter()
+        writer.add_blank_page(width=612, height=792)
+        with (outdir / (source.stem + ".pdf")).open("wb") as stream:
+            writer.write(stream)
+        return SimpleNamespace(returncode=0, stderr="")
+
+    import pathlib
+    monkeypatch.setattr(auditor.subprocess, "run", fake_run)
+    result = auditor.render_docx_files(paths, tmp_path / "rendered")
+    assert result["page_counts"] == {"second.docx": 1}
+    assert result["failures"]["first.docx"]["error_type"] == "TimeoutExpired"
+    assert len(calls) == 2
+    assert all(call[1] == 120 for call in calls)
+    profiles = [next(arg for arg in call[0] if arg.startswith("-env:UserInstallation=")) for call in calls]
+    assert profiles[0] != profiles[1]
+

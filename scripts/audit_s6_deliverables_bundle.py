@@ -309,20 +309,28 @@ def docx_directionality(path):
   "rtl_runs_true":rtl_true,"rtl_runs_false":rtl_false,"rtl_runs_missing":rtl_missing}
 
 def render_docx_files(docx_paths, output_dir):
- output_dir.mkdir(parents=True,exist_ok=True)
- profile=output_dir/"lo-profile"
- cmd=["libreoffice",f"-env:UserInstallation=file://{profile}","--headless","--convert-to","pdf","--outdir",str(output_dir)]+[str(p) for p in docx_paths]
- run=subprocess.run(cmd,capture_output=True,text=True,timeout=600)
- if run.returncode!=0: raise RuntimeError("DOCX_RENDER_FAILED:"+run.stderr[-2000:])
+ """Render each DOCX in an isolated LibreOffice process and retain per-file outcomes."""
  from pypdf import PdfReader
- pages={}
- for path in docx_paths:
+ output_dir.mkdir(parents=True,exist_ok=True)
+ pages={}; failures={}
+ for index,path in enumerate(docx_paths):
+  profile=output_dir/f"lo-profile-{index:02d}"
   pdf=output_dir/(path.stem+".pdf")
-  if not pdf.is_file(): raise RuntimeError("DOCX_RENDER_OUTPUT_MISSING:"+path.name)
-  count=len(PdfReader(str(pdf)).pages)
-  if count<1: raise RuntimeError("DOCX_RENDER_ZERO_PAGES:"+path.name)
-  pages[path.name]=count
- return pages
+  pdf.unlink(missing_ok=True)
+  cmd=["libreoffice",f"-env:UserInstallation=file://{profile}","--headless","--convert-to","pdf","--outdir",str(output_dir),str(path)]
+  try:
+   run=subprocess.run(cmd,capture_output=True,text=True,timeout=120)
+   if run.returncode!=0:
+    raise RuntimeError("DOCX_RENDER_FAILED:"+run.stderr[-2000:])
+   if not pdf.is_file():
+    raise RuntimeError("DOCX_RENDER_OUTPUT_MISSING:"+path.name)
+   count=len(PdfReader(str(pdf)).pages)
+   if count<1:
+    raise RuntimeError("DOCX_RENDER_ZERO_PAGES:"+path.name)
+   pages[path.name]=count
+  except Exception as exc:
+   failures[path.name]={"error_type":type(exc).__name__,"error":str(exc)}
+ return {"page_counts":pages,"failures":failures}
 
 def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, financial_mismatch_count, package_inventory_verified, artifact_fingerprint_verified, run_id, job_id, tested_sha):
     """Report scoped execution separately from historical acceptance-test completion."""
@@ -445,17 +453,15 @@ def audit(a):
  docx_blocked=[name for name,item in docx_results.items() if item["status"]=="BLOCKED"]
  checks["docx_files"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","files":docx_results,"docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file DOCX parse, T2, §17.3 substance, OOXML directionality and resolution of every explicit Number Registry ID; full numeric-token lineage remains a separate acceptance test."}
  checks["docx_number_registry_traceability"]={"status":"BLOCKED" if docx_unknown_ids or docx_id_occurrences==0 else "PASS_SCOPED","number_id_occurrences":docx_id_occurrences,"unresolved_number_ids":sorted(set(docx_unknown_ids)),"detail":"Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."}
- render_blocked=None; page_counts={}
- try:
-  page_counts=render_docx_files(docx_paths,root/"d6_rendered")
-  for summary in ("الملخص_AR.docx","Summary_EN.docx"):
-   if not 2<=page_counts.get(summary,0)<=3: raise ValueError("DOCX_SUMMARY_PAGE_COUNT_INVALID:"+summary+":"+str(page_counts.get(summary)))
-  checks["docx_rendering"]={"status":"PASS_SCOPED","page_counts":page_counts,"detail":"All five DOCX files rendered independently with LibreOffice; both summaries verified at 2–3 pages."}
- except Exception as exc:
-  render_blocked={"error_type":type(exc).__name__,"error":str(exc)}
-  checks["docx_rendering"]={"status":"BLOCKED","page_counts":page_counts,"error":render_blocked}
- finally:
-  for path in docx_paths: path.unlink(missing_ok=True)
+ render_result=render_docx_files(docx_paths,root/"d6_rendered")
+ page_counts=render_result["page_counts"]
+ render_failures=dict(render_result["failures"])
+ for summary in ("الملخص_AR.docx","Summary_EN.docx"):
+  if summary not in page_counts or not 2<=page_counts[summary]<=3:
+   render_failures[summary]=render_failures.get(summary,{"error_type":"ValueError","error":"DOCX_SUMMARY_PAGE_COUNT_INVALID:"+str(page_counts.get(summary))})
+ render_blocked=render_failures or None
+ checks["docx_rendering"]={"status":"BLOCKED" if render_blocked else "PASS_SCOPED","page_counts":page_counts,"file_failures":render_failures,"timeout_seconds_per_file":120,"detail":"Each DOCX was rendered in a separate LibreOffice process with an isolated profile and 120-second timeout; both summaries must be 2–3 pages."}
+ for path in docx_paths: path.unlink(missing_ok=True)
  checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."}
  a.audit_checks=checks
  checks.update(acceptance_test_statuses(

@@ -6,6 +6,9 @@ on:
       - tmp/d1-rebuild-20261101
     paths:
       - 'docs/stage_d/D6_EXECUTION_TRIGGER_*.md'
+      - 'scripts/audit_s6_deliverables_bundle.py'
+      - 'tests/test_d6_audit.py'
+      - '.github/workflows/stage-d6-independent-audit.yml'
 permissions:
   contents: write
   actions: read
@@ -80,6 +83,7 @@ jobs:
         env:
           AUDIT_RUN_ID: ${{ github.run_id }}
           TESTED_SHA: ${{ github.sha }}
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_${{ github.run_id }}.md
         run: |
           python - <<'PY'
           import json,pathlib,os
@@ -98,24 +102,27 @@ jobs:
           ]
           for k,v in r["checks"].items(): lines.append(f"- {k}: {v['status']}")
           lines += ["","## Limitations",""]+[f"- {x}" for x in r["limitations"]]
-          session_path=pathlib.Path(f"docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_{os.environ['AUDIT_RUN_ID']}.md")
+          session_path=pathlib.Path(os.environ["SESSION_PATH"])
           session_path.write_text("\n".join(lines)+"\n",encoding="utf-8")
           entry="\n\n## D6 independent post-write audit — 2026-11-04 (append-only)\n\n"+f"- Run {os.environ['AUDIT_RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}; D5 Artifact {r['source_d5_artifact_id']} from Run {r['source_d5_run_id']}.\n"+f"- Disposition {r['status']}; classification T2_INTERIM / NOT_FINAL_BLOCKED.\n"+"- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.\n"+"- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.\n"
           for name in ("docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"):
             p=pathlib.Path(name); p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
           PY
       - name: Commit D6 audit reports and append-only handoff
+        env:
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_${{ github.run_id }}.md
         run: |
           set -euo pipefail
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/FINAL_AUDIT.md docs/FINAL_AUDIT.json docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_*.md docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
+          git add docs/FINAL_AUDIT.md docs/FINAL_AUDIT.json "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
           git commit -m "docs(d6): record independent post-write audit"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final HEAD validation
         env:
           GH_TOKEN: ${{ github.token }}
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_${{ github.run_id }}.md
         run: |
           set -euo pipefail
           head="$(git rev-parse HEAD)"
@@ -124,7 +131,8 @@ jobs:
           python - <<'PY'
           import hashlib,os,pathlib,urllib.request,urllib.parse,subprocess
           repo=os.environ["GITHUB_REPOSITORY"]; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
-          session=next(pathlib.Path("docs/stage_d").glob("D6_SESSION_RECORD_2026-11-04_RUN_*.md"))
+          session=pathlib.Path(os.environ["SESSION_PATH"])
+          if not session.is_file(): raise SystemExit("D6_EXACT_SESSION_RECORD_MISSING:"+str(session))
           paths=["docs/FINAL_AUDIT.md","docs/FINAL_AUDIT.json",str(session),"docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md"]
           for path in paths:
             local=pathlib.Path(path).read_bytes()
@@ -143,6 +151,6 @@ jobs:
           path: |
             docs/FINAL_AUDIT.md
             docs/FINAL_AUDIT.json
-            docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_*.md
+            docs/stage_d/D6_SESSION_RECORD_2026-11-04_RUN_${{ github.run_id }}.md
           if-no-files-found: error
           retention-days: 30
