@@ -1,0 +1,247 @@
+name: D3 Candidate Artifact Final Delivery Acceptance
+
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths:
+      - .github/workflows/d3-candidate-artifact-final-acceptance.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: d3-candidate-artifact-final-acceptance
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      REPOSITORY: ${{ github.repository }}
+      BRANCH: tmp/d1-rebuild-20261101
+      GH_TOKEN: ${{ github.token }}
+      ARTIFACT_ID: "13288779998"
+      SOURCE_RUN_ID: "41754147172"
+      SOURCE_SHA: "3325fd961005c2c47de071d25904a748af7a21a6"
+      EXPECTED_ARTIFACT_BYTES: "535567142"
+      EXPECTED_ARTIFACT_SHA256: "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+      EXPECTED_MAIN_SHA: "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Independently verify owner-approved candidate Artifact and D3-18
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "$BRANCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib, io, json, os, pathlib, shutil, subprocess, tempfile, zipfile
+          import xml.etree.ElementTree as ET
+          import requests
+
+          repo=os.environ["REPOSITORY"]; token=os.environ["GH_TOKEN"]
+          aid=int(os.environ["ARTIFACT_ID"]); rid=int(os.environ["SOURCE_RUN_ID"])
+          tested=os.environ["GITHUB_SHA"]; branch=os.environ["BRANCH"]
+          expected_members=json.loads(r'''{"D3_BUILD_AUDIT.json":{"artifact_member":"deliverables/D3_BUILD_AUDIT.json","bytes":9137,"sha256":"422ee932594f8869cf4d0c5b5af76d18579219c47defee74f340197f21d702b5"},"D3_EXTENSION_BUILD_AUDIT.json":{"artifact_member":"deliverables/D3_EXTENSION_BUILD_AUDIT.json","bytes":4125,"sha256":"f112f84b5013ada381608b7d80786211142a5a80aa329eef0661c5e91d6c0d8b"},"D3_MANIFEST.json":{"artifact_member":"deliverables/D3_MANIFEST.json","bytes":6249,"sha256":"45777f4e446da0290847a78e20c964361853fdb69413503ba1febca08d08550c"},"D3_NUMBER_REGISTRY_EXTENSION.json.gz":{"artifact_member":"deliverables/D3_NUMBER_REGISTRY_EXTENSION.json.gz","bytes":16440292,"sha256":"7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"},"D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json":{"artifact_member":"docs/stage_d/D3_OWNER_APPROVED_SOURCE_REPROCESSING_2026-11-02.json","bytes":6850,"sha256":"653b0da79716527c97e9891e980dde1a85d1255109bf35f9891b6b31757ca5d1"},"D3_SCOPED_CLOSURE_REPORT_2026-11-02.md":{"artifact_member":"deliverables/D3_SCOPED_CLOSURE_REPORT_2026-11-02.md","bytes":3224,"sha256":"3a26e258c18978b5657f67c483d31740e20854195fe3359c49c751c37ad7e3a0"},"D3_SOURCE_INPUT_ENVELOPE.json":{"artifact_member":"deliverables/D3_SOURCE_INPUT_ENVELOPE.json","bytes":280,"sha256":"80c58c30b61d6c68a984c2c06528a724b6b46cf655c6ca9f1752b071ba529bc7"},"D3_SOURCE_INPUT_MANIFEST.json":{"artifact_member":"deliverables/D3_SOURCE_INPUT_MANIFEST.json","bytes":2058,"sha256":"3b7b9ccdf37c879351c33ac7f34a4652e931525f6c30d51073297d9769d0a82a"},"Full_Report_EN.docx":{"artifact_member":"deliverables/Full_Report_EN.docx","bytes":41645,"sha256":"927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"},"Full_Results_EN.xlsx":{"artifact_member":"deliverables/Full_Results_EN.xlsx","bytes":259442692,"sha256":"8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"},"Summary_EN.docx":{"artifact_member":"deliverables/Summary_EN.docx","bytes":39968,"sha256":"e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"},"التقرير_الكامل_AR.docx":{"artifact_member":"deliverables/التقرير_الكامل_AR.docx","bytes":42248,"sha256":"e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"},"الملخص_AR.docx":{"artifact_member":"deliverables/الملخص_AR.docx","bytes":40435,"sha256":"874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"},"النتائج_الكاملة_AR.xlsx":{"artifact_member":"deliverables/النتائج_الكاملة_AR.xlsx","bytes":259444534,"sha256":"e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"},"دراسة_الجدوى_AR.docx":{"artifact_member":"deliverables/دراسة_الجدوى_AR.docx","bytes":40761,"sha256":"08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"}}''')
+          headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}
+          base=f"https://api.github.com/repos/{repo}"
+          def get_json(url):
+              r=requests.get(url,headers=headers,timeout=(30,90)); r.raise_for_status(); return r.json()
+          artifact=get_json(f"{base}/actions/artifacts/{aid}")
+          source=get_json(f"{base}/actions/runs/{rid}")
+          checks={
+            "artifact_id":artifact.get("id")==aid,
+            "artifact_name":artifact.get("name")=="D3-Owner-Approved-Source-Reprocessing-41754147172",
+            "artifact_bytes":artifact.get("size_in_bytes")==int(os.environ["EXPECTED_ARTIFACT_BYTES"]),
+            "artifact_digest":artifact.get("digest")=="sha256:"+os.environ["EXPECTED_ARTIFACT_SHA256"],
+            "artifact_not_expired":artifact.get("expired") is False,
+            "artifact_source_run":artifact.get("workflow_run",{}).get("id")==rid,
+            "artifact_source_branch":artifact.get("workflow_run",{}).get("head_branch")==branch,
+            "artifact_source_sha":artifact.get("workflow_run",{}).get("head_sha")==os.environ["SOURCE_SHA"],
+            "source_run_id":source.get("id")==rid,
+            "source_run_success":source.get("conclusion")=="success",
+            "source_run_branch":source.get("head_branch")==branch,
+            "source_run_sha":source.get("head_sha")==os.environ["SOURCE_SHA"]
+          }
+          if not all(checks.values()):
+              raise SystemExit("D3_CANDIDATE_LINEAGE_FAILURE "+json.dumps(checks,sort_keys=True))
+          tmp=pathlib.Path(tempfile.mkdtemp(prefix="d3-candidate-final-")); archive=tmp/"candidate.zip"
+          response=requests.get(f"{base}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=(60,300)); response.raise_for_status()
+          outer_hash=hashlib.sha256(); total=0
+          with archive.open("wb") as out:
+              for chunk in response.iter_content(8*1024*1024):
+                  if chunk: out.write(chunk); outer_hash.update(chunk); total+=len(chunk)
+          outer_sha=outer_hash.hexdigest()
+          if total!=int(os.environ["EXPECTED_ARTIFACT_BYTES"]) or outer_sha!=os.environ["EXPECTED_ARTIFACT_SHA256"]:
+              raise SystemExit(f"D3_CANDIDATE_OUTER_FINGERPRINT_FAILURE:{total}:{outer_sha}")
+          workbooks={
+            "Full_Results_EN.xlsx":(259442692,"8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"),
+            "النتائج_الكاملة_AR.xlsx":(259444534,"e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d")
+          }
+          inventory={}
+          with zipfile.ZipFile(archive) as z:
+              bad=z.testzip()
+              if bad: raise SystemExit("D3_CANDIDATE_ZIP_CRC_FAILURE:"+bad)
+              infos={i.filename:i for i in z.infolist() if not i.is_dir()}
+              if len(infos)!=15 or set(infos)!=set(v["artifact_member"] for v in expected_members.values()):
+                  raise SystemExit("D3_CANDIDATE_MEMBER_SET_MISMATCH")
+              for name,expected in expected_members.items():
+                  member=expected["artifact_member"]; info=infos[member]
+                  h=hashlib.sha256(); count=0
+                  with z.open(info) as stream:
+                      while True:
+                          chunk=stream.read(8*1024*1024)
+                          if not chunk: break
+                          h.update(chunk); count+=len(chunk)
+                  sha=h.hexdigest()
+                  if count!=expected["bytes"] or sha!=expected["sha256"]:
+                      raise SystemExit(f"D3_MEMBER_FINGERPRINT_FAILURE:{name}:{count}:{sha}")
+                  inventory[name]={"artifact_member":member,"bytes":count,"sha256":sha}
+              workbook_results={}
+              for name,(expected_bytes,expected_sha) in workbooks.items():
+                  member=expected_members[name]["artifact_member"]
+                  target=tmp/name
+                  with z.open(member) as src,target.open("wb") as dst: shutil.copyfileobj(src,dst,8*1024*1024)
+                  data_hash=hashlib.sha256(target.read_bytes()).hexdigest()
+                  if target.stat().st_size!=expected_bytes or data_hash!=expected_sha:
+                      raise SystemExit("D3_WORKBOOK_FINGERPRINT_FAILURE:"+name)
+                  with zipfile.ZipFile(target) as x:
+                      bad=x.testzip()
+                      if bad: raise SystemExit("D3_XLSX_CRC_FAILURE:"+name+":"+bad)
+                      wb=ET.fromstring(x.read("xl/workbook.xml"))
+                      sheets=sum(1 for e in wb.iter() if e.tag.rsplit("}",1)[-1]=="sheet")
+                      worksheet_parts=[n for n in x.namelist() if n.startswith("xl/worksheets/") and n.endswith(".xml")]
+                      formulas=errors=0
+                      for entry in worksheet_parts:
+                          with x.open(entry) as stream:
+                              for _,elem in ET.iterparse(stream,events=("end",)):
+                                  tag=elem.tag.rsplit("}",1)[-1]
+                                  if tag=="f": formulas+=1
+                                  elif tag=="c" and elem.attrib.get("t")=="e": errors+=1
+                                  elem.clear()
+                      if sheets!=185 or len(worksheet_parts)!=185 or formulas or errors:
+                          raise SystemExit(f"D3_XLSX_XML_FAILURE:{name}:{sheets}:{len(worksheet_parts)}:{formulas}:{errors}")
+                  workbook_results[name]={"bytes":expected_bytes,"sha256":expected_sha,"sheet_count":sheets,
+                    "worksheet_xml_count":len(worksheet_parts),"formula_cell_count":formulas,"excel_error_cell_count":errors,"xlsx_crc":"PASS"}
+              docx_names=["Full_Report_EN.docx","Summary_EN.docx","التقرير_الكامل_AR.docx","الملخص_AR.docx","دراسة_الجدوى_AR.docx"]
+              docx_results={}
+              for name in docx_names:
+                  member=expected_members[name]["artifact_member"]
+                  with zipfile.ZipFile(io.BytesIO(z.read(member))) as d:
+                      bad=d.testzip()
+                      if bad or "[Content_Types].xml" not in d.namelist() or "word/document.xml" not in d.namelist():
+                          raise SystemExit("D3_DOCX_PACKAGE_FAILURE:"+name)
+                  docx_results[name]={"bytes":expected_members[name]["bytes"],"sha256":expected_members[name]["sha256"],"ooxml_package":"PASS_SCOPED"}
+              build=json.loads(z.read(expected_members["D3_BUILD_AUDIT.json"]["artifact_member"]))
+              manifest=json.loads(z.read(expected_members["D3_MANIFEST.json"]["artifact_member"]))
+              if build.get("requirement_statuses",{}).get("D3-18")!="NOT_RUN":
+                  raise SystemExit("D3_BUILD_AUDIT_PREACCEPTANCE_STATE_UNEXPECTED")
+              if manifest.get("requirement_statuses",{}).get("D3-18")!="NOT_RUN":
+                  raise SystemExit("D3_MANIFEST_PREACCEPTANCE_STATE_UNEXPECTED")
+          now={
+            "schema_version":"d3-candidate-actions-artifact-final-acceptance-v1",
+            "classification":"PASS_SCOPED",
+            "owner_decision":"ACCEPTED_BY_OWNER_2026-11-05",
+            "owner_instruction":"Owner explicitly approved Artifact 13288779998 as the final immediate D3 delivery object, replacing Artifact 13160434943.",
+            "repository":repo,"branch":branch,"acceptance_run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "acceptance_tested_sha":tested,"source_run_id":rid,"source_sha":os.environ["SOURCE_SHA"],
+            "artifact":{"id":aid,"name":artifact.get("name"),"bytes":total,"sha256":outer_sha,
+              "created_at":artifact.get("created_at"),"expires_at":artifact.get("expires_at"),"expired":artifact.get("expired"),
+              "metadata_digest":artifact.get("digest"),"lineage_checks":checks,"zip_crc":"PASS","member_count":15,
+              "member_inventory":inventory},
+            "workbooks":workbook_results,"docx_packages":docx_results,
+            "d3_18":"PASS_SCOPED","d3_gate_status":"PASS_SCOPED_WITH_LIMITATIONS",
+            "d3_requirement_statuses":build.get("requirement_statuses",{}),
+            "preserved_limitations":build.get("limitations",[]),
+            "preserved_gate_statuses":build.get("preserved_gate_statuses",{}),
+            "missing_historical_48k_accounting_fields":build.get("missing_historical_48k_accounting_fields",[]),
+            "delivery_method":"GITHUB_ACTIONS_ARTIFACT_FINAL_IMMEDIATE",
+            "retention_boundary":"Temporary Actions Artifact; availability ends at recorded expiry; not a permanent archive.",
+            "git_lfs":"NOT_REQUIRED_BY_OWNER_DECISION; NO_UPLOAD_PERFORMED",
+            "d4_status":"NOT_STARTED","final_acceptance":"NOT_DECLARED",
+            "no_trial_simulation_monte_carlo_n_expansion_backfill_zero_fill_or_identity_change":True,
+            "historical_artifacts_and_manifests_modified":False
+          }
+          out=pathlib.Path("docs/stage_d"); out.mkdir(parents=True,exist_ok=True)
+          json_path=out/"D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json"
+          md_path=out/"D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md"
+          json_path.write_text(json.dumps(now,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          lines=["# D3 Candidate Actions Artifact Final Acceptance — 2026-11-05","",
+            f"- Owner decision: Artifact {aid} explicitly approved as final immediate D3 delivery, replacing Artifact 13160434943.",
+            f"- Acceptance Run: {now['acceptance_run_id']}; exact tested SHA: {tested}.",
+            f"- Source Run: {rid}; source SHA: {os.environ['SOURCE_SHA']}.",
+            f"- Artifact bytes: {total}; SHA-256: {outer_sha}; ZIP CRC PASS; all 15 member fingerprints PASS.",
+            f"- Artifact expiry: {artifact.get('expires_at')}; temporary Actions retention, not permanent archival."]
+          for name,v in workbook_results.items():
+              lines += ["",f"## {name}",f"- Bytes: {v['bytes']}",f"- SHA-256: {v['sha256']}",
+                f"- Sheets: {v['sheet_count']}; worksheet XML: {v['worksheet_xml_count']}; formulas: {v['formula_cell_count']}; Excel errors: {v['excel_error_cell_count']}; CRC PASS."]
+          lines += ["","## Gate disposition","- D3-18: PASS_SCOPED — owner-authorized Artifact delivery and independent outer ZIP/member/workbook verification.",
+            "- Overall D3: PASS_SCOPED_WITH_LIMITATIONS; the candidate's original requirement statuses and limitations are preserved.",
+            "- D4: NOT_STARTED. This workflow does not begin D4 or declare FINAL_ACCEPTED.",
+            "- Five historical 48K accounting fields remain MISSING_EVIDENCE; no inference or zero-fill.",
+            "- Full Logging remains 105 representative keys only; C100 Golden revalidation remains NOT_RUN.",
+            "- Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED.",
+            "- Git LFS is not required under the owner delivery decision; no LFS upload was performed."]
+          md_path.write_text("\n".join(lines)+"\n",encoding="utf-8")
+          append="""\n\n## D3 candidate Artifact owner acceptance — 2026-11-05 (append-only)\n\n- Owner explicitly approved GitHub Actions Artifact 13288779998 (SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe; 535567142 bytes) as the final immediate D3 delivery object, replacing Artifact 13160434943.\n- Independent acceptance Run {run}; tested SHA {sha}; source Run 41754147172 / source SHA 3325fd961005c2c47de071d25904a748af7a21a6.\n- D3-18 PASS_SCOPED after artifact lineage, outer ZIP digest/CRC, all 15 member sizes and SHA-256 values, both workbook byte fingerprints, 185-sheet/XML structure, zero formulas and zero Excel error cells were independently verified.\n- Overall D3 PASS_SCOPED_WITH_LIMITATIONS. Existing D3 limitations and upstream gate states are retained without promotion. D4 NOT_STARTED; FINAL_ACCEPTED NOT_DECLARED.\n- Artifact is temporary and expires {expiry}; not permanent archival. Git LFS is not required by this owner decision; no LFS upload was performed.\n- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed/Trial identity change, historical Artifact/manifest mutation, main write, merge, Release, or final acceptance occurred.\n"""
+          append=append.format(run=now["acceptance_run_id"],sha=tested,expiry=artifact.get("expires_at"))
+          for path in ["docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md",
+                       "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md",
+                       "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"]:
+              p=pathlib.Path(path)
+              if not p.exists(): raise SystemExit("D3_REQUIRED_STATUS_FILE_MISSING:"+path)
+              old=p.read_text(encoding="utf-8")
+              if "D3 candidate Artifact owner acceptance — 2026-11-05" not in old:
+                  p.write_text(old.rstrip()+"\n"+append,encoding="utf-8")
+          print("D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_PASS_SCOPED "+json.dumps(
+            {"artifact_id":aid,"bytes":total,"sha256":outer_sha,"d3_18":"PASS_SCOPED","d3_gate_status":"PASS_SCOPED_WITH_LIMITATIONS",
+             "acceptance_run_id":now["acceptance_run_id"],"tested_sha":tested},sort_keys=True))
+          shutil.rmtree(tmp,ignore_errors=True)
+          PY
+
+      - name: Commit append-only acceptance evidence and exact remote readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_MAIN_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md
+          git commit -m "docs(d3): accept owner-approved candidate artifact delivery"
+          git push origin HEAD:"refs/heads/$BRANCH"
+          head="$(git rev-parse HEAD)"
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$head"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_MAIN_SHA"
+          python - <<'PY'
+          import hashlib,os,pathlib,requests,subprocess,time
+          repo=os.environ["REPOSITORY"]; branch=os.environ["BRANCH"]
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          paths=["docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json",
+            "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md","docs/PROJECT_CONTINUITY.md",
+            "docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md",
+            "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"]
+          for path in paths:
+              local=pathlib.Path(path).read_bytes()
+              url=f"https://raw.githubusercontent.com/{repo}/{head}/{path}"
+              last=None
+              for attempt in range(5):
+                  try:
+                      response=requests.get(url,timeout=(30,180)); response.raise_for_status()
+                      if response.content!=local: raise RuntimeError("raw bytes differ")
+                      break
+                  except Exception as exc:
+                      last=exc; time.sleep(5*(attempt+1))
+              else: raise SystemExit("D3_RAW_READBACK_FAILED:"+path+":"+str(last))
+              blob=hashlib.sha1(b"blob "+str(len(local)).encode()+b"\0"+local).hexdigest()
+              print(f"VERIFIED_LIVE {path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob_sha1={blob} commit={head} url={url}")
+          print("D3_CANDIDATE_ACCEPTANCE_EXACT_FINAL_HEAD_PASS "+head)
+          PY
