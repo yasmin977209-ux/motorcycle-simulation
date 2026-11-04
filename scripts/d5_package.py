@@ -19,15 +19,15 @@ GOVERNING_SHA = "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0
 GOVERNING_BYTES = 401397
 GOVERNING_URL = "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
 HISTORICAL_SHA = "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
-D3_ARTIFACT_ID = 13160434943
-D3_ARTIFACT_RUN = 41480650491
-D3_ARTIFACT_BYTES = 535358202
-D3_ARTIFACT_SHA = "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04"
-D3_ARTIFACT_EXPIRY = "2026-12-02T16:56:31Z"
+D3_ARTIFACT_ID = 13288779998
+D3_ARTIFACT_RUN = 41754147172
+D3_ARTIFACT_BYTES = 535567142
+D3_ARTIFACT_SHA = "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+D3_ARTIFACT_EXPIRY = "2026-12-04T02:07:02Z"
 REGISTRY_PATH = "results/number_registry.json"
 REGISTRY_BYTES = 24137036
 REGISTRY_SHA = "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
-PACKAGE_NAME = "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03.zip"
+PACKAGE_NAME = "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip"
 MEMBERS = (
     "Full_Results_EN.xlsx",
     "النتائج_الكاملة_AR.xlsx",
@@ -38,11 +38,11 @@ MEMBERS = (
     "دراسة_الجدوى_AR.docx",
 )
 DOCX_EXPECTED = {
-    "التقرير_الكامل_AR.docx": (42248, "e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"),
-    "Full_Report_EN.docx": (41645, "927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"),
-    "الملخص_AR.docx": (40435, "874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"),
-    "Summary_EN.docx": (39968, "e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"),
-    "دراسة_الجدوى_AR.docx": (40761, "08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"),
+    "التقرير_الكامل_AR.docx": (42249, "332d7205d67ce19b12cbb196820f741cab34d99f5f11aa8780775446b1dec0bb"),
+    "Full_Report_EN.docx": (41645, "945c11d9dbc71b185371cd21ff02d0db68e74d8770eec8f5e09cee00fad2a778"),
+    "الملخص_AR.docx": (40435, "d1f5dcc7ac6ff67779d3a6a430645f65dad813c1ec8afa6130c9464a9109dc1d"),
+    "Summary_EN.docx": (39967, "8310bbb52c0eb275ed3cbcca4d8cbb9227c438bf77db9b39454d0232d08e5699"),
+    "دراسة_الجدوى_AR.docx": (40761, "1fe55fb3ece3dee3368c290551fd8461b0e47240e889fc2ceb384eb11155b3dc"),
 }
 S6_SOURCE = "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
 S6_COHORT = "s6-v23-da1a9ea9"
@@ -121,8 +121,8 @@ def extract_d3(args) -> None:
                     dst.write(chunk)
     print(f"D3_ARTIFACT_VERIFIED bytes={artifact.stat().st_size} sha256={actual} artifact_id={D3_ARTIFACT_ID}")
     for name, expected in {
-        "Full_Results_EN.xlsx": (259441523, "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5"),
-        "النتائج_الكاملة_AR.xlsx": (259443380, "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2"),
+        "Full_Results_EN.xlsx": (259442692, "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"),
+        "النتائج_الكاملة_AR.xlsx": (259444534, "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"),
     }.items():
         p = out / name
         if (p.stat().st_size, sha256_file(p)) != expected:
@@ -142,9 +142,19 @@ def file_record(path: Path) -> dict:
 def validate_inputs(root: Path, reference: Path) -> tuple[dict, dict, dict, dict]:
     d3 = load_json(root / "deliverables/D3_MANIFEST.json")
     d3audit = load_json(root / "deliverables/D3_BUILD_AUDIT.json")
-    d3accept = load_json(root / "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json")
-    d4audit = load_json(root / "docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json")
-    d4manifest = load_json(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-03.json")
+    d3accept = load_json(root / "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json")
+    d4audit = load_json(root / "docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json")
+    d4manifest = load_json(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json")
+    if d3accept.get("owner_decision") != "ACCEPTED_BY_OWNER_2026-11-05" or d3accept.get("d3_18") != "PASS_SCOPED" or d3accept.get("d3_gate_status") != "PASS_SCOPED_WITH_LIMITATIONS":
+        raise ValueError("D3_OWNER_ACCEPTANCE_OR_GATE_STATUS_INVALID")
+    if d3accept.get("artifact", {}).get("id") != D3_ARTIFACT_ID or d3accept.get("artifact", {}).get("sha256") != D3_ARTIFACT_SHA:
+        raise ValueError("D3_ACCEPTANCE_ARTIFACT_IDENTITY_MISMATCH")
+    if d3accept.get("source_run_id") != D3_ARTIFACT_RUN or d3accept.get("artifact", {}).get("bytes") != D3_ARTIFACT_BYTES:
+        raise ValueError("D3_ACCEPTANCE_LINEAGE_MISMATCH")
+    if d4audit.get("status") != "PASS_SCOPED_WITH_LIMITATIONS" or int(d4audit.get("workflow_run_id", 0)) != 41916830283:
+        raise ValueError("D4_BUILD_GATE_NOT_CLOSED")
+    if d4audit.get("tested_sha") != d4manifest.get("tested_sha") or d4audit.get("manifest_sha256") != sha256_file(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json"):
+        raise ValueError("D4_MANIFEST_LINEAGE_MISMATCH")
     if d3["current_governing_reference"]["sha256"] != GOVERNING_SHA:
         raise ValueError("D3_GOVERNING_REFERENCE_IDENTITY_MISMATCH")
     if d3["historical_execution_reference_sha256"] != HISTORICAL_SHA:
@@ -186,10 +196,10 @@ def build(args) -> None:
                 raise ValueError("D3_WORKBOOK_SHEET_COUNT_INVALID:" + name)
         finally:
             wb.close()
-    d4_commit = d4audit.get("output_commit") or "c0bfcbadac8d90932d52eb4ecaec2e72e6b4b909"
+    d4_commit = d4audit.get("output_commit") or "df5bf4564fbbe2168a364190c64d9018a66211d1"
     manifest = {
         "schema_version": "motorcycle-simulation-d5-manifest-v1",
-        "package_identity": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03",
+        "package_identity": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05",
         "package_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "repository": REPO,
@@ -224,7 +234,10 @@ def build(args) -> None:
                 "artifact_id": D3_ARTIFACT_ID, "source_run_id": D3_ARTIFACT_RUN,
                 "bytes": D3_ARTIFACT_BYTES, "sha256": D3_ARTIFACT_SHA,
                 "expires_at": D3_ARTIFACT_EXPIRY,
-                "acceptance_run_id": d3accept["acceptance_run_id"]
+                "acceptance_run_id": d3accept["acceptance_run_id"],
+                "owner_decision": d3accept["owner_decision"],
+                "d3_18": d3accept["d3_18"],
+                "d3_gate_status": d3accept["d3_gate_status"]
             },
             "D3_output_manifest": {"path": "deliverables/D3_MANIFEST.json", **file_record(root / "deliverables/D3_MANIFEST.json")},
             "D3_build_audit": {"path": "deliverables/D3_BUILD_AUDIT.json", **file_record(root / "deliverables/D3_BUILD_AUDIT.json")},
@@ -244,12 +257,9 @@ def build(args) -> None:
             "python_docx": __import__("docx").__version__
         },
         "validation_runs": [
-            {"stage": "D1-D2", "run_id": 41697222992, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
-            {"stage": "D3 artifact acceptance", "run_id": 41682389098, "tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4", "result": "PASS_SCOPED", "artifact_id": D3_ARTIFACT_ID},
-            {"stage": "D3 exact-head", "run_id": 41697222991, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
-            {"stage": "D4 report build", "run_id": 41694460895, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "result": "PASS_SCOPED_WITH_LIMITATIONS", "tests_passed": 5},
-            {"stage": "D4 exact-head", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"},
-            {"stage": "D0-D4 final exact-head", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740", "result": "PASS"}
+            {"stage": "D1-D2 source validation", "run_id": 41916830333, "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5", "result": "PASS"},
+            {"stage": "D3 owner-approved Artifact acceptance", "run_id": 41914970361, "tested_sha": "b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1", "result": "PASS_SCOPED", "artifact_id": D3_ARTIFACT_ID},
+            {"stage": "D4 report build and final-head readback", "run_id": 41916830283, "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5", "final_output_commit_sha": "df5bf4564fbbe2168a364190c64d9018a66211d1", "result": "PASS_SCOPED_WITH_LIMITATIONS"}
         ],
         "gate_statuses": {
             "financial_gate_a": "PASS_SCOPED",
@@ -278,11 +288,9 @@ def build(args) -> None:
                 "status": "NOT_RUN",
                 "reason": "The D0-D4 scoped validation runs are not the complete 177-unique-test acceptance suite."
             },
-            "D1_D2_source_validation": {"status": "PASS", "run_id": 41694461194, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "tests_passed": 34},
-            "D3_artifact_acceptance": {"status": "PASS_SCOPED", "run_id": 41682389098, "tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4"},
-            "D3_exact_head_validation": {"status": "PASS", "run_id": 41694461171, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "tests_passed": 36},
-            "D4_docx_tests": {"status": "PASS", "run_id": 41694460895, "tested_sha": "17696ec48557a33f2c231634ba25f26cf831800e", "tests_passed": 5},
-            "D0_D4_final_exact_head": {"status": "PASS", "run_id": 41697223043, "tested_sha": "00dfa15934780271a9be98d55d4cdd83f10e3740"},
+            "D1_D2_source_validation": {"status": "PASS", "run_id": 41916830333, "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5"},
+            "D3_artifact_acceptance": {"status": "PASS_SCOPED", "run_id": 41914970361, "tested_sha": "b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1", "artifact_id": D3_ARTIFACT_ID},
+            "D4_docx_build_and_tests": {"status": "PASS_SCOPED_WITH_LIMITATIONS", "run_id": 41916830283, "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5", "final_output_commit_sha": "df5bf4564fbbe2168a364190c64d9018a66211d1", "all_steps_passed": True},
             "D5_package_integrity": {"status": "PASS_BUILDER_REOPEN_AND_CHECKSUM_VALIDATION", "scope": "builder-generated ZIP, embedded manifest, 10-entry SHA256SUMS"}
         },
         "limitations": d3.get("limitations", []),
@@ -371,7 +379,7 @@ def main():
     b.add_argument("--run-id", required=True)
     b.add_argument("--branch", default=BRANCH)
     b.add_argument("--package-name", default=PACKAGE_NAME)
-    b.add_argument("--report", default="docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json")
+    b.add_argument("--report", default="docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json")
     b.set_defaults(fn=build)
     v = sub.add_parser("verify")
     v.add_argument("--root", default=".")
