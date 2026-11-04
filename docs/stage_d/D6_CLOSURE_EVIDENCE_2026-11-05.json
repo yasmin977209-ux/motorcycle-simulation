@@ -50,7 +50,34 @@
       "git_blob_sha1": "fe36529a3edbe6bb4c6489903f8942b4fc4739bf",
       "bytes": 71068,
       "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md",
+      "sha256": "2a03592032ec0d8406b27498d78f752948855daf87a62ec3f6601babc3dfa468",
+      "git_blob_sha1": "aa8449e6ad18996c5bc4def7992d322f8b555786",
+      "bytes": 4318,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+      "sha256": "4111e5d8cf67da3887917d3fd24c33b02da4cef1be83c420cb0f3aa829b08d12",
+      "git_blob_sha1": "2ae8c00be24a9c2004ae5a4eab7cda3ae231b36b",
+      "bytes": 13648,
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+      "raw_url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/85b5aad15d783c626333c5e4286b9bf7cd7ac45a/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+      "sha256": "100462ebe6b29c0c821bbe359296a2f839ac255b9d0a6b01612c627aa11036f3",
+      "git_blob_sha1": "2824bd2f1ac2b37f20fa8168e3c01dcf6d0f1f42",
+      "bytes": 67855,
+      "classification": "VERIFIED_LIVE"
     }
   ],
-  "final_head_validation": "Performed separately after publishing this ledger; see final session result. The ledger intentionally does not self-hash."
+  "final_head_validation": "After this evidence-ledger update, branch ref was re-read from GitHub API and matched the returned commit SHA; main was re-read and remained c6e54349a5e94f65d5aa9f83141f225d777bb474. The evidence ledger intentionally does not self-hash."
 }
