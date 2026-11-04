@@ -83,3 +83,27 @@ D3 acceptance Run: 41914970361 (tested SHA b3dfd886ec57308c0bf68f5eec4cc8417faaa
 - `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, and `CONVERGED` remain `NOT_DECLARED`.
 
 D6 is administratively closed only at `PASS_SCOPED_WITH_LIMITATIONS`. E0 has not been started by this closure action.
+
+
+---
+
+## CURRENT VERIFIED STATE — CONSOLIDATED D0–D6 CLOSURE — 2026-11-05
+
+This append-only block supersedes earlier stage-status snapshots above for the current D0–D6 disposition; it does not delete historical records.
+
+- Review baseline HEAD: `bd64c72593755b97867665a0cb587966dee699b2`.
+- Consolidated report: [D0_D6_MASTER_CLOSURE_2026-11-05.md](D0_D6_MASTER_CLOSURE_2026-11-05.md); machine-readable index: [D0_D6_MASTER_CLOSURE_2026-11-05.json](D0_D6_MASTER_CLOSURE_2026-11-05.json).
+- D0: `PASS_SCOPED_WITH_LIMITATIONS`.
+- D1: `PASS_SCOPED_WITH_LIMITATIONS`.
+- D2: `PASS_SCOPED_WITH_LIMITATIONS`.
+- D3: `PASS_SCOPED_WITH_LIMITATIONS`; D3-18 `PASS_SCOPED` under owner-approved Artifact 13288779998.
+- D4: `PASS_SCOPED_WITH_LIMITATIONS`.
+- D5: `PASS_SCOPED_WITH_LIMITATIONS`; Artifact 13369179742 independently read back.
+- D6: `PASS_SCOPED_WITH_LIMITATIONS`; Run 41929888796, Job 126923812128.
+- Overall project classification remains `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- Preserved gates: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only; C100 Golden `NOT_RUN`.
+- D5 full 177-unique-test suite and D6 tests 176/179/180/181/183 remain `NOT_RUN`. Historical acceptance invocations 175/182/186 also remain `NOT_RUN` despite corresponding scoped audit checks.
+- Five accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+- `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, `CONVERGED` remain `NOT_DECLARED`. E0 not started.
+
+No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge or Release was performed by this consolidated closure action.
