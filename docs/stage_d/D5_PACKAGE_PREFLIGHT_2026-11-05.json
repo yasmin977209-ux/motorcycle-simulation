@@ -1,0 +1,42 @@
+{
+  "schema_version": "d5-package-preflight-v1",
+  "status": "PUBLISHED_AND_REMOTE_READBACK_VERIFIED",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "tested_sha": "baf696af1e951cbf4a79e8a9e009c60c6b053b2d",
+  "workflow_run_id": 41928234377,
+  "package": {
+    "path": "deliverables/Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip",
+    "bytes": 519104296,
+    "sha256": "313fa322ffbdda858efa973b5e3e264c26b55cfff0609634b0c919c33733b107",
+    "git_blob_sha1": "ae46d3e777c086ae42e814bcbff9cb6b6ca0cfcb",
+    "members": 8
+  },
+  "manifest": {
+    "path": "deliverables/manifest.json",
+    "bytes": 11003,
+    "sha256": "5896249f0c3061796229323d1c6a5e9ff05f8436b9a1915376ca15adcb2bb8c5",
+    "git_blob_sha1": "a46f6a1c03ff4138045b366121be4a02d4134f43"
+  },
+  "sha256sums": {
+    "path": "deliverables/SHA256SUMS.txt",
+    "bytes": 938,
+    "sha256": "349fc09650297bda69e274ca642fca2ce605bc101b9ba2b3c0a57e02624cf8b7",
+    "git_blob_sha1": "164003e97ff560267a64720cce82a272d38d6f20"
+  },
+  "publication": "GITHUB_ACTIONS_ARTIFACT",
+  "main_modified": false,
+  "d6_started": false,
+  "artifact": {
+    "id": 13369179742,
+    "name": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05",
+    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41928234377/artifacts/13369179742",
+    "size_in_bytes": 519116689,
+    "digest": "sha256:80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1",
+    "downloaded_zip_sha256": "80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1",
+    "expires_at": "2026-12-04T22:49:30Z",
+    "retention_days": 30,
+    "remote_readback": "PASS"
+  },
+  "publication_commit_sha": "baf696af1e951cbf4a79e8a9e009c60c6b053b2d"
+}

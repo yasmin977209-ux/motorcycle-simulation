@@ -3214,3 +3214,14 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
 - Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
 - No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
+
+
+## D5 package publication — 2026-11-05 (append-only)
+
+- Workflow Run 41928234377; tested source SHA baf696af1e951cbf4a79e8a9e009c60c6b053b2d; publication commit baf696af1e951cbf4a79e8a9e009c60c6b053b2d.
+- D5 package ZIP: 519104296 bytes; SHA-256 313fa322ffbdda858efa973b5e3e264c26b55cfff0609634b0c919c33733b107; 8 members; reopened, exact inventory and CRC PASS.
+- manifest SHA-256 5896249f0c3061796229323d1c6a5e9ff05f8436b9a1915376ca15adcb2bb8c5; external SHA256SUMS SHA-256 349fc09650297bda69e274ca642fca2ce605bc101b9ba2b3c0a57e02624cf8b7 (10 entries).
+- New GitHub Actions Artifact ID 13369179742; size 519116689; digest sha256:80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1; downloaded ZIP SHA-256 80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1; expires 2026-12-04T22:49:30Z; retention 30 days.
+- Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
+- Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
