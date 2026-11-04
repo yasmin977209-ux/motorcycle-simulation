@@ -3239,3 +3239,25 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition PASS_SCOPED_WITH_LIMITATIONS; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md and FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+---
+
+## CURRENT VERIFIED STATE — 2026-11-05 — D6 CLOSURE
+
+This is the latest current-state addendum; earlier status snapshots in this file remain historical and are not overwritten.
+
+- Active branch at closure start: `tmp/d1-rebuild-20261101`; pre-closure HEAD `73ce736f35e530f25fd4636904b11e1df2009b07`.
+- `main` HEAD rechecked: `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- D0/D1/D2 remain `PASS_SCOPED_WITH_LIMITATIONS` as previously evidenced.
+- D3 and D4: `PASS_SCOPED_WITH_LIMITATIONS`.
+- D5: `PASS_SCOPED_WITH_LIMITATIONS`, package integrity only; `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- D6: `PASS_SCOPED_WITH_LIMITATIONS`, Run `41929888796`, Job `126923812128`, tested SHA `48ae9fbf5a7264834a523504706a7c04b654061b`, Artifact `13371094066`.
+- D6 closure matrix: `docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md`.
+- D6 session record: `docs/stage_d/D6_CLOSURE_SESSION_RECORD_2026-11-05.md`.
+- D6 remaining NOT_RUN: 176, 179, 180, 181, 183; historical acceptance invocations 175, 182, 186 are also NOT_RUN as separately numbered tests. Scoped checks are not substitutes.
+- No full 177-unique-test suite; no P17 acceptance or P18 release authorization.
+- Gate states unchanged: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; C100 Golden `NOT_RUN`.
+- Missing accounting fields remain: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+
+The stale top-of-file snapshots remain preserved for historical context. This current addendum is authoritative for D6 disposition as of this commit. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change, historical Artifact mutation, main write, merge, Release, or final acceptance occurred.
