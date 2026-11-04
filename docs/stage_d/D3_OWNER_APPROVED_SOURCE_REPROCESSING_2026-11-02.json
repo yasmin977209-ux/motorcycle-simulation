@@ -27,7 +27,7 @@
   "files": {
     "D3_BUILD_AUDIT.json": {
       "bytes": 9137,
-      "sha256": "5fe40ab589186e46aad10fddc1bca1c885b055d38635c92ae2a3db98c69080a9"
+      "sha256": "422ee932594f8869cf4d0c5b5af76d18579219c47defee74f340197f21d702b5"
     },
     "D3_EXTENSION_BUILD_AUDIT.json": {
       "bytes": 4125,
@@ -35,7 +35,7 @@
     },
     "D3_MANIFEST.json": {
       "bytes": 6249,
-      "sha256": "f9bbd442592f9d1b95551a6ea09890fa1d38a98111efdadad06503efc1e7c894"
+      "sha256": "45777f4e446da0290847a78e20c964361853fdb69413503ba1febca08d08550c"
     },
     "D3_NUMBER_REGISTRY_EXTENSION.json.gz": {
       "bytes": 16440292,
@@ -43,7 +43,7 @@
     },
     "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md": {
       "bytes": 3224,
-      "sha256": "2b044e32f51bb8af97932bc445288124814ef8f630576c195937a9c38e282e65"
+      "sha256": "3a26e258c18978b5657f67c483d31740e20854195fe3359c49c751c37ad7e3a0"
     },
     "D3_SOURCE_INPUT_ENVELOPE.json": {
       "bytes": 280,
@@ -53,13 +53,33 @@
       "bytes": 2058,
       "sha256": "3b7b9ccdf37c879351c33ac7f34a4652e931525f6c30d51073297d9769d0a82a"
     },
+    "Full_Report_EN.docx": {
+      "bytes": 41645,
+      "sha256": "927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"
+    },
     "Full_Results_EN.xlsx": {
-      "bytes": 259441523,
-      "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5"
+      "bytes": 259442692,
+      "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"
+    },
+    "Summary_EN.docx": {
+      "bytes": 39968,
+      "sha256": "e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"
+    },
+    "التقرير_الكامل_AR.docx": {
+      "bytes": 42248,
+      "sha256": "e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"
+    },
+    "الملخص_AR.docx": {
+      "bytes": 40435,
+      "sha256": "874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"
     },
     "النتائج_الكاملة_AR.xlsx": {
-      "bytes": 259443380,
-      "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2"
+      "bytes": 259444534,
+      "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+    },
+    "دراسة_الجدوى_AR.docx": {
+      "bytes": 40761,
+      "sha256": "08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"
     }
   },
   "full_logging_validation": {
@@ -152,6 +172,6 @@
     }
   },
   "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
-  "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
-  "workflow_run_id": "41480650491"
+  "source_head": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "workflow_run_id": "41754147172"
 }

@@ -1,13 +1,13 @@
 {
   "arabic_workbook": {
-    "bytes": 259443380,
+    "bytes": 259444534,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
     "numeric_cells": 10346928,
-    "sha256": "bcaeac7be2733a745d2f7608476d696fe613644a32244c26b4a3a5c45c598eb2",
+    "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d",
     "sheet_count": 185,
     "sheet_direction_mismatches": [],
     "sheet_direction_status": "PASS"
@@ -46,31 +46,17 @@
     "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
     "url": "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md"
   },
-  "d3_candidate_status": "T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS",
-  "d3_gate_status": "PASS_SCOPED_WITH_LIMITATIONS",
-  "delivery_solution": {
-    "acceptance_report": "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json",
-    "acceptance_run_id": 41682389098,
-    "acceptance_tested_sha": "a05d71adb3d45140ebc07f523dad2569e560c7c4",
-    "artifact_bytes": 535358202,
-    "artifact_expires_at": "2026-12-02T16:56:31Z",
-    "artifact_id": 13160434943,
-    "artifact_sha256": "513f2a2edab7083c4f36d0e655de6b8a939403f67b51cf0d0d65d4e51f437b04",
-    "git_lfs": "NOT_REQUIRED_BY_OWNER_DECISION",
-    "method": "GITHUB_ACTIONS_ARTIFACT",
-    "owner_decision": "ACCEPTED_BY_OWNER_2026-11-03",
-    "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
-    "source_run_id": 41480650491
-  },
+  "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
   "english_workbook": {
-    "bytes": 259441523,
+    "bytes": 259442692,
     "excel_error_cell_count": 0,
     "excel_error_cells": [],
     "excel_safety_status": "PASS",
     "formula_cell_count": 0,
     "formula_cells": [],
     "numeric_cells": 10346928,
-    "sha256": "849090a6cd03cf023f8d203345c7aca0141b326d308972b6963a746e84225bd5",
+    "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
     "sheet_count": 185,
     "sheet_direction_mismatches": [],
     "sheet_direction_status": "PASS"
@@ -135,7 +121,7 @@
     "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
   },
   "registry_extension": {
-    "actions_artifact_name": "D3-Registry-Extension-41480650491",
+    "actions_artifact_name": "D3-Registry-Extension-41754147172",
     "bytes": 16440292,
     "extension_id": "D3NRX-f390f65b39afccff21ebf3fd",
     "git_blob_sha1": "3aef5d153725e24341e8b49e08b3e6463e19a538",
@@ -175,7 +161,7 @@
     "D3-15": "PASS_SCOPED",
     "D3-16": "PASS_SCOPED",
     "D3-17": "PASS_SCOPED_WITH_LIMITATIONS",
-    "D3-18": "PASS_SCOPED"
+    "D3-18": "NOT_RUN"
   },
   "scenario_count": 25,
   "source_artifacts": {
@@ -219,7 +205,7 @@
       "workflow_run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
     }
   },
-  "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
-  "workflow_run_id": "41480650491",
+  "source_head": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "workflow_run_id": "41754147172",
   "worksheet_count_per_workbook": 185
 }

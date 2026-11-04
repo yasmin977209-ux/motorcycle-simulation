@@ -322,3 +322,184 @@ Run 41366779707 checked out the triggering commit and asserted the branch name p
   "source_head": "2f3cb05bf668cd003cdb5bcb121d2217d629d9f1",
   "workflow_run_id": "41480650491"
 }
+
+
+## Owner-approved source reprocessing outputs — 2026-11-02
+
+{
+  "c100_validation": {
+    "G_status": "G_INERT",
+    "N_unique_paths": 1,
+    "daily_reuse_status": "PASS_SCOPED_C100_DAILY_REUSE",
+    "daily_rows_per_scenario": 2198,
+    "degeneracy_status": "DEGENERATE_DETERMINISTIC",
+    "golden_common_field_path_matches": 5,
+    "golden_revalidation": "NOT_RUN",
+    "golden_trial_fingerprint_matches": 5,
+    "scenario_count": 5,
+    "trial_count_per_scenario": 300
+  },
+  "close_date_validation": {
+    "C100_golden_member_sha256": "39950d91c3b40b11bea0997b8504ac932a57bcc0ef8e0c51e12d031342a53327",
+    "C100_scenarios": 5,
+    "C100_trial_count": 1500,
+    "S6_scenarios": 20,
+    "S6_summary_member_sha256": "66c8c4530073dba14e4082eb13ab492d304fa6841e3db08ae6c38509de66d522",
+    "S6_trial_count": 48000,
+    "scenario_count": 25,
+    "total_trial_count": 49500
+  },
+  "d3_candidate_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "d3_gate_status": "BLOCKED_MISSING_EVIDENCE",
+  "extension_build_status": "PASS_SCOPED_D3_REGISTRY_EXTENSION",
+  "files": {
+    "D3_BUILD_AUDIT.json": {
+      "bytes": 9137,
+      "sha256": "422ee932594f8869cf4d0c5b5af76d18579219c47defee74f340197f21d702b5"
+    },
+    "D3_EXTENSION_BUILD_AUDIT.json": {
+      "bytes": 4125,
+      "sha256": "f112f84b5013ada381608b7d80786211142a5a80aa329eef0661c5e91d6c0d8b"
+    },
+    "D3_MANIFEST.json": {
+      "bytes": 6249,
+      "sha256": "45777f4e446da0290847a78e20c964361853fdb69413503ba1febca08d08550c"
+    },
+    "D3_NUMBER_REGISTRY_EXTENSION.json.gz": {
+      "bytes": 16440292,
+      "sha256": "7b7e082424a0dab9519723028e8bb99e699e2e590168db258429bb14be6c4024"
+    },
+    "D3_SCOPED_CLOSURE_REPORT_2026-11-02.md": {
+      "bytes": 3224,
+      "sha256": "3a26e258c18978b5657f67c483d31740e20854195fe3359c49c751c37ad7e3a0"
+    },
+    "D3_SOURCE_INPUT_ENVELOPE.json": {
+      "bytes": 280,
+      "sha256": "80c58c30b61d6c68a984c2c06528a724b6b46cf655c6ca9f1752b071ba529bc7"
+    },
+    "D3_SOURCE_INPUT_MANIFEST.json": {
+      "bytes": 2058,
+      "sha256": "3b7b9ccdf37c879351c33ac7f34a4652e931525f6c30d51073297d9769d0a82a"
+    },
+    "Full_Report_EN.docx": {
+      "bytes": 41645,
+      "sha256": "927eae4fd072f765ee6d595e8da6aa4052d770b0ac23d8254154a5fe7436a064"
+    },
+    "Full_Results_EN.xlsx": {
+      "bytes": 259442692,
+      "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"
+    },
+    "Summary_EN.docx": {
+      "bytes": 39968,
+      "sha256": "e0b589769b749d0429c0fb0cece03f68af8aabd87544ca0a2e5e791f0b04ced2"
+    },
+    "التقرير_الكامل_AR.docx": {
+      "bytes": 42248,
+      "sha256": "e0e0d9ef504aa4d799b16a94597f228471e1f94ef4d5747b55690e5c43d11dc4"
+    },
+    "الملخص_AR.docx": {
+      "bytes": 40435,
+      "sha256": "874c3a87dfa9f2b6648c59ef0bd51ba85779a991f744e08ab9da73e934115681"
+    },
+    "النتائج_الكاملة_AR.xlsx": {
+      "bytes": 259444534,
+      "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+    },
+    "دراسة_الجدوى_AR.docx": {
+      "bytes": 40761,
+      "sha256": "08dd8602cd7666db1f7a48b146498d882cdfb07cb292f44759ddb8f2509f3ec3"
+    }
+  },
+  "full_logging_validation": {
+    "completed_keys": 105,
+    "failed_keys": 0,
+    "normalized_status": "NOT_VERIFIED_105_OF_105",
+    "p50_case_count": 25,
+    "p50_scenario_coverage": 25,
+    "post_write_audit_pass_count": 105,
+    "representative_role_case_count": 105,
+    "role_assignments": 125,
+    "role_assignments_covered": 125,
+    "scope": "105_REPRESENTATIVE_KEYS_ONLY_NOT_48000",
+    "unique_trial_keys": 105,
+    "verified_member_count": 1365
+  },
+  "missing_historical_48k_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
+  ],
+  "no_source_or_trial_identity_changed": true,
+  "no_trials_or_simulation_executed": true,
+  "owner_approval": "APPROVED_2026-11-02",
+  "preserved_gate_statuses": {
+    "c100_golden_revalidation": "NOT_RUN",
+    "full_logging": "PASS_SCOPED_105_KEYS_ONLY",
+    "gate_a_financial": "PASS_SCOPED",
+    "gate_a_production": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "n4800": "NOT_EXECUTED",
+    "stability": "NOT_CONVERGED (0/60)"
+  },
+  "quarantined_run_41358971225_reused": false,
+  "representative_accounting_fields": {
+    "do_not_infer_or_zero_fill": true,
+    "fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "historical_48k_status": "MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "status": "VERIFIED_SCOPED_25_P50_CASES"
+  },
+  "schema_version": "d3-owner-approved-source-reprocessing-record-v1",
+  "scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+  "source_artifacts": {
+    "aggregate": {
+      "artifact_id": 12852969854,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "s6-n2400.zip",
+      "run_created_at_utc": "2026-10-28T21:36:57Z",
+      "run_id": 40773412377,
+      "sha256": "ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+      "size_bytes": 9357996,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "4f2f2cc16d0cb5125262088704febccbae6f50ed"
+    },
+    "c100": {
+      "artifact_id": 12630457193,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "c100-reuse.zip",
+      "run_created_at_utc": "2026-10-26T03:18:29Z",
+      "run_id": 40263424595,
+      "sha256": "c977d1cbb5204919eadc72358533f77cdbbc239902bcd6f921bf1a915a716e79",
+      "size_bytes": 361733,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "24050f15bc7eb3097e20f76785a45c5d177643dd"
+    },
+    "full_logging": {
+      "artifact_id": 12998778418,
+      "evidence_status": "VERIFIED_LIVE",
+      "filename": "full-logging.zip",
+      "run_created_at_utc": "2026-10-30T17:25:30Z",
+      "run_id": 41098699740,
+      "sha256": "403371cc8eb12880dda05529b4c83dd675bfa609e8680c09d35efa729c5b5aeb",
+      "size_bytes": 310827203,
+      "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+      "source_date_exception_owner_approval": "APPROVED_2026-11-02",
+      "source_date_exception_scope": "D3_ONLY_EXACT_THREE_PINNED_ARTIFACTS",
+      "workflow_run_head_sha": "e3c2098df9fc5dbc126eb1e77ad35c493ff3ac70"
+    }
+  },
+  "source_date_exception": "D3_ONLY_PINNED_ARTIFACTS_2026-11-02",
+  "source_head": "3325fd961005c2c47de071d25904a748af7a21a6",
+  "workflow_run_id": "41754147172"
+}

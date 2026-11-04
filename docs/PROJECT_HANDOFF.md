@@ -418,3 +418,15 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+## D3 owner-approved pinned-source reprocessing — 2026-11-02 (append-only)
+
+- Owner decision: D3_ONLY_PINNED_ARTIFACTS_2026-11-02 (D3 only; exactly three pre-cutoff pinned artifacts).
+- Reprocessing workflow run: 41754147172; input source HEAD: 3325fd961005c2c47de071d25904a748af7a21a6.
+- D3 candidate: T2_INTERIM / NOT_FINAL_BLOCKED; D3 gate: BLOCKED_MISSING_EVIDENCE.
+- Original GitHub artifact ZIPs were re-downloaded and checked against exact artifact/run metadata, run creation dates, head SHAs, byte sizes and SHA-256 before archive readers opened them.
+- ZIP/member CRC, path safety, member hashes/sizes, source/cohort/trial lineage and required field coverage were checked by the pinned reader and D3 builder.
+- No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source/cohort/seed change or Trial identity change. The cancelled run 41358971225 outputs were not used.
+- Missing historical 48k accounting fields remain MISSING_EVIDENCE; C100 Golden revalidation and Full Logging limitations remain explicitly scoped as recorded in the build audit.
+- D4 remains NOT_STARTED unless the D3 gate is independently closed.
