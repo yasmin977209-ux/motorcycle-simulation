@@ -129,9 +129,12 @@ def test_streamed_xlsx_xml_audit_rejects_formula_and_error_cells(tmp_path):
 
 def test_section_17_3_disclosure_checks_substance_not_generic_missing_evidence_token():
     from scripts.audit_s6_deliverables_bundle import disclosure_173_findings
-    complete = """Not a realistic forecast. Assets are measured at book value, not market value.
-    No operating costs, maintenance, theft, or inflation. No external financing.
-    The guarantee is a deterministic multiplier. Results are non-monotonic.
-    Zero probability of accounting loss is not a guarantee."""
+    complete = """Not a realistic forecast. Demand is unlimited and immediate re-rent the next day is assumed.
+    There is no fleet cap and no variation between renters. Operating costs, maintenance, theft, and inflation are excluded.
+    The Friday fee and settlement rent are deterministic. Held assets are measured at book value, not market value.
+    Repairs, fines, theft, accidents, administrative expenses, and taxes are excluded. There is no external financing.
+    The guarantee is a deterministic multiplier and does not reflect actual recovery capacity.
+    Results are non-monotonic: owned bikes leave the fleet while held assets remain at book value.
+    Zero probability of accounting loss is not a guarantee. Partner 1 funded all capital; the 70/30 split applies to net equity and the net position is disclosed."""
     assert disclosure_173_findings(complete) == []
     assert "book_value_not_market_value" in disclosure_173_findings("MISSING_EVIDENCE only")

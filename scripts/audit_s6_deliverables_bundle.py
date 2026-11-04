@@ -253,13 +253,20 @@ def disclosure_173_findings(text):
  value=" ".join(str(text).lower().split())
  def has(*terms): return any(term in value for term in terms)
  requirements={
-  "realism_gap":has("not a realistic forecast","not realistic","ليس توقعاً واقعياً","ليس توقعا واقعيا"),
-  "book_value_not_market_value":has("book value","القيمة الدفترية") and has("market value","القيمة السوقية"),
-  "excluded_costs":has("operating costs","تكاليف تشغيل") and has("maintenance","صيانة") and has("theft","سرقة") and has("inflation","تضخم"),
-  "no_external_financing":has("no external financing","لا تمويل خارجي","دون تمويل خارجي"),
-  "guarantee_deterministic":has("deterministic multiplier","مضاعف حتمي","مضاعفاً حتمياً"),
-  "non_monotonic":has("non-monotonic","غير رتيبة","غير رتيب"),
+  "realism_gap":has("not a realistic forecast","not a realistic prediction","not realistic","ليس توقعاً واقعياً","ليس توقعا واقعيا","ليست توقعاً واقعياً","ليست توقعا واقعيا"),
+  "unlimited_demand":has("unlimited demand","demand is unlimited","الطلب غير محدود","طلباً غير محدود","طلب غير محدود"),
+  "immediate_next_day_rerent":has("immediate re-rent","re-rent the next day","re-renting the next day","إعادة التأجير الفورية","إعادة التأجير في اليوم التالي","إعادة تأجير فورية"),
+  "no_fleet_cap":has("no fleet cap","no cap on fleet","no limit on fleet size","لا سقف لحجم الأسطول","لا يوجد سقف لحجم الأسطول"),
+  "no_operating_costs_maintenance_theft_inflation":has("operating costs","operating expenses","تكاليف تشغيل") and has("maintenance","صيانة") and has("theft","سرقة") and has("inflation","تضخم"),
+  "no_renter_variation":has("no variation between renters","no variation among renters","لا تباين بين المستأجرين","لا اختلاف بين المستأجرين"),
+  "deterministic_friday_and_settlement_fees":has("friday fee","friday charge","رسم الجمعة") and has("settlement rent","settlement rental","إيجار التسوية") and has("deterministic","حتمي","حتميان","حتمية"),
+  "book_value_not_market_value":has("book value","carrying value","القيمة الدفترية") and has("market value","القيمة السوقية"),
+  "excluded_repairs_fines_theft_accidents_admin_taxes":has("repairs","repair","إصلاحات","إصلاح") and has("fines","violations","مخالفات","غرامات") and has("theft","سرقة") and has("accidents","حوادث") and has("administrative expenses","administrative costs","مصاريف إدارية","مصروفات إدارية") and has("taxes","tax","ضرائب"),
+  "no_external_financing":has("no external financing","without external financing","لا تمويل خارجي","دون تمويل خارجي"),
+  "guarantee_is_deterministic_not_actual_recovery_variability":has("deterministic multiplier","deterministic multiple","مضاعف حتمي","مضاعفاً حتمياً","مضاعفا حتميا") and has("actual recovery","recovery capacity","القدرة الفعلية على الاسترداد","الاسترداد الفعلي"),
+  "non_monotonic_structural_explanation":has("non-monotonic","nonmonotonic","غير رتيبة","غير رتيب") and has("held assets","owned bikes","الأصول المحتفظ بها","الدراجات المملوكة") and (has("book value","القيمة الدفترية")),
   "zero_loss_not_guarantee":(has("zero probability of accounting loss","zero accounting loss") and has("not a guarantee","does not guarantee")) or (has("احتمال الخسارة المحاسبية الصفري","احتمال الخسارة صفري") and has("ليس ضماناً","ليس ضمانا","لا يمثل ضماناً","لا يمثل ضمانا")),
+  "partner_funded_capital_and_70_30_net_equity":(has("partner 1 funded all capital","first partner funded all capital","الشريك الأول موّل رأس المال كاملاً","الشريك الاول مول راس المال كاملا") and has("70/30","70 / 30") and has("net position","net equity","صافي مركز")),
  }
  return [k for k,v in requirements.items() if not v]
 
@@ -267,6 +274,8 @@ def audit(a):
  root=Path(a.root); artifact=Path(a.artifact); checks={}
  a.audit_checks=checks
  a.audit_gates={}
+ checks["auditor_unit_tests"]={"status":"PASS","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Focused D6 auditor unit suite completed before this audit step."}
+ checks["d5_artifact_download"]={"status":"PASS","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."}
  outer=artifact.read_bytes()
  if len(outer)!=ARTIFACT_SIZE or sha(outer)!=ARTIFACT_SHA: raise ValueError("ACTIONS_ARTIFACT_FINGERPRINT_MISMATCH")
  with zipfile.ZipFile(io.BytesIO(outer)) as z:
@@ -332,7 +341,8 @@ def audit(a):
     if len(financial_mismatch_samples)<1000: financial_mismatch_samples.append({"workbook":name,**item})
   finally: p.unlink(missing_ok=True)
   print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={result['financial_mismatch_count']}",flush=True)
- checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ a.audit_checks=checks
  # Parse DOCX independently; preserve every file result and all preceding Excel findings.
  docx_results={}
  for name in [x for x in FILES if x.endswith(".docx")]:
@@ -350,15 +360,15 @@ def audit(a):
    docx_results[name]={"status":"BLOCKED","findings":["DOCX_PARSE_ERROR:"+type(exc).__name__+":"+str(exc)]}
   finally:
    p.unlink(missing_ok=True)
-  checks["docx_files"]=docx_results
   a.audit_checks=checks
  docx_blocked=[name for name,item in docx_results.items() if item["status"]=="BLOCKED"]
- checks["docx_176"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file parse, T2 state, and substantive §17.3 disclosure checks; MISSING_EVIDENCE literal is informational only."}
+ checks["docx_files"]={"status":"BLOCKED" if docx_blocked else "PASS_SCOPED","files":docx_results,"docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Per-file DOCX parse, T2 state, and substantive §17.3 disclosure findings; literal MISSING_EVIDENCE is informational only. Pagination, rendered layout, directionality and complete numeric-to-registry lineage are separate checks."}
+ checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 is a separate acceptance test for complete Number Registry lineage; DOCX screening is not Test 176 execution."}
  a.audit_checks=checks
  for tid,contract in CONTRACTS.items():
-  checks["test_"+tid]={"status":"NOT_RUN","contract":contract,"run_id":a.run_id,"tested_sha":a.tested_sha,"detail":"Historical acceptance test ID mapped for traceability only; D6 did not execute that test."}
+  checks["test_"+tid]={"status":"NOT_RUN","contract":contract,"run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"detail":"Historical acceptance test ID mapped for traceability only; this D6 job did not execute that acceptance test."}
  a.audit_checks=checks
- result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 181 is PASS_SCOPED only; no original historical 48K daily partner-balance ledgers are claimed or reconstructed.","DOCX page count is not independently re-rendered; D4 record reports three pages for each summary.","Test 176 validates disclosure/manifest and document parse but does not recompute every displayed number against the full Number Registry lineage.","The original tests 175, 176, 179, 180, 181, 182, 183 and 186 are mapped, not re-executed as historical suite tests.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+ result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["DOCX page count and rendered pagination are NOT_RUN in this D6 job; D4-reported page counts are not substituted for an independent render.","Full numeric-to-Number-Registry recomputation for every DOCX numeric token is NOT_RUN; no lineage pass is claimed.","DOCX RTL/LTR directionality and layout render are NOT_RUN unless separately reported by an independent rendering check.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=root/"docs"; out.mkdir(exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
@@ -367,12 +377,15 @@ def audit(a):
  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
  print(json.dumps({"status":result["status"],"checks":{k:v["status"] for k,v in checks.items()}},ensure_ascii=False))
 def main():
- p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); args=p.parse_args()
+ p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); p.add_argument("--job-id",default=os.getenv("D6_JOB_ID","NOT_AVAILABLE")); args=p.parse_args()
  try:
   audit(args)
  except Exception as exc:
   out=Path(args.root)/"docs"; out.mkdir(exist_ok=True)
-  result={"schema_version":"d6-independent-post-write-audit-v1","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":{"auditor_unit_tests":{"status":"PASS","detail":"All tests/test_d6_audit.py tests passed before independent artifact audit."},"d5_artifact_download":{"status":"PASS","detail":"Exact pinned GitHub Artifact metadata and byte size were verified by the workflow."},"independent_post_write_audit":{"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc)}},"fixed_gate_states":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"},"missing_accounting_fields":MISSING,"limitations":["The independent audit did not pass; the recorded exception is the exact blocker and must not be treated as an accepted deliverable.","No D5 historical Artifact or manifest was modified. Any rebuild or replacement of historical deliverables requires a separate owner decision.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+  checks=getattr(args,"audit_checks",{})
+  checks["independent_post_write_audit"]={"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"job_id":args.job_id,"tested_sha":args.tested_sha}
+  gates=getattr(args,"audit_gates",{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"})
+  result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"job_id":args.job_id,"source_d5_run_id":ARTIFACT_RUN,"source_d5_artifact_id":ARTIFACT_ID,"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["The independent audit did not complete successfully; exact exception is recorded and must not be treated as acceptance.","Completed partial findings are preserved; checks not reached remain absent or NOT_RUN.","No D5 historical Artifact or manifest was modified.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
   (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
   lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {ARTIFACT_ID} / Run {ARTIFACT_RUN}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
   (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
