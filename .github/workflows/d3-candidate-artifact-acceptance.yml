@@ -1,4 +1,4 @@
-name: D3 Candidate Artifact Final Acceptance
+name: D3 Candidate Artifact Integrity Audit
 
 on:
   push:
@@ -323,9 +323,9 @@ jobs:
                       fail("D3_DOCX_PACKAGE_INVALID",name+":"+str(bad))
               docx_results[name]={"bytes":owner["files"][name]["bytes"],"sha256":owner["files"][name]["sha256"],"ooxml_package":"PASS_SCOPED"}
 
-          # Promote only D3-18 for this candidate record; never edit the embedded historical audit or manifest.
+          # Candidate payload integrity is audited separately; delivery authorization is not inferred.
           requirement_statuses=dict(expected_statuses)
-          requirement_statuses["D3-18"]="PASS_SCOPED"
+          requirement_statuses["D3-18"]="NOT_RUN"
           report={
               "schema_version":"d3-candidate-artifact-final-acceptance-v1",
               "classification":"VERIFIED_LIVE",
@@ -363,12 +363,15 @@ jobs:
               "workbooks":workbook_results,
               "docx_packages":docx_results,
               "d3_requirement_statuses":requirement_statuses,
-              "d3_18":"PASS_SCOPED",
-              "d3_gate_status":"PASS_SCOPED_WITH_LIMITATIONS",
-              "d3_candidate_status":"T2_INTERIM / PASS_SCOPED_WITH_LIMITATIONS",
-              "d4_status":"NOT_RUN",
+              "candidate_artifact_integrity_status":"PASS_SCOPED",
+              "d3_18":"NOT_RUN",
+              "d3_gate_status":"BLOCKED_MISSING_EVIDENCE",
+              "d3_candidate_status":"T2_INTERIM / NOT_FINAL_BLOCKED",
+              "d3_delivery_authorization_status":"BLOCKED",
+              "d3_delivery_authorization_blocker":"The recorded owner delivery decision is scoped to Artifact 13160434943 and does not authorize Artifact 13288779998 as the final D3 delivery object.",
+              "d4_status":"NOT_STARTED",
               "final_acceptance":"NOT_DECLARED",
-              "delivery_boundary":"This report verifies the candidate Actions Artifact bytes and payload. The candidate Artifact is temporary and expires at the recorded date; this record does not modify or extend the historical owner decision tied to Artifact 13160434943, does not create a permanent archive, and does not publish a Release.",
+              "delivery_boundary":"This report verifies only the candidate Actions Artifact bytes and payload. The candidate Artifact is temporary and expires at the recorded date. The owner-approved final-delivery decision is scoped to Artifact 13160434943; it does not extend to candidate Artifact 13288779998. Therefore D3-18 remains NOT_RUN and the D3 stage gate remains BLOCKED_MISSING_EVIDENCE pending a specific owner delivery decision for this candidate or another approved publication route.",
               "preserved_limitations":owner.get("limitations",[]),
               "preserved_gate_statuses":owner.get("preserved_gate_statuses",{}),
               "missing_historical_48k_accounting_fields":owner.get("missing_historical_48k_accounting_fields",[]),
@@ -377,22 +380,23 @@ jobs:
           }
           out=pathlib.Path("docs/stage_d")
           out.mkdir(parents=True,exist_ok=True)
-          report_json=out/"D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json"
-          report_md=out/"D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md"
+          report_json=out/"D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.json"
+          report_md=out/"D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.md"
           report_json.write_text(json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
           lines=[
-              "# D3 Candidate Artifact Final Acceptance — 2026-11-04","",
+              "# D3 Candidate Artifact Integrity Audit — 2026-11-04","",
               f"- Acceptance Run: {report['acceptance_run_id']}; tested SHA: {tested_sha}.",
               f"- Candidate source Run: {source_run_id}; source SHA: {source_sha}.",
               f"- Candidate Artifact: {artifact_id}; bytes: {outer_bytes}; SHA-256: {outer_sha}.",
               f"- Artifact expiry: {artifact.get('expires_at')}; temporary Actions retention.",
-              f"- ZIP inventory: {len(member_inventory)} pinned files (14 generated outputs plus the owner-approval record); outer ZIP CRC PASS; every member size/SHA-256 PASS.",
-              "- D3-18: PASS_SCOPED — independent candidate Artifact/workbook byte and XML verification.",
+              f"- ZIP inventory: {len(member_inventory)} pinned files (14 generated outputs plus the included owner-approval record); outer ZIP CRC PASS; every member size/SHA-256 PASS.",
+              "- Candidate Artifact payload integrity: PASS_SCOPED — independent download, lineage, byte, member and workbook XML verification.",
+              "- D3-18: NOT_RUN — the owner-approved final-delivery decision is scoped to Artifact 13160434943, not candidate Artifact 13288779998.",
               "- Financial Registry audit: PASS_SCOPED; 5,953,640 financial registry matches per workbook; zero mismatches; bilingual numeric digests identical.",
               "- Both XLSX files: 185 sheets and 185 worksheet XML parts; zero formula cells and zero Excel error cells; XLSX CRC PASS.",
               "- Five DOCX files: OOXML package integrity PASS_SCOPED; content/layout acceptance remains within D4.",
-              "- Overall candidate D3: PASS_SCOPED_WITH_LIMITATIONS; candidate classification remains T2_INTERIM.",
-              "- D4: NOT_RUN; rerun against this candidate before any later stage.",
+              "- Overall candidate D3: BLOCKED_MISSING_EVIDENCE; candidate classification remains T2_INTERIM / NOT_FINAL_BLOCKED.",
+              "- D4: NOT_STARTED; do not enter D4 until D3-18 delivery authorization and D3 gate closure are evidenced.",
               "- FINAL_ACCEPTED: NOT_DECLARED. The candidate Artifact expires and is not a permanent archive.",
               "",
               "## Preserved source and project boundaries",
@@ -405,14 +409,14 @@ jobs:
               "- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release, or final-acceptance declaration."
           ]
           report_md.write_text("\n".join(lines)+"\n",encoding="utf-8")
-          print("D3_CANDIDATE_ARTIFACT_ACCEPTANCE_PASS_SCOPED")
+          print("D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_PASS_SCOPED")
           print(json.dumps({"artifact_id":artifact_id,"artifact_bytes":outer_bytes,"artifact_sha256":outer_sha,
                             "member_count":len(member_inventory),"workbooks":workbook_results,
                             "requirement_statuses":requirement_statuses},ensure_ascii=False,sort_keys=True))
           shutil.rmtree(tmp,ignore_errors=True)
           PY
 
-      - name: Append candidate D3 acceptance and commit evidence
+      - name: Append candidate Artifact integrity evidence and commit
         shell: bash
         run: |
           set -euo pipefail
@@ -425,15 +429,15 @@ jobs:
           source=os.environ["SOURCE_SHA"]
           entry=f"""
 
-          ## D3 candidate Artifact final acceptance — 2026-11-04 (append-only)
+          ## D3 candidate Artifact integrity audit — 2026-11-04 (append-only)
 
           - Candidate acceptance Run {run}; exact tested SHA {tested}.
           - Candidate source Run 41754147172 / SHA {source}; candidate Artifact 13288779998.
           - Independent ZIP/member fingerprints, all 15 members (14 generated outputs plus the included owner-approval record), both workbook byte streams, 185-sheet structure, workbook CRC, zero formula cells and zero Excel error cells passed.
           - Candidate financial Registry audit Run 41900246587 on {os.environ["FINANCIAL_AUDIT_TESTED_SHA"]}: PASS_SCOPED; 5,953,640 financial matches per workbook, zero mismatches, and identical bilingual numeric digests.
-          - D3-18: PASS_SCOPED for this candidate; overall candidate D3: PASS_SCOPED_WITH_LIMITATIONS. The embedded source build audit and manifest were not altered.
-          - D4 remains NOT_RUN and requires a separate rebuild/revalidation against this candidate. FINAL_ACCEPTED remains NOT_DECLARED.
-          - Candidate Actions Artifact is temporary and expires at its recorded expiry. This addendum does not rewrite the earlier owner decision scoped to Artifact 13160434943.
+          - Candidate Artifact payload integrity: PASS_SCOPED. D3-18 remains NOT_RUN and overall D3 remains BLOCKED_MISSING_EVIDENCE because the owner-approved final-delivery decision is specific to Artifact 13160434943, not candidate Artifact 13288779998.
+          - D4 remains NOT_STARTED; no stage transition is authorized by this payload-integrity audit. FINAL_ACCEPTED remains NOT_DECLARED.
+          - Candidate Actions Artifact is temporary and expires at its recorded expiry. No owner delivery decision for this exact candidate Artifact has been inferred.
           - Historical 48K fields remain MISSING_EVIDENCE; Full Logging remains 105 representative keys only; C100 Golden remains NOT_RUN; upstream financial/production/statistical gates remain unchanged.
           - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, Release, or final-acceptance declaration occurred.
           """
@@ -442,22 +446,22 @@ jobs:
           for name in paths:
               p=pathlib.Path(name)
               old=p.read_text(encoding="utf-8")
-              if "D3 candidate Artifact final acceptance — 2026-11-04" not in old:
+              if "D3 candidate Artifact integrity audit — 2026-11-04" not in old:
                   p.write_text(old.rstrip()+"\n"+entry,encoding="utf-8")
           status=pathlib.Path("docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md")
           status.write_text(f"""# Stage D Session Status — 2026-11-04
 
           Repository: {os.environ["REPOSITORY"]}
           Working branch: {branch}
-          Acceptance workflow tested SHA: {tested}
+          Integrity audit workflow tested SHA: {tested}
 
           ## Live stage disposition
 
           - D0: PASS_SCOPED_WITH_LIMITATIONS (retained; no reopen).
           - D1: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597, tested SHA {tested if False else "d323300abaa361413091b3062e3417db62c18f56"}; 34 tests passed).
           - D2: PASS_SCOPED_WITH_LIMITATIONS (Run 41900246597; Number Registry verified).
-          - D3 candidate Artifact 13288779998: PASS_SCOPED_WITH_LIMITATIONS; D3-18 PASS_SCOPED; acceptance Run {run}.
-          - D4: NOT_RUN on candidate D3; rerun required.
+          - D3 candidate Artifact 13288779998 integrity: PASS_SCOPED; D3-18 NOT_RUN; D3 gate BLOCKED_MISSING_EVIDENCE; integrity audit Run {run}.
+          - D4: NOT_STARTED; candidate D3 has not passed its delivery gate.
           - D5: existing Artifact 13264003231 remains historical/unchanged; do not treat it as rebuilt from candidate D3.
           - D6: prior independent audit remains BLOCKED; do not infer D6 closure from D3/D4 changes.
           - E0–E6: NOT_STARTED.
@@ -484,12 +488,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .github/workflows/d3-candidate-artifact-acceptance.yml \
-            docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json \
-            docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md \
+            docs/stage_d/D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.json \
+            docs/stage_d/D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.md \
             docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md \
             docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md \
             docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md
-          git commit -m "docs(d3): accept candidate artifact with scoped limitations"
+          git commit -m "docs(d3): record candidate artifact integrity audit"
           git push origin HEAD:"refs/heads/$BRANCH"
 
       - name: Raw readback and exact final HEAD validation
@@ -510,8 +514,8 @@ jobs:
               raise SystemExit(f"MAIN_HEAD_CHANGED_UNEXPECTEDLY:{main}")
           paths=[
             ".github/workflows/d3-candidate-artifact-acceptance.yml",
-            "docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.json",
-            "docs/stage_d/D3_CANDIDATE_ARTIFACT_FINAL_ACCEPTANCE_2026-11-04.md",
+            "docs/stage_d/D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.json",
+            "docs/stage_d/D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_2026-11-04.md",
             "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-04.md",
             "docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md",
             "docs/stage_d/D3_FINAL_REVIEW_AND_REMEDIATION_STATUS_2026-11-02.md"
@@ -526,6 +530,6 @@ jobs:
                   raise SystemExit("D3_ACCEPTANCE_RAW_READBACK_MISMATCH:"+path)
               blob=hashlib.sha1(b"blob "+str(len(remote_bytes)).encode()+b"\0"+remote_bytes).hexdigest()
               print(f"VERIFIED_LIVE {path} bytes={len(remote_bytes)} sha256={hashlib.sha256(remote_bytes).hexdigest()} blob_sha1={blob} commit={head} url={url}")
-          print("D3_CANDIDATE_ARTIFACT_ACCEPTANCE_EXACT_FINAL_HEAD_PASS "+head)
+          print("D3_CANDIDATE_ARTIFACT_INTEGRITY_AUDIT_EXACT_FINAL_HEAD_PASS "+head)
           print("MAIN_UNCHANGED "+main)
           PY
