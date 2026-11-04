@@ -6,9 +6,6 @@ on:
       - tmp/d1-rebuild-20261101
     paths:
       - 'docs/stage_d/D6_EXECUTION_TRIGGER_*.md'
-      - 'scripts/audit_s6_deliverables_bundle.py'
-      - 'tests/test_d6_audit.py'
-      - '.github/workflows/stage-d6-independent-audit.yml'
 permissions:
   contents: write
   actions: read
