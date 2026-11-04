@@ -1,0 +1,24 @@
+{
+  "schema": "d6-current-audit-pointer-v1",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "current_run_id": 41929888796,
+  "current_job_id": 126923812128,
+  "tested_sha": "48ae9fbf5a7264834a523504706a7c04b654061b",
+  "disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "current_report_md": "docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.md",
+  "current_report_json": "docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+  "d5_source_run_id": 41928234377,
+  "d5_source_artifact_id": 13369179742,
+  "d6_artifact_id": 13371094066,
+  "historical_root_reports": {
+    "md": "docs/FINAL_AUDIT.md",
+    "json": "docs/FINAL_AUDIT.json",
+    "historical_run_id": 41874399640,
+    "historical_disposition": "BLOCKED",
+    "current": false,
+    "preserved_append_only": true
+  },
+  "note": "Run-specific append-only reports are authoritative for the current run. Root-level historical reports were not overwritten."
+}
