@@ -4,7 +4,7 @@ from pathlib import Path, PurePosixPath
 from openpyxl import load_workbook
 from docx import Document
 
-PACKAGE="Motorcycle_Simulation_D5_T2_INTERIM_2026-11-03.zip"
+PACKAGE="Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip"
 GOV_SHA="225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
 HIST_SHA="e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
 S6={"SOURCE_SHA":"da1a9ea9b5cd789c944de3f07b08395bb67c49e7","cohort_id":"s6-v23-da1a9ea9","MASTER_SEED":20270101}
@@ -24,7 +24,7 @@ CONTRACTS={
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def load_d5_pin(root):
- path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-03.json"
+ path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json"
  if not path.is_file(): raise ValueError("D5_PREFLIGHT_MISSING")
  report=json.loads(path.read_text(encoding="utf-8"))
  if report.get("status")!="PUBLISHED_AND_REMOTE_READBACK_VERIFIED": raise ValueError("D5_NOT_PUBLISHED_OR_READBACK_VERIFIED")
@@ -490,7 +490,7 @@ def audit(a):
   run_id=a.run_id,job_id=a.job_id,tested_sha=a.tested_sha))
  a.audit_checks=checks
  result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
- out=root/"docs"; out.mkdir(exist_ok=True)
+ out=Path(a.output_dir); out.mkdir(parents=True,exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {pin['artifact_id']} / Run {pin['artifact_run_id']}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
  for k,v in checks.items(): lines.append(f"| {k} | {v['status']} | {v.get('detail',v.get('contract',''))} |")
@@ -498,11 +498,11 @@ def audit(a):
  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
  print(json.dumps({"status":result["status"],"checks":{k:v["status"] for k,v in checks.items()}},ensure_ascii=False))
 def main():
- p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); p.add_argument("--job-id",default=os.getenv("D6_JOB_ID","NOT_AVAILABLE")); args=p.parse_args()
+ p=argparse.ArgumentParser(); p.add_argument("--artifact",required=True); p.add_argument("--root",default="."); p.add_argument("--run-id",default=os.getenv("GITHUB_RUN_ID","local")); p.add_argument("--tested-sha",default=os.getenv("GITHUB_SHA","unknown")); p.add_argument("--branch",default=os.getenv("GITHUB_REF_NAME","unknown")); p.add_argument("--job-id",default=os.getenv("D6_JOB_ID","NOT_AVAILABLE")); p.add_argument("--output-dir",default="docs/stage_d/D6_AUDIT_RUN"); args=p.parse_args()
  try:
   audit(args)
  except Exception as exc:
-  out=Path(args.root)/"docs"; out.mkdir(exist_ok=True)
+  out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
   checks=getattr(args,"audit_checks",{})
   checks["independent_post_write_audit"]={"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"job_id":args.job_id,"tested_sha":args.tested_sha}
   gates=getattr(args,"audit_gates",{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"})
