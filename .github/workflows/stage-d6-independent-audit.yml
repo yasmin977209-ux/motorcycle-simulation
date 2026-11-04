@@ -1,6 +1,13 @@
 name: D6 Independent Post-Write Audit
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - .github/workflows/stage-d6-independent-audit.yml
+      - scripts/audit_s6_deliverables_bundle.py
+      - tests/test_d6_audit.py
 permissions:
   contents: write
   actions: read
