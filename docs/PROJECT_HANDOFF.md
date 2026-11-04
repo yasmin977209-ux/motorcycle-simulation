@@ -587,3 +587,14 @@ Preserve: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISS
 The five accounting fields remain missing and must not be inferred/zero-filled: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
 
 Do not start E0 until its own prompt and entry prerequisites are freshly read and validated against GitHub. No Trial, Simulation, Monte Carlo, N expansion, historical backfill, identity change, main write, merge or Release is authorized by this handoff. The branch to resume from must be re-read from GitHub API; do not reuse the HEAD stated in an earlier handoff as current proof.
+
+
+# CURRENT HANDOFF — SESSION WRAP 2026-11-05
+
+Read first: `docs/stage_d/D0_D6_MASTER_CLOSURE_BRANCH_2026-11-05.md` and `docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05_SESSION_WRAP.md`.
+
+The accidental main documentation commit was reverted normally in `01a6f79eedc522bb734ed9c5ea31beee581f2468`; main tree matches the pre-incident tree. Do not write to main. Resume only from the freshly read active branch HEAD.
+
+At prior branch HEAD `c447a5b5c3162b23e21ca8ea5befdd6541409113`, D1-D2 exact-head validation Run 41935049292 and D3 published-output exact-head Run 41935049260 succeeded. D0-D4 exact-head gate Run 41935049455 failed because workflow loaded stale `D4_BUILD_AUDIT_2026-11-03.json`; the log shows mismatch against current deliverable. Workflow path references were updated to 2026-11-05 current D3/D4 audit/report/matrix files in the session-wrap commit. Re-check the triggered Run before asserting exact-head PASS.
+
+Main Run 41935664221 / Job 126943358779 was in_progress at last inspection. Do not wait for long-running workflow; monitor later. D0-D6 remain PASS_SCOPED_WITH_LIMITATIONS within individual scope; all production/statistical/accounting limitations remain. E0 not started; no Trials/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/merge/Release authorized.

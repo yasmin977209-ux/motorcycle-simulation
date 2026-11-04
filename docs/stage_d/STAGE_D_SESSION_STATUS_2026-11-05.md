@@ -107,3 +107,13 @@ This append-only block supersedes earlier stage-status snapshots above for the c
 - `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, `CONVERGED` remain `NOT_DECLARED`. E0 not started.
 
 No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge or Release was performed by this consolidated closure action.
+
+
+## Session wrap — 2026-11-05 (append-only)
+
+- Main Revert commit: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; main tree restored to pre-incident tree; no force push.
+- Comprehensive handoff: `docs/stage_d/D0_D6_MASTER_CLOSURE_BRANCH_2026-11-05.md`.
+- Branch before this update: `c447a5b5c3162b23e21ca8ea5befdd6541409113`.
+- D1-D2 exact-head Run 41935049292 success; D3 output exact-head Run 41935049260 success; D0-D4 exact-head Run 41935049455 failed because workflow compared current DOCX against stale 2026-11-03 audit fingerprints. Workflow baseline updated in this commit to current 2026-11-05 D3/D4 evidence paths; inspect its next Run before calling exact-head gate passed.
+- Main Run 41935664221 (Job 126943358779) was in_progress at last inspection; stop rather than wait for long Stage 5 Round 3 validation.
+- D0-D6 scoped status and all gate limitations remain unchanged; E0 not started. No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity changes, merge or Release.

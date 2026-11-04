@@ -11,10 +11,10 @@ on:
       - docs/stage_d/D0_REPOSITORY_CLOSURE.md
       - docs/stage_d/D1_REPOSITORY_CLOSURE.md
       - docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md
-      - docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md
+      - docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md
       - docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md
       - docs/PROJECT_HANDOFF.md
-      - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md
+      - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
   workflow_dispatch:
 
 permissions:
@@ -74,7 +74,7 @@ jobs:
               "deliverables/Summary_EN.docx",
               "deliverables/دراسة_الجدوى_AR.docx",
           ]
-          audit = json.loads(Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
+          audit = json.loads(Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json").read_text(encoding="utf-8"))
           for path in names:
               p = Path(path)
               if not p.is_file():
@@ -129,13 +129,13 @@ jobs:
               "docs/stage_d/D0_REPOSITORY_CLOSURE.md",
               "docs/stage_d/D1_REPOSITORY_CLOSURE.md",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT.md",
-              "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.md",
+              "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json",
               "docs/PROJECT_CONTINUITY.md",
               "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md",
               "docs/PROJECT_HANDOFF.md",
-              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md",
               "docs/stage_d/D0_INPUT_AUDIT.md",
               "docs/stage_d/D0_REPOSITORY_CLOSURE.md",
               "docs/stage_d/D0_REMOTE_EVIDENCE_LEDGER_2026-10-31.md",
@@ -167,10 +167,10 @@ jobs:
               "docs/stage_d/D1_REBUILD_AUDIT_2026-11-01.json",
               "docs/stage_d/D2_NUMBER_REGISTRY_AUDIT_LIVE_2026-11-01.json",
               "docs/stage_d/D2_REQUIREMENTS_MATRIX_2026-11-01.md",
-              "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json",
-              "docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json",
-              "docs/stage_d/D4_BUILD_REPORT_2026-11-03.md",
-              "docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-03.md",
+              "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json",
+              "docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json",
+              "docs/stage_d/D4_BUILD_REPORT_2026-11-05.md",
+              "docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json",
               "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
