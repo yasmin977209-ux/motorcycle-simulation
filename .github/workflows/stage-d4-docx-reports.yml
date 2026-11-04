@@ -1,4 +1,4 @@
-name: Stage D4 Registry-Backed DOCX Reports
+name: Stage D4 Registry-Backed DOCX Reports — Accepted D3 Candidate
 on:
   push:
     branches: [tmp/d1-rebuild-20261101]
