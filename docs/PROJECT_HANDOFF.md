@@ -454,3 +454,11 @@ See `docs/stage_d/D0_D5_FINAL_HANDOFF_2026-11-03.md` for the complete evidence m
 - Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
 - See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
 - D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
+
+
+## D6 independent post-write audit — 2026-11-04 (append-only)
+
+- Run 41868591128; tested source SHA bd01f908d8e957863f5085e018069ce9a9a3553d; D5 Artifact 13264003231 from Run 41704252218.
+- Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
+- See docs/FINAL_AUDIT.md and docs/FINAL_AUDIT.json for check-level results and limitations.
+- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
