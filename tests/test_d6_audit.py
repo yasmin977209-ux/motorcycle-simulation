@@ -204,6 +204,6 @@ def test_d6_acceptance_statuses_fail_closed_when_scoped_prerequisites_missing():
         run_id="run-2", job_id="job-2", tested_sha="def456",
     )
     assert result["test_175"]["status"] == "BLOCKED"
-    assert result["test_182"]["status"] == "PASS_SCOPED"
+    assert result["test_182"]["status"] == "BLOCKED"
     assert result["test_186"]["status"] == "BLOCKED"
 
