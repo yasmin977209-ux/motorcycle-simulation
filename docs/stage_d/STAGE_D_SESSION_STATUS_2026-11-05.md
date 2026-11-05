@@ -251,3 +251,13 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - New source pin candidate: `002b74893ca9dfea864e83fecc558f2388748ffe`; old S6 source: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; repair reference: `a5573eb1891ed2c56b01f6c9b3ccfe9619a08358`.
 - No new Trials or Monte Carlo were started. Final owner confirmation remains required. Existing old-identity Run `41958935113` remains active and separate.
 - No historical artifact, `main`, or original D0–D6 output was changed.
+
+
+## Verification addendum — E2 old-identity replay completion — 2026-11-05
+
+- GitHub Run `41958935113` is completed `success`; 20 scenario jobs + aggregate job succeeded at tested workflow SHA `002b74893ca9dfea864e83fecc558f2388748ffe`.
+- The 20 scenario logs each report 2,400 Trials, exact financial fingerprint match, exact daily overlap, and all replay daily balance rows passing. Aggregate report: 48,000 Trials; 98,323,918 daily rows; `PASS_SCOPED_REPLAY_RECONSTRUCTION`; `final_acceptance=NOT_GRANTED`.
+- Aggregate Artifact `13393273763`: 1,069 bytes, ZIP SHA-256 `fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1`; embedded JSON SHA-256 `4756203c36d578a44204c40c4ec1948312a4ec736d3b4a83588b9399f713b80e`. Downloaded aggregate bytes matched GitHub's digest.
+- This is **not** the new S6+C100 rebuild. The workflow checked out original source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609` and appended an instrumentation wrapper. Output retains old `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7` and old cohort `s6-v23-da1a9ea9`.
+- New S6 cohort `s6-v23-rebuild-20261105` and separate C100 cohort `c100-v23-rebuild-20261105` remain NOT_RUN pending explicit final owner confirmation. New Golden and D0'–D6' remain NOT_RUN.
+- Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`; Gate B and Stability unchanged; no final acceptance.
