@@ -105,3 +105,16 @@ No S6 Trial, C100 Trial, Simulation, Monte Carlo, N expansion, Golden revalidati
 - separate C100 cohort `c100-v23-rebuild-20261105`;
 - C100's deterministic 300-repeat comparison contract;
 - approximately 24-hour workload and fail-fast fingerprint stop rule.
+
+
+## Live verification correction — Run 41958935113 — 2026-11-05
+
+The earlier note that Run `41958935113` was still active is superseded by live GitHub evidence:
+- Run conclusion: `success`; tested workflow HEAD: `002b74893ca9dfea864e83fecc558f2388748ffe`; run attempt 1.
+- 20/20 scenario jobs succeeded, each logging `PASS_SCOPED_REPLAY_RECONSTRUCTION`, 2,400 Trials, exact financial fingerprint match, exact overlapping daily comparison, and daily balance validation.
+- Aggregate job succeeded. Its machine report states 48,000 Trials, 98,323,918 replay daily rows, all 20 scenario results passing, and `final_acceptance=NOT_GRANTED`.
+- Aggregate artifact ID `13393273763`, SHA-256 `fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1`, 1,069 bytes. Downloaded ZIP bytes were hashed locally and matched that digest. Extracted JSON SHA-256: `4756203c36d578a44204c40c4ec1948312a4ec736d3b4a83588b9399f713b80e`, 5,176 bytes.
+- Representative scenario artifact `C030_G050`, ID `13384613845`, ZIP SHA-256 `ce7ae24282688f2fd86e2e8baf1ff51500d67a75a5d590c827118ad98165b416`; its manifest reports 2,400/2,400 exact fingerprints, 3,760,559 overlapping daily rows, and 3,760,559 balance rows checked.
+- Crucial scope boundary: this run did **not** execute the new source commit as the model source. Its workflow checks out original execution source `a23ba71f48487f3ebead99bc30039b14ef9b7609` and applies `scripts/e2_prepare_replay_source.py`, which wraps the original `_daily_snapshot` and appends `accounting.balance_sheet_snapshot(project)`. Its reports retain old `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, old cohort `s6-v23-da1a9ea9`, and old seed. Thus it is a successful old-identity replay reconstruction, not execution of the proposed new S6+C100 lineage.
+- `002b748...` is a Git commit pin candidate containing the repaired source tree, but the successful replay workflow used it as workflow HEAD, not as the model execution source. No new S6/C100 Trials, new-cohort Golden, or D0'–D6' work has been run.
+- Production Gate A remains `NOT_DECLARED_REQUIRES_SEPARATE_REVIEW`; Financial Gate A remains `PASS_SCOPED_ONLY`; final acceptance remains `NOT_GRANTED`.
