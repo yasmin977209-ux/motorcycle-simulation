@@ -1,6 +1,7 @@
 """D3-S1 partitioning and D3-S2 semantic reassembly for the pinned D3 workbooks."""
 from __future__ import annotations
-import argparse, copy, datetime, hashlib, json, re, sys, gc\nimport xml.etree.ElementTree as ET
+import argparse, copy, datetime, hashlib, json, re, sys, gc
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell.cell import MergedCell
