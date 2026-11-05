@@ -3305,3 +3305,16 @@ Scoped dispositions D0–D6: `PASS_SCOPED_WITH_LIMITATIONS` each, subject to the
 D5 tested SHA `baf696af1e951cbf4a79e8a9e009c60c6b053b2d` is not its evidence publication commit; the corrected publication-evidence commit is `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`.
 
 Main accidental-write incident is resolved by owner-authorized normal Revert `01a6f79eedc522bb734ed9c5ea31beee581f2468`; main remains read-only. E0 remains NOT_STARTED. All fixed gates, missing accounting fields, artifact retention and prohibitions are detailed in the linked final session report.
+
+
+## E0 Post-D6 Gap Inventory — 2026-11-05 (append-only)
+
+- E0 was explicitly authorized by the owner in chat after live D6 revalidation.
+- E0 disposition: PASS_SCOPED as a gap inventory only; project remains T2_INTERIM / NOT_FINAL_BLOCKED.
+- Baseline HEAD before E0 writes: 97120ff43434bad84d110a1087fbbc9b437e826a; main at start: 01a6f79eedc522bb734ed9c5ea31beee581f2468.
+- E0 register: docs/post_d/E0_POST_D_GAP_REGISTER.md and .json; continuity handoff: docs/post_d/E0_POST_D_CONTINUITY.md.
+- Current-head validation: D1-D2 Run 41938370466 (34 passed), D3 Run 41938370426 (38 passed), D0-D4 Run 41938370461 (5 passed), all tested at 97120ff43434bad84d110a1087fbbc9b437e826a.
+- D5/D6 remain scoped to their own tested SHAs; do not attribute their results to current HEAD.
+- Fixed blockers remain: Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; C100 Golden NOT_RUN; Full Logging 105 representative keys; 105 manifest statuses NOT_VERIFIED; Full 177 suite NOT_RUN; five accounting fields MISSING_EVIDENCE.
+- E1 is the only next permitted stage after E0 readback. No Trials, Monte Carlo, N expansion, backfill, zero-fill, identity changes, main write, merge or Release.
+- This entry supplements prior history and does not rewrite it.
