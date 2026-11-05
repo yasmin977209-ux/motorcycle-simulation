@@ -1,0 +1,298 @@
+{
+  "schema": "e2-old-identity-replay-reconstruction-addendum-v1",
+  "recorded_at": "2026-11-05T22:05:00+03:00",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "owner_decision_ref": "docs/post_d/E2_OWNER_DECISION_APPROVED_A_2026-11-05.md",
+  "related_disposition_ref": "docs/post_d/E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.json",
+  "owner_authorization_scope": "Old-Identity Replay Reconstruction only; this addendum records completed execution and does not extend authorization to the proposed new S6+C100 lineage.",
+  "workflow_run": {
+    "id": 41958935113,
+    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41958935113",
+    "conclusion": "success",
+    "workflow_head_sha": "002b74893ca9dfea864e83fecc558f2388748ffe",
+    "model_execution_source_commit": "a23ba71f48487f3ebead99bc30039b14ef9b7609",
+    "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "cohort_id": "s6-v23-da1a9ea9",
+    "master_seed": 20270101
+  },
+  "outcome": {
+    "status": "PASS_SCOPED_REPLAY_RECONSTRUCTION",
+    "scenario_jobs_expected": 20,
+    "scenario_jobs_success": 20,
+    "trial_count": 48000,
+    "daily_rows": 98323918,
+    "aggregate_job_id": 127088943738,
+    "aggregate_job_conclusion": "success",
+    "final_acceptance": "NOT_GRANTED",
+    "production_gate_a": "NOT_DECLARED_REQUIRES_SEPARATE_REVIEW"
+  },
+  "scenario_jobs": [
+    {
+      "job_id": 127021177356,
+      "name": "Replay C030_G050 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177358,
+      "name": "Replay C050_G000 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177360,
+      "name": "Replay C030_G070 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177361,
+      "name": "Replay C030_G030 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177379,
+      "name": "Replay C085_G000 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177390,
+      "name": "Replay C050_G050 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177398,
+      "name": "Replay C070_G030 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177400,
+      "name": "Replay C050_G030 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177415,
+      "name": "Replay C070_G000 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177432,
+      "name": "Replay C030_G000 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177441,
+      "name": "Replay C050_G100 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177449,
+      "name": "Replay C070_G100 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177469,
+      "name": "Replay C085_G030 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177483,
+      "name": "Replay C070_G050 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177494,
+      "name": "Replay C050_G070 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177507,
+      "name": "Replay C085_G050 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177593,
+      "name": "Replay C070_G070 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021177755,
+      "name": "Replay C030_G100 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021179536,
+      "name": "Replay C085_G070 against its original immutable Artifact",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 127021179580,
+      "name": "Replay C085_G100 against its original immutable Artifact",
+      "conclusion": "success"
+    }
+  ],
+  "scenario_artifacts": [
+    {
+      "artifact_id": 13385547304,
+      "name": "e2-s6-replay-C030_G000-41958935113",
+      "size_bytes": 130319892,
+      "sha256": "f00365c8089df7ba9fa57f5a37133130d6443284a337df8977ef57ea1a56ce78",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13385442622,
+      "name": "e2-s6-replay-C030_G030-41958935113",
+      "size_bytes": 137381702,
+      "sha256": "7dfbb69a236f92811b48185fa3db11b545de64aa4c9f3157e846b18dc3f51869",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13384613845,
+      "name": "e2-s6-replay-C030_G050-41958935113",
+      "size_bytes": 140903672,
+      "sha256": "ce7ae24282688f2fd86e2e8baf1ff51500d67a75a5d590c827118ad98165b416",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13385711291,
+      "name": "e2-s6-replay-C030_G070-41958935113",
+      "size_bytes": 144916284,
+      "sha256": "fed0e7bb7e4e80532f607189c0ca874364df42669a0e99921d24135613769848",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13386247870,
+      "name": "e2-s6-replay-C030_G100-41958935113",
+      "size_bytes": 149815178,
+      "sha256": "68a0a1a405afef65ddea40a13ac92e15d94f963f825ad5084cb81eb19dea8d7f",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13387718801,
+      "name": "e2-s6-replay-C050_G000-41958935113",
+      "size_bytes": 240841082,
+      "sha256": "4b55f2f5ffe626091f49e1cb4c2b8a2b462c137cf7bbc89fbcdd7dad5fe753af",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13390020181,
+      "name": "e2-s6-replay-C050_G030-41958935113",
+      "size_bytes": 244980641,
+      "sha256": "466d729fa0b50b9ff8d4dc106c5980f61c85fc6ae5b4b87108e8022cda8a2f09",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13388993770,
+      "name": "e2-s6-replay-C050_G050-41958935113",
+      "size_bytes": 243086253,
+      "sha256": "8317571340dc50f831ee195812c7445ae348d48804aef91ddd5f89bf8c4e6495",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13389748302,
+      "name": "e2-s6-replay-C050_G070-41958935113",
+      "size_bytes": 245243231,
+      "sha256": "4f746aa1281df124e490bb79450325692e59829e1cd487004f1f33c9072a6383",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13387489646,
+      "name": "e2-s6-replay-C050_G100-41958935113",
+      "size_bytes": 241681966,
+      "sha256": "ef6487593b0fb40d6506d46b9813bffd23e76c198c9cf9cf844fc865113e82c9",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13386989611,
+      "name": "e2-s6-replay-C070_G000-41958935113",
+      "size_bytes": 207601236,
+      "sha256": "a434ca949af300e0d5e8b6d542c947804d5b26419336c3b1b2b12f1d5580791b",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13387039806,
+      "name": "e2-s6-replay-C070_G030-41958935113",
+      "size_bytes": 207601239,
+      "sha256": "2d1ba7f302c04fece22f5d3aa9f39b9e61fd3c65d21affce33cac24bd5a92d94",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13390253424,
+      "name": "e2-s6-replay-C070_G050-41958935113",
+      "size_bytes": 207601239,
+      "sha256": "ec5afd2a67b2f8a6fc86330812a0c8f4e43c5ff7d7cb19361a8552dc95518da9",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13391878325,
+      "name": "e2-s6-replay-C070_G070-41958935113",
+      "size_bytes": 207601239,
+      "sha256": "8acf1ce8d1f0f9199f527e071ccc120910aab15f42422aaabe2ce1b872a4d3ef",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13391099143,
+      "name": "e2-s6-replay-C070_G100-41958935113",
+      "size_bytes": 207601247,
+      "sha256": "bb9fa6efb0b828648533ab26caa253c809e099e63238de86fe6d3a0a9f35fa16",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13393345087,
+      "name": "e2-s6-replay-C085_G000-41958935113",
+      "size_bytes": 180210279,
+      "sha256": "89dad446f3c9b22696006aa6e4beae9c6da57eb3384d7815f8f63cda81b4cf4f",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13393166526,
+      "name": "e2-s6-replay-C085_G030-41958935113",
+      "size_bytes": 180210280,
+      "sha256": "4eaebd081581169ff48d2453824d72a3a17209b11ac816046b9cdb8ab3269578",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13391877035,
+      "name": "e2-s6-replay-C085_G050-41958935113",
+      "size_bytes": 180210278,
+      "sha256": "9f686863444cbc07d0f7435f4c2310e540c739a7918f2bf793d86cb0bbbec37b",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13392884757,
+      "name": "e2-s6-replay-C085_G070-41958935113",
+      "size_bytes": 180210279,
+      "sha256": "2fbe539ed9e85f57aeb8500ed56c1515efd1c66aa0cd9a865c8504a72dba3401",
+      "expires_at": "2027-02-03T03:01:28Z"
+    },
+    {
+      "artifact_id": 13392656883,
+      "name": "e2-s6-replay-C085_G100-41958935113",
+      "size_bytes": 180210280,
+      "sha256": "cc8b5826aeb63c2fb6ef835c485daf44d7fca7b99e140b1616e16ba26011f237",
+      "expires_at": "2027-02-03T03:01:28Z"
+    }
+  ],
+  "aggregate_artifact": {
+    "artifact_id": 13393273763,
+    "name": "e2-s6-replay-aggregate-41958935113",
+    "size_bytes": 1069,
+    "sha256": "fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1",
+    "expires_at": "2027-02-03T03:01:28Z"
+  },
+  "provenance_boundary": {
+    "replay_method": "Original execution source a23ba71f... with replay instrumentation overlay scripts/e2_prepare_replay_source.py; wrapper captured full accounting balance snapshot from the original project state.",
+    "workflow_head_is_not_model_execution_source": true,
+    "original_identity_preserved": true,
+    "original_historical_daily_ledgers_remain_missing_evidence": true,
+    "five_historical_accounting_fields_remain_missing_evidence": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "replay_does_not_replace_original_historical_evidence": true,
+    "new_s6_c100_lineage_executed": false,
+    "new_trials_or_monte_carlo_in_this_addendum": false
+  },
+  "interpretation": "The successful run proves a scoped old-identity replay reconstruction for 20/20 scenarios and 48,000 trial identities with 98,323,918 replay daily rows. It does not prove that the five fields were present in the original historical records, does not upgrade Production Gate A, does not authorize new S6/C100 execution, and does not constitute final acceptance."
+}
