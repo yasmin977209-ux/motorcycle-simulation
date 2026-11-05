@@ -1,0 +1,44 @@
+{
+  "schema":"d0-d6-final-remote-evidence-v1",
+  "repository":"yasmin977209-ux/motorcycle-simulation",
+  "branch":"tmp/d1-rebuild-20261101",
+  "readback_head_before_ledger_commit":"17ac308f8f563412d610b0d5ed5eb135a43dbb0a",
+  "main_head":"01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "evidence_method":"Fetched exact GitHub Raw URLs at the stated branch HEAD. SHA-256 calculated over fetched UTF-8 bytes; Git blob SHA-1 and byte size independently obtained from GitHub Contents API.",
+  "files":[
+    {
+      "path":"docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+      "url":"https://github.com/yasmin977209-ux/motorcycle-simulation/blob/17ac308f8f563412d610b0d5ed5eb135a43dbb0a/docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+      "raw_url":"https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/17ac308f8f563412d610b0d5ed5eb135a43dbb0a/docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+      "sha256":"46596a49ee7c21c62dbab954fd39c42ca0a59b4c3752a65f4e8cc30feab40c2f",
+      "git_blob_sha1":"a274a449ef5e1636c858509a8a33a497b7398c88",
+      "bytes":7423,
+      "containing_commit":"1d639a11237c9822f01f8c1b8f731d37b3b71818",
+      "classification":"VERIFIED_LIVE"
+    },
+    {
+      "path":"docs/stage_d/D0_D6_FINAL_HANDOFF_2026-11-05.md",
+      "url":"https://github.com/yasmin977209-ux/motorcycle-simulation/blob/17ac308f8f563412d610b0d5ed5eb135a43dbb0a/docs/stage_d/D0_D6_FINAL_HANDOFF_2026-11-05.md",
+      "raw_url":"https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/17ac308f8f563412d610b0d5ed5eb135a43dbb0a/docs/stage_d/D0_D6_FINAL_HANDOFF_2026-11-05.md",
+      "sha256":"5fb77f08705d2429d40a2d566a1fcdb00b2ba106e63013265992d10b56dbf145",
+      "git_blob_sha1":"be53e5bbb9c3935aa91dfd0cda973c91b391ad77",
+      "bytes":3295,
+      "containing_commit":"17ac308f8f563412d610b0d5ed5eb135a43dbb0a",
+      "classification":"VERIFIED_LIVE"
+    }
+  ],
+  "validated_runs":{
+    "d1_d2":{"run_id":41937190532,"job_id":126948512516,"tested_sha":"60707875f7ecedbbe55ff28de4f8b64961711aad","conclusion":"success"},
+    "d3":{"run_id":41937190400,"job_id":126948659648,"tested_sha":"60707875f7ecedbbe55ff28de4f8b64961711aad","conclusion":"success"},
+    "d0_d4":{"run_id":41937190378,"job_id":126948543162,"tested_sha":"60707875f7ecedbbe55ff28de4f8b64961711aad","conclusion":"success"},
+    "d5":{"run_id":41928234377,"tested_sha":"baf696af1e951cbf4a79e8a9e009c60c6b053b2d","artifact_id":13369179742,"conclusion":"success"},
+    "d6":{"run_id":41929888796,"job_id":126923812128,"tested_sha":"48ae9fbf5a7264834a523504706a7c04b654061b","artifact_id":13371094066,"conclusion":"success"}
+  },
+  "limitations_preserved":true,
+  "project_classification":"T2_INTERIM / NOT_FINAL_BLOCKED",
+  "final_accepted":"NOT_DECLARED",
+  "p17_final_accepted":"NOT_DECLARED",
+  "p18_released":"NOT_DECLARED",
+  "converged":"NOT_DECLARED",
+  "e0_started":false
+}
