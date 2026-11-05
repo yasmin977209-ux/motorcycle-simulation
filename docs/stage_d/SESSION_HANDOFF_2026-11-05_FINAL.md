@@ -268,3 +268,44 @@ Downloadable copies were materialized for six artifacts: `12852969854`, `1328877
 D0-D4 Run `42055739374` is still `in_progress` on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`; Job `127343509424` remains in dependency installation and downstream D4 pagination/Raw readback steps are pending. Per long-running workflow policy, no wait or duplicate run was started. D1-D2 Run `42055739478` and D3 Run `42055739378` completed SUCCESS on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`.
 
 Permanent binary retention remains BLOCKED: Git history preserves text/source records only; Actions artifacts expire; Release publication requires a separate owner decision; no external storage connector/archive has been established. E3/E4/E5/E6 remain NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical artifact mutation, main write, merge, force-push, or Release occurred.
+
+
+---
+
+## REV3 Prompt Library publication and live-state correction — 2026-11-05 (append-only)
+
+### Live baseline before this write
+- Repository: `yasmin977209-ux/motorcycle-simulation`
+- Branch: `tmp/d1-rebuild-20261101`
+- Pre-write branch HEAD: `413d1322c046299ea7c3557583d8d25cf37192fb`
+- main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`
+- Compare: diverged, 954 ahead / 2 behind; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- No open PR uses the active branch; 16 repository-wide open PRs are on other branches. Releases: zero.
+
+### Exact-head Actions recheck on pre-write HEAD
+- D1-D2 Run `42059899115`: SUCCESS; Job `127358322171`; tested SHA `413d1322c046299ea7c3557583d8d25cf37192fb`.
+- D3 Run `42059899239`: SUCCESS; Job `127358325043`; tested SHA `413d1322c046299ea7c3557583d8d25cf37192fb`.
+- D0-D4 Run `42059899061`: SUCCESS; Job `127361530536`; tested SHA `413d1322c046299ea7c3557583d8d25cf37192fb`.
+- These are exact-head results for the pre-write HEAD only. They do not validate the resulting REV3 commit.
+
+### Current disposition
+- D0–D6: `PASS_SCOPED_WITH_LIMITATIONS`.
+- E0/E1/E2: `PASS_SCOPED` within documentary/audit scopes.
+- E3–E6: `NOT_STARTED`; E3 Readiness is not E3 Acceptance Execution.
+- Project: `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- Financial Gate A: `PASS_SCOPED`; Production Gate A: `NOT_DECLARED`.
+- Gate B run-specific N=2400 result: `FAIL_SCOPED (10/10)`; consolidated classification `CONFLICTED` pending full identity reconciliation.
+- Stability: `NOT_CONVERGED (0/60)`; N=4800: `NOT_EXECUTED`.
+- Five historical accounting fields remain `MISSING_EVIDENCE`.
+
+### Artifact retention recheck
+All 29 Artifacts listed in the 2026-11-05 inventory were re-queried via Actions API and were `expired=false` at this check. Earliest expiry: D0 aggregate `12852969854` at 2026-11-27T21:46:36Z. D3 `13288779998`, D5 `13369179742`, D6 `13371094066`, and D0-D4 evidence expire 2026-12-04/05. D1 Full Logging and C100 expire Jan 2027. The 20 E2 scenario Artifacts plus aggregate expire 2027-02-03. No permanent external archive exists. Six prior temporary downloads do not prove permanent retention or independent ZIP SHA-256 verification.
+
+### D3 lineage correction
+Artifact `13288779998` was produced by Source Run `41754147172`, tested SHA `3325fd961005c2c47de071d25904a748af7a21a6`; Run `41914970361` is the separate Acceptance Run.
+
+### Excel packaging proposal captured
+The Git tree contains `deliverables/Full_Results_EN.xlsx` (27,722,355 bytes; blob `a01c1f4061da731de24fcc8d061113bb195e65b1`) and `deliverables/النتائج_الكاملة_AR.xlsx` (27,734,273 bytes; blob `056b7f482bbb84583526f093ae886e13b8c01356`). Five C-group parts per language are specified in REV3, with all five G values per C group. This remains a derived packaging plan; original files are untouched and byte-level workbook content has not been read in this session.
+
+### Scope and non-actions
+REV3 updates prompt guidance and continuity only. No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.

@@ -995,3 +995,15 @@ Owner decision `D-2026-10-30-REFERENCE-V2.4.0` remains `APPROVED_BY_OWNER` and c
 Main incident: owner authorized a normal Revert, commit `01a6f79eedc522bb734ed9c5ea31beee581f2468`, which removes only the accidentally added master report. No force-push or history rewrite. Main is read-only henceforth absent a new owner decision.
 
 For the full evidence matrix, run IDs, artifact IDs/digests/retention, gate limitations, open PR/release inspection and next steps, read [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md). This addendum does not authorize E0, final acceptance, release, trials, Monte Carlo or N expansion.
+
+
+---
+
+## إشعار REV3 — 2026-11-05 (Append-only)
+
+تم إصدار المكتبة التشغيلية الأحدث:
+- [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV3.md](PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV3.md)
+- الحالة: current operational prompt library.
+- REV3 supersedes REV2 في الحالة الحية، ترتيب الاستئناف، الاحتفاظ بالـArtifacts، وتصميم Scenario Packaging.
+- تبقى هذه النسخة محفوظة كسجل تاريخي ولا تُحذف أو يُعاد كتابة محتواها السابق.
+- في كل جلسة، أعد التحقق من GitHub HEAD وملفات الحالة؛ لا تعتبر snapshot REV3 بديلاً عن التحقق الحي.

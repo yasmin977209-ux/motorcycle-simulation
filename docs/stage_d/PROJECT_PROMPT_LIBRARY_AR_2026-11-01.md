@@ -862,3 +862,15 @@ metric × scenario × checkpoint × method × threshold × result × evidence.
 - Two 185-sheet workbooks were generated from results/number_registry.json only; see D3 remote evidence ledger.
 - D3 remains BLOCKED_MISSING_EVIDENCE: C100 daily distributions, representative P50 daily logs, detailed asset/accounting/partner/guarantee/contracts ledgers and closure-date distributions are not represented in Number Registry.
 - No D4, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main update, PR, merge or Release.
+
+
+---
+
+## إشعار REV3 — 2026-11-05 (Append-only)
+
+تم إصدار المكتبة التشغيلية الأحدث:
+- [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV3.md](PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV3.md)
+- الحالة: current operational prompt library.
+- REV3 supersedes REV2 في الحالة الحية، ترتيب الاستئناف، الاحتفاظ بالـArtifacts، وتصميم Scenario Packaging.
+- تبقى هذه النسخة محفوظة كسجل تاريخي ولا تُحذف أو يُعاد كتابة محتواها السابق.
+- في كل جلسة، أعد التحقق من GitHub HEAD وملفات الحالة؛ لا تعتبر snapshot REV3 بديلاً عن التحقق الحي.
