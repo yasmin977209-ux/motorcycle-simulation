@@ -13,3 +13,9 @@
 - No business rule, reference bytes, threshold, identity, historical Artifact/manifest, or main branch was changed. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, merge, force-push, or Release.
 - E2 has not started; do not start it under this request.
 - `docs/PROJECT_HANDOFF.md` was not modified.
+
+## Addendum — 2026-11-05
+- Added `docs/post_d/E1_RECONCILIATION_ADDENDUM.md` after reading D3 manifest, D3 final acceptance Markdown/JSON, D5 preflight JSON and D5 workflow correction.
+- D3 records contain a further direct status conflict: historical manifest `d3_gate_status=BLOCKED_MISSING_EVIDENCE`, requirement D3-18 `NOT_RUN`, versus artifact-level D3-18 `PASS_SCOPED` in the final acceptance narrative/top-level field. The requirement-level `NOT_RUN` remains visible; no historical manifest changed.
+- D5 preflight's `publication_commit_sha` repeats the tested SHA; workflow correction identifies `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a` as publication-evidence commit. Historical JSON preserved unchanged.
+- E1 matrix C12 is narrowed to a role-separation review note; no direct D3/D4 value conflict was established.
