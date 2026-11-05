@@ -167,3 +167,15 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 - D1-D2 Run `41938370466`, D3 Run `41938370426`, and D0-D4 Run `41938370461` succeeded on exact tested SHA `97120ff43434bad84d110a1087fbbc9b437e826a`.
 - D5 Run `41928234377` remains tested at `baf696af1e951cbf4a79e8a9e009c60c6b053b2d`; D6 Run `41929888796` remains tested at `48ae9fbf5a7264834a523504706a7c04b654061b`.
 - Fixed gates and missing fields remain unchanged; E1 only next. No Trials, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge or Release.
+
+
+## E1 Governance Reconciliation — 2026-11-05 (append-only)
+
+- E1 disposition: `PASS_SCOPED` — documentary/governance reconciliation only; `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- E0 files were re-read; D0–D6 closure and exact tested SHA metadata were reviewed. D5/D6 successes were not attributed to a different HEAD.
+- E1 deliverables: E1 governance reconciliation, owner decisions required, machine-readable decision register, and E1 continuity.
+- Conflicts retained and clarified: v2.4.0 stale header vs owner approval; D3-18 requirement `NOT_RUN` vs scoped top-level result; D5 tested SHA vs publication evidence commit; superseded D1/D6/session status snapshots.
+- Gate limits unchanged: Gate A financial `PASS_SCOPED`; Production Gate A `NOT_DECLARED`; Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`.
+- Five accounting fields `MISSING_EVIDENCE`; 105 manifest statuses `NOT_VERIFIED`; Full Logging 105 representative keys; C100 Golden and Full 177-test suite `NOT_RUN`.
+- No rule/threshold/identity changes, Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, historical Artifact/manifest mutation, main write, merge, force-push, or Release. E2 not started.
+- E1 baseline HEAD: `3c11c11cbe71bdf6e0ca3f1499853b13a7ffde59`.
