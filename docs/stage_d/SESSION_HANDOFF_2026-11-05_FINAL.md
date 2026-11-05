@@ -404,3 +404,17 @@ See [docs/stage_d/LIVE_REVALIDATION_AND_ARTIFACT_INVENTORY_CORRECTION_2026-11-05
 - Dropbox folder readback: 9/9 files, `has_more=false`, 1,375,253,616 bytes, matching source Artifact sizes. Byte-hash comparison and restore test remain `NOT_RUN`; only one external durable copy is evidenced.
 - D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED`; E3–E6 remain `NOT_STARTED`. Fixed financial/statistical gate states and five missing historical accounting fields remain unchanged.
 - Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`. The new S6+C100 lineage remains gated on separate final owner confirmation. No E3, Trial, Monte Carlo, identity change, main write, merge, or Release occurred.
+
+
+---
+
+## REV6 gate-readiness handoff — 2026-11-05 (append-only)
+
+The current gate verdict is recorded in [REV6_GATE_READINESS_AUDIT_2026-11-05.md](../post_d/REV6_GATE_READINESS_AUDIT_2026-11-05.md).
+
+- D0–D6 and E0–E1 remain scoped closures only; none is established as `PASS_GAP_FREE` under REV6.
+- E2 audit and old-identity replay are scoped sub-results only. The E2 phase gate is `BLOCKED` because the five original historical accounting fields and complete original 48K daily ledgers remain `MISSING_EVIDENCE`.
+- The old-identity replay is not original historical evidence and cannot substitute for the missing original records.
+- Global Preservation remains `BLOCKED`: one Dropbox copy of nine priority ZIPs exists with matching size metadata only; no byte-hash comparison, restore test or second independent durable copy is proven.
+- E3–E6 must remain `NOT_STARTED`. E3 requires D0–D6 and E0–E2 `PASS_GAP_FREE` plus Global Preservation `PASS`.
+- New S6+C100 execution requires separate final owner confirmation. Do not dispatch Trials/Monte Carlo or create D0'–D6' before that confirmation.
