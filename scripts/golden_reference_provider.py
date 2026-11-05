@@ -298,6 +298,17 @@ def statistical_execution_status(
                     blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:P90_Held_Assets:{state}")
                 else:
                     blockers.append(f"STATISTICAL_COMPONENT_NOT_ACCEPTED:{name}:{state}")
+                continue
+
+            # Do not let a status string override unresolved evidence recorded
+            # on the component. Production acceptance requires an explicit
+            # empty blocker inventory and no outstanding implementation gap.
+            component_blockers = value.get("blockers")
+            if not isinstance(component_blockers, list) or component_blockers:
+                blockers.append(f"STATISTICAL_COMPONENT_BLOCKERS_UNRESOLVED:{name}")
+            implementation_gap = value.get("implementation_gap")
+            if implementation_gap not in (None, ""):
+                blockers.append(f"STATISTICAL_COMPONENT_IMPLEMENTATION_GAP:{name}")
 
     return {
         "authorized": not blockers,
