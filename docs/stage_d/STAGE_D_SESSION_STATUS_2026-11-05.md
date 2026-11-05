@@ -146,3 +146,14 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 - D3-18 conflict and D1 105 normalized manifest NOT_VERIFIED statuses remain visible. Invariant gates and five missing accounting fields unchanged.
 - D5 full 177-test suite NOT_RUN; D6 tests 176/179/180/181/183 and historical invocations 175/182/186 NOT_RUN.
 - FINAL_ACCEPTED/P17_FINAL_ACCEPTED/P18_RELEASED/CONVERGED NOT_DECLARED; E0–E6 NOT_STARTED. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release.
+
+
+## Final exact-head stabilization trigger — 2026-11-05 (append-only)
+
+- Branch HEAD immediately before this final status append: 9bc1744ae2e435efcd6f0cd3d31e150c1741b6e8.
+- This is the last planned documentation write in this closure session. After its commit, no further branch writes are intended; the new commit is the final candidate HEAD for D1–D2, D3 and D0–D4 exact-head workflows.
+- Consolidated closure: [D0_D6_MASTER_CLOSURE_2026-11-05.md](D0_D6_MASTER_CLOSURE_2026-11-05.md).
+- Final handoff: [D0_D6_FINAL_HANDOFF_2026-11-05.md](D0_D6_FINAL_HANDOFF_2026-11-05.md).
+- Evidence ledger: [D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json](D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json).
+- D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS only; project T2_INTERIM / NOT_FINAL_BLOCKED. E0–E6 NOT_STARTED; all final acceptance and release flags NOT_DECLARED.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity changes, main write, merge or Release.
