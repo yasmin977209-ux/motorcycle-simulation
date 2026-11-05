@@ -157,3 +157,13 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 - Evidence ledger: [D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json](D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json).
 - D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS only; project T2_INTERIM / NOT_FINAL_BLOCKED. E0–E6 NOT_STARTED; all final acceptance and release flags NOT_DECLARED.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity changes, main write, merge or Release.
+
+
+## E0 Post-D6 Gap Inventory — 2026-11-05 (append-only)
+
+- E0 disposition: `PASS_SCOPED` as a complete gap inventory within the inspected evidence; no upstream gaps are closed by E0.
+- Owner explicitly authorized E0 in chat after D6 revalidation.
+- E0 files: `docs/post_d/E0_POST_D_GAP_REGISTER.md`, `docs/post_d/E0_POST_D_GAP_REGISTER.json`, `docs/post_d/E0_POST_D_CONTINUITY.md`.
+- D1-D2 Run `41938370466`, D3 Run `41938370426`, and D0-D4 Run `41938370461` succeeded on exact tested SHA `97120ff43434bad84d110a1087fbbc9b437e826a`.
+- D5 Run `41928234377` remains tested at `baf696af1e951cbf4a79e8a9e009c60c6b053b2d`; D6 Run `41929888796` remains tested at `48ae9fbf5a7264834a523504706a7c04b654061b`.
+- Fixed gates and missing fields remain unchanged; E1 only next. No Trials, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge or Release.
