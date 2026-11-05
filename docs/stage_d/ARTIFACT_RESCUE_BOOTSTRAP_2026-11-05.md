@@ -68,3 +68,12 @@ The GitHub metadata digests remain the recorded source digests; this session did
 
 ## Next safe action
 After the owner connects an external storage destination (Dropbox or another approved archive), upload the exact downloaded ZIPs, re-read each remote object, compare size and SHA-256 to the GitHub artifact digest, and perform a restore/download test. Prioritize the 535.6 MB D3 and 519.1 MB D5 archives, then D1 Full Logging and D0 aggregate. Do not claim Global Preservation PASS until two independent durable copies and restore evidence exist.
+
+
+## Dropbox Rescue Readback Correction — 2026-11-05T18:26:19Z (append-only)
+- The owner approved Dropbox destination `/Motorcycle-Simulation-Rescue-2026-11-05/`; all nine priority GitHub Actions ZIPs uploaded with Dropbox `completed` responses.
+- Fresh Dropbox folder readback returned exactly nine files (`has_more=false`), with returned sizes matching the source Artifact metadata: total 1,375,253,616 bytes (1,311.54 MiB). Full file-by-file path/size table: [ARTIFACT_RESCUE_DROPBOX_READBACK_2026-11-05.md](ARTIFACT_RESCUE_DROPBOX_READBACK_2026-11-05.md).
+- The nine source artifacts were re-queried through their associated workflow runs; all nine are `expired=false`. The same run inventory returned 29/29 unexpired artifacts (9 priority + 20 E2 replay). Expiry timestamps remain active and unchanged.
+- Important limitation: no ZIP extraction, independent ZIP-byte SHA-256, digest comparison against GitHub artifact digests, or restore test was performed. Dropbox listing and byte-size equality are not content-integrity proof.
+- One Dropbox archive copy now exists; Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE` pending second independent durable copy, exact byte-hash comparison and restore test. No phone copy, GitHub Release, main write, merge, or stage promotion.
+- Live bootstrap at 18:26Z: branch HEAD `bbb97a643ad5b1bc6137e54262ddafabae26394a`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; diverged 971 ahead / 2 behind; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
