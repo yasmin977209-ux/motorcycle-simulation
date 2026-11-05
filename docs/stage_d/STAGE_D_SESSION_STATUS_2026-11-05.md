@@ -270,3 +270,18 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - D0-D6 `PASS_SCOPED_WITH_LIMITATIONS`; E0/E1/E2 `PASS_SCOPED`; E3-E6 `NOT_STARTED`; project `T2_INTERIM / NOT_FINAL_BLOCKED`.
 - E2 Run `41958935113` is old-identity replay reconstruction only, not execution of the proposed new S6/C100 lineage. New S6/C100 remains `WAIT_FINAL_OWNER_CONFIRMATION`.
 - Plan-only approval; no Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, backfill, zero-fill, identity/rule/reference/threshold change, historical Artifact mutation, main write, merge, or Release.
+
+
+## REV3 review/correction addendum — 2026-11-05 (append-only)
+
+Live pre-write baseline: branch `tmp/d1-rebuild-20261101` HEAD `d24d67c6eb196b4f59c59d73390b483d0f1ade5c`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare diverged 943 ahead / 2 behind.
+
+- D1-D2 Run [42044376943](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42044376943): SUCCESS on exact workflow HEAD `d24d67c...`.
+- D3 Run [42044376989](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42044376989): SUCCESS on exact workflow HEAD `d24d67c...`.
+- D0-D4 Run [42038599379](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42038599379): SUCCESS on `e508daf3520e2fec267e10745fb46c020dd24dec`, not current HEAD; no current-head D0-D4 pass is claimed.
+
+D5 Artifact 13369179742 metadata: 519,116,689 bytes; digest `80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1`; expires 2026-12-04T22:49:30Z. ZIP bytes and durable archive were not verified.
+
+REV3 corrections: `Potential_Coverage_Cells=604`; `Required_Output_Coverage_Cells=PENDING_MATRIX_VALIDATION` until applicability is demonstrated. E2 dispositions are historical audit `PASS_SCOPED`, old-identity replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`, and new S6/C100 `WAIT_FINAL_OWNER_CONFIRMATION`. E3 Readiness is documentation/inventory only and distinct from E3 Acceptance Execution; formal E3 remains `NOT_STARTED`. Gate B remains `CONFLICTED` pending SOURCE_SHA/cohort/seed/scenario/N/checkpoint/Run/Job/tested-SHA/Artifact reconciliation.
+
+No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, protected identity/rule/reference/threshold changes, historical Artifact mutation, main write, merge, Release, or final acceptance. Financial Gate A remains `PASS_SCOPED`; Production Gate A `NOT_DECLARED`; Stability `NOT_CONVERGED (0/60)`.
