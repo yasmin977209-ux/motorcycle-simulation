@@ -37,7 +37,7 @@ The following source files were fetched from GitHub at exact source execution co
 ## 4. Independent corroboration
 - [Run 40787081064](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40787081064), tested SHA `ef6f25bc2b5dd718f9623f75fc4dffbc0f52ace3`: 98,323,918 persisted daily rows checked for `Net_Equity == Capital + Retained_Earnings`; zero mismatches. The audit explicitly reports all five fields missing, `full_balance_sheet_status=MISSING_EVIDENCE`, and `acceptance=NOT_GRANTED`.
 - [Run 40761382163](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40761382163), tested SHA `cb139583b04f43e19c3e6b9df2faa4a6e01bb5e7`: 48,000 Trial rows and 2,086,550 daily distribution rows; Trial fingerprints and aggregate digest matched, but independent daily-balance recheck remained missing.
-- [Run 40784902124](https://github.com/yasmin977209-ux/motorcycle-simulation/motorcycle-simulation/actions/runs/40784902124), tested SHA `e7527b42ed30a26a857c5b25064f5419d0dc6c14`: daily accounting audit failed closed; 48,000 fingerprints matched, but `rows_recomputed=0`.
+- [Run 40784902124](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40784902124), tested SHA `e7527b42ed30a26a857c5b25064f5419d0dc6c14`: daily accounting audit failed closed; 48,000 fingerprints matched, but `rows_recomputed=0`.
 - [Run 41098699740](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41098699740): 105 representative keys only (100 S6 + 5 C100); not the original 48K per-Trial daily ledgers.
 - Stage 12/13 and C100 are separate lineages and are not substitutes.
 
