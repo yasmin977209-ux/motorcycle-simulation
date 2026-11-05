@@ -182,3 +182,13 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 
 - E1 append-only correction: `docs/post_d/E1_RECONCILIATION_ADDENDUM.md` records D3 manifest `BLOCKED_MISSING_EVIDENCE` / D3-18 `NOT_RUN` versus later Artifact-level `PASS_SCOPED`, and D5 preflight's stale `publication_commit_sha` versus actual publication-evidence commit `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`. Historical records remain unchanged.
 - E1 C12 is narrowed to a role-separation review note; no direct D3/D4 value conflict was established.
+
+
+## E2 historical accounting serialization finding — 2026-11-05 (append-only)
+
+- Original S6 daily callback at execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609` persists a reduced projection; all five full-balance fields are omitted before `daily_snapshots.parquet` serialization.
+- The engine's full balance snapshot is computed in memory but is not the payload serialized by the S6 callback. This explains the historical evidence gap.
+- Original preserved S6 daily artifacts cannot close the five-field gap through their persisted daily-snapshot member. Keep all five `MISSING_EVIDENCE`; Production Gate A `NOT_DECLARED`.
+- E2 read-only audit remains `PASS_SCOPED`; this forensic clarification does not upgrade Production Gate A.
+- Deterministic replay of exactly 20×2,400 existing S6 Trial IDs with the same source/cohort/seed is the only identified computational recovery route. It is not authorized yet and must not be run without explicit owner approval. No Trials, Simulation, Monte Carlo, replay, backfill, zero-fill, or identity change occurred.
+- E3 not started; await the owner decision recorded in `docs/post_d/E2_OWNER_DECISION_REQUIRED.md`.

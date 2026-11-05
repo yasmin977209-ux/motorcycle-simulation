@@ -154,3 +154,14 @@ The following exact Raw URLs were fetched at their containing commits after the 
 | `docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md` | `60707875f7ecedbbe55ff28de4f8b64961711aad` | `b6f788c3eec0865d4ad7943e4ca81198069a8310` | 11,403 | `5e1b583e2937f5818734f39edd4d55874581ef985d695716664dcf4a7942c82e` |
 
 The master handoff file itself was created at `fe8723a7dfed6b06c26fce5b5d879de736c9567b`, Git blob `c5b165ad353b5c6dee1d51df511e74dc84694f08`, 14,730 bytes. Its exact Raw SHA-256 and containing commit are to be recorded in the final session response after the last append-only evidence update. The branch HEAD must be re-read after that update; no historical review-start SHA is a substitute for the exact final HEAD.
+
+
+---
+
+## E2 accounting gap forensic handoff — 2026-11-05
+
+- The S6 source writer's persisted daily snapshot is a reduced projection from `monte_carlo.py::_daily_snapshot`; the full accounting snapshot is computed in memory but is not serialized through the callback.
+- This proves a source-serialization omission, not zero balances. Original artifact recovery cannot supply the five fields via the persisted daily-snapshot path.
+- Keep the five fields `MISSING_EVIDENCE` and Production Gate A `NOT_DECLARED`.
+- The owner must explicitly choose the deterministic replay reconstruction specified in `docs/post_d/E2_OWNER_DECISION_REQUIRED.md` or preserve the gap. No replay or new Trial was dispatched.
+- All historical artifacts/manifests remain untouched. E3 remains not started.

@@ -3349,3 +3349,14 @@ Main accidental-write incident is resolved by owner-authorized normal Revert `01
 - Five fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
 - Stage 12 dataset identity is different and was not reused for S6. Financial Gate A remains `PASS_SCOPED`; Production Gate A remains `NOT_DECLARED`; Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`.
 - No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or new workflow run in this session. E3 not started.
+
+
+## E2 forensic closure of original-artifact search — 2026-11-05 (append-only)
+
+- Forensic addendum: `docs/post_d/E2_SOURCE_SERIALIZATION_FORENSIC_ADDENDUM_2026-11-05.md`.
+- At source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`, `monte_carlo.py::_daily_snapshot` emits a reduced daily projection; `run_single_trial` captures that row through `on_day_end`; `scripts/s6_first_checkpoint.py::snapshot_record` adds identity metadata only; and the S6 writer persists those rows as `daily_snapshots.parquet`. The five balance-sheet fields are not serialized on this path.
+- The accounting engine computes a full balance snapshot in memory, but this is distinct from the reduced persisted S6 callback payload. The original preserved daily projection cannot recover the omitted fields.
+- Corroborating historical runs: 40787081064 (98,323,918 partial daily rows; zero Net Equity identity mismatches; full balance sheet missing; acceptance not granted), 40761382163 (48,000 fingerprints matched; independent daily balance recheck missing), and 40784902124 (daily accounting recheck failed; rows_recomputed=0).
+- The five fields remain `MISSING_EVIDENCE`; Production Gate A remains `NOT_DECLARED`. Financial Gate A remains `PASS_SCOPED`.
+- The original-artifact search path is closed on the inspected S6 producer and persisted artifact contract. A deterministic replay is the only identified computational route, and requires separate explicit owner authorization. Any replay must be separately labelled and must not overwrite or be represented as original preserved history.
+- No replay, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, artifact/manifest mutation, workflow dispatch, main write, merge, or Release occurred. E3 remains not started.

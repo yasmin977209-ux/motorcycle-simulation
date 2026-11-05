@@ -14,3 +14,15 @@
 - No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, force-push, or Release. No new workflow was run in this session.
 - E3 has not started.
 - `docs/PROJECT_HANDOFF.md` was not modified; this file and append-only project/session entries are the E2 handoff.
+
+
+## E2 source-serialization forensic addendum — 2026-11-05
+
+- Read-only forensic follow-up at branch HEAD `ed9b67f49dfeb80f27be9b7150d9ed37c1cfc68e`; main remained `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Root cause confirmed in the original S6 producer path: `monte_carlo.py::_daily_snapshot` explicitly serializes a reduced daily row and omits all five full-balance fields. `run_single_trial` passes that reduced row through `on_day_end`; `scripts/s6_first_checkpoint.py::snapshot_record` only adds scenario/source/cohort/schema metadata and does not restore omitted fields; the resulting rows are written to `daily_snapshots.parquet`.
+- The runtime accounting engine does calculate a full `balance_sheet_snapshot` and records it in the in-memory project state, but the S6 persistence callback serializes a separate reduced projection. Runtime calculation is not proof of historical persistence.
+- E2 Run 40787081064 checked 98,323,918 persisted daily rows, found zero partial Net Equity identity mismatches, and explicitly returned `full_balance_sheet_status=MISSING_EVIDENCE` / `acceptance=NOT_GRANTED`. Run 40761382163 matched 48,000 Trial fingerprints but did not establish full daily accounting.
+- The original preserved S6 scenario artifacts cannot supply the five omitted fields through the persisted daily-snapshot path. The five fields remain `MISSING_EVIDENCE`; Production Gate A remains `NOT_DECLARED`.
+- No artifact was downloaded or modified in this follow-up; no Trial, Simulation, Monte Carlo, replay, backfill, zero-fill, identity change, workflow dispatch, or historical manifest mutation occurred.
+- The only identified computational recovery path is a separately authorized deterministic replay, labelled replay-derived rather than original preserved history, with exact comparison to original Trial fingerprints and all overlapping daily fields. Any mismatch must fail closed. No replay is authorized here.
+- E3 remains not started. This addendum closes the original-artifact search path only; it does not close the historical accounting gap or Production Gate A.

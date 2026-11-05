@@ -630,3 +630,17 @@ The owner-authorized Revert of the accidental main write is `01a6f79eedc522bb734
 - D5 41928234377 / Artifact 13369179742 and D6 41929888796 / Artifact 13371094066 are verified only at their respective tested SHAs.
 - Preserve D3-18 status conflict, D1 105 manifest NOT_VERIFIED states, all gate limitations and five missing accounting fields. D5 177-test suite and D6 acceptance tests remain NOT_RUN as listed in the closure report.
 - E0–E6 remain NOT_STARTED; FINAL_ACCEPTED/P17_FINAL_ACCEPTED/P18_RELEASED/CONVERGED remain NOT_DECLARED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge or Release.
+
+
+---
+
+## E2 accounting forensic handoff override — 2026-11-05
+
+Read first: `docs/post_d/E2_SOURCE_SERIALIZATION_FORENSIC_ADDENDUM_2026-11-05.md`, `docs/post_d/E2_ACCOUNTING_EVIDENCE_AUDIT.md`, and `docs/post_d/E2_OWNER_DECISION_REQUIRED.md`.
+
+- Review baseline before this documentation append: branch `tmp/d1-rebuild-20261101` at `ed9b67f49dfeb80f27be9b7150d9ed37c1cfc68e`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Original S6 daily callback persisted a reduced projection. The full balance snapshot existed in runtime memory but the persisted `daily_snapshots.parquet` path omitted all five fields.
+- Do not claim that the original historical accounting gap is closed. Keep Production Gate A `NOT_DECLARED` and all five fields `MISSING_EVIDENCE`.
+- Owner decision required: either authorize the precisely scoped replay in the E2 owner memo, or preserve the gap. Do not dispatch replay/Trials/Monte Carlo before that decision.
+- Preserve all original artifacts and manifests. Any replay output must be a new artifact, separately labelled `REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED`, with exact fingerprint/daily-field comparison and full daily balance checks.
+- E3 has not started. Do not move to E3 until the E2 gate disposition is resolved and documented.
