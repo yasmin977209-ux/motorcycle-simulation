@@ -210,3 +210,20 @@ Current dispositions remain D0-D6 `PASS_SCOPED_WITH_LIMITATIONS`, E0/E1/E2 `PASS
 Run `41958935113` is a successful old-identity replay reconstruction only (execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`, SOURCE_SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`). It is not the proposed new S6/C100 lineage. New S6/C100 still waits for explicit final owner confirmation.
 
 REV3 authorizes documentation/planning only. No E3-E6 execution, Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/rule/reference/threshold change, historical Artifact/manifest mutation, main write, merge, Release or final acceptance is authorized or performed.
+
+
+---
+
+## REV3 review/correction handoff — 2026-11-05 (append-only)
+
+Latest live pre-write baseline: branch `tmp/d1-rebuild-20261101` = `d24d67c6eb196b4f59c59d73390b483d0f1ade5c`; main = `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare diverged, 943 ahead / 2 behind.
+
+Review addendum: [MASTER_EXECUTION_PLAN_REV3_REVIEW_AND_CORRECTION_ADDENDUM.md](../post_d/MASTER_EXECUTION_PLAN_REV3_REVIEW_AND_CORRECTION_ADDENDUM.md).
+
+Exact Actions readback: D1-D2 Run 42044376943 SUCCESS on `d24d67c...`; D3 Run 42044376989 SUCCESS on `d24d67c...`; D0-D4 Run 42038599379 SUCCESS on `e508daf...` (older, not current exact-head evidence).
+
+D5 Artifact 13369179742: metadata only verified; 519,116,689 bytes; digest `sha256:80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1`; expires 2026-12-04T22:49:30Z. ZIP bytes and permanent archival are not verified.
+
+Corrections: 604 is potential coverage arithmetic only; applicability matrix pending. E2 historical audit / old-identity replay / new S6-C100 are separate dispositions; new lineage waits for final owner confirmation. E3 Readiness is documentation-only and distinct from E3 Acceptance Execution; formal E3 remains NOT_STARTED. Gate B remains CONFLICTED pending exact identity/checkpoint/run/artifact reconciliation.
+
+No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, protected identity/rule/reference/threshold change, historical Artifact mutation, main write, merge, Release, or final acceptance. Continue only documentation-only E3 readiness after a fresh baseline; do not enter E3 acceptance execution without its formal gate.
