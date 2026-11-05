@@ -195,3 +195,18 @@ The previous review-start note that D0–D4 exact-head validation had not yet pa
 The earlier Run 41952532356 remains a preserved historical exact-head race failure; it is superseded for the `225974b...` candidate by the successful D0–D4 Run 41954633829. These results do not close Test 176, the full 177-test suite, Production Gate A, Gate B, Stability, or any owner-only decision.
 
 This is the validation of the candidate HEAD before this append-only status refresh. The new commit created by this refresh must itself be checked by its own exact-head workflows before being called final.
+
+
+---
+
+## Master Execution Plan REV3 — 2026-11-05 (append-only)
+
+Created [MASTER_EXECUTION_PLAN_REV3.md](../post_d/MASTER_EXECUTION_PLAN_REV3.md), plan creation commit `8a84168fe469fe855ef8c5d0a6689eaf9bed52e8`.
+
+Baseline before plan write: working branch `tmp/d1-rebuild-20261101` HEAD `e508daf3520e2fec267e10745fb46c020dd24dec`; main HEAD `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare divergent, 938 ahead / 2 behind. Prompt library REV2, governing reference/owner decision, E0/E1/E2 records and D0-D6 closure/handoff were re-read.
+
+Current dispositions remain D0-D6 `PASS_SCOPED_WITH_LIMITATIONS`, E0/E1/E2 `PASS_SCOPED`, E3-E6 `NOT_STARTED`; project `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+Run `41958935113` is a successful old-identity replay reconstruction only (execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`, SOURCE_SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`). It is not the proposed new S6/C100 lineage. New S6/C100 still waits for explicit final owner confirmation.
+
+REV3 authorizes documentation/planning only. No E3-E6 execution, Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/rule/reference/threshold change, historical Artifact/manifest mutation, main write, merge, Release or final acceptance is authorized or performed.
