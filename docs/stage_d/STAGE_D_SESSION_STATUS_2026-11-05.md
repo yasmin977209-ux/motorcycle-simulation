@@ -179,3 +179,6 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 - Five accounting fields `MISSING_EVIDENCE`; 105 manifest statuses `NOT_VERIFIED`; Full Logging 105 representative keys; C100 Golden and Full 177-test suite `NOT_RUN`.
 - No rule/threshold/identity changes, Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, historical Artifact/manifest mutation, main write, merge, force-push, or Release. E2 not started.
 - E1 baseline HEAD: `3c11c11cbe71bdf6e0ca3f1499853b13a7ffde59`.
+
+- E1 append-only correction: `docs/post_d/E1_RECONCILIATION_ADDENDUM.md` records D3 manifest `BLOCKED_MISSING_EVIDENCE` / D3-18 `NOT_RUN` versus later Artifact-level `PASS_SCOPED`, and D5 preflight's stale `publication_commit_sha` versus actual publication-evidence commit `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`. Historical records remain unchanged.
+- E1 C12 is narrowed to a role-separation review note; no direct D3/D4 value conflict was established.
