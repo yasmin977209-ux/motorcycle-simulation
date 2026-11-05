@@ -26,3 +26,13 @@
 - No artifact was downloaded or modified in this follow-up; no Trial, Simulation, Monte Carlo, replay, backfill, zero-fill, identity change, workflow dispatch, or historical manifest mutation occurred.
 - The only identified computational recovery path is a separately authorized deterministic replay, labelled replay-derived rather than original preserved history, with exact comparison to original Trial fingerprints and all overlapping daily fields. Any mismatch must fail closed. No replay is authorized here.
 - E3 remains not started. This addendum closes the original-artifact search path only; it does not close the historical accounting gap or Production Gate A.
+
+
+## Consolidated cross-domain gap disposition — 2026-11-05
+
+- Latest review baseline: branch `a237a3005867e0735b380480ca6cb141bca0440f`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Read [E0–E2 Evidence Gap Disposition](E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md) and its JSON register for the current D0–D6/E0–E2 phase states, exact-head workflows, accounting producer root cause, all fixed gates, 28-output/15-gap inventory, unresolved owner decision and documentation freshness.
+- D1–D2 Run 41952618662 and D3 Run 41952618680 succeeded on exact review-start HEAD. D0–D4 Run 41952532356 tested old SHA `7ebed36...` and failed exact-head validation because the branch had moved to `a237a3005867e0735b380480ca6cb141bca0440f`; no D0–D4 exact-head PASS is claimed on `a237a3005867e0735b380480ca6cb141bca0440f`.
+- The original S6 writer serializes a reduced callback projection that omits the five full-balance fields. The original persisted daily projection cannot recover them. All five remain `MISSING_EVIDENCE`; Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`.
+- Replay reconstruction is not authorized or run. Owner must explicitly choose Option A (exact-scope replay, separately labelled and independently reconciled) or Option B (preserve gap). E3 remains not started until E2 disposition is recorded.
+- All other gate limitations, unrun tests, 105 manifest statuses, 105 representative Full Logging scope, C100 Golden NOT_RUN and lineage separation remain unchanged.

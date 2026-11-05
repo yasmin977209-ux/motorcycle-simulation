@@ -165,3 +165,17 @@ The master handoff file itself was created at `fe8723a7dfed6b06c26fce5b5d879de73
 - Keep the five fields `MISSING_EVIDENCE` and Production Gate A `NOT_DECLARED`.
 - The owner must explicitly choose the deterministic replay reconstruction specified in `docs/post_d/E2_OWNER_DECISION_REQUIRED.md` or preserve the gap. No replay or new Trial was dispatched.
 - All historical artifacts/manifests remain untouched. E3 remains not started.
+
+
+---
+
+## E0–E2 current gap handoff override — 2026-11-05 05:15 +03
+
+The latest consolidated state is recorded in [E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md](../post_d/E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md) and its JSON companion.
+
+- Review-start branch HEAD: `a237a3005867e0735b380480ca6cb141bca0440f`; main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D0–D6 `PASS_SCOPED_WITH_LIMITATIONS`; E0/E1/E2 `PASS_SCOPED`; E3–E6 `NOT_STARTED`; project `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- D1–D2 Run 41952618662 and D3 Run 41952618680 passed on exact review-start HEAD. D0–D4 Run 41952532356 failed because the branch advanced from tested SHA `7ebed36...` to the live HEAD before exact-head readback; it does not prove D0–D4 on this HEAD.
+- Original S6 daily serialization omitted the five full-balance fields; all remain `MISSING_EVIDENCE`, Production Gate A `NOT_DECLARED`. A deterministic replay is not authorized; owner must choose exact-scope replay-only reconstruction or preserve the gap.
+- Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; 105 representative logging keys only; 105 manifest statuses `NOT_VERIFIED`; C100 Golden and full 177-test suite `NOT_RUN`.
+- E3 remains not started pending explicit E2 disposition. No restricted execution, main write, merge, Release or final acceptance.

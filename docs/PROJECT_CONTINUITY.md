@@ -3360,3 +3360,15 @@ Main accidental-write incident is resolved by owner-authorized normal Revert `01
 - The five fields remain `MISSING_EVIDENCE`; Production Gate A remains `NOT_DECLARED`. Financial Gate A remains `PASS_SCOPED`.
 - The original-artifact search path is closed on the inspected S6 producer and persisted artifact contract. A deterministic replay is the only identified computational route, and requires separate explicit owner authorization. Any replay must be separately labelled and must not overwrite or be represented as original preserved history.
 - No replay, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, artifact/manifest mutation, workflow dispatch, main write, merge, or Release occurred. E3 remains not started.
+
+
+## Cross-domain gap disposition and live handoff refresh — 2026-11-05 (append-only)
+
+- Current review-start working branch HEAD: `a237a3005867e0735b380480ca6cb141bca0440f`; main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`. Branch comparison: 911 ahead / 2 behind; divergent. No branch rebase/merge or main write.
+- Current consolidated gap record: `docs/post_d/E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md` and `.json`.
+- D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0 `PASS_SCOPED`; E1 `PASS_SCOPED`; E2 `PASS_SCOPED`; E3–E6 `NOT_STARTED`. Overall `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- Exact-head runs on `a237a3005867e0735b380480ca6cb141bca0440f`: D1–D2 Run 41952618662 SUCCESS; D3 Run 41952618680 SUCCESS. D0–D4 Run 41952532356 tested `7ebed36...` and failed the exact-head assertion because the live branch moved to `a237a3005867e0735b380480ca6cb141bca0440f`; it is not a D4 content failure, but no exact-head D0–D4 PASS is established for `a237a3005867e0735b380480ca6cb141bca0440f`.
+- Accounting root cause: original S6 callback persisted a reduced daily projection and omitted all five full-balance fields before Parquet serialization. Runtime in-memory calculations do not prove historical persistence. The five fields remain `MISSING_EVIDENCE`; Production Gate A `NOT_DECLARED`; Financial Gate A `PASS_SCOPED`.
+- Owner decision still required before any deterministic replay: exact 20×2,400 S6 scope, same source/cohort/seed/Trial IDs, new immutable replay-only artifact, full fingerprint/daily overlap and `Assets == Equity` validation; or preserve the gap. No replay/Trial/Simulation/Monte Carlo was run.
+- Preserve Gate B `FAIL_SCOPED (10/10)`, Stability `NOT_CONVERGED (0/60)`, N=4800 `NOT_EXECUTED`, Full Logging 105 representative keys, manifest `NOT_VERIFIED_105_OF_105`, C100 Golden `NOT_RUN`, full 177 suite `NOT_RUN`, tests 176/179/180/181/183 and historical invocations 175/182/186 `NOT_RUN`.
+- E3 not started; `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, `CONVERGED` remain `NOT_DECLARED`. S6/C100/Stage 12/13 lineages remain separate.

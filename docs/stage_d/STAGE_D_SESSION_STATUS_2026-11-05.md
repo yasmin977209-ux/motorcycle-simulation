@@ -192,3 +192,17 @@ See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) f
 - E2 read-only audit remains `PASS_SCOPED`; this forensic clarification does not upgrade Production Gate A.
 - Deterministic replay of exactly 20×2,400 existing S6 Trial IDs with the same source/cohort/seed is the only identified computational recovery route. It is not authorized yet and must not be run without explicit owner approval. No Trials, Simulation, Monte Carlo, replay, backfill, zero-fill, or identity change occurred.
 - E3 not started; await the owner decision recorded in `docs/post_d/E2_OWNER_DECISION_REQUIRED.md`.
+
+
+---
+
+## E0–E2 cross-domain status refresh — 2026-11-05 05:15 +03 (append-only)
+
+- Current review-start HEAD: `a237a3005867e0735b380480ca6cb141bca0440f`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D0–D6: `PASS_SCOPED_WITH_LIMITATIONS` each; E0 `PASS_SCOPED`; E1 `PASS_SCOPED`; E2 `PASS_SCOPED`; E3–E6 `NOT_STARTED`.
+- Exact-head: D1–D2 Run 41952618662 SUCCESS and D3 Run 41952618680 SUCCESS on `a237a3005867e0735b380480ca6cb141bca0440f`. D0–D4 Run 41952532356 failed exact-head validation because its tested SHA was `7ebed36...` while live HEAD was `a237a3005867e0735b380480ca6cb141bca0440f`; no D0–D4 exact-head PASS on `a237a3005867e0735b380480ca6cb141bca0440f`.
+- E2 accounting producer root cause: reduced callback serialization omits all five full-balance fields. They remain `MISSING_EVIDENCE`; Production Gate A `NOT_DECLARED`; Financial Gate A `PASS_SCOPED`.
+- Owner decision required before deterministic replay; no replay or new Trial was run. See `docs/post_d/E2_OWNER_DECISION_REQUIRED.md`.
+- Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only; manifest `NOT_VERIFIED_105_OF_105`; C100 Golden `NOT_RUN`; full 177 suite `NOT_RUN`; D6 tests 176/179/180/181/183 and historical invocations 175/182/186 `NOT_RUN`.
+- Consolidated gap register: `docs/post_d/E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md` and JSON companion.
+- E3 not started. No restricted execution or final acceptance was performed.

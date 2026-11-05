@@ -644,3 +644,21 @@ Read first: `docs/post_d/E2_SOURCE_SERIALIZATION_FORENSIC_ADDENDUM_2026-11-05.md
 - Owner decision required: either authorize the precisely scoped replay in the E2 owner memo, or preserve the gap. Do not dispatch replay/Trials/Monte Carlo before that decision.
 - Preserve all original artifacts and manifests. Any replay output must be a new artifact, separately labelled `REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED`, with exact fingerprint/daily-field comparison and full daily balance checks.
 - E3 has not started. Do not move to E3 until the E2 gate disposition is resolved and documented.
+
+
+---
+
+## Current cross-domain handoff override — 2026-11-05 05:15 +03
+
+Read first: [E0–E2 Evidence Gap Disposition](post_d/E2_EVIDENCE_GAP_DISPOSITION_2026-11-05.md), [E2 source serialization forensic addendum](post_d/E2_SOURCE_SERIALIZATION_FORENSIC_ADDENDUM_2026-11-05.md), [E2 owner decision memo](post_d/E2_OWNER_DECISION_REQUIRED.md), and [live Prompt Library REV2](stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md).
+
+- Review-start branch: `tmp/d1-rebuild-20261101` at `a237a3005867e0735b380480ca6cb141bca0440f`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468` (read-only).
+- Branch is 911 commits ahead and 2 behind main; do not rebase/merge without explicit owner decision. No open PR has this branch as head; no Releases.
+- D0–D6 `PASS_SCOPED_WITH_LIMITATIONS`; E0 `PASS_SCOPED`; E1 `PASS_SCOPED`; E2 `PASS_SCOPED`; E3–E6 `NOT_STARTED`. Overall `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- D1–D2 Run 41952618662 and D3 Run 41952618680 succeeded on exact review-start HEAD `a237a3005867e0735b380480ca6cb141bca0440f`. D0–D4 Run 41952532356 tested `7ebed36...` and failed only the final exact-head check because branch HEAD had moved to `a237a3005867e0735b380480ca6cb141bca0440f`; no D0–D4 exact-head success is claimed for `a237a3005867e0735b380480ca6cb141bca0440f`.
+- S6 accounting root cause: the original daily callback persisted a reduced projection and omitted `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`. The engine's runtime in-memory full balance snapshot is not evidence that those fields were persisted historically.
+- Keep all five fields `MISSING_EVIDENCE`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Financial Gate A `PASS_SCOPED`. Do not infer/zero-fill.
+- Owner decision required: authorize exact-scope deterministic replay labelled `REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED` with complete fingerprint/daily comparison and `Assets == Equity` checks, or preserve the gap. No replay is authorized or run by this handoff.
+- Other invariant gates: Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only; manifest `NOT_VERIFIED_105_OF_105`; C100 Golden `NOT_RUN`; full 177 test suite `NOT_RUN`; D6 tests 176/179/180/181/183 and historical invocations 175/182/186 remain `NOT_RUN`.
+- D3-18 top-level artifact acceptance remains `PASS_SCOPED` while requirement invocation is `NOT_RUN`; preserve both. D5 tested SHA `baf696...` differs from publication evidence commit `4c6a84...`.
+- E3 is not started; do not start until E2 owner disposition is explicitly selected and documented. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/historical Artifact mutation/main write/merge/Release/final acceptance.

@@ -1,0 +1,94 @@
+{
+  "schema": "e0-e2-evidence-gap-disposition-v1",
+  "created_at": "2026-11-05T05:15:00+03:00",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "review_start_head": "a237a3005867e0735b380480ca6cb141bca0440f",
+  "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "branch_comparison": {"ahead_by": 911, "behind_by": 2, "status": "diverged"},
+  "open_pr_for_working_branch": false,
+  "releases": 0,
+  "phase_status": {
+    "D0_D6": "PASS_SCOPED_WITH_LIMITATIONS",
+    "E0": "PASS_SCOPED",
+    "E1": "PASS_SCOPED",
+    "E2": "PASS_SCOPED",
+    "E3_E6": "NOT_STARTED",
+    "project": "T2_INTERIM / NOT_FINAL_BLOCKED"
+  },
+  "exact_head_runs": [
+    {"scope":"D1-D2","run_id":41952618662,"tested_sha":"a237a3005867e0735b380480ca6cb141bca0440f","conclusion":"success","tests":"34 passed"},
+    {"scope":"D3","run_id":41952618680,"tested_sha":"a237a3005867e0735b380480ca6cb141bca0440f","conclusion":"success","readback":"committed D3 output Raw readback"},
+    {"scope":"D0-D4","run_id":41952532356,"tested_sha":"7ebed36f63a4b5e6d45f4da714a2658e27704120","conclusion":"failure","failure":"D0_D4_FINAL_EXACT_HEAD_MISMATCH:a237a3005867e0735b380480ca6cb141bca0440f","interpretation":"branch moved during run; no exact-head pass on review_start_head"}
+  ],
+  "accounting": {
+    "source_run":40731224990,
+    "source_execution_commit":"a23ba71f48487f3ebead99bc30039b14ef9b7609",
+    "source_sha":"da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "cohort_id":"s6-v23-da1a9ea9",
+    "master_seed":20270101,
+    "scenarios":20,
+    "trials_per_scenario":2400,
+    "trial_count":48000,
+    "producer_root_cause":"reduced daily callback projection omitted all five full-balance fields before daily_snapshots.parquet persistence",
+    "missing_fields":["Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"],
+    "full_balance_sheet_status":"MISSING_EVIDENCE",
+    "production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "financial_gate_a":"PASS_SCOPED",
+    "original_artifact_recovery_path":"CLOSED_FOR_INSPECTED_S6_PRODUCER_CONTRACT",
+    "historical_accounting_gap":"OPEN",
+    "replay_authorized":false,
+    "replay_label_if_authorized":"REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED"
+  },
+  "fixed_gates": {
+    "gate_b_n2400":"FAIL_SCOPED (10/10)",
+    "stability":"NOT_CONVERGED (0/60)",
+    "n4800":"NOT_EXECUTED",
+    "full_logging":"105 representative unique keys only (100 S6 + 5 C100)",
+    "normalized_manifest":"NOT_VERIFIED_105_OF_105",
+    "c100_golden":"NOT_RUN",
+    "full_177_test_suite":"NOT_RUN",
+    "tests_not_run":["176","179","180","181","183"],
+    "historical_test_invocations_not_run":["175","182","186"]
+  },
+  "known_conflicts": [
+    "v2.4.0 document header PROPOSED_FOR_OWNER_ADOPTION vs owner decision APPROVED_BY_OWNER; owner decision controls",
+    "D3-18 artifact-level PASS_SCOPED vs requirement invocation NOT_RUN",
+    "D5 tested SHA baf696af1e951cbf4a79e8a9e009c60c6b053b2d vs publication evidence commit 4c6a84b10ac78b6067175d0eafa149f3f12dbc2a"
+  ],
+  "other_open_gaps": [
+    "complete raw Monte Carlo/all-trial database MISSING_EVIDENCE",
+    "complete full statistics MISSING_EVIDENCE",
+    "complete event log MISSING_EVIDENCE",
+    "all-trial daily accounting balance test MISSING_EVIDENCE",
+    "five roll-forward tests MISSING_EVIDENCE",
+    "2030-12-31 interim inventory full independent readback MISSING_EVIDENCE",
+    "all-trial final close-date distribution REPORTED_ONLY",
+    "complete Parquet/SQLite all-trial database MISSING_EVIDENCE",
+    "complete 48K daily logging MISSING_EVIDENCE",
+    "REALISM_CALIBRATED_MODEL calibration MISSING_EVIDENCE",
+    "D4 full numeric-token lineage / Test 176 NOT_RUN",
+    "D0-D4 exact-head gate on review_start_head NOT_RUN"
+  ],
+  "owner_decision_required": {
+    "id":"E2-ACCOUNTING-REPLAY",
+    "option_a":"explicitly authorize exact-scope deterministic replay with same 48K identities and replay-only labeling, complete fingerprint/daily-field comparison, full Assets == Equity checks, immutable new artifacts",
+    "option_b":"preserve five fields MISSING_EVIDENCE and Production Gate A NOT_DECLARED",
+    "selected":null
+  },
+  "execution_limits": {
+    "new_trials_run":false,
+    "simulation_run":false,
+    "monte_carlo_run":false,
+    "replay_run":false,
+    "n_expanded":false,
+    "backfill_or_zero_fill":false,
+    "identity_changed":false,
+    "historical_artifacts_or_manifests_modified":false,
+    "main_written":false,
+    "merge_or_force_push":false,
+    "release_published":false,
+    "e3_started":false,
+    "final_acceptance_declared":false
+  }
+}
