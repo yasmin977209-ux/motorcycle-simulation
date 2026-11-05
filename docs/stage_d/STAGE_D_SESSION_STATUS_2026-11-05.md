@@ -464,3 +464,16 @@ See [REV6_GATE_READINESS_AUDIT_2026-11-05.md](../post_d/REV6_GATE_READINESS_AUDI
 - D0–D6 and E0–E1 have scoped evidence only, not `PASS_GAP_FREE`.
 - Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`: Dropbox has one nine-file copy with size readback only; byte-hash comparison, restore test and second independent durable copy are absent.
 - E3–E6 remain `NOT_STARTED`; E3 entry conditions are not met. New S6+C100 execution remains `WAIT_FINAL_OWNER_CONFIRMATION`.
+
+
+---
+
+## Final exact-head gate trigger and REV6 blocker disposition — 2026-11-05 (append-only)
+
+- Exact branch HEAD immediately before this final status commit: `7ac722ca26be83819fc17cb68204d6b5f95e6112`; main remains `01a6f79eedc522bb734ed9c5ea31beee581f2468`; branch comparison remains diverged.
+- D1–D2 Run [42088150922](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42088150922) completed SUCCESS on exact tested SHA `7ac722ca26be83819fc17cb68204d6b5f95e6112`.
+- D3 Run [42088151035](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42088151035) completed SUCCESS on exact tested SHA `7ac722ca26be83819fc17cb68204d6b5f95e6112`.
+- D0–D4 Run [42087456208](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42087456208) failed before DOCX/test execution because the branch moved from tested SHA `a69a846a5f8d9d4f23ecac1a8eb709562f6b77c7` to a later HEAD; log failed the initial exact-remote-HEAD assertion. This is an exact-head race, not evidence of a DOCX fingerprint or test failure. It is superseded only by a later D0–D4 run on the exact final HEAD.
+- The live REV6 gate-readiness audit [REV6_GATE_READINESS_AUDIT_2026-11-05.md](../post_d/REV6_GATE_READINESS_AUDIT_2026-11-05.md) clarifies: D0–D6 and E0–E1 have scoped evidence only; E2 read-only/replay results are scoped subtasks, while the E2 phase gate is `BLOCKED` by original missing accounting evidence; Global Preservation is `BLOCKED`; E3–E6 remain `NOT_STARTED`.
+- This status commit is the final planned documentation write for this session. Its D0–D4, D1–D2 and D3 workflows must be checked on its own exact SHA. No later branch commit is planned.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, Release or final acceptance occurred.
