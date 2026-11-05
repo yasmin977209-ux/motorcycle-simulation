@@ -73,3 +73,13 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - Run `41958935113` (tested SHA `002b74893ca9dfea864e83fecc558f2388748ffe`) has advanced from pending to `in_progress`; owner-authorization preflight is running. This is the sole current active candidate run. Its workflow has `cancel-in-progress: true` to prevent overlapping same-branch replay runs.
 - Current branch HEAD at this correction's start was `bd737a86e02a1a648603a6a0f7714fa130f55a48`; this documentation-only append does not change replay code or the tested SHA of Run 41958935113.
 - No scenario report or aggregate acceptance has yet been confirmed. E2 accounting reconstruction remains `IN_PROGRESS`; Production Gate A remains `NOT_DECLARED`; E3 remains not started.
+
+
+## New S6+C100 rebuild Preflight — 2026-11-05
+
+- New owner decision record: [E2_OWNER_DECISION_APPROVED_A_2026-11-05.md](E2_OWNER_DECISION_APPROVED_A_2026-11-05.md), commit `b66f3a95513d0a773f929eed4305fb1f8255120f`.
+- New source pin candidate `002b74893ca9dfea864e83fecc558f2388748ffe`; repair anchor `a5573eb1891ed2c56b01f6c9b3ccfe9619a08358`; new S6 cohort `s6-v23-rebuild-20261105`; proposed separate C100 cohort `c100-v23-rebuild-20261105`; `MASTER_SEED=20270101`.
+- Code inspection: repaired `_daily_snapshot` persists the full accounting projection; `rng.py` and accounting arithmetic are unchanged. Financial fingerprint equivalence remains unproven until execution and exact comparison.
+- This is Preflight only; new S6/C100 Trials and Golden revalidation remain held for final owner confirmation. C100 300-per-path repetitions remain deterministic repeats, not independent samples.
+- Prior Run `41958935113` is still active under the earlier S6 replay identity and is explicitly outside this new lineage.
+- E2 historical gap status is not retroactively changed; historical five fields remain `MISSING_EVIDENCE`. E3 remains not started.
