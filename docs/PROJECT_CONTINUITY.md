@@ -3677,3 +3677,17 @@ See [owner authorization continuity addendum](stage_d/OWNER_AUTHORIZATION_CONTIN
 - Latest observed scoped successful exact-head runs: D1–D2 `42111210356`; D3 published-output verification `42111210352`, both tested on the intake branch HEAD.
 - Global Preservation remains BLOCKED; D0–D2 remain scoped; D3 is not closed; E2 original accounting evidence remains BLOCKED; E3–E6 NOT_STARTED.
 - No new Trial/Simulation/Monte Carlo/N expansion, identity change, main write, merge, Release or final acceptance was performed by this intake.
+
+
+---
+
+## Live bootstrap and preservation review — 2026-11-06 (append-only)
+
+See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md), [Session Status](stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md), and [Continuity Handoff](stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md).
+
+- Live review-start refs: working branch `cc5753e1a37db1cc0a3ee02ab2a2f21ae08e1d3f`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468` (read-only); compare `diverged`, 1,015 ahead / 2 behind.
+- REV6 and governing v2.4.0 exact-byte SHA-256 values were recomputed and match their declared pins.
+- D0–D2 remain scoped; D3 is not closed; D3-S1/S2 are not closed; E2 original accounting remains BLOCKED; E3–E6 are NOT_STARTED.
+- Dropbox root has nine files and three same-provider mirrors. E2's 20 scenario Artifacts plus aggregate are absent. A test upload failed with INSUFFICIENT_SPACE; no partial file remained.
+- Global Preservation remains BLOCKED pending byte-level hash/ZIP/restore verification and a second independent durable provider/failure domain.
+- No new Trial, Simulation, Monte Carlo, N expansion, identity change, main write, merge, Release or final acceptance was performed.
