@@ -3417,3 +3417,13 @@ Supersedes the earlier replay run-state paragraph in this append-only file:
 - Run 41958854203 (tested SHA 65578376a428befa0edcb5652ada0571847b1588) is cancelled; its matrix jobs are cancelled and its aggregate has no accepted scenario evidence.
 - Run 41958935113 (tested SHA 002b74893ca9dfea864e83fecc558f2388748ffe) is the sole current active candidate; it has advanced to in_progress and its owner-authorization preflight is running.
 - Documentation-only updates after the tested SHA do not alter the replay code or trial identities. No scenario report or aggregate acceptance has yet been confirmed. E2 remains IN_PROGRESS, Production Gate A NOT_DECLARED, and E3 not started.
+
+
+## E2 new-lineage rebuild Preflight — 2026-11-05
+
+- Owner decision memo created: [E2_OWNER_DECISION_APPROVED_A_2026-11-05.md](post_d/E2_OWNER_DECISION_APPROVED_A_2026-11-05.md), commit `b66f3a95513d0a773f929eed4305fb1f8255120f`.
+- Proposed new S6 source pin: `002b74893ca9dfea864e83fecc558f2388748ffe`; repair reference `a5573eb1891ed2c56b01f6c9b3ccfe9619a08358`; S6 cohort `s6-v23-rebuild-20261105`; separate proposed C100 cohort `c100-v23-rebuild-20261105`; seed remains `20270101`.
+- Preflight only. No new S6/C100 Trial, Monte Carlo, Golden revalidation, D0'–D6' build, or N expansion was dispatched.
+- Existing Run `41958935113` remains a separately tracked, already-active earlier E2 replay on the old S6 identity/source; it is not part of the new S6+C100 lineage.
+- Final owner confirmation is required before any new Trial. C100's 5 paths remain deterministic with `N_unique_paths=1`; 300 repetitions per path must not be treated as independent samples.
+- Historical D0–D6 artifacts and all original manifests remain untouched. Production Gate A remains undeclared pending new evidence review.
