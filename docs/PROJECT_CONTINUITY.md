@@ -3427,3 +3427,14 @@ Supersedes the earlier replay run-state paragraph in this append-only file:
 - Existing Run `41958935113` remains a separately tracked, already-active earlier E2 replay on the old S6 identity/source; it is not part of the new S6+C100 lineage.
 - Final owner confirmation is required before any new Trial. C100's 5 paths remain deterministic with `N_unique_paths=1`; 300 repetitions per path must not be treated as independent samples.
 - Historical D0–D6 artifacts and all original manifests remain untouched. Production Gate A remains undeclared pending new evidence review.
+
+
+## E2 replay live result verification — 2026-11-05 (append-only)
+
+- Run `41958935113` is now completed with conclusion `success` (tested workflow HEAD `002b74893ca9dfea864e83fecc558f2388748ffe`). All 20 scenario jobs and the aggregate job succeeded.
+- Each scenario job's final log line reports `PASS_SCOPED_REPLAY_RECONSTRUCTION`, 2,400 Trials, exact fingerprints, exact daily overlap, and balance validation. Aggregate reports 48,000 Trials and 98,323,918 daily rows validated.
+- Aggregate Artifact `13393273763` SHA-256 `fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1` (1,069 bytes). The downloaded ZIP was locally hashed and matched GitHub's digest; embedded JSON SHA-256 `4756203c36d578a44204c40c4ec1948312a4ec736d3b4a83588b9399f713b80e`.
+- One scenario Artifact (`C030_G050`, ID `13384613845`) was downloaded and its ZIP SHA-256 matched GitHub's artifact digest. Its manifest reports 2,400 exact fingerprint matches, 3,760,559 exact overlapping daily rows, and 3,760,559 daily balance rows validated.
+- The successful replay remains on old identity: `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, seed `20270101`, source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`. Workflow code checks out that original execution commit and wraps its original `_daily_snapshot` with an instrumentation overlay; it does not run the proposed repaired model source at `002b748...`.
+- Therefore this closes the previously active old-identity replay attempt only. It does not prove the proposed new S6 source/cohort or C100 lineage, and does not make the original historical artifacts complete. Reconstructed output is explicitly `REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED`.
+- Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`; final acceptance not granted. E3 remains not started.
