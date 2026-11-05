@@ -1,0 +1,41 @@
+{
+  "schema_version": "d3-18-invocation-reconciliation-v1",
+  "recorded_at": "2026-11-05T19:30:00Z",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "requirement": "D3-18",
+  "classification": "PASS_SCOPED",
+  "acceptance": {
+    "workflow_run_id": 41914970361,
+    "job_id": 126872113225,
+    "workflow_head_sha": "b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1",
+    "exact_final_head_after_acceptance": "c92708402b60ca18513bc952b8be5ae03e6fd262",
+    "artifact_id": 13288779998,
+    "artifact_source_run_id": 41754147172,
+    "artifact_bytes": 535567142,
+    "artifact_sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+    "verified_member_count": 15,
+    "zip_crc": "PASS",
+    "member_size_and_sha256": "PASS",
+    "workbook_sheet_count_each": 185,
+    "workbook_formula_cell_count": 0,
+    "workbook_excel_error_cell_count": 0
+  },
+  "historical_conflict": {
+    "d3_manifest_requirement_status": "NOT_RUN",
+    "d3_build_audit_requirement_status": "NOT_RUN",
+    "acceptance_report_top_level_status": "PASS_SCOPED",
+    "disposition": "Preserve the original manifests and their historical NOT_RUN values. This append-only record reconciles the later owner-authorized acceptance invocation; it does not rewrite the original Artifact or claim that the historical manifest itself was regenerated."
+  },
+  "gate": {
+    "d3_18": "PASS_SCOPED",
+    "overall_d3": "PASS_SCOPED_WITH_LIMITATIONS",
+    "d3_s": "NOT_RUN_AT_RECORD_CREATION",
+    "d4": "NOT_STARTED",
+    "final_acceptance": "NOT_GRANTED"
+  },
+  "limitations": [
+    "D3-18 scoped acceptance does not close D3-S.",
+    "D3-S must independently produce ten partitions and pass two semantic reassembly round trips.",
+    "Artifact retention is temporary and does not satisfy permanent preservation."
+  ]
+}

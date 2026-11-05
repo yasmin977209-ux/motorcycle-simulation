@@ -1,0 +1,98 @@
+name: D3-S Scenario Partitioning and Reassembly
+on:
+  push:
+    branches:
+      - tmp/d1-rebuild-20261101
+    paths:
+      - scripts/d3_s_partition.py
+      - .github/workflows/d3-s-scenario-partitioning.yml
+      - docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  partition-and-reassemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Install workbook parser
+        run: |
+          python -m pip install --upgrade openpyxl==3.1.5
+      - name: Download and verify exact D3 and D5 source Artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import hashlib, os, pathlib, requests, zipfile, stat
+          repo="yasmin977209-ux/motorcycle-simulation"
+          pins={
+            13288779998:(535567142,"e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe","d3.zip"),
+            13369179742:(519116689,"80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1","d5.zip")
+          }
+          headers={"Authorization":f"Bearer {os.environ['GITHUB_TOKEN']}","Accept":"application/vnd.github+json"}
+          out=pathlib.Path("d3-s-sources");out.mkdir(exist_ok=True)
+          for aid,(expected_size,expected_sha,name) in pins.items():
+            meta=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}",headers=headers,timeout=60);meta.raise_for_status()
+            item=meta.json()
+            if item.get("expired") or item.get("size_in_bytes")!=expected_size or item.get("digest")!=f"sha256:{expected_sha}":
+              raise SystemExit(f"ARTIFACT_METADATA_PIN_MISMATCH:{aid}")
+            r=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=120);r.raise_for_status()
+            p=out/name;h=hashlib.sha256();n=0
+            with p.open("wb") as f:
+              for chunk in r.iter_content(1024*1024):
+                if chunk:f.write(chunk);h.update(chunk);n+=len(chunk)
+            if n!=expected_size or h.hexdigest()!=expected_sha:raise SystemExit(f"ARTIFACT_BYTES_PIN_MISMATCH:{aid}:{n}:{h.hexdigest()}")
+            print(f"VERIFIED_ARTIFACT id={aid} bytes={n} sha256={h.hexdigest()}")
+          d3=zipfile.ZipFile(out/"d3.zip");d5=zipfile.ZipFile(out/"d5.zip")
+          for z in (d3,d5):
+            names=z.namelist()
+            if len(names)!=len(set(names)) or z.testzip():raise SystemExit("OUTER_ZIP_CRC_OR_DUPLICATE_FAILURE")
+            for name in names:
+              if name.startswith("/") or ".." in pathlib.PurePosixPath(name).parts or "\\" in name:raise SystemExit("UNSAFE_OUTER_ZIP_MEMBER")
+          expected_d3={"deliverables/Full_Results_EN.xlsx":(259442692,"8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"),
+                       "deliverables/النتائج_الكاملة_AR.xlsx":(259444534,"e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d")}
+          d5_names={"Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip","manifest.json","SHA256SUMS.txt"}
+          if set(d5.namelist())!=d5_names:raise SystemExit("D5_OUTER_INVENTORY_MISMATCH")
+          import io
+          inner=zipfile.ZipFile(io.BytesIO(d5.read("Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip")))
+          if inner.testzip():raise SystemExit("D5_INNER_ZIP_CRC_FAILURE")
+          for name,(size,digest) in expected_d3.items():
+            d3_member=name
+            base=pathlib.PurePosixPath(name).name
+            if d3.getinfo(d3_member).file_size!=size:raise SystemExit("D3_WORKBOOK_SIZE_MISMATCH:"+base)
+            raw=d3.read(d3_member)
+            if len(raw)!=size or hashlib.sha256(raw).hexdigest()!=digest:raise SystemExit("D3_WORKBOOK_HASH_MISMATCH:"+base)
+            if base not in inner.namelist():raise SystemExit("D5_WORKBOOK_MISSING:"+base)
+            d5raw=inner.read(base)
+            if len(d5raw)!=size or hashlib.sha256(d5raw).hexdigest()!=digest or d5raw!=raw:
+              raise SystemExit("D3_D5_WORKBOOK_BYTE_IDENTITY_MISMATCH:"+base)
+            target=out/base;target.write_bytes(raw)
+            print(f"VERIFIED_D3_D5_WORKBOOK {base} bytes={size} sha256={digest} exact_byte_match=true")
+          d3.close();d5.close();inner.close()
+          PY
+      - name: Partition both source workbooks and perform two semantic round trips
+        run: |
+          set -euo pipefail
+          python scripts/d3_s_partition.py \
+            --english "d3-s-sources/Full_Results_EN.xlsx" \
+            --arabic "d3-s-sources/النتائج_الكاملة_AR.xlsx" \
+            --outdir "permanent_archive/v240_stage_d/d3_s"
+      - name: Verify all ten outputs and publish D3-S Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: D3-S-10-workbooks-and-equivalence-evidence
+          path: |
+            permanent_archive/v240_stage_d/d3_s/*.xlsx
+            permanent_archive/v240_stage_d/d3_s/*.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Exact tested SHA and artifact inventory
+        run: |
+          set -euo pipefail
+          echo "D3_S_TESTED_SHA=$GITHUB_SHA"
+          find permanent_archive/v240_stage_d/d3_s -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
