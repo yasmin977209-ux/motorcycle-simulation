@@ -1,0 +1,53 @@
+{
+  "schema": "e1-decision-register-v1",
+  "created_at": "2026-11-05",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "baseline_head": "3c11c11cbe71bdf6e0ca3f1499853b13a7ffde59",
+  "e1_status": "PASS_SCOPED",
+  "project_classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "next_stage": "E2",
+  "next_stage_started": false,
+  "current_governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+  "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+  "reconciliations": [
+    {"id":"E1-C01","classification":"CONFLICTED","issue":"v2.4.0 stale header vs owner approval","disposition":"owner decision governs; reference bytes unchanged"},
+    {"id":"E1-C02","classification":"CONFLICTED","issue":"D3-18 requirement NOT_RUN vs top-level scoped disposition","disposition":"retain requirement NOT_RUN"},
+    {"id":"E1-C03","classification":"CONFLICTED","issue":"D5 tested SHA vs publication evidence commit","tested_sha":"baf696af1e951cbf4a79e8a9e009c60c6b053b2d","publication_evidence_commit_sha":"4c6a84b10ac78b6067175d0eafa149f3f12dbc2a","disposition":"keep identities distinct"},
+    {"id":"E1-C04","classification":"CONFLICTED","issue":"earlier D1 BLOCKED snapshot vs later final scoped closure","disposition":"later append-only closure governs"},
+    {"id":"E1-C05","classification":"CONFLICTED","issue":"older Stage D status snapshot vs later D0-D6 closure","disposition":"later closure governs"},
+    {"id":"E1-C06","classification":"CONFLICTED","issue":"historical D6 root audit vs run-specific current audit pointers","disposition":"use current run-specific pointers"},
+    {"id":"E1-C07","classification":"MISSING_EVIDENCE","issue":"105 manifest statuses NOT_VERIFIED","disposition":"no inference"},
+    {"id":"E1-C08","classification":"NOT_RUN","issue":"Full 177-test suite and selected acceptance tests","disposition":"preserve per-test statuses"},
+    {"id":"E1-C09","classification":"MISSING_EVIDENCE","issue":"five historical 48K accounting fields","disposition":"no inference or zero-fill"},
+    {"id":"E1-C10","classification":"PASS_SCOPED","issue":"Gate B/stability/N4800 states reconciled","disposition":"preserve FAIL_SCOPED/NOT_CONVERGED/NOT_EXECUTED"}
+  ],
+  "fixed_gates": {
+    "financial_gate_a":"PASS_SCOPED",
+    "production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400":"FAIL_SCOPED (10/10)",
+    "stability":"NOT_CONVERGED (0/60)",
+    "n4800":"NOT_EXECUTED",
+    "full_logging":"105 representative keys only",
+    "normalized_manifest":"NOT_VERIFIED_105_OF_105",
+    "c100_golden":"NOT_RUN",
+    "full_177_test_suite":"NOT_RUN",
+    "missing_accounting_fields":["Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"]
+  },
+  "owner_approval_required_for": ["new Trials/Simulation/Monte Carlo/N expansion", "backfill or inference of missing historical accounting", "business-rule/reference/threshold changes", "historical Artifact/manifest mutation", "main write/merge/force-push/Release"],
+  "execution_limits": {
+    "business_rules_changed":false,
+    "thresholds_changed":false,
+    "identities_changed":false,
+    "trials_run":false,
+    "simulation_run":false,
+    "monte_carlo_run":false,
+    "n_expanded":false,
+    "backfill_or_zero_fill":false,
+    "historical_artifacts_or_manifests_modified":false,
+    "main_written":false,
+    "merge_or_force_push":false,
+    "release_published":false,
+    "e2_started":false
+  }
+}
