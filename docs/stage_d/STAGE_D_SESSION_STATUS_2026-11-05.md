@@ -425,3 +425,15 @@ Because this file resides under docs/stage_d, the REV6 library and audit links a
 - Important limitation: no ZIP extraction, independent ZIP-byte SHA-256, digest comparison against GitHub artifact digests, or restore test was performed. Dropbox listing and byte-size equality are not content-integrity proof.
 - One Dropbox archive copy now exists; Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE` pending second independent durable copy, exact byte-hash comparison and restore test. No phone copy, GitHub Release, main write, merge, or stage promotion.
 - Live bootstrap at 18:26Z: branch HEAD `bbb97a643ad5b1bc6137e54262ddafabae26394a`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; diverged 971 ahead / 2 behind; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+
+
+---
+
+## Live Repository and Preservation Revalidation — 2026-11-05T18:33:00Z (append-only)
+
+See [LIVE_REVALIDATION_ADDENDUM_2026-11-05_1833Z.md](LIVE_REVALIDATION_ADDENDUM_2026-11-05_1833Z.md) for the exact baseline, reference hashes, scoped phase dispositions, 29-artifact readback, Dropbox nine-file readback, and preservation blockers.
+
+- Exact branch HEAD before this record: `2c2d48a443ef642b52303feacd9122d1ceb30099`; exact main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare diverged, 976 ahead / 2 behind; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED` within scope; E3–E6 `NOT_STARTED`. E2 new S6/C100 lineage still awaits final owner confirmation.
+- Actions retention: 29/29 Artifacts unexpired. Dropbox: 9/9 priority ZIPs present with exact size readback. Byte SHA-256 comparison, restore test, and independent second durable copy remain missing; Global Preservation remains `BLOCKED`.
+- No phase execution, protected identity change, main write, merge, Release, or final acceptance occurred.
