@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
   actions: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
 concurrency:
   group: e2-s6-deterministic-replay-${{ github.ref }}
   cancel-in-progress: false
