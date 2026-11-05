@@ -261,3 +261,12 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - This is **not** the new S6+C100 rebuild. The workflow checked out original source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609` and appended an instrumentation wrapper. Output retains old `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7` and old cohort `s6-v23-da1a9ea9`.
 - New S6 cohort `s6-v23-rebuild-20261105` and separate C100 cohort `c100-v23-rebuild-20261105` remain NOT_RUN pending explicit final owner confirmation. New Golden and D0'–D6' remain NOT_RUN.
 - Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`; Gate B and Stability unchanged; no final acceptance.
+
+
+## Master Execution Plan REV3 — 2026-11-05 (append-only)
+
+- Created `docs/post_d/MASTER_EXECUTION_PLAN_REV3.md`; plan creation commit `8a84168fe469fe855ef8c5d0a6689eaf9bed52e8`.
+- Baseline before plan write: branch HEAD `e508daf3520e2fec267e10745fb46c020dd24dec`; main HEAD `01a6f79eedc522bb734ed9c5ea31beee581f2468`; diverged, 938 ahead / 2 behind.
+- D0-D6 `PASS_SCOPED_WITH_LIMITATIONS`; E0/E1/E2 `PASS_SCOPED`; E3-E6 `NOT_STARTED`; project `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- E2 Run `41958935113` is old-identity replay reconstruction only, not execution of the proposed new S6/C100 lineage. New S6/C100 remains `WAIT_FINAL_OWNER_CONFIRMATION`.
+- Plan-only approval; no Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, backfill, zero-fill, identity/rule/reference/threshold change, historical Artifact mutation, main write, merge, or Release.
