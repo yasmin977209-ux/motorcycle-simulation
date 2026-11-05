@@ -320,3 +320,16 @@ The current operational prompt library is [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_
 REV4 does not retroactively promote any phase. D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS; E0/E1/E2 remain PASS_SCOPED within their documented scope; old-identity E2 replay is PASS_SCOPED_REPLAY_RECONSTRUCTION only. Five historical accounting fields remain MISSING_EVIDENCE; Production Gate A remains NOT_DECLARED; Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. E3–E6 remain NOT_STARTED.
 
 Global Preservation Gate remains BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE. The 29 Actions artifacts were unexpired in the 2026-11-05 API check, but temporary availability is not permanent retention; six earlier temporary downloads do not prove phone storage or an independent archive. No new Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.
+
+ 
+---
+ 
+## REV5 Prompt Library Handoff — 2026-11-05 (Append-only)
+
+Use `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV5.md` as the current operational prompt library, subject to fresh GitHub verification in every session. The four prior libraries remain preserved; their merge rationale is in `docs/stage_d/REV5_LIBRARY_MERGE_AUDIT_2026-11-05.md`.
+
+REV5's major operational change is the mandatory D3-S scenario partition sub-gate within D3: five C groups, each retaining G000/G030/G050/G070/G100, producing five derived workbooks per language. Originals remain untouched. Actual sheet-to-scenario mapping and semantic equivalence must be proven from source workbook bytes.
+
+When the owner sends a single phase name, execute only that phase after live bootstrap and predecessor-gate verification. Do not advance automatically. A scoped pass does not satisfy zero-gap closure. Owner-only decisions and physical phone/archive actions remain explicit limitations.
+
+No phase execution or acceptance promotion occurred in this library-update session. Existing stage dispositions remain historical/scoped until revalidated. Global Preservation Gate remains blocked until two independent durable copies and restore evidence are proven. No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, historical artifact/manifest mutation, main write, merge, force-push, Release or final acceptance was performed.
