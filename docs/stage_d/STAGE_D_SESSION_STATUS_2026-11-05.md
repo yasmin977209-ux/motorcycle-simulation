@@ -437,3 +437,17 @@ See [LIVE_REVALIDATION_ADDENDUM_2026-11-05_1833Z.md](LIVE_REVALIDATION_ADDENDUM_
 - D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED` within scope; E3–E6 `NOT_STARTED`. E2 new S6/C100 lineage still awaits final owner confirmation.
 - Actions retention: 29/29 Artifacts unexpired. Dropbox: 9/9 priority ZIPs present with exact size readback. Byte SHA-256 comparison, restore test, and independent second durable copy remain missing; Global Preservation remains `BLOCKED`.
 - No phase execution, protected identity change, main write, merge, Release, or final acceptance occurred.
+
+
+---
+
+## Live revalidation and retention inventory correction — 2026-11-05T18:39:38Z (append-only)
+
+See [docs/stage_d/LIVE_REVALIDATION_AND_ARTIFACT_INVENTORY_CORRECTION_2026-11-05.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/LIVE_REVALIDATION_AND_ARTIFACT_INVENTORY_CORRECTION_2026-11-05.md) for the exact live revalidation, run IDs, artifact metadata corrections, Dropbox readback, and remaining blockers.
+
+- Baseline branch HEAD before the report commit: `b1072bc3d5905d658adb7794821effffa936eef7`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare diverged 980 ahead / 2 behind.
+- D1–D2 Run 42085999599 and D3 Run 42085999457 succeeded on that exact baseline SHA. No D0–D4 exact-head success is claimed on it.
+- Requeried all 29 expected Actions Artifacts: 29/29 found, 29/29 unexpired, all sizes match. Two malformed digest strings in the inventory are corrected by the live values recorded in the linked addendum; no Artifact bytes or historical manifests were changed.
+- Dropbox folder readback: 9/9 files, `has_more=false`, 1,375,253,616 bytes, matching source Artifact sizes. Byte-hash comparison and restore test remain `NOT_RUN`; only one external durable copy is evidenced.
+- D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED`; E3–E6 remain `NOT_STARTED`. Fixed financial/statistical gate states and five missing historical accounting fields remain unchanged.
+- Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`. The new S6+C100 lineage remains gated on separate final owner confirmation. No E3, Trial, Monte Carlo, identity change, main write, merge, or Release occurred.
