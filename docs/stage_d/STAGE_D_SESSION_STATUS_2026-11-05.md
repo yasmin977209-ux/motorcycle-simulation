@@ -243,3 +243,11 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - Run `41958935113` (tested SHA `002b74893ca9dfea864e83fecc558f2388748ffe`) has advanced from pending to `in_progress`; owner-authorization preflight is running. This is the sole current active candidate run. Its workflow has `cancel-in-progress: true` to prevent overlapping same-branch replay runs.
 - Current branch HEAD at this correction's start was `bd737a86e02a1a648603a6a0f7714fa130f55a48`; this documentation-only append does not change replay code or the tested SHA of Run 41958935113.
 - No scenario report or aggregate acceptance has yet been confirmed. E2 accounting reconstruction remains `IN_PROGRESS`; Production Gate A remains `NOT_DECLARED`; E3 remains not started.
+
+
+## Session Preflight update — 2026-11-05
+
+- Completed read-only code/identity preflight for a proposed independent S6+C100 accounting rebuild and recorded the owner scope in `docs/post_d/E2_OWNER_DECISION_APPROVED_A_2026-11-05.md`.
+- New source pin candidate: `002b74893ca9dfea864e83fecc558f2388748ffe`; old S6 source: `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; repair reference: `a5573eb1891ed2c56b01f6c9b3ccfe9619a08358`.
+- No new Trials or Monte Carlo were started. Final owner confirmation remains required. Existing old-identity Run `41958935113` remains active and separate.
+- No historical artifact, `main`, or original D0–D6 output was changed.
