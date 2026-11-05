@@ -3588,3 +3588,12 @@ No phase was executed or promoted by this documentation update. D0–D6 and E0�
 - REV6 adds detailed phase contracts, exact predecessor gating, traceability matrices, test invocation evidence, root-cause remediation, negative/boundary coverage, GitHub size guardrails, permanent-retention restore requirements, and phone-copy limitations.
 - No D0 or later phase was executed or closed. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/historical Artifact mutation/main write/merge/Release/final acceptance occurred.
 - The project phase statuses and preservation gate remain unchanged until separately revalidated and closed by their own evidence.
+
+
+## Live Bootstrap & Evidence Rescue — 2026-11-05 (append-only)
+- Live branch HEAD before this record: `8177b0948081d38223a00652892930c7afb9c8d8`; live main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; branch diverged ahead 970 / behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Recomputed governing v2.4.0 Raw SHA-256 from exact GitHub bytes: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; 401,397 bytes. Owner decision `D-2026-10-30-REFERENCE-V2.4.0` is live and `APPROVED_BY_OWNER`.
+- Re-queried all 29 Actions artifacts in the current retention inventory; all `expired=false`. Nearest expiry: D0 aggregate `12852969854`, 2026-11-27T21:46:36Z. D3 `13288779998` (535,567,142 bytes) and D5 `13369179742` (519,116,689 bytes) expire 2026-12-04. D1 Full Logging `12998778418` (310,827,203 bytes) expires 2027-01-28.
+- Downloaded nine priority artifact ZIPs into temporary ChatGPT-hosted file objects; no independent ZIP-byte SHA-256 pass and no durable external archive/phone copy are claimed. Full list and digests/expiry metadata: [ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md).
+- Permanent binary retention remains `BLOCKED` pending external storage connection and verified upload/restore. GitHub Release was not attempted; it requires a separate owner decision.
+- Exact current HEAD had successful D1-D2 Run `42078525625` and D3 Run `42078525547`; neither proves D0-D4 exact-head closure or final acceptance. No phase execution/promotion occurred.

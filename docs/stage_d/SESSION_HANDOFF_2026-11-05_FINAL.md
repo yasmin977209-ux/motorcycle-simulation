@@ -359,3 +359,13 @@ No phase execution or acceptance promotion occurred in this library-update sessi
 Because this file resides under docs/stage_d, the REV6 library and audit links are absolute GitHub URLs:
 - https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md
 - https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/REV6_LIBRARY_REVIEW_AUDIT_2026-11-05.md
+
+
+## Live Bootstrap & Evidence Rescue — 2026-11-05
+- Live pre-write HEAD `8177b0948081d38223a00652892930c7afb9c8d8`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; branch diverged 970 ahead / 2 behind.
+- Governing v2.4.0 bytes re-hashed from GitHub Raw: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; 401,397 bytes.
+- Rechecked all 29 inventory artifacts: 29 unexpired. Nearest expiry D0 aggregate `12852969854` on 2026-11-27T21:46:36Z. Key large artifacts: D3 `13288779998` 535,567,142 bytes; D5 `13369179742` 519,116,689 bytes; Full Logging `12998778418` 310,827,203 bytes.
+- Nine priority ZIPs downloaded to temporary ChatGPT-hosted files; this is not permanent retention and ZIP-byte SHA-256 was not independently recomputed in this session.
+- Exact-head D1-D2 Run `42078525625` and D3 Run `42078525547` succeeded on `8177b0948081d38223a00652892930c7afb9c8d8`; D0-D4 exact-head closure is not claimed. No stage executed or promoted.
+- External archive is still blocked pending owner connection of Dropbox or another approved destination. No Release, phone copy, or Global Preservation PASS is claimed.
+- See [ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md).

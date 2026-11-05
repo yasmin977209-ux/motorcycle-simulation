@@ -405,3 +405,14 @@ Global Preservation Gate remains BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE. The
 Because this file resides under docs/stage_d, the REV6 library and audit links are absolute GitHub URLs:
 - https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md
 - https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/REV6_LIBRARY_REVIEW_AUDIT_2026-11-05.md
+
+
+## Live Bootstrap & Evidence Rescue — 2026-11-05 (append-only)
+- Branch HEAD at bootstrap: `8177b0948081d38223a00652892930c7afb9c8d8`; main HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; branch ahead 970 / behind 2.
+- Governing v2.4.0 Raw SHA-256 independently recomputed from exact GitHub bytes and matched: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`; blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`; 401,397 bytes.
+- All 29 inventory Actions artifacts were re-queried; all remain unexpired. Earliest expiry is D0 aggregate `12852969854` at 2026-11-27T21:46:36Z.
+- Nine priority artifact ZIPs were downloaded into temporary ChatGPT-hosted file objects (IDs: 12852969854, 12998778418, 12630457193, 13288779998, 13364064483, 13369179742, 13371094066, 13373853115, 13382253631). ZIP bytes were not independently re-hashed in this session; no permanent archive or phone save is claimed.
+- Current exact-head runs: D1-D2 Run `42078525625` and D3 Run `42078525547` succeeded on `8177b0948081d38223a00652892930c7afb9c8d8`. They do not prove D0-D4 exact-head closure or final acceptance.
+- Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE` until external archive upload, readback/hash, second independent durable copy, and restore test. Dropbox connection is pending owner action; Release remains owner-protected.
+- No D0–E6 phase was executed or promoted in this rescue session. Fixed gate dispositions and missing accounting fields remain unchanged.
+- Full record: [ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/ARTIFACT_RESCUE_BOOTSTRAP_2026-11-05.md).
