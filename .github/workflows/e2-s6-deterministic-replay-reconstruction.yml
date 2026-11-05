@@ -35,6 +35,12 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: execution-source/requirements.txt
+      - name: Verify explicit owner authorization for Option A
+        run: |
+          set -euo pipefail
+          grep -Fq 'Decision state: OWNER_AUTHORIZED_OPTION_A' docs/post_d/E2_OWNER_DECISION_REQUIRED.md
+          grep -Fq 'REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED' docs/post_d/E2_OWNER_DECISION_REQUIRED.md
+          grep -Fq '48,000 Trials' docs/post_d/E2_OWNER_DECISION_REQUIRED.md
       - name: Verify exact original source run and execution revision
         run: |
           set -euo pipefail
