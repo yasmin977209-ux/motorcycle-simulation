@@ -1,6 +1,6 @@
 """D3-S1 partitioning and D3-S2 semantic reassembly for the pinned D3 workbooks."""
 from __future__ import annotations
-import argparse, copy, datetime, hashlib, json, re, sys, gc
+import argparse, copy, datetime, hashlib, json, re, sys, gc\nimport xml.etree.ElementTree as ET
 from pathlib import Path
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell.cell import MergedCell
@@ -44,7 +44,7 @@ def sheet_digest(ws):
       "merged":[str(x) for x in ws.merged_cells.ranges],
       "rows":{str(k):dim_record(v) for k,v in sorted(ws.row_dimensions.items())},
       "columns":{str(k):dim_record(v) for k,v in sorted(ws.column_dimensions.items())},
-      "cells":cells,"auto_filter":str(ws.auto_filter),
+      "cells":cells,"auto_filter":ET.tostring(ws.auto_filter.to_tree(),encoding="unicode"),
       "data_validations":[str(x) for x in getattr(ws.data_validations,"dataValidation",[])],
       "conditional_formatting":[(str(k),[str(x) for x in v]) for k,v in getattr(ws.conditional_formatting,"_cf_rules",{}).items()],
       "page_setup":str(ws.page_setup),"page_margins":str(ws.page_margins),
