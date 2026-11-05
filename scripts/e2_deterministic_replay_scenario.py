@@ -47,7 +47,10 @@ def main():
    tr=[]; dr=[]
    for result in results:
     tid=int(result.trial_id); newfp[tid]=str(result.trial_fingerprint)
-    rec=asdict(result); rec.update(source_sha=SOURCE_SHA,cohort_id=COHORT,model_schema_version="v2.3",replay_label=LABEL); tr.append(rec)
+    # Persist only the canonical Trial identity/fingerprint tuple. The complete
+    # asdict(result) contains arbitrary-precision counters outside Arrow int64;
+    # those are not needed for the authorized parity comparison.
+    tr.append({"trial_id":tid,"trial_fingerprint":str(result.trial_fingerprint),"source_sha":SOURCE_SHA,"cohort_id":COHORT,"model_schema_version":"v2.3","replay_label":LABEL})
     rows=sorted(daily[tid],key=lambda x:str(x["date"]))
     if not rows: raise RuntimeError(f"REPLAY_DAILY_ROWS_MISSING:{tid}")
     for row in rows:
