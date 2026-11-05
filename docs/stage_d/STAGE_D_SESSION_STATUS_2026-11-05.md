@@ -366,3 +366,16 @@ The current operational prompt library is [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_
 REV4 does not retroactively promote any phase. D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS; E0/E1/E2 remain PASS_SCOPED within their documented scope; old-identity E2 replay is PASS_SCOPED_REPLAY_RECONSTRUCTION only. Five historical accounting fields remain MISSING_EVIDENCE; Production Gate A remains NOT_DECLARED; Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. E3–E6 remain NOT_STARTED.
 
 Global Preservation Gate remains BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE. The 29 Actions artifacts were unexpired in the 2026-11-05 API check, but temporary availability is not permanent retention; six earlier temporary downloads do not prove phone storage or an independent archive. No new Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.
+
+ 
+---
+ 
+## REV5 Library Update — 2026-11-05 (Append-only)
+
+- Consolidated the four live prompt libraries (REV1–REV4) into `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV5.md`.
+- Added full D0–D6/E0–E6 prompt contracts, zero-gap hard stop, one-stage-at-a-time dispatch, exact evidence/lineage/retention requirements, and protected-owner decision boundaries.
+- Added mandatory D3-S sub-gate for ten derived workbooks (five per language), five C partitions × five G levels, with source-preserving and semantic-equivalence checks.
+- Added `docs/stage_d/REV5_LIBRARY_MERGE_AUDIT_2026-11-05.md`.
+- REV5 remote readback: SHA-256 `090f7c36b83308bd0d54054de913dc0df707bd214fcd3cf9a31cc939e01ea2a2`; blob SHA-1 `2c8d8595c69251e80b050013f856417e9cf77ba0`; 52,364 bytes; containing commit `28367e7edbe16c5555daa3a65dab78ce9ac547e9`.
+- This update did not execute any stage, run any Trial/Simulation/Monte Carlo, change business rules/identity/reference, alter historical artifacts/manifests, modify main, merge, force-push, publish Release, or declare final acceptance.
+- Current branch HEAD advanced by documentation commits only; exact final HEAD must be recorded after all continuity updates and remote readback.
