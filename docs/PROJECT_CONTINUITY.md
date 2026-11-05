@@ -3537,3 +3537,14 @@ The Git tree contains `deliverables/Full_Results_EN.xlsx` (27,722,355 bytes; blo
 
 ### Scope and non-actions
 REV3 updates prompt guidance and continuity only. No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.
+
+
+---
+
+## REV4 Operational Prompt Library Notice — 2026-11-05 (Append-only)
+
+The current operational prompt library is [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV4.md](../stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV4.md) (relative link may be adjusted by the containing document). REV4 supersedes earlier prompt libraries for phase ordering, zero-gap exit gates, D3 scenario packaging, permanent-retention gate, and E3–E6 lock conditions. REV3/REV2 remain preserved as historical records only.
+
+REV4 does not retroactively promote any phase. D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS; E0/E1/E2 remain PASS_SCOPED within their documented scope; old-identity E2 replay is PASS_SCOPED_REPLAY_RECONSTRUCTION only. Five historical accounting fields remain MISSING_EVIDENCE; Production Gate A remains NOT_DECLARED; Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. E3–E6 remain NOT_STARTED.
+
+Global Preservation Gate remains BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE. The 29 Actions artifacts were unexpired in the 2026-11-05 API check, but temporary availability is not permanent retention; six earlier temporary downloads do not prove phone storage or an independent archive. No new Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.
