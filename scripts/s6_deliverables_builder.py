@@ -64,7 +64,14 @@ def build_shared_model(paths: dict[str,str]) -> S6SharedModel:
               "trial_manifest_status":trial.get("status"),"post_write_audit_status":audit.get("status")})
             reconciliation.append({"scenario_id":key[0],"trial_id":key[1],"original_status":trial.get("status"),
               "normalized_audit_status":res["normalized_audit_status"],"identity_match":res["identity_match"],
-              "fingerprint_match":res["fingerprint_match"],"post_write_audit_pass":res["post_write_audit_pass"],"reasons":res["reasons"]})
+              "fingerprint_match":res["fingerprint_match"],"post_write_audit_pass":res["post_write_audit_pass"],
+              "trial_manifest_size_bytes":res["trial_manifest_size_bytes"],
+              "trial_manifest_zip_central_directory_size_bytes":res["trial_manifest_zip_central_directory_size_bytes"],
+              "trial_manifest_sha256":res["trial_manifest_sha256"],"trial_manifest_sha256_match":res["trial_manifest_sha256_match"],
+              "post_write_audit_size_bytes":res["post_write_audit_size_bytes"],
+              "post_write_audit_zip_central_directory_size_bytes":res["post_write_audit_zip_central_directory_size_bytes"],
+              "post_write_audit_sha256":res["post_write_audit_sha256"],"post_write_audit_sha256_match":res["post_write_audit_sha256_match"],
+              "reasons":res["reasons"]})
         s6=sum(k["cohort_id"]==S6_COHORT for k in keys); c100n=sum(k["cohort_id"]==C100_COHORT for k in keys)
         if (s6,c100n)!=(100,5): raise ValueError("COHORT_KEY_COUNTS_MISMATCH")
         return S6SharedModel("s6-shared-model-v1",GOVERNING_DECISION,GOVERNING_SHA,HISTORICAL_S6_SHA,
