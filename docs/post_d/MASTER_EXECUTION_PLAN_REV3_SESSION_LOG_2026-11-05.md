@@ -46,3 +46,13 @@ D5 Artifact 13369179742 metadata: 519,116,689 bytes; GitHub digest `sha256:80caf
 Corrections: 604 is `Potential_Coverage_Cells`; required-cell count awaits applicability matrix. E2 historical audit `PASS_SCOPED`; old replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`; new S6/C100 `WAIT_FINAL_OWNER_CONFIRMATION`. E3 Readiness is separate from E3 Acceptance Execution. Gate B remains `CONFLICTED` pending identity/checkpoint/run/artifact reconciliation.
 
 Append-only updates were made to `docs/PROJECT_CONTINUITY.md`, `docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md`, and `docs/stage_d/SESSION_HANDOFF_2026-11-05_FINAL.md`. No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, protected identity/reference/rule/threshold change, historical Artifact mutation, main write, merge, Release, or final acceptance was performed.
+
+
+## Post-write Actions exact-head readback — 2026-11-05 (append-only)
+
+The documentation commits caused branch-triggered validation runs. Intermediate D1-D2/D3 runs on commits `55f1590...`, `f2e91c7...`, `492e2e3...`, and `f6d6944...` did not all pass; those attempts are preserved and are not used as final evidence. On the then-current final commit `074ba855456a5b0a27d7dbd604d2398cd600b718`, GitHub reports:
+- D1-D2 Run `42047911700`: SUCCESS; job `127315817557` (`d1-source`) SUCCESS.
+- D3 Run `42047911649`: SUCCESS; job `127315862951` SUCCESS.
+- D0-D4 Run `42047850177` was triggered by the earlier status commit `492e2e3648f3f02da63a7e6db20725b017b53b7c` and failed only at its final remote readback with `D0_D4_FINAL_EXACT_HEAD_MISMATCH:074ba855456a5b0a27d7dbd604d2398cd600b718`, because later append-only commits advanced the branch while the run was validating. Earlier local/document checks and DOCX checks in that job passed. This is an exact-head race, not evidence that the D0-D4 content checks themselves failed; nevertheless it is not a passing exact-head validation for the final HEAD.
+
+No workflow was manually dispatched in this session. D0-D4 exact-head validation remains outstanding for the ultimate post-documentation HEAD. The current task remains documentation-only; do not infer D0-D4 current-head PASS from Run `42038599379` or from the raced Run `42047850177`.
