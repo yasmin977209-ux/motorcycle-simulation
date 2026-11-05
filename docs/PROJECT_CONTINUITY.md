@@ -3620,3 +3620,17 @@ See [docs/stage_d/LIVE_REVALIDATION_AND_ARTIFACT_INVENTORY_CORRECTION_2026-11-05
 - Dropbox folder readback: 9/9 files, `has_more=false`, 1,375,253,616 bytes, matching source Artifact sizes. Byte-hash comparison and restore test remain `NOT_RUN`; only one external durable copy is evidenced.
 - D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED`; E3–E6 remain `NOT_STARTED`. Fixed financial/statistical gate states and five missing historical accounting fields remain unchanged.
 - Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`. The new S6+C100 lineage remains gated on separate final owner confirmation. No E3, Trial, Monte Carlo, identity change, main write, merge, or Release occurred.
+
+
+---
+
+## REV6 gate-readiness clarification — 2026-11-05 (append-only)
+
+See [REV6_GATE_READINESS_AUDIT_2026-11-05.md](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/post_d/REV6_GATE_READINESS_AUDIT_2026-11-05.md) for the gate-by-gate reasoning under the live REV6 library.
+
+- Scoped audit/replay results are retained as `PASS_SCOPED` / `PASS_SCOPED_REPLAY_RECONSTRUCTION`; they are not phase-level `PASS_GAP_FREE`.
+- Under REV6 §§17.2, 17.11, 18 PROMPT E2/E3 and §19, the E2 phase gate is `BLOCKED`: the five original historical accounting fields and complete original all-48K ledgers remain `MISSING_EVIDENCE`. The old-identity replay does not replace original evidence.
+- D0–D6 and E0–E1 have scoped evidence only, not `PASS_GAP_FREE`.
+- Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`: Dropbox has one nine-file copy with matching sizes, but no ZIP-byte hash comparison, no restore test and no second independent durable copy.
+- Therefore E3–E6 remain `NOT_STARTED`; E3 must not start. The new S6+C100 proposal remains `WAIT_FINAL_OWNER_CONFIRMATION` and no new Trials/Monte Carlo were run.
+- All fixed financial/statistical gate values and the five missing historical fields remain unchanged. No protected action was performed.
