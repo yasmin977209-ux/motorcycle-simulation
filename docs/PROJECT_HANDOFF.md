@@ -662,3 +662,19 @@ Read first: [E0–E2 Evidence Gap Disposition](post_d/E2_EVIDENCE_GAP_DISPOSITIO
 - Other invariant gates: Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only; manifest `NOT_VERIFIED_105_OF_105`; C100 Golden `NOT_RUN`; full 177 test suite `NOT_RUN`; D6 tests 176/179/180/181/183 and historical invocations 175/182/186 remain `NOT_RUN`.
 - D3-18 top-level artifact acceptance remains `PASS_SCOPED` while requirement invocation is `NOT_RUN`; preserve both. D5 tested SHA `baf696...` differs from publication evidence commit `4c6a84...`.
 - E3 is not started; do not start until E2 owner disposition is explicitly selected and documented. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/historical Artifact mutation/main write/merge/Release/final acceptance.
+
+
+## Post-write exact-HEAD verification — 2026-11-05
+
+The previous review-start note that D0–D4 exact-head validation had not yet passed on `a237a300...` is superseded for the subsequent exact candidate HEAD `225974b05527dbf2fb27d0542ae2fd7b77413774`:
+
+| Scope | Run / Job | Tested SHA | Result |
+|---|---|---|---|
+| D1–D2 | [41954633832](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633832) / 127006466583 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; 34 passed, 0 failed, 0 skipped; pinned artifact verification, compile and exact-head assertion |
+| D3 | [41954633860](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633860) / 127006467211 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; 35 committed Raw files read back and exact remote HEAD assertion |
+| D0–D4 | [41954633829](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633829) / 127006467170 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; five DOCX reopened, summary pagination and fingerprints checked, focused tests and exact Raw readback passed |
+| D0–D4 evidence Artifact | [13382253631](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633829) | — | 5,698 bytes; digest `sha256:d7811702f0e8365ca888bc49ec2652877d4d451beb4a54d87e43c0a7abcae718`; expires 2026-12-05T02:21:52Z |
+
+The earlier Run 41952532356 remains a preserved historical exact-head race failure; it is superseded for the `225974b...` candidate by the successful D0–D4 Run 41954633829. These results do not close Test 176, the full 177-test suite, Production Gate A, Gate B, Stability, or any owner-only decision.
+
+This is the validation of the candidate HEAD before this append-only status refresh. The new commit created by this refresh must itself be checked by its own exact-head workflows before being called final.

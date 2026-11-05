@@ -36,3 +36,19 @@
 - The original S6 writer serializes a reduced callback projection that omits the five full-balance fields. The original persisted daily projection cannot recover them. All five remain `MISSING_EVIDENCE`; Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`.
 - Replay reconstruction is not authorized or run. Owner must explicitly choose Option A (exact-scope replay, separately labelled and independently reconciled) or Option B (preserve gap). E3 remains not started until E2 disposition is recorded.
 - All other gate limitations, unrun tests, 105 manifest statuses, 105 representative Full Logging scope, C100 Golden NOT_RUN and lineage separation remain unchanged.
+
+
+## Post-write exact-HEAD verification — 2026-11-05
+
+The previous review-start note that D0–D4 exact-head validation had not yet passed on `a237a300...` is superseded for the subsequent exact candidate HEAD `225974b05527dbf2fb27d0542ae2fd7b77413774`:
+
+| Scope | Run / Job | Tested SHA | Result |
+|---|---|---|---|
+| D1–D2 | [41954633832](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633832) / 127006466583 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; 34 passed, 0 failed, 0 skipped; pinned artifact verification, compile and exact-head assertion |
+| D3 | [41954633860](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633860) / 127006467211 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; 35 committed Raw files read back and exact remote HEAD assertion |
+| D0–D4 | [41954633829](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633829) / 127006467170 | `225974b05527dbf2fb27d0542ae2fd7b77413774` | SUCCESS; five DOCX reopened, summary pagination and fingerprints checked, focused tests and exact Raw readback passed |
+| D0–D4 evidence Artifact | [13382253631](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41954633829) | — | 5,698 bytes; digest `sha256:d7811702f0e8365ca888bc49ec2652877d4d451beb4a54d87e43c0a7abcae718`; expires 2026-12-05T02:21:52Z |
+
+The earlier Run 41952532356 remains a preserved historical exact-head race failure; it is superseded for the `225974b...` candidate by the successful D0–D4 Run 41954633829. These results do not close Test 176, the full 177-test suite, Production Gate A, Gate B, Stability, or any owner-only decision.
+
+This is the validation of the candidate HEAD before this append-only status refresh. The new commit created by this refresh must itself be checked by its own exact-head workflows before being called final.
