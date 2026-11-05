@@ -3451,3 +3451,21 @@ Supersedes the earlier replay run-state paragraph in this append-only file:
 - تمييز E2 الحاسم: Run `41958935113` نجاح `PASS_SCOPED_REPLAY_RECONSTRUCTION` على الهوية القديمة (source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`, SOURCE_SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`). لا يمثل تشغيل السلالة الجديدة S6/C100. New S6/C100 preflight remains `WAIT_FINAL_OWNER_CONFIRMATION`.
 - REV3 تخطيط فقط؛ لا Trial/Simulation/Monte Carlo/Golden revalidation/N expansion، لا تغيير هوية أو مرجع أو قاعدة أو threshold، لا backfill/zero-fill، لا تعديل Artifact تاريخي، لا كتابة main أو merge أو Release.
 - الخطوة التالية المسموحة: استكمال توثيق بوابات الدخول ومصفوفات E3/متطلبات الأدلة على الفرع بعد baseline جديد؛ لا تبدأ E3 أو أي تشغيل إلا بعد إثبات شروط دخوله والقرارات اللازمة.
+
+
+## REV3 review/correction addendum — 2026-11-05 (append-only)
+
+A documentation-only review was completed against live GitHub immediately before writing:
+- Working branch `tmp/d1-rebuild-20261101` HEAD: `d24d67c6eb196b4f59c59d73390b483d0f1ade5c`.
+- `main` HEAD: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Compare: diverged, 943 ahead / 2 behind.
+- Live prompt library REV2 blob: `da2feb5f3ad7cca6b08b3a11f4e4e91978f6f999`.
+- New append-only review: [MASTER_EXECUTION_PLAN_REV3_REVIEW_AND_CORRECTION_ADDENDUM.md](post_d/MASTER_EXECUTION_PLAN_REV3_REVIEW_AND_CORRECTION_ADDENDUM.md).
+
+Exact workflow boundaries: D1-D2 Run `42044376943` and D3 Run `42044376989` succeeded on tested workflow HEAD `d24d67c6eb196b4f59c59d73390b483d0f1ade5c`. D0-D4 Run `42038599379` succeeded on older tested HEAD `e508daf3520e2fec267e10745fb46c020dd24dec`, not on `d24d67c...`; no current-HEAD D0-D4 validation is claimed.
+
+D5 Artifact `13369179742` metadata is live-verified: 519,116,689 bytes; GitHub digest `sha256:80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1`; expires `2026-12-04T22:49:30Z`. ZIP bytes and durable archive were not downloaded/verified in this review.
+
+REV3 corrections: 604 is `Potential_Coverage_Cells` only (`24 × 25 + 4)); `Required_Output_Coverage_Cells=PENDING_MATRIX_VALIDATION` until applicability is evidenced. E2 is split into historical audit `PASS_SCOPED`, old-identity replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`, and new S6/C100 `WAIT_FINAL_OWNER_CONFIRMATION`. E3 Readiness (documentation/inventory only) is distinct from E3 Acceptance Execution. Gate B remains `CONFLICTED` until identity/checkpoint/run/tested-SHA/artifact mapping reconciles the N=2400 statements.
+
+No Trials, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/reference/threshold/business-rule change, historical Artifact/manifest mutation, main write, merge, Release, or final acceptance was performed or authorized. E3 remains `NOT_STARTED`; project remains `T2_INTERIM / NOT_FINAL_BLOCKED`.
