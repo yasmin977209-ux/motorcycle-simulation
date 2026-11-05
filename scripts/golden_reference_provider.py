@@ -318,9 +318,13 @@ def stage10_trial_result_sha256(result: Any) -> str:
     if is_dataclass(result):
         value = asdict(result)
     elif isinstance(result, dict):
-        value = result
+        value = dict(result)
     else:
         raise TypeError("trial result must be a dataclass instance or dict")
+    # RNG audit metadata uses its own fingerprint and must not alter historic
+    # financial TrialResult hashes.
+    value.pop("rng_checksum", None)
+    value.pop("rng_draw_count", None)
     payload = json.dumps(
         value,
         ensure_ascii=False,

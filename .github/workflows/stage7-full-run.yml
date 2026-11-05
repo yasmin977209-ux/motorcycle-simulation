@@ -458,7 +458,7 @@ jobs:
               has_successful_adjacent_transition_window,
               is_statistical_checkpoint, next_statistical_checkpoint,
           )
-          from run_batch import _evaluate_gate_a_with_provider, _gate_a_target_is_covered
+          from run_batch import _evaluate_gate_a_with_provider, _gate_a_target_is_covered, _validate_rng_audits
           from scripts.golden_reference_provider import (
               GoldenReferenceProvider, stage10_trial_result_sha256,
           )
@@ -493,10 +493,13 @@ jobs:
               rows = []
               for path in sorted(BLOCKS_DIR.glob("block_*.parquet")):
                   rows.extend(pq.read_table(path).to_pylist())
-              return sorted(
+              results = sorted(
                   [monte_carlo.TrialResult(**row) for row in rows],
                   key=lambda x: x.trial_id,
               )
+              if results:
+                  _validate_rng_audits(results, expected_scenario=SCENARIO)
+              return results
 
           def statistics(results):
               values = {
@@ -569,6 +572,10 @@ jobs:
                   trial_id_start=1,
                   trial_id_end=completed,
                   fingerprint_sha256=expected_fingerprint,
+                  master_seed=MASTER_SEED,
+                  rng_checksum_fingerprint_sha256=monte_carlo.fingerprint_rng_audit(
+                      results, source_sha=SOURCE_SHA, master_seed=MASTER_SEED
+                  ),
               )
               if state.get("final_fingerprint") != expected_fingerprint:
                   raise RuntimeError(
@@ -689,6 +696,10 @@ jobs:
                           trial_id_start=1,
                           trial_id_end=completed,
                           fingerprint_sha256=state["final_fingerprint"],
+                          master_seed=MASTER_SEED,
+                          rng_checksum_fingerprint_sha256=monte_carlo.fingerprint_rng_audit(
+                              results, source_sha=SOURCE_SHA, master_seed=MASTER_SEED
+                          ),
                       )
                   blob_sha = store.save_state(state, blob_sha)
                   write_json(
@@ -767,6 +778,10 @@ jobs:
                           trial_id_start=1,
                           trial_id_end=completed,
                           fingerprint_sha256=state["final_fingerprint"],
+                          master_seed=MASTER_SEED,
+                          rng_checksum_fingerprint_sha256=monte_carlo.fingerprint_rng_audit(
+                              results, source_sha=SOURCE_SHA, master_seed=MASTER_SEED
+                          ),
                       )
                   blob_sha = store.save_state(state, blob_sha)
                   print(json.dumps({
@@ -997,6 +1012,10 @@ jobs:
                   trial_id_start=1,
                   trial_id_end=completed,
                   fingerprint_sha256=state["final_fingerprint"],
+                  master_seed=MASTER_SEED,
+                  rng_checksum_fingerprint_sha256=monte_carlo.fingerprint_rng_audit(
+                      results, source_sha=SOURCE_SHA, master_seed=MASTER_SEED
+                  ),
               )
               blob_sha = store.save_state(state, blob_sha)
 

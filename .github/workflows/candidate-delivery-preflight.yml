@@ -1,0 +1,46 @@
+name: Candidate delivery preflight (no production simulation)
+
+on:
+  push:
+    branches:
+      - owner-approved-delivery-preparation-20261025
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build bounded Stage 5 fixtures in the ephemeral runner only
+        env:
+          PYTHONPATH: .
+        run: |
+          rm -rf results_stage5
+          python tests/build_stage5_acceptance_fixtures.py
+      - name: Run the complete acceptance inventory against ephemeral fixtures
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q tests/test_acceptance_16_v2.py
+      - name: Run deterministic delivery, ledger, and fail-closed gate regressions
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q \
+            tests/test_run_batch.py \
+            tests/test_stage7_authoring.py \
+            tests/test_excel_daily_serialization.py \
+            tests/test_stage13_assembler.py \
+            tests/test_stage13_maxcase_audit_loader.py \
+            tests/test_stage13_maxcase_pending_fields.py
+      - name: Run full repository pytest suite with ephemeral acceptance fixtures
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q

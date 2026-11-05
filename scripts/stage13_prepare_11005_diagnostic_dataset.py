@@ -60,6 +60,39 @@ def same_summary(candidate: Any, expected: dict[str, Any]) -> bool:
     )
 
 
+def validate_rng_audit_rows(scenario: str, rows: list[dict[str, Any]]) -> None:
+    """Reject legacy rows without real RNG audit; never synthesize missing checksums."""
+    expected_probability = maxcase_audit.expected_collection_probability(scenario)
+    seen: dict[int, int] = {}
+    for row in rows:
+        trial_id = row.get("trial_id")
+        if "rng_checksum" not in row or "rng_draw_count" not in row:
+            raise RuntimeError(
+                f"STAGE13_RNG_AUDIT_MISSING: {scenario}/{trial_id}; "
+                "historical rows must be regenerated under an approved audited source"
+            )
+        checksum = row["rng_checksum"]
+        draw_count = row["rng_draw_count"]
+        if type(checksum) is not int or not 0 <= checksum < (1 << 64):
+            raise RuntimeError(f"STAGE13_RNG_CHECKSUM_INVALID: {scenario}/{trial_id}")
+        if type(draw_count) is not int or draw_count < 0:
+            raise RuntimeError(f"STAGE13_RNG_DRAW_COUNT_INVALID: {scenario}/{trial_id}")
+        if expected_probability in (0.0, 1.0):
+            if checksum != 0 or draw_count != 0:
+                raise RuntimeError(f"STAGE13_DETERMINISTIC_RNG_AUDIT_NOT_EMPTY: {scenario}/{trial_id}")
+        elif draw_count == 0:
+            raise RuntimeError(f"STAGE13_STOCHASTIC_RNG_AUDIT_EMPTY: {scenario}/{trial_id}")
+        if draw_count == 0 and checksum != 0:
+            raise RuntimeError(f"STAGE13_RNG_CHECKSUM_WITHOUT_DRAWS: {scenario}/{trial_id}")
+        if checksum != 0:
+            previous = seen.get(checksum)
+            if previous is not None:
+                raise RuntimeError(
+                    f"DUPLICATE_SEED_DETECTED: {scenario}:{previous},{trial_id}:{checksum}"
+                )
+            seen[checksum] = int(trial_id)
+
+
 def assert_artifact_run(artifact: dict[str, Any], run_id: int, head_sha: str, scenario: str) -> None:
     run = artifact.get("workflow_run") or {}
     if not run or int(run.get("id", -1)) != run_id or run.get("head_sha") != head_sha:
@@ -351,6 +384,7 @@ def prepare_dataset(output_dataset: Path, manifest_out: Path, provenance_out: Pa
             rows, block_evidence, trial_hashes = maxcase_audit.rows_from_zip(
                 scenario, trial_zip, source_manifest,
             )
+            validate_rng_audit_rows(scenario, rows)
             if len(rows) != count or sorted(trial_hashes) != list(range(1, count + 1)):
                 raise RuntimeError(f"PINNED_TRIAL_SOURCE_COVERAGE_MISMATCH: {scenario}")
             for row in rows:

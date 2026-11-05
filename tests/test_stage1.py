@@ -183,7 +183,7 @@ def test_date_calendar_and_reference_examples() -> None:
 
 
 def test_rng_is_sha256_and_logically_independent() -> None:
-    key = "20270101|C085_G070|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
+    key = "20270101|C085|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
     expected_digest = hashlib.sha256(key.encode("utf-8")).digest()
     actual_digest = rng.derive_seed(
         constants.MASTER_SEED,
@@ -204,9 +204,16 @@ def test_rng_is_sha256_and_logically_independent() -> None:
         "PRIMARY_COLLECTION",
     ) == expected_digest.hex()
 
+    # Recovery-rate variants must share the collection-level stream.
+    assert rng.derive_seed(
+        constants.MASTER_SEED, "C085_G050", 1, "BK0001",
+        date(2027, 1, 2), "PRIMARY_COLLECTION"
+    ) == actual_digest
+
     logical_events = {
         actual_digest,
-        rng.derive_seed(constants.MASTER_SEED, "C085_G071", 1, "BK0001", date(2027, 1, 2), "PRIMARY_COLLECTION"),
+        # A different collection level remains a different stream.
+        rng.derive_seed(constants.MASTER_SEED, "C070_G070", 1, "BK0001", date(2027, 1, 2), "PRIMARY_COLLECTION"),
         rng.derive_seed(constants.MASTER_SEED, "C085_G070", 2, "BK0001", date(2027, 1, 2), "PRIMARY_COLLECTION"),
         rng.derive_seed(constants.MASTER_SEED, "C085_G070", 1, "BK0002", date(2027, 1, 2), "PRIMARY_COLLECTION"),
         rng.derive_seed(constants.MASTER_SEED, "C085_G070", 1, "BK0001", date(2027, 1, 3), "PRIMARY_COLLECTION"),
@@ -218,13 +225,36 @@ def test_rng_is_sha256_and_logically_independent() -> None:
     assert rng.deterministic_success(0.0, actual_digest) is False
 
 
+def test_rng_couples_all_recovery_rates_within_each_collection_level() -> None:
+    representative_day = date(2027, 1, 2)
+    seeds_by_collection = []
+
+    for collection_probability in constants.COLLECTION_PROBABILITIES:
+        seeds = {
+            rng.derive_seed(
+                constants.MASTER_SEED,
+                rng.scenario_id(collection_probability, recovery_rate),
+                1,
+                "BK0001",
+                representative_day,
+                "PRIMARY_COLLECTION",
+            )
+            for recovery_rate in constants.GUARANTEE_RECOVERY_RATES
+        }
+        assert len(seeds) == 1, collection_probability
+        seeds_by_collection.append(next(iter(seeds)))
+
+    # Pairing applies across G levels, not across different C levels.
+    assert len(set(seeds_by_collection)) == len(constants.COLLECTION_PROBABILITIES)
+
+
 def test_rng_reproducible_across_pythonhashseed_processes() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     script = """
 from datetime import date
 import hashlib
 import rng
-key = "20270101|C085_G070|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
+key = "20270101|C085|1|BK0001|2027-01-02|PRIMARY_COLLECTION"
 digest = rng.derive_seed(20270101, "C085_G070", 1, "BK0001", date(2027, 1, 2), "PRIMARY_COLLECTION")
 print(hash("motorcycle-simulation"))
 print(digest.hex())
@@ -254,4 +284,35 @@ print(hashlib.sha256(key.encode("utf-8")).hexdigest())
     assert results[0][0] != results[1][0]
     # The project seed is independent of Python's hash randomization.
     assert results[0][1] == results[1][1] == results[0][2]
-    assert results[0][1] == "a3f7d0599bc3deee189973f3e84a008efdeb6363bf317fc82ab174a2267399b5"
+    assert results[0][1] == "fc2a64164208aa0f3b4d08bb75f80e950dddb803a26535ad3e344c1a5f9b8601"
+
+
+
+def test_rng_collection_success_uses_exact_integer_comparison() -> None:
+    # Each byte string controls the 64-bit integer exactly; remaining digest
+    # bytes do not affect the specified decision.
+    below_half = ((1 << 63) - 1).to_bytes(8, "big") + bytes(24)
+    at_half = (1 << 63).to_bytes(8, "big") + bytes(24)
+    maximum = ((1 << 64) - 1).to_bytes(8, "big") + bytes(24)
+    zero = bytes(32)
+
+    assert rng.draw_success(below_half, 50) is True
+    assert rng.draw_success(at_half, 50) is False
+    assert rng.draw_success(zero, 0) is False
+    assert rng.draw_success(maximum, 100) is True
+    assert rng.deterministic_success(0.85, below_half) is True
+
+    try:
+        rng.deterministic_success(0.505, zero)
+    except ValueError as exc:
+        assert "whole integer percentage" in str(exc)
+    else:
+        raise AssertionError("noncanonical fractional percent must fail closed")
+
+
+def test_rng_float_view_uses_53_bits_and_never_rounds_to_one() -> None:
+    maximum = ((1 << 64) - 1).to_bytes(8, "big") + bytes(24)
+    zero = bytes(32)
+    assert rng.rng_draw(maximum) == ((1 << 53) - 1) / (1 << 53)
+    assert 0.0 <= rng.rng_draw(maximum) < 1.0
+    assert rng.rng_draw(zero) == 0.0

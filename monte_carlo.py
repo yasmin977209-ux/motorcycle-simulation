@@ -67,6 +67,8 @@ class TrialResult:
     guarantee_recovered: int
     partner1_final_entitlement: int
     partner2_final_entitlement: int
+    rng_checksum: int = 0
+    rng_draw_count: int = 0
 
 
 def _daily_snapshot(
@@ -111,6 +113,8 @@ def _trial_result_from_project(
     collection_probability: float,
     recovery_rate_pct: int,
     trial_id: int,
+    rng_checksum: int = 0,
+    rng_draw_count: int = 0,
 ) -> TrialResult:
     if project.final_net_project_equity is None:
         raise AssertionError(
@@ -163,6 +167,8 @@ def _trial_result_from_project(
         ),
         partner1_final_entitlement=project.partner1_final_entitlement,
         partner2_final_entitlement=project.partner2_final_entitlement,
+        rng_checksum=rng_checksum,
+        rng_draw_count=rng_draw_count,
     )
 
 
@@ -183,14 +189,15 @@ def run_single_trial(
             _daily_snapshot(project, current_date, trial_id)
         )
 
-    project = daily_engine.run_deterministic_trial(
-        recovery_rate_pct=recovery_rate_pct,
-        trial_id=trial_id,
-        scenario_id=scenario_id,
-        master_seed=master_seed,
-        collection_probability=collection_probability,
-        on_day_end=capture_day,
-    )
+    with rng.capture_rng_checksum() as rng_audit:
+        project = daily_engine.run_deterministic_trial(
+            recovery_rate_pct=recovery_rate_pct,
+            trial_id=trial_id,
+            scenario_id=scenario_id,
+            master_seed=master_seed,
+            collection_probability=collection_probability,
+            on_day_end=capture_day,
+        )
 
     result = _trial_result_from_project(
         project,
@@ -198,6 +205,8 @@ def run_single_trial(
         collection_probability=collection_probability,
         recovery_rate_pct=recovery_rate_pct,
         trial_id=trial_id,
+        rng_checksum=rng_audit.checksum,
+        rng_draw_count=rng_audit.draw_count,
     )
 
     return result, daily_rows
@@ -286,10 +295,34 @@ def _fingerprint_json_lines(records: list[object]) -> str:
 
 
 def fingerprint_trial_results(results: list[TrialResult]) -> str:
-    records = [
-        asdict(result)
-        for result in sorted(results, key=lambda item: item.trial_id)
-    ]
+    """Fingerprint financial TrialResult fields, separately from RNG audit metadata."""
+    records = []
+    for result in sorted(results, key=lambda item: item.trial_id):
+        record = asdict(result)
+        record.pop("rng_checksum", None)
+        record.pop("rng_draw_count", None)
+        records.append(record)
+    return _fingerprint_json_lines(records)
+
+
+def fingerprint_rng_audit(
+    results: list[TrialResult],
+    *,
+    source_sha: str,
+    master_seed: int,
+) -> str:
+    """Bind each trial checksum to its source, master seed, scenario and trial ID."""
+    records = []
+    for result in sorted(results, key=lambda item: item.trial_id):
+        records.append({
+            "audit_schema": rng.RNG_CHECKSUM_SCHEMA,
+            "source_sha": source_sha,
+            "master_seed": master_seed,
+            "scenario_id": result.scenario_id,
+            "trial_id": result.trial_id,
+            "rng_checksum": result.rng_checksum,
+            "rng_draw_count": result.rng_draw_count,
+        })
     return _fingerprint_json_lines(records)
 
 

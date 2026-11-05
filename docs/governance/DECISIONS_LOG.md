@@ -209,3 +209,29 @@ This authorization is tied to the provider implementation constants and runtime 
 - **Disposition:** `STAGE11_SCOPE_CLOSED_DOCUMENTATION_ONLY`; keep Stage 10 metadata drift and runtime-risk blockers explicitly open.
 
 References: `docs/stage11/dataset_identity.json`; `docs/stage11/global_manifest_11005_reconciled.json`; `docs/stage11/R4_manifest_reconciliation.md`; `docs/stage10/STAGE10_METRICS.json`; `docs/PROJECT_CONTINUITY.md` and the five supplied references.
+
+
+## D-2026-10-25-01 — Candidate-only RNG collection-scope correction and delivery preparation
+
+**Status:** OWNER-APPROVED CANDIDATE SCOPE ONLY — 2026-10-25.
+
+**Approval record:** In the current project conversation, the owner explicitly approved proceeding with the proposed plan after review of the current-main blockers. This entry records only the limited candidate work authorized by that approval; it does not rewrite the effective governance on `main`.
+
+**Scope authorized on branch `owner-approved-delivery-preparation-20261025`:**
+
+1. Implement and test the reference's `SEED_SCOPE=COLLECTION_LEVEL` key for canonical scenario IDs: for `Cxxx_Gxxx`, derive the event key using `Cxxx` while retaining master seed, trial ID, bike ID, date and event type.
+2. Add deterministic tests covering all configured collection levels and all configured guarantee-recovery levels, exact seed reproducibility, and independence across other logical event dimensions.
+3. Prepare delivery-readiness and realism-calibration specifications; preserve the existing P17/P18 disposition and source/authority findings in the candidate branch.
+4. Run candidate-only unit/integration regression workflows that do not dispatch production Monte Carlo, Trial/checkpoint, Golden generation/extension, statistical stability declaration, workbook release acceptance or publication.
+
+**Explicit prohibitions preserved:**
+
+- Do not modify `main`, tags, Releases, or historical Parquet/JSON/TrialResult data and fingerprints under this candidate decision.
+- Do not relabel prior outputs as if they were produced by the changed RNG.
+- Do not use historical Golden coverage as authority for the changed RNG implementation. The candidate changes source behavior and therefore requires a separately reviewed source identity and new compatible Golden/cohort plan before production use.
+- Do not declare Gate A, Gate B, scenario stability, P17, P18, or final delivery accepted from candidate tests.
+- Do not launch a production Trial/checkpoint/Monte Carlo cohort or extend Golden coverage under this decision.
+
+**Reference authority note:** The attached comparison source `المرجع_النهائي_الموحد_v2.1-1.md` has SHA-256 `297fb4c445bcce20fdd66a02d65aea00c74007d2f3d7c68ead416a5822fd5582`, while effective `main/docs/stage7/statistical_execution_gate.json` records `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479`. This decision does not resolve or silently supersede that mismatch. Production governance must formally designate the governing reference before model acceptance.
+
+**Exit criteria for this candidate scope:** Exact-head Stage 1 and scoped deterministic regression CI passes; diff is reviewed independently; the change is classified as a new source behavior; blockers above are carried forward. Passing this scope does not satisfy the statistical execution gate and does not authorize merge or release.

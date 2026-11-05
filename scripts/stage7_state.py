@@ -10,6 +10,8 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import rng
+
 RETRYABLE_HTTP_STATUS = frozenset({429, 500, 502, 503, 504})
 MAX_ATTEMPTS = 4
 RETRY_BASE_SECONDS = 1.0
@@ -47,17 +49,30 @@ def build_artifact_identity(
     trial_id_start: int,
     trial_id_end: int,
     fingerprint_sha256: str,
+    master_seed: int,
+    rng_checksum_fingerprint_sha256: str,
 ) -> dict[str, object]:
     if trial_id_start < 1:
         raise ValueError("trial_id_start must be >= 1")
     if trial_id_end < trial_id_start:
         raise ValueError("trial_id_end must be >= trial_id_start")
+    if type(master_seed) is not int:
+        raise ValueError("master_seed must be an integer")
+    if (
+        not isinstance(rng_checksum_fingerprint_sha256, str)
+        or len(rng_checksum_fingerprint_sha256) != 64
+        or any(char not in "0123456789abcdef" for char in rng_checksum_fingerprint_sha256)
+    ):
+        raise ValueError("rng_checksum_fingerprint_sha256 must be a lowercase SHA-256")
     return {
         "scenario": scenario,
         "source_sha": source_sha,
+        "master_seed": master_seed,
+        "rng_audit_schema": rng.RNG_CHECKSUM_SCHEMA,
         "trial_id_start": trial_id_start,
         "trial_id_end": trial_id_end,
         "fingerprint_sha256": fingerprint_sha256,
+        "rng_checksum_fingerprint_sha256": rng_checksum_fingerprint_sha256,
     }
 
 

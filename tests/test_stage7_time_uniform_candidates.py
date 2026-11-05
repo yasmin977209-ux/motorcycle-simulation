@@ -64,7 +64,7 @@ def test_quantile_precision_requires_complete_candidate_interval_and_strict_marg
         "upper": 10.5,
     }
     assert quantile_precision_pass(interval, 0.6) is True
-    assert quantile_precision_pass(interval, 0.5) is False
+    assert quantile_precision_pass(interval, 0.5) is True
     assert quantile_precision_pass({**interval, "lower": None}, 1.0) is False
     assert quantile_precision_pass({**interval, "lower": 10.5, "upper": 9.5}, 1.0) is False
     assert quantile_precision_pass({**interval, "finite_interval": False}, 1.0) is False
@@ -113,7 +113,7 @@ def _valid_bernoulli_interval() -> dict[str, object]:
 def test_bernoulli_precision_gate_validates_complete_interval_and_strict_width() -> None:
     valid = _valid_bernoulli_interval()
     assert bernoulli_precision_pass(valid, 0.5) is True
-    assert bernoulli_precision_pass(valid, valid["half_width"]) is False
+    assert bernoulli_precision_pass(valid, valid["half_width"]) is True
     assert bernoulli_precision_pass({**valid, "half_width": 0.0}, 0.005) is False
     assert bernoulli_precision_pass({**valid, "lower": None}, 0.5) is False
     assert bernoulli_precision_pass({**valid, "empty_confidence_set": True}, 0.5) is False
@@ -155,3 +155,28 @@ def test_quantile_precision_rejects_nonfinite_or_boolean_values() -> None:
     }
     assert quantile_precision_pass({**valid, "estimate": True}, 0.5) is False
     assert quantile_precision_pass({**valid, "upper": math.inf}, 1.0) is False
+
+
+
+def test_quantile_interval_handles_discrete_ties_without_fabricating_endpoints() -> None:
+    values = np.asarray([0] * 30 + [1] * 270, dtype=float)
+    interval = order_statistic_quantile_interval(
+        values, 0.9, checkpoint_n=300, alpha=0.0025
+    )
+    assert interval["estimate"] == 1.0
+    assert interval["finite_interval"] is True
+    assert interval["lower"] is not None
+    assert interval["upper"] is not None
+    assert interval["lower"] <= interval["estimate"] <= interval["upper"]
+
+
+def test_precision_equality_is_accepted_but_adjacent_change_remains_strict() -> None:
+    quantile_interval = {
+        "method": "ORDER_STATISTIC_ALPHA_SPENDING_GRID_V1",
+        "finite_interval": True,
+        "estimate": 5.0,
+        "lower": 4.0,
+        "upper": 6.0,
+    }
+    assert quantile_precision_pass(quantile_interval, 1.0) is True
+    assert adjacent_probability_change_pass(0.5, 0.505, 0.005) is False

@@ -576,13 +576,18 @@ def test_stage7_artifact_identity_contains_exact_required_identity_fields() -> N
         trial_id_start=1,
         trial_id_end=300,
         fingerprint_sha256="abc123",
+        master_seed=20270101,
+        rng_checksum_fingerprint_sha256="c" * 64,
     )
     assert identity == {
         "scenario": "C070_G100",
         "source_sha": APPROVED_SOURCE_SHA,
+        "master_seed": 20270101,
+        "rng_audit_schema": "rng-checksum-high53-mod2^64-v1",
         "trial_id_start": 1,
         "trial_id_end": 300,
         "fingerprint_sha256": "abc123",
+        "rng_checksum_fingerprint_sha256": "c" * 64,
     }
 
 
