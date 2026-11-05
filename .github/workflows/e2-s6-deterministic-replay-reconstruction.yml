@@ -12,7 +12,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: e2-s6-deterministic-replay-${ github.ref }}
+  group: e2-s6-deterministic-replay-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   preflight:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${ github.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/checkout@v4
         with:
           ref: a23ba71f48487f3ebead99bc30039b14ef9b7609
@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/40731224990/artifacts?per_page=100" --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_sha == "a23ba71f48487f3ebead99bc30039b14ef9b7609")] | length' | awk '$1 >= 20 {ok=1} END {exit !ok}'
   replay:
-    name: Replay ${ matrix.scenario }} against its original immutable Artifact
+    name: Replay ${{ matrix.scenario }} against its original immutable Artifact
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -73,6 +73,10 @@ jobs:
       max-parallel: 8
       matrix:
         include:
+          - scenario: C030_G000
+            source_artifact: s6-n2400-C030_G000-40731224990
+            source_artifact_id: 12839053751
+            source_artifact_digest: "sha256:683133a5619981e6daf76d54dc41b4fedf8082fe9e856a24e512fab3aba85f52"
           - scenario: C030_G030
             source_artifact: s6-n2400-C030_G030-40731224990
             source_artifact_id: 12840210926
@@ -152,7 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${ github.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/checkout@v4
         with:
           ref: a23ba71f48487f3ebead99bc30039b14ef9b7609
@@ -171,37 +175,37 @@ jobs:
           echo "PYTHONPATH=/tmp/e2-replay-overlay:$GITHUB_WORKSPACE/execution-source" >> "$GITHUB_ENV"
       - name: Verify exact original Artifact ID, digest, and source run
         env:
-          GH_TOKEN: ${ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          actual="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/${ matrix.source_artifact_id }}" --jq '[.name,.digest,(.expired|tostring),(.workflow_run.id|tostring),.workflow_run.head_sha]|@tsv')"
-          expected="$(printf '%s\\t%s\\tfalse\\t40731224990\\ta23ba71f48487f3ebead99bc30039b14ef9b7609' '${ matrix.source_artifact }}' '${ matrix.source_artifact_digest }}')"
+          actual="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/${{ matrix.source_artifact_id }}" --jq '[.name,.digest,(.expired|tostring),(.workflow_run.id|tostring),.workflow_run.head_sha]|@tsv')"
+          expected="$(printf '%s\t%s\tfalse\t40731224990\ta23ba71f48487f3ebead99bc30039b14ef9b7609' '${{ matrix.source_artifact }}' '${{ matrix.source_artifact_digest }}')"
           test "$actual" = "$expected"
       - name: Download immutable original scenario Artifact
         uses: actions/download-artifact@v4
         with:
           run-id: "40731224990"
-          github-token: ${ secrets.GITHUB_TOKEN }}
-          name: ${ matrix.source_artifact }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ matrix.source_artifact }}
           path: source-artifact
       - name: Execute deterministic 2,400-Trial reconstruction and full daily balance capture
         run: |
           set -euo pipefail
-          python scripts/e2_deterministic_replay_scenario.py \\
-            --scenario "${ matrix.scenario }}" \\
-            --source-artifact-dir source-artifact \\
-            --source-artifact-name "${ matrix.source_artifact }}" \\
-            --source-artifact-id "${ matrix.source_artifact_id }}" \\
-            --source-artifact-digest "${ matrix.source_artifact_digest }}" \\
-            --overlay-dir /tmp/e2-replay-overlay \\
-            --workers 2 --batch-trials 40 \\
-            --output-dir "replay-output/${ matrix.scenario }}"
+          python scripts/e2_deterministic_replay_scenario.py \
+            --scenario "${{ matrix.scenario }}" \
+            --source-artifact-dir source-artifact \
+            --source-artifact-name "${{ matrix.source_artifact }}" \
+            --source-artifact-id "${{ matrix.source_artifact_id }}" \
+            --source-artifact-digest "${{ matrix.source_artifact_digest }}" \
+            --overlay-dir /tmp/e2-replay-overlay \
+            --workers 2 --batch-trials 40 \
+            --output-dir "replay-output/${{ matrix.scenario }}"
       - name: Upload new immutable replay-labelled evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2-s6-replay-${ matrix.scenario }}-${ github.run_id }}
-          path: replay-output/${ matrix.scenario }}/
+          name: e2-s6-replay-${{ matrix.scenario }}-${{ github.run_id }}
+          path: replay-output/${{ matrix.scenario }}/
           if-no-files-found: warn
           retention-days: 90
   aggregate:
@@ -213,14 +217,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${ github.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Download all available replay scenario evidence
         uses: actions/download-artifact@v4
         with:
-          pattern: e2-s6-replay-*-${ github.run_id }}
+          pattern: e2-s6-replay-*-${{ github.run_id }}
           path: replay-scenarios
           merge-multiple: false
       - name: Require exact 20-scenario and 48,000-Trial coverage
@@ -231,7 +235,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2-s6-replay-aggregate-${ github.run_id }}
+          name: e2-s6-replay-aggregate-${{ github.run_id }}
           path: replay-aggregate/
           if-no-files-found: warn
           retention-days: 90
