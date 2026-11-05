@@ -3438,3 +3438,16 @@ Supersedes the earlier replay run-state paragraph in this append-only file:
 - The successful replay remains on old identity: `SOURCE_SHA=da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`, seed `20270101`, source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`. Workflow code checks out that original execution commit and wraps its original `_daily_snapshot` with an instrumentation overlay; it does not run the proposed repaired model source at `002b748...`.
 - Therefore this closes the previously active old-identity replay attempt only. It does not prove the proposed new S6 source/cohort or C100 lineage, and does not make the original historical artifacts complete. Reconstructed output is explicitly `REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED`.
 - Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`; final acceptance not granted. E3 remains not started.
+
+
+---
+
+## REV3 Master Execution Plan — 2026-11-05 (append-only)
+
+- أُنشئت وثيقة `docs/post_d/MASTER_EXECUTION_PLAN_REV3.md` بموافقة المالك على إعداد الخطة فقط؛ commit الإنشاء: `8a84168fe469fe855ef8c5d0a6689eaf9bed52e8`.
+- رابط الخطة: https://github.com/yasmin977209-ux/motorcycle-simulation/blob/8a84168fe469fe855ef8c5d0a6689eaf9bed52e8/docs/post_d/MASTER_EXECUTION_PLAN_REV3.md
+- Baseline قبل كتابة الخطة: فرع `tmp/d1-rebuild-20261101` HEAD `e508daf3520e2fec267e10745fb46c020dd24dec`؛ main HEAD `01a6f79eedc522bb734ed9c5ea31beee581f2468`; المقارنة Diverged، 938 ahead / 2 behind. أُعيد التحقق من الفرعين عبر GitHub API.
+- الحالة: D0–D6 `PASS_SCOPED_WITH_LIMITATIONS`، E0/E1/E2 `PASS_SCOPED`، E3–E6 `NOT_STARTED`، المشروع `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- تمييز E2 الحاسم: Run `41958935113` نجاح `PASS_SCOPED_REPLAY_RECONSTRUCTION` على الهوية القديمة (source execution commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`, SOURCE_SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, cohort `s6-v23-da1a9ea9`). لا يمثل تشغيل السلالة الجديدة S6/C100. New S6/C100 preflight remains `WAIT_FINAL_OWNER_CONFIRMATION`.
+- REV3 تخطيط فقط؛ لا Trial/Simulation/Monte Carlo/Golden revalidation/N expansion، لا تغيير هوية أو مرجع أو قاعدة أو threshold، لا backfill/zero-fill، لا تعديل Artifact تاريخي، لا كتابة main أو merge أو Release.
+- الخطوة التالية المسموحة: استكمال توثيق بوابات الدخول ومصفوفات E3/متطلبات الأدلة على الفرع بعد baseline جديد؛ لا تبدأ E3 أو أي تشغيل إلا بعد إثبات شروط دخوله والقرارات اللازمة.
