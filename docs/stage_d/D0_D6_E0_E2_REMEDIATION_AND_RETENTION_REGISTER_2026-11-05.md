@@ -32,3 +32,18 @@ Downloadable copies were materialized for six artifacts: `12852969854`, `1328877
 D0-D4 Run `42055739374` is still `in_progress` on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`; Job `127343509424` remains in dependency installation and downstream D4 pagination/Raw readback steps are pending. Per long-running workflow policy, no wait or duplicate run was started. D1-D2 Run `42055739478` and D3 Run `42055739378` completed SUCCESS on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`.
 
 Permanent binary retention remains BLOCKED: Git history preserves text/source records only; Actions artifacts expire; Release publication requires a separate owner decision; no external storage connector/archive has been established. E3/E4/E5/E6 remain NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical artifact mutation, main write, merge, force-push, or Release occurred.
+
+
+---
+
+## D0–D2 live evidence reconciliation — 2026-11-05 (append-only)
+
+See [D0–D2 Live Evidence Reconciliation](stage_d/D0_D2_LIVE_RECONCILIATION_2026-11-05.md) for run/job IDs, exact tested SHA, pinned Artifact digests, registry evidence and limitations.
+
+- Baseline HEAD before reconciliation documentation: `d08d4fcd74d43eab00a770ba8595fa0cd96b9329`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468` (read-only).
+- D1–D2 source validation Run [42099529644](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42099529644), Job `127498347595`, succeeded on exact tested SHA `d08d4fcd74d43eab00a770ba8595fa0cd96b9329`: 36 passed, no failures/skips; three pinned input ZIPs were downloaded and their size/SHA-256 pins matched.
+- The same run emitted the exact 105-key manifest evidence. The job-log base64 payload was decoded and compared byte-for-byte with `docs/stage_d/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json`: 69,247 bytes, SHA-256 `8412adb32c32a000d624fbbd1ea965238dd4da4b1ef95949551e5b47bf19516f`, Git blob `2ea998a1faeeb7ebb36208f36fc878a9c20518f7`; 105/105 representative keys have actual manifest/audit sizes and matching SHA-256 values. This supersedes the prior NOT_VERIFIED status only for those 105 keys.
+- D2 completion Run [41335321803](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41335321803) remains the full-registry evidence: 2,640 entries, 1,000 daily series, 2,086,550/2,086,550 points resolved; current branch tree retains the exact registry blob `8cf17de488c623f96c1961ca91d682fbbc7733d6`.
+- D0, D1 and D2 remain `PASS_SCOPED_WITH_LIMITATIONS`; no phase is promoted to `PASS_GAP_FREE`. D0's complete Parquet schema/null/partition audit, original all-48K historical ledgers, null aggregate `source_run_metadata.sha256`, and five missing historical accounting fields remain unresolved. D1 importer/full independent rebuild requirements are not proven. D2 registry does not replace all-48K original financial ledgers. C100 Golden remains NOT_RUN; fixed financial/statistical gates unchanged.
+- The old D2 JSON `NOT_VERIFIED_105_OF_105` field and older D1 audit snapshots are retained as historical records; this addendum is the later reconciliation. No code, business rule, reference, identity, threshold or historical artifact was changed; no Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/main write/merge/Release or D3/D4 progression occurred.
+- Reconciliation addendum commit: `4e5fab1990c6f4004062e53daa6910890fe3d717`. Further status/handoff writes are append-only and require their own exact-final-HEAD readback.
