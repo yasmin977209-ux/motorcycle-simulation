@@ -70,6 +70,35 @@ jobs:
           set -euo pipefail
           python -m compileall -q scripts/s6_artifact_reader.py scripts/s6_deliverables_model.py scripts/s6_manifest_resolver.py scripts/s6_deliverables_builder.py scripts/s6_number_registry.py scripts/s6_validate_representatives.py tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
           python -m pytest -q -rs tests/test_s6_deliverables_builder.py tests/test_s6_number_registry.py
+      - name: Export exact 105-key size and digest evidence
+        working-directory: d1
+        env:
+          STAGE_D_AGGREGATE: stage-d-artifacts/aggregate.zip
+          STAGE_D_FULL_LOGGING: stage-d-artifacts/full-logging.zip
+          STAGE_D_C100: stage-d-artifacts/c100.zip
+        run: |
+          set -euo pipefail
+          python scripts/export_s6_manifest_size_evidence.py \
+            --aggregate "$STAGE_D_AGGREGATE" \
+            --full-logging "$STAGE_D_FULL_LOGGING" \
+            --c100 "$STAGE_D_C100" \
+            --output /tmp/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json
+          python - <<'PY'
+          import base64, pathlib
+          raw=pathlib.Path("/tmp/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json").read_bytes()
+          encoded=base64.b64encode(raw).decode("ascii")
+          print("D1_EVIDENCE_BASE64_BEGIN")
+          for i in range(0,len(encoded),6000):
+              print(f"D1_EVIDENCE_CHUNK:{i//6000:03d}:{encoded[i:i+6000]}")
+          print("D1_EVIDENCE_BASE64_END")
+          PY
+      - name: Upload exact 105-key evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-105-manifest-size-evidence
+          path: /tmp/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Assert tested SHA is still the exact live branch HEAD
         working-directory: d1
         run: |
