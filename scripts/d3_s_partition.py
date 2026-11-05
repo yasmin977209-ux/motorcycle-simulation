@@ -7,7 +7,7 @@ from openpyxl.cell.cell import MergedCell
 
 COLLECTIONS=("C030","C050","C070","C085","C100")
 RECOVERIES=("G000","G030","G050","G070","G100")
-SCENARIO_RE=re.compile(r"^(C\\d{3})_(G\\d{3})(?:_|$)")
+SCENARIO_RE=re.compile(r"^(C\d{3})_(G\d{3})(?:_|$)")
 EXPECTED_SHEETS=185
 
 def sha256_file(path:Path)->str:
