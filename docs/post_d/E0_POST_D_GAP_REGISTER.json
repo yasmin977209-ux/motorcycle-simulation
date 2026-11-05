@@ -1,0 +1,702 @@
+{
+  "schema": "e0-post-d-gap-register-v1",
+  "created_at": "2026-11-05",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "baseline_head": "97120ff43434bad84d110a1087fbbc9b437e826a",
+  "main_head_at_start": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "owner_authorization": "EXPLICIT_IN_CHAT_2026-11-05",
+  "e0_status": "PASS_SCOPED",
+  "project_classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "next_stage": "E1",
+  "next_stage_started": false,
+  "governing_reference": {
+    "version": "v2.4.0",
+    "status": "APPROVED_BY_OWNER",
+    "decision_id": "D-2026-10-30-REFERENCE-V2.4.0",
+    "current_governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+    "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+    "header_conflict": "CONFLICTED: reference header still says PROPOSED_FOR_OWNER_ADOPTION; owner decision APPROVED_BY_OWNER governs; preserve and correct Append-only."
+  },
+  "live_github": {
+    "branch_head": "97120ff43434bad84d110a1087fbbc9b437e826a",
+    "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "open_pr_for_working_head": [],
+    "releases": [],
+    "e0_paths_preexisting": false,
+    "main_modified": false
+  },
+  "live_exact_head_runs": [
+    {
+      "scope": "D1-D2",
+      "run_id": 41938370466,
+      "job_id": 126952522965,
+      "tested_sha": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "conclusion": "success",
+      "tests": "34 passed",
+      "steps": [
+        "pinned artifact downloads and SHA-256 verification",
+        "compile",
+        "exact-head assertion"
+      ]
+    },
+    {
+      "scope": "D3",
+      "run_id": 41938370426,
+      "job_id": 126952535291,
+      "tested_sha": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "conclusion": "success",
+      "tests": "38 passed",
+      "steps": [
+        "exact branch/remote HEAD",
+        "35-file GitHub Raw readback"
+      ]
+    },
+    {
+      "scope": "D0-D4",
+      "run_id": 41938370461,
+      "job_id": 126967291551,
+      "tested_sha": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "conclusion": "success",
+      "tests": "5 passed",
+      "artifact_id": 13376379151,
+      "steps": [
+        "five DOCX reopened",
+        "provenance/pagination checks",
+        "Raw readback",
+        "exact-head validation"
+      ]
+    }
+  ],
+  "d5_d6_artifacts": [
+    {
+      "stage": "D5",
+      "run_id": 41928234377,
+      "job_id": 126918200452,
+      "tested_sha": "baf696af1e951cbf4a79e8a9e009c60c6b053b2d",
+      "artifact_id": 13369179742,
+      "bytes": 519116689,
+      "sha256": "80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1",
+      "expires_at": "2026-12-04T22:49:30Z",
+      "current_status": "present_unexpired",
+      "scope": "package publication/integrity only"
+    },
+    {
+      "stage": "D6",
+      "run_id": 41929888796,
+      "job_id": 126923812128,
+      "tested_sha": "48ae9fbf5a7264834a523504706a7c04b654061b",
+      "artifact_id": 13371094066,
+      "bytes": 6635,
+      "sha256": "f8ed5e1f516a3a6d34086c2ef4f5fb2a84670c9907fabd503b994086426ca112",
+      "expires_at": "2026-12-04T23:14:36Z",
+      "current_status": "present_unexpired",
+      "scope": "independent post-write audit only"
+    }
+  ],
+  "file_evidence": [
+    {
+      "path": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+      "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+      "git_blob_sha1": "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33",
+      "bytes": 401397,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+      "sha256": "1076b3e876d3db1a7e6ab4473fedb22226dfda0cb499d230ba3a0c2a9652a95d",
+      "git_blob_sha1": "58f89bc016523f1350345428b4a224ac42a8b130",
+      "bytes": 3527,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+      "sha256": "e8c12e76a13a6f33f198f55152ddb682d8273fb91d8d893959e305a5d4059c6d",
+      "git_blob_sha1": "da2feb5f3ad7cca6b08b3a11f4e4e91978f6f999",
+      "bytes": 69991,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+      "sha256": "5ddd4cd181f986b4f8ce547f3a1d21eda8ceaec3626ef45833ea4488f3965628",
+      "git_blob_sha1": "00d6bd18cf808d0fd0d1afe2483c5f0425a5450b",
+      "bytes": 12164,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+      "sha256": "46596a49ee7c21c62dbab954fd39c42ca0a59b4c3752a65f4e8cc30feab40c2f",
+      "git_blob_sha1": "a274a449ef5e1636c858509a8a33a497b7398c88",
+      "bytes": 7423,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json",
+      "sha256": "09edd7957880791c146d96bc12eba240be2e2b408cbfa3cc19a4aa208ecd1e65",
+      "git_blob_sha1": "372dc1362ed028e86419aa3e745d597e4171a799",
+      "bytes": 4800,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_CLOSURE_EVIDENCE_2026-11-05.json",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D6_CLOSURE_EVIDENCE_2026-11-05.json",
+      "sha256": "4d79452a8e23b240c18634611e4b624710bfed9f153912367e822572fb207d2a",
+      "git_blob_sha1": "127da6e2805e1570e7506053cd8ace36b167e137",
+      "bytes": 7033,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+      "sha256": "4111e5d8cf67da3887917d3fd24c33b02da4cef1be83c420cb0f3aa829b08d12",
+      "git_blob_sha1": "2ae8c00be24a9c2004ae5a4eab7cda3ae231b36b",
+      "bytes": 13648,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json",
+      "sha256": "6df56445e9f0f95465e409fa09dc0e3472ba1ccf103e5029ac2bae332e4d1c0e",
+      "git_blob_sha1": "cf73f5e8d87cd440cf3d0abbff646d712b66bde5",
+      "bytes": 1745,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    },
+    {
+      "path": "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json",
+      "url": "https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json",
+      "sha256": "4ca618c29b1fecfa4717e106ebde3934d8eaaecde3ed2e043536a0714c7a09ec",
+      "git_blob_sha1": "655ba86cb53c822458df5f502efe817610af4f4d",
+      "bytes": 686,
+      "commit": "97120ff43434bad84d110a1087fbbc9b437e826a",
+      "classification": "VERIFIED_LIVE"
+    }
+  ],
+  "requirement_matrix": [
+    {
+      "door": "0",
+      "requirement": "المبادئ الحاكمة المطلقة",
+      "classification": "CONFLICTED",
+      "scope_and_gap": "قرار المالك نافذ؛ رأس المرجع PROPOSED يحتاج توضيحاً Append-only."
+    },
+    {
+      "door": "1",
+      "requirement": "النطاق والأهداف والجدول الزمني (§1.1–1.3)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "التسليمات تصف REFERENCE_COMPLIANT_BASELINE؛ لا قبول شامل."
+    },
+    {
+      "door": "2",
+      "requirement": "الثوابت الحتمية (§2.1–2.7)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "المرجع ومصدر البناء مثبتان؛ لا اختبارات قبول شاملة لكل ثابت."
+    },
+    {
+      "door": "3",
+      "requirement": "نموذج الكيانات (§3.1–3.8)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "اختبارات builder محدودة؛ لا دفاتر كاملة لـ48K."
+    },
+    {
+      "door": "4",
+      "requirement": "آلة الحالات (§4.1–4.4)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تغطية محدودة؛ لا كل المسارات/الاختبارات."
+    },
+    {
+      "door": "5",
+      "requirement": "الجمعة وتغيير الزيت (§5.1–5.5)",
+      "classification": "REPORTED_ONLY",
+      "scope_and_gap": "لا full-cohort acceptance."
+    },
+    {
+      "door": "6",
+      "requirement": "التحصيل اليومي (§6.1–6.3)",
+      "classification": "REPORTED_ONLY",
+      "scope_and_gap": "لا full 177 suite أو تحقق لكل يوم/Trial."
+    },
+    {
+      "door": "7",
+      "requirement": "التسوية بعد النضج (§7.1–7.6)",
+      "classification": "REPORTED_ONLY",
+      "scope_and_gap": "لا تحقق كامل لكل حالات التسوية."
+    },
+    {
+      "door": "8",
+      "requirement": "الإهلاك (§8.1–8.4)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "مقارنات مالية محدودة؛ roll-forward شامل مفقود."
+    },
+    {
+      "door": "9",
+      "requirement": "الكفالة والمطالبات (§9.1–9.5)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "سجلات تمثيلية فقط؛ Test 181 NOT_RUN."
+    },
+    {
+      "door": "10",
+      "requirement": "المحاسبة الكاملة (§10.1–10.10)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "Financial Gate A فقط؛ Production Gate A غير معلنة والحقول الخمسة مفقودة."
+    },
+    {
+      "door": "11",
+      "requirement": "أرصدة الشركاء (§11.1–11.4)",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "daily PARTNER balances الكاملة غير مثبتة؛ Test 181 NOT_RUN."
+    },
+    {
+      "door": "12",
+      "requirement": "المحرك اليومي M1–M17",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "34/38 focused tests و5 DOCX tests؛ لا قبول شامل."
+    },
+    {
+      "door": "13",
+      "requirement": "الإغلاق الديناميكي (§13.1–13.8)",
+      "classification": "REPORTED_ONLY",
+      "scope_and_gap": "D3 يسجل close-date distribution لـ49,500؛ artifact member لم يُفتح مستقلاً في E0."
+    },
+    {
+      "door": "14",
+      "requirement": "Monte Carlo وRNG (§14.1–14.12)",
+      "classification": "FAIL_SCOPED",
+      "scope_and_gap": "Gate B 10/10 fail؛ stability 0/60؛ N4800 NOT_EXECUTED؛ C100 Golden NOT_RUN."
+    },
+    {
+      "door": "15",
+      "requirement": "Excel (§15.1–15.6)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "185 sheets؛ 0 formulas/errors؛ فحوص رقمية ضمن نطاق D6."
+    },
+    {
+      "door": "16",
+      "requirement": "اختبارات القبول (§16.0–16.18)",
+      "classification": "NOT_RUN",
+      "scope_and_gap": "Full 177 unique suite NOT_RUN؛ فحوص D6 المقيدة لا تستبدل الاختبارات الأصلية."
+    },
+    {
+      "door": "17",
+      "requirement": "الافتراضات والإفصاحات (§17.1–17.3)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "محتوى §17.3 تحقق في خمسة DOCX؛ لا مراجعة بصرية بشرية لكل صفحة."
+    },
+    {
+      "door": "18",
+      "requirement": "المخرجات الـ28 (§18.1–18.2)",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "سبعة ملفات تسليم منشورة؛ اكتمال 24 مخرجاً × 25 سيناريو + 4 مشروع غير مثبت."
+    },
+    {
+      "door": "19",
+      "requirement": "الدليل التنفيذي وبنية الكود (§19.1–19.5)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "compile/tests/readback محدودة؛ لا إثبات كل خطوات البناء."
+    },
+    {
+      "door": "20",
+      "requirement": "التأكيدات النهائية (§20.1–20.2)",
+      "classification": "NOT_DECLARED",
+      "scope_and_gap": "FINAL_ACCEPTED/P17/P18/CONVERGED غير معلنة."
+    },
+    {
+      "door": "21",
+      "requirement": "سلامة الإحصاء (§21.1–21.9)",
+      "classification": "FAIL_SCOPED",
+      "scope_and_gap": "Gate B fail؛ stability not converged؛ Test 192 غير مثبت."
+    },
+    {
+      "door": "22",
+      "requirement": "التسليمات السبعة (§22.1–22.5)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "2 XLSX + 5 DOCX في D5؛ ليس P17 acceptance."
+    },
+    {
+      "door": "23",
+      "requirement": "بروتوكول ChatGPT/GitHub (§23.1–23.7)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "REV2 والـhandoffs مستخدمة؛ snapshots تاريخية تحتاج توضيح."
+    },
+    {
+      "door": "24",
+      "requirement": "المنتج وفجوة الواقعية (§24.1–24.3)",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "REALISM_CALIBRATED_MODEL غير مبني أو معاير."
+    },
+    {
+      "door": "25",
+      "requirement": "حوكمة الأدلة والتنفيذ (§25.1–25.11)",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "HEAD/Runs/Jobs/Artifacts/PRs/Releases فُحصت؛ تعارضات توثيقية باقية."
+    }
+  ],
+  "acceptance_test_inventory": {
+    "reference_rows": 193,
+    "unique_executable": 177,
+    "aliases": 15,
+    "documentation_rows": 1,
+    "full_177_suite": "NOT_RUN",
+    "d6_individual": {
+      "175": "PASS_SCOPED — historical test not invoked",
+      "176": "NOT_RUN",
+      "179": "NOT_RUN",
+      "180": "NOT_RUN",
+      "181": "NOT_RUN",
+      "182": "PASS_SCOPED — historical test not invoked",
+      "183": "NOT_RUN",
+      "186": "PASS_SCOPED — historical test not invoked"
+    },
+    "current_head_focused_tests": {
+      "d1_d2": "34 passed",
+      "d3": "38 passed",
+      "d4": "5 passed"
+    }
+  },
+  "output_inventory": [
+    {
+      "output_number": 1,
+      "name": "Raw Monte Carlo results",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "قاعدة كاملة لكل التكرارات غير مثبتة."
+    },
+    {
+      "output_number": 2,
+      "name": "Full statistics",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "لا دليل لكل المؤشرات والسيناريوهات."
+    },
+    {
+      "output_number": 3,
+      "name": "Representative P50 trial",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "حالات تمثيلية فقط."
+    },
+    {
+      "output_number": 4,
+      "name": "P50 daily log",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "نطاق تمثيلي لا 48K."
+    },
+    {
+      "output_number": 5,
+      "name": "P10/P90/LossCase/MaxCase",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "أدوار تمثيلية محدودة."
+    },
+    {
+      "output_number": 6,
+      "name": "DAILY_DISTRIBUTION",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "2,086,550 daily points ضمن Registry."
+    },
+    {
+      "output_number": 7,
+      "name": "Event log",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "تغطية الأحداث الكاملة غير مثبتة."
+    },
+    {
+      "output_number": 8,
+      "name": "Financial transaction log",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تمثيلي فقط."
+    },
+    {
+      "output_number": 9,
+      "name": "Contract log",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تمثيلي فقط."
+    },
+    {
+      "output_number": 10,
+      "name": "Guarantee claims log",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تمثيلي فقط."
+    },
+    {
+      "output_number": 11,
+      "name": "Asset log",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تمثيلي فقط."
+    },
+    {
+      "output_number": 12,
+      "name": "Income statement",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "موجود بالتقارير ضمن النطاق."
+    },
+    {
+      "output_number": 13,
+      "name": "Balance sheet",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "لا يثبت توازن كل يوم وكل Trial."
+    },
+    {
+      "output_number": 14,
+      "name": "Cash-flow statement",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "تقرير محدود؛ roll-forward شامل مفقود."
+    },
+    {
+      "output_number": 15,
+      "name": "Daily accounting balance test",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "48K daily proof غير موجود."
+    },
+    {
+      "output_number": 16,
+      "name": "Five roll-forward tests",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "all-trial proof غير موجود."
+    },
+    {
+      "output_number": 17,
+      "name": "2030-12-31 interim inventory",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "readback شامل غير مثبت."
+    },
+    {
+      "output_number": 18,
+      "name": "Final close date per Trial",
+      "classification": "REPORTED_ONLY",
+      "scope_and_gap": "D3 record يذكر 49,500؛ artifact member لم يُفتح في E0."
+    },
+    {
+      "output_number": 19,
+      "name": "Final inventory",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "نطاق التقرير/التسليم فقط."
+    },
+    {
+      "output_number": 20,
+      "name": "Final settlement",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "نطاق التقرير فقط."
+    },
+    {
+      "output_number": 21,
+      "name": "Final project equity",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "مخرجات تقرير محدودة؛ Gate B fail."
+    },
+    {
+      "output_number": 22,
+      "name": "Partner 1 entitlement 70%",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "مخرجات تقرير محدودة."
+    },
+    {
+      "output_number": 23,
+      "name": "Partner 2 entitlement 30%",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "مخرجات تقرير محدودة."
+    },
+    {
+      "output_number": 24,
+      "name": "Arabic and English Excel workbooks",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "185 sheets لكل ملف؛ 0 formulas/errors."
+    },
+    {
+      "output_number": 25,
+      "name": "Parquet/SQLite result database",
+      "classification": "MISSING_EVIDENCE",
+      "scope_and_gap": "قاعدة all-trial كاملة غير مثبتة."
+    },
+    {
+      "output_number": 26,
+      "name": "Error log and acceptance report",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "سجلات اختبارات محدودة؛ full suite NOT_RUN."
+    },
+    {
+      "output_number": 27,
+      "name": "manifest.json and number_registry",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "Registry 2,640 entries؛ 105 statuses NOT_VERIFIED."
+    },
+    {
+      "output_number": 28,
+      "name": "Seven deliverables",
+      "classification": "PASS_SCOPED",
+      "scope_and_gap": "7 files + manifest في D5؛ ليس P17."
+    }
+  ],
+  "prioritized_gaps": [
+    {
+      "id": "E0-G01",
+      "priority": "P0",
+      "classification": "MISSING_EVIDENCE",
+      "gap": "Production Gate A not declared; five historical accounting fields missing",
+      "action": "E1 record decisions; E2 search original sources only; no backfill"
+    },
+    {
+      "id": "E0-G02",
+      "priority": "P0",
+      "classification": "FAIL_SCOPED",
+      "gap": "Gate B N=2400 fails 10/10; Stability 0/60",
+      "action": "E1 document decision paths; N=4800 requires separate owner approval"
+    },
+    {
+      "id": "E0-G03",
+      "priority": "P0",
+      "classification": "NOT_RUN",
+      "gap": "Full 177 unique-test suite not run",
+      "action": "E3 test and fixture mapping"
+    },
+    {
+      "id": "E0-G04",
+      "priority": "P0",
+      "classification": "MISSING_EVIDENCE",
+      "gap": "All 28 outputs across all 25 scenarios not evidenced",
+      "action": "E2/E3 by dependency; no new trials in E0"
+    },
+    {
+      "id": "E0-G05",
+      "priority": "P1",
+      "classification": "MISSING_EVIDENCE",
+      "gap": "Full Logging 105 representative keys; 105/105 manifest statuses NOT_VERIFIED",
+      "action": "E1 identify independent expected byte-size source; no guessing"
+    },
+    {
+      "id": "E0-G06",
+      "priority": "P1",
+      "classification": "NOT_RUN",
+      "gap": "C100 Golden revalidation not run",
+      "action": "E3 review contract/fixtures; reuse is not Golden PASS"
+    },
+    {
+      "id": "E0-G07",
+      "priority": "P1",
+      "classification": "MISSING_EVIDENCE",
+      "gap": "Parquet schema/row-count/value-level evidence missing from D0 scope",
+      "action": "Later scoped data audit; no historical artifact changes"
+    },
+    {
+      "id": "E0-G08",
+      "priority": "P1",
+      "classification": "NOT_RUN",
+      "gap": "Tests 176/179/180/181/183 not run; 175/182/186 scoped only",
+      "action": "E3"
+    },
+    {
+      "id": "E0-G09",
+      "priority": "P1",
+      "classification": "CONFLICTED",
+      "gap": "D3-18 top-level PASS_SCOPED vs requirement map NOT_RUN",
+      "action": "E1 Append-only reconciliation"
+    },
+    {
+      "id": "E0-G10",
+      "priority": "P1",
+      "classification": "CONFLICTED",
+      "gap": "D5 tested SHA vs publication evidence commit identity",
+      "action": "E1 clarify tested SHA baf696... vs evidence commit 4c6a84..."
+    },
+    {
+      "id": "E0-G11",
+      "priority": "P1",
+      "classification": "CONFLICTED",
+      "gap": "v2.4.0 header PROPOSED vs owner decision APPROVED",
+      "action": "E1 Append-only clarification"
+    },
+    {
+      "id": "E0-G12",
+      "priority": "P1",
+      "classification": "PASS_SCOPED",
+      "gap": "D5/D6 artifacts are temporary and expire 2026-12-04",
+      "action": "Retain IDs/digests; do not mutate historical artifacts"
+    },
+    {
+      "id": "E0-G13",
+      "priority": "P2",
+      "classification": "NOT_RUN",
+      "gap": "Full DOCX numeric lineage and human page-by-page visual review",
+      "action": "E3"
+    },
+    {
+      "id": "E0-G14",
+      "priority": "P2",
+      "classification": "MISSING_EVIDENCE",
+      "gap": "REALISM_CALIBRATED_MODEL has no calibration data",
+      "action": "Separate owner scope/approval"
+    },
+    {
+      "id": "E0-G15",
+      "priority": "P2",
+      "classification": "VERIFIED_LIVE",
+      "gap": "No open PR at working head and no Releases",
+      "action": "No PR/Release needed in E0"
+    }
+  ],
+  "preserved_gate_states": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "full_logging": "105 representative keys only",
+    "c100_golden": "NOT_RUN",
+    "manifest_105": "NOT_VERIFIED",
+    "full_177_suite": "NOT_RUN",
+    "missing_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "final_accepted": "NOT_DECLARED",
+    "p17_final_accepted": "NOT_DECLARED",
+    "p18_released": "NOT_DECLARED",
+    "converged": "NOT_DECLARED"
+  },
+  "conflicts": [
+    "D3-18 top-level PASS_SCOPED vs requirement_statuses D3-18 NOT_RUN",
+    "D5 JSON publication_commit_sha equals tested SHA baf696...; correction identifies 4c6a84... as evidence-publication commit",
+    "v2.4.0 header PROPOSED vs owner decision APPROVED_BY_OWNER",
+    "REV2 opening D3/D4-D6 status snapshots are historical and superseded by later records",
+    "D6 PASS_SCOPED checks for 175/182/186 are not invocations of those historical tests"
+  ],
+  "actions_not_performed": [
+    "Trials",
+    "Simulation",
+    "Monte Carlo",
+    "N expansion",
+    "backfill",
+    "zero-fill",
+    "identity changes",
+    "historical Artifact/manifest mutation",
+    "main write",
+    "merge",
+    "force-push",
+    "Release",
+    "E1",
+    "E2",
+    "E3"
+  ],
+  "artifact_readback_note": "D5 and D6 artifacts downloaded by exact Artifact ID to ZIP file references in this session; binary ZIP bytes could not be opened in this execution context. D6 run itself records independent D5 download and verification.",
+  "source_links": {
+    "prompt_library": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-01_REV2.md",
+    "governing_reference": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+    "owner_decision": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+    "d0_d6_master": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+    "d6_matrix": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D6_CLOSURE_MATRIX_2026-11-05.md",
+    "d6_audit_json": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D6_AUDIT_RUN_41929888796/FINAL_AUDIT.json",
+    "d5_preflight": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/97120ff43434bad84d110a1087fbbc9b437e826a/docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json"
+  }
+}
