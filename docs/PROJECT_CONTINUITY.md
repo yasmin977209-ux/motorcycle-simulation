@@ -3548,3 +3548,24 @@ The current operational prompt library is [PROJECT_PROMPT_LIBRARY_AR_2026-11-05_
 REV4 does not retroactively promote any phase. D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS; E0/E1/E2 remain PASS_SCOPED within their documented scope; old-identity E2 replay is PASS_SCOPED_REPLAY_RECONSTRUCTION only. Five historical accounting fields remain MISSING_EVIDENCE; Production Gate A remains NOT_DECLARED; Gate B N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED. E3–E6 remain NOT_STARTED.
 
 Global Preservation Gate remains BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE. The 29 Actions artifacts were unexpired in the 2026-11-05 API check, but temporary availability is not permanent retention; six earlier temporary downloads do not prove phone storage or an independent archive. No new Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/business-rule/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or final acceptance declaration was performed.
+
+ 
+---
+ 
+## REV5 Prompt Library Consolidation — 2026-11-05 (Append-only)
+
+The consolidated operational library is now `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV5.md`. It was created after reading the four live libraries REV1, REV2, REV3 and REV4. The merge decisions and source Git blob identities are recorded in `docs/stage_d/REV5_LIBRARY_MERGE_AUDIT_2026-11-05.md`.
+
+REV5 introduces the mandatory `D3-S` scenario-partition sub-gate within D3 (five C partitions × five G levels, five workbooks per language), strengthens zero-gap exit criteria for D0–D6/E0–E6, and defines one-stage-at-a-time execution when the owner sends only a phase name. D3-S is a sub-gate, not a new major phase; the main sequence remains D0→D6→E0→E6.
+
+REV5 is operational documentation only. It does not change v2.4.0, business rules, thresholds, source/cohort/seed/Trial identity, historical artifacts/manifests, or acceptance verdicts. It does not authorize Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, main writes, merge, force-push, Release or final acceptance.
+
+At the REV5 session start, branch HEAD was `a4d120bb65360dfa1fbeb8e4600b1fc773411bdf`, main HEAD was `01a6f79eedc522bb734ed9c5ea31beee581f2468`, and comparison was diverged (ahead 957 / behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`). These are session evidence, not future baselines.
+
+The two original Excel files were present in the Git tree at 27,722,355 bytes (EN) and 27,734,273 bytes (AR), both below 100 MB. Partitioning is for delivery organization and scenario traceability, not a single-file size-limit workaround. Actions binary artifacts are a separate retention risk.
+
+The 29 artifact inventory was rechecked against Actions API in this session; all 29 returned `expired=false` at the time of inspection. The nearest recorded expiry remains the D0 aggregate on 2026-11-27T21:46:36Z. Metadata verification is not a ZIP byte download/hash nor permanent retention. Global Preservation Gate remains blocked until two independent durable copies and restore evidence exist.
+
+REV5 file evidence: GitHub URL https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV5.md ; SHA-256 `090f7c36b83308bd0d54054de913dc0df707bd214fcd3cf9a31cc939e01ea2a2`; Git blob SHA-1 `2c8d8595c69251e80b050013f856417e9cf77ba0`; size 52,364 bytes; containing commit `28367e7edbe16c5555daa3a65dab78ce9ac547e9`. Consolidation audit: `docs/stage_d/REV5_LIBRARY_MERGE_AUDIT_2026-11-05.md`.
+
+No phase was executed or promoted by this documentation update. D0–D6 and E0–E2 retain their prior scoped dispositions until each is independently revalidated against current evidence; E3–E6 remain gated.
