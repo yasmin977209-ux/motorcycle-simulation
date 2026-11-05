@@ -56,3 +56,8 @@ The documentation commits caused branch-triggered validation runs. Intermediate 
 - D0-D4 Run `42047850177` was triggered by the earlier status commit `492e2e3648f3f02da63a7e6db20725b017b53b7c` and failed only at its final remote readback with `D0_D4_FINAL_EXACT_HEAD_MISMATCH:074ba855456a5b0a27d7dbd604d2398cd600b718`, because later append-only commits advanced the branch while the run was validating. Earlier local/document checks and DOCX checks in that job passed. This is an exact-head race, not evidence that the D0-D4 content checks themselves failed; nevertheless it is not a passing exact-head validation for the final HEAD.
 
 No workflow was manually dispatched in this session. D0-D4 exact-head validation remains outstanding for the ultimate post-documentation HEAD. The current task remains documentation-only; do not infer D0-D4 current-head PASS from Run `42038599379` or from the raced Run `42047850177`.
+
+
+## Validation race note — final candidate 9d75852 — 2026-11-05 (append-only)
+
+The final candidate branch HEAD at this read was `9d75852b66209f38e26a4fb4326a41af5df041ac`. Runs started for preceding commit `1910773e078328f71c00223ee76bc49f3342bf55` did not validate this HEAD: D1-D2 Run `42048242486` failed its final exact-HEAD assertion because the branch had advanced to `9d75852...`; D3 Run `42048242406` was still in progress when inspected. These are preserved as race-affected attempts, not final-head evidence. This log append is intended to be the final documentation write; its resulting commit must be checked against any automatically triggered D1-D2/D3 runs, and no subsequent file writes should occur before their exact-head outcomes are read.
