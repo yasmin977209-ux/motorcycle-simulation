@@ -134,3 +134,15 @@ No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity ch
 - Invariant gates and five missing accounting fields unchanged. `FINAL_ACCEPTED`, `P17_FINAL_ACCEPTED`, `P18_RELEASED`, `CONVERGED` remain `NOT_DECLARED`. E0–E6 remain `NOT_STARTED`.
 
 See [SESSION_HANDOFF_2026-11-05_FINAL.md](SESSION_HANDOFF_2026-11-05_FINAL.md) for complete run/artifact evidence and next-session checklist.
+
+
+## D0–D6 final closure refresh — 2026-11-05 (append-only)
+
+- Consolidated report: [D0_D6_MASTER_CLOSURE_2026-11-05.md](D0_D6_MASTER_CLOSURE_2026-11-05.md); next-session handoff: [D0_D6_FINAL_HANDOFF_2026-11-05.md](D0_D6_FINAL_HANDOFF_2026-11-05.md); remote evidence: [D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json](D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json).
+- D0–D6: PASS_SCOPED_WITH_LIMITATIONS individually; project T2_INTERIM / NOT_FINAL_BLOCKED.
+- Exact-head validation at 60707875f7ecedbbe55ff28de4f8b64961711aad: D1–D2 Run 41937190532 SUCCESS (34 passed, 0 failed, 0 skipped); D3 Run 41937190400 SUCCESS (35-file Raw readback); D0–D4 Run 41937190378 SUCCESS (five DOCX checks, summary pagination, tests and Raw readback).
+- D4 stale baseline failure Run 41935049455 is superseded by corrected workflow and successful Run 41937190378. Historical failure preserved.
+- D5 Run 41928234377 / Artifact 13369179742 and D6 Run 41929888796 / Artifact 13371094066 remain scoped to their own tested SHAs; not relabelled as runs on current branch HEAD.
+- D3-18 conflict and D1 105 normalized manifest NOT_VERIFIED statuses remain visible. Invariant gates and five missing accounting fields unchanged.
+- D5 full 177-test suite NOT_RUN; D6 tests 176/179/180/181/183 and historical invocations 175/182/186 NOT_RUN.
+- FINAL_ACCEPTED/P17_FINAL_ACCEPTED/P18_RELEASED/CONVERGED NOT_DECLARED; E0–E6 NOT_STARTED. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release.
