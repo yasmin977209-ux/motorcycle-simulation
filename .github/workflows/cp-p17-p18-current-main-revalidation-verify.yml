@@ -1,0 +1,78 @@
+name: cp-p17-p18-current-main-revalidation-verify
+
+on:
+  push:
+    branches:
+      - "tmp/cp-p17-p18-current-main-revalidation-20261024"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "docs/audits/P17-INDEPENDENT-DELIVERY-AUDIT-2026-10-20.md"
+      - "docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md"
+      - "docs/audits/CP_P17_P18_CURRENT_MAIN_REVALIDATION_2026-10-24.md"
+      - "docs/stage7/statistical_execution_gate.json"
+      - "state.json"
+      - "docs/PROJECT_CONTINUITY.md"
+      - ".github/workflows/cp-p17-p18-current-main-revalidation-verify.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  p17-p18-current-main-revalidation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify restored historical P17 prefix, append-only addenda, and blocked gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p17_path = Path("docs/audits/P17-INDEPENDENT-DELIVERY-AUDIT-2026-10-20.md")
+          p18_path = Path("docs/audits/P18-RELEASE-GATE-DISPOSITION-2026-10-20.md")
+          report_path = Path("docs/audits/CP_P17_P18_CURRENT_MAIN_REVALIDATION_2026-10-24.md")
+          gate_path = Path("docs/stage7/statistical_execution_gate.json")
+          state_path = Path("state.json")
+          continuity_path = Path("docs/PROJECT_CONTINUITY.md")
+
+          p17 = p17_path.read_text(encoding="utf-8")
+          p18 = p18_path.read_text(encoding="utf-8")
+          report = report_path.read_text(encoding="utf-8")
+          gate = json.loads(gate_path.read_text(encoding="utf-8"))
+          state = json.loads(state_path.read_text(encoding="utf-8"))
+          continuity = continuity_path.read_text(encoding="utf-8")
+
+          assert p17.startswith("# P17 — independent delivery precondition audit — 2026-10-20")
+          assert "**Audit disposition: NOT_ACCEPTED.**" in p17
+          assert "P17 therefore records `NOT_ACCEPTED`" in p17
+          assert "Current-main revalidation addendum — 2026-10-24" in p17
+          assert "The old `SOURCE_SHA_DRIFT` observation is superseded" in p17
+          assert "**NOT_ACCEPTED / MISSING_EVIDENCE**" in p17
+          assert p18.startswith("# P18 — Release gate disposition — 2026-10-20")
+          assert "**Disposition: BLOCKED — no Release created.**" in p18
+          assert "Current-main revalidation addendum — 2026-10-24" in p18
+          assert "Updated disposition: BLOCKED — no Release created." in p18
+          assert "P17/P18 current-main revalidation" in report
+          assert "NOT_ACCEPTED" in report and "BLOCKED" in report
+          assert gate["status"] == "BLOCKED_FOR_IMPLEMENTATION"
+          auth = gate["execution_authorization"]
+          assert auth["production_trial_checkpoint_monte_carlo_allowed"] is False
+          assert auth["scenario_stability_declaration_allowed"] is False
+          assert auth["final_delivery_acceptance_allowed"] is False
+          cp = "CP-P17-P18-CURRENT-MAIN-REVALIDATION-20261024"
+          assert cp in state["cp_completed"]
+          assert state["p17_p18_current_main_revalidation_20261024"]["p17_status"] == "NOT_ACCEPTED"
+          assert state["p17_p18_current_main_revalidation_20261024"]["p18_status"] == "BLOCKED_NO_RELEASE"
+          assert state["p17_p18_current_main_revalidation_20261024"]["live_release_count"] == 0
+          assert cp in continuity
+          assert "P17 remains `NOT_ACCEPTED`" in continuity
+          print("P17_P18_CURRENT_MAIN_REVALIDATION_OK")
+          PY
