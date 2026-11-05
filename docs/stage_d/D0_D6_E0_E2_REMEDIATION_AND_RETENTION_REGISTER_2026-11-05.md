@@ -19,3 +19,16 @@ D1-D2 Run 42048367250 and D3 Run 42048367264 succeeded on baseline `8efa2cb5d936
 Git history preserves source and text evidence. GitHub Actions artifacts are temporary. The full inventory of 29 artifacts, IDs, run IDs, sizes, digests and expiry dates is in `D0_D6_E0_E2_RETENTION_INVENTORY_2026-11-05.json`. Earliest expiry is D0 aggregate Artifact 12852969854 on 2026-11-27; D3/D5/D6 and D0-D4 evidence expire in December; E2 replay artifacts expire 2027-02-03. No permanent binary archive exists yet. Release needs owner decision; Box was suggested but is not connected.
 
 Fixed gates remain unchanged: Financial Gate A PASS_SCOPED only; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; Full Logging 105 keys only; 105 manifest statuses NOT_VERIFIED; C100 Golden NOT_RUN. Five accounting fields remain MISSING_EVIDENCE and are not inferred or zero-filled. E3 Acceptance Execution remains NOT_STARTED.
+
+
+## Append-only correction — 2026-11-05T15:47:45Z
+
+Live Actions API recheck corrected the D3 artifact lineage: Artifact `13288779998` was produced by source Run `41754147172` (tested SHA `3325fd961005c2c47de071d25904a748af7a21a6`), not Run `41914970361`. Run `41914970361` remains the separate acceptance run. The corrected inventory records both IDs distinctly.
+
+Live metadata recheck confirmed all eight near-term/critical inventory artifacts remain unexpired: D0 aggregate `12852969854` (2026-11-27); D3 `13288779998` (2026-12-04); D5 `13369179742` (2026-12-04); D6 `13371094066` (2026-12-04); D0-D4 evidence `13373853115` (2026-12-04) and `13382253631` (2026-12-05). D1 Full Logging `12998778418` and C100 `12630457193` remain until January 2027.
+
+Downloadable copies were materialized for six artifacts: `12852969854`, `13288779998`, `13369179742`, `13371094066`, `13382253631`, `13373853115`. Their temporary signed links were supplied in the session response; they are not durable archive links. Owner should save these files locally. ZIP bytes were not independently re-hashed by this session; GitHub's artifact metadata digest remains the source-recorded digest.
+
+D0-D4 Run `42055739374` is still `in_progress` on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`; Job `127343509424` remains in dependency installation and downstream D4 pagination/Raw readback steps are pending. Per long-running workflow policy, no wait or duplicate run was started. D1-D2 Run `42055739478` and D3 Run `42055739378` completed SUCCESS on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`.
+
+Permanent binary retention remains BLOCKED: Git history preserves text/source records only; Actions artifacts expire; Release publication requires a separate owner decision; no external storage connector/archive has been established. E3/E4/E5/E6 remain NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical artifact mutation, main write, merge, force-push, or Release occurred.

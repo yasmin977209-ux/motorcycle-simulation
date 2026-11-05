@@ -3483,3 +3483,16 @@ No Trials, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, ba
 - Git history preserves text/source records. Binary Actions artifacts remain temporary; no permanent external archive is yet created. Box was suggested but is not connected; Release remains unissued and requires owner decision.
 - Project remains `T2_INTERIM / NOT_FINAL_BLOCKED`; E3 Acceptance Execution not started.
 
+
+
+## Append-only correction — 2026-11-05T15:47:45Z
+
+Live Actions API recheck corrected the D3 artifact lineage: Artifact `13288779998` was produced by source Run `41754147172` (tested SHA `3325fd961005c2c47de071d25904a748af7a21a6`), not Run `41914970361`. Run `41914970361` remains the separate acceptance run. The corrected inventory records both IDs distinctly.
+
+Live metadata recheck confirmed all eight near-term/critical inventory artifacts remain unexpired: D0 aggregate `12852969854` (2026-11-27); D3 `13288779998` (2026-12-04); D5 `13369179742` (2026-12-04); D6 `13371094066` (2026-12-04); D0-D4 evidence `13373853115` (2026-12-04) and `13382253631` (2026-12-05). D1 Full Logging `12998778418` and C100 `12630457193` remain until January 2027.
+
+Downloadable copies were materialized for six artifacts: `12852969854`, `13288779998`, `13369179742`, `13371094066`, `13382253631`, `13373853115`. Their temporary signed links were supplied in the session response; they are not durable archive links. Owner should save these files locally. ZIP bytes were not independently re-hashed by this session; GitHub's artifact metadata digest remains the source-recorded digest.
+
+D0-D4 Run `42055739374` is still `in_progress` on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`; Job `127343509424` remains in dependency installation and downstream D4 pagination/Raw readback steps are pending. Per long-running workflow policy, no wait or duplicate run was started. D1-D2 Run `42055739478` and D3 Run `42055739378` completed SUCCESS on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`.
+
+Permanent binary retention remains BLOCKED: Git history preserves text/source records only; Actions artifacts expire; Release publication requires a separate owner decision; no external storage connector/archive has been established. E3/E4/E5/E6 remain NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical artifact mutation, main write, merge, force-push, or Release occurred.

@@ -58,7 +58,7 @@
     },
     {
       "phase": "D3",
-      "run_id": 41914970361,
+      "run_id": 41754147172,
       "artifact_id": 13288779998,
       "tested_sha": "b3dfd886ec57308c0bf68f5eec4cc8417faaa3e1",
       "size_in_bytes": 535567142,
@@ -66,7 +66,9 @@
       "expires_at": "2026-12-04T02:07:02Z",
       "expired": false,
       "role": "D3 workbook",
-      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41914970361/artifacts/13288779998"
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41914970361/artifacts/13288779998",
+      "source_run_head_sha": "3325fd961005c2c47de071d25904a748af7a21a6",
+      "acceptance_run_id": 41914970361
     },
     {
       "phase": "D0-D4",
@@ -375,9 +377,67 @@
     "unexpired": 29
   },
   "limitations": [
-    "Metadata and GitHub digests were read live except D3 metadata which derives from committed D3 acceptance record and needs Actions API recheck.",
     "This inventory does not claim independent ZIP byte re-hash of all 29 items in this session.",
     "D3, D5, D6, D0-D4 and E2 replay artifacts are temporary Actions artifacts, not permanent archives.",
-    "No historical artifact, manifest, source identity, or trial identity was modified."
+    "No historical artifact, manifest, source identity, or trial identity was modified.",
+    "D3 source artifact run ID corrected by live Actions API: Artifact 13288779998 was produced by Run 41754147172 (tested SHA 3325fd961005c2c47de071d25904a748af7a21a6); Run 41914970361 is the separate acceptance run.",
+    "Six downloadable ZIP copies were materialized on 2026-11-05; ChatGPT-hosted signed links are temporary and are not a permanent archive.",
+    "Permanent binary retention remains unresolved; GitHub Actions artifact expiry is unchanged. No Release, external archive, or phone storage operation was performed."
+  ],
+  "metadata_reverified_at": "2026-11-05T15:47:45Z",
+  "metadata_reverification": {
+    "D0_aggregate_12852969854": "LIVE_UNEXPIRED",
+    "D1_full_logging_12998778418": "LIVE_UNEXPIRED",
+    "D2_C100_12630457193": "LIVE_UNEXPIRED",
+    "D3_owner_approved_13288779998": "LIVE_UNEXPIRED; source run corrected to 41754147172; acceptance run 41914970361 is distinct",
+    "D5_13369179742": "LIVE_UNEXPIRED",
+    "D6_13371094066": "LIVE_UNEXPIRED",
+    "D0_D4_13373853115": "LIVE_UNEXPIRED",
+    "D0_D4_13382253631": "LIVE_UNEXPIRED"
+  },
+  "download_copies_created_at": "2026-11-05T15:47:45Z",
+  "download_copies": [
+    {
+      "artifact_id": 12852969854,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-12852969854.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    },
+    {
+      "artifact_id": 13288779998,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-13288779998.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    },
+    {
+      "artifact_id": 13369179742,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-13369179742.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    },
+    {
+      "artifact_id": 13371094066,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-13371094066.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    },
+    {
+      "artifact_id": 13382253631,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-13382253631.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    },
+    {
+      "artifact_id": 13373853115,
+      "downloaded": true,
+      "download_copy_name": "motorcycle-artifact-13373853115.zip",
+      "signed_download_url_not_committed": true,
+      "link_validity_note": "ChatGPT-hosted signed download URL is temporary; save the file locally to the phone now."
+    }
   ]
 }

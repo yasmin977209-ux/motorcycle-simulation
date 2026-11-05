@@ -61,3 +61,16 @@ No workflow was manually dispatched in this session. D0-D4 exact-head validation
 ## Validation race note — final candidate 9d75852 — 2026-11-05 (append-only)
 
 The final candidate branch HEAD at this read was `9d75852b66209f38e26a4fb4326a41af5df041ac`. Runs started for preceding commit `1910773e078328f71c00223ee76bc49f3342bf55` did not validate this HEAD: D1-D2 Run `42048242486` failed its final exact-HEAD assertion because the branch had advanced to `9d75852...`; D3 Run `42048242406` was still in progress when inspected. These are preserved as race-affected attempts, not final-head evidence. This log append is intended to be the final documentation write; its resulting commit must be checked against any automatically triggered D1-D2/D3 runs, and no subsequent file writes should occur before their exact-head outcomes are read.
+
+
+## Append-only correction — 2026-11-05T15:47:45Z
+
+Live Actions API recheck corrected the D3 artifact lineage: Artifact `13288779998` was produced by source Run `41754147172` (tested SHA `3325fd961005c2c47de071d25904a748af7a21a6`), not Run `41914970361`. Run `41914970361` remains the separate acceptance run. The corrected inventory records both IDs distinctly.
+
+Live metadata recheck confirmed all eight near-term/critical inventory artifacts remain unexpired: D0 aggregate `12852969854` (2026-11-27); D3 `13288779998` (2026-12-04); D5 `13369179742` (2026-12-04); D6 `13371094066` (2026-12-04); D0-D4 evidence `13373853115` (2026-12-04) and `13382253631` (2026-12-05). D1 Full Logging `12998778418` and C100 `12630457193` remain until January 2027.
+
+Downloadable copies were materialized for six artifacts: `12852969854`, `13288779998`, `13369179742`, `13371094066`, `13382253631`, `13373853115`. Their temporary signed links were supplied in the session response; they are not durable archive links. Owner should save these files locally. ZIP bytes were not independently re-hashed by this session; GitHub's artifact metadata digest remains the source-recorded digest.
+
+D0-D4 Run `42055739374` is still `in_progress` on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`; Job `127343509424` remains in dependency installation and downstream D4 pagination/Raw readback steps are pending. Per long-running workflow policy, no wait or duplicate run was started. D1-D2 Run `42055739478` and D3 Run `42055739378` completed SUCCESS on exact HEAD `72aadb22ba7d3e52ce381ce898ce614058def095`.
+
+Permanent binary retention remains BLOCKED: Git history preserves text/source records only; Actions artifacts expire; Release publication requires a separate owner decision; no external storage connector/archive has been established. E3/E4/E5/E6 remain NOT_STARTED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical artifact mutation, main write, merge, force-push, or Release occurred.
