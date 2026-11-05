@@ -60,6 +60,11 @@ class Archive:
         return self
     def names(self) -> list[str]:
         self._require(); return self._zip.namelist()
+    def member_size(self, member: str) -> int:
+        """Return the uncompressed member size recorded in the verified ZIP central directory."""
+        self._require()
+        try: return int(self._zip.getinfo(member).file_size)
+        except KeyError as exc: raise MissingEvidenceError("MISSING_MEMBER:"+member) from exc
     def read_bytes(self, member: str) -> bytes:
         self._require()
         if member not in self._zip.namelist(): raise MissingEvidenceError("MISSING_MEMBER:"+member)
