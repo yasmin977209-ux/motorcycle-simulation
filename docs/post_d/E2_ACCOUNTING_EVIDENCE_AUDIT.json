@@ -1,0 +1,1 @@
+{"schema":"e2-accounting-evidence-audit-v1","e2_status":"PASS_SCOPED","production_gate_a":"NOT_DECLARED","five_missing_fields":["Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"],"baseline_head":"561d5b0cb1b87f83c365c2bf3b1dee5ef120be07","next_stage_started":false}
