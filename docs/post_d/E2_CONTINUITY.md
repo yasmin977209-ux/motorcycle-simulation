@@ -83,3 +83,12 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - This is Preflight only; new S6/C100 Trials and Golden revalidation remain held for final owner confirmation. C100 300-per-path repetitions remain deterministic repeats, not independent samples.
 - Prior Run `41958935113` is still active under the earlier S6 replay identity and is explicitly outside this new lineage.
 - E2 historical gap status is not retroactively changed; historical five fields remain `MISSING_EVIDENCE`. E3 remains not started.
+
+
+## E2 Run 41958935113 completion — live verification — 2026-11-05
+
+- Run `41958935113` concluded `success`; 20/20 replay scenario jobs and aggregate job succeeded at workflow HEAD `002b74893ca9dfea864e83fecc558f2388748ffe`.
+- Scenario outputs: 48,000 total Trial identities, 2,400 per scenario, 98,323,918 daily rows. Every scenario log ends with `PASS_SCOPED_REPLAY_RECONSTRUCTION`, `fingerprints=PASS`, `overlap=PASS`, `balance=PASS`.
+- Aggregate artifact `13393273763`, ZIP SHA-256 `fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1`; embedded JSON SHA-256 `4756203c36d578a44204c40c4ec1948312a4ec736d3b4a83588b9399f713b80e`.
+- This is the old-identity E2 replay only: original execution source `a23ba71f48487f3ebead99bc30039b14ef9b7609`, old SOURCE_SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`, old cohort `s6-v23-da1a9ea9`. The workflow applies instrumentation to the old source; it does not execute the proposed new source/cohort.
+- No new S6/C100 Trials, new Golden, or D0'–D6' outputs were created. Production Gate A remains `NOT_DECLARED`; final acceptance remains not granted.
