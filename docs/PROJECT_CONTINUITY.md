@@ -3318,3 +3318,16 @@ Main accidental-write incident is resolved by owner-authorized normal Revert `01
 - Fixed blockers remain: Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; C100 Golden NOT_RUN; Full Logging 105 representative keys; 105 manifest statuses NOT_VERIFIED; Full 177 suite NOT_RUN; five accounting fields MISSING_EVIDENCE.
 - E1 is the only next permitted stage after E0 readback. No Trials, Monte Carlo, N expansion, backfill, zero-fill, identity changes, main write, merge or Release.
 - This entry supplements prior history and does not rewrite it.
+
+
+## E1 Governance Reconciliation — 2026-11-05 (append-only)
+
+- E1: `PASS_SCOPED` — documentary/governance reconciliation only; project remains `T2_INTERIM / NOT_FINAL_BLOCKED`.
+- E0 was re-read from GitHub and confirmed `PASS_SCOPED`; D0–D6 closure was revalidated within the bounded scopes documented in the D0–D6 master closure.
+- E1 outputs: `docs/post_d/E1_GOVERNANCE_RECONCILIATION.md`, `docs/post_d/E1_OWNER_DECISIONS_REQUIRED.md`, `docs/post_d/E1_DECISION_REGISTER.json`, and `docs/post_d/E1_CONTINUITY.md`.
+- Reconciled documentary conflicts: v2.4.0 stale `PROPOSED_FOR_OWNER_ADOPTION` header vs owner decision `APPROVED_BY_OWNER`; D3-18 requirement-level `NOT_RUN` vs top-level scoped D3 disposition; D5 tested SHA vs publication-evidence commit; superseded historical D1/D6/session snapshots.
+- Fixed gate states remain unchanged: Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`.
+- Full 177-test suite `NOT_RUN`; C100 Golden `NOT_RUN`; 105 manifest statuses `NOT_VERIFIED`; Full Logging 105 representative keys only; five accounting fields remain `MISSING_EVIDENCE`.
+- No business rule/reference/threshold/identity changes, Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, historical Artifact/manifest mutation, main write, merge, force-push, or Release.
+- E2 has not started. E1 is limited to reconciliation and owner-decision register; no later stage is authorized by this record.
+- E1 baseline HEAD: `3c11c11cbe71bdf6e0ca3f1499853b13a7ffde59`; E1 files committed in sequence and will be remotely re-read at the exact final HEAD.
