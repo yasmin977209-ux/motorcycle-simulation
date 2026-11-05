@@ -3400,3 +3400,12 @@ This is the validation of the candidate HEAD before this append-only status refr
 - At this status append, Run `41958854203` (tested SHA `65578376a428befa0edcb5652ada0571847b1588`) is `in_progress`; preflight succeeded and replay matrix jobs are partly running/partly cancelled. Run `41958935113` (tested SHA `002b74893ca9dfea864e83fecc558f2388748ffe`) is `pending`. These are duplicate workflow attempts for the same fixed Trial identity set; no new scenarios, Trial IDs, N expansion, or changed identities are authorized. Do not claim replay completion until one run produces all 20 accepted scenario reports and the aggregate exact-coverage report.
 - E2 remains `BLOCKED / IN_PROGRESS` for accounting reconstruction; Production Gate A remains `NOT_DECLARED`; Financial Gate A remains `PASS_SCOPED`; E3 has not started. No final acceptance is granted.
 - Next action: monitor the already-started run(s), inspect each job log and every uploaded replay Artifact, then perform exact 20-scenario/48,000-Trial fingerprint, overlapping daily-field/date, complete daily coverage, and per-row `Assets == Equity` checks. Any mismatch fails closed. Do not start a further run or expand scope.
+
+ 
+## E2 replay run-state correction — 2026-11-05
+
+This later append-only status supersedes the in-progress/pending labels in the preceding execution note:
+- Run `41958854203` (tested SHA `65578376a428befa0edcb5652ada0571847b1588`) is now `cancelled`; all 20 matrix jobs are cancelled and aggregate failed due absent completed scenario evidence. No replay scenario is accepted from this run.
+- Run `41958935113` (tested SHA `002b74893ca9dfea864e83fecc558f2388748ffe`) has advanced from pending to `in_progress`; owner-authorization preflight is running. This is the sole current active candidate run. Its workflow has `cancel-in-progress: true` to prevent overlapping same-branch replay runs.
+- Current branch HEAD at this correction's start was `763fdef9601c3749ba9c9a9a7b237359f145ea7b`; this documentation-only append does not change replay code or the tested SHA of Run 41958935113.
+- No scenario report or aggregate acceptance has yet been confirmed. E2 accounting reconstruction remains `IN_PROGRESS`; Production Gate A remains `NOT_DECLARED`; E3 remains not started.
