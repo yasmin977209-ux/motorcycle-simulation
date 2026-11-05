@@ -285,3 +285,8 @@ D5 Artifact 13369179742 metadata: 519,116,689 bytes; digest `80caf0567e31a6bf539
 REV3 corrections: `Potential_Coverage_Cells=604`; `Required_Output_Coverage_Cells=PENDING_MATRIX_VALIDATION` until applicability is demonstrated. E2 dispositions are historical audit `PASS_SCOPED`, old-identity replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`, and new S6/C100 `WAIT_FINAL_OWNER_CONFIRMATION`. E3 Readiness is documentation/inventory only and distinct from E3 Acceptance Execution; formal E3 remains `NOT_STARTED`. Gate B remains `CONFLICTED` pending SOURCE_SHA/cohort/seed/scenario/N/checkpoint/Run/Job/tested-SHA/Artifact reconciliation.
 
 No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, protected identity/rule/reference/threshold changes, historical Artifact mutation, main write, merge, Release, or final acceptance. Financial Gate A remains `PASS_SCOPED`; Production Gate A `NOT_DECLARED`; Stability `NOT_CONVERGED (0/60)`.
+
+
+## Final validation candidate — 2026-11-05 (append-only)
+
+After the previous documentation commits, the live branch HEAD was `1910773e078328f71c00223ee76bc49f3342bf55`. The branch-triggered D1-D2 Run `42047911700` and D3 Run `42047911649` both succeeded on the immediately preceding HEAD `074ba855456a5b0a27d7dbd604d2398cd600b718`. D0-D4 Run `42047850177` did not validate that final HEAD: its job was pinned to `492e2e3648f3f02da63a7e6db20725b017b53b7c` and ended at remote readback with exact-head mismatch because the branch advanced to `074ba855...` during execution. This status append is the final intended validation candidate; its own triggered workflow outcomes must be read back before classifying the resulting HEAD.
