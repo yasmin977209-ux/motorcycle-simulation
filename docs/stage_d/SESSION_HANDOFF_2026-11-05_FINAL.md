@@ -227,3 +227,31 @@ D5 Artifact 13369179742: metadata only verified; 519,116,689 bytes; digest `sha2
 Corrections: 604 is potential coverage arithmetic only; applicability matrix pending. E2 historical audit / old-identity replay / new S6-C100 are separate dispositions; new lineage waits for final owner confirmation. E3 Readiness is documentation-only and distinct from E3 Acceptance Execution; formal E3 remains NOT_STARTED. Gate B remains CONFLICTED pending exact identity/checkpoint/run/artifact reconciliation.
 
 No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, protected identity/rule/reference/threshold change, historical Artifact mutation, main write, merge, Release, or final acceptance. Continue only documentation-only E3 readiness after a fresh baseline; do not enter E3 acceptance execution without its formal gate.
+
+# Remediation Session Log — 2026-11-05
+
+- Baseline: branch `8efa2cb5d936a79dd27f649b5fd7434cced5f29f`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; divergent 951 ahead / 2 behind.
+- D1-D2 Run 42048367250 and D3 Run 42048367264 passed on baseline HEAD. D0-D4 exact-head was not verified on this baseline.
+- D4 workflow corrected to use D3/D4 evidence dated 2026-11-05 and current Session Status; separate D5/D6 tested SHAs retained.
+- Added read-only D0 Parquet metadata workflow for pinned artifacts 12852969854, 12998778418, 12630457193; no Trials or historical data mutation.
+- Added 29-artifact retention inventory; all listed artifacts were unexpired at the metadata snapshot. Binary retention remains temporary pending archive destination.
+- E2 old-identity replay Run 41958935113 remains PASS_SCOPED_REPLAY_RECONSTRUCTION; new S6/C100 lineage awaits final owner confirmation.
+- No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release or E3 Acceptance Execution.
+
+# D0–D6 / E0–E2 Remediation Summary — 2026-11-05
+
+| Stage | Disposition | Remaining boundary |
+|---|---|---|
+| D0 | PASS_SCOPED_WITH_LIMITATIONS | Read-only Parquet metadata audit triggered; original 48K daily evidence and five fields remain missing |
+| D1 | PASS_SCOPED_WITH_LIMITATIONS | 105 normalized manifest states NOT_VERIFIED where independent expected byte sizes are absent |
+| D2 | PASS_SCOPED_WITH_LIMITATIONS | Registry is scoped; no full 48K detailed ledgers |
+| D3 | PASS_SCOPED_WITH_LIMITATIONS | D3-18 remains NOT_RUN |
+| D4 | PASS_SCOPED_WITH_LIMITATIONS | Workflow stale references corrected; exact-head rerun required |
+| D5 | PASS_SCOPED_WITH_LIMITATIONS | 177-test suite NOT_RUN; Artifact temporary |
+| D6 | PASS_SCOPED_WITH_LIMITATIONS | Tests 176/179/180/183 NOT_RUN; Artifact temporary |
+| E0 | PASS_SCOPED | Gap inventory only; not acceptance |
+| E1 | PASS_SCOPED | Governance reconciliation only; owner-only choices remain |
+| E2 | PASS_SCOPED | Old replay reconstruction succeeded; original history still has missing fields; new lineage waits owner confirmation |
+
+Retention: Git history preserves source/docs; 29 GitHub Actions Artifacts are temporary. No permanent binary archive exists yet. GitHub Release requires separate owner decision; Box is suggested but not connected. E3 remains NOT_STARTED.
+

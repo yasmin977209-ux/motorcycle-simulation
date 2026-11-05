@@ -15,6 +15,10 @@ on:
       - docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md
       - docs/PROJECT_HANDOFF.md
       - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
+      - docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md
+      - docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json
+      - docs/stage_d/D0_D6_E0_E2_REMEDIATION_AND_RETENTION_REGISTER_2026-11-05.md
+      - docs/stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_2026-11-05.json
   workflow_dispatch:
 
 permissions:
@@ -132,6 +136,13 @@ jobs:
               "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.md",
               "docs/stage_d/D0_D4_GATE_CLOSURE_2026-11-03.json",
+              "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md",
+              "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json",
+              "docs/stage_d/D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json",
+              "docs/stage_d/D0_D6_E0_E2_REMEDIATION_AND_RETENTION_REGISTER_2026-11-05.md",
+              "docs/stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_2026-11-05.json",
+              "docs/stage_d/D0_PARQUET_AUDIT_TRIGGER_2026-11-05.md",
+              ".github/workflows/d0-immutable-input-parquet-audit.yml",
               "docs/PROJECT_CONTINUITY.md",
               "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md",
               "docs/PROJECT_HANDOFF.md",
@@ -177,7 +188,7 @@ jobs:
               "docs/PROJECT_CONTINUITY.md",
               "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md",
               "docs/PROJECT_HANDOFF.md",
-              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-03.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md",
               "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
               "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
               "results/number_registry.json",
@@ -201,19 +212,22 @@ jobs:
               print(f"VERIFIED_RAW {path} bytes={len(remote)} sha256={digest} blob_sha1={blob} commit={sha} url={url}")
               evidence.append({"path": path, "bytes": len(remote), "sha256": digest, "git_blob_sha1": blob, "commit_sha": sha, "url": url})
 
-          audit = json.loads(pathlib.Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-03.json").read_text(encoding="utf-8"))
-          artifact_acceptance = json.loads(pathlib.Path("docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-03.json").read_text(encoding="utf-8"))
+          audit = json.loads(pathlib.Path("docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json").read_text(encoding="utf-8"))
+          artifact_acceptance = json.loads(pathlib.Path("docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json").read_text(encoding="utf-8"))
+          d0_d6 = json.loads(pathlib.Path("docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.json").read_text(encoding="utf-8"))
+          d5 = json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json").read_text(encoding="utf-8"))
           result = {
               "schema_version": "d0-d4-final-exact-head-evidence-v1",
               "repository": repo,
               "branch": "tmp/d1-rebuild-20261101",
               "tested_sha": sha,
               "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
-              "d0": "PASS_SCOPED_WITH_LIMITATIONS",
-              "d1": "PASS_SCOPED_WITH_LIMITATIONS",
-              "d2": "PASS_SCOPED_WITH_LIMITATIONS",
-              "d3": "PASS_SCOPED_WITH_LIMITATIONS",
-              "d4": "PASS_SCOPED_WITH_LIMITATIONS",
+              "d0": d0_d6["D0"],
+              "d1": d0_d6["D1"],
+              "d2": d0_d6["D2"],
+              "d3": d0_d6["D3"],
+              "d4": d0_d6["D4"],
+              "d3_18_requirement_status": artifact_acceptance["d3_requirement_statuses"]["D3-18"],
               "d3_artifact_id": artifact_acceptance["artifact"]["id"],
               "d3_artifact_expires_at": artifact_acceptance["artifact"]["expires_at"],
               "d4_tested_sha": audit["tested_sha"],
@@ -221,9 +235,11 @@ jobs:
               "d4_number_ids_rendered": audit["number_ids_rendered"],
               "evidence": evidence,
               "main_modified": False,
-              "d5": "NOT_STARTED",
+              "d5": {"status":"PASS_SCOPED_WITH_LIMITATIONS","run_id":int(d5["workflow_run_id"]),"tested_sha":d5["tested_sha"],"artifact_id":d5["artifact"]["id"],"expires_at":d5["artifact"]["expires_at"],"scope":"separate tested SHA; not attributed to current D0-D4 HEAD"},
+              "d6": {"status":"PASS_SCOPED_WITH_LIMITATIONS","artifact_id":13371094066,"scope":"separate tested SHA; not attributed to current D0-D4 HEAD"},
               "final_accepted": "NOT_DECLARED",
-              "limitations_preserved": True
+              "limitations_preserved": True,
+              "final_acceptance": "NOT_DECLARED"
           }
           pathlib.Path("d0-d4-final-exact-head-evidence.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           remote_head = subprocess.check_output(["git", "ls-remote", "origin", "refs/heads/tmp/d1-rebuild-20261101"], text=True).split()[0]

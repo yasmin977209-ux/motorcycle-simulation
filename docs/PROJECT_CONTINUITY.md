@@ -3469,3 +3469,17 @@ D5 Artifact `13369179742` metadata is live-verified: 519,116,689 bytes; GitHub d
 REV3 corrections: 604 is `Potential_Coverage_Cells` only (`24 × 25 + 4)); `Required_Output_Coverage_Cells=PENDING_MATRIX_VALIDATION` until applicability is evidenced. E2 is split into historical audit `PASS_SCOPED`, old-identity replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`, and new S6/C100 `WAIT_FINAL_OWNER_CONFIRMATION`. E3 Readiness (documentation/inventory only) is distinct from E3 Acceptance Execution. Gate B remains `CONFLICTED` until identity/checkpoint/run/tested-SHA/artifact mapping reconciles the N=2400 statements.
 
 No Trials, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, backfill, zero-fill, identity/reference/threshold/business-rule change, historical Artifact/manifest mutation, main write, merge, Release, or final acceptance was performed or authorized. E3 remains `NOT_STARTED`; project remains `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+# Project Continuity Addendum — D0–D6 / E0–E2 Remediation — 2026-11-05
+
+- Baseline branch HEAD: `8efa2cb5d936a79dd27f649b5fd7434cced5f29f`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D4 exact-head workflow defect identified: stale D3/D4 JSON references dated 2026-11-03 and stale Session Status Raw path. Corrected in this commit to 2026-11-05 sources.
+- Added read-only D0 metadata audit workflow for pinned artifacts 12852969854, 12998778418, 12630457193. It verifies bytes and inspects Parquet metadata only; no Trials.
+- Added current retention inventory covering 29 Actions Artifacts; expiry dates and digests are recorded in the new JSON register.
+- D0/D1/D2 historical limits remain: missing source_run_metadata.sha256, 105 normalized manifest statuses NOT_VERIFIED, historical 48K detailed ledgers and five accounting fields missing.
+- D3-18 remains NOT_RUN despite scoped artifact-level D3 disposition.
+- D5 full 177-test suite and D6 tests 176/179/180/183 remain NOT_RUN; these are not silently promoted or run as E3.
+- E2 Run 41958935113 is a successful old-identity replay reconstruction only. The proposed new S6/C100 lineage still awaits final owner confirmation.
+- Git history preserves text/source records. Binary Actions artifacts remain temporary; no permanent external archive is yet created. Box was suggested but is not connected; Release remains unissued and requires owner decision.
+- Project remains `T2_INTERIM / NOT_FINAL_BLOCKED`; E3 Acceptance Execution not started.
+

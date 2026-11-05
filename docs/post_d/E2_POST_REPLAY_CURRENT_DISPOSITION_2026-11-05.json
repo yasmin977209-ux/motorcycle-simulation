@@ -1,0 +1,49 @@
+{
+  "schema": "e2-post-replay-current-disposition-v1",
+  "recorded_at": "2026-11-05",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "review_head": "8efa2cb5d936a79dd27f649b5fd7434cced5f29f",
+  "status": "PASS_SCOPED",
+  "historical_original_accounting": {
+    "status": "MISSING_EVIDENCE",
+    "fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "production_gate_a": "NOT_DECLARED"
+  },
+  "old_identity_replay": {
+    "status": "PASS_SCOPED_REPLAY_RECONSTRUCTION",
+    "run_id": 41958935113,
+    "workflow_head_sha": "002b74893ca9dfea864e83fecc558f2388748ffe",
+    "execution_source_commit": "a23ba71f48487f3ebead99bc30039b14ef9b7609",
+    "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "cohort_id": "s6-v23-da1a9ea9",
+    "master_seed": 20270101,
+    "scenarios": 20,
+    "trials_per_scenario": 2400,
+    "total_trials": 48000,
+    "replay_daily_rows": 98323918,
+    "scenario_jobs": "20/20 success",
+    "fingerprint_reconciliation": "PASS_SCOPED",
+    "overlapping_daily_reconciliation": "PASS_SCOPED",
+    "daily_balance_reconstruction": "PASS_SCOPED",
+    "final_acceptance": "NOT_GRANTED",
+    "aggregate_artifact_id": 13393273763,
+    "aggregate_artifact_sha256": "fcd8f86c8c60b9577931839b2755041e0072063cf963c396ddcb318a3d14b7c1"
+  },
+  "new_s6_c100_lineage": {
+    "status": "WAIT_FINAL_OWNER_CONFIRMATION",
+    "source_pin_candidate": "002b74893ca9dfea864e83fecc558f2388748ffe",
+    "s6_cohort_id": "s6-v23-rebuild-20261105",
+    "c100_cohort_id": "c100-v23-rebuild-20261105",
+    "master_seed": 20270101,
+    "trials_run": false
+  },
+  "e3_started": false,
+  "project": "T2_INTERIM / NOT_FINAL_BLOCKED"
+}

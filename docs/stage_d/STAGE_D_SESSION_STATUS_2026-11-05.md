@@ -290,3 +290,14 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, N=4800, pro
 ## Final validation candidate — 2026-11-05 (append-only)
 
 After the previous documentation commits, the live branch HEAD was `1910773e078328f71c00223ee76bc49f3342bf55`. The branch-triggered D1-D2 Run `42047911700` and D3 Run `42047911649` both succeeded on the immediately preceding HEAD `074ba855456a5b0a27d7dbd604d2398cd600b718`. D0-D4 Run `42047850177` did not validate that final HEAD: its job was pinned to `492e2e3648f3f02da63a7e6db20725b017b53b7c` and ended at remote readback with exact-head mismatch because the branch advanced to `074ba855...` during execution. This status append is the final intended validation candidate; its own triggered workflow outcomes must be read back before classifying the resulting HEAD.
+
+# Remediation Session Log — 2026-11-05
+
+- Baseline: branch `8efa2cb5d936a79dd27f649b5fd7434cced5f29f`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; divergent 951 ahead / 2 behind.
+- D1-D2 Run 42048367250 and D3 Run 42048367264 passed on baseline HEAD. D0-D4 exact-head was not verified on this baseline.
+- D4 workflow corrected to use D3/D4 evidence dated 2026-11-05 and current Session Status; separate D5/D6 tested SHAs retained.
+- Added read-only D0 Parquet metadata workflow for pinned artifacts 12852969854, 12998778418, 12630457193; no Trials or historical data mutation.
+- Added 29-artifact retention inventory; all listed artifacts were unexpired at the metadata snapshot. Binary retention remains temporary pending archive destination.
+- E2 old-identity replay Run 41958935113 remains PASS_SCOPED_REPLAY_RECONSTRUCTION; new S6/C100 lineage awaits final owner confirmation.
+- No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity/reference/threshold change, historical Artifact/manifest mutation, main write, merge, force-push, Release or E3 Acceptance Execution.
+
