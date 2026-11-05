@@ -352,3 +352,10 @@ No phase execution or acceptance promotion occurred in this library-update sessi
 - REV6 adds detailed phase contracts, exact predecessor gating, traceability matrices, test invocation evidence, root-cause remediation, negative/boundary coverage, GitHub size guardrails, permanent-retention restore requirements, and phone-copy limitations.
 - No D0 or later phase was executed or closed. No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/historical Artifact mutation/main write/merge/Release/final acceptance occurred.
 - The project phase statuses and preservation gate remain unchanged until separately revalidated and closed by their own evidence.
+
+
+## REV6 Link Resolution Correction — Append-only
+
+Because this file resides under docs/stage_d, the REV6 library and audit links are absolute GitHub URLs:
+- https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md
+- https://github.com/yasmin977209-ux/motorcycle-simulation/blob/tmp/d1-rebuild-20261101/docs/stage_d/REV6_LIBRARY_REVIEW_AUDIT_2026-11-05.md
