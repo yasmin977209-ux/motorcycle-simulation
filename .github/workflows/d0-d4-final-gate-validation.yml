@@ -141,8 +141,6 @@ jobs:
               "docs/stage_d/D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json",
               "docs/stage_d/D0_D6_E0_E2_REMEDIATION_AND_RETENTION_REGISTER_2026-11-05.md",
               "docs/stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_2026-11-05.json",
-              "docs/stage_d/D0_PARQUET_AUDIT_TRIGGER_2026-11-05.md",
-              ".github/workflows/d0-immutable-input-parquet-audit.yml",
               "docs/PROJECT_CONTINUITY.md",
               "docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-03.md",
               "docs/PROJECT_HANDOFF.md",
