@@ -615,3 +615,18 @@ Review-start refs (must be revalidated in the next session):
 D0–D6 are currently recorded as `PASS_SCOPED_WITH_LIMITATIONS` within scoped evidence. D6 is not final acceptance. D3-18 requirement-map and v2.4.0 header/owner-decision inconsistencies are explicitly preserved for append-only reconciliation. D5 publication evidence commit is `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`; tested SHA is `baf696af1e951cbf4a79e8a9e009c60c6b053b2d`.
 
 The owner-authorized Revert of the accidental main write is `01a6f79eedc522bb734ed9c5ea31beee581f2468`. Do not write main again absent new explicit owner authorization. E0–E6 remain NOT_STARTED; do not infer permission to run trials, simulations, Monte Carlo, N expansion, backfill, identity changes, release or final acceptance.
+
+
+---
+
+## D0–D6 final closure handoff — 2026-11-05 (append-only)
+
+- Canonical closure report: [D0_D6_MASTER_CLOSURE_2026-11-05.md](stage_d/D0_D6_MASTER_CLOSURE_2026-11-05.md).
+- Stage D final handoff: [D0_D6_FINAL_HANDOFF_2026-11-05.md](stage_d/D0_D6_FINAL_HANDOFF_2026-11-05.md).
+- Remote evidence triples: [D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json](stage_d/D0_D6_FINAL_REMOTE_EVIDENCE_2026-11-05.json).
+- D0–D6 remain PASS_SCOPED_WITH_LIMITATIONS; project remains T2_INTERIM / NOT_FINAL_BLOCKED.
+- Exact-head runs on 60707875f7ecedbbe55ff28de4f8b64961711aad: D1–D2 41937190532 SUCCESS (34 passed); D3 41937190400 SUCCESS (35 Raw-readback files); D0–D4 41937190378 SUCCESS (DOCX open/fingerprint, summary pagination, tests, Raw readback).
+- D4 stale audit path was corrected; Run 41935049455 remains historical failure, superseded for current gate by 41937190378.
+- D5 41928234377 / Artifact 13369179742 and D6 41929888796 / Artifact 13371094066 are verified only at their respective tested SHAs.
+- Preserve D3-18 status conflict, D1 105 manifest NOT_VERIFIED states, all gate limitations and five missing accounting fields. D5 177-test suite and D6 acceptance tests remain NOT_RUN as listed in the closure report.
+- E0–E6 remain NOT_STARTED; FINAL_ACCEPTED/P17_FINAL_ACCEPTED/P18_RELEASED/CONVERGED remain NOT_DECLARED. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge or Release.
