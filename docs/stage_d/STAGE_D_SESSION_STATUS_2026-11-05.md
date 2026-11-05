@@ -451,3 +451,16 @@ See [docs/stage_d/LIVE_REVALIDATION_AND_ARTIFACT_INVENTORY_CORRECTION_2026-11-05
 - Dropbox folder readback: 9/9 files, `has_more=false`, 1,375,253,616 bytes, matching source Artifact sizes. Byte-hash comparison and restore test remain `NOT_RUN`; only one external durable copy is evidenced.
 - D0–D6 remain `PASS_SCOPED_WITH_LIMITATIONS`; E0–E2 remain `PASS_SCOPED`; E3–E6 remain `NOT_STARTED`. Fixed financial/statistical gate states and five missing historical accounting fields remain unchanged.
 - Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`. The new S6+C100 lineage remains gated on separate final owner confirmation. No E3, Trial, Monte Carlo, identity change, main write, merge, or Release occurred.
+
+
+---
+
+## REV6 gate-readiness clarification — 2026-11-05 (append-only)
+
+See [REV6_GATE_READINESS_AUDIT_2026-11-05.md](../post_d/REV6_GATE_READINESS_AUDIT_2026-11-05.md).
+
+- Scoped E2 read-only audit and old-identity replay remain valid scoped work-product results; neither is `PASS_GAP_FREE` for the E2 phase gate.
+- Under live REV6 §§17.2, 17.11, PROMPT E2/E3 and §19, E2 phase gate is `BLOCKED` while five original historical accounting fields and complete original all-48K daily ledgers remain `MISSING_EVIDENCE`.
+- D0–D6 and E0–E1 have scoped evidence only, not `PASS_GAP_FREE`.
+- Global Preservation remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`: Dropbox has one nine-file copy with size readback only; byte-hash comparison, restore test and second independent durable copy are absent.
+- E3–E6 remain `NOT_STARTED`; E3 entry conditions are not met. New S6+C100 execution remains `WAIT_FINAL_OWNER_CONFIRMATION`.
