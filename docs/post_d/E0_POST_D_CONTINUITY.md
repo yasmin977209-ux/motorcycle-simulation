@@ -46,3 +46,6 @@ The detailed requirement-by-requirement matrix, 28-output inventory, priority-ra
 - `docs/post_d/E0_POST_D_GAP_REGISTER.json`
 
 This document supplements the historical `docs/PROJECT_CONTINUITY.md`; it does not rewrite or delete historical entries.
+
+
+Correction (append-only): this continuity file was committed as `6a69de273ceb68d3f772dd0bd9c3423d3d297a16`. The subsequent E0 continuity/status commits are recorded in the session handoff: `2964a0b8df1f35c2606086652e6ac470a1a51760` (`PROJECT_CONTINUITY.md`) and `f5014c491b1f9a43105b4ef21f24aba4887558da` (`STAGE_D_SESSION_STATUS_2026-11-05.md`). The branch HEAD before this correction was `f5014c491b1f9a43105b4ef21f24aba4887558da`; final exact HEAD is confirmed by remote readback in the session report.
