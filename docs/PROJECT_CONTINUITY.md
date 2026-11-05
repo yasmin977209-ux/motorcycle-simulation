@@ -3409,3 +3409,11 @@ This later append-only status supersedes the in-progress/pending labels in the p
 - Run `41958935113` (tested SHA `002b74893ca9dfea864e83fecc558f2388748ffe`) has advanced from pending to `in_progress`; owner-authorization preflight is running. This is the sole current active candidate run. Its workflow has `cancel-in-progress: true` to prevent overlapping same-branch replay runs.
 - Current branch HEAD at this correction's start was `763fdef9601c3749ba9c9a9a7b237359f145ea7b`; this documentation-only append does not change replay code or the tested SHA of Run 41958935113.
 - No scenario report or aggregate acceptance has yet been confirmed. E2 accounting reconstruction remains `IN_PROGRESS`; Production Gate A remains `NOT_DECLARED`; E3 remains not started.
+
+ 
+## E2 replay run-state correction — 2026-11-05
+
+Supersedes the earlier replay run-state paragraph in this append-only file:
+- Run 41958854203 (tested SHA 65578376a428befa0edcb5652ada0571847b1588) is cancelled; its matrix jobs are cancelled and its aggregate has no accepted scenario evidence.
+- Run 41958935113 (tested SHA 002b74893ca9dfea864e83fecc558f2388748ffe) is the sole current active candidate; it has advanced to in_progress and its owner-authorization preflight is running.
+- Documentation-only updates after the tested SHA do not alter the replay code or trial identities. No scenario report or aggregate acceptance has yet been confirmed. E2 remains IN_PROGRESS, Production Gate A NOT_DECLARED, and E3 not started.
