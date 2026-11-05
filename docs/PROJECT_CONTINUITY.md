@@ -3334,3 +3334,18 @@ Main accidental-write incident is resolved by owner-authorized normal Revert `01
 
 - E1 append-only correction: `docs/post_d/E1_RECONCILIATION_ADDENDUM.md` records D3 manifest `BLOCKED_MISSING_EVIDENCE` / D3-18 `NOT_RUN` versus later Artifact-level `PASS_SCOPED`, and D5 preflight's stale `publication_commit_sha` versus actual publication-evidence commit `4c6a84b10ac78b6067175d0eafa149f3f12dbc2a`. Historical records remain unchanged.
 - E1 C12 is narrowed to a role-separation review note; no direct D3/D4 value conflict was established.
+
+
+## E2 Accounting Evidence Audit — 2026-11-05 (append-only)
+
+- E2: `PASS_SCOPED` as a read-only historical evidence audit; Production Gate A remains `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`.
+- Baseline HEAD: `561d5b0cb1b87f83c365c2bf3b1dee5ef120be07`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- E2 reports: `docs/post_d/E2_ACCOUNTING_EVIDENCE_AUDIT.md`, `.json`, `E2_OWNER_DECISION_REQUIRED.md`, and `E2_CONTINUITY.md`.
+- S6 cohort: source run 40731224990; source SHA `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; cohort `s6-v23-da1a9ea9`; seed 20270101; 20 scenarios × 2,400 = 48,000 Trials.
+- Run 40787081064 checked 98,323,918 daily rows for `Net_Equity == Capital + Retained_Earnings`: zero mismatches. It explicitly reports the five full balance-sheet fields missing and `acceptance=NOT_GRANTED`.
+- Run 40761382163 matched 48,000 Trial fingerprints and 2,086,550 daily distribution rows, but daily balance independent recheck and source-run metadata remain missing.
+- Run 40784902124 failed the daily accounting recheck: 48,000 fingerprints matched, but `rows_recomputed=0` and daily balance reconciliation is missing evidence.
+- Run 41098699740 completed 105 representative keys only (100 S6 + 5 C100); historical 48K daily artifacts were not audited/modified; normalized status remains `NOT_VERIFIED_105_OF_105`.
+- Five fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+- Stage 12 dataset identity is different and was not reused for S6. Financial Gate A remains `PASS_SCOPED`; Production Gate A remains `NOT_DECLARED`; Gate B `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`.
+- No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact/manifest mutation, main write, merge, force-push, Release, or new workflow run in this session. E3 not started.
