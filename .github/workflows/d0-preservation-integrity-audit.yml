@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Resolve 20 S6 source Artifacts and three additional preservation Artifacts
+      - name: Resolve 20 S6 source Artifacts and seven additional preservation Artifacts
         id: matrix
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -42,17 +42,17 @@ jobs:
               items.append({"id":a["artifact_id"],"name":a["name"],"size":a["source_size_bytes"],
                 "sha256":a["github_api_digest"].removeprefix("sha256:"),"require_parquet":True,"require_metadata":True})
           headers={"Authorization":f"Bearer {os.environ['GITHUB_TOKEN']}","Accept":"application/vnd.github+json"}
-          for aid in (12852969854,12998778418,12630457193):
+          for aid in (12852969854,12998778418,12630457193,13393273763,13442739373,13454621678,13465123601):
               r=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}",headers=headers,timeout=45)
               r.raise_for_status(); m=r.json()
               if m.get("expired") or not m.get("digest") or not m.get("size_in_bytes"):
                   raise SystemExit(f"ADDITIONAL_ARTIFACT_METADATA_UNAVAILABLE:{aid}")
               items.append({"id":aid,"name":m["name"],"size":m["size_in_bytes"],
                 "sha256":m["digest"].removeprefix("sha256:"),"require_parquet":False,"require_metadata":False})
-          if len(items)!=23 or len({x["id"] for x in items})!=23: raise SystemExit("ARTIFACT_MATRIX_COUNT_OR_DUPLICATE_FAILURE")
+          if len(items)!=27 or len({x["id"] for x in items})!=27: raise SystemExit("ARTIFACT_MATRIX_COUNT_OR_DUPLICATE_FAILURE")
           value=json.dumps({"include":items},separators=(",",":"))
           with open(os.environ["GITHUB_OUTPUT"],"a") as f: f.write("value="+value+"\n")
-          print("PRESERVATION_ARTIFACT_MATRIX_COUNT=23")
+          print("PRESERVATION_ARTIFACT_MATRIX_COUNT=27")
           PY
 
   audit:
@@ -128,7 +128,7 @@ jobs:
           for p in sorted(glob.glob("audit-reports/*.json")):
               reports.append(json.loads(pathlib.Path(p).read_text(encoding="utf-8")))
           blocked=[r for r in reports if r.get("classification")!="PASS_SCOPED"]
-          expected=23
+          expected=27
           result={"schema_version":"d0-preservation-aggregate-v1","tested_sha":"${{ github.sha }}",
             "workflow_run_id":"${{ github.run_id }}","expected_artifact_count":expected,
             "reports_received":len(reports),"pass_scoped_count":len(reports)-len(blocked),
