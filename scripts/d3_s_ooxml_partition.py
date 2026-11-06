@@ -137,6 +137,7 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
  remove_parts={s["part"] for s in removed}
  remove_parts.update(rels_part(s["part"]) for s in removed)
  remove_parts.update(calc_targets)
+ remove_parts={p for p in remove_parts if p in names}
  # Use Info-ZIP to retain compressed bytes of all unchanged package parts.
  shutil.copy2(source,out)
  with tempfile.TemporaryDirectory(prefix="d3s-ooxml-") as td:
@@ -160,7 +161,7 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
  return {"filename":out.name,"bytes":out.stat().st_size,"sha256":file_sha(out),"sheet_count":len(kept),"sheet_names":[s["name"] for s in kept],"scenario_ids":[f"{collection}_{g}" for g in RECOVERIES],"shared_sheet_count":len(shared)}
 
 def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_meta):
- names,wb,rels,ct,relmap,sheets=source_meta
+ names,wb,rels,ct,relmap,sheets=source_meta[:6]
  by_name={s["name"]:s for s in sheets}
  # Start from the C030 package; insert every missing worksheet part from its owning partition.
  assembled=outdir/f"{lang}_reassembled.xlsx"
