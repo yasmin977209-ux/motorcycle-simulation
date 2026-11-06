@@ -8,6 +8,15 @@ on:
       - docs/governance/OWNER_MASTER_BLOCKER_REMOVAL_2026-11-05.md
       - docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md
       - docs/PROJECT_CONTINUITY.md
+      - docs/governance/PROJECT_DECISION_QUALITY_AND_EVIDENCE_HARDENING_PLAN_2026-11-06.md
+      - docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json
+      - docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.md
+      - docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md
+      - docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md
+      - scripts/verify_tri_hash_preservation_bridge.py
+      - scripts/quickxorhash.c
+      - tests/test_tri_hash_preservation_bridge.py
+      - .github/workflows/tri-hash-preservation-verification.yml
       - docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md
       - docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md
       - docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json
@@ -59,6 +68,15 @@ jobs:
               "docs/governance/OWNER_MASTER_BLOCKER_REMOVAL_2026-11-05.md",
               "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
             "docs/PROJECT_CONTINUITY.md",
+            "docs/governance/PROJECT_DECISION_QUALITY_AND_EVIDENCE_HARDENING_PLAN_2026-11-06.md",
+            "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json",
+            "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.md",
+            "docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md",
+            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md",
+            "scripts/verify_tri_hash_preservation_bridge.py",
+            "scripts/quickxorhash.c",
+            "tests/test_tri_hash_preservation_bridge.py",
+            ".github/workflows/tri-hash-preservation-verification.yml",
             "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
             "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
             "docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json",

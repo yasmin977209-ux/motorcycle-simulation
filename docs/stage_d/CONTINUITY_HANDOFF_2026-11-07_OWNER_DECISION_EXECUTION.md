@@ -1,0 +1,51 @@
+# Continuity Handoff — Owner Decision Hardening and D3 Preservation Gate
+**Date:** 2026-11-07  
+**Branch:** tmp/d1-rebuild-20261101  
+**Pre-commit baseline:** 6273df9166d0b9d46b0114c798b6aece307b7262  
+**Protected main:** 01a6f79eedc522bb734ed9c5ea31beee581f2468
+
+## Resume point
+The owner-approved scope decision resolves the D3/D5 workbook identity conflict and aligns D3-05..D3-12 with v2.4.0:
+- canonical full EN/AR workbook outputs are Artifacts 13288779998 and 13369179742;
+- 105 representative keys / 125 role assignments are the Full Logging deliverable scope;
+- detailed sheets cover 25 P50 representative cases, one per scenario;
+- C100 deterministic reuse is accepted for T2_INTERIM; do not launch a new Golden Trial.
+
+The append-only effective state records D3-01..D3-18 and D3-S1/S2 as PASS_SCOPED. D3 as a phase remains BLOCKED because preservation and restore evidence are incomplete. D4 is NOT_STARTED.
+
+## Existing exact run evidence
+- D3 source Artifact 13288779998: Run 41754147172, tested SHA 3325fd961005c2c47de071d25904a748af7a21a6.
+- D1 105-key size evidence: Run 42286384747, Artifact 13537657313; 105 verified keys.
+- D3-S1/S2 and actual D3-18: Run 42295053851, tested SHA 86c70de8dad240283310fe3aea8d9141a6a03451.
+  - D3-18 Job 128158006147.
+  - EN Job 128158006443.
+  - AR Job 128158006808.
+  - Aggregate Job 128164769532.
+  - D3-S combined Artifact 13542178172; 22 part artifacts plus restore manifest.
+- D3 published-output exact-head verification: Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262.
+- D1-D2 exact-head validation: Run 42302342225 / Job 128183002595 / same tested SHA.
+
+## Immediate next action
+The new tri-hash workflow is push-triggered by the documentation/code commit. Before it can read external providers, ensure the repository has these read-only Actions secrets configured:
+- ONEDRIVE_GRAPH_ACCESS_TOKEN (Microsoft Graph Files.Read / Sites.Read scope as required by the target drive)
+- DROPBOX_ACCESS_TOKEN (files.metadata.read and files.content.read)
+
+Do not paste token values into chat, source code or workflow logs. If the workflow fails because a secret is absent or expired, stop and request credential setup; do not downgrade the proof standard.
+
+## Preservation conditions still open
+- Verify all 20 S6 archives against GitHub Artifact digests.
+- Verify all 20 D1/D3/D5 transport objects, sidecars and full reassembly against the original GitHub Artifacts.
+- Verify all 23 D3-S objects against their GitHub artifact digests, then reassemble the 1,837,203,298-byte transport package and compare its SHA-256 and members with combined Artifact 13542178172.
+- Verify the nine Dropbox core packages against Dropbox content_hash and GitHub Artifact digests.
+- Transfer and verify the separate 20 E2 Replay scenario archives; they are not the 20 S6 archives.
+- Prove two independent durable failure domains and successful restore for all required artifacts.
+
+## Stop conditions
+- Do not start D4 until D3 PASS_GAP_FREE and Global Preservation Gate closure are proven.
+- Do not start D5 until D4 closes; do not start D6 until D5 closes.
+- Do not run Test 176 or the D4 report builder ahead of D3 closure.
+- No Trials, Simulations, Monte Carlo, N expansion, backfill, zero-fill, identity changes, main modification, merge, force-push or Release.
+- Keep Gate B FAIL_SCOPED (10/10), Stability NOT_CONVERGED (0/60), N=4800 NOT_EXECUTED, Production Gate A NOT_DECLARED and the five missing accounting fields unchanged.
+
+## Monitoring rule
+If the tri-hash Actions run is still queued/in_progress after ten minutes of in-chat monitoring, stop polling. Report Run ID, tested Commit SHA, current status and elapsed time to the owner; await the owner's completion notice before resuming.

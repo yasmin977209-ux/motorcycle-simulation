@@ -1,0 +1,745 @@
+{
+  "schema": "d3-effective-closure-state-v1",
+  "decision_id": "OWNER-DECISION-HARDENING-AND-D3-TO-D6-EXECUTION-2026-11-06",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "baseline_head": "6273df9166d0b9d46b0114c798b6aece307b7262",
+  "main_head_read_only": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "authority": {
+    "governing_reference": {
+      "id": "D-2026-10-30-REFERENCE-V2.4.0",
+      "status": "APPROVED_BY_OWNER",
+      "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+      "bytes": 401397,
+      "git_blob_sha1": "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33",
+      "url": "https://gist.githubusercontent.com/yasmin977209-ux/c3e5362f5928da22ee079fc94817224e/raw/384c27810e76572e77e79e9829c5f92c1c4165d7/reference_v240.md",
+      "gist_commit": "384c27810e76572e77e79e9829c5f92c1c4165d7"
+    },
+    "operational_library": {
+      "path": "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
+      "sha256": "b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243",
+      "git_blob_sha1": "22ad6f50dbe32226f2753d4e4e9af902984dc765"
+    }
+  },
+  "normative_scope_alignment": {
+    "decision": "OWNER_APPROVED_NORMATIVE_SCOPE_ALIGNMENT",
+    "canonical_output": {
+      "classification": "CANONICAL_D3_D5_FULL_WORKBOOK_OUTPUTS",
+      "english": {
+        "name": "Full_Results_EN.xlsx",
+        "bytes": 259442692,
+        "sha256": "8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"
+      },
+      "arabic": {
+        "name": "النتائج_الكاملة_AR.xlsx",
+        "bytes": 259444534,
+        "sha256": "e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+      },
+      "source_artifacts": [
+        13288779998,
+        13369179742
+      ]
+    },
+    "upstream_computational_truth": [
+      "v2.4.0 approved reference",
+      "source-backed data identities",
+      "results/number_registry.json"
+    ],
+    "compact_git_tree_subset": {
+      "classification": "HISTORICAL_COMPACT_GIT_TREE_SUBSET",
+      "english_bytes": 27722355,
+      "arabic_bytes": 27734273,
+      "conflict": "D3_CANONICAL_WORKBOOK_IDENTITY_CONFLICT",
+      "resolution": "RESOLVED_BY_OWNER"
+    },
+    "full_logging_scope": {
+      "role_assignments": 125,
+      "unique_keys": 105,
+      "not_48000": true
+    },
+    "p50_scope": {
+      "scenario_count": 25,
+      "representative_cases": 25,
+      "detailed_sheets": [
+        "DAILY",
+        "ASSETS",
+        "ACCTG",
+        "PARTNER",
+        "GUARANTEE",
+        "CONTRACTS"
+      ]
+    },
+    "c100_scope": {
+      "rule": "CROSS_COHORT_DETERMINISTIC_REUSE",
+      "source_artifact_id": 12630457193,
+      "golden_revalidation": "NOT_RUN_BY_DESIGN_FOR_T2_INTERIM; preserve NOT_RUN for later gates"
+    }
+  },
+  "source_artifacts": {
+    "d3": {
+      "run_id": 41754147172,
+      "tested_sha": "3325fd961005c2c47de071d25904a748af7a21a6",
+      "artifact_id": 13288779998,
+      "bytes": 535567142,
+      "sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+    },
+    "d5": {
+      "run_id": 41928234377,
+      "tested_sha": "baf696af1e951cbf4a79e8a9e009c60c6b053b2d",
+      "artifact_id": 13369179742,
+      "bytes": 519116689,
+      "sha256": "80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1"
+    },
+    "d1_105_manifest": {
+      "run_id": 42286384747,
+      "tested_sha": "3862d153cebd8de9041c3608e2a4930fde713925",
+      "artifact_id": 13537657313,
+      "artifact_bytes": 10545,
+      "artifact_digest": "sha256:db0928f852fa4677ed9539815942cde793a62e3097478b993b2ee2d9b2aa59c5",
+      "file_path": "docs/stage_d/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json",
+      "file_bytes": 69247,
+      "file_git_blob_sha1": "2ea998a1faeeb7ebb36208f36fc878a9c20518f7",
+      "verified_keys": 105
+    },
+    "c100_reuse": {
+      "run_id": 40263424595,
+      "artifact_id": 12630457193
+    }
+  },
+  "d3_s": {
+    "run_id": 42295053851,
+    "tested_sha": "86c70de8dad240283310fe3aea8d9141a6a03451",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 128158006443,
+        "name": "D3-S1/S2 EN",
+        "result": "success"
+      },
+      {
+        "id": 128158006808,
+        "name": "D3-S1/S2 AR",
+        "result": "success"
+      },
+      {
+        "id": 128164769532,
+        "name": "Publish combined D3-S evidence",
+        "result": "success"
+      }
+    ],
+    "artifacts": {
+      "en_partitions": 13541213877,
+      "ar_partitions": 13542631401,
+      "combined": 13542178172,
+      "d3_18": 13542125808,
+      "restore_manifest": 13542068569,
+      "part_count": 22
+    },
+    "result": {
+      "scenario_coverage_per_language": "25/25",
+      "worksheet_xml_and_relationship_parts": "185/185 byte-exact after source-side reassembly",
+      "zip_crc": "PASS",
+      "openpyxl": "PASS_SCOPED"
+    }
+  },
+  "d3_18": {
+    "run_id": 42295053851,
+    "job_id": 128158006147,
+    "artifact_id": 13542125808,
+    "test_id": "D3-18-EXACT-HEAD-MANIFEST-RAW-READBACK",
+    "tested_sha": "86c70de8dad240283310fe3aea8d9141a6a03451",
+    "result": "PASS_SCOPED"
+  },
+  "exact_head_validation": {
+    "d3_published_output": {
+      "run_id": 42302342219,
+      "job_id": 128183048784,
+      "tested_sha": "6273df9166d0b9d46b0114c798b6aece307b7262",
+      "result": "success"
+    },
+    "d1_d2": {
+      "run_id": 42302342225,
+      "job_id": 128183002595,
+      "tested_sha": "6273df9166d0b9d46b0114c798b6aece307b7262",
+      "result": "success"
+    },
+    "project_continuity_raw_readback": {
+      "run_id": 42295053627,
+      "tested_sha": "86c70de8dad240283310fe3aea8d9141a6a03451",
+      "result": "success"
+    }
+  },
+  "requirements": [
+    {
+      "id": "D3-01",
+      "title": "Governing reference and registry",
+      "status": "PASS_SCOPED",
+      "normative_scope": "v2.4.0 and Number Registry pins",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-02",
+      "title": "S6/C100 identity separation",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Distinct SOURCE_SHA/cohort identity; C100 deterministic reuse remains separate",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-03",
+      "title": "185 sheets per workbook",
+      "status": "PASS_SCOPED",
+      "normative_scope": "185 worksheets in EN and AR",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-04",
+      "title": "Bilingual workbook parity",
+      "status": "PASS_SCOPED",
+      "normative_scope": "10,346,928 numeric comparisons; zero mismatches",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-05",
+      "title": "Daily Distribution and C100",
+      "status": "PASS_SCOPED",
+      "normative_scope": "20 S6 scenarios, 1,000 series, 2,086,550 points; C100 five cells under owner-approved CROSS_COHORT_DETERMINISTIC_REUSE",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-06",
+      "title": "Representative Cases / Full Logging",
+      "status": "PASS_SCOPED",
+      "normative_scope": "125 role assignments, 105 unique keys; D1 evidence proves 105/105 sizes and hashes",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 42286384747 / tested SHA 3862d153cebd8de9041c3608e2a4930fde713925 / Artifact 13537657313",
+          "105/105 representative manifest records and post-write audit sizes/hashes"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-07",
+      "title": "P50 DAILY",
+      "status": "PASS_SCOPED",
+      "normative_scope": "25 representative P50 cases across 25 scenarios",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-08",
+      "title": "ASSETS",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Detailed ASSETS ledgers for 25 representative P50 cases",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-09",
+      "title": "ACCTG",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Detailed ACCTG ledgers for 25 representative P50 cases",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-10",
+      "title": "PARTNER",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Detailed PARTNER ledgers for 25 representative P50 cases",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-11",
+      "title": "GUARANTEE",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Detailed GUARANTEE ledgers for 25 representative P50 cases",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-12",
+      "title": "CONTRACTS",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Detailed CONTRACTS ledgers for 25 representative P50 cases",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-13",
+      "title": "Final close-date distribution",
+      "status": "PASS_SCOPED",
+      "normative_scope": "49,500 source-backed close dates across 25 scenarios",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-14",
+      "title": "Excel safety and RTL/LTR",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Zero formula/error cells; direction checks pass",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-15",
+      "title": "Numeric traceability",
+      "status": "PASS_SCOPED",
+      "normative_scope": "20,693,856 numeric cells checked; zero untraced",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-16",
+      "title": "Exact financial arithmetic",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Integer-ratio and Decimal ROUND_HALF_EVEN controls",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-17",
+      "title": "Preserve limitations",
+      "status": "PASS_SCOPED",
+      "normative_scope": "All known gate statuses and five missing accounting fields explicitly retained",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
+        "test_evidence": [
+          "Run 41754147172 / tested SHA 3325fd961005c2c47de071d25904a748af7a21a6",
+          "Run 41911722372 / tested SHA 9196b332b068a0db232420dcdf684f25542db34a",
+          "Run 42302342219 / Job 128183048784 / tested SHA 6273df9166d0b9d46b0114c798b6aece307b7262"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    },
+    {
+      "id": "D3-18",
+      "title": "Manifest and Raw readback",
+      "status": "PASS_SCOPED",
+      "normative_scope": "Actual invocation on Run 42295053851 / Job 128158006147",
+      "evidence_chain": {
+        "source_identity": {
+          "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
+          "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
+          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+        },
+        "implementation": "scripts/test_d3_18_manifest_remote_readback.py and exact-head invocation workflow",
+        "test_evidence": [
+          "Run 42295053851 / Job 128158006147 / tested SHA 86c70de8dad240283310fe3aea8d9141a6a03451",
+          "five exact GitHub Raw readbacks; job success"
+        ],
+        "output_evidence": [
+          "Artifact 13288779998 / 535567142 bytes / SHA-256 e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe",
+          "Full_Results_EN.xlsx / 259442692 bytes / SHA-256 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d",
+          "النتائج_الكاملة_AR.xlsx / 259444534 bytes / SHA-256 e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d"
+        ],
+        "independent_audit": "Run 41911722372; 185 sheets per workbook, ZIP/member checks, financial registry comparisons and bilingual parity; exact-head no-rebuild Run 42302342219.",
+        "retention_evidence": "Source/retention metadata listed; raw-byte verification remains a separate blocking gate.",
+        "exact_final_head": "Baseline tested HEAD 6273df9166d0b9d46b0114c798b6aece307b7262; final documentation commit readback to be appended after commit."
+      }
+    }
+  ],
+  "subgate_d3s": [
+    {
+      "id": "D3-S1",
+      "status": "PASS_SCOPED",
+      "evidence": "Run 42295053851; EN Job 128158006443 and AR Job 128158006808; five partitions per language; 25/25 scenario coverage."
+    },
+    {
+      "id": "D3-S2",
+      "status": "PASS_SCOPED",
+      "evidence": "Run 42295053851; aggregate Job 128164769532; 185/185 worksheet XML and relationship parts byte-exact after source-side reassembly; ZIP CRC and workbook open checks passed."
+    }
+  ],
+  "preserved_non_promotions": {
+    "gate_a_financial": "PASS_SCOPED",
+    "gate_a_production": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "full_logging": "105 representative keys only; not 48,000 trial full logging",
+    "missing_historical_accounting_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ]
+  },
+  "retention_snapshot": {
+    "onedrive": {
+      "s6_archives": 20,
+      "multipart_d1_d3_d5_objects": 20,
+      "d3s_transport_objects": 23,
+      "d3s_folder_id": "893D06C344EA996B!s0f3055f9ce89404c9ef34c7dd004f187",
+      "d3s_folder_size": 1394763799,
+      "metadata_quickxorhash_readback": "PRESENT",
+      "raw_sha256": "NOT_RUN",
+      "remote_restore": "NOT_RUN"
+    },
+    "dropbox": {
+      "core_packages": 9,
+      "root": "/Motorcycle-Simulation-Rescue-2026-11-05",
+      "metadata_sizes_readback": "PRESENT",
+      "content_hash_readback": "NOT_EXPOSED_BY_CONNECTED_METADATA_ACTION",
+      "raw_sha256": "NOT_RUN",
+      "restore": "NOT_RUN"
+    },
+    "e2_replay": {
+      "scenario_archives": 20,
+      "status": "NOT_TRANSFERRED",
+      "separate_from_s6": true
+    },
+    "independent_failure_domains": "NOT_PROVEN_FOR_ALL_REQUIRED_ARTIFACTS"
+  },
+  "phase_disposition": {
+    "d3_requirements_scope": "PASS_SCOPED_OWNER_ALIGNED",
+    "d3_s1_s2": "PASS_SCOPED",
+    "d3_18": "PASS_SCOPED",
+    "d3_overall": "BLOCKED",
+    "d3_pass_gap_free": false,
+    "global_preservation_gate": "BLOCKED",
+    "d4": "NOT_STARTED",
+    "d5_new_exact_head_execution": "NOT_RUN",
+    "d6_new_independent_audit": "NOT_RUN",
+    "reason": "REV6 preservation/readback/restore requirements remain incomplete. OneDrive raw-byte SHA-256 and restore are unverified; Dropbox content_hash and raw-byte restore are unverified; E2 Replay's 20 archives are not transferred; two independent durable failure domains are not proven.",
+    "next_allowed_action": "Run tri-hash preservation verification only after required GitHub Actions secrets are configured; reassess Global Preservation Gate from its ledger. Do not start D4 before D3 PASS_GAP_FREE and required preservation closure."
+  },
+  "no_new_trial_or_simulation": true,
+  "final_head_validation": "PENDING_POST_COMMIT_RAW_READBACK"
+}

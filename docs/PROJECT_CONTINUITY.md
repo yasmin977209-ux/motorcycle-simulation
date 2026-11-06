@@ -3864,3 +3864,16 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Global Preservation Gate remains `BLOCKED / PERMANENT_RETENTION_NOT_COMPLETE`: this transfer created only one OneDrive copy of these D3-S objects; byte-level SHA-256, remote restore, second independent durable copy and the wider required artifact inventory remain incomplete.
 - D3 remains `BLOCKED_MISSING_EVIDENCE`, not `PASS_GAP_FREE`. D4 remains `NOT_STARTED`; do not begin D4.
 - Detailed inventory and evidence: [D3-S OneDrive Transfer Reconciliation](stage_d/D3S_ONEDRIVE_TRANSFER_RECONCILIATION_2026-11-07.md).
+
+
+## Owner decision execution and D3 effective-scope reconciliation — 2026-11-07 (append-only)
+
+- Owner decision: OWNER-DECISION-HARDENING-AND-D3-TO-D6-EXECUTION-2026-11-06. The owner-approved normative alignment governs D3/D5 workbook classification and the 105-key / 125-role and 25-P50 design scope. The canonical full outputs are Full_Results_EN.xlsx and النتائج_الكاملة_AR.xlsx from Artifacts 13288779998 and 13369179742; compact Git-tree workbook copies remain HISTORICAL_COMPACT_GIT_TREE_SUBSET.
+- Current governing reference v2.4.0 remains APPROVED_BY_OWNER with SHA-256 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b. REV6 remains the operational prompt library with SHA-256 b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243.
+- Effective D3 state is recorded append-only in docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json and .md. D3-01..D3-18 and D3-S1/S2 are PASS_SCOPED under the owner's scope alignment; D3-18 actual invocation is Run 42295053851 / Job 128158006147. D3-S EN/AR/aggregate jobs 128158006443, 128158006808 and 128164769532 all succeeded.
+- Exact-head baseline checks at 6273df9166d0b9d46b0114c798b6aece307b7262: D3 published-output Run 42302342219 / Job 128183048784 success; D1-D2 Run 42302342225 / Job 128183002595 success. Protected main remains 01a6f79eedc522bb734ed9c5ea31beee581f2468.
+- Global Preservation Gate remains BLOCKED. OneDrive lists 20 S6 archives, 20 D1/D3/D5 multipart objects and 23 D3-S transport objects. Dropbox primary rescue root lists nine core packages. These are listing/metadata facts, not raw-byte SHA-256/Dropbox content_hash proof or restore. The separate E2 Replay 20-scenario archive set remains NOT_TRANSFERRED.
+- Added scripts/verify_tri_hash_preservation_bridge.py, scripts/quickxorhash.c, tests/test_tri_hash_preservation_bridge.py and .github/workflows/tri-hash-preservation-verification.yml. The workflow requires read-only Actions secrets ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN; execution result is pending at this append.
+- D3 phase remains BLOCKED pending preservation readback, reassembly/restore and independent durable copies. D4 remains NOT_STARTED; D5/D6 new exact-head execution remains NOT_RUN. Do not promote D3 to PASS_GAP_FREE or begin D4 until both D3 and the required preservation gate are proven.
+- No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, SOURCE_SHA/cohort/MASTER_SEED change, main write, merge, force-push or Release was performed. The five historical accounting fields remain MISSING_EVIDENCE.
+
