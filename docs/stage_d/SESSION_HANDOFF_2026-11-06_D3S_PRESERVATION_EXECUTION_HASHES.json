@@ -1,0 +1,53 @@
+{
+  "schema_version": "session-handoff-remote-readback-hashes-v1",
+  "recorded_at_utc": "2026-11-06",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "files": [
+    {
+      "path": "docs/stage_d/SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md",
+      "commit_sha": "5ca9d12b07b977ac5c7f4f82769b1622221bf3b4",
+      "git_blob_sha1": "185858730b06ffda7faaf76e8932551d8aa4e1a7",
+      "size_bytes": 22955,
+      "sha256": "176116f4a14a153d507ba47341c449301901575b1ab4e9ef4d0203891f1c4313"
+    },
+    {
+      "path": "docs/PROJECT_CONTINUITY.md",
+      "commit_sha": "90208caf0cddb7bc2f0cee37ff848ee564da8546",
+      "git_blob_sha1": "0680f07be05be41def5ee08e21cba62fa02c1bd1",
+      "size_bytes": 598796,
+      "sha256": "01ccb775b525079b11b4c9523f9c3139f60be62b3b2215436efc36212c64fcfa"
+    },
+    {
+      "path": "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
+      "commit_sha": "61a65c9ab8a752f1686576785e7fef340079f10c",
+      "git_blob_sha1": "54d15b36a4c02da7770db30d5768ae0799862aac",
+      "size_bytes": 7172,
+      "sha256": "6aff4b39732dd7dd1831a2c4a394ebd104ed3b1b00d6a4101a4d591ecef88b7a"
+    },
+    {
+      "path": "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
+      "commit_sha": "ddde378b490f9edecdc0543e49047054248264f4",
+      "git_blob_sha1": "754a2c270e4ab323a3afeaf50f15ad20f7271d66",
+      "size_bytes": 9347,
+      "sha256": "cfad62b948916300d583e8194a7e9e9b522f61f7db089518fd6e931e3a5dcd48"
+    },
+    {
+      "path": "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+      "git_blob_sha1": "9fe43bfbb2cbfd2bb7f7010866e7469506d22c33",
+      "size_bytes": 401397,
+      "sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
+    },
+    {
+      "path": "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
+      "git_blob_sha1": "22ad6f50dbe32226f2753d4e4e9af902984dc765",
+      "size_bytes": 101383,
+      "sha256": "b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243"
+    }
+  ],
+  "notes": [
+    "SHA-256 values were computed from UTF-8 bytes returned by live GitHub file reads; the two governing pins match their approved expected values.",
+    "The first four files are the exact content versions identified by their containing commits and Git blob SHA-1 values.",
+    "This manifest intentionally does not contain its own hash."
+  ]
+}
