@@ -15,3 +15,12 @@
 - No new Trials, Simulation, Monte Carlo, N expansion, identity changes, main write, merge, Release, or final acceptance.
 - No long-running workflow dispatched/restarted; prior D3-S attempt not queried or restarted.
 - Detailed evidence: [Session Audit](SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md).
+
+
+## Append-only revalidation — 2026-11-06
+
+- Verified bootstrap HEAD: `0e491a7eb9977654652c32e937c88ac643b2b68d`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; comparison diverged, ahead 1019 / behind 2.
+- D0–D2 `PASS_SCOPED_WITH_LIMITATIONS`; D3 not closed (D3-18 `PASS_SCOPED`, D3-S1/S2 not closed); D4–D6 historical limited scope; E0/E1 `PASS_SCOPED`; E2 Original `BLOCKED`; E2 Replay `PASS_SCOPED_REPLAY_RECONSTRUCTION`; E3–E6 `NOT_STARTED`.
+- Global Preservation remains `BLOCKED`; Dropbox capacity blocker persists and no independent second provider is connected. No long workflow restarted.
+- Details: [Bootstrap & Preservation Recovery Addendum](BOOTSTRAP_PRESERVATION_RECOVERY_ADDENDUM_2026-11-06.md).
+- Append-only correction: [Artifact 13364064483](D0_D6_E0_E2_RETENTION_INVENTORY_CORRECTION_2026-11-06_ARTIFACT_13364064483.json).
