@@ -1,0 +1,34 @@
+{
+  "schema": "artifact-retention-inventory-correction-v1",
+  "created_at": "2026-11-06",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "correction_kind": "APPEND_ONLY_MISSING_ARTIFACT_ENTRY",
+  "supersedes_nothing": true,
+  "historical_inventory": "docs/stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_2026-11-05.json",
+  "artifact": {
+    "phase": "D4",
+    "artifact_id": 13364064483,
+    "run_id": 41916830283,
+    "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5",
+    "name": "D4-DOCX-Report-Evidence",
+    "size_in_bytes": 4814,
+    "github_api_digest": "sha256:fd5517de84bdb99a2a1e77068d471bea0cdce5de2145ed6f16c336e376b06b99",
+    "created_at": "2026-11-04T21:32:19Z",
+    "expires_at": "2026-12-04T21:32:18Z",
+    "expired": false,
+    "artifact_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/41916830283/artifacts/13364064483",
+    "evidence_classification": "REPORTED_ONLY",
+    "classification_reason": "GitHub API metadata digest has not been independently recomputed from downloaded ZIP bytes."
+  },
+  "dropbox": {
+    "path": "/Motorcycle-Simulation-Rescue-2026-11-05/artifact-13364064483-D4-evidence.zip",
+    "exists_by_search_and_listing": true,
+    "size_in_bytes": 4814,
+    "byte_sha256_readback": "NOT_RUN",
+    "zip_crc_member_inventory": "NOT_RUN",
+    "restore_test": "NOT_RUN"
+  },
+  "correction_note": "Artifact 13364064483 was present in Dropbox and live in GitHub but omitted from the prior retention inventory. This file records the omission without rewriting the prior inventory.",
+  "historical_artifacts_modified": false
+}
