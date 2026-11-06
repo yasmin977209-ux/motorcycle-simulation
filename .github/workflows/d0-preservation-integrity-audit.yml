@@ -59,7 +59,7 @@ jobs:
     name: Raw SHA, ZIP restore and Parquet ${{ matrix.id }}
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 23
