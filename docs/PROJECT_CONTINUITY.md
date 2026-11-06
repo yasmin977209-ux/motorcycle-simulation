@@ -3701,3 +3701,12 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - Original S6 Run 40731224990: 20 unexpired scenario Artifacts, total 1,531,244,201 bytes, expire 2026-11-27. E2 Replay Run 41958935113: 21 unexpired Artifacts, total 3,858,228,566 bytes. The former are original run artifacts but their reduced daily projection does not contain the five protected balance-sheet fields; the latter are replay reconstruction, not original evidence.
 - D3 remains not closed; D3-18 PASS_SCOPED only; D3-S1/S2 not closed. D0–D2 remain PASS_SCOPED_WITH_LIMITATIONS. No long workflow was restarted.
 - See [Bootstrap & Preservation Recovery Addendum](stage_d/BOOTSTRAP_PRESERVATION_RECOVERY_ADDENDUM_2026-11-06.md), [Session Status](stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md), [Continuity Handoff](stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md), and [append-only Artifact 13364064483 correction](stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_CORRECTION_2026-11-06_ARTIFACT_13364064483.json).
+
+
+## Append-only revalidation — 2026-11-06 (latest)
+
+- Exact live branch HEAD: `f8fa6fac488fc23f2cb28a35a1110070f2a1e692`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; comparison: diverged, ahead 1025, behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- The earlier checkpoint `0e491a7eb9977654652c32e937c88ac643b2b68d` is superseded by the current ref. Six later documentation commits are present; current branch ref was re-read before this update.
+- v2.4.0 and Prompt Library REV6 Raw SHA-256 values were recomputed at current HEAD and match the approved pins.
+- 20 original S6 source artifacts remain unexpired in GitHub Actions (1,531,244,201 bytes; expiry window 2026-11-27); no Dropbox copy exists. The 21 E2 replay artifacts also remain absent from Dropbox. Dropbox upload blocker persists; no second provider is connected.
+- No long D3-S run was restarted; no branch run is queued/in_progress. Full status and evidence limitations: [Current Bootstrap & Preservation Revalidation](stage_d/BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).

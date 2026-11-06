@@ -36,3 +36,11 @@ Working branch `tmp/d1-rebuild-20261101`. Review-start HEAD was `cc5753e1a37db1c
 - No branch run is queued/in_progress at revalidation. Do not restart the prior D3-S long workflow; D3-S1/S2 remain open.
 - Preservation priority: 20 original S6 artifacts from Run 40731224990 (1,531,244,201 bytes; expire 2026-11-27) remain in GitHub but are absent from Dropbox. E2 Replay has 21 artifacts (3,858,228,566 bytes), also absent from Dropbox. A 130,319,892-byte Dropbox upload failed due to insufficient space.
 - SharePoint is not connected; no second-provider transfer occurred. See [Bootstrap & Preservation Recovery Addendum](BOOTSTRAP_PRESERVATION_RECOVERY_ADDENDUM_2026-11-06.md) and [Artifact 13364064483 inventory correction](D0_D6_E0_E2_RETENTION_INVENTORY_CORRECTION_2026-11-06_ARTIFACT_13364064483.json).
+
+
+## Latest live resume point — 2026-11-06
+
+- Branch HEAD `f8fa6fac488fc23f2cb28a35a1110070f2a1e692`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; ahead 1025/behind 2, merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- 20 original S6 Artifacts (1,531,244,201 bytes) remain retrievable in GitHub Actions until 2026-11-27; no off-platform copy. Preserve after sufficient independent storage is connected. E2 replay set is separate (21 artifacts, 3,858,228,566 bytes).
+- Dropbox upload failed for 130,319,892 bytes; do not retry without capacity resolution. SharePoint is not connected. No transfer was made.
+- Do not restart D3-S long runs 42094642530 / 42099529400. D3 not closed; do not start D4. See [Current Bootstrap & Preservation Revalidation](BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).

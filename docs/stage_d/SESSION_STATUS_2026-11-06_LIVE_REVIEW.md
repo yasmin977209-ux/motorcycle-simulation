@@ -24,3 +24,13 @@
 - Global Preservation remains `BLOCKED`; Dropbox capacity blocker persists and no independent second provider is connected. No long workflow restarted.
 - Details: [Bootstrap & Preservation Recovery Addendum](BOOTSTRAP_PRESERVATION_RECOVERY_ADDENDUM_2026-11-06.md).
 - Append-only correction: [Artifact 13364064483](D0_D6_E0_E2_RETENTION_INVENTORY_CORRECTION_2026-11-06_ARTIFACT_13364064483.json).
+
+
+## Latest append-only revalidation — 2026-11-06
+
+- Current branch HEAD `f8fa6fac488fc23f2cb28a35a1110070f2a1e692`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468`; diverged, ahead 1025/behind 2.
+- Exact-HEAD D1-D2 validation Run 42136073091 succeeded; Artifact 13466346209 (10,545 bytes). D3 Published Output verification Run 42136073042 succeeded but does not close D3 or D3-S.
+- No branch runs queued/in_progress; prior long D3-S runs were not restarted.
+- 20 original S6 source artifacts (1,531,244,201 bytes) remain unexpired in GitHub Actions, expiring 2026-11-27; absent from Dropbox. Dropbox upload capacity failure remains; independent provider not connected. Global Preservation `BLOCKED`.
+- D0–D2 limited scope; D3 not closed; E2 Original `BLOCKED`; E2 Replay reconstruction only; five protected fields remain `MISSING_EVIDENCE`.
+- Details: [Current Bootstrap & Preservation Revalidation](BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).
