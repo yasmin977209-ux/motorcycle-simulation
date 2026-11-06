@@ -3753,3 +3753,58 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - Scope: 20 S6 originals + Artifacts `12852969854`, `12998778418`, `12630457193`, `13393273763`, `13442739373`, `13454621678`, `13465123601`.
 - This does not verify OneDrive/Dropbox bytes and does not close Global Preservation. Historical `source_run_metadata.sha256` null values remain MISSING_EVIDENCE and were not synthesized. Do not upgrade to full D0 closure.
 - Detailed report: [D3-S and preservation execution handoff](stage_d/SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
+
+
+
+## Append-only execution reconciliation — 2026-11-06
+
+### Pre-flight: five mandated GitHub Actions runs and downstream work
+All five runs were fetched directly from GitHub API, including jobs, step conclusions, branch, event and tested SHA:
+- Run 42269494042 — D3 Published Output Exact-HEAD Verification; completed/success; Job 128070044536 success; push; tested SHA a54b396e649a7acb2e06ba08acbc0c9944c517da. No artifact produced.
+- Run 42269494069 — D3 Workbook Size and Identity Reconciliation; completed/cancelled; Job 128070044539 cancelled during workbook row/cell/source comparison; tested SHA a54b396e649a7acb2e06ba08acbc0c9944c517da. Report publication and inventory steps skipped.
+- Run 42276098398 — D3-S; completed/failure; tested SHA 493ff976cfb9ee681b995e9d576f913ce6cd3c55. AR Job 128092681915 success; D3-18 Job 128092682329 failure; EN Job 128092682486 success; aggregate Job 128100204763 success. Artifacts 13534500895, 13534335918, 13534411487 were produced despite D3-18 failure.
+- Run 42276129141 — D3-S; completed/success; tested SHA c9d44537dc5b401ab0987426115440650bffb4f4. D3-18 Job 128101026672 success; EN Job 128101027123 success; AR Job 128101027310 success; aggregate Job 128116008695 success. Artifacts: 13536960583 (combined), 13536705734 (AR), 13535750621 (EN), 13533264931 (D3-18).
+- Run 42283741942 — D0 Raw Artifact/ZIP/Parquet audit; completed/success; tested SHA afbc65bae45a53ccc14fd9098014494d09ec70e3. Prepare Job 128119106162; 27 per-artifact audit jobs; aggregate Job 128119621895. Artifact 13535434691 (2,346 bytes; SHA-256 sha256:898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f).
+
+Run 42269494042 and 42269494069 were separate push-triggered workflows on the same commit and started at the same timestamp; neither is a retry of the other. The cancelled reconciliation was subsequently completed by Run 42272832024 on tested SHA 9899d836b778cf... (full SHA: 9899d836b778cf130fa772492c64f7ea3ffdf86), Job 128081528703 success, Artifact 13531164484. The report classifies D3/D5 EN and AR raw workbook identities as byte-identical, while Git-tree small workbooks differ from D3 in 184 sheets.
+Run 42276098398 and 42276129141 were separate push-triggered executions on different SHAs, 13 seconds apart; the latter is the successful later execution, not a retry on the same SHA. Run 42283741942 followed on a later push and audited the expanded 27-artifact matrix.
+After these runs, further push-triggered D1-D2 validation and D3 published-output verification executions occurred on successive commits, including Runs 42283741870/42283741868, 42284823305/42284823304, 42284939533/42284939583, 42285016869/42285016914, 42285158995/42285159039, 42285236246/42285236121, 42285344430/42285344462, 42285743900/42285744097, 42286083026/42286082978, 42286128836/42286128864, 42286167088/42286167064, 42286212820/42286212822, and 42286384747/42286384590. These are push validation runs on distinct commits, not new simulation/trial executions. The latest D1-D2 and D3 published-output runs on SHA 3862d153cebd8de9041c3608e2a4930fde713925 completed successfully; D1 evidence Artifact 13537657313 and D3 published-output verification does not close D3.
+
+### D3 workbook identity reconciliation
+Run 42272832024 / Job 128081528703 / tested SHA 9899d836b778cf130fa772492c64f7ea3ffdf86 / Artifact 13531164484:
+- Git EN 27,722,355 bytes; AR 27,734,273 bytes.
+- D3 EN 259,442,692 bytes; AR 259,444,534 bytes.
+- Both Git and D3 have 185 sheets, but Git has 94,059 worksheet rows and 5,242,356 cells versus D3 538,560 rows and 32,147,146 cells.
+- Git-vs-D3 differs in 184 sheets in each language.
+- D3-vs-D5 is byte-identical in both languages.
+- Report classification PASS_SCOPED applies to D3/D5 identity; the Git-vs-D3 discrepancy remains explicit and unresolved. Do not replace either version or infer equivalence from sheet count.
+
+### D0 preservation audit
+Run 42283741942 audited 20 S6 source Artifacts plus seven additional support Artifacts. Aggregate Artifact 13535434691 records 27 reports / 27 PASS_SCOPED / 0 blocked. Raw GitHub Artifact SHA-256, outer ZIP CRC, safe extraction/restore, nested ZIP checks and applicable Parquet checks ran in GitHub Actions. This does not read back OneDrive/Dropbox bytes. source_run_metadata.sha256 gaps remain MISSING_EVIDENCE and are not synthesized.
+
+### External preservation readback
+OneDrive rescue folder was read back through Microsoft Graph:
+- Root: 32 files, 1,541,040,288 bytes at readback.
+- 20 S6 original files remain present; source transfer inventory total 1,531,244,201 bytes.
+- Six of the nine named core packages are present as exact root files: Artifact IDs 12630457193, 12852969854, 13364064483, 13371094066, 13373853115, 13382253631.
+- The other three large packages (13288779998 D3, 13369179742 D5, 12998778418 D1 Full Logging) are represented by multipart transport files in OneDrive subfolder Multipart-D3-D5-Transport-2026-11-06: seven D3 parts, seven D5 parts, four D1 parts, and restore manifests. They are not yet reassembled as single exact-named ZIP objects; raw chunk hash readback and restore verification remain outstanding.
+- Additional requested support Artifacts 13393273763, 13442739373, 13454621678 and 13465123601 are present in the OneDrive root with size readback.
+- New report copies uploaded and read back: D3 reconciliation Run 42272832024 (22,678 bytes; item 893D06C344EA996B!s0fe5b75ae43549a68004a9327f42cf9c) and D0 audit Run 42283741942 (2,346 bytes; item 893D06C344EA996B!s9a174a3b1c81495ab9ee5f5ac6321429).
+- Dropbox rescue root readback: exactly nine requested core files, 1,375,253,616 bytes; Artifact 13364064483 is present. No new large Dropbox upload was attempted because the prior quota/insufficient-space blocker remains unresolved.
+- E2 Replay Run 41958935113 has 21 Artifacts totaling 3,858,228,566 bytes; aggregate Artifact 13393273763 is in OneDrive, but the 20 scenario archives have not been transferred. No claim of complete E2 Replay preservation.
+- OneDrive item metadata/size readback is not SHA-256 byte readback. Global Preservation remains BLOCKED.
+
+### D3-S engineering optimization and current run
+At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow already used streaming OOXML worksheet filtering, rebuilt workbook.xml / workbook relationships / Content_Types, preserved sharedStrings/styles, checked RTL/LTR, definedNames and cross-partition formula references, then reassembled and compared worksheet XML and relationships byte-for-byte. The observed avoidable bottleneck was matrix max-parallel=1 for EN/AR.
+- Added scripts/d3_s_create_transport_chunks.py (commit 32d5b0ddf838d6ade4c019b248a4182099468b67) to build a ZIP_STORED transport container, calculate SHA-256 per package and 80 MiB part, verify ZIP CRC and byte-exact reassembly, and write a restore manifest.
+- Updated .github/workflows/d3-s-scenario-partitioning.yml (blob d9439b9508f07cc12a004d4fb7d37dee76127998) to matrix max-parallel=2 and publish 17 individual 80 MiB OneDrive transport part Artifacts plus a restoration manifest. The transport container is a new ZIP wrapper of the ten workbooks/evidence files, not byte-identical to the GitHub Actions artifact wrapper.
+- Push-triggered Run 42290160686 on tested SHA c3a85ca5dac05cca5b1ce5e567d99a93dd04e229 began 2026-11-06T20:39:14Z. D3-18 Job 128141182580 completed success; evidence Artifact 13538264943 (1,326 bytes). At this append, EN Job 128141183016 was in_progress and AR Job 128141183093 queued; combined transport job had not started. Do not classify D3-S as passed until the full run and artifacts are inspected.
+- The 1,394,728,947-byte combined Artifact 13536960583 exceeds the connector's 512 MiB single-artifact download limit. The new 17-part workflow is intended to make OneDrive transport feasible in sub-100 MiB uploads; parts must still be transferred and read back before preservation is claimed.
+
+### Current live resume point at this append
+- Branch: tmp/d1-rebuild-20261101; HEAD at execution start: c3a85ca5dac05cca5b1ce5e567d99a93dd04e229.
+- main: 01a6f79eedc522bb734ed9c5ea31beee581f2468 (read-only).
+- D3-18: PASS_SCOPED on Run 42290160686 / Job 128141182580 / Test ID D3-18-EXACT-HEAD-MANIFEST-RAW-READBACK-2026-11-06 / tested SHA c3a85ca5dac05cca5b1ce5e567d99a93dd04e229.
+- D3-S: RUNNING at append time; D3 overall remains NOT_CLOSED; D4 NOT_STARTED.
+- Global Preservation: BLOCKED; OneDrive multipart restoration and E2 Replay scenario archive transfer remain outstanding.
+- Protected financial/statistical gates and five missing accounting fields remain unchanged.
