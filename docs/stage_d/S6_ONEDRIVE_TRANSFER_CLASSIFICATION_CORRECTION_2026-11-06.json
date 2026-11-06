@@ -1,0 +1,22 @@
+{
+  "schema": "evidence-classification-correction-v1",
+  "recorded_at_utc": "2026-11-06T00:56:00Z",
+  "corrects_file": "docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json",
+  "corrects_file_commit": "c4601abc8da731c5277a2938f020cf5485ddf4ee",
+  "issue": "TRANSFERRED_SIZE_MATCHED was used in evidence_classification fields although it is not an approved project evidence classification.",
+  "correction": {
+    "approved_evidence_classification": "REPORTED_ONLY",
+    "scope": "OneDrive artifact presence and size metadata were read live; all 20 names were present and aggregate/per-item sizes matched GitHub artifact API size metadata.",
+    "transfer_outcome_label": "TRANSFERRED_SIZE_MATCHED is descriptive only and must not be treated as an evidence classification.",
+    "raw_byte_sha256_readback": "NOT_RUN",
+    "zip_crc": "NOT_RUN",
+    "restore_test": "NOT_RUN",
+    "verified_live_policy": "Not met for the OneDrive copy because exact raw-byte SHA-256 readback and full proof triple have not been established."
+  },
+  "impact": {
+    "source_artifacts": "unchanged",
+    "onedrive_files": "unchanged",
+    "global_preservation_gate": "BLOCKED",
+    "d3_or_e2_stage_status": "unchanged"
+  }
+}
