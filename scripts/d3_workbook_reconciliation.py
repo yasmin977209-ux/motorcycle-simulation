@@ -77,7 +77,7 @@ def main():
       "AR_D3_vs_D5":compare(sources["d3_ar"],sources["d5_ar"])
     }
     record=json.loads(pathlib.Path("docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json").read_text(encoding="utf-8"))
-    d3_18={"test_id":"D3-18","classification":record.get("gate",{}).get("d3_18),
+    d3_18={"test_id":"D3-18","classification":record.get("gate",{}).get("d3_18"),
       "run_id":record.get("acceptance",{}).get("workflow_run_id"),"job_id":record.get("acceptance",{}).get("job_id"),
       "tested_sha":record.get("acceptance",{}).get("workflow_head_sha"),"artifact_id":record.get("acceptance",{}).get("artifact_id")}
     if d3_18["classification"]!="PASS_SCOPED" or not d3_18["run_id"] or not d3_18["job_id"]: raise SystemExit("D3_18_PRIOR_INVOCATION_EVIDENCE_INVALID")
