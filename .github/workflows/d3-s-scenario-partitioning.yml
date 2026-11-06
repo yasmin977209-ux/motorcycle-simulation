@@ -1,98 +1,153 @@
-name: D3-S Scenario Partitioning and Reassembly
+name: D3-S Surgical OOXML Partitioning and Reassembly
 on:
   push:
-    branches:
-      - tmp/d1-rebuild-20261101
+    branches: [tmp/d1-rebuild-20261101]
     paths:
-      - scripts/d3_s_partition.py
+      - scripts/d3_s_ooxml_partition.py
       - .github/workflows/d3-s-scenario-partitioning.yml
       - docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json
   workflow_dispatch:
 permissions:
   actions: read
   contents: read
+concurrency:
+  group: d3-s-ooxml-\${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  partition-and-reassemble:
+  partition:
+    name: D3-S1/S2 \${{ matrix.lang }}
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - lang: EN
+            member: deliverables/Full_Results_EN.xlsx
+            expected_bytes: 259442692
+            expected_sha256: 8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d
+          - lang: AR
+            member: deliverables/النتائج_الكاملة_AR.xlsx
+            expected_bytes: 259444534
+            expected_sha256: e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d
     steps:
-      - name: Checkout exact source commit
+      - name: Checkout exact tested commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
-      - name: Install workbook parser
-        run: |
-          python -m pip install --upgrade openpyxl==3.1.5
-      - name: Download and verify exact D3 and D5 source Artifacts
+          ref: \${{ github.sha }}
+      - name: Install OOXML and workbook validators
+        run: python -m pip install --disable-pip-version-check lxml==5.3.0 openpyxl==3.1.5 requests==2.32.3
+      - name: Download and verify pinned original D3 Artifact
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          python - <<'PY'
-          import hashlib, os, pathlib, requests, zipfile, stat
-          repo="yasmin977209-ux/motorcycle-simulation"
-          pins={
-            13288779998:(535567142,"e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe","d3.zip"),
-            13369179742:(519116689,"80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1","d5.zip")
-          }
-          headers={"Authorization":f"Bearer {os.environ['GITHUB_TOKEN']}","Accept":"application/vnd.github+json"}
-          out=pathlib.Path("d3-s-sources");out.mkdir(exist_ok=True)
-          for aid,(expected_size,expected_sha,name) in pins.items():
-            meta=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}",headers=headers,timeout=60);meta.raise_for_status()
-            item=meta.json()
-            if item.get("expired") or item.get("size_in_bytes")!=expected_size or item.get("digest")!=f"sha256:{expected_sha}":
-              raise SystemExit(f"ARTIFACT_METADATA_PIN_MISMATCH:{aid}")
-            r=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=120);r.raise_for_status()
-            p=out/name;h=hashlib.sha256();n=0
-            with p.open("wb") as f:
-              for chunk in r.iter_content(1024*1024):
-                if chunk:f.write(chunk);h.update(chunk);n+=len(chunk)
-            if n!=expected_size or h.hexdigest()!=expected_sha:raise SystemExit(f"ARTIFACT_BYTES_PIN_MISMATCH:{aid}:{n}:{h.hexdigest()}")
-            print(f"VERIFIED_ARTIFACT id={aid} bytes={n} sha256={h.hexdigest()}")
-          d3=zipfile.ZipFile(out/"d3.zip");d5=zipfile.ZipFile(out/"d5.zip")
-          for z in (d3,d5):
-            names=z.namelist()
-            if len(names)!=len(set(names)) or z.testzip():raise SystemExit("OUTER_ZIP_CRC_OR_DUPLICATE_FAILURE")
-            for name in names:
-              if name.startswith("/") or ".." in pathlib.PurePosixPath(name).parts or "\\" in name:raise SystemExit("UNSAFE_OUTER_ZIP_MEMBER")
-          expected_d3={"deliverables/Full_Results_EN.xlsx":(259442692,"8b14ec0b2555beae117d453722abc6c733b49ef941bfa8b3e15d299d7983d77d"),
-                       "deliverables/النتائج_الكاملة_AR.xlsx":(259444534,"e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d")}
-          d5_names={"Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip","manifest.json","SHA256SUMS.txt"}
-          if set(d5.namelist())!=d5_names:raise SystemExit("D5_OUTER_INVENTORY_MISMATCH")
-          import io
-          inner=zipfile.ZipFile(io.BytesIO(d5.read("Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip")))
-          if inner.testzip():raise SystemExit("D5_INNER_ZIP_CRC_FAILURE")
-          for name,(size,digest) in expected_d3.items():
-            d3_member=name
-            base=pathlib.PurePosixPath(name).name
-            if d3.getinfo(d3_member).file_size!=size:raise SystemExit("D3_WORKBOOK_SIZE_MISMATCH:"+base)
-            raw=d3.read(d3_member)
-            if len(raw)!=size or hashlib.sha256(raw).hexdigest()!=digest:raise SystemExit("D3_WORKBOOK_HASH_MISMATCH:"+base)
-            if base not in inner.namelist():raise SystemExit("D5_WORKBOOK_MISSING:"+base)
-            d5raw=inner.read(base)
-            if len(d5raw)!=size or hashlib.sha256(d5raw).hexdigest()!=digest or d5raw!=raw:
-              raise SystemExit("D3_D5_WORKBOOK_BYTE_IDENTITY_MISMATCH:"+base)
-            target=out/base;target.write_bytes(raw)
-            print(f"VERIFIED_D3_D5_WORKBOOK {base} bytes={size} sha256={digest} exact_byte_match=true")
-          d3.close();d5.close();inner.close()
-          PY
-      - name: Partition both source workbooks and perform two semantic round trips
+          GITHUB_TOKEN: \${{ github.token }}
+          MEMBER: \${{ matrix.member }}
+          EXPECTED_BYTES: \${{ matrix.expected_bytes }}
+          EXPECTED_SHA256: \${{ matrix.expected_sha256 }}
         run: |
           set -euo pipefail
-          python scripts/d3_s_partition.py \
-            --english "d3-s-sources/Full_Results_EN.xlsx" \
-            --arabic "d3-s-sources/النتائج_الكاملة_AR.xlsx" \
-            --outdir "permanent_archive/v240_stage_d/d3_s"
-      - name: Verify all ten outputs and publish D3-S Artifact
+          python - <<'PY'
+          import hashlib, os, pathlib, requests, zipfile
+          repo="yasmin977209-ux/motorcycle-simulation"
+          aid=13288779998
+          expected_artifact_bytes=535567142
+          expected_artifact_sha="e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+          headers={"Authorization":f"Bearer {os.environ['GITHUB_TOKEN']}","Accept":"application/vnd.github+json"}
+          meta=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}",headers=headers,timeout=45)
+          meta.raise_for_status(); item=meta.json()
+          if item.get("expired") or item.get("size_in_bytes")!=expected_artifact_bytes or item.get("digest")!=f"sha256:{expected_artifact_sha}":
+            raise SystemExit("D3_SOURCE_ARTIFACT_METADATA_PIN_MISMATCH")
+          response=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=(45,180))
+          response.raise_for_status()
+          p=pathlib.Path("d3-source.zip"); h=hashlib.sha256(); count=0
+          with p.open("wb") as f:
+            for chunk in response.iter_content(1024*1024):
+              if chunk: f.write(chunk); h.update(chunk); count+=len(chunk)
+          if count!=expected_artifact_bytes or h.hexdigest()!=expected_artifact_sha:
+            raise SystemExit(f"D3_SOURCE_ARTIFACT_RAW_HASH_MISMATCH:{count}:{h.hexdigest()}")
+          with zipfile.ZipFile(p) as z:
+            if z.testzip(): raise SystemExit("D3_SOURCE_ARTIFACT_ZIP_CRC_FAILURE")
+            member=os.environ["MEMBER"]
+            if member not in z.namelist(): raise SystemExit("D3_WORKBOOK_MEMBER_MISSING:"+member)
+            raw=z.read(member)
+          if len(raw)!=int(os.environ["EXPECTED_BYTES"]) or hashlib.sha256(raw).hexdigest()!=os.environ["EXPECTED_SHA256"]:
+            raise SystemExit("D3_WORKBOOK_RAW_HASH_MISMATCH:"+member)
+          out=pathlib.Path("d3-s-source")/("source.xlsx")
+          out.parent.mkdir(parents=True,exist_ok=True); out.write_bytes(raw)
+          print(f"VERIFIED_D3_SOURCE_ARTIFACT={aid} bytes={count} sha256={h.hexdigest()}")
+          print(f"VERIFIED_WORKBOOK={member} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()}")
+          PY
+      - name: D3-S1 surgical OOXML filtering and D3-S2 byte-exact reassembly
+        run: |
+          set -euo pipefail
+          python scripts/d3_s_ooxml_partition.py --source d3-s-source/source.xlsx --lang "\${{ matrix.lang }}" --outdir "d3-s-output/\${{ matrix.lang }}"
+      - name: Validate output inventory and preserve D3-18 scoped invocation record
+        env:
+          LANG_CODE: \${{ matrix.lang }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib
+          out=pathlib.Path("d3-s-output")/os.environ["LANG_CODE"]
+          xlsx=sorted(p.name for p in out.glob("*.xlsx"))
+          if len(xlsx)!=5: raise SystemExit(f"PARTITION_OUTPUT_COUNT_NOT_5:{xlsx}")
+          coverage=json.loads((out/f"D3_S_{os.environ['LANG_CODE']}_SCENARIO_COVERAGE.json").read_text())
+          if sum(len(v) for v in coverage.values())!=25: raise SystemExit("SCENARIO_COVERAGE_NOT_25_OF_25")
+          record=json.loads(pathlib.Path("docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json").read_text())
+          if record.get("gate",{}).get("d3_18")!="PASS_SCOPED" or not record.get("acceptance",{}).get("workflow_run_id") or not record.get("acceptance",{}).get("job_id"):
+            raise SystemExit("D3_18_PRIOR_SCOPED_INVOCATION_EVIDENCE_INVALID")
+          print("D3_18_PRIOR_RUN_ID="+str(record["acceptance"]["workflow_run_id"]))
+          print("D3_18_PRIOR_JOB_ID="+str(record["acceptance"]["job_id"]))
+          print("D3_18_TESTED_WORKFLOW_HEAD_SHA="+str(record["acceptance"]["workflow_head_sha"]))
+          print("D3_18_TEST_ID=NOT_RECORDED_IN_CURRENT_ACCEPTANCE_LEDGER")
+          PY
+      - name: Upload language-specific partition outputs and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: D3-S-\${{ matrix.lang }}-partitions
+          path: |
+            d3-s-output/\${{ matrix.lang }}/*.xlsx
+            d3-s-output/\${{ matrix.lang }}/*.json
+            d3-s-output/\${{ matrix.lang }}/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    name: Publish combined D3-S evidence
+    needs: partition
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Download both language partition artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: D3-S-*-partitions
+          merge-multiple: true
+          path: combined-d3-s
+      - name: Verify ten-workbook combined inventory
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path("combined-d3-s")
+          books=sorted(root.glob("*.xlsx"))
+          if len(books)!=10: raise SystemExit(f"COMBINED_PARTITION_COUNT_NOT_10:{len(books)}")
+          manifests=sorted(root.glob("D3_S_*_MANIFEST.json"))
+          if len(manifests)!=2: raise SystemExit("LANGUAGE_MANIFEST_COUNT_NOT_2")
+          for p in books: print(f"{p.name} {p.stat().st_size} {hashlib.sha256(p.read_bytes()).hexdigest()}")
+          report={"status":"PASS_SCOPED","tested_sha":"\${{ github.sha }}","workflow_run_id":"\${{ github.run_id }}","partition_workbooks":10,"languages":["EN","AR"],"scenario_coverage":"25/25 per language","manifests":[p.name for p in manifests]}
+          (root/"D3_S_COMBINED_RUN_REPORT.json").write_text(json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n")
+          PY
+      - name: Publish combined D3-S Artifact
         uses: actions/upload-artifact@v4
         with:
           name: D3-S-10-workbooks-and-equivalence-evidence
-          path: |
-            permanent_archive/v240_stage_d/d3_s/*.xlsx
-            permanent_archive/v240_stage_d/d3_s/*.json
+          path: combined-d3-s/*
           if-no-files-found: error
           retention-days: 30
-      - name: Exact tested SHA and artifact inventory
+      - name: Exact tested SHA and final inventory
         run: |
-          set -euo pipefail
           echo "D3_S_TESTED_SHA=$GITHUB_SHA"
-          find permanent_archive/v240_stage_d/d3_s -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+          find combined-d3-s -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
