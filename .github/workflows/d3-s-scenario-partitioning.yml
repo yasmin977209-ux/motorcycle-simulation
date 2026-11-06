@@ -4,6 +4,7 @@ on:
     branches: [tmp/d1-rebuild-20261101]
     paths:
       - scripts/d3_s_ooxml_partition.py
+      - scripts/test_d3_18_manifest_remote_readback.py
       - .github/workflows/d3-s-scenario-partitioning.yml
       - docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json
   workflow_dispatch:
@@ -17,7 +18,7 @@ jobs:
   partition:
     name: D3-S1/S2 ${{ matrix.lang }}
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -78,6 +79,11 @@ jobs:
           print(f"VERIFIED_WORKBOOK={member} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()}")
           PY
       - name: D3-S1 surgical OOXML filtering and D3-S2 byte-exact reassembly
+        env:
+          D3_SOURCE_ARTIFACT_ID: "13288779998"
+          D3_SOURCE_RUN_ID: "41754147172"
+          D3_SOURCE_ARTIFACT_SHA256: "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           python scripts/d3_s_ooxml_partition.py --source d3-s-source/source.xlsx --lang "${{ matrix.lang }}" --outdir "d3-s-output/${{ matrix.lang }}"
@@ -110,11 +116,34 @@ jobs:
             d3-s-output/${{ matrix.lang }}/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
+  d3-18:
+    name: D3-18 Manifest and Exact-HEAD Raw Readback
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Invoke D3-18 actual test against GitHub Raw
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python scripts/test_d3_18_manifest_remote_readback.py
+      - name: Upload D3-18 actual invocation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: D3-18-Manifest-Exact-Head-Readback
+          path: d3-18-output/D3_18_ACTUAL_INVOCATION_2026-11-06.json
+          if-no-files-found: error
+          retention-days: 30
   aggregate:
     name: Publish combined D3-S evidence
     needs: partition
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
     steps:
       - name: Checkout exact tested commit
         uses: actions/checkout@v4
