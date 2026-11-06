@@ -162,41 +162,38 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
 
 def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_meta):
  names,wb,rels,ct,relmap,sheets=source_meta[:6]
- by_name={s["name"]:s for s in sheets}
- # Start from the C030 package; insert every missing worksheet part from its owning partition.
- assembled=outdir/f"{lang}_reassembled.xlsx"
- shutil.copy2(outdir/parts["C030"]["filename"],assembled)
+ mapping=source_meta[6][2]
+ assembled_dir=outdir/"_verification"; assembled_dir.mkdir(exist_ok=True)
+ assembled=assembled_dir/f"{lang}_reassembled.xlsx"
+ shutil.copy2(source,assembled)
  all_sheet_parts={s["part"] for s in sheets}
- with zipfile.ZipFile(assembled) as z: present=set(z.namelist())
- add_from=[]
- for c in COLLECTIONS:
-  p=outdir/parts[c]["filename"]
-  with zipfile.ZipFile(p) as z:
-   for s in sheets:
-    if s["part"] in z.namelist() and s["part"] not in present:
-     add_from.append((p,s["part"])); present.add(s["part"])
- if present.intersection(all_sheet_parts)!=all_sheet_parts: raise RuntimeError("REASSEMBLY_MISSING_SHEET_PART")
- # Restore the exact source workbook-level metadata and original relationship/content-type documents.
- with zipfile.ZipFile(source) as z:
-  original_meta={n:z.read(n) for n in ("xl/workbook.xml","xl/_rels/workbook.xml.rels","[Content_Types].xml")}
+ all_sheet_rels={rels_part(s["part"]) for s in sheets}
+ with zipfile.ZipFile(source) as src:
+  source_names=set(src.namelist())
+  remove_parts=sorted((all_sheet_parts|all_sheet_rels)&source_names)
+ # Remove every original worksheet and its relationship part, then rebuild those parts only from partition outputs.
+ if remove_parts:
+  subprocess.run(["zip","-q","-d",str(assembled),*remove_parts],check=True,capture_output=True)
  with tempfile.TemporaryDirectory(prefix="d3s-reassemble-") as td:
-  td=pathlib.Path(td); (td/"xl/_rels").mkdir(parents=True)
-  (td/"xl/workbook.xml").write_bytes(original_meta["xl/workbook.xml"])
-  (td/"xl/_rels/workbook.xml.rels").write_bytes(original_meta["xl/_rels/workbook.xml.rels"])
-  (td/"[Content_Types].xml").write_bytes(original_meta["[Content_Types].xml"])
-  # Restore original workbook metadata after deleting the filtered metadata copies.
-  subprocess.run(["zip","-q","-d",str(assembled),"xl/workbook.xml","xl/_rels/workbook.xml.rels","[Content_Types].xml"],check=True,capture_output=True)
-  subprocess.run(["zip","-q","-u",str(assembled),"xl/workbook.xml","xl/_rels/workbook.xml.rels","[Content_Types].xml"],cwd=td,check=True,capture_output=True)
-  for idx,(p,part) in enumerate(add_from):
-   temp=td/f"sheet_{idx}.xml"; temp.parent.mkdir(parents=True,exist_ok=True)
-   with zipfile.ZipFile(p) as z: temp.write_bytes(z.read(part))
-   # Keep the original archive member path when adding the sheet.
-   target=td/part; target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(temp.read_bytes())
-   subprocess.run(["zip","-q","-u",str(assembled),part],cwd=td,check=True,capture_output=True)
+  td=pathlib.Path(td)
+  for s in sheets:
+   info=mapping[s["name"]]
+   owner=info["collection"] if info["classification"]=="scenario_specific" else COLLECTIONS[0]
+   part_file=outdir/parts[owner]["filename"]
+   to_add=[s["part"]]
+   rp=rels_part(s["part"])
+   if rp in source_names: to_add.append(rp)
+   with zipfile.ZipFile(part_file) as z:
+    for idx,member in enumerate(to_add):
+     target=td/member; target.parent.mkdir(parents=True,exist_ok=True)
+     target.write_bytes(z.read(member))
+     subprocess.run(["zip","-q","-u",str(assembled),member],cwd=td,check=True,capture_output=True)
  with zipfile.ZipFile(source) as src, zipfile.ZipFile(assembled) as rebuilt:
   for s in sheets:
    if sha(src.read(s["part"]))!=sha(rebuilt.read(s["part"])): raise RuntimeError("REASSEMBLY_WORKSHEET_BYTE_MISMATCH:"+s["name"])
-  for part in ("xl/sharedStrings.xml","xl/styles.xml"):
+   rp=rels_part(s["part"])
+   if rp in source_names and src.read(rp)!=rebuilt.read(rp): raise RuntimeError("REASSEMBLY_WORKSHEET_RELATIONSHIP_MISMATCH:"+s["name"])
+  for part in ("xl/sharedStrings.xml","xl/styles.xml","xl/workbook.xml","xl/_rels/workbook.xml.rels","[Content_Types].xml"):
    if part in src.namelist() and src.read(part)!=rebuilt.read(part): raise RuntimeError("REASSEMBLY_GLOBAL_PART_MISMATCH:"+part)
   bad=rebuilt.testzip()
   if bad: raise RuntimeError("REASSEMBLY_ZIP_CRC_FAILURE:"+bad)
