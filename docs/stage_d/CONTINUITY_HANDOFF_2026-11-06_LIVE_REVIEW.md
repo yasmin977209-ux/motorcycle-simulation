@@ -44,3 +44,12 @@ Working branch `tmp/d1-rebuild-20261101`. Review-start HEAD was `cc5753e1a37db1c
 - 20 original S6 Artifacts (1,531,244,201 bytes) remain retrievable in GitHub Actions until 2026-11-27; no off-platform copy. Preserve after sufficient independent storage is connected. E2 replay set is separate (21 artifacts, 3,858,228,566 bytes).
 - Dropbox upload failed for 130,319,892 bytes; do not retry without capacity resolution. SharePoint is not connected. No transfer was made.
 - Do not restart D3-S long runs 42094642530 / 42099529400. D3 not closed; do not start D4. See [Current Bootstrap & Preservation Revalidation](BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).
+
+
+## Latest preservation handoff — 2026-11-06
+
+- OneDrive personal rescue folder created: [Motorcycle-Simulation-Rescue-2026-11-05](https://onedrive.live.com?cid=893D06C344EA996B&id=893D06C344EA996B!s0a781736638d4c6fac434b1ff2bb1b9a).
+- All 20 original S6 artifacts from Run [40731224990](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40731224990) transferred. OneDrive readback: 20 items, 1,531,244,201 bytes, all names present, total size equals GitHub artifact inventory.
+- Do not upgrade this to byte-verified preservation: raw SHA-256 readback, ZIP CRC and restore remain `NOT_RUN`. Detailed item mapping and source API digests: [S6 OneDrive transfer addendum](S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
+- E2 Replay's 21 artifacts (3,858,228,566 bytes) remain the next separate preservation target; do not conflate them with original S6.
+- Global Preservation remains `BLOCKED`; D3 is not closed; do not start D4. Do not restart long D3-S runs 42094642530 / 42099529400.
