@@ -63,7 +63,7 @@ def compare(a,b):
 
 def main():
     p=argparse.ArgumentParser()
-    for x in ("git_en","git_ar","d3_en","d3_ar","d5_en","d5_ar"): p.add_argument("--"+x,required=True)
+    for x in ("git_en","git_ar","d3_en","d3_ar","d5_en","d5_ar"): p.add_argument("--"+x.replace("_","-"),dest=x,required=True)
     p.add_argument("--d3-artifact-id",type=int,required=True); p.add_argument("--d5-artifact-id",type=int,required=True)
     p.add_argument("--output",default="reconciliation-output")
     a=p.parse_args()
