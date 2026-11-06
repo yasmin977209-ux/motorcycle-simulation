@@ -5,7 +5,7 @@ on:
     branches:
       - tmp/d1-rebuild-20261101
     paths:
-      - 'docs/stage_d/D6_EXECUTION_TRIGGER_*.md'
+      - 'docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json'
 permissions:
   contents: write
   actions: read
@@ -41,14 +41,14 @@ jobs:
           echo "D6_JOB_ID=${job_id}" >> "$GITHUB_ENV"
           echo "D6_JOB_ID=${job_id}"
       - name: Run independent auditor unit tests
-        run: python -m pytest -q -rs tests/test_d6_audit.py
+        run: python -m pytest -q -rs tests/test_d6_audit.py tests/test_d5_package.py tests/test_d4_numeric_occurrences.py
       - name: Download exact D5 Artifact and verify GitHub metadata
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          artifact_id="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json")); print(d["artifact"]["id"])')"
-          expected_size="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json")); print(d["artifact"]["size_in_bytes"])')"
+          artifact_id="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json")); print(d["artifact"]["id"])')"
+          expected_size="$(python -c 'import json; d=json.load(open("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json")); print(d["artifact"]["size_in_bytes"])')"
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
           for attempt in $(seq 1 12); do
             if curl --fail --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api" -o /tmp/d5-meta.json; then break; fi
@@ -57,7 +57,7 @@ jobs:
           python - <<'PY'
           import json,pathlib
           m=json.loads(pathlib.Path("/tmp/d5-meta.json").read_text())
-          d=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json").read_text())
+          d=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json").read_text())
           a=d["artifact"]
           assert m["id"]==int(a["id"]) and m["expired"] is False
           assert m["size_in_bytes"]==int(a["size_in_bytes"])
@@ -127,7 +127,7 @@ jobs:
           set -euo pipefail
           head="$(git rev-parse HEAD)"
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$head"
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "01a6f79eedc522bb734ed9c5ea31beee581f2468"
           python - <<'PY'
           import hashlib,os,pathlib,urllib.request,urllib.parse,subprocess
           repo=os.environ["GITHUB_REPOSITORY"]; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
