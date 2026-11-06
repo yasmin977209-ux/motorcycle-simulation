@@ -55,8 +55,9 @@ def main() -> None:
                 json.dumps(record, sort_keys=True, indent=2) + "\n", encoding="utf-8")
             parts.append(record)
             index += 1
-    if len(parts) != 17:
-        raise SystemExit(f"D3S_TRANSPORT_EXPECTED_17_PARTS_GOT_{len(parts)}")
+    expected_parts = (full_size + CHUNK - 1) // CHUNK
+    if len(parts) != expected_parts:
+        raise SystemExit(f"D3S_TRANSPORT_PART_COUNT_MISMATCH:{len(parts)}:{expected_parts}")
     rebuilt = out / "D3S.reassembled.check.zip"
     h = hashlib.sha256()
     with rebuilt.open("wb") as dst:

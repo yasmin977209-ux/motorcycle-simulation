@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 2
       matrix:
         include:
           - lang: EN
@@ -338,6 +338,51 @@ jobs:
           path: |
             transport-parts/D3S.part016.bin
             transport-parts/D3S.part016.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-017
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-017
+          path: |
+            transport-parts/D3S.part017.bin
+            transport-parts/D3S.part017.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-018
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-018
+          path: |
+            transport-parts/D3S.part018.bin
+            transport-parts/D3S.part018.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-019
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-019
+          path: |
+            transport-parts/D3S.part019.bin
+            transport-parts/D3S.part019.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-020
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-020
+          path: |
+            transport-parts/D3S.part020.bin
+            transport-parts/D3S.part020.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-021
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-021
+          path: |
+            transport-parts/D3S.part021.bin
+            transport-parts/D3S.part021.json
           if-no-files-found: error
           retention-days: 30
       - name: Publish D3-S transport restoration manifest
