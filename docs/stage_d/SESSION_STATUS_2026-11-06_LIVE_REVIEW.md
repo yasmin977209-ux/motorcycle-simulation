@@ -64,3 +64,13 @@
 - Global Preservation BLOCKED; overall D3 not closed; D4 NOT_STARTED; protected Gate A/B/Stability/N=4800 and five missing fields unchanged.
 - Monitoring rule: ten minutes applies to the assistant's active observation, not GitHub Actions runtime. Long jobs may continue; do not cancel them or artificially cap them at nine minutes.
 - Full record: [Detailed D3-S and preservation execution handoff](SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
+
+
+## D0 expanded-matrix completion correction — 2026-11-06
+
+- The 27-artifact D0 audit completed successfully after the previous status section was appended.
+- Run 42283741942 on exact tested SHA `afbc65bae45a53ccc14fd9098014494d09ec70e3`: 29/29 jobs successful (prepare + 27 artifact audits + aggregate).
+- Aggregate result: 27 reports / 27 PASS_SCOPED / 0 blocked. Artifact 13535434691, 2,346 bytes, artifact ZIP SHA-256 `898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f`.
+- All 20 S6 source artifacts and seven additional support artifacts were audited for raw GitHub artifact bytes, ZIP integrity/restore, and applicable Parquet scope.
+- This does not verify OneDrive or Dropbox object bytes. Historical `source_run_metadata.sha256` remains MISSING_EVIDENCE where null; no synthesis. Global Preservation remains BLOCKED.
+- Detailed record: [D3-S and preservation execution handoff](SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
