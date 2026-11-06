@@ -56,7 +56,7 @@ jobs:
           PY
 
   audit:
-    name: Raw SHA, ZIP restore and Parquet ${{ matrix.artifact.id }}
+    name: Raw SHA, ZIP restore and Parquet ${{ matrix.id }}
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -76,12 +76,12 @@ jobs:
       - name: Download exact artifact bytes, verify source digest, CRC, restore and Parquet
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          ARTIFACT_ID: ${{ matrix.artifact.id }}
-          ARTIFACT_NAME: ${{ matrix.artifact.name }}
-          EXPECTED_SIZE: ${{ matrix.artifact.size }}
-          EXPECTED_SHA256: ${{ matrix.artifact.sha256 }}
-          REQUIRE_PARQUET: ${{ matrix.artifact.require_parquet }}
-          REQUIRE_METADATA: ${{ matrix.artifact.require_metadata }}
+          ARTIFACT_ID: ${{ matrix.id }}
+          ARTIFACT_NAME: ${{ matrix.name }}
+          EXPECTED_SIZE: ${{ matrix.size }}
+          EXPECTED_SHA256: ${{ matrix.sha256 }}
+          REQUIRE_PARQUET: ${{ matrix.require_parquet }}
+          REQUIRE_METADATA: ${{ matrix.require_metadata }}
         run: |
           set -euo pipefail
           args=()
@@ -98,7 +98,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: preservation-audit-${{ matrix.artifact.id }}
+          name: preservation-audit-${{ matrix.id }}
           path: audit-output/*.json
           if-no-files-found: warn
           retention-days: 30
