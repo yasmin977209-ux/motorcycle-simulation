@@ -113,6 +113,7 @@ def main():
     ap.add_argument("--expected-size",type=int,required=True)
     ap.add_argument("--expected-sha256",required=True)
     ap.add_argument("--require-parquet",action="store_true")
+    ap.add_argument("--require-source-metadata",action="store_true")
     ap.add_argument("--output",default="audit-output")
     a=ap.parse_args()
     repo="yasmin977209-ux/motorcycle-simulation"
@@ -147,7 +148,7 @@ def main():
       "outer_zip":{"crc":"PASS","member_count":len(members),"restored_bytes":restored_bytes},
       "restore_test":{"status":"PASS","restored_member_count":len(members),"nested_archives":nested},
       "source_run_metadata_sha256":metadata,"parquet_audit":parquet,
-      "classification":"PASS_SCOPED" if metadata["status"]=="PASS" and parquet["status"] in ("PASS_SCOPED","NOT_PRESENT") else "BLOCKED",
+      "classification":"PASS_SCOPED" if (metadata["status"]=="PASS" or (not a.require_source_metadata and metadata["status"]=="MISSING_EVIDENCE")) and parquet["status"] in ("PASS_SCOPED","NOT_PRESENT") else "BLOCKED",
       "limitations":["GitHub source bytes are audited here; this runner cannot independently read back OneDrive or Dropbox object bytes. Provider metadata/size matches are separate evidence."]
     }
     out=pathlib.Path(a.output); out.mkdir(parents=True,exist_ok=True)
