@@ -161,3 +161,12 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - D0/D1/D2 remain PASS_SCOPED_WITH_LIMITATIONS; D3 not closed; D4 NOT_STARTED; E2 Original Accounting BLOCKED; E2 Replay reconstruction only.
 - Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED. The five protected accounting fields remain MISSING_EVIDENCE.
 - No new Trial, Simulation, Monte Carlo, N expansion, identity change, main write, merge, Release, or final acceptance was performed.
+
+## Final append-only closure of this session's live-state reconciliation — 2026-11-06
+
+- Final raw-readback after the preceding handoff commit: Run 42291735999 / Job 128146606928, SUCCESS, tested SHA 4e2b8d42e0e17ed37d7cb377b9af4269881b639e, 12 files, VERIFIED_LIVE; Artifact 13540915115, 1,831 bytes, artifact ZIP SHA-256 4f68494a57d65a3d48b7c0245576573e7d918b07703ee7caa61536e27cf11bda. The report contains per-file raw SHA-256 and Git blob SHA-1 and confirms GitHub Raw bytes equal the exact checkout. v2.4.0 and REV6 pins passed.
+- On the same exact tested SHA, D1-D2 validation Run 42291735970 / Job 128146607958 completed SUCCESS; D3 Published Output Exact-HEAD verification Run 42291735953 / Job 128146606860 completed SUCCESS. Neither run is a D3 phase closure.
+- The raw-readback report was copied to OneDrive and read back: item 893D06C344EA996B!sce6fd1d926844a848bf8d6440110046d, 1,831 bytes. This is OneDrive metadata/size readback only.
+- The prior branch HEAD at this append was 4e2b8d42e0e17ed37d7cb377b9af4269881b639e; protected main remained 01a6f79eedc522bb734ed9c5ea31beee581f2468. Branch compare was diverged, 1,086 ahead / 2 behind; merge base c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Do not poll or restart Run 42290160686 after the assistant's ten-minute monitoring handoff. At the cutoff it remained queued at run level, with EN Job 128141183016 in_progress, AR Job 128141183093 queued, and D3-18 Job 128141182580 success. GitHub Actions continues independently. Await the owner's completion notice before retrieving D3-S transport artifacts or transferring them.
+- Global Preservation remains BLOCKED; overall D3 remains NOT_CLOSED; D4 NOT_STARTED. All protected financial/statistical statuses and five missing accounting fields remain unchanged.
