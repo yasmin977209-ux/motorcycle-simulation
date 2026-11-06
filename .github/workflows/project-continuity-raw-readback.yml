@@ -3,6 +3,10 @@ on:
   push:
     branches: [tmp/d1-rebuild-20261101]
     paths:
+      - docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md
+      - docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md
+      - docs/governance/OWNER_MASTER_BLOCKER_REMOVAL_2026-11-05.md
+      - docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md
       - docs/PROJECT_CONTINUITY.md
       - docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md
       - docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md
@@ -50,6 +54,10 @@ jobs:
           if ref.json()["object"]["sha"]!=tested:
               raise SystemExit("RAW_READBACK_INITIAL_HEAD_MISMATCH")
           paths=[
+              "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md",
+              "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
+              "docs/governance/OWNER_MASTER_BLOCKER_REMOVAL_2026-11-05.md",
+              "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
             "docs/PROJECT_CONTINUITY.md",
             "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
             "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
@@ -59,6 +67,10 @@ jobs:
             ".github/workflows/d3-s-scenario-partitioning.yml",
             ".github/workflows/project-continuity-raw-readback.yml"
           ]
+          expected={
+            "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md":"225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+            "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md":"b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243"
+          }
           out=[]
           for rel in paths:
               url=f"https://raw.githubusercontent.com/{repo}/{tested}/"+rel
