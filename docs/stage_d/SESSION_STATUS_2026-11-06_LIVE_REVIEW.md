@@ -43,3 +43,9 @@
 - S6 original Run 40731224990: 20/20 artifacts copied; OneDrive listing confirms 20 exact names and total 1,531,244,201 bytes, equal to GitHub API artifact sizes.
 - Evidence classification: `TRANSFERRED_SIZE_MATCHED`; no SHA-256 raw-byte readback, ZIP CRC or restore test yet. See [transfer addendum](S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
 - Global Preservation remains `BLOCKED`; E2 Replay 21-artifact set is not yet preserved. D3 remains not closed; E2 Original Accounting remains `BLOCKED`; five protected accounting fields remain `MISSING_EVIDENCE`.
+
+
+## Evidence-label correction — 2026-11-06
+
+- The S6 OneDrive copy outcome is size-matched (20/20, 1,531,244,201 bytes), but the approved evidence classification is `REPORTED_ONLY`, not `VERIFIED_LIVE`; raw SHA-256 readback, ZIP CRC and restore are `NOT_RUN`.
+- Correction record: [S6 OneDrive classification correction](S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json).
