@@ -49,5 +49,55 @@
     "SHA-256 values were computed from UTF-8 bytes returned by live GitHub file reads; the two governing pins match their approved expected values.",
     "The first four files are the exact content versions identified by their containing commits and Git blob SHA-1 values.",
     "This manifest intentionally does not contain its own hash."
-  ]
+  ],
+  "latest_append_only_revalidation": {
+    "recorded_after": "D0 expanded 27-artifact audit Run 42283741942",
+    "branch_commit_heads": {
+      "detailed_execution_handoff": "e97afebf15e0d1c6b47caf176647e659c0f554e0",
+      "project_continuity": "8d436c685959d7623f7e40164b77f2aca86a4071",
+      "session_status": "54c477ecf2a0f8c9e4bee9e461412d0919182bee",
+      "continuity_handoff": "7d2bd2b9e10b6cadbea9cc4682da72b479ecafb5"
+    },
+    "files": [
+      {
+        "path": "docs/stage_d/SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md",
+        "commit_sha": "e97afebf15e0d1c6b47caf176647e659c0f554e0",
+        "git_blob_sha1": "6ee3b5ff7d8391e9d00af62569a7cfb43e7e2b3f",
+        "size_bytes": 24343,
+        "sha256": "c009b031b256ad92d6b8aa233b817b968e0adb3020b4070e1a8ebe20a51214fc"
+      },
+      {
+        "path": "docs/PROJECT_CONTINUITY.md",
+        "commit_sha": "8d436c685959d7623f7e40164b77f2aca86a4071",
+        "git_blob_sha1": "82512e1c6f0a4e463e7e9ad3ae92192c727fbd25",
+        "size_bytes": 600000,
+        "sha256": "1fa6269b00524b69f14dc8ea312f32c5937232c3695b76e854b9e3985dd1caa2"
+      },
+      {
+        "path": "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
+        "commit_sha": "54c477ecf2a0f8c9e4bee9e461412d0919182bee",
+        "git_blob_sha1": "bb4573aad54e664fbcc68857852ed9b8071582ec",
+        "size_bytes": 8135,
+        "sha256": "a44b680f865b682029bf4c3093cd16106b4a2c031fe9f17689f00864b98813b7"
+      },
+      {
+        "path": "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
+        "commit_sha": "7d2bd2b9e10b6cadbea9cc4682da72b479ecafb5",
+        "git_blob_sha1": "c42aba504f417f839d756e5a7b814ed03dcbd16b",
+        "size_bytes": 10435,
+        "sha256": "79822459ca29fc9e31c575aec36050bb8357d13bf5b48f8b3d80fdf62ea0db1b"
+      }
+    ],
+    "additional_verified_run": {
+      "run_id": 42283741942,
+      "tested_sha": "afbc65bae45a53ccc14fd9098014494d09ec70e3",
+      "result": "PASS_SCOPED",
+      "reports": 27,
+      "blocked": 0,
+      "aggregate_artifact_id": 13535434691,
+      "aggregate_artifact_bytes": 2346,
+      "aggregate_artifact_zip_sha256": "898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f"
+    },
+    "note": "These are remote-readback UTF-8 SHA-256 values for the exact file contents identified by their containing commits. The manifest does not include its own hash."
+  }
 }
