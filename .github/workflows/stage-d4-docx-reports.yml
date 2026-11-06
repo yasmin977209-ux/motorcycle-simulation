@@ -3,9 +3,7 @@ on:
   push:
     branches: [tmp/d1-rebuild-20261101]
     paths:
-      - scripts/s6_docx_reports.py
-      - tests/test_s6_docx_reports.py
-      - .github/workflows/stage-d4-docx-reports.yml
+      - docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json
   workflow_dispatch:
 permissions:
   contents: write
@@ -38,7 +36,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "$EXPECTED_SHA"
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "01a6f79eedc522bb734ed9c5ea31beee581f2468"
           python - <<'PY'
           import json
           from pathlib import Path
@@ -75,11 +73,15 @@ jobs:
               print(f"SUMMARY_PAGINATION {name} pages={pages}")
               if not 2 <= pages <= 3: raise SystemExit(f"SUMMARY_PAGE_COUNT_INVALID:{name}:{pages}")
           PY
-      - name: Run D4 document, provenance, disclosure and RTL tests
+      - name: Run occurrence-level numeric token lineage across five DOCX outputs
         run: |
           set -euo pipefail
-          python -m compileall -q scripts/s6_docx_reports.py tests/test_s6_docx_reports.py
-          python -m pytest -q -rs tests/test_s6_docx_reports.py
+          python scripts/audit_d4_numeric_occurrences.py --input-dir deliverables --output docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json
+      - name: Run D4 document, provenance, disclosure, RTL and Test 176 tests
+        run: |
+          set -euo pipefail
+          python -m compileall -q scripts/s6_docx_reports.py scripts/audit_d4_numeric_occurrences.py tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py
+          python -m pytest -q -rs tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py
       - name: Write D4 requirements matrix and scoped build report
         env:
           TESTED_SHA: ${{ github.sha }}
@@ -114,6 +116,23 @@ jobs:
           report += ["","## Scope and limitations","", "- Reports use REFERENCE_COMPLIANT_BASELINE only; no external market assumptions were introduced.","- Every displayed financial/statistical value is registry-backed and carries its number_id; unavailable values remain MISSING_EVIDENCE.","- D3 remains PASS_SCOPED_WITH_LIMITATIONS; D4 does not change any upstream gate.","- C100 Golden revalidation remains NOT_RUN; Full Logging remains representative-only; the five historical accounting fields remain MISSING_EVIDENCE.","- Financial Gate A remains PASS_SCOPED; Production Gate A remains NOT_DECLARED; Gate B remains FAIL_SCOPED; Stability remains NOT_CONVERGED; N=4800 remains NOT_EXECUTED.","- FINAL_ACCEPTED remains NOT_DECLARED. D5 is the next stage only after D4 exact-head and remote readback pass.",""]
           pathlib.Path("docs/stage_d/D4_BUILD_REPORT_2026-11-05.md").write_text("\n".join(report),encoding="utf-8")
           PY
+      - name: Write D4 effective closure state after zero-unresolved lineage
+        env:
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, os
+          p=pathlib.Path("docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json")
+          r=json.loads(p.read_text(encoding="utf-8"))
+          assert r["acceptance"]=="PASS" and r["unresolved_occurrences"]==0
+          assert r["identity_equation"] and r["total_occurrences"]==r["resolved_occurrences"]+r["explicitly_classified_occurrences"]
+          state={"schema":"d4-effective-closure-state-v1","recorded_at":"2026-11-07","repository":"yasmin977209-ux/motorcycle-simulation","branch":"tmp/d1-rebuild-20261101","tested_sha":os.environ["TESTED_SHA"],"workflow_run_id":int(os.environ["RUN_ID"]),"status":"PASS_GAP_FREE","test_176":{"status":"PASS","total_occurrences":r["total_occurrences"],"resolved_occurrences":r["resolved_occurrences"],"explicitly_classified_occurrences":r["explicitly_classified_occurrences"],"unresolved_occurrences":0,"identity_equation":True},"documents":r["documents"],"required_outputs":["التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"],"preserved_project_status":"T2_INTERIM / NOT_FINAL_BLOCKED","upstream_gates":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED"},"limitations":["This D4 closure is limited to the normative D4 deliverables and occurrence-level lineage.","No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."]}
+          pathlib.Path("docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json").write_text(json.dumps(state,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          lines=["# D4 Effective Closure — 2026-11-07","","Status: PASS_GAP_FREE",f"- Tested SHA: {state['tested_sha']}",f"- Workflow Run: {state['workflow_run_id']}","- Test 176: PASS","",f"- Total occurrences: {r['total_occurrences']}",f"- Resolved: {r['resolved_occurrences']}",f"- Explicitly classified: {r['explicitly_classified_occurrences']}","- Unresolved: 0","- Identity equation: PASS","","## Five DOCX files",""]+[f"- {x['file']}: {x['total_occurrences']} occurrences; {x['xml_parts_scanned']} OOXML parts." for x in r["documents"]]+["","## Preserved gates",""]+[f"- {k}: {v}" for k,v in state["upstream_gates"].items()]+["","D4 closure does not change upstream project gates or final acceptance."]
+          pathlib.Path("docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+          PY
       - name: Append D4 continuity and session status
         env:
           TESTED_SHA: ${{ github.sha }}
@@ -143,11 +162,11 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "01a6f79eedc522bb734ed9c5ea31beee581f2468"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f -- "deliverables/التقرير_الكامل_AR.docx" "deliverables/Full_Report_EN.docx" "deliverables/الملخص_AR.docx" "deliverables/Summary_EN.docx" "deliverables/دراسة_الجدوى_AR.docx"
-          git add -- docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md docs/stage_d/D4_BUILD_REPORT_2026-11-05.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
+          git add -- docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md docs/stage_d/D4_BUILD_REPORT_2026-11-05.md docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.md docs/PROJECT_CONTINUITY.md docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
           git commit -m "build(d4): publish registry-backed DOCX reports"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Verify remote Raw bytes, evidence triples and exact final HEAD
@@ -161,10 +180,10 @@ jobs:
           remote=subprocess.check_output(["git","ls-remote","origin",f"refs/heads/{branch}"],text=True).split()[0]
           if remote!=head: raise SystemExit("D4_FINAL_HEAD_MISMATCH")
           main=subprocess.check_output(["git","ls-remote","origin","refs/heads/main"],text=True).split()[0]
-          if main!="c6e54349a5e94f65d5aa9f83141f225d777bb474": raise SystemExit("MAIN_HEAD_CHANGED:"+main)
+          if main!="01a6f79eedc522bb734ed9c5ea31beee581f2468": raise SystemExit("MAIN_HEAD_CHANGED:"+main)
           paths=[
             "deliverables/التقرير_الكامل_AR.docx","deliverables/Full_Report_EN.docx","deliverables/الملخص_AR.docx","deliverables/Summary_EN.docx","deliverables/دراسة_الجدوى_AR.docx",
-            "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json","docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json","docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md","docs/stage_d/D4_BUILD_REPORT_2026-11-05.md",
+            "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json","docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json","docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md","docs/stage_d/D4_BUILD_REPORT_2026-11-05.md","docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json","docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json","docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.md",
             "docs/PROJECT_CONTINUITY.md","docs/PROJECT_CONTINUITY_ADDENDUM_2026-11-05.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"
           ]
           for path in paths:
@@ -178,7 +197,7 @@ jobs:
             print(f"VERIFIED_RAW {path} bytes={len(local)} sha256={hashlib.sha256(local).hexdigest()} blob_sha1={blob} commit={head} url={url}")
           if subprocess.check_output(["git","ls-remote","origin",f"refs/heads/{branch}"],text=True).split()[0]!=head:
             raise SystemExit("D4_FINAL_EXACT_HEAD_MISMATCH")
-          if subprocess.check_output(["git","ls-remote","origin","refs/heads/main"],text=True).split()[0]!="c6e54349a5e94f65d5aa9f83141f225d777bb474":
+          if subprocess.check_output(["git","ls-remote","origin","refs/heads/main"],text=True).split()[0]!="01a6f79eedc522bb734ed9c5ea31beee581f2468":
             raise SystemExit("D4_MAIN_HEAD_CHANGED")
           print("D4_FINAL_EXACT_HEAD_PASS "+head)
           PY
@@ -191,4 +210,7 @@ jobs:
             docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json
             docs/stage_d/D4_REQUIREMENTS_MATRIX_2026-11-05.md
             docs/stage_d/D4_BUILD_REPORT_2026-11-05.md
+            docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json
+            docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json
+            docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.md
           retention-days: 30
