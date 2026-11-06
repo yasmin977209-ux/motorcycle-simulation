@@ -199,3 +199,15 @@ The earlier line in §5 accidentally omitted the substring `eb77da3ab7d32`. This
 ## Append-only correction 2 — exact 64-character AR workbook digest
 
 The exact SHA-256 captured by the D3-S AR job log is `e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d` (64 hex characters). This supersedes both mistyped/abbreviated strings in §5 and the first correction above. Source: Run `42276129141`, Job `128101027310`, log line `2026-11-06T19:33:17.6543139Z`.
+
+
+## Append-only update 3 — expanded 27-Artifact D0 audit completed
+
+This supersedes the earlier §3 statement that no 27-item run had completed.
+
+- Workflow Run [42283741942](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942) completed `success` on exact tested SHA `afbc65bae45a53ccc14fd9098014494d09ec70e3`.
+- It ran 29 jobs: one matrix preparation, 27 per-artifact audits, and one aggregate job. All jobs completed successfully.
+- Aggregate output: `reports=27`, `pass=27`, `blocked=0`, classification `PASS_SCOPED`.
+- It covered the 20 S6 originals and all seven additional artifacts: `12852969854`, `12998778418`, `12630457193`, `13393273763`, `13442739373`, `13454621678`, `13465123601`.
+- Aggregate Artifact [13535434691](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942/artifacts/13535434691), `D0-Preservation-Raw-Artifact-Audit`, 2,346 bytes; artifact ZIP SHA-256 `898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f`.
+- This is an expanded scoped raw-byte/ZIP/restore/Parquet audit of GitHub source artifacts. It does not read OneDrive/Dropbox object bytes and does not close Global Preservation. `source_run_metadata.sha256` remains explicitly `MISSING_EVIDENCE` where the historical source value is null; no field was synthesized. Do not promote this to full D0 or Global Preservation closure.
