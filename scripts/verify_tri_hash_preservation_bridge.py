@@ -16,6 +16,8 @@ import os
 import re
 import shutil
 import struct
+import subprocess
+import sys
 import tempfile
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -336,7 +338,16 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--output-dir", default="tri-hash-output")
     ap.add_argument("--quickxor-lib", default=os.environ.get("QUICKXOR_LIB", "/tmp/libquickxorhash.so"))
+    ap.add_argument("--github-raw-only", action="store_true",
+                    help="Run Stage A against GitHub Artifact ZIP bytes only; no provider credentials or network reads.")
     args = ap.parse_args()
+    if args.github_raw_only:
+        outdir = Path(args.output_dir)
+        outdir.mkdir(parents=True, exist_ok=True)
+        target = outdir / "GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json"
+        subprocess.run([sys.executable, "scripts/verify_github_raw_tri_hash_manifest.py",
+                        "--output", str(target), "--quickxor-lib", args.quickxor_lib], check=True)
+        return
     engine = HashEngine(args.quickxor_lib)
     clients = Clients()
     outdir = Path(args.output_dir)
