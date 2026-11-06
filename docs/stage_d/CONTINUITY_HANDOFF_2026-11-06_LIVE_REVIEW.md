@@ -84,3 +84,12 @@ The ten-minute threshold is for ChatGPT's active monitoring. It does not constra
 
 ### Safety boundaries
 No new Trials, Simulation, Monte Carlo, N expansion, source/cohort/seed/trial identity changes, business-rule/threshold changes, main writes, merge, force-push, historical Artifact replacement/deletion, Release or final-acceptance declaration. Do not start D4 before full D3 closure.
+
+
+## D0 expanded audit completion — append-only correction — 2026-11-06
+
+- Expanded 27-artifact D0 Run [42283741942](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942) completed SUCCESS on tested SHA `afbc65bae45a53ccc14fd9098014494d09ec70e3`.
+- 27 artifact jobs plus prepare and aggregate all succeeded; aggregate `27/27 PASS_SCOPED`, 0 blocked.
+- Aggregate Artifact [13535434691](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942/artifacts/13535434691), 2,346 bytes, ZIP digest `898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f`.
+- Includes all 20 S6 originals and seven additional Artifacts `12852969854`, `12998778418`, `12630457193`, `13393273763`, `13442739373`, `13454621678`, `13465123601`.
+- This is GitHub source Artifact auditing only; it does not verify OneDrive/Dropbox object bytes or close Global Preservation. Null historical `source_run_metadata.sha256` values remain MISSING_EVIDENCE. Full detail is in [the execution handoff](SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
