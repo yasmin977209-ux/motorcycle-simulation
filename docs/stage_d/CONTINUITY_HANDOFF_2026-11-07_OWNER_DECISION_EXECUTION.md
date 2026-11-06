@@ -72,3 +72,13 @@ If the tri-hash Actions run is still queued/in_progress after ten minutes of in-
 - The workflow writes an explicit BLOCKED_MISSING_PROVIDER_SECRETS JSON ledger artifact when either read-only secret is absent. It does not attempt provider reads.
 - The registry hash field in the D3 closure record is corrected to NOT_VERIFIED_IN_THIS_SESSION; do not use the prior unverified literal.
 - Pre-hardening exact-head validation SHA 110892985dcfffa61248918537b3da7d3e6ec28d: D3 Run 42307704095 / Job 128201134649 PASS; D1-D2 Run 42307703964 / Job 128201132997 PASS; Raw readback Run 42307704101 / Job 128201134226 PASS.
+
+
+## Latest exact-head checks and tri-hash status
+On tested SHA c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1:
+- D3 Run 42308136995 / Job 128202596651 SUCCESS.
+- D1-D2 Run 42308137023 / Job 128202596326 SUCCESS; 105-key evidence Artifact 13546583942.
+- Raw readback Run 42308137053 / Job 128202596852 SUCCESS; Artifact 13546608955.
+- Tri-hash Run 42308136996 / Job 128202596866 passed the C compile and 4 unit tests, then stopped at missing provider secrets. It emitted blocked ledger Artifact 13546299231 (497 bytes; sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca). No external file bytes were read.
+- The owner must add the two read-only repository secrets and manually dispatch the tri-hash workflow. Then assess all 72 provider objects and restore results from the new ledger.
+- Until the provider verification and independent retention requirements pass, do not claim D3 PASS_GAP_FREE and do not start D4.

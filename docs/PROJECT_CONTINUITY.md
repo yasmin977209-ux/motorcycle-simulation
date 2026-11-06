@@ -3905,3 +3905,15 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Correction to the effective closure draft: the previously typed results/number_registry.json SHA-256 was not established from raw bytes in this session. The JSON now marks the registry SHA as NOT_VERIFIED_IN_THIS_SESSION; the registry remains upstream truth, but no digest is claimed.
 - Exact-head validations on pre-hardening SHA 110892985dcfffa61248918537b3da7d3e6ec28d all succeeded: D3 Run 42307704095 / Job 128201134649; D1-D2 Run 42307703964 / Job 128201132997; Raw readback Run 42307704101 / Job 128201134226 (Artifact 13547091551).
 - The new script/workflow correction commit will trigger a fresh tri-hash test and fresh D3, D1-D2 and Raw readback checks. Provider reads remain blocked until the two Actions secrets are configured.
+
+
+## Latest exact-head validation and blocked tri-hash ledger — 2026-11-07 (append-only)
+
+- Tested SHA: c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1.
+- D3 published-output exact-head Run 42308136995 / Job 128202596651: SUCCESS.
+- D1-D2 source validation Run 42308137023 / Job 128202596326: SUCCESS; 105-key evidence Artifact 13546583942, 10,545 bytes, GitHub digest sha256:52fb470bca49147bd357d33fcced5bba9f5cabd5b86fa96f2c6bf7b4b9fb3cb2.
+- Project continuity raw readback Run 42308137053 / Job 128202596852: SUCCESS; Artifact 13546608955, 2,683 bytes, digest sha256:b5c0a514738a8eb3293ddf06e7c1f4b3e4c21997de1a39b2594f3c3f29b4fb68.
+- Tri-hash Run 42308136996 / Job 128202596866: QuickXorHash C compilation and 4/4 unit tests passed; provider credential gate failed because ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN are absent. No provider bytes were read.
+- The fail-closed ledger is Artifact 13546299231, 497 bytes, digest sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca. Its state is BLOCKED_MISSING_PROVIDER_SECRETS / provider_reads=NOT_STARTED; it is not a hash result.
+- The script now uses manifest-driven part sizes/hashes and GitHub Artifact metadata for D1/D3/D5 reassembly; no unverified D1 size/hash pin remains.
+- Global Preservation Gate remains BLOCKED; no D3 PASS_GAP_FREE claim and no D4 start. D5/D6 new exact-head execution remains NOT_RUN.

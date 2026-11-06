@@ -79,3 +79,12 @@ The final documentation commit SHA and post-commit Raw readback are to be record
 - Number Registry: prior unverified SHA literal removed from effective claims; status NOT_VERIFIED_IN_THIS_SESSION.
 - Pre-hardening exact-head checks on SHA 110892985dcfffa61248918537b3da7d3e6ec28d: D3 Run 42307704095 / Job 128201134649 PASS; D1-D2 Run 42307703964 / Job 128201132997 PASS; Raw readback Run 42307704101 / Job 128201134226 PASS (Artifact 13547091551).
 - Fresh run set pending after this correction commit. main remains read-only and unchanged.
+
+
+## Latest run results — exact tested SHA c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1
+- D3 Run 42308136995 / Job 128202596651: SUCCESS.
+- D1-D2 Run 42308137023 / Job 128202596326: SUCCESS; Artifact 13546583942 (10,545 bytes; sha256:52fb470bca49147bd357d33fcced5bba9f5cabd5b86fa96f2c6bf7b4b9fb3cb2).
+- Raw readback Run 42308137053 / Job 128202596852: SUCCESS; Artifact 13546608955 (2,683 bytes; sha256:b5c0a514738a8eb3293ddf06e7c1f4b3e4c21997de1a39b2594f3c3f29b4fb68).
+- Tri-hash Run 42308136996 / Job 128202596866: QuickXorHash C compile PASS; unit tests 4/4 PASS; credential gate BLOCKED (both provider secrets absent); provider reads NOT_STARTED.
+- Blocked ledger Artifact 13546299231 (497 bytes; sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca).
+- No raw OneDrive SHA-256, Dropbox content_hash, provider reassembly or restore proof exists yet. Global Preservation Gate remains BLOCKED; D3 phase remains BLOCKED; D4 NOT_STARTED.
