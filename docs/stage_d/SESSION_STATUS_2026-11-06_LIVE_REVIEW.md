@@ -49,3 +49,18 @@
 
 - The S6 OneDrive copy outcome is size-matched (20/20, 1,531,244,201 bytes), but the approved evidence classification is `REPORTED_ONLY`, not `VERIFIED_LIVE`; raw SHA-256 readback, ZIP CRC and restore are `NOT_RUN`.
 - Correction record: [S6 OneDrive classification correction](S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json).
+
+
+## Latest execution status — D0 / D3-S / D3-18 — 2026-11-06
+
+- Pre-handoff live branch HEAD: `afbc65bae45a53ccc14fd9098014494d09ec70e3`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`; compare diverged, ahead 1,065 / behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- D3-S Run 42276129141 completed SUCCESS on exact tested SHA `c9d44537dc5b401ab0987426115440650bffb4f4`. Jobs: D3-18 128101026672 SUCCESS; D3-S1/S2 EN 128101027123 SUCCESS; AR 128101027310 SUCCESS; aggregate 128116008695 SUCCESS.
+- D3-S result: ten workbooks (five EN + five AR); 25/25 scenarios per language; 45 sheets per partition; source/reassembled 185 worksheet XML parts byte-exact; openpyxl reassembled-open PASS. Semantic/numeric equivalence is scoped to exact worksheet XML byte identity. Combined Artifact 13536960583, 1,394,728,947 bytes, artifact ZIP SHA-256 `e194fe7c4a9cf4a192042ec0d331a6a70b9bdfd617eb85e8bf45e86f0f369d08`.
+- Actual D3-18: PASS_SCOPED; Test ID `D3-18-EXACT-HEAD-MANIFEST-RAW-READBACK-2026-11-06`; Run 42276129141; Job 128101026672; Tested SHA c9d445...; evidence Artifact 13533264931.
+- D3 workbook reconciliation Run 42272832024 SUCCESS on SHA `9899d836b778cf...` (full SHA in handoff); D3/D5 EN and AR raw workbook byte identity true. Artifact 13531164484. Overall D3 remains not closed.
+- D0 audit Run 42269416300 SUCCESS: 23/23 reports PASS_SCOPED (20 S6 originals plus three support Artifacts); aggregate Artifact 13529360447. Source metadata SHA may remain MISSING_EVIDENCE and is not synthesized.
+- Current D0 workflow has an expanded 27-Artifact matrix, but no completed 27-item run was verified. Audit timeout changed to 30 minutes in commit afbc65...; latest D1/D2 validation Run 42283741870 succeeded on that exact commit, 36 tests passed, 105 representative keys only; Artifact 13536107817.
+- Multipart OneDrive staging runs 42273360334 (D3/D5) and 42274900045 (D1) succeeded but produced GitHub Actions part Artifacts only; they did not upload to OneDrive. Existing S6 OneDrive copy remains REPORTED_ONLY for integrity; no new Dropbox/OneDrive raw-byte verification this session.
+- Global Preservation BLOCKED; overall D3 not closed; D4 NOT_STARTED; protected Gate A/B/Stability/N=4800 and five missing fields unchanged.
+- Monitoring rule: ten minutes applies to the assistant's active observation, not GitHub Actions runtime. Long jobs may continue; do not cancel them or artificially cap them at nine minutes.
+- Full record: [Detailed D3-S and preservation execution handoff](SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
