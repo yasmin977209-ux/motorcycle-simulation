@@ -87,7 +87,9 @@ def classify(sheets,lang,source):
  return scenarios,shared,mapping
 
 def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str,source_meta):
- names,wb,rels,ct,relmap,sheets=source_meta
+ names,wb,rels,ct,relmap,sheets=source_meta[:6]
+ wb=copy.deepcopy(wb); rels=copy.deepcopy(rels); ct=copy.deepcopy(ct)
+ relmap={r.get('Id'):r for r in rels.findall('rel:Relationship',NS)}
  scenarios,shared,mapping=source_meta[6]
  kept=[s for s in sheets if s["name"] in shared or (mapping[s["name"]]["collection"]==collection)]
  removed=[s for s in sheets if s not in kept]
