@@ -3743,3 +3743,13 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - Ten-minute rule clarification: it limits ChatGPT's active monitoring only, not GitHub Actions runtime. Do not cap jobs at 9 minutes to satisfy the assistant's monitoring rule. If a run remains active after ten minutes of assistant monitoring, stop polling and hand monitoring to the owner without cancelling the workflow.
 - Overall D3 remains not closed; D4 NOT_STARTED. Protected gates and five missing accounting fields remain unchanged.
 - Full detailed record and continuation order: [SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md](stage_d/SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
+
+
+## Append-only correction — D0 expanded 27-artifact audit completed — 2026-11-06
+
+- The expanded 27-artifact D0 matrix did complete after the previous handoff text was written.
+- Run [42283741942](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942), tested SHA `afbc65bae45a53ccc14fd9098014494d09ec70e3`, conclusion SUCCESS; 27 per-artifact audit jobs + prepare + aggregate, all successful.
+- Aggregate: 27 reports, 27 PASS_SCOPED, 0 blocked. Artifact [13535434691](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42283741942/artifacts/13535434691), 2,346 bytes, artifact ZIP SHA-256 `898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f`.
+- Scope: 20 S6 originals + Artifacts `12852969854`, `12998778418`, `12630457193`, `13393273763`, `13442739373`, `13454621678`, `13465123601`.
+- This does not verify OneDrive/Dropbox bytes and does not close Global Preservation. Historical `source_run_metadata.sha256` null values remain MISSING_EVIDENCE and were not synthesized. Do not upgrade to full D0 closure.
+- Detailed report: [D3-S and preservation execution handoff](stage_d/SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md).
