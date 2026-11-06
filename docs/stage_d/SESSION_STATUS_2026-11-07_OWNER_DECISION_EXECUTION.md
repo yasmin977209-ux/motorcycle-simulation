@@ -53,3 +53,12 @@ No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, SOURCE_SHA/
 
 ## Final-head validation
 The final documentation commit SHA and post-commit Raw readback are to be recorded after the atomic commit. No D4 transition is authorized until D3 PASS_GAP_FREE and the required preservation gate are both proven.
+
+
+## Append-only run correction — 2026-11-07
+- Tri-hash first run: 42307180251 / Job 128199351125 / tested SHA 9eda9580618b4f65f07a5285906613900d8f2eb7 / FAILURE at pytest collection due to missing repository-root import path. Provider credential and download steps were skipped; no OneDrive/Dropbox raw bytes were read.
+- Test correction: tests/test_tri_hash_preservation_bridge.py now inserts the repository root into sys.path before importing the verifier. Fresh run pending after commit.
+- D3 exact-output Run 42307180159 / Job 128199350695: SUCCESS on tested SHA 9eda9580618b4f65f07a5285906613900d8f2eb7.
+- D1-D2 Run 42307180254 / Job 128199350368: SUCCESS on the same tested SHA; Artifact 13545519765 (10,545 bytes; digest sha256:ac58c0fe8bfb8b73dc758c4d4f7e932105f087b1c08758bded751823b02a46b3).
+- Project Raw readback Run 42307180276 / Job 128199351164: SUCCESS on the same tested SHA; Artifact 13546782730 (2,677 bytes; digest sha256:b6ab087dd56e0decc387b632bdc58d05756182049af6d7f4ac5630c6a78b053a).
+- These are pre-test-fix exact-head checks. The upcoming correction commit will move HEAD and trigger fresh validation; final HEAD remains pending.

@@ -49,3 +49,10 @@ Do not paste token values into chat, source code or workflow logs. If the workfl
 
 ## Monitoring rule
 If the tri-hash Actions run is still queued/in_progress after ten minutes of in-chat monitoring, stop polling. Report Run ID, tested Commit SHA, current status and elapsed time to the owner; await the owner's completion notice before resuming.
+
+
+## Append-only correction — tri-hash initial run and repair
+- Run 42307180251 / Job 128199351125 failed before remote reads: pytest could not import the scripts namespace. No provider credential check or external file download occurred.
+- Corrected test discovery by adding the repository root to sys.path in tests/test_tri_hash_preservation_bridge.py. The correction commit will trigger a fresh run.
+- Pre-fix SHA 9eda9580618b4f65f07a5285906613900d8f2eb7 was independently checked by D3 Run 42307180159 / Job 128199350695, D1-D2 Run 42307180254 / Job 128199350368, and Raw readback Run 42307180276 / Job 128199351164; all three succeeded.
+- Await the new tri-hash run. If it passes tests and credentials, monitor up to ten minutes only; if still queued/in_progress at ten minutes, hand off to owner. If credentials are missing/expired, stop and request setup. Do not claim any provider byte verification from Run 42307180251.

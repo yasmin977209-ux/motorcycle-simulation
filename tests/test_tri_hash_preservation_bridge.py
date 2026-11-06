@@ -2,8 +2,10 @@ import base64
 import ctypes
 import hashlib
 import struct
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.verify_tri_hash_preservation_bridge import quickxor_bytes, dropbox_content_hash_bytes
 
 def test_quickxor_matches_streaming_c_implementation(tmp_path):

@@ -3877,3 +3877,12 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - D3 phase remains BLOCKED pending preservation readback, reassembly/restore and independent durable copies. D4 remains NOT_STARTED; D5/D6 new exact-head execution remains NOT_RUN. Do not promote D3 to PASS_GAP_FREE or begin D4 until both D3 and the required preservation gate are proven.
 - No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, SOURCE_SHA/cohort/MASTER_SEED change, main write, merge, force-push or Release was performed. The five historical accounting fields remain MISSING_EVIDENCE.
 
+
+
+## Tri-hash bridge first-run test harness correction — 2026-11-07 (append-only)
+
+- Push-triggered Tri-hash workflow Run 42307180251 / Job 128199351125 tested exact SHA 9eda9580618b4f65f07a5285906613900d8f2eb7 and failed at pytest collection, before any OneDrive/Dropbox credential or provider read.
+- Failure: tests/test_tri_hash_preservation_bridge.py could not import the repository scripts namespace (ModuleNotFoundError: No module named 'scripts'). The QuickXorHash C compilation succeeded; the failing step was the Python test import path, not a hash mismatch.
+- The test harness now explicitly adds the repository root to sys.path. This is a test-discovery correction only; no hash algorithm, source identity, business rule or preservation result is promoted.
+- On the same pre-fix SHA 9eda9580618b4f65f07a5285906613900d8f2eb7, D3 exact-output Run 42307180159 / Job 128199350695 succeeded; D1-D2 Run 42307180254 / Job 128199350368 succeeded and produced Artifact 13545519765; project Raw readback Run 42307180276 / Job 128199351164 succeeded and produced Artifact 13546782730.
+- The test correction commit will trigger a fresh tri-hash run and exact-head validation. Provider raw-byte verification remains NOT_RUN until that run passes the tests and credential gate.
