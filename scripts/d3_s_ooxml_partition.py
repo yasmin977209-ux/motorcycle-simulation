@@ -246,7 +246,7 @@ def main():
  sums=[]
  for f in sorted(outdir.glob("*.xlsx")):
   if "reassembled" not in f.name: sums.append(f"{file_sha(f)}  {f.name}")
- (outdir/"SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
+ (outdir/f"D3_S_{a.lang}_SHA256SUMS.txt").write_text("\n".join(sums)+"\n",encoding="utf-8")
  print(json.dumps({"event":"LANGUAGE_COMPLETE","lang":a.lang,"status":"PASS_SCOPED","partitions":5,"scenario_coverage":"25/25","reassembly":reassembly},sort_keys=True),flush=True)
 
 if __name__=="__main__": main()
