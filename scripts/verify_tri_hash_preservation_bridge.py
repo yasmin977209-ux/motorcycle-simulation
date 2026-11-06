@@ -35,7 +35,6 @@ D3S_RUN = 42295053851
 D3S_COMBINED_ARTIFACT = 13542178172
 D3S_PACKAGE_BYTES = 1837203298
 D3S_PACKAGE_SHA256 = "80e15d07873b51b0c1d1ff653546025a642361de26dbd57ef876a23c4cacc0f0"
-D1_ARTIFACT_ID = 12998778418
 D3_ARTIFACT_ID = 13288779998
 D5_ARTIFACT_ID = 13369179742
 CHUNK = 4 * 1024 * 1024
@@ -397,6 +396,7 @@ def main() -> None:
 
         # 22 D3-S parts plus their manifest: direct raw GitHub Artifact ZIP copies.
         d3s_parts = []
+        restore_source_pins = {}
         for item in d3s_items:
             name = item["name"]
             p = work / ("od-" + name)
@@ -508,33 +508,44 @@ def main() -> None:
                 sources = restore_data.get("sources", {})
                 if name.startswith("D1-RESTORE"):
                     d1 = sources.get("D1", {})
-                    if int(d1.get("artifact_id", -1)) != D1_ARTIFACT_ID or int(d1.get("part_count", -1)) != 4:
+                    d1_id = int(d1.get("artifact_id", -1))
+                    if d1_id <= 0 or int(d1.get("part_count", -1)) != 4:
                         raise BridgeError("D1_RESTORE_MANIFEST_PIN_MISMATCH")
+                    restore_source_pins["D1"] = {"artifact_id": d1_id, "source_bytes": int(d1.get("source_bytes", -1)),
+                        "source_sha256": str(d1.get("source_sha256", "")), "part_count": 4}
                 else:
                     for key, artifact_id in (("D3", D3_ARTIFACT_ID), ("D5", D5_ARTIFACT_ID)):
                         src = sources.get(key, {})
                         if int(src.get("artifact_id", -1)) != artifact_id or int(src.get("part_count", -1)) != 7:
                             raise BridgeError("D3_D5_RESTORE_MANIFEST_PIN_MISMATCH:" + key)
+                        restore_source_pins[key] = {"artifact_id": artifact_id, "source_bytes": int(src.get("source_bytes", -1)),
+                            "source_sha256": str(src.get("source_sha256", "")), "part_count": 7}
                 restore_files.append(name)
             report["entries"].append({"provider": "OneDrive", "name": name, "item_id": item["id"],
                 "remote_size": item["size"], **h, "remote_quickxorhash": remote_qx,
                 "status": "VERIFIED_LIVE"})
             p.unlink(missing_ok=True)
-        expected_ids = {D1_ARTIFACT_ID, D3_ARTIFACT_ID, D5_ARTIFACT_ID}
-        if set(groups) != expected_ids:
+        expected_ids = {int(x["artifact_id"]) for x in restore_source_pins.values()}
+        if len(expected_ids) != 3 or set(groups) != expected_ids:
             raise BridgeError("MULTIPART_SOURCE_ARTIFACT_SET_MISMATCH:" + str(sorted(groups)))
         multipart_results = []
-        for aid, parts in groups.items():
+        for key, pin in restore_source_pins.items():
+            aid = int(pin["artifact_id"])
+            parts = groups[aid]
             sizes = {int(x["source_bytes"]) for x in parts}
             shas = {str(x["source_sha256"]) for x in parts}
             counts = {int(x["part_count"]) for x in parts}
-            expected_count = 4 if aid == D1_ARTIFACT_ID else 7
-            if len(sizes) != 1 or len(shas) != 1 or counts != {expected_count}:
+            if len(sizes) != 1 or len(shas) != 1 or counts != {int(pin["part_count"])}:
                 raise BridgeError("MULTIPART_SIDECAR_IDENTITY_CONFLICT:" + str(aid))
-            expected_size = next(iter(sizes))
-            expected_sha = next(iter(shas))
-            multipart_results.append(verify_reassembled_group("multipart-" + str(aid), parts, aid,
-                expected_size, expected_sha, clients, engine, work, report))
+            expected_size = int(pin["source_bytes"])
+            expected_sha = str(pin["source_sha256"])
+            if sizes != {expected_size} or shas != {expected_sha}:
+                raise BridgeError("MULTIPART_RESTORE_MANIFEST_VS_PARTS_CONFLICT:" + key)
+            result = verify_reassembled_group("multipart-" + key, parts, aid,
+                expected_size, expected_sha, clients, engine, work, report)
+            if key == "D1" and not re.search(r"(D1|full[-_ ]?logging)", result["github_source_artifact"]["artifact_name"], re.I):
+                raise BridgeError("D1_SOURCE_ARTIFACT_NAME_MISMATCH:" + result["github_source_artifact"]["artifact_name"])
+            multipart_results.append(result)
         if len(restore_files) != 2:
             raise BridgeError("MULTIPART_RESTORE_MANIFEST_COUNT_MISMATCH:" + str(restore_files))
         report["multipart_reassemblies"] = multipart_results

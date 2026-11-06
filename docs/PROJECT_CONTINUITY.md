@@ -3917,3 +3917,13 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - The fail-closed ledger is Artifact 13546299231, 497 bytes, digest sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca. Its state is BLOCKED_MISSING_PROVIDER_SECRETS / provider_reads=NOT_STARTED; it is not a hash result.
 - The script now uses manifest-driven part sizes/hashes and GitHub Artifact metadata for D1/D3/D5 reassembly; no unverified D1 size/hash pin remains.
 - Global Preservation Gate remains BLOCKED; no D3 PASS_GAP_FREE claim and no D4 start. D5/D6 new exact-head execution remains NOT_RUN.
+
+
+## Exact-head verification and manifest-driven D1 identity refinement — 2026-11-07 (append-only)
+
+- Exact tested SHA bcf0bfa40ad4f75a7b7a3fc4f166ef3515f5273c passed:
+  - D1-D2 Run 42308428293 / Job 128203579526; Artifact 13547201916 (10,545 bytes; digest sha256:111eb03c87ad5e95d82137b6c5301d7be1d47eab86a821415b6ebf5b3f0a0f65).
+  - D3 Run 42308428409 / Job 128203580538.
+  - Raw readback Run 42308428346 / Job 128203579944; Artifact 13547905361 (2,679 bytes; digest sha256:8849528ccb07db8cbc4b045ab982c41c8d1ac4485987771a8c46e266a4524899).
+- Additional verifier hardening: D1 source Artifact ID is now derived from the D1 restore manifest rather than a hard-coded identifier. D1 source size/SHA and part count must agree across restore manifest and all sidecars; the reassembled bytes are then compared to the exact GitHub Artifact metadata digest and size. D3/D5 remain pinned to owner-specified Artifact IDs.
+- The next commit runs the updated verifier tests and emits a fail-closed missing-secrets ledger if provider credentials remain absent. No provider byte reads are claimed.

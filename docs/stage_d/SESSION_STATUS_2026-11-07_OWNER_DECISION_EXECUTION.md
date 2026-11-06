@@ -88,3 +88,12 @@ The final documentation commit SHA and post-commit Raw readback are to be record
 - Tri-hash Run 42308136996 / Job 128202596866: QuickXorHash C compile PASS; unit tests 4/4 PASS; credential gate BLOCKED (both provider secrets absent); provider reads NOT_STARTED.
 - Blocked ledger Artifact 13546299231 (497 bytes; sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca).
 - No raw OneDrive SHA-256, Dropbox content_hash, provider reassembly or restore proof exists yet. Global Preservation Gate remains BLOCKED; D3 phase remains BLOCKED; D4 NOT_STARTED.
+
+
+## Append-only final baseline check and D1 source identity correction — 2026-11-07
+- Pre-correction tested SHA bcf0bfa40ad4f75a7b7a3fc4f166ef3515f5273c:
+  - D1-D2 Run 42308428293 / Job 128203579526 PASS; Artifact 13547201916 (10,545 bytes; sha256:111eb03c87ad5e95d82137b6c5301d7be1d47eab86a821415b6ebf5b3f0a0f65).
+  - D3 Run 42308428409 / Job 128203580538 PASS.
+  - Raw readback Run 42308428346 / Job 128203579944 PASS; Artifact 13547905361 (2,679 bytes; sha256:8849528ccb07db8cbc4b045ab982c41c8d1ac4485987771a8c46e266a4524899).
+- The D1 multipart source Artifact ID is now read from the restore manifest, not assumed. The source size/hash are compared across all sidecars and then to the exact GitHub Artifact digest. This is a manifest-driven correctness refinement.
+- Tri-hash remote verification remains blocked by absent ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN; prior fail-closed ledger Artifact 13546299231 records provider_reads=NOT_STARTED.

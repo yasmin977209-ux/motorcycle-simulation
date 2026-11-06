@@ -82,3 +82,9 @@ On tested SHA c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1:
 - Tri-hash Run 42308136996 / Job 128202596866 passed the C compile and 4 unit tests, then stopped at missing provider secrets. It emitted blocked ledger Artifact 13546299231 (497 bytes; sha256:0c3fdbd45228f444108ed3680d1a25c01e0fcf60bdaefe11df6d980132481aca). No external file bytes were read.
 - The owner must add the two read-only repository secrets and manually dispatch the tri-hash workflow. Then assess all 72 provider objects and restore results from the new ledger.
 - Until the provider verification and independent retention requirements pass, do not claim D3 PASS_GAP_FREE and do not start D4.
+
+
+## Manifest-driven D1 source identity refinement
+- D1 source artifact ID now comes from the OneDrive D1 restore manifest. The verifier checks manifest/sidecar agreement, exact part coverage, reassembly SHA-256/size, then live GitHub Artifact digest/size. It no longer hardcodes D1 Artifact ID.
+- Exact tested SHA bcf0bfa40ad4f75a7b7a3fc4f166ef3515f5273c passed D1-D2 Run 42308428293, D3 Run 42308428409, and Raw readback Run 42308428346.
+- Provider reads remain blocked pending the two Actions secrets; no D4/D5/D6 start.
