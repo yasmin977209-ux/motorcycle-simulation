@@ -3927,3 +3927,14 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
   - Raw readback Run 42308428346 / Job 128203579944; Artifact 13547905361 (2,679 bytes; digest sha256:8849528ccb07db8cbc4b045ab982c41c8d1ac4485987771a8c46e266a4524899).
 - Additional verifier hardening: D1 source Artifact ID is now derived from the D1 restore manifest rather than a hard-coded identifier. D1 source size/SHA and part count must agree across restore manifest and all sidecars; the reassembled bytes are then compared to the exact GitHub Artifact metadata digest and size. D3/D5 remain pinned to owner-specified Artifact IDs.
 - The next commit runs the updated verifier tests and emits a fail-closed missing-secrets ledger if provider credentials remain absent. No provider byte reads are claimed.
+
+
+## Latest verifier run and D1 manifest-driven source handling — 2026-11-07 (append-only)
+
+- Tested SHA 292845e6442091bf90c941a7c6fe189d8b838822.
+- Tri-hash Run 42308670184 / Job 128204410445: C compilation PASS; hash implementation tests PASS; provider credential gate failed. Fail-closed ledger Artifact 13547551455, 498 bytes, GitHub digest sha256:607370841a8573ed01212fa4e1f2abcef48737bc8df88413efae668c8636545d; no provider reads.
+- D1-D2 Run 42308670105 / Job 128204409892 succeeded; evidence Artifact 13546624706, 10,545 bytes, digest sha256:eace78960f879ee2788242b5c5a9d6eb33681c3041dcee58e0d5de20bce4cabf.
+- D3 exact-output Run 42308670249 / Job 128204410893 succeeded.
+- Project Raw readback Run 42308670096 / Job 128204410265 succeeded; Artifact 13546977906, 2,686 bytes, digest sha256:4443b49e76041e87cd76a5dbc6519d8c573d53b384c122dfb2158e5afbb80e3e.
+- D1 artifact identity is taken from the D1 restore manifest and matched against all sidecars and the exact GitHub artifact digest. A redundant artifact-name heuristic is removed; the manifest ID and byte hashes are the controlling identity.
+- Main remains 01a6f79eedc522bb734ed9c5ea31beee581f2468. D3 phase and Global Preservation Gate remain BLOCKED pending actual provider byte verification and durable independent restore evidence.

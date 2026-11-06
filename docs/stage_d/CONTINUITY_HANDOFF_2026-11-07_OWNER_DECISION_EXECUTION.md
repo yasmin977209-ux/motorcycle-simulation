@@ -88,3 +88,8 @@ On tested SHA c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1:
 - D1 source artifact ID now comes from the OneDrive D1 restore manifest. The verifier checks manifest/sidecar agreement, exact part coverage, reassembly SHA-256/size, then live GitHub Artifact digest/size. It no longer hardcodes D1 Artifact ID.
 - Exact tested SHA bcf0bfa40ad4f75a7b7a3fc4f166ef3515f5273c passed D1-D2 Run 42308428293, D3 Run 42308428409, and Raw readback Run 42308428346.
 - Provider reads remain blocked pending the two Actions secrets; no D4/D5/D6 start.
+
+
+## Latest exact-head results
+On SHA 292845e6442091bf90c941a7c6fe189d8b838822, D1-D2 Run 42308670105, D3 Run 42308670249 and Raw readback Run 42308670096 all succeeded. Tri-hash Run 42308670184 passed code compilation/tests but stopped at missing provider secrets and emitted blocked ledger Artifact 13547551455. No OneDrive/Dropbox bytes were downloaded.
+The D1 source artifact ID is read from its restore manifest; source bytes/hash are cross-checked against sidecars and the GitHub Artifact digest. The redundant name heuristic is being removed; it is not part of the evidence chain.

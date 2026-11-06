@@ -97,3 +97,11 @@ The final documentation commit SHA and post-commit Raw readback are to be record
   - Raw readback Run 42308428346 / Job 128203579944 PASS; Artifact 13547905361 (2,679 bytes; sha256:8849528ccb07db8cbc4b045ab982c41c8d1ac4485987771a8c46e266a4524899).
 - The D1 multipart source Artifact ID is now read from the restore manifest, not assumed. The source size/hash are compared across all sidecars and then to the exact GitHub Artifact digest. This is a manifest-driven correctness refinement.
 - Tri-hash remote verification remains blocked by absent ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN; prior fail-closed ledger Artifact 13546299231 records provider_reads=NOT_STARTED.
+
+
+## Exact-head run results — tested SHA 292845e6442091bf90c941a7c6fe189d8b838822
+- Tri-hash Run 42308670184 / Job 128204410445: QuickXorHash C compile PASS; tests PASS; credential gate BLOCKED. Ledger Artifact 13547551455 (498 bytes; sha256:607370841a8573ed01212fa4e1f2abcef48737bc8df88413efae668c8636545d); provider_reads NOT_STARTED.
+- D1-D2 Run 42308670105 / Job 128204409892 PASS; Artifact 13546624706 (10,545 bytes; sha256:eace78960f879ee2788242b5c5a9d6eb33681c3041dcee58e0d5de20bce4cabf).
+- D3 Run 42308670249 / Job 128204410893 PASS.
+- Raw readback Run 42308670096 / Job 128204410265 PASS; Artifact 13546977906 (2,686 bytes; sha256:4443b49e76041e87cd76a5dbc6519d8c573d53b384c122dfb2158e5afbb80e3e).
+- D1 source identity is manifest-driven; the next code revision removes a nonessential artifact-name heuristic. Provider bytes remain unread until the owner configures both Actions secrets.

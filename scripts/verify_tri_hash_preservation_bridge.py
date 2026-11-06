@@ -543,8 +543,6 @@ def main() -> None:
                 raise BridgeError("MULTIPART_RESTORE_MANIFEST_VS_PARTS_CONFLICT:" + key)
             result = verify_reassembled_group("multipart-" + key, parts, aid,
                 expected_size, expected_sha, clients, engine, work, report)
-            if key == "D1" and not re.search(r"(D1|full[-_ ]?logging)", result["github_source_artifact"]["artifact_name"], re.I):
-                raise BridgeError("D1_SOURCE_ARTIFACT_NAME_MISMATCH:" + result["github_source_artifact"]["artifact_name"])
             multipart_results.append(result)
         if len(restore_files) != 2:
             raise BridgeError("MULTIPART_RESTORE_MANIFEST_COUNT_MISMATCH:" + str(restore_files))
