@@ -56,3 +56,12 @@ If the tri-hash Actions run is still queued/in_progress after ten minutes of in-
 - Corrected test discovery by adding the repository root to sys.path in tests/test_tri_hash_preservation_bridge.py. The correction commit will trigger a fresh run.
 - Pre-fix SHA 9eda9580618b4f65f07a5285906613900d8f2eb7 was independently checked by D3 Run 42307180159 / Job 128199350695, D1-D2 Run 42307180254 / Job 128199350368, and Raw readback Run 42307180276 / Job 128199351164; all three succeeded.
 - Await the new tri-hash run. If it passes tests and credentials, monitor up to ten minutes only; if still queued/in_progress at ten minutes, hand off to owner. If credentials are missing/expired, stop and request setup. Do not claim any provider byte verification from Run 42307180251.
+
+
+## Current hard blocker — provider credentials
+- The tri-hash verifier and its 4 unit tests are in GitHub. The second run passed all four tests and compiled the QuickXorHash C routine, then stopped because ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN repository secrets are absent/empty.
+- This is not a provider hash failure; no OneDrive or Dropbox content was downloaded. No TRI_HASH_PRESERVATION_LEDGER artifact exists for Run 42307467332.
+- Owner action: configure the two read-only secrets under GitHub repository Settings → Secrets and variables → Actions. Never paste token values into chat or commit them.
+- Then run Actions → “Tri-hash Preservation Verification — GitHub / OneDrive / Dropbox” → Run workflow on tmp/d1-rebuild-20261101. Await the ledger artifact and inspect exact tested SHA, all three hashes, all part reassemblies, ZIP/member restore checks, and provider metadata matches.
+- D3 exact output, D1-D2 and continuity raw readback succeeded on pre-final docs SHA c4e2b4aabbbb6d36045cd1a51a6a6dfe4128ce57 (Runs 42307467239, 42307467183, 42307467246 respectively). A subsequent documentation commit will trigger fresh exact-head validation.
+- D3 remains BLOCKED; D4/D5/D6 are not started in this execution chain.

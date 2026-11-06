@@ -62,3 +62,12 @@ The final documentation commit SHA and post-commit Raw readback are to be record
 - D1-D2 Run 42307180254 / Job 128199350368: SUCCESS on the same tested SHA; Artifact 13545519765 (10,545 bytes; digest sha256:ac58c0fe8bfb8b73dc758c4d4f7e932105f087b1c08758bded751823b02a46b3).
 - Project Raw readback Run 42307180276 / Job 128199351164: SUCCESS on the same tested SHA; Artifact 13546782730 (2,677 bytes; digest sha256:b6ab087dd56e0decc387b632bdc58d05756182049af6d7f4ac5630c6a78b053a).
 - These are pre-test-fix exact-head checks. The upcoming correction commit will move HEAD and trigger fresh validation; final HEAD remains pending.
+
+
+## Append-only provider-gate result — 2026-11-07
+- Current checked HEAD for this run set: c4e2b4aabbbb6d36045cd1a51a6a6dfe4128ce57; main unchanged at 01a6f79eedc522bb734ed9c5ea31beee581f2468.
+- Tri-hash Run 42307467332 / Job 128200328702: test suite 4/4 PASS and QuickXorHash C compilation PASS; stopped at missing/empty ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN secrets. No provider reads or ledger artifact.
+- D3 exact-output Run 42307467239 / Job 128200328647: SUCCESS on tested SHA c4e2b4aabbbb6d36045cd1a51a6a6dfe4128ce57.
+- D1-D2 Run 42307467183 / Job 128200327492: SUCCESS on same SHA; Artifact 13546043921 (10,545 bytes; sha256:12fa532f1422fd00ec8a8b90a362fa8dca7ca2a19eee73b6bc726acb4efe4038).
+- Raw readback Run 42307467246 / Job 128200328453: SUCCESS on same SHA; Artifact 13547240938 (2,684 bytes; sha256:b3c48d44a62025e01d82a9ecd03216698d418922dd317d03d3f741a193872094).
+- Next: owner configures the two read-only Actions secrets, then manually runs the tri-hash workflow. Until its ledger and restore checks pass, Global Preservation Gate remains BLOCKED and D4 remains NOT_STARTED.

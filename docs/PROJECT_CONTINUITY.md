@@ -3886,3 +3886,13 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - The test harness now explicitly adds the repository root to sys.path. This is a test-discovery correction only; no hash algorithm, source identity, business rule or preservation result is promoted.
 - On the same pre-fix SHA 9eda9580618b4f65f07a5285906613900d8f2eb7, D3 exact-output Run 42307180159 / Job 128199350695 succeeded; D1-D2 Run 42307180254 / Job 128199350368 succeeded and produced Artifact 13545519765; project Raw readback Run 42307180276 / Job 128199351164 succeeded and produced Artifact 13546782730.
 - The test correction commit will trigger a fresh tri-hash run and exact-head validation. Provider raw-byte verification remains NOT_RUN until that run passes the tests and credential gate.
+
+
+## Tri-hash provider credential gate and second exact-head validation — 2026-11-07 (append-only)
+
+- Corrected verifier unit tests now pass: 4/4. QuickXorHash C compilation passed.
+- Tri-hash workflow Run 42307467332 / Job 128200328702 tested SHA c4e2b4aabbbb6d36045cd1a51a6a6dfe4128ce57. It stopped at Require read-only provider credentials because both repository secrets ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN were empty/unconfigured. No Graph or Dropbox download was attempted; no raw-byte SHA-256, provider hash comparison, reassembly, restore test or tri-hash ledger was produced.
+- D3 exact-output Run 42307467239 / Job 128200328647 succeeded on the same tested SHA.
+- D1-D2 Run 42307467183 / Job 128200327492 succeeded on the same tested SHA and produced Artifact 13546043921 (10,545 bytes; digest sha256:12fa532f1422fd00ec8a8b90a362fa8dca7ca2a19eee73b6bc726acb4efe4038).
+- Project Raw readback Run 42307467246 / Job 128200328453 succeeded on the same tested SHA and produced Artifact 13547240938 (2,684 bytes; digest sha256:b3c48d44a62025e01d82a9ecd03216698d418922dd317d03d3f741a193872094).
+- To resume the tri-hash run, the owner must configure the two read-only repository Actions secrets and manually dispatch the workflow. Do not send token values in chat. No provider byte-level claim is made from Run 42307467332.
