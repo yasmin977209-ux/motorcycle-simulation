@@ -1,4 +1,4 @@
-name: D3-S Surgical OOXML Partitioning and Reassembly
+name: D3-S Surgical OOXML Partitioning and Reassembly — final exact-head execution
 on:
   push:
     branches: [tmp/d1-rebuild-20261101]
