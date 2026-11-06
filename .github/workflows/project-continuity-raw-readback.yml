@@ -1,0 +1,93 @@
+name: Project Continuity Exact-HEAD Raw Readback
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths:
+      - docs/PROJECT_CONTINUITY.md
+      - docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md
+      - docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md
+      - docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json
+      - docs/stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json
+      - scripts/d3_s_create_transport_chunks.py
+      - .github/workflows/d3-s-scenario-partitioning.yml
+      - .github/workflows/project-continuity-raw-readback.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: project-continuity-raw-readback-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  raw-readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact branch HEAD and fetch GitHub Raw bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check requests==2.32.3
+          python - <<'PY'
+          import hashlib, json, os, pathlib, requests
+          repo=os.environ["GITHUB_REPOSITORY"]
+          branch="tmp/d1-rebuild-20261101"
+          tested=os.environ["GITHUB_SHA"]
+          token=os.environ["GITHUB_TOKEN"]
+          api=f"https://api.github.com/repos/{repo}"
+          headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json"}
+          ref=requests.get(api+f"/git/ref/heads/{branch}",headers=headers,timeout=30)
+          ref.raise_for_status()
+          if ref.json()["object"]["sha"]!=tested:
+              raise SystemExit("RAW_READBACK_INITIAL_HEAD_MISMATCH")
+          paths=[
+            "docs/PROJECT_CONTINUITY.md",
+            "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
+            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
+            "docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json",
+            "docs/stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json",
+            "scripts/d3_s_create_transport_chunks.py",
+            ".github/workflows/d3-s-scenario-partitioning.yml",
+            ".github/workflows/project-continuity-raw-readback.yml"
+          ]
+          out=[]
+          for rel in paths:
+              url=f"https://raw.githubusercontent.com/{repo}/{tested}/"+rel
+              r=requests.get(url,headers=headers,timeout=(30,120))
+              r.raise_for_status()
+              raw=r.content
+              local=pathlib.Path(rel).read_bytes()
+              if raw!=local:
+                  raise SystemExit("RAW_READBACK_BYTES_MISMATCH:"+rel)
+              blob=hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+b"\\0"+raw).hexdigest()
+              out.append({"path":rel,"url":url,"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),
+                          "git_blob_sha1":blob,"commit_sha":tested,"raw_equals_checkout":True})
+          ref=requests.get(api+f"/git/ref/heads/{branch}",headers=headers,timeout=30)
+          ref.raise_for_status()
+          final=ref.json()["object"]["sha"]
+          if final!=tested:
+              raise SystemExit("RAW_READBACK_FINAL_HEAD_MOVED:"+final)
+          report={"schema_version":"project-continuity-raw-readback-v1","classification":"VERIFIED_LIVE",
+                  "run_id":int(os.environ["GITHUB_RUN_ID"]),"branch":branch,"tested_sha":tested,
+                  "initial_head":tested,"final_head":final,"files":out}
+          p=pathlib.Path("raw-readback-output"); p.mkdir(exist_ok=True)
+          (p/"PROJECT_CONTINUITY_RAW_READBACK.json").write_text(json.dumps(report,sort_keys=True,indent=2)+"\\n")
+          print(json.dumps({"classification":report["classification"],"run_id":report["run_id"],
+                            "tested_sha":tested,"file_count":len(out)},sort_keys=True))
+          PY
+      - name: Publish raw readback evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: PROJECT-CONTINUITY-RAW-READBACK
+          path: raw-readback-output/PROJECT_CONTINUITY_RAW_READBACK.json
+          if-no-files-found: error
+          retention-days: 30
