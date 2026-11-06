@@ -142,6 +142,7 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
  remove_parts={p for p in remove_parts if p in names}
  # Use Info-ZIP to retain compressed bytes of all unchanged package parts.
  shutil.copy2(source,out)
+ out=out.resolve()
  with tempfile.TemporaryDirectory(prefix="d3s-ooxml-") as td:
   td=pathlib.Path(td); (td/"xl").mkdir()
   (td/"xl/workbook.xml").write_bytes(xml_bytes(wb))
@@ -168,6 +169,7 @@ def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_met
  assembled_dir=outdir/"_verification"; assembled_dir.mkdir(exist_ok=True)
  assembled=assembled_dir/f"{lang}_reassembled.xlsx"
  shutil.copy2(source,assembled)
+ assembled=assembled.resolve()
  all_sheet_parts={s["part"] for s in sheets}
  all_sheet_rels={rels_part(s["part"]) for s in sheets}
  with zipfile.ZipFile(source) as src:
