@@ -129,3 +129,35 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - D3-S: RUNNING at append time; D3 overall remains NOT_CLOSED; D4 NOT_STARTED.
 - Global Preservation: BLOCKED; OneDrive multipart restoration and E2 Replay scenario archive transfer remain outstanding.
 - Protected financial/statistical gates and five missing accounting fields remain unchanged.
+
+## Append-only execution continuation — 2026-11-06 (final monitoring handoff)
+
+### Corrected governing-reference and continuity raw readback
+- Live v2.4.0 file: docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md; Git blob SHA-1 9fe43bfbb2cbfd2bb7f7010866e7469506d22c33; owner pin SHA-256 225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b; decision D-2026-10-30-REFERENCE-V2.4.0 remains APPROVED_BY_OWNER. The PROPOSED header is preserved and does not override the separate owner decision.
+- Live operational library REV6: docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md; Git blob SHA-1 22ad6f50dbe32226f2753d4e4e9af902984dc765; expected SHA-256 b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243.
+- Raw readback Run 42290522175 was retained as history; its Git blob SHA-1 separator was incorrect. The workflow was corrected to use an actual NUL byte in the Git blob header. Run 42290686106 passed for eight files; the workflow was then extended to pin v2.4.0 and REV6 and read back twelve files.
+- Final corrected raw readback Run 42291013828 completed SUCCESS on exact tested SHA 5b8764099ebbd81f2469d9966870b6297112151d. Job 128144122745; 12 files; classification VERIFIED_LIVE; GitHub Raw bytes matched exact checkout bytes; SHA-256 and Git blob SHA-1 were recorded in the report; v2.4.0 and REV6 SHA-256 pins passed. Artifact 13539362912, 1,829 bytes, artifact ZIP SHA-256 c4695b1cbad52222f3c332b104b552d9724634a23f96dd4fb1184a9c044540a2.
+- D1-D2 exact-head validation Run 42291013808 / Job 128144122383 completed SUCCESS on the same SHA. D3 Published Output Exact-HEAD verification Run 42291013530 / Job 128144121361 completed SUCCESS on the same SHA. Neither result closes overall D3.
+
+### OneDrive additional readback
+- D3 reconciliation report: 22,678 bytes; item ID 893D06C344EA996B!s0fe5b75ae43549a68004a9327f42cf9c.
+- D0 27-artifact audit report: 2,346 bytes; item ID 893D06C344EA996B!s9a174a3b1c81495ab9ee5f5ac6321429.
+- Corrected raw readback report: 1,829 bytes; item ID 893D06C344EA996B!s7dd188cc2f4147e1952b4b4e51896918.
+- D3-18 actual invocation report: 1,326 bytes; item ID 893D06C344EA996B!s48164902b6d248e9ae2519cbbe78ce59.
+- All four items were read back by Graph item ID and sizes matched uploaded file sizes. OneDrive rescue root now lists 34 files totaling 1,541,043,443 bytes. These are metadata/size checks, not raw-byte SHA-256 verification of OneDrive copies.
+
+### D3-S long-run monitoring handoff
+- Run 42290160686 is the new parallel D3-S1/S2 and D3-18 execution on tested SHA c3a85ca5dac05cca5b1ce5e567d99a93dd04e229.
+- At the ten-minute assistant monitoring boundary (2026-11-06T20:49:14Z), GitHub API still reported Run status queued / no conclusion; Job 128141182580 (D3-18) completed success; Job 128141183016 (EN) remained in_progress; Job 128141183093 (AR) remained queued. Only Artifact 13538264943 (D3-18, 1,326 bytes) existed at that time.
+- Assistant monitoring stopped at the ten-minute boundary. GitHub Actions was not cancelled or time-limited and may continue normally. Do not restart this run. The owner should monitor Run 42290160686 and provide its final outcome before further D3-S artifact processing.
+- The new workflow sets EN/AR max-parallel=2 and, after language jobs complete, builds and verifies a 17-part, 80 MiB transport package plus restore manifest. No D3-S transport parts were available at the monitoring cutoff, so no D3-S multipart transfer to OneDrive is claimed.
+- D3-18 remains PASS_SCOPED only; D3-S remains RUNNING at cutoff; overall D3 remains NOT_CLOSED; D4 remains NOT_STARTED.
+
+### Current branch and protected decisions
+- Pre-handoff branch HEAD: 5b8764099ebbd81f2469d9966870b6297112151d; protected main: 01a6f79eedc522bb734ed9c5ea31beee581f2468 (read-only). Compare at that HEAD: diverged, 1,085 ahead / 2 behind, merge base c6e54349a5e94f65d5aa9f83141f225d777bb474.
+- Dropbox rescue root remains 9/9 requested core files, 1,375,253,616 bytes. OneDrive contains six exact standalone core ZIPs and multipart representations of the other three (D1/D3/D5); reassembly and raw-byte readback remain outstanding.
+- E2 Replay Run 41958935113 remains 21 Artifacts / 3,858,228,566 bytes; aggregate 13393273763 is in OneDrive, while the twenty scenario archives are not yet transferred.
+- Global Preservation remains BLOCKED. Do not declare dual-provider byte-verified preservation.
+- D0/D1/D2 remain PASS_SCOPED_WITH_LIMITATIONS; D3 not closed; D4 NOT_STARTED; E2 Original Accounting BLOCKED; E2 Replay reconstruction only.
+- Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED. The five protected accounting fields remain MISSING_EVIDENCE.
+- No new Trial, Simulation, Monte Carlo, N expansion, identity change, main write, merge, Release, or final acceptance was performed.
