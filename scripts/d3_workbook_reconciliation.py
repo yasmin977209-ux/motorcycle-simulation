@@ -32,9 +32,7 @@ def inspect_xlsx(path):
                 rows=cells=formulas=errors=numeric=0
                 dimension=None
                 for event,el in ET.iterparse(stream,events=("start","end")):
-                    if event=="start" and el.tag==MAIN+"worksheet":
-                        d=el.find(MAIN+"dimension")
-                        if d is not None: dimension=d.get("ref")
+                    if event=="end" and el.tag==MAIN+"dimension": dimension=el.get("ref")
                     if event=="end":
                         if el.tag==MAIN+"row": rows+=1
                         elif el.tag==MAIN+"c":
