@@ -3691,3 +3691,13 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - Dropbox root has nine files and three same-provider mirrors. E2's 20 scenario Artifacts plus aggregate are absent. A test upload failed with INSUFFICIENT_SPACE; no partial file remained.
 - Global Preservation remains BLOCKED pending byte-level hash/ZIP/restore verification and a second independent durable provider/failure domain.
 - No new Trial, Simulation, Monte Carlo, N expansion, identity change, main write, merge, Release or final acceptance was performed.
+
+
+## Append-only live bootstrap and preservation revalidation — 2026-11-06
+
+- Exact branch HEAD at bootstrap: `0e491a7eb9977654652c32e937c88ac643b2b68d`; `main` remains `01a6f79eedc522bb734ed9c5ea31beee581f2468` (read-only). Comparison: diverged, ahead 1019 / behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- Governing v2.4.0 and operational prompt library REV6 Raw-byte SHA-256 values were recomputed and matched their declared pins.
+- Global Preservation remains BLOCKED: nine Dropbox root files; same-provider mirrors only; a prior 130,319,892-byte upload failed with INSUFFICIENT_SPACE; original S6 and E2 replay artifact sets remain absent from Dropbox.
+- Original S6 Run 40731224990: 20 unexpired scenario Artifacts, total 1,531,244,201 bytes, expire 2026-11-27. E2 Replay Run 41958935113: 21 unexpired Artifacts, total 3,858,228,566 bytes. The former are original run artifacts but their reduced daily projection does not contain the five protected balance-sheet fields; the latter are replay reconstruction, not original evidence.
+- D3 remains not closed; D3-18 PASS_SCOPED only; D3-S1/S2 not closed. D0–D2 remain PASS_SCOPED_WITH_LIMITATIONS. No long workflow was restarted.
+- See [Bootstrap & Preservation Recovery Addendum](stage_d/BOOTSTRAP_PRESERVATION_RECOVERY_ADDENDUM_2026-11-06.md), [Session Status](stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md), [Continuity Handoff](stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md), and [append-only Artifact 13364064483 correction](stage_d/D0_D6_E0_E2_RETENTION_INVENTORY_CORRECTION_2026-11-06_ARTIFACT_13364064483.json).
