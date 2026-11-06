@@ -4,6 +4,7 @@ on:
     branches: [tmp/d1-rebuild-20261101]
     paths:
       - scripts/d3_s_ooxml_partition.py
+      - scripts/d3_s_create_transport_chunks.py
       - scripts/test_d3_18_manifest_remote_readback.py
       - .github/workflows/d3-s-scenario-partitioning.yml
       - docs/stage_d/D3_18_INVOCATION_RECONCILIATION_2026-11-05.json
@@ -179,6 +180,171 @@ jobs:
         with:
           name: D3-S-10-workbooks-and-equivalence-evidence
           path: combined-d3-s/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build and raw-byte verify 80 MiB OneDrive transport parts
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python scripts/d3_s_create_transport_chunks.py --source-dir combined-d3-s --output-dir transport-parts
+      - name: Publish OneDrive transport part D3S-000
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-000
+          path: |
+            transport-parts/D3S.part000.bin
+            transport-parts/D3S.part000.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-001
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-001
+          path: |
+            transport-parts/D3S.part001.bin
+            transport-parts/D3S.part001.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-002
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-002
+          path: |
+            transport-parts/D3S.part002.bin
+            transport-parts/D3S.part002.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-003
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-003
+          path: |
+            transport-parts/D3S.part003.bin
+            transport-parts/D3S.part003.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-004
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-004
+          path: |
+            transport-parts/D3S.part004.bin
+            transport-parts/D3S.part004.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-005
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-005
+          path: |
+            transport-parts/D3S.part005.bin
+            transport-parts/D3S.part005.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-006
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-006
+          path: |
+            transport-parts/D3S.part006.bin
+            transport-parts/D3S.part006.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-007
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-007
+          path: |
+            transport-parts/D3S.part007.bin
+            transport-parts/D3S.part007.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-008
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-008
+          path: |
+            transport-parts/D3S.part008.bin
+            transport-parts/D3S.part008.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-009
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-009
+          path: |
+            transport-parts/D3S.part009.bin
+            transport-parts/D3S.part009.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-010
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-010
+          path: |
+            transport-parts/D3S.part010.bin
+            transport-parts/D3S.part010.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-011
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-011
+          path: |
+            transport-parts/D3S.part011.bin
+            transport-parts/D3S.part011.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-012
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-012
+          path: |
+            transport-parts/D3S.part012.bin
+            transport-parts/D3S.part012.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-013
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-013
+          path: |
+            transport-parts/D3S.part013.bin
+            transport-parts/D3S.part013.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-014
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-014
+          path: |
+            transport-parts/D3S.part014.bin
+            transport-parts/D3S.part014.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-015
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-015
+          path: |
+            transport-parts/D3S.part015.bin
+            transport-parts/D3S.part015.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3S-016
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-016
+          path: |
+            transport-parts/D3S.part016.bin
+            transport-parts/D3S.part016.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish D3-S transport restoration manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3S-Restore-Manifest
+          path: transport-parts/D3S_RESTORE_MANIFEST.json
           if-no-files-found: error
           retention-days: 30
       - name: Exact tested SHA and final inventory
