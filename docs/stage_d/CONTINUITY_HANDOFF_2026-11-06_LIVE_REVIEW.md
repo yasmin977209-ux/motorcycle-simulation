@@ -53,3 +53,34 @@ Working branch `tmp/d1-rebuild-20261101`. Review-start HEAD was `cc5753e1a37db1c
 - Do not upgrade this to byte-verified preservation: raw SHA-256 readback, ZIP CRC and restore remain `NOT_RUN`. Detailed item mapping and source API digests: [S6 OneDrive transfer addendum](S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
 - E2 Replay's 21 artifacts (3,858,228,566 bytes) remain the next separate preservation target; do not conflate them with original S6.
 - Global Preservation remains `BLOCKED`; D3 is not closed; do not start D4. Do not restart long D3-S runs 42094642530 / 42099529400.
+
+
+## Current execution handoff — 2026-11-06 (latest append-only addendum)
+
+### Last verified baseline before this handoff commit
+- Branch `tmp/d1-rebuild-20261101`: `afbc65bae45a53ccc14fd9098014494d09ec70e3`.
+- Protected `main`: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Compare: diverged, ahead 1,065 / behind 2; merge base `c6e54349a5e94f65d5aa9f83141f225d777bb474`.
+- The new handoff file is [SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md](SESSION_HANDOFF_2026-11-06_D3S_PRESERVATION_EXECUTION.md). Read it in full after re-fetching the current HEAD.
+
+### Completed scoped work
+1. D3-S exact-head Run 42276129141 completed SUCCESS on tested SHA `c9d44537dc5b401ab0987426115440650bffb4f4`. EN/AR partition jobs, D3-18 job, and combined evidence job all succeeded. Ten partition workbooks, 25/25 scenarios per language, 185/185 worksheet XML parts byte-exact after reassembly, openpyxl PASS. Combined Artifact 13536960583 (1,394,728,947 bytes; artifact ZIP SHA-256 `e194fe7c4a9cf4a192042ec0d331a6a70b9bdfd617eb85e8bf45e86f0f369d08`).
+2. Actual D3-18 invocation PASS_SCOPED: Run 42276129141 / Job 128101026672 / Test ID `D3-18-EXACT-HEAD-MANIFEST-RAW-READBACK-2026-11-06` / Tested SHA c9d445... / Artifact 13533264931.
+3. D3 workbook reconciliation Run 42272832024 succeeded on tested SHA `9899d836b778cf...`; D3/D5 English and Arabic workbooks were byte-identical. Artifact 13531164484. Scoped only.
+4. D0 raw audit Run 42269416300 succeeded with 23/23 reports PASS_SCOPED. It did not cover the four newer Artifacts added to the current 27-item matrix. Historical source metadata SHA gaps remain MISSING_EVIDENCE.
+5. Exact-head D1/D2 validation Run 42283741870 succeeded on SHA `afbc65bae45a53ccc14fd9098014494d09ec70e3`; 36 tests passed; 105 representative keys only; Artifact 13536107817.
+
+### Remaining blockers and next actions
+1. D0 current 27-artifact matrix still needs a completed exact-head run. Its job timeout is 30 minutes; ten-minute rule governs assistant monitoring only.
+2. D3/D5 and D1 multipart transport runs created GitHub Actions part Artifacts; no Microsoft Graph upload to OneDrive occurred. Upload, reassemble and read back parts in OneDrive with raw SHA-256, ZIP CRC and restore verification.
+3. Re-list Dropbox and OneDrive. Existing S6 OneDrive copy is size-matched but integrity classification remains REPORTED_ONLY. Dropbox has not been freshly checked in this session. No raw-byte/ZIP/restore proof for the full required preservation set.
+4. Transfer and verify the nine Dropbox packages and newer support Artifacts; separately preserve E2 Replay's 21 artifacts. Do not conflate replay with original S6.
+5. Global Preservation remains BLOCKED.
+6. Overall D3 is not declared closed; D4 remains NOT_STARTED. D3-S PASS_SCOPED and D3-18 PASS_SCOPED do not equal full D3 closure.
+7. Keep Gate A financial PASS_SCOPED only; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED 10/10; Stability NOT_CONVERGED 0/60; N=4800 NOT_EXECUTED; the five accounting fields remain MISSING_EVIDENCE and must never be inferred or zero-filled.
+
+### Monitoring policy correction
+The ten-minute threshold is for ChatGPT's active monitoring. It does not constrain GitHub Actions job runtime. Do not set runner timeout to nine minutes to meet the assistant's monitoring threshold. If the assistant has monitored a long run for ten minutes and it remains queued/in_progress, stop polling and hand monitoring to the owner without cancelling the workflow.
+
+### Safety boundaries
+No new Trials, Simulation, Monte Carlo, N expansion, source/cohort/seed/trial identity changes, business-rule/threshold changes, main writes, merge, force-push, historical Artifact replacement/deletion, Release or final-acceptance declaration. Do not start D4 before full D3 closure.
