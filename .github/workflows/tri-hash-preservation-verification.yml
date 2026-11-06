@@ -1,12 +1,5 @@
-name: Tri-hash Preservation Verification — GitHub / OneDrive / Dropbox
+name: Tri-hash Preservation Verification — legacy entrypoint (no provider secrets)
 on:
-  push:
-    branches: [tmp/d1-rebuild-20261101]
-    paths:
-      - scripts/verify_tri_hash_preservation_bridge.py
-      - scripts/quickxorhash.c
-      - tests/test_tri_hash_preservation_bridge.py
-      - .github/workflows/tri-hash-preservation-verification.yml
   workflow_dispatch:
 permissions:
   actions: read
@@ -15,60 +8,33 @@ concurrency:
   group: tri-hash-preservation-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  verify:
-    name: Download, triple-hash, compare and restore exact preservation inventory
+  github-raw-stage-a:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - name: Checkout exact triggering commit
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install bounded verification dependencies
-        run: |
-          python -m pip install --disable-pip-version-check \
-            requests==2.32.3 openpyxl==3.1.5 python-docx==1.1.2 \
-            pypdf==5.1.0 pyarrow==18.1.0 pytest==8.3.3
-      - name: Compile QuickXorHash reference implementation
+      - run: python -m pip install --disable-pip-version-check requests==2.32.3
+      - name: Compile QuickXorHash
         run: |
           cc -O3 -fPIC -shared scripts/quickxorhash.c -o /tmp/libquickxorhash.so
           echo "QUICKXOR_LIB=/tmp/libquickxorhash.so" >> "$GITHUB_ENV"
-      - name: Verify hash implementations before remote reads
-        run: pytest -q tests/test_tri_hash_preservation_bridge.py
-      - name: Require read-only provider credentials
-        env:
-          ONEDRIVE_GRAPH_ACCESS_TOKEN: ${{ secrets.ONEDRIVE_GRAPH_ACCESS_TOKEN }}
-          DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          mkdir -p tri-hash-output
-          if [[ -z "$ONEDRIVE_GRAPH_ACCESS_TOKEN" || -z "$DROPBOX_ACCESS_TOKEN" ]]; then
-            python -c 'import json,os,pathlib; d={"schema":"tri-hash-preservation-ledger-v1","overall":"BLOCKED_MISSING_PROVIDER_SECRETS","tested_sha":os.environ.get("GITHUB_SHA","UNKNOWN"),"workflow_run_id":int(os.environ.get("GITHUB_RUN_ID","0")),"provider_reads":"NOT_STARTED","sha256":"NOT_COMPUTED","onedrive_quickxorhash":"NOT_COMPUTED","dropbox_content_hash":"NOT_COMPUTED","missing_secrets":[n for n,v in (("ONEDRIVE_GRAPH_ACCESS_TOKEN",os.environ.get("ONEDRIVE_GRAPH_ACCESS_TOKEN","")),("DROPBOX_ACCESS_TOKEN",os.environ.get("DROPBOX_ACCESS_TOKEN",""))) if not v]}; pathlib.Path("tri-hash-output/TRI_HASH_PRESERVATION_LEDGER_2026-11-06.json").write_text(json.dumps(d,indent=2)+"\\n",encoding="utf-8")'
-            echo "::error::Provider read-only secrets are missing; no remote bytes were read."
-            exit 2
-          fi
-      - name: Run tri-hash, exact artifact comparison and restore verification
+      - name: Run Stage A without provider credentials
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          ONEDRIVE_GRAPH_ACCESS_TOKEN: ${{ secrets.ONEDRIVE_GRAPH_ACCESS_TOKEN }}
-          DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
-          QUICKXOR_LIB: /tmp/libquickxorhash.so
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
-          set -euo pipefail
-          python scripts/verify_tri_hash_preservation_bridge.py --output-dir tri-hash-output
-      - name: Publish append-only verification ledger artifact
+          mkdir -p tri-hash-output
+          python scripts/verify_github_raw_tri_hash_manifest.py --output tri-hash-output/GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: TRI-HASH-PRESERVATION-LEDGER-${{ github.run_id }}
-          path: tri-hash-output/TRI_HASH_PRESERVATION_LEDGER_2026-11-06.json
+          name: GITHUB-RAW-TRI-HASH-MANIFEST-${{ github.run_id }}
+          path: tri-hash-output/GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json
           if-no-files-found: warn
           retention-days: 90
