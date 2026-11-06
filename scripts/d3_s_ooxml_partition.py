@@ -175,7 +175,7 @@ def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_met
  if remove_parts:
   subprocess.run(["zip","-q","-d",str(assembled),*remove_parts],check=True,capture_output=True)
  with tempfile.TemporaryDirectory(prefix="d3s-reassemble-") as td:
-  td=pathlib.Path(td)
+  td=pathlib.Path(td); add_members=[]
   for s in sheets:
    info=mapping[s["name"]]
    owner=info["collection"] if info["classification"]=="scenario_specific" else COLLECTIONS[0]
@@ -184,10 +184,11 @@ def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_met
    rp=rels_part(s["part"])
    if rp in source_names: to_add.append(rp)
    with zipfile.ZipFile(part_file) as z:
-    for idx,member in enumerate(to_add):
+    for member in to_add:
      target=td/member; target.parent.mkdir(parents=True,exist_ok=True)
      target.write_bytes(z.read(member))
-     subprocess.run(["zip","-q","-u",str(assembled),member],cwd=td,check=True,capture_output=True)
+     add_members.append(member)
+  subprocess.run(["zip","-q","-u",str(assembled),*add_members],cwd=td,check=True,capture_output=True)
  with zipfile.ZipFile(source) as src, zipfile.ZipFile(assembled) as rebuilt:
   for s in sheets:
    if sha(src.read(s["part"]))!=sha(rebuilt.read(s["part"])): raise RuntimeError("REASSEMBLY_WORKSHEET_BYTE_MISMATCH:"+s["name"])
