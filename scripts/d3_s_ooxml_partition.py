@@ -27,6 +27,17 @@ def file_sha(p:pathlib.Path)->str:
  return h.hexdigest()
 def xml_bytes(root)->bytes:
  return etree.tostring(root,xml_declaration=True,encoding="UTF-8",standalone=True)
+def zip_member_sha(z:zipfile.ZipFile,name:str)->str:
+ h=hashlib.sha256()
+ with z.open(name) as stream:
+  for block in iter(lambda:stream.read(8*1024*1024),b""): h.update(block)
+ return h.hexdigest()
+def zip_member_equal(left:zipfile.ZipFile,right:zipfile.ZipFile,name:str)->bool:
+ with left.open(name) as a, right.open(name) as b:
+  while True:
+   x=a.read(8*1024*1024); y=b.read(8*1024*1024)
+   if x!=y: return False
+   if not x: return True
 def rel_target(base_file:str,target:str)->str:
  if target.startswith("/"): return posixpath.normpath(target.lstrip("/"))
  return posixpath.normpath(posixpath.join(posixpath.dirname(base_file),target))
@@ -80,7 +91,7 @@ def classify(sheets,lang,source):
      break
    expected=(lang=="AR")
    if rtl!=expected: raise RuntimeError(f"SHEET_DIRECTION_MISMATCH:{lang}:{s['name']}:rtl={rtl}")
-   mapping[s["name"]]={"source_index":s["index"],"classification":cls,"scenario_id":sid,"collection":c,"recovery":g,"worksheet_part":s["part"],"worksheet_sha256":sha(z.read(s["part"]))}
+   mapping[s["name"]]={"source_index":s["index"],"classification":cls,"scenario_id":sid,"collection":c,"recovery":g,"worksheet_part":s["part"],"worksheet_sha256":zip_member_sha(z,s["part"])}
  expected_ids={f"{c}_{g}" for c in COLLECTIONS for g in RECOVERIES}
  if set(scenarios)!=expected_ids or len(scenarios)!=25: raise RuntimeError("SCENARIO_MATRIX_NOT_25_OF_25")
  if len(shared)!=EXPECTED_SHARED_SHEETS or sum(map(len,scenarios.values()))!=EXPECTED_SCENARIO_SHEETS:
@@ -116,11 +127,15 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
  with zipfile.ZipFile(source) as z:
   for s in kept:
    with z.open(s["part"]) as stream:
-    for _,formula_node in etree.iterparse(stream,events=("end",),tag="{%s}f"%NS["main"],resolve_entities=False,no_network=True,huge_tree=True):
-     formula="".join(formula_node.itertext())
-     for name in removed_names:
-      if name in formula: raise RuntimeError("CROSS_PARTITION_FORMULA_REFERENCE:"+s["name"]+":"+name)
-     formula_node.clear()
+    for _,node in etree.iterparse(stream,events=("end",),resolve_entities=False,no_network=True,huge_tree=True):
+     if node.tag=="{%s}f"%NS["main"]:
+      formula="".join(node.itertext())
+      for name in removed_names:
+       if name in formula: raise RuntimeError("CROSS_PARTITION_FORMULA_REFERENCE:"+s["name"]+":"+name)
+     parent=node.getparent()
+     node.clear()
+     if parent is not None:
+      while node.getprevious() is not None: del parent[0]
  # Build filtered workbook + relationship + content-type documents.
  sheet_parent=wb.find("main:sheets",NS)
  for el in list(sheet_parent):
@@ -159,8 +174,8 @@ def build_partition(source:pathlib.Path,out:pathlib.Path,lang:str,collection:str
  with zipfile.ZipFile(out) as z:
   bad=z.testzip()
   if bad: raise RuntimeError("PARTITION_ZIP_CRC_FAILURE:"+bad)
-  if "xl/sharedStrings.xml" in names and sha(z.read("xl/sharedStrings.xml"))!=source_meta[7]["shared_strings_sha256"]: raise RuntimeError("SHARED_STRINGS_CHANGED")
-  if "xl/styles.xml" in names and sha(z.read("xl/styles.xml"))!=source_meta[7]["styles_sha256"]: raise RuntimeError("STYLES_CHANGED")
+  if "xl/sharedStrings.xml" in names and zip_member_sha(z,"xl/sharedStrings.xml")!=source_meta[7]["shared_strings_sha256"]: raise RuntimeError("SHARED_STRINGS_CHANGED")
+  if "xl/styles.xml" in names and zip_member_sha(z,"xl/styles.xml")!=source_meta[7]["styles_sha256"]: raise RuntimeError("STYLES_CHANGED")
  # openpyxl verifies each derived workbook opens and presents the intended sheet list.
  check=load_workbook(out,read_only=True,data_only=False,keep_links=True)
  if check.sheetnames!=[s["name"] for s in kept]: raise RuntimeError("OPENPYXL_PARTITION_SHEETLIST_MISMATCH:"+collection)
@@ -194,16 +209,16 @@ def reassemble(source:pathlib.Path,outdir:pathlib.Path,lang:str,parts,source_met
    with zipfile.ZipFile(part_file) as z:
     for member in to_add:
      target=td/member; target.parent.mkdir(parents=True,exist_ok=True)
-     target.write_bytes(z.read(member))
+     with z.open(member) as src, target.open("wb") as dst: shutil.copyfileobj(src,dst,8*1024*1024)
      add_members.append(member)
   subprocess.run(["zip","-q","-u",str(assembled),*add_members],cwd=td,check=True,capture_output=True)
  with zipfile.ZipFile(source) as src, zipfile.ZipFile(assembled) as rebuilt:
   for s in sheets:
-   if sha(src.read(s["part"]))!=sha(rebuilt.read(s["part"])): raise RuntimeError("REASSEMBLY_WORKSHEET_BYTE_MISMATCH:"+s["name"])
+   if not zip_member_equal(src,rebuilt,s["part"]): raise RuntimeError("REASSEMBLY_WORKSHEET_BYTE_MISMATCH:"+s["name"])
    rp=rels_part(s["part"])
-   if rp in source_names and src.read(rp)!=rebuilt.read(rp): raise RuntimeError("REASSEMBLY_WORKSHEET_RELATIONSHIP_MISMATCH:"+s["name"])
+   if rp in source_names and not zip_member_equal(src,rebuilt,rp): raise RuntimeError("REASSEMBLY_WORKSHEET_RELATIONSHIP_MISMATCH:"+s["name"])
   for part in ("xl/sharedStrings.xml","xl/styles.xml","xl/workbook.xml","xl/_rels/workbook.xml.rels","[Content_Types].xml"):
-   if part in src.namelist() and src.read(part)!=rebuilt.read(part): raise RuntimeError("REASSEMBLY_GLOBAL_PART_MISMATCH:"+part)
+   if part in src.namelist() and not zip_member_equal(src,rebuilt,part): raise RuntimeError("REASSEMBLY_GLOBAL_PART_MISMATCH:"+part)
   bad=rebuilt.testzip()
   if bad: raise RuntimeError("REASSEMBLY_ZIP_CRC_FAILURE:"+bad)
  check=load_workbook(assembled,read_only=True,data_only=False,keep_links=True)
@@ -219,8 +234,8 @@ def main():
  names,wb,rels,ct,relmap,sheets=load_package(source)
  scenarios,shared,mapping=classify(sheets,a.lang,source)
  with zipfile.ZipFile(source) as z:
-  shared_meta={"shared_strings_sha256":sha(z.read("xl/sharedStrings.xml")) if "xl/sharedStrings.xml" in names else None,
-               "styles_sha256":sha(z.read("xl/styles.xml")) if "xl/styles.xml" in names else None}
+  shared_meta={"shared_strings_sha256":zip_member_sha(z,"xl/sharedStrings.xml") if "xl/sharedStrings.xml" in names else None,
+               "styles_sha256":zip_member_sha(z,"xl/styles.xml") if "xl/styles.xml" in names else None}
  source_meta=(names,wb,rels,ct,relmap,sheets, (scenarios,shared,mapping), shared_meta)
  parts={}
  for c in COLLECTIONS:
