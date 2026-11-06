@@ -185,3 +185,12 @@ Two workflows completed successfully but their source proves they only split ver
 - `493ff976cfb9ee681b995e9d576f913ce6cd3c55`: stream OOXML parts and avoid large in-memory buffers.
 - `c9d44537dc5b401ab0987426115440650bffb4f4`: serialize bilingual matrix jobs; this is the tested SHA for final D3-S/D3-18 success.
 - `afbc65bae45a53ccc14fd9098014494d09ec70e3`: increase D0 audit matrix job timeout from 9 to 30 minutes; exact-head D1/D2 validation succeeded on this commit.
+
+
+## Append-only correction — exact Arabic source workbook SHA-256
+
+The D3-S AR job log was re-read after this handoff was first committed. The exact 64-character SHA-256 for `deliverables/النتائج_الكاملة_AR.xlsx` in D3 Artifact `13288779998` is:
+
+`e6617de7799e9a1ee00533d3c9d6940fcb87dd04afcbc5d`
+
+The earlier line in §5 accidentally omitted the substring `eb77da3ab7d32`. This correction is the authoritative value; the original entry is retained for append-only traceability.
