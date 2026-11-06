@@ -145,15 +145,21 @@ def validate_inputs(root: Path, reference: Path) -> tuple[dict, dict, dict, dict
     d3accept = load_json(root / "docs/stage_d/D3_ARTIFACT_FINAL_ACCEPTANCE_2026-11-05.json")
     d4audit = load_json(root / "docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json")
     d4manifest = load_json(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json")
+    d4state = load_json(root / "docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json")
+    d4lineage = load_json(root / "docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json")
     if d3accept.get("owner_decision") != "ACCEPTED_BY_OWNER_2026-11-05" or d3accept.get("d3_18") != "PASS_SCOPED" or d3accept.get("d3_gate_status") != "PASS_SCOPED_WITH_LIMITATIONS":
         raise ValueError("D3_OWNER_ACCEPTANCE_OR_GATE_STATUS_INVALID")
     if d3accept.get("artifact", {}).get("id") != D3_ARTIFACT_ID or d3accept.get("artifact", {}).get("sha256") != D3_ARTIFACT_SHA:
         raise ValueError("D3_ACCEPTANCE_ARTIFACT_IDENTITY_MISMATCH")
     if d3accept.get("source_run_id") != D3_ARTIFACT_RUN or d3accept.get("artifact", {}).get("bytes") != D3_ARTIFACT_BYTES:
         raise ValueError("D3_ACCEPTANCE_LINEAGE_MISMATCH")
-    if d4audit.get("status") != "PASS_SCOPED_WITH_LIMITATIONS" or int(d4audit.get("workflow_run_id", 0)) != 41916830283:
-        raise ValueError("D4_BUILD_GATE_NOT_CLOSED")
-    if d4audit.get("tested_sha") != d4manifest.get("tested_sha") or d4audit.get("manifest_sha256") != sha256_file(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json"):
+    if d4state.get("status") != "PASS_GAP_FREE" or d4state.get("test_176", {}).get("status") != "PASS":
+        raise ValueError("D4_EFFECTIVE_CLOSURE_NOT_GAP_FREE")
+    if d4state.get("tested_sha") != d4audit.get("tested_sha") or d4audit.get("tested_sha") != d4manifest.get("tested_sha"):
+        raise ValueError("D4_TESTED_SHA_LINEAGE_MISMATCH")
+    if d4lineage.get("acceptance") != "PASS" or d4lineage.get("unresolved_occurrences") != 0 or not d4lineage.get("identity_equation"):
+        raise ValueError("D4_NUMERIC_TOKEN_LINEAGE_NOT_GAP_FREE")
+    if d4audit.get("status") != "PASS_SCOPED_WITH_LIMITATIONS" or d4audit.get("manifest_sha256") != sha256_file(root / "docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json"):
         raise ValueError("D4_MANIFEST_LINEAGE_MISMATCH")
     if d3["current_governing_reference"]["sha256"] != GOVERNING_SHA:
         raise ValueError("D3_GOVERNING_REFERENCE_IDENTITY_MISMATCH")
