@@ -34,3 +34,12 @@
 - 20 original S6 source artifacts (1,531,244,201 bytes) remain unexpired in GitHub Actions, expiring 2026-11-27; absent from Dropbox. Dropbox upload capacity failure remains; independent provider not connected. Global Preservation `BLOCKED`.
 - D0–D2 limited scope; D3 not closed; E2 Original `BLOCKED`; E2 Replay reconstruction only; five protected fields remain `MISSING_EVIDENCE`.
 - Details: [Current Bootstrap & Preservation Revalidation](BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).
+
+
+## Append-only transfer update — 2026-11-06
+
+- Branch HEAD at transfer start: `c4601abc8da731c5277a2938f020cf5485ddf4ee`; main: `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- OneDrive rescue folder created and read back: [open folder](https://onedrive.live.com?cid=893D06C344EA996B&id=893D06C344EA996B!s0a781736638d4c6fac434b1ff2bb1b9a).
+- S6 original Run 40731224990: 20/20 artifacts copied; OneDrive listing confirms 20 exact names and total 1,531,244,201 bytes, equal to GitHub API artifact sizes.
+- Evidence classification: `TRANSFERRED_SIZE_MATCHED`; no SHA-256 raw-byte readback, ZIP CRC or restore test yet. See [transfer addendum](S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
+- Global Preservation remains `BLOCKED`; E2 Replay 21-artifact set is not yet preserved. D3 remains not closed; E2 Original Accounting remains `BLOCKED`; five protected accounting fields remain `MISSING_EVIDENCE`.
