@@ -1,0 +1,51 @@
+name: GitHub Raw Tri-Hash Manifest — No Provider Secrets
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths:
+      - scripts/verify_github_raw_tri_hash_manifest.py
+      - scripts/quickxorhash.c
+      - .github/workflows/github-raw-tri-hash-manifest.yml
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: github-raw-trihash-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  github-raw-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install bounded dependency
+        run: python -m pip install --disable-pip-version-check requests==2.32.3
+      - name: Compile QuickXorHash C implementation
+        run: |
+          cc -O3 -fPIC -shared scripts/quickxorhash.c -o /tmp/libquickxorhash.so
+          echo "QUICKXOR_LIB=/tmp/libquickxorhash.so" >> "$GITHUB_ENV"
+      - name: Run no-secret GitHub raw artifact hashing
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p tri-hash-output
+          python scripts/verify_github_raw_tri_hash_manifest.py --output tri-hash-output/GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json
+      - name: Publish GitHub raw tri-hash manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GITHUB-RAW-TRI-HASH-MANIFEST-${{ github.run_id }}
+          path: tri-hash-output/GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json
+          if-no-files-found: error
+          retention-days: 90
