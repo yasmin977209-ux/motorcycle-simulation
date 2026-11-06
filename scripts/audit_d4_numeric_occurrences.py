@@ -20,7 +20,7 @@ PAGINATION=re.compile(r"(?i)(\bPAGE\b|\bNUMPAGES\b|page number|رقم الصفح
 def classify(token:str, context:str, field_context:str="")->str:
     if PAGINATION.search(field_context) or PAGINATION.search(context): return "Pagination"
     if REFERENCE.search(context): return "Reference constant"
-    if DATE.search(context): return "Date/Time"
+    if DATE.search(context) or re.search(r"(?i)(تاريخ|date|time|وقت|اليوم)",context): return "Date/Time"
     if re.match(r"^\s*[0-9٠-٩۰-۹]+(?:[.)،-])?\s+",context): return "Section/Item number"
     if FINANCIAL.search(context): return "Financial"
     if STATISTICAL.search(context): return "Statistical"
