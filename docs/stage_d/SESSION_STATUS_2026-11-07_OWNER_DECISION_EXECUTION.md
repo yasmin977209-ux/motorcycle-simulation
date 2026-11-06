@@ -71,3 +71,11 @@ The final documentation commit SHA and post-commit Raw readback are to be record
 - D1-D2 Run 42307467183 / Job 128200327492: SUCCESS on same SHA; Artifact 13546043921 (10,545 bytes; sha256:12fa532f1422fd00ec8a8b90a362fa8dca7ca2a19eee73b6bc726acb4efe4038).
 - Raw readback Run 42307467246 / Job 128200328453: SUCCESS on same SHA; Artifact 13547240938 (2,684 bytes; sha256:b3c48d44a62025e01d82a9ecd03216698d418922dd317d03d3f741a193872094).
 - Next: owner configures the two read-only Actions secrets, then manually runs the tri-hash workflow. Until its ledger and restore checks pass, Global Preservation Gate remains BLOCKED and D4 remains NOT_STARTED.
+
+
+## Append-only implementation correction — 2026-11-07
+- Hardening: D1/D3/D5 multipart source archive size/SHA are now derived from part sidecars and independently compared to the live GitHub Artifact API digest after exact reassembly. The prior unverified D1 hard-coded size/hash was removed.
+- Missing-secret workflow behavior: it now writes a BLOCKED_MISSING_PROVIDER_SECRETS ledger artifact with provider_reads=NOT_STARTED; this is not a tri-hash result.
+- Number Registry: prior unverified SHA literal removed from effective claims; status NOT_VERIFIED_IN_THIS_SESSION.
+- Pre-hardening exact-head checks on SHA 110892985dcfffa61248918537b3da7d3e6ec28d: D3 Run 42307704095 / Job 128201134649 PASS; D1-D2 Run 42307703964 / Job 128201132997 PASS; Raw readback Run 42307704101 / Job 128201134226 PASS (Artifact 13547091551).
+- Fresh run set pending after this correction commit. main remains read-only and unchanged.

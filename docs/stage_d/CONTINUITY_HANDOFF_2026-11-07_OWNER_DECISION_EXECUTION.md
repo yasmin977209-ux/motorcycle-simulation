@@ -65,3 +65,10 @@ If the tri-hash Actions run is still queued/in_progress after ten minutes of in-
 - Then run Actions → “Tri-hash Preservation Verification — GitHub / OneDrive / Dropbox” → Run workflow on tmp/d1-rebuild-20261101. Await the ledger artifact and inspect exact tested SHA, all three hashes, all part reassemblies, ZIP/member restore checks, and provider metadata matches.
 - D3 exact output, D1-D2 and continuity raw readback succeeded on pre-final docs SHA c4e2b4aabbbb6d36045cd1a51a6a6dfe4128ce57 (Runs 42307467239, 42307467183, 42307467246 respectively). A subsequent documentation commit will trigger fresh exact-head validation.
 - D3 remains BLOCKED; D4/D5/D6 are not started in this execution chain.
+
+
+## Additional verifier hardening
+- D1/D3/D5 multipart verification now reads source_bytes/source_sha256 from each part sidecar, checks consistency across all parts, reassembles, then downloads the exact source artifact and matches GitHub Artifact digest/size. This removes an unverified hard-coded D1 hash.
+- The workflow writes an explicit BLOCKED_MISSING_PROVIDER_SECRETS JSON ledger artifact when either read-only secret is absent. It does not attempt provider reads.
+- The registry hash field in the D3 closure record is corrected to NOT_VERIFIED_IN_THIS_SESSION; do not use the prior unverified literal.
+- Pre-hardening exact-head validation SHA 110892985dcfffa61248918537b3da7d3e6ec28d: D3 Run 42307704095 / Job 128201134649 PASS; D1-D2 Run 42307703964 / Job 128201132997 PASS; Raw readback Run 42307704101 / Job 128201134226 PASS.

@@ -43,10 +43,16 @@ jobs:
         env:
           ONEDRIVE_GRAPH_ACCESS_TOKEN: ${{ secrets.ONEDRIVE_GRAPH_ACCESS_TOKEN }}
           DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          test -n "$ONEDRIVE_GRAPH_ACCESS_TOKEN" || { echo "::error::Missing repository secret ONEDRIVE_GRAPH_ACCESS_TOKEN"; exit 2; }
-          test -n "$DROPBOX_ACCESS_TOKEN" || { echo "::error::Missing repository secret DROPBOX_ACCESS_TOKEN"; exit 2; }
+          mkdir -p tri-hash-output
+          if [[ -z "$ONEDRIVE_GRAPH_ACCESS_TOKEN" || -z "$DROPBOX_ACCESS_TOKEN" ]]; then
+            python -c 'import json,os,pathlib; d={"schema":"tri-hash-preservation-ledger-v1","overall":"BLOCKED_MISSING_PROVIDER_SECRETS","tested_sha":os.environ.get("GITHUB_SHA","UNKNOWN"),"workflow_run_id":int(os.environ.get("GITHUB_RUN_ID","0")),"provider_reads":"NOT_STARTED","sha256":"NOT_COMPUTED","onedrive_quickxorhash":"NOT_COMPUTED","dropbox_content_hash":"NOT_COMPUTED","missing_secrets":[n for n,v in (("ONEDRIVE_GRAPH_ACCESS_TOKEN",os.environ.get("ONEDRIVE_GRAPH_ACCESS_TOKEN","")),("DROPBOX_ACCESS_TOKEN",os.environ.get("DROPBOX_ACCESS_TOKEN",""))) if not v]}; pathlib.Path("tri-hash-output/TRI_HASH_PRESERVATION_LEDGER_2026-11-06.json").write_text(json.dumps(d,indent=2)+"\\n",encoding="utf-8")'
+            echo "::error::Provider read-only secrets are missing; no remote bytes were read."
+            exit 2
+          fi
       - name: Run tri-hash, exact artifact comparison and restore verification
         env:
           GITHUB_TOKEN: ${{ github.token }}

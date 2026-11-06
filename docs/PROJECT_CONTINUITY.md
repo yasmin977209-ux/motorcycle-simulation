@@ -3896,3 +3896,12 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - D1-D2 Run 42307467183 / Job 128200327492 succeeded on the same tested SHA and produced Artifact 13546043921 (10,545 bytes; digest sha256:12fa532f1422fd00ec8a8b90a362fa8dca7ca2a19eee73b6bc726acb4efe4038).
 - Project Raw readback Run 42307467246 / Job 128200328453 succeeded on the same tested SHA and produced Artifact 13547240938 (2,684 bytes; digest sha256:b3c48d44a62025e01d82a9ecd03216698d418922dd317d03d3f741a193872094).
 - To resume the tri-hash run, the owner must configure the two read-only repository Actions secrets and manually dispatch the workflow. Do not send token values in chat. No provider byte-level claim is made from Run 42307467332.
+
+
+## Tri-hash verifier hardening and registry-hash correction — 2026-11-07 (append-only)
+
+- The tri-hash source-artifact comparison was hardened to derive D1/D3/D5 source size and SHA-256 from each part sidecar, then compare the reassembled bytes against the live GitHub Artifact metadata/digest. It no longer relies on an unverified hard-coded D1 artifact size/hash.
+- The tri-hash workflow now emits a BLOCKED_MISSING_PROVIDER_SECRETS ledger artifact when either provider token is absent; this is an explicit blocker record, not a hash or restore pass.
+- Correction to the effective closure draft: the previously typed results/number_registry.json SHA-256 was not established from raw bytes in this session. The JSON now marks the registry SHA as NOT_VERIFIED_IN_THIS_SESSION; the registry remains upstream truth, but no digest is claimed.
+- Exact-head validations on pre-hardening SHA 110892985dcfffa61248918537b3da7d3e6ec28d all succeeded: D3 Run 42307704095 / Job 128201134649; D1-D2 Run 42307703964 / Job 128201132997; Raw readback Run 42307704101 / Job 128201134226 (Artifact 13547091551).
+- The new script/workflow correction commit will trigger a fresh tri-hash test and fresh D3, D1-D2 and Raw readback checks. Provider reads remain blocked until the two Actions secrets are configured.

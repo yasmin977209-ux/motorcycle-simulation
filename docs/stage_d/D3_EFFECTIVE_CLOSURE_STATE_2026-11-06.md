@@ -84,3 +84,7 @@ QuickXorHash ليس بديلاً عن SHA-256. كما أن نسخ D1/D3/D5 ال�
 4. يُعاد فحص Exact Final HEAD وتُحدّث الاستمرارية.
 
 **الحالة الحالية: D3 BLOCKED على شرط الحفظ؛ D4 NOT_STARTED.** هذا لا ينفي نجاح المتطلبات النطاقية أعلاه، ولا يحول نجاحها إلى إغلاق مرحلة كامل.
+
+
+## Append-only correction — Number Registry hash field
+The earlier draft JSON carried a literal SHA-256 for results/number_registry.json without a successful raw-byte readback in this session. That value is not evidence and must not be relied on. The effective JSON now records upstream_registry_sha256_status=NOT_VERIFIED_IN_THIS_SESSION and removes the unverified hash from each requirement chain. The registry remains part of UPSTREAM_COMPUTATIONAL_TRUTH; no substitute hash is inferred.

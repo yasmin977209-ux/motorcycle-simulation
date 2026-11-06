@@ -20,7 +20,8 @@
       "path": "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
       "sha256": "b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243",
       "git_blob_sha1": "22ad6f50dbe32226f2753d4e4e9af902984dc765"
-    }
+    },
+    "upstream_registry_sha256_status": "NOT_VERIFIED_IN_THIS_SESSION"
   },
   "normative_scope_alignment": {
     "decision": "OWNER_APPROVED_NORMATIVE_SCOPE_ALIGNMENT",
@@ -180,8 +181,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -208,8 +208,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -236,8 +235,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -264,8 +262,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -292,8 +289,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -320,8 +316,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -347,8 +342,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -375,8 +369,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -403,8 +396,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -431,8 +423,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -459,8 +450,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -487,8 +477,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -515,8 +504,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -543,8 +531,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -571,8 +558,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -599,8 +585,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -627,8 +612,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/s6_excel_export.py; deliverables/D3_BUILD_AUDIT.json; deliverables/D3_MANIFEST.json",
         "test_evidence": [
@@ -655,8 +639,7 @@
         "source_identity": {
           "governing_reference": "v2.4.0 / D-2026-10-30-REFERENCE-V2.4.0",
           "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-          "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87"
+          "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f"
         },
         "implementation": "scripts/test_d3_18_manifest_remote_readback.py and exact-head invocation workflow",
         "test_evidence": [
@@ -741,5 +724,14 @@
     "next_allowed_action": "Run tri-hash preservation verification only after required GitHub Actions secrets are configured; reassess Global Preservation Gate from its ledger. Do not start D4 before D3 PASS_GAP_FREE and required preservation closure."
   },
   "no_new_trial_or_simulation": true,
-  "final_head_validation": "PENDING_POST_COMMIT_RAW_READBACK"
+  "final_head_validation": "PENDING_POST_COMMIT_RAW_READBACK",
+  "correction_log": [
+    {
+      "date": "2026-11-07",
+      "field": "requirements[*].evidence_chain.source_identity.registry_sha256",
+      "previous_value": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+      "classification": "REPORTED_ONLY_UNVERIFIED",
+      "correction": "Removed from verified claims; registry remains part of upstream computational truth, but its raw-byte SHA-256 was not established in this session."
+    }
+  ]
 }
