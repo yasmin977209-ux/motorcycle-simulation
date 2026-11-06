@@ -3721,3 +3721,10 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - Addendum inventory: [S6 OneDrive external-copy transfer record](stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
 - This is a separate-provider copy of original S6 artifacts, not recovery of the five missing accounting fields or the original full 48K daily balance ledgers. The S6 parent workflow remains `failure`; no workflow was restarted.
 - Global Preservation remains `BLOCKED`: E2 Replay's 21 artifacts remain unpreserved externally, S6 byte identity/ZIP/restore checks remain outstanding, and the remaining required preservation scope is not closed.
+
+
+## Append-only evidence-label correction — 2026-11-06
+
+- Correction: `TRANSFERRED_SIZE_MATCHED` in the S6 OneDrive transfer addendum is a descriptive transfer outcome, not an approved evidence classification.
+- Approved classification for OneDrive artifact integrity remains `REPORTED_ONLY`; live OneDrive listing established 20 names and size equality, but raw-byte SHA-256 readback, ZIP CRC and restore are `NOT_RUN`.
+- See [S6 OneDrive evidence-classification correction](stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json). Global Preservation remains `BLOCKED`.
