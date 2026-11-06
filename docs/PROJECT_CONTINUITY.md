@@ -3710,3 +3710,14 @@ See [Session Audit](stage_d/SESSION_AUDIT_2026-11-06_BOOTSTRAP_PRESERVATION.md),
 - v2.4.0 and Prompt Library REV6 Raw SHA-256 values were recomputed at current HEAD and match the approved pins.
 - 20 original S6 source artifacts remain unexpired in GitHub Actions (1,531,244,201 bytes; expiry window 2026-11-27); no Dropbox copy exists. The 21 E2 replay artifacts also remain absent from Dropbox. Dropbox upload blocker persists; no second provider is connected.
 - No long D3-S run was restarted; no branch run is queued/in_progress. Full status and evidence limitations: [Current Bootstrap & Preservation Revalidation](stage_d/BOOTSTRAP_PRESERVATION_RECOVERY_REVALIDATION_2026-11-06.md).
+
+
+## Append-only S6 OneDrive transfer update — 2026-11-06
+
+- At branch HEAD `c4601abc8da731c5277a2938f020cf5485ddf4ee`, main remained `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- Created OneDrive personal folder [Motorcycle-Simulation-Rescue-2026-11-05](https://onedrive.live.com?cid=893D06C344EA996B&id=893D06C344EA996B!s0a781736638d4c6fac434b1ff2bb1b9a).
+- Transferred all 20 original S6 artifacts from Run [40731224990](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/40731224990) to OneDrive. Live folder readback returned 20/20 exact names and aggregate size 1,531,244,201 bytes, matching the GitHub artifact inventory sizes.
+- Classification is `TRANSFERRED_SIZE_MATCHED`, not byte-identity verified: GitHub API digests are source metadata; OneDrive metadata exposed file sizes/QuickXorHash but not a recomputed SHA-256. ZIP CRC and restore tests remain `NOT_RUN`.
+- Addendum inventory: [S6 OneDrive external-copy transfer record](stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json).
+- This is a separate-provider copy of original S6 artifacts, not recovery of the five missing accounting fields or the original full 48K daily balance ledgers. The S6 parent workflow remains `failure`; no workflow was restarted.
+- Global Preservation remains `BLOCKED`: E2 Replay's 21 artifacts remain unpreserved externally, S6 byte identity/ZIP/restore checks remain outstanding, and the remaining required preservation scope is not closed.
