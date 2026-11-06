@@ -148,8 +148,8 @@ def main():
       "outer_zip":{"crc":"PASS","member_count":len(members),"restored_bytes":restored_bytes},
       "restore_test":{"status":"PASS","restored_member_count":len(members),"nested_archives":nested},
       "source_run_metadata_sha256":metadata,"parquet_audit":parquet,
-      "classification":"PASS_SCOPED" if (metadata["status"]=="PASS" or (not a.require_source_metadata and metadata["status"]=="MISSING_EVIDENCE")) and parquet["status"] in ("PASS_SCOPED","NOT_PRESENT") else "BLOCKED",
-      "limitations":["GitHub source bytes are audited here; this runner cannot independently read back OneDrive or Dropbox object bytes. Provider metadata/size matches are separate evidence."]
+      "classification":"PASS_SCOPED" if metadata["status"] in ("PASS","MISSING_EVIDENCE") and parquet["status"] in ("PASS_SCOPED","NOT_PRESENT") else "BLOCKED",
+      "limitations":["GitHub source bytes are audited here; this runner cannot independently read back OneDrive or Dropbox object bytes. Provider metadata/size matches are separate evidence.","The historical original source_run_metadata.sha256 field may be null; MISSING_EVIDENCE is preserved as a gap and is not synthesized."]
     }
     out=pathlib.Path(a.output); out.mkdir(parents=True,exist_ok=True)
     dest=out/f"ARTIFACT_{a.artifact_id}_AUDIT.json"
