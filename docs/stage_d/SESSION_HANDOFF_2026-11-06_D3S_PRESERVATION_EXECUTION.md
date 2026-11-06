@@ -194,3 +194,8 @@ The D3-S AR job log was re-read after this handoff was first committed. The exac
 `e6617de7799e9a1ee00533d3c9d6940fcb87dd04afcbc5d`
 
 The earlier line in §5 accidentally omitted the substring `eb77da3ab7d32`. This correction is the authoritative value; the original entry is retained for append-only traceability.
+
+
+## Append-only correction 2 — exact 64-character AR workbook digest
+
+The exact SHA-256 captured by the D3-S AR job log is `e6617de7799e9a1ee00533e9e5eb77da3ab7d32d3c9d6940fcb87dd04afcbc5d` (64 hex characters). This supersedes both mistyped/abbreviated strings in §5 and the first correction above. Source: Run `42276129141`, Job `128101027310`, log line `2026-11-06T19:33:17.6543139Z`.
