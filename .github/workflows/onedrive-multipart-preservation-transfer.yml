@@ -1,0 +1,214 @@
+name: OneDrive Multipart Transport for D3 and D5 Preservation
+on:
+  push:
+    branches: [tmp/d1-rebuild-20261101]
+    paths:
+      - .github/workflows/onedrive-multipart-preservation-transfer.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: onedrive-multipart-preservation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  split:
+    name: Verify and split exact D3/D5 source artifacts for OneDrive transfer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download, raw-hash verify, CRC-check and split into 80 MiB transport parts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,pathlib,requests,zipfile
+          repo="yasmin977209-ux/motorcycle-simulation"
+          specs={
+            "D3":{"artifact_id":13288779998,"bytes":535567142,"sha256":"e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"},
+            "D5":{"artifact_id":13369179742,"bytes":519116689,"sha256":"80caf0567e31a6bf5397543dac8ef191b38999105dd3cedce4c3dad75b20bff1"}
+          }
+          chunk_size=80*1024*1024
+          root=pathlib.Path("split-output"); root.mkdir(exist_ok=True)
+          headers={"Authorization":"Bearer "+os.environ["GITHUB_TOKEN"],"Accept":"application/vnd.github+json"}
+          restore={"schema_version":"onedrive-multipart-transport-v1","tested_sha":"${{ github.sha }}","chunk_size_bytes":chunk_size,"sources":{}}
+          for kind,spec in specs.items():
+            aid=spec["artifact_id"]
+            meta=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}",headers=headers,timeout=60)
+            meta.raise_for_status(); item=meta.json()
+            if item.get("expired") or item.get("size_in_bytes")!=spec["bytes"] or item.get("digest")!="sha256:"+spec["sha256"]:
+              raise SystemExit("SOURCE_ARTIFACT_METADATA_PIN_MISMATCH:"+kind)
+            response=requests.get(f"https://api.github.com/repos/{repo}/actions/artifacts/{aid}/zip",headers=headers,stream=True,timeout=(60,300))
+            response.raise_for_status()
+            source=root/(kind+".source.zip"); h=hashlib.sha256(); size=0
+            with source.open("wb") as out:
+              for block in response.iter_content(4*1024*1024):
+                if block: out.write(block); h.update(block); size+=len(block)
+            if size!=spec["bytes"] or h.hexdigest()!=spec["sha256"]:
+              raise SystemExit(f"SOURCE_RAW_SHA256_MISMATCH:{kind}:{size}:{h.hexdigest()}")
+            with zipfile.ZipFile(source) as z:
+              bad=z.testzip()
+              if bad: raise SystemExit("SOURCE_ZIP_CRC_FAILURE:"+kind+":"+bad)
+            chunks=[]
+            with source.open("rb") as src:
+              index=0
+              while True:
+                block=src.read(chunk_size)
+                if not block: break
+                name=f"{kind}.part{index:03d}.bin"
+                digest=hashlib.sha256(block).hexdigest()
+                (root/name).write_bytes(block)
+                record={"source_artifact_id":aid,"source_bytes":size,"source_sha256":h.hexdigest(),
+                  "part_index":index,"part_count":(size+chunk_size-1)//chunk_size,"offset_bytes":index*chunk_size,
+                  "part_name":name,"part_bytes":len(block),"part_sha256":digest}
+                (root/f"{kind}.part{index:03d}.json").write_text(json.dumps(record,sort_keys=True,indent=2)+"\n")
+                chunks.append(record); index+=1
+            if len(chunks)!=7: raise SystemExit("EXPECTED_SEVEN_PARTS:"+kind)
+            restore["sources"][kind]={"artifact_id":aid,"source_bytes":size,"source_sha256":h.hexdigest(),"part_count":len(chunks),"parts":chunks}
+            print(f"VERIFIED_AND_SPLIT kind={kind} bytes={size} sha256={h.hexdigest()} parts={len(chunks)}")
+          (root/"RESTORE_MANIFEST.json").write_text(json.dumps(restore,sort_keys=True,indent=2)+"\n")
+          PY
+      - name: Publish OneDrive transport part D3-000
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-000
+          path: |
+            split-output/D3.part000.bin
+            split-output/D3.part000.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-001
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-001
+          path: |
+            split-output/D3.part001.bin
+            split-output/D3.part001.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-002
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-002
+          path: |
+            split-output/D3.part002.bin
+            split-output/D3.part002.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-003
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-003
+          path: |
+            split-output/D3.part003.bin
+            split-output/D3.part003.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-004
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-004
+          path: |
+            split-output/D3.part004.bin
+            split-output/D3.part004.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-005
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-005
+          path: |
+            split-output/D3.part005.bin
+            split-output/D3.part005.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D3-006
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D3-006
+          path: |
+            split-output/D3.part006.bin
+            split-output/D3.part006.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-000
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-000
+          path: |
+            split-output/D5.part000.bin
+            split-output/D5.part000.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-001
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-001
+          path: |
+            split-output/D5.part001.bin
+            split-output/D5.part001.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-002
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-002
+          path: |
+            split-output/D5.part002.bin
+            split-output/D5.part002.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-003
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-003
+          path: |
+            split-output/D5.part003.bin
+            split-output/D5.part003.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-004
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-004
+          path: |
+            split-output/D5.part004.bin
+            split-output/D5.part004.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-005
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-005
+          path: |
+            split-output/D5.part005.bin
+            split-output/D5.part005.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish OneDrive transport part D5-006
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-D5-006
+          path: |
+            split-output/D5.part006.bin
+            split-output/D5.part006.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish multipart restoration manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: OD-Multipart-Restore-Manifest
+          path: split-output/RESTORE_MANIFEST.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Exact source tested SHA and transport inventory
+        run: |
+          echo "ONEDRIVE_MULTIPART_TESTED_SHA=$GITHUB_SHA"
+          find split-output -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
