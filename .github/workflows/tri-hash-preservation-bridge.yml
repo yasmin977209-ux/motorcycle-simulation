@@ -60,9 +60,9 @@ jobs:
 
       - name: Compute 21 reference fingerprints from exact historical GitHub Artifact ZIPs
         env:
-          GITHUB_TOKEN: \${{ github.token }}
-          GITHUB_SHA: \${{ github.sha }}
-          GITHUB_RUN_ID: \${{ github.run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
           QUICKXOR_LIB: /tmp/libquickxorhash.so
         run: |
           set -euo pipefail

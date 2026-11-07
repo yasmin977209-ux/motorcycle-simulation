@@ -42,11 +42,11 @@ jobs:
         run: python -m pytest -q -rs tests/test_d6_audit.py tests/test_d5_package.py tests/test_d4_numeric_occurrences.py
       - name: Download and verify original D0 Artifact
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          api="https://api.github.com/repos/\${GITHUB_REPOSITORY}/actions/artifacts/13535434691"
-          curl --fail --silent --show-error -H "Authorization: Bearer \${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api" -o /tmp/d0-meta.json
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/13535434691"
+          curl --fail --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api" -o /tmp/d0-meta.json
           python - <<'PY'
           import json,pathlib,hashlib,zipfile
           m=json.loads(pathlib.Path("/tmp/d0-meta.json").read_text())
@@ -55,7 +55,7 @@ jobs:
           assert m["digest"]=="sha256:898f650ca5f0196d7fae9fe49cd1987c8ffd2ad4d1cab54c63a130ad24022d7f"
           print("D0_ARTIFACT_METADATA_PASS",json.dumps({k:m.get(k) for k in ("id","name","size_in_bytes","digest","expires_at")}))
           PY
-          curl --fail --location --silent --show-error -H "Authorization: Bearer \${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d0-artifact.zip
+          curl --fail --location --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d0-artifact.zip
           test "$(stat -c %s /tmp/d0-artifact.zip)" = "2346"
           python - <<'PY'
           import hashlib,pathlib,zipfile
@@ -104,7 +104,7 @@ jobs:
               for block in iter(lambda:f.read(8*1024*1024),b""): h.update(block)
           print("D5_PACKAGE_SHA256",h.hexdigest())
           PY
-          echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=\${artifact_id}"
+          echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
       - name: Execute normative acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 on exact HEAD
         env:
           D5_ARTIFACT_ZIP: /tmp/d5-artifact.zip

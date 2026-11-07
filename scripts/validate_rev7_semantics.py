@@ -21,7 +21,7 @@ def main():
  for stage in STAGES:
   match=re.search(r"^- "+stage+r":\s*([^;\n]+)",s4,re.M)
   assert match,("REV7_STAGE_ROW_MISSING",stage)
-  extracted[stage]=match.group(1).strip()
+  extracted[stage]=match.group(1).split(" on tested SHA",1)[0].strip()
   assert extracted[stage]==stages[stage],("REV7_CLOSURE_STATUS_CONFLICT",stage,extracted[stage],stages[stage])
  for tid in TEST_IDS: assert re.search(r"(?<!\d)"+tid+r"(?!\d)",s4),("REV7_REQUIRED_TEST_ID_MISSING",tid)
  for value in CONSTANTS.values(): assert value in section,("REV7_CONSTANT_MISSING",value)
