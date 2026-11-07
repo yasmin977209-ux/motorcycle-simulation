@@ -38,5 +38,15 @@
     "retention_days": 30,
     "remote_readback": "PASS"
   },
-  "publication_commit_sha": "c757126ac27e8f6606f38b14324119cc22604858"
+  "publication_commit_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+  "owner_api_d6_trigger": {
+    "authorized_by": "owner explicit execution instruction 2026-11-07",
+    "method": "GitHub Contents API user-authored push on working branch",
+    "trigger_path": "docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json",
+    "d5_tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+    "d5_evidence_commit_sha": "85dfc8c385302923987f90d49a423cf79b028cd9",
+    "d5_closure_json_commit": "9f03ea81c38856a2156ffc33df322d66fd474385",
+    "d5_closure_markdown_commit": "5c60adc3c873708b787b9796caf8231001f02831",
+    "intent": "Trigger D6 only after D5 publication and independent remote readback were verified."
+  }
 }
