@@ -38,11 +38,11 @@ MEMBERS = (
     "دراسة_الجدوى_AR.docx",
 )
 DOCX_EXPECTED = {
-    "التقرير_الكامل_AR.docx": (42249, "332d7205d67ce19b12cbb196820f741cab34d99f5f11aa8780775446b1dec0bb"),
-    "Full_Report_EN.docx": (41645, "945c11d9dbc71b185371cd21ff02d0db68e74d8770eec8f5e09cee00fad2a778"),
-    "الملخص_AR.docx": (40435, "d1f5dcc7ac6ff67779d3a6a430645f65dad813c1ec8afa6130c9464a9109dc1d"),
-    "Summary_EN.docx": (39967, "8310bbb52c0eb275ed3cbcca4d8cbb9227c438bf77db9b39454d0232d08e5699"),
-    "دراسة_الجدوى_AR.docx": (40761, "1fe55fb3ece3dee3368c290551fd8461b0e47240e889fc2ceb384eb11155b3dc"),
+    "التقرير_الكامل_AR.docx": (42329, "429f143bf84816c3f4ab7eb95dd9f34f758748035423be47ef79cb308c1aeec9"),
+    "Full_Report_EN.docx": (41726, "d4d0e49f4b97baa321b9092813ffa40f328a763e7c519ee7201080a3b3c44044"),
+    "الملخص_AR.docx": (40517, "17650a5c4c0a739eb87ba0b81b0a833aba6fcd844aea5230faea80f21840e2bd"),
+    "Summary_EN.docx": (40050, "e938822db4c4e5d941457a14ea0a6f0fd4cc8808c29ac9722abf1e6ea8bba795"),
+    "دراسة_الجدوى_AR.docx": (40763, "df8e5d5da036fd8526f0f33e618ec1b6a26da152caee27ce771cf39dee1cfe3f"),
 }
 S6_SOURCE = "da1a9ea9b5cd789c944de3f07b08395bb67c49e7"
 S6_COHORT = "s6-v23-da1a9ea9"
