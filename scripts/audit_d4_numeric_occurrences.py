@@ -50,14 +50,15 @@ def audit_docx(path:Path)->dict:
                 ids=REGISTRY_ID.findall(text)
                 for match in TOKEN.finditer(text):
                     token=match.group(0)
-                    category=classify(token,text,field_context)
+                    context=text[max(0,match.start()-100):min(len(text),match.end()+100)]
+                    category=classify(token,context,field_context)
                     linked_id=ids[0] if ids else None
                     resolved=(category in ("Financial","Statistical") and linked_id is not None)
                     if resolved: disposition="RESOLVED"
                     elif category!="Unresolved": disposition="EXPLICITLY_CLASSIFIED"
                     else: disposition="UNRESOLVED"
                     occurrences.append({"part":name,"paragraph_index":pindex,"token":token,
-                        "context":text[max(0,match.start()-100):min(len(text),match.end()+100)],
+                        "context":context,
                         "category":category,"number_id":linked_id if resolved else None,
                         "disposition":disposition})
     counts={}
@@ -87,9 +88,10 @@ def main():
       "total_occurrences":total,"resolved_occurrences":resolved,
       "explicitly_classified_occurrences":explicit,"unresolved_occurrences":unresolved,
       "identity_equation":total==resolved+explicit+unresolved,
+      "unresolved_samples":[{"file":x["file"],"part":o["part"],"token":o["token"],"context":o["context"]} for x in results for o in x["occurrences"] if o["disposition"]=="UNRESOLVED"][:100],
       "acceptance":"PASS" if total==resolved+explicit and unresolved==0 else "BLOCKED"}
     Path(args.output).parent.mkdir(parents=True,exist_ok=True)
     Path(args.output).write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print(json.dumps({k:report[k] for k in ("total_occurrences","resolved_occurrences","explicitly_classified_occurrences","unresolved_occurrences","identity_equation","acceptance")}))
+    print(json.dumps({k:report[k] for k in ("total_occurrences","resolved_occurrences","explicitly_classified_occurrences","unresolved_occurrences","identity_equation","acceptance","unresolved_samples")}))
     if report["acceptance"]!="PASS": raise SystemExit("D4_NUMERIC_TOKEN_LINEAGE_NOT_GAP_FREE")
 if __name__=="__main__": main()

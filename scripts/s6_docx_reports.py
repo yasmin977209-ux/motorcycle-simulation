@@ -159,7 +159,7 @@ def value_cell(entry, used_ids):
         return "MISSING_EVIDENCE"
     nid = entry["number_id"]
     used_ids.add(nid)
-    return f'{entry["display_value"]}\n[{nid}]'
+    return f'{entry["display_value"]} [{nid}] {entry["metric_name"]}'
 
 def status_for(sid):
     if sid.startswith("C100_"):

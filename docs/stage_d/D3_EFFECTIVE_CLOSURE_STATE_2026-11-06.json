@@ -797,10 +797,17 @@
       "classification": "OWNER_DECISION_REV6_SCOPE_CORRECTION",
       "correction": "D3 normative v2.4.0 scope is PASS_GAP_FREE_NORMATIVE_V240_SCOPE and READY_FOR_D4. Global Preservation Gate remains independently BLOCKED before E3; it does not gate D3/D4/D5/D6. 72/72 live provider metadata hashes and sizes match the 72 GitHub raw Artifact ZIP hash records.",
       "evidence": "Stage A Run 42330906466 / Job 128276958747 / Artifact 13557202516; Stage A compatibility Run 42330906698 / Job 128276959441; Stage B connector metadata comparison 20+23+20+9=72 matches."
+    },
+    {
+      "date": "2026-11-07",
+      "field": "D4 occurrence-level lineage audit",
+      "previous_value": "Run 42331683955 failed with 241 occurrences / 0 resolved / 81 classified / 160 unresolved",
+      "classification": "D4_AUDIT_FAILURE_REMEDIATION",
+      "correction": "The 16 registry-backed values were separated from their NR identifiers by paragraph breaks, and the classifier used whole-paragraph context. Render each registry value, identifier and metric label in one paragraph; classify each token from its local context and broaden approved identifier/statistical cues. Keep D4 blocked unless unresolved_occurrences is zero."
     }
   ],
   "decision_execution_base_head": "71a0e354e9ecccd2b10ac9509af426be20fdcef0",
-  "updated_on_head": "cef3572d3ce49545cc44739324929685208245a7",
+  "updated_on_head": "8d624bf3b861af670412ac5f607343dbb0542c70",
   "tri_hash_bridge_2026_11_07": {
     "stage_a": {
       "run_id": 42330906466,
