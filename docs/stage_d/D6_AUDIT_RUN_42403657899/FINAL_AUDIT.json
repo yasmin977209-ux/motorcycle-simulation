@@ -1,0 +1,432 @@
+{
+  "schema_version": "d6-independent-post-write-audit-v3",
+  "status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+  "run_id": "42403657899",
+  "source_d5_run_id": 42393413807,
+  "source_d5_artifact_id": 13582441423,
+  "checks": {
+    "auditor_unit_tests": {
+      "status": "PASS",
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "detail": "Focused D6 auditor unit suite completed before this audit step."
+    },
+    "d5_artifact_download": {
+      "status": "PASS",
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "detail": "Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."
+    },
+    "artifact_outer": {
+      "status": "PASS",
+      "artifact_id": 13582441423,
+      "run_id": 42393413807,
+      "bytes": 519117017,
+      "sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc"
+    },
+    "zip_inventory_crc_paths": {
+      "status": "PASS",
+      "inner_members": [
+        "Full_Report_EN.docx",
+        "Full_Results_EN.xlsx",
+        "Summary_EN.docx",
+        "manifest.json",
+        "التقرير_الكامل_AR.docx",
+        "الملخص_AR.docx",
+        "النتائج_الكاملة_AR.xlsx",
+        "دراسة_الجدوى_AR.docx"
+      ],
+      "bytes": 519104624,
+      "sha256": "f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7"
+    },
+    "manifest_sha256sums": {
+      "status": "PASS",
+      "manifest_sha256": "a291a886fc6973f1f747cc74c98b0b8a25b01a7f96e32048c4c345c1d19484eb",
+      "sha256sums_entries": 10,
+      "sha256sums_sha256": "7c76cef416a08b6864e2b1a1c2e4159023e72cb0326793887cceb143d4ce0421"
+    },
+    "identities_gates": {
+      "status": "PASS",
+      "S6": {
+        "SOURCE_SHA": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "MASTER_SEED": 20270101
+      },
+      "C100": {
+        "SOURCE_SHA": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+        "cohort_id": "c100-v23-s4-20261026-965281d5"
+      },
+      "gate_statuses": {
+        "financial_gate_a": "PASS_SCOPED",
+        "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+        "gate_b_n2400": "FAIL_SCOPED (10/10)",
+        "stability": "NOT_CONVERGED (0/60)",
+        "n4800": "NOT_EXECUTED",
+        "c100_golden": "NOT_RUN"
+      },
+      "missing_accounting_fields": [
+        "Accounts_Receivable",
+        "Accumulated_Depreciation",
+        "Gross_Bike_Assets",
+        "Guarantee_Claim_Receivable",
+        "Total_Assets"
+      ]
+    },
+    "excel_175_180_182": {
+      "status": "PASS_SCOPED",
+      "source": "ACCEPTANCE_TEST_EXECUTION.json",
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "test_ids": [
+        "175",
+        "180",
+        "181",
+        "182"
+      ],
+      "detail": "Exact-head acceptance tests checked workbook inventory, numeric parity, daily round-trip, representative partner balances and exact-rational financial cells; duplicate full XML scanning is intentionally not repeated."
+    },
+    "docx_files": {
+      "status": "PASS_SCOPED",
+      "files": {
+        "التقرير_الكامل_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 13809,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 252,
+            "text_runs": 252,
+            "bidi_true": 252,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 252,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
+        },
+        "Full_Report_EN.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 14273,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 250,
+            "text_runs": 250,
+            "bidi_true": 0,
+            "bidi_false": 250,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 250,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
+        },
+        "الملخص_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 9510,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 127,
+            "text_runs": 127,
+            "bidi_true": 127,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 127,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        },
+        "Summary_EN.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 9841,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 125,
+            "text_runs": 125,
+            "bidi_true": 0,
+            "bidi_false": 125,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 125,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        },
+        "دراسة_الجدوى_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 6826,
+          "missing_evidence_literal_present": false,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 147,
+            "text_runs": 147,
+            "bidi_true": 147,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 147,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        }
+      },
+      "docx_files": 5,
+      "blocked_files": [],
+      "detail": "Per-file DOCX parse, T2, §17.3 substance, OOXML directionality and resolution of every explicit Number Registry ID; full numeric-token lineage remains a separate acceptance test."
+    },
+    "docx_number_registry_traceability": {
+      "status": "PASS_SCOPED",
+      "number_id_occurrences": 112,
+      "unresolved_number_ids": [],
+      "detail": "Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."
+    },
+    "docx_rendering": {
+      "status": "PASS_SCOPED",
+      "page_counts": {
+        "d6_التقرير_الكامل_AR.docx": 4,
+        "d6_Full_Report_EN.docx": 3,
+        "d6_الملخص_AR.docx": 3,
+        "d6_Summary_EN.docx": 3,
+        "d6_دراسة_الجدوى_AR.docx": 3
+      },
+      "file_failures": {},
+      "timeout_seconds_per_file": 120,
+      "detail": "Each DOCX was rendered in a separate LibreOffice process with an isolated profile and 120-second timeout; both summaries must be 2–3 pages."
+    },
+    "docx_176": {
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "pytest_nodeid": "tests.test_176_numeric_token_lineage::test_176_numeric_token_lineage"
+    },
+    "acceptance_test_execution": {
+      "status": "PASS",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tests": {
+        "176": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_176_numeric_token_lineage::test_176_numeric_token_lineage",
+          "duration_seconds": 1.084,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "175": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_175_bilingual_workbooks_have_185_ordered_sheets_and_numeric_parity",
+          "duration_seconds": 517.565,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "179": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_179_package_manifest_pins_provenance_commit_command_runtime_and_seed",
+          "duration_seconds": 0.0,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "180": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_180_daily_rows_are_ordered_and_preserved_for_105_keys_and_25_p50_cases",
+          "duration_seconds": 1.943,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "181": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_181_partner_daily_balances_and_rollforwards_cover_105_keys_and_25_p50_cases",
+          "duration_seconds": 0.404,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "182": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_182_all_financial_cells_match_exact_registry_values",
+          "duration_seconds": 0.0,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "183": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_183_c100_cross_cohort_reuse_is_explicit_and_not_merged",
+          "duration_seconds": 0.0,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        },
+        "186": {
+          "result": "PASS",
+          "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_186_exact_eight_member_package_outer_artifact_crc_and_sha256sums",
+          "duration_seconds": 1.156,
+          "run_id": 42403657899,
+          "job_id": 128498571102,
+          "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34"
+        }
+      }
+    },
+    "test_175": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "185 sheets per workbook; identical sheet order; numeric parity; no Excel errors",
+      "detail": "D6 independently verified 185 worksheets per workbook, matching worksheet order, cross-workbook numeric parity, and rejected formula/error cells. This is scoped evidence, not a claim that the separately numbered historical test suite was invoked.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_175_bilingual_workbooks_have_185_ordered_sheets_and_numeric_parity"
+    },
+    "test_176": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "Every report numeric value has Number Registry lineage; no manual unregistered number",
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_176_numeric_token_lineage::test_176_numeric_token_lineage"
+    },
+    "test_179": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "manifest fingerprints and provenance/commit/command/library/MASTER_SEED",
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_179_package_manifest_pins_provenance_commit_command_runtime_and_seed"
+    },
+    "test_180": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "DAILY worksheet ordered round-trip; dates and numbers preserved",
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_180_daily_rows_are_ordered_and_preserved_for_105_keys_and_25_p50_cases"
+    },
+    "test_181": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "Daily partner balances exist for representative trials; absence is MISSING_EVIDENCE, never inferred",
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_181_partner_daily_balances_and_rollforwards_cover_105_keys_and_25_p50_cases"
+    },
+    "test_183": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "All package rows belong to one cohort; reject mixed cohort identities",
+      "detail": "The full historical acceptance contract was not executed by this D6 audit. Related scoped checks, if any, are reported separately and are not substituted.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_183_c100_cross_cohort_reuse_is_explicit_and_not_merged"
+    },
+    "test_182": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "No float leakage into financial statistics; exact rational recomputation",
+      "financial_mismatch_count": 0,
+      "detail": "Exact registry-value comparisons were performed for the financial cells resolved by the pinned Registry. Any mismatch blocks this scoped result; this is not a claim that the separate historical acceptance test was invoked.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_182_all_financial_cells_match_exact_registry_values"
+    },
+    "test_186": {
+      "run_id": "42403657899",
+      "job_id": "128498571102",
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "status": "EXECUTED_ON_EXACT_HEAD",
+      "contract": "Seven deliverables plus manifest in exactly eight-member ZIP; external SHA256SUMS and remote bytes",
+      "detail": "D6 verified the exact outer GitHub Artifact fingerprint, inner package fingerprint, eight-member ZIP inventory, CRC/path safety, manifest member hashes, and SHA256SUMS coverage. This is scoped package evidence, not a claim that the separately numbered historical test suite was invoked.",
+      "execution": "EXECUTED_ON_EXACT_HEAD",
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_186_exact_eight_member_package_outer_artifact_crc_and_sha256sums"
+    }
+  },
+  "fixed_gate_states": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "c100_golden": "NOT_RUN"
+  },
+  "missing_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
+  ],
+  "limitations": [
+    "Test 176 is bound to the exact D4 build outputs and D5 package members through D4 report-manifest SHA, D4 build-output SHA values and D5 package-manifest SHA values.",
+    "DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.",
+    "Acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 executed on this exact D6 run and SHA; individual outcomes are retained in ACCEPTANCE_TEST_EXECUTION.json.",
+    "Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.",
+    "No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."
+  ],
+  "d6_disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+  "final_accepted": "NOT_DECLARED",
+  "p17_final_accepted": "NOT_DECLARED",
+  "p18_released": "NOT_DECLARED",
+  "converged": "NOT_DECLARED",
+  "Workflow_Status": "SUCCESS",
+  "Audit_Status": "PASS_SCOPED_WITH_LIMITATIONS",
+  "Stage_Disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+  "Final_Acceptance": "NOT_ACCEPTED"
+}
