@@ -361,3 +361,35 @@ def test_audit_disposition_gate_rejects_blocked_or_fail_and_never_promotes_accep
             validate_d6_audit_disposition({"status":status,"d6_disposition":status,"final_accepted":"NOT_DECLARED"})
     with pytest.raises(ValueError,match="D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNDECLARED"):
         validate_d6_audit_disposition({"status":"PASS_SCOPED_WITH_LIMITATIONS","d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"FINAL_ACCEPTED"})
+
+def test_test176_binding_verifies_exact_d4_outputs_and_d5_members(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import validate_docx_176_binding, sha
+    root=tmp_path; (root/"docs/stage_d").mkdir(parents=True)
+    names=["التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"]
+    payload={name:(b"docx-content-"+name.encode("utf-8")) for name in names}
+    outputs={name:{"bytes":len(data),"sha256":sha(data)} for name,data in payload.items()}
+    d4raw=json.dumps({"workflow_run_id":"42","tested_sha":"1"*40},separators=(",",":")).encode()
+    (root/"docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json").write_bytes(d4raw)
+    (root/"docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json").write_text(json.dumps({"workflow_run_id":"42","tested_sha":"1"*40,"outputs":outputs}),encoding="utf-8")
+    docs=[{"file":name,"bytes":len(data),"total_occurrences":241 if i==0 else 0,"resolved_occurrences":64 if i==0 else 0,"explicitly_classified_occurrences":177 if i==0 else 0,"unresolved_occurrences":0} for i,(name,data) in enumerate(payload.items())]
+    lineage={"acceptance":"PASS","total_occurrences":241,"resolved_occurrences":64,"explicitly_classified_occurrences":177,"unresolved_occurrences":0,"identity_equation":True,"documents":docs}
+    manifest={"inputs":{"D4_report_manifest_sha256":sha(d4raw),"D4_source_run_id":42,"D4_tested_sha":"1"*40},"package_members":{name:{"bytes":len(data),"sha256":sha(data)} for name,data in payload.items()}}
+    assert validate_docx_176_binding({"tests":{"176":{"result":"PASS"}}},lineage,"EXECUTED_ON_EXACT_HEAD",root,manifest,payload)
+
+
+def test_test176_binding_rejects_d5_member_hash_mismatch(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import validate_docx_176_binding, sha
+    root=tmp_path; (root/"docs/stage_d").mkdir(parents=True)
+    names=["التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"]
+    payload={name:(b"docx-content-"+name.encode("utf-8")) for name in names}
+    outputs={name:{"bytes":len(data),"sha256":sha(data)} for name,data in payload.items()}
+    d4raw=json.dumps({"workflow_run_id":"42","tested_sha":"1"*40},separators=(",",":")).encode()
+    (root/"docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json").write_bytes(d4raw)
+    (root/"docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json").write_text(json.dumps({"workflow_run_id":"42","tested_sha":"1"*40,"outputs":outputs}),encoding="utf-8")
+    docs=[{"file":name,"bytes":len(data),"total_occurrences":241 if i==0 else 0,"resolved_occurrences":64 if i==0 else 0,"explicitly_classified_occurrences":177 if i==0 else 0,"unresolved_occurrences":0} for i,(name,data) in enumerate(payload.items())]
+    lineage={"acceptance":"PASS","total_occurrences":241,"resolved_occurrences":64,"explicitly_classified_occurrences":177,"unresolved_occurrences":0,"identity_equation":True,"documents":docs}
+    members={name:{"bytes":len(data),"sha256":sha(data)} for name,data in payload.items()}
+    members[names[0]]["sha256"]="0"*64
+    manifest={"inputs":{"D4_report_manifest_sha256":sha(d4raw),"D4_source_run_id":42,"D4_tested_sha":"1"*40},"package_members":members}
+    with pytest.raises(ValueError,match="D6_TEST_176_D5_PACKAGE_MEMBER_MISMATCH"):
+        validate_docx_176_binding({"tests":{"176":{"result":"PASS"}}},lineage,"EXECUTED_ON_EXACT_HEAD",root,manifest,payload)

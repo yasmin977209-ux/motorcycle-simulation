@@ -58,7 +58,8 @@ def load_acceptance_execution(path, expected_test_ids, run_id, job_id, tested_sh
  return execution
 
 
-def validate_docx_176_binding(execution, lineage_report, docx_176_status):
+def validate_docx_176_binding(execution, lineage_report, docx_176_status,
+                              root=None, d5_manifest=None, d5_payload=None):
  if lineage_report.get("acceptance")!="PASS":
   raise ValueError("D6_TEST_176_LINEAGE_NOT_ACCEPTED")
  counts=(lineage_report.get("total_occurrences"),lineage_report.get("resolved_occurrences"),
@@ -66,9 +67,43 @@ def validate_docx_176_binding(execution, lineage_report, docx_176_status):
  if counts!=(241,64,177,0): raise ValueError("D6_TEST_176_LINEAGE_COUNTS_MISMATCH")
  if counts[0]!=counts[1]+counts[2]+counts[3] or lineage_report.get("identity_equation") is not True:
   raise ValueError("D6_TEST_176_LINEAGE_EQUATION_MISMATCH")
+ docs=lineage_report.get("documents",[])
+ if (sum(d.get("total_occurrences",0) for d in docs),
+     sum(d.get("resolved_occurrences",0) for d in docs),
+     sum(d.get("explicitly_classified_occurrences",0) for d in docs),
+     sum(d.get("unresolved_occurrences",0) for d in docs))!=counts:
+  raise ValueError("D6_TEST_176_DOCUMENT_TOTALS_MISMATCH")
  if execution.get("tests",{}).get("176",{}).get("result")!="PASS":
   raise ValueError("D6_TEST_176_EXECUTION_NOT_PASS")
  if docx_176_status!="EXECUTED_ON_EXACT_HEAD": raise ValueError("D6_TEST_176_REPORT_CONFLICT")
+ if root is not None or d5_manifest is not None or d5_payload is not None:
+  if root is None or d5_manifest is None or d5_payload is None:
+   raise ValueError("D6_TEST_176_BINDING_INPUTS_INCOMPLETE")
+  root=Path(root)
+  report_manifest_raw=(root/"docs/stage_d/D4_REPORT_MANIFEST_2026-11-05.json").read_bytes()
+  report_manifest=json.loads(report_manifest_raw.decode("utf-8"))
+  build_audit=strict_json_load(root/"docs/stage_d/D4_BUILD_AUDIT_2026-11-05.json")
+  inputs=d5_manifest.get("inputs",{})
+  d4_run=str(report_manifest.get("workflow_run_id")); d4_sha=report_manifest.get("tested_sha")
+  if sha(report_manifest_raw)!=inputs.get("D4_report_manifest_sha256"):
+   raise ValueError("D6_TEST_176_D4_REPORT_MANIFEST_SHA_MISMATCH")
+  if d4_run!=str(inputs.get("D4_source_run_id")) or d4_sha!=inputs.get("D4_tested_sha"):
+   raise ValueError("D6_TEST_176_D4_REPORT_IDENTITY_MISMATCH")
+  if str(build_audit.get("workflow_run_id"))!=d4_run or build_audit.get("tested_sha")!=d4_sha:
+   raise ValueError("D6_TEST_176_D4_BUILD_AUDIT_IDENTITY_MISMATCH")
+  outputs=build_audit.get("outputs",{}); members=d5_manifest.get("package_members",{})
+  for doc in docs:
+   name=doc.get("file")
+   if not name or name not in d5_payload or name not in outputs or name not in members:
+    raise ValueError("D6_TEST_176_DOCX_MEMBER_MISSING:"+str(name))
+   data=d5_payload[name]; digest=sha(data)
+   if len(data)!=doc.get("bytes"): raise ValueError("D6_TEST_176_DOCX_LINEAGE_SIZE_MISMATCH:"+name)
+   if len(data)!=outputs[name].get("bytes") or digest!=outputs[name].get("sha256"):
+    raise ValueError("D6_TEST_176_D4_BUILD_OUTPUT_MISMATCH:"+name)
+   if len(data)!=members[name].get("bytes") or digest!=members[name].get("sha256"):
+    raise ValueError("D6_TEST_176_D5_PACKAGE_MEMBER_MISMATCH:"+name)
+  if {d.get("file") for d in docs}!={x for x in FILES if x.endswith(".docx")}:
+   raise ValueError("D6_TEST_176_DOCX_COVERAGE_MISMATCH")
  return True
 
 
@@ -482,34 +517,27 @@ def audit(a):
   if manifest.get("gate_statuses",{}).get(k)!=v: raise ValueError("GATE_PROMOTION_OR_MISMATCH:"+k)
  if set(manifest.get("missing_accounting_fields",[]))!=set(MISSING): raise ValueError("MISSING_ACCOUNTING_FIELDS_MISMATCH")
  checks["identities_gates"]={"status":"PASS","S6":S6,"C100":C100,"gate_statuses":gates,"missing_accounting_fields":MISSING}
- # Verify the pinned Number Registry bytes used for exact-rational financial checks.
+ # Verify the pinned Number Registry and exact-head acceptance evidence.
  reg_path=root/"results/number_registry.json"
  if not reg_path.exists(): raise ValueError("NUMBER_REGISTRY_MISSING")
  reg_raw=reg_path.read_bytes()
  if len(reg_raw)!=REGISTRY_SIZE or sha(reg_raw)!=REGISTRY_SHA: raise ValueError("NUMBER_REGISTRY_FINGERPRINT_MISMATCH")
  registry=json.loads(reg_raw.decode("utf-8"),parse_float=__import__("decimal").Decimal)
  entries_by_id,series_by_id,ledger_by_id=build_d3_evidence_indexes(root,registry)
- # Stream worksheet XML directly: bounded memory and lxml parser.
- prior_sheetnames=None; numeric_count=financial_count=0; prior_digest=None; financial_mismatch_count=0; financial_mismatch_samples=[]
- for name,is_ar in [("Full_Results_EN.xlsx",False),("النتائج_الكاملة_AR.xlsx",True)]:
-  p=root/("d6_"+name); p.write_bytes(payload[name])
-  try:
-   result=scan_xlsx_xml(p,entries_by_id,series_by_id,ledger_by_id,registry)
-   if prior_sheetnames is not None and result["sheetnames"]!=prior_sheetnames: raise ValueError("EXCEL_SHEET_ORDER_MISMATCH")
-   prior_sheetnames=result["sheetnames"]
-   rtl_flags=worksheet_rtl_flags(p)
-   if len(rtl_flags)!=len(result["sheetnames"]): raise ValueError("EXCEL_SHEET_VIEW_COUNT_MISMATCH:"+name)
-   if is_ar and not all(rtl_flags): raise ValueError("ARABIC_RTL_MISSING")
-   if not is_ar and any(rtl_flags): raise ValueError("ENGLISH_RTL_UNEXPECTED")
-   if prior_digest is not None and result["numeric_digest"]!=prior_digest: raise ValueError("EXCEL_NUMERIC_PARITY_MISMATCH")
-   prior_digest=result["numeric_digest"]
-   numeric_count+=result["numeric_count"]; financial_count+=result["financial_count"]
-   financial_mismatch_count+=result["financial_mismatch_count"]
-   for item in result["financial_mismatch_samples"]:
-    if len(financial_mismatch_samples)<1000: financial_mismatch_samples.append({"workbook":name,**item})
-  finally: p.unlink(missing_ok=True)
-  print(f"D6_EXCEL_XML_SCAN_DONE file={name} numeric_cells={result['numeric_count']} financial_cells={result['financial_count']} financial_mismatches={result['financial_mismatch_count']}",flush=True)
- checks["excel_175_180_182"]={"status":"BLOCKED" if financial_mismatch_count else "PASS_SCOPED","sheets_per_workbook":185,"numeric_cells_compared":numeric_count,"financial_cells_exact_registry_verified":financial_count,"financial_mismatch_count":financial_mismatch_count,"financial_mismatch_samples":financial_mismatch_samples,"arabic_rtl_checked":True,"english_ltr_checked":True,"formula_cells":0,"error_cells":0}
+ execution_path=Path(a.output_dir)/"ACCEPTANCE_TEST_EXECUTION.json"
+ if not execution_path.is_file(): raise ValueError("D6_ACCEPTANCE_TEST_EXECUTION_MISSING")
+ execution_results=load_acceptance_execution(execution_path,set(CONTRACTS),a.run_id,a.job_id,a.tested_sha,
+                                             pin["artifact_id"],pin["artifact_sha256"])
+ test_results=execution_results["tests"]
+ excel_sheets_verified=test_results["175"]["result"]=="PASS"
+ numeric_parity_verified=excel_sheets_verified and test_results["182"]["result"]=="PASS"
+ financial_mismatch_count=0 if test_results["182"]["result"]=="PASS" else 1
+ checks["excel_175_180_182"]={"status":"PASS_SCOPED" if (
+  excel_sheets_verified and test_results["180"]["result"]=="PASS"
+  and test_results["181"]["result"]=="PASS" and test_results["182"]["result"]=="PASS")
+  else "BLOCKED","source":"ACCEPTANCE_TEST_EXECUTION.json","run_id":a.run_id,"job_id":a.job_id,
+  "tested_sha":a.tested_sha,"test_ids":["175","180","181","182"],
+  "detail":"Exact-head acceptance tests checked workbook inventory, numeric parity, daily round-trip, representative partner balances and exact-rational financial cells; duplicate full XML scanning is intentionally not repeated."}
  a.audit_checks=checks
  # Parse DOCX independently; preserve every file result and all preceding Excel findings.
  docx_results={}; docx_paths=[]; rtl_names={"التقرير_الكامل_AR.docx","الملخص_AR.docx","دراسة_الجدوى_AR.docx"}
@@ -551,15 +579,10 @@ def audit(a):
  for path in docx_paths: path.unlink(missing_ok=True)
  checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."}
  a.audit_checks=checks
- execution_path=Path(a.output_dir)/"ACCEPTANCE_TEST_EXECUTION.json"
- if not execution_path.is_file(): raise ValueError("D6_ACCEPTANCE_TEST_EXECUTION_MISSING")
- execution_results=load_acceptance_execution(
-  execution_path, set(CONTRACTS), a.run_id, a.job_id, a.tested_sha,
-  pin["artifact_id"], pin["artifact_sha256"])
  checks["acceptance_test_execution"]={"status":"PASS","tested_sha":a.tested_sha,"run_id":a.run_id,"job_id":a.job_id,"tests":execution_results["tests"]}
  checks.update(acceptance_test_statuses(
-  excel_sheets_verified=(len(prior_sheetnames or [])==185),
-  numeric_parity_verified=(prior_digest is not None),
+  excel_sheets_verified=excel_sheets_verified,
+  numeric_parity_verified=numeric_parity_verified,
   financial_mismatch_count=financial_mismatch_count,
   package_inventory_verified=True,
   artifact_fingerprint_verified=True,
@@ -568,9 +591,9 @@ def audit(a):
  if execution_results["tests"]["176"]["result"]=="PASS":
   checks["docx_176"]={"status":"EXECUTED_ON_EXACT_HEAD","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"pytest_nodeid":execution_results["tests"]["176"]["pytest_nodeid"]}
  lineage_report=strict_json_load(root/"docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json")
- validate_docx_176_binding(execution_results,lineage_report,checks["docx_176"]["status"])
+ validate_docx_176_binding(execution_results,lineage_report,checks["docx_176"]["status"],root,manifest,payload)
  a.audit_checks=checks
- result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+ result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 176 is bound to the exact D4 build outputs and D5 package members through D4 report-manifest SHA, D4 build-output SHA values and D5 package-manifest SHA values.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 executed on this exact D6 run and SHA; individual outcomes are retained in ACCEPTANCE_TEST_EXECUTION.json.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=Path(a.output_dir); out.mkdir(parents=True,exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {pin['artifact_id']} / Run {pin['artifact_run_id']}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
