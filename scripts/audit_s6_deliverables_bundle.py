@@ -350,7 +350,7 @@ def summary_page_count_failures(page_counts, failures, summary_names):
  return result
 
 
-def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, financial_mismatch_count, package_inventory_verified, artifact_fingerprint_verified, run_id, job_id, tested_sha):
+def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, financial_mismatch_count, package_inventory_verified, artifact_fingerprint_verified, run_id, job_id, tested_sha, execution_results=None):
     """Report scoped execution separately from historical acceptance-test completion."""
     base={"run_id":run_id,"job_id":job_id,"tested_sha":tested_sha}
     out={}
@@ -364,6 +364,19 @@ def acceptance_test_statuses(*, excel_sheets_verified, numeric_parity_verified, 
         "detail":"Exact registry-value comparisons were performed for the financial cells resolved by the pinned Registry. Any mismatch blocks this scoped result; this is not a claim that the separate historical acceptance test was invoked."}
     out["test_186"]={**base,"status":"PASS_SCOPED" if package_inventory_verified and artifact_fingerprint_verified else "BLOCKED",
         "contract":CONTRACTS["186"],"detail":"D6 verified the exact outer GitHub Artifact fingerprint, inner package fingerprint, eight-member ZIP inventory, CRC/path safety, manifest member hashes, and SHA256SUMS coverage. This is scoped package evidence, not a claim that the separately numbered historical test suite was invoked."}
+    executed = (execution_results or {}).get("tests", {})
+    for tid in CONTRACTS:
+        record = executed.get(tid, {})
+        if (record.get("result") == "PASS"
+                and record.get("tested_sha") == tested_sha
+                and str(record.get("run_id")) == str(run_id)
+                and str(record.get("job_id")) == str(job_id)):
+            out["test_" + tid].update({
+                "status": "EXECUTED_ON_EXACT_HEAD",
+                "execution": "EXECUTED_ON_EXACT_HEAD",
+                "result": "PASS",
+                "pytest_nodeid": record.get("pytest_nodeid"),
+            })
     return out
 
 
@@ -481,13 +494,25 @@ def audit(a):
  for path in docx_paths: path.unlink(missing_ok=True)
  checks["docx_176"]={"status":"NOT_RUN","docx_files":len(docx_results),"blocked_files":docx_blocked,"detail":"Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."}
  a.audit_checks=checks
+ execution_path=Path(a.output_dir)/"ACCEPTANCE_TEST_EXECUTION.json"
+ if not execution_path.is_file(): raise ValueError("D6_ACCEPTANCE_TEST_EXECUTION_MISSING")
+ execution_results=json.loads(execution_path.read_text(encoding="utf-8"))
+ expected_test_ids=set(CONTRACTS)
+ if set(execution_results.get("tests",{}))!=expected_test_ids: raise ValueError("D6_ACCEPTANCE_TEST_ID_SET_MISMATCH")
+ for tid,record in execution_results["tests"].items():
+  if record.get("result")!="PASS" or record.get("tested_sha")!=a.tested_sha or str(record.get("run_id"))!=str(a.run_id) or str(record.get("job_id"))!=str(a.job_id):
+   raise ValueError("D6_ACCEPTANCE_TEST_NOT_PASS_ON_EXACT_HEAD:"+tid)
+ checks["acceptance_test_execution"]={"status":"PASS","tested_sha":a.tested_sha,"run_id":a.run_id,"job_id":a.job_id,"tests":execution_results["tests"]}
  checks.update(acceptance_test_statuses(
   excel_sheets_verified=(len(prior_sheetnames or [])==185),
   numeric_parity_verified=(prior_digest is not None),
   financial_mismatch_count=financial_mismatch_count,
   package_inventory_verified=True,
   artifact_fingerprint_verified=True,
-  run_id=a.run_id,job_id=a.job_id,tested_sha=a.tested_sha))
+  run_id=a.run_id,job_id=a.job_id,tested_sha=a.tested_sha,
+  execution_results=execution_results))
+ if execution_results["tests"]["176"]["result"]=="PASS":
+  checks["docx_176"]={"status":"EXECUTED_ON_EXACT_HEAD","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"pytest_nodeid":execution_results["tests"]["176"]["pytest_nodeid"]}
  a.audit_checks=checks
  result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=Path(a.output_dir); out.mkdir(parents=True,exist_ok=True)

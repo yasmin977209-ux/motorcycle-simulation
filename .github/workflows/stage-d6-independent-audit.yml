@@ -68,6 +68,45 @@ jobs:
           curl --fail --location --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d5-artifact.zip
           test "$(stat -c %s /tmp/d5-artifact.zip)" = "$expected_size"
           echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
+      - name: Execute normative acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 on exact HEAD
+        env:
+          D5_ARTIFACT_ZIP: /tmp/d5-artifact.zip
+          D6_RUN_ID: ${{ github.run_id }}
+          D6_JOB_ID: ${{ env.D6_JOB_ID }}
+          TESTED_SHA: ${{ github.sha }}
+          D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$D6_OUT"
+          python -m pytest -q -rs tests/test_176_numeric_token_lineage.py tests/test_d6_normative_acceptance_ids.py --junitxml=/tmp/d6-acceptance-tests.xml
+          python - <<'PY'
+          import json, os, pathlib, re, xml.etree.ElementTree as ET
+          root=ET.parse("/tmp/d6-acceptance-tests.xml").getroot()
+          expected={"175","176","179","180","181","182","183","186"}
+          records={}
+          for case in root.findall(".//testcase"):
+              name=case.attrib.get("name","")
+              match=re.search(r"test_(175|176|179|180|181|182|183|186)_",name)
+              if not match: continue
+              tid=match.group(1)
+              failed=bool(case.findall("failure") or case.findall("error") or case.findall("skipped"))
+              records[tid]={
+                  "result":"FAIL" if failed else "PASS",
+                  "pytest_nodeid":case.attrib.get("classname","")+"::"+name,
+                  "duration_seconds":float(case.attrib.get("time","0")),
+                  "run_id":int(os.environ["D6_RUN_ID"]),
+                  "job_id":int(os.environ["D6_JOB_ID"]),
+                  "tested_sha":os.environ["TESTED_SHA"],
+              }
+          if set(records)!=expected:
+              raise SystemExit("D6_ACCEPTANCE_TEST_ID_SET_MISMATCH:"+repr(sorted(set(records)^expected)))
+          failed=[k for k,v in records.items() if v["result"]!="PASS"]
+          if failed: raise SystemExit("D6_ACCEPTANCE_TEST_FAILURES:"+repr(failed))
+          out={"schema_version":"d6-acceptance-test-execution-v1","run_id":int(os.environ["D6_RUN_ID"]),"job_id":int(os.environ["D6_JOB_ID"]),"tested_sha":os.environ["TESTED_SHA"],"tests":records}
+          path=pathlib.Path(os.environ["D6_OUT"])/"ACCEPTANCE_TEST_EXECUTION.json"
+          path.write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          print(json.dumps({"acceptance_tests":"PASS","test_ids":sorted(records),"run_id":out["run_id"],"job_id":out["job_id"],"tested_sha":out["tested_sha"]}))
+          PY
       - name: Independent post-write audit
         env:
           AUDIT_RUN_ID: ${{ github.run_id }}
@@ -115,7 +154,7 @@ jobs:
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
+          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$D6_OUT/ACCEPTANCE_TEST_EXECUTION.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
           git commit -m "docs(d6): record independent post-write audit"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final HEAD validation
