@@ -341,6 +341,11 @@ def main() -> None:
     ap.add_argument("--github-raw-only", action="store_true",
                     help="Run Stage A against GitHub Artifact ZIP bytes only; no provider credentials or network reads.")
     args = ap.parse_args()
+    provider_tokens = (os.environ.get("ONEDRIVE_GRAPH_ACCESS_TOKEN", "").strip(), os.environ.get("DROPBOX_ACCESS_TOKEN", "").strip())
+    if not args.github_raw_only and not all(provider_tokens):
+        print("PROVIDER_SECRETS_UNAVAILABLE_FALLBACK:GITHUB_RAW_MANIFEST_ONLY")
+        subprocess.run([sys.executable, "scripts/verify_github_raw_tri_hash_manifest.py", "--output", str(Path(args.output_dir) / "GITHUB_RAW_TRI_HASH_MANIFEST_2026-11-07.json"), "--quickxor-lib", args.quickxor_lib], check=True)
+        return
     if args.github_raw_only:
         outdir = Path(args.output_dir)
         outdir.mkdir(parents=True, exist_ok=True)

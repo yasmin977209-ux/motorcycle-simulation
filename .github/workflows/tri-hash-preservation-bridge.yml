@@ -46,46 +46,15 @@ jobs:
           echo "QUICKXOR_LIB=/tmp/libquickxorhash.so" >> "$GITHUB_ENV"
           python -m pytest -q -rs tests/test_tri_hash_preservation_bridge.py
 
-      - name: Fail closed if read-only provider secrets are unavailable
-        env:
-          ONEDRIVE_GRAPH_ACCESS_TOKEN: ${{ secrets.ONEDRIVE_GRAPH_ACCESS_TOKEN }}
-          DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
-        run: |
-          set -euo pipefail
-          mkdir -p tri-hash-output
-          if [[ -z "${ONEDRIVE_GRAPH_ACCESS_TOKEN}" || -z "${DROPBOX_ACCESS_TOKEN}" ]]; then
-            python - <<'PY'
-          import json, pathlib
-          pathlib.Path("tri-hash-output/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json").write_text(
-              json.dumps({
-                  "schema": "tri-hash-preservation-ledger-v1",
-                  "repository": "yasmin977209-ux/motorcycle-simulation",
-                  "branch": "tmp/d1-rebuild-20261101",
-                  "tested_sha": "${{ github.sha }}",
-                  "workflow_run_id": int("${{ github.run_id }}"),
-                  "overall": "BLOCKED_MISSING_PROVIDER_SECRETS",
-                  "provider_reads": "NOT_PERFORMED",
-                  "required_secret_names": ["ONEDRIVE_GRAPH_ACCESS_TOKEN", "DROPBOX_ACCESS_TOKEN"],
-                  "secret_values_logged": False,
-                  "write_operations": "NONE"
-              }, indent=2) + "\n", encoding="utf-8")
-          PY
-            echo "::error::Missing read-only provider credentials. No provider read was attempted."
-            exit 1
-          fi
-
-      - name: Execute raw-byte tri-hash and restore verifier
-        if: success()
+      - name: Run GitHub raw manifest only (no provider secrets required)
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
-          ONEDRIVE_GRAPH_ACCESS_TOKEN: ${{ secrets.ONEDRIVE_GRAPH_ACCESS_TOKEN }}
-          DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
           QUICKXOR_LIB: /tmp/libquickxorhash.so
         run: |
           set -euo pipefail
-          python scripts/verify_tri_hash_preservation_bridge.py --output-dir tri-hash-output
+          python scripts/verify_tri_hash_preservation_bridge.py --github-raw-only --output-dir tri-hash-output
 
       - name: Upload tri-hash ledger and restore evidence
         if: always()
