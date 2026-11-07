@@ -77,10 +77,10 @@ def metadata_hash_audit(root):
         except Exception: pass
     actual=[{"path":str(p.relative_to(root)),"bytes":p.stat().st_size,"sha256":sha_file(p)} for p in metadata_files]
     if not expected: return {"status":"MISSING_EVIDENCE","expected_sha256_values":[],"metadata_files":actual}
-    matched=[]
-    for e in expected:
-        matched.extend([a for a in actual if a["sha256"]==e])
-    return {"status":"PASS" if matched else "FAIL","expected_sha256_values":sorted(set(expected)),"metadata_files":actual,"matching_files":matched}
+    actual_hashes={a["sha256"] for a in actual}
+    missing_expected=sorted(set(expected)-actual_hashes)
+    matched=[a for a in actual if a["sha256"] in set(expected)]
+    return {"status":"PASS" if not missing_expected else "FAIL","expected_sha256_values":sorted(set(expected)),"missing_expected_sha256_values":missing_expected,"metadata_files":actual,"matching_files":matched}
 
 def missing_required_accounting_fields(columns):
     present={str(column.get("name","")).casefold() for column in columns}

@@ -55,7 +55,6 @@ jobs:
           print("PRESERVATION_ARTIFACT_MATRIX_COUNT=27")
           PY
           python -m unittest discover -s tests -p "test_audit_preservation_artifact.py"
-          PY
 
   audit:
     name: Raw SHA, ZIP restore and Parquet ${{ matrix.id }}
