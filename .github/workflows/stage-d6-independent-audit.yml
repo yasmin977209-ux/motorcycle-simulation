@@ -167,7 +167,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
           D6_JOB_ID: ${{ env.D6_JOB_ID }}
         run: |
-          python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-package.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME" --job-id "$D6_JOB_ID" --output-dir "$D6_OUT"
+          python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-artifact.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME" --job-id "$D6_JOB_ID" --output-dir "$D6_OUT"
       - name: Enforce fail-closed D6 audit disposition
         env:
           D6_OUT: /tmp/D6_AUDIT_RUN_${{ github.run_id }}
