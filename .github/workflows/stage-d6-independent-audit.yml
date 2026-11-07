@@ -7,6 +7,7 @@ on:
     paths:
       - 'docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json'
       - 'scripts/audit_s6_deliverables_bundle.py'
+      - 'tests/test_d6_audit.py'
       - '.github/workflows/stage-d6-independent-audit.yml'
 permissions:
   contents: write
