@@ -92,22 +92,36 @@ jobs:
           curl --fail --location --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$api/zip" -o /tmp/d5-artifact.zip
           test "$(stat -c %s /tmp/d5-artifact.zip)" = "$expected_size"
           python - <<'PY'
-          import zipfile,hashlib,pathlib
-          p=pathlib.Path("/tmp/d5-artifact.zip")
-          with zipfile.ZipFile(p) as z:
-              assert z.testzip() is None
+          import hashlib,json,pathlib,zipfile
+          outer=pathlib.Path("/tmp/d5-artifact.zip")
+          pre=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json").read_text())
+          with zipfile.ZipFile(outer) as z:
+              assert z.testzip() is None, "D5_OUTER_ZIP_CRC_FAILURE"
               names=[n for n in z.namelist() if not n.endswith("/")]
-              assert len(names)==8, f"D5_MEMBER_COUNT_MISMATCH:{len(names)}:{names}"
-              print("D5_PACKAGE_EIGHT_MEMBERS_PASS",names)
-          h=hashlib.sha256()
-          with p.open("rb") as f:
-              for block in iter(lambda:f.read(8*1024*1024),b""): h.update(block)
-          print("D5_PACKAGE_SHA256",h.hexdigest())
+              expected={"Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip","manifest.json","SHA256SUMS.txt"}
+              assert set(names)==expected, f"D5_OUTER_MEMBER_SET_MISMATCH:{names}"
+              inner_name=pre["package"]["path"].split("/")[-1]
+              inner=z.read(inner_name)
+              manifest=z.read("manifest.json")
+              sums=z.read("SHA256SUMS.txt")
+          pkg=pre["package"]
+          assert len(inner)==int(pkg["bytes"]), ("D5_INNER_PACKAGE_SIZE_MISMATCH",len(inner),pkg["bytes"])
+          assert hashlib.sha256(inner).hexdigest()==pkg["sha256"], "D5_INNER_PACKAGE_SHA256_MISMATCH"
+          assert hashlib.sha256(manifest).hexdigest()==pre["manifest"]["sha256"], "D5_MANIFEST_SHA256_MISMATCH"
+          assert hashlib.sha256(sums).hexdigest()==pre["sha256sums"]["sha256"], "D5_SHA256SUMS_SHA256_MISMATCH"
+          inner_path=pathlib.Path("/tmp/d5-package.zip")
+          inner_path.write_bytes(inner)
+          with zipfile.ZipFile(inner_path) as z:
+              assert z.testzip() is None, "D5_INNER_ZIP_CRC_FAILURE"
+              members=[n for n in z.namelist() if not n.endswith("/")]
+              assert len(members)==int(pkg["members"])==8, f"D5_PACKAGE_EIGHT_MEMBERS_MISMATCH:{len(members)}:{members}"
+              print("D5_PACKAGE_EIGHT_MEMBERS_PASS",members)
+          print(json.dumps({"outer_bytes":outer.stat().st_size,"outer_sha256":hashlib.sha256(outer.read_bytes()).hexdigest(),"inner_bytes":len(inner),"inner_sha256":pkg["sha256"],"inner_members":members},sort_keys=True))
           PY
           echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
       - name: Execute normative acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 on exact HEAD
         env:
-          D5_ARTIFACT_ZIP: /tmp/d5-artifact.zip
+          D5_ARTIFACT_ZIP: /tmp/d5-package.zip
           D6_RUN_ID: ${{ github.run_id }}
           D6_JOB_ID: ${{ env.D6_JOB_ID }}
           TESTED_SHA: ${{ github.sha }}
@@ -153,7 +167,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
           D6_JOB_ID: ${{ env.D6_JOB_ID }}
         run: |
-          python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-artifact.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME" --job-id "$D6_JOB_ID" --output-dir "$D6_OUT"
+          python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-package.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME" --job-id "$D6_JOB_ID" --output-dir "$D6_OUT"
       - name: Enforce fail-closed D6 audit disposition
         env:
           D6_OUT: /tmp/D6_AUDIT_RUN_${{ github.run_id }}
