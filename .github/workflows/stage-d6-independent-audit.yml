@@ -171,7 +171,7 @@ jobs:
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$D6_OUT/ACCEPTANCE_TEST_EXECUTION.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md
+          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$D6_OUT/ACCEPTANCE_TEST_EXECUTION.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md
           git commit -m "docs(d6): record independent post-write audit"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final HEAD validation
