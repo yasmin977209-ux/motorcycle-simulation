@@ -8,6 +8,8 @@ on:
       - scripts/verify_tri_hash_preservation_bridge.py
       - scripts/quickxorhash.c
       - tests/test_tri_hash_preservation_bridge.py
+      - scripts/compute_21_multipart_reference_hashes.py
+      - docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json
   workflow_dispatch:
 
 permissions:
@@ -56,6 +58,15 @@ jobs:
           set -euo pipefail
           python scripts/verify_tri_hash_preservation_bridge.py --github-raw-only --output-dir tri-hash-output
 
+      - name: Compute 21 reference fingerprints from exact historical GitHub Artifact ZIPs
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+          GITHUB_SHA: \${{ github.sha }}
+          GITHUB_RUN_ID: \${{ github.run_id }}
+          QUICKXOR_LIB: /tmp/libquickxorhash.so
+        run: |
+          set -euo pipefail
+          python scripts/compute_21_multipart_reference_hashes.py --ledger docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json --output tri-hash-output/21_REFERENCE_HASHES_2026-11-07.json
       - name: Upload tri-hash ledger and restore evidence
         if: always()
         uses: actions/upload-artifact@v4

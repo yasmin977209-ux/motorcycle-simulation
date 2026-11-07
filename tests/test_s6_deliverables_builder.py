@@ -185,3 +185,26 @@ def test_manifest_resolver_rejects_root_hash_mismatch(tmp_path):
         assert "ROOT_MANIFEST_SHA256_MISMATCH" in resolved["reasons"]
     finally:
         archive.close()
+
+
+def test_D1_DOUBLE_REBUILD_DETERMINISM(tmp_path):
+    """Build the pinned shared model twice in isolated output roots and compare all bytes."""
+    import json
+    if not all(os.path.isfile(p) for p in P.values()):
+        pytest.skip("pinned artifact ZIPs are supplied only to the D1 integration validation")
+    run_a = tmp_path / "run_a"
+    run_b = tmp_path / "run_b"
+    run_a.mkdir()
+    run_b.mkdir()
+    model_a = build_shared_model(P)
+    model_b = build_shared_model(P)
+    payload_a = json.dumps(to_jsonable(model_a), ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n"
+    payload_b = json.dumps(to_jsonable(model_b), ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n"
+    (run_a / "shared_model.json").write_bytes(payload_a)
+    (run_b / "shared_model.json").write_bytes(payload_b)
+    digest_a = hashlib.sha256((run_a / "shared_model.json").read_bytes()).hexdigest()
+    digest_b = hashlib.sha256((run_b / "shared_model.json").read_bytes()).hexdigest()
+    assert to_jsonable(model_a) == to_jsonable(model_b)
+    assert digest_a == digest_b
+    assert (run_a / "shared_model.json").read_bytes() == (run_b / "shared_model.json").read_bytes()
+    print(f"D1_DOUBLE_REBUILD_DETERMINISM=PASS sha256={digest_a} bytes={len(payload_a)}")

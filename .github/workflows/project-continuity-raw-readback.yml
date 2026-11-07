@@ -31,6 +31,8 @@ on:
       - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md
       - docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md
       - scripts/verify_tri_hash_preservation_bridge.py
+      - scripts/compute_21_multipart_reference_hashes.py
+      - scripts/validate_rev7_semantics.py
       - scripts/quickxorhash.c
       - tests/test_tri_hash_preservation_bridge.py
       - .github/workflows/tri-hash-preservation-verification.yml
@@ -67,6 +69,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check requests==2.32.3
+          python scripts/validate_rev7_semantics.py --library docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md --closure docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.json
           python - <<'PY'
           import copy, hashlib, json, os, pathlib, re, requests
           repo=os.environ["GITHUB_REPOSITORY"]
