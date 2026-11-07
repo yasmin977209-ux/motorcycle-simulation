@@ -67,15 +67,15 @@ def validate_docx_176_binding(execution, lineage_report, docx_176_status,
  if counts!=(241,64,177,0): raise ValueError("D6_TEST_176_LINEAGE_COUNTS_MISMATCH")
  if counts[0]!=counts[1]+counts[2]+counts[3] or lineage_report.get("identity_equation") is not True:
   raise ValueError("D6_TEST_176_LINEAGE_EQUATION_MISMATCH")
+ if execution.get("tests",{}).get("176",{}).get("result")!="PASS":
+  raise ValueError("D6_TEST_176_EXECUTION_NOT_PASS")
+ if docx_176_status!="EXECUTED_ON_EXACT_HEAD": raise ValueError("D6_TEST_176_REPORT_CONFLICT")
  docs=lineage_report.get("documents",[])
  if (sum(d.get("total_occurrences",0) for d in docs),
      sum(d.get("resolved_occurrences",0) for d in docs),
      sum(d.get("explicitly_classified_occurrences",0) for d in docs),
      sum(d.get("unresolved_occurrences",0) for d in docs))!=counts:
   raise ValueError("D6_TEST_176_DOCUMENT_TOTALS_MISMATCH")
- if execution.get("tests",{}).get("176",{}).get("result")!="PASS":
-  raise ValueError("D6_TEST_176_EXECUTION_NOT_PASS")
- if docx_176_status!="EXECUTED_ON_EXACT_HEAD": raise ValueError("D6_TEST_176_REPORT_CONFLICT")
  if root is not None or d5_manifest is not None or d5_payload is not None:
   if root is None or d5_manifest is None or d5_payload is None:
    raise ValueError("D6_TEST_176_BINDING_INPUTS_INCOMPLETE")
