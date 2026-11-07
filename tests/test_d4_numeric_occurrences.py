@@ -15,3 +15,18 @@ def test_numeric_token_classification_covers_normative_categories():
     assert classify("4","معادلة تعتمد على 4") == "Formula constant"
     assert classify("42","Artifact ID 42") == "Identifier"
     assert classify("9","unlabelled token 9") == "Unresolved"
+
+
+def test_parenthetical_enumeration_is_classified_as_section_item():
+    from scripts.audit_d4_numeric_occurrences import classify
+    assert classify("3", "الفقرة: (3) لا تمويل خارجي") == "Section/Item number"
+
+
+def test_arabic_clause_ranges_are_classified_as_reference_constants():
+    from scripts.audit_d4_numeric_occurrences import classify
+    assert classify("17.1", "بنوداً كثيرة (17.1–17.2)") == "Reference constant"
+
+
+def test_artifact_run_numeric_pair_is_classified_as_identifier():
+    from scripts.audit_d4_numeric_occurrences import classify
+    assert classify("12852969854", "12852969854/40773412377") == "Identifier"

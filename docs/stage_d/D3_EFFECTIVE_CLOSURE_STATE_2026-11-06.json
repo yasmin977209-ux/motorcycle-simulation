@@ -818,10 +818,17 @@
       "previous_value": "D6 auditor read the historical 2026-11-05 preflight pin while the current D6 trigger is the 2026-11-07 preflight; execution JSON was not included in raw readback/artifact",
       "classification": "D6_WORKFLOW_LINEAGE_CORRECTION",
       "correction": "Prefer the current 2026-11-07 D5 preflight pin (fall back to the 2026-11-05 pin only for historical compatibility), include ACCEPTANCE_TEST_EXECUTION.json in the D6 commit, raw readback and uploaded evidence artifact, and preserve the exact run/job/tested-SHA linkage."
+    },
+    {
+      "date": "2026-11-07",
+      "field": "D4 unresolved numeric token classification",
+      "previous_value": "Run 42333230598: 241 occurrences / 64 resolved / 62 explicitly classified / 115 unresolved",
+      "classification": "D4_AUDIT_DIAGNOSTIC_ROOT_CAUSE",
+      "correction": "All 115 remaining unresolved tokens were traced to three patterns: artifact/run numeric pairs (81), Arabic normative clause range 17.1–17.2, and parenthetical enumerated list items. Classify numeric artifact/run pairs as Identifier, Arabic 'بنود' references as Reference constant, and parenthetical item numbers as Section/Item number. Unit tests added for all three patterns."
     }
   ],
   "decision_execution_base_head": "71a0e354e9ecccd2b10ac9509af426be20fdcef0",
-  "updated_on_head": "62bebaca859e1c7d62e2ca1c418a0d119f42f0da",
+  "updated_on_head": "0d2644a4ba7e7acb7dec5ded39b89bd08f836b20",
   "tri_hash_bridge_2026_11_07": {
     "stage_a": {
       "run_id": 42330906466,

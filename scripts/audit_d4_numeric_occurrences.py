@@ -11,7 +11,7 @@ REGISTRY_ID=re.compile(r"\bNR-[A-Za-z0-9_-]{8,}\b")
 DATE=re.compile(r"[0-9٠-٩۰-۹]{1,4}[-/][0-9٠-٩۰-۹]{1,2}[-/][0-9٠-٩۰-۹]{1,4}")
 FINANCIAL=re.compile(r"(?i)(£|\$|€|ريال|جنيه|دولار|رأس المال|رأس مال|الإيراد|الإيرادات|الأصول|الالتزامات|الحقوق|الربح|الخسارة|equity|capital|revenue|asset|liabilit|profit|loss|cash|balance)")
 STATISTICAL=re.compile(r"(?i)(%|٪|نسبة|احتمال|متوسط|وسيط|انحراف|مئين|كمية|تجربة|تجارب|scenario|trial|mean|median|percent|probability|rate|sample|n\s*=|P10|P25|P50|P75|P90|quantile)")
-REFERENCE=re.compile(r"(?i)(§|المادة|الفقرة|البند|مرجع|reference|section|clause|v2\.)")
+REFERENCE=re.compile(r"(?i)(§|المادة|الفقرة|البند|بنود|مرجع|reference|section|clause|v2\.)")
 FORMULA=re.compile(r"(?i)(formula|معادلة|equation|calculated|يحسب|ناتج المعادلة)")
 QUANTITY=re.compile(r"(?i)(كمية|عدد|صفحة|صفحات|يوم|أيام|ساعة|ساعات|شهر|أشهر|سنة|سنوات|kg|km|days?|hours?|months?|years?|pages?|units?)")
 IDENTIFIER=re.compile(r"(?i)(id\b|identifier|معرّف|معرف|كود|code|run(?:\s*id)?|artifact(?:\s*id)?|job(?:\s*id)?|sha(?:-256)?|commit|version|scenario|trial|cohort|test\s*#?\s*\d+|T\d+_|D\d+|C\d{3}_G\d{3}|NR-)")
@@ -19,8 +19,10 @@ PAGINATION=re.compile(r"(?i)(\bPAGE\b|\bNUMPAGES\b|page number|رقم الصفح
 
 def classify(token:str, context:str, field_context:str="")->str:
     if PAGINATION.search(field_context) or PAGINATION.search(context): return "Pagination"
+    if re.fullmatch(r"\\s*[0-9]{8,}/[0-9]{8,}\\s*",context.strip()): return "Identifier"
     if REFERENCE.search(context): return "Reference constant"
     if DATE.search(context) or re.search(r"(?i)(تاريخ|date|time|وقت|اليوم)",context): return "Date/Time"
+    if re.search(r"[\\(\\[]\\s*"+re.escape(token)+r"\\s*[\\)\\]]",context): return "Section/Item number"
     if re.match(r"^\s*[0-9٠-٩۰-۹]+(?:[.)،-])?\s+",context): return "Section/Item number"
     if FINANCIAL.search(context): return "Financial"
     if STATISTICAL.search(context): return "Statistical"
