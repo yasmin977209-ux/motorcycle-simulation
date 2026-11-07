@@ -357,10 +357,37 @@ def test_test176_rejects_conflicting_lineage_and_report_disposition():
 def test_audit_disposition_gate_rejects_blocked_or_fail_and_never_promotes_acceptance():
     from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
     for status in ("BLOCKED","FAIL"):
+        report={"status":status,"d6_disposition":status,"final_accepted":"NOT_DECLARED",
+                "Workflow_Status":"FAIL","Audit_Status":status,"Stage_Disposition":status,"Final_Acceptance":"NOT_ACCEPTED"}
         with pytest.raises(ValueError,match="D6_AUDIT_NOT_CLOSABLE"):
-            validate_d6_audit_disposition({"status":status,"d6_disposition":status,"final_accepted":"NOT_DECLARED"})
-    with pytest.raises(ValueError,match="D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNDECLARED"):
-        validate_d6_audit_disposition({"status":"PASS_SCOPED_WITH_LIMITATIONS","d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"FINAL_ACCEPTED"})
+            validate_d6_audit_disposition(report)
+    promoted={"status":"PASS_SCOPED_WITH_LIMITATIONS","d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS",
+              "final_accepted":"FINAL_ACCEPTED","Workflow_Status":"SUCCESS","Audit_Status":"PASS_SCOPED_WITH_LIMITATIONS",
+              "Stage_Disposition":"PASS_SCOPED_WITH_LIMITATIONS","Final_Acceptance":"FINAL_ACCEPTED"}
+    with pytest.raises(ValueError,match="D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNACCEPTED"):
+        validate_d6_audit_disposition(promoted)
+
+
+def test_audit_disposition_gate_rejects_blocked_with_workflow_success():
+    from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
+    report={"status":"BLOCKED","d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED",
+            "Workflow_Status":"SUCCESS","Audit_Status":"BLOCKED","Stage_Disposition":"BLOCKED","Final_Acceptance":"NOT_ACCEPTED"}
+    with pytest.raises(ValueError,match="D6_WORKFLOW_STATUS_CONFLICT"):
+        validate_d6_audit_disposition(report)
+
+
+def test_audit_disposition_gate_requires_all_four_independent_status_fields():
+    from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
+    with pytest.raises(ValueError,match="D6_INDEPENDENT_STATUS_FIELDS_MISSING"):
+        validate_d6_audit_disposition({"status":"PASS_SCOPED","d6_disposition":"PASS_SCOPED","final_accepted":"NOT_DECLARED"})
+
+
+def test_audit_disposition_gate_allows_scoped_success_without_final_acceptance():
+    from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
+    report={"status":"PASS_SCOPED_WITH_LIMITATIONS","d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS",
+            "final_accepted":"NOT_DECLARED","Workflow_Status":"SUCCESS","Audit_Status":"PASS_SCOPED_WITH_LIMITATIONS",
+            "Stage_Disposition":"PASS_SCOPED_WITH_LIMITATIONS","Final_Acceptance":"NOT_ACCEPTED"}
+    assert validate_d6_audit_disposition(report)
 
 def test_test176_binding_verifies_exact_d4_outputs_and_d5_members(tmp_path):
     from scripts.audit_s6_deliverables_bundle import validate_docx_176_binding, sha

@@ -137,7 +137,7 @@ jobs:
           AUDIT_RUN_ID: ${{ github.run_id }}
           TESTED_SHA: ${{ github.sha }}
           D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
-          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-07_RUN_${{ github.run_id }}.md
         run: |
           python - <<'PY'
           import json,pathlib,os
@@ -159,26 +159,26 @@ jobs:
           session_path=pathlib.Path(os.environ["SESSION_PATH"])
           session_path.write_text("\n".join(lines)+"\n",encoding="utf-8")
           entry="\n\n## D5 publication record correction — 2026-11-05 (append-only)\n\n"+"- D5 Run 41928234377 tested source SHA: baf696af1e951cbf4a79e8a9e009c60c6b053b2d. The workflow committed publication evidence as 4c6a84b10ac78b6067175d0eafa149f3f12dbc2a; the earlier `publication_commit_sha` field and prose entry naming baf696... identify the triggering/tested SHA, not the documentation commit.\n"+"- D5 matrix path is dated 2026-11-05, but its internal title says 2026-11-03; this is a stale title only and does not change package bytes or test results.\n"+"- D5 exact-final-head Raw readback was performed at 4c6a84b10ac78b6067175d0eafa149f3f12dbc2a.\n\n## D6 independent post-write audit — 2026-11-05 (append-only)\n\n"+f"- Run {os.environ['AUDIT_RUN_ID']}; tested source SHA {os.environ['TESTED_SHA']}; D5 Artifact {r['source_d5_artifact_id']} from Run {r['source_d5_run_id']}.\n"+f"- Disposition {r['status']}; classification T2_INTERIM / NOT_FINAL_BLOCKED.\n"+f"- See {os.environ['D6_OUT']}/FINAL_AUDIT.md and FINAL_AUDIT.json for check-level results and limitations.\n"+"- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.\n"
-          for name in ("docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"):
+          for name in ("docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md"):
             p=pathlib.Path(name); p.write_text(p.read_text(encoding="utf-8")+entry,encoding="utf-8")
           PY
       - name: Commit D6 audit reports and append-only handoff
         env:
           D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
-          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-07_RUN_${{ github.run_id }}.md
         run: |
           set -euo pipefail
           test "$(git ls-remote origin refs/heads/tmp/d1-rebuild-20261101 | cut -f1)" = "${{ github.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$D6_OUT/ACCEPTANCE_TEST_EXECUTION.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md
+          git add "$D6_OUT/FINAL_AUDIT.md" "$D6_OUT/FINAL_AUDIT.json" "$D6_OUT/ACCEPTANCE_TEST_EXECUTION.json" "$SESSION_PATH" docs/PROJECT_CONTINUITY.md docs/PROJECT_HANDOFF.md docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md
           git commit -m "docs(d6): record independent post-write audit"
           git push origin HEAD:tmp/d1-rebuild-20261101
       - name: Remote Raw readback and exact final HEAD validation
         env:
           GH_TOKEN: ${{ github.token }}
           D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
-          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
+          SESSION_PATH: docs/stage_d/D6_SESSION_RECORD_2026-11-07_RUN_${{ github.run_id }}.md
         run: |
           set -euo pipefail
           head="$(git rev-parse HEAD)"
@@ -190,7 +190,7 @@ jobs:
           session=pathlib.Path(os.environ["SESSION_PATH"])
           if not session.is_file(): raise SystemExit("D6_EXACT_SESSION_RECORD_MISSING:"+str(session))
           out=os.environ["D6_OUT"]
-          paths=[f"{out}/FINAL_AUDIT.md",f"{out}/FINAL_AUDIT.json",f"{out}/ACCEPTANCE_TEST_EXECUTION.json",str(session),"docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"]
+          paths=[f"{out}/FINAL_AUDIT.md",f"{out}/FINAL_AUDIT.json",f"{out}/ACCEPTANCE_TEST_EXECUTION.json",str(session),"docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md","docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md"]
           for path in paths:
             local=pathlib.Path(path).read_bytes()
             url=f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path,safe='/')}"
@@ -204,11 +204,11 @@ jobs:
       - name: Publish D6 audit evidence Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Motorcycle_Simulation_D6_Post_Write_Audit_2026-11-05
+          name: Motorcycle_Simulation_D6_Post_Write_Audit_2026-11-07
           path: |
             docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/FINAL_AUDIT.md
             docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/FINAL_AUDIT.json
             docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/ACCEPTANCE_TEST_EXECUTION.json
-            docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
+            docs/stage_d/D6_SESSION_RECORD_2026-11-07_RUN_${{ github.run_id }}.md
           if-no-files-found: error
           retention-days: 30

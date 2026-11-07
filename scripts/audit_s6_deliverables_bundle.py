@@ -109,6 +109,17 @@ def validate_docx_176_binding(execution, lineage_report, docx_176_status,
 
 def validate_d6_audit_disposition(report):
  status=report.get("status"); disposition=report.get("d6_disposition")
+ workflow=report.get("Workflow_Status"); audit=report.get("Audit_Status")
+ stage=report.get("Stage_Disposition"); final=report.get("Final_Acceptance")
+ if any(x is None for x in (workflow,audit,stage,final)):
+  raise ValueError("D6_INDEPENDENT_STATUS_FIELDS_MISSING")
+ if audit!=status or stage!=disposition:
+  raise ValueError("D6_INDEPENDENT_STATUS_FIELDS_CONFLICT")
+ expected_workflow="FAIL" if audit in ("BLOCKED","FAIL") or stage in ("BLOCKED","FAIL") else "SUCCESS"
+ if workflow!=expected_workflow:
+  raise ValueError("D6_WORKFLOW_STATUS_CONFLICT:"+str(workflow)+":"+expected_workflow)
+ if final!="NOT_ACCEPTED":
+  raise ValueError("D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNACCEPTED")
  if status in ("BLOCKED","FAIL") or disposition in ("BLOCKED","FAIL"):
   raise ValueError("D6_AUDIT_NOT_CLOSABLE:"+str(status)+":"+str(disposition))
  if report.get("final_accepted")!="NOT_DECLARED":
@@ -594,9 +605,13 @@ def audit(a):
  validate_docx_176_binding(execution_results,lineage_report,checks["docx_176"]["status"],root,manifest,payload)
  a.audit_checks=checks
  result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Test 176 is bound to the exact D4 build outputs and D5 package members through D4 report-manifest SHA, D4 build-output SHA values and D5 package-manifest SHA values.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 executed on this exact D6 run and SHA; individual outcomes are retained in ACCEPTANCE_TEST_EXECUTION.json.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+ result["Workflow_Status"]="FAIL" if result["status"] in ("BLOCKED","FAIL") else "SUCCESS"
+ result["Audit_Status"]=result["status"]
+ result["Stage_Disposition"]=result["d6_disposition"]
+ result["Final_Acceptance"]="NOT_ACCEPTED"
  out=Path(a.output_dir); out.mkdir(parents=True,exist_ok=True)
  (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
- lines=["# D6 Independent Post-Write Audit","",f"- Disposition: {result['status']}",f"- D5 Artifact: {pin['artifact_id']} / Run {pin['artifact_run_id']}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
+ lines=["# D6 Independent Post-Write Audit","",f"- Workflow_Status: {result['Workflow_Status']}",f"- Audit_Status: {result['Audit_Status']}",f"- Stage_Disposition: {result['Stage_Disposition']}",f"- Final_Acceptance: {result['Final_Acceptance']}",f"- Disposition: {result['status']}",f"- D5 Artifact: {pin['artifact_id']} / Run {pin['artifact_run_id']}",f"- D6 Run: {a.run_id}",f"- Tested SHA: {a.tested_sha}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","| Check | Status | Detail |","|---|---|---|"]
  for k,v in checks.items(): lines.append(f"| {k} | {v['status']} | {v.get('detail',v.get('contract',''))} |")
  lines+=["","## Preserved gate states",""]+[f"- {k}: {v}" for k,v in gates.items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED, or release authorization."]
  (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
@@ -611,8 +626,9 @@ def main():
   checks["independent_post_write_audit"]={"status":"BLOCKED","error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"job_id":args.job_id,"tested_sha":args.tested_sha}
   gates=getattr(args,"audit_gates",{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED","c100_golden":"NOT_RUN"})
   result={"schema_version":"d6-independent-post-write-audit-v3","status":"BLOCKED","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":args.branch,"tested_sha":args.tested_sha,"run_id":args.run_id,"job_id":args.job_id,"source_d5_run_id":getattr(args,"d5_pin",{}).get("artifact_run_id"),"source_d5_artifact_id":getattr(args,"d5_pin",{}).get("artifact_id"),"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["The independent audit did not complete successfully; exact exception is recorded and must not be treated as acceptance.","Completed partial findings are preserved; checks not reached remain absent or NOT_RUN.","No D5 historical Artifact or manifest was modified.","D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."],"d6_disposition":"BLOCKED","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
+  result.update({"Workflow_Status":"FAIL","Audit_Status":"BLOCKED","Stage_Disposition":"BLOCKED","Final_Acceptance":"NOT_ACCEPTED"})
   (out/"FINAL_AUDIT.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-  lines=["# D6 Independent Post-Write Audit","",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {getattr(args,'d5_pin',{}).get('artifact_id')} / Run {getattr(args,'d5_pin',{}).get('artifact_run_id')}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
+  lines=["# D6 Independent Post-Write Audit","",f"- Workflow_Status: {result['Workflow_Status']}",f"- Audit_Status: {result['Audit_Status']}",f"- Stage_Disposition: {result['Stage_Disposition']}",f"- Final_Acceptance: {result['Final_Acceptance']}",f"- Disposition: BLOCKED",f"- D6 Run: {args.run_id}",f"- Tested SHA: {args.tested_sha}",f"- D5 Artifact: {getattr(args,'d5_pin',{}).get('artifact_id')} / Run {getattr(args,'d5_pin',{}).get('artifact_run_id')}","- Classification: T2_INTERIM / NOT_FINAL_BLOCKED","","## Blocking evidence","",f"- {type(exc).__name__}: {exc}","","## Fixed gate states",""]+[f"- {k}: {v}" for k,v in result["fixed_gate_states"].items()]+["","## Limitations",""]+[f"- {x}" for x in result["limitations"]]+["","D6 is BLOCKED; this report is not acceptance or release authorization."]
   (out/"FINAL_AUDIT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
   print("D6_AUDIT_BLOCKED "+json.dumps({"error_type":type(exc).__name__,"error":str(exc),"run_id":args.run_id,"tested_sha":args.tested_sha},ensure_ascii=False))
 if __name__=="__main__": main()
