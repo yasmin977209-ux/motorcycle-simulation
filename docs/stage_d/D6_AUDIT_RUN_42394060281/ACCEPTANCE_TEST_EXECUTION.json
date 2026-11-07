@@ -1,0 +1,72 @@
+{
+  "schema_version": "d6-acceptance-test-execution-v1",
+  "run_id": 42394060281,
+  "job_id": 128467560335,
+  "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4",
+  "tests": {
+    "176": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_176_numeric_token_lineage::test_176_every_numeric_token_has_a_registry_or_explicit_classification",
+      "duration_seconds": 0.001,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "175": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_175_bilingual_workbooks_have_185_ordered_sheets_and_numeric_parity",
+      "duration_seconds": 669.667,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "179": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_179_package_manifest_pins_provenance_commit_command_runtime_and_seed",
+      "duration_seconds": 0.0,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "180": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_180_daily_rows_are_ordered_and_preserved_for_105_keys_and_25_p50_cases",
+      "duration_seconds": 2.238,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "181": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_181_partner_daily_balances_and_rollforwards_cover_105_keys_and_25_p50_cases",
+      "duration_seconds": 0.565,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "182": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_182_all_financial_cells_match_exact_registry_values",
+      "duration_seconds": 0.0,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "183": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_183_c100_cross_cohort_reuse_is_explicit_and_not_merged",
+      "duration_seconds": 0.0,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    },
+    "186": {
+      "result": "PASS",
+      "pytest_nodeid": "tests.test_d6_normative_acceptance_ids::test_186_exact_eight_member_package_outer_artifact_crc_and_sha256sums",
+      "duration_seconds": 1.196,
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    }
+  }
+}\n

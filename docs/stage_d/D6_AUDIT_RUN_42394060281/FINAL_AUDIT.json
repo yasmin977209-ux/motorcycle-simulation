@@ -1,0 +1,265 @@
+{
+  "schema_version": "d6-independent-post-write-audit-v3",
+  "status": "BLOCKED",
+  "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4",
+  "run_id": "42394060281",
+  "job_id": "128467560335",
+  "source_d5_run_id": 42393413807,
+  "source_d5_artifact_id": 13582441423,
+  "checks": {
+    "auditor_unit_tests": {
+      "status": "PASS",
+      "run_id": "42394060281",
+      "job_id": "128467560335",
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4",
+      "detail": "Focused D6 auditor unit suite completed before this audit step."
+    },
+    "d5_artifact_download": {
+      "status": "PASS",
+      "run_id": "42394060281",
+      "job_id": "128467560335",
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4",
+      "detail": "Workflow verified exact pinned GitHub Artifact metadata, digest, and downloaded byte size before invoking auditor."
+    },
+    "artifact_outer": {
+      "status": "PASS",
+      "artifact_id": 13582441423,
+      "run_id": 42393413807,
+      "bytes": 519117017,
+      "sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc"
+    },
+    "zip_inventory_crc_paths": {
+      "status": "PASS",
+      "inner_members": [
+        "Full_Report_EN.docx",
+        "Full_Results_EN.xlsx",
+        "Summary_EN.docx",
+        "manifest.json",
+        "التقرير_الكامل_AR.docx",
+        "الملخص_AR.docx",
+        "النتائج_الكاملة_AR.xlsx",
+        "دراسة_الجدوى_AR.docx"
+      ],
+      "bytes": 519104624,
+      "sha256": "f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7"
+    },
+    "manifest_sha256sums": {
+      "status": "PASS",
+      "manifest_sha256": "a291a886fc6973f1f747cc74c98b0b8a25b01a7f96e32048c4c345c1d19484eb",
+      "sha256sums_entries": 10,
+      "sha256sums_sha256": "7c76cef416a08b6864e2b1a1c2e4159023e72cb0326793887cceb143d4ce0421"
+    },
+    "identities_gates": {
+      "status": "PASS",
+      "S6": {
+        "SOURCE_SHA": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+        "cohort_id": "s6-v23-da1a9ea9",
+        "MASTER_SEED": 20270101
+      },
+      "C100": {
+        "SOURCE_SHA": "965281d52441cd0d4b744e211c9f68ee4cdc3753",
+        "cohort_id": "c100-v23-s4-20261026-965281d5"
+      },
+      "gate_statuses": {
+        "financial_gate_a": "PASS_SCOPED",
+        "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+        "gate_b_n2400": "FAIL_SCOPED (10/10)",
+        "stability": "NOT_CONVERGED (0/60)",
+        "n4800": "NOT_EXECUTED",
+        "c100_golden": "NOT_RUN"
+      },
+      "missing_accounting_fields": [
+        "Accounts_Receivable",
+        "Accumulated_Depreciation",
+        "Gross_Bike_Assets",
+        "Guarantee_Claim_Receivable",
+        "Total_Assets"
+      ]
+    },
+    "excel_175_180_182": {
+      "status": "PASS_SCOPED",
+      "sheets_per_workbook": 185,
+      "numeric_cells_compared": 20904740,
+      "financial_cells_exact_registry_verified": 11907280,
+      "financial_mismatch_count": 0,
+      "financial_mismatch_samples": [],
+      "arabic_rtl_checked": true,
+      "english_ltr_checked": true,
+      "formula_cells": 0,
+      "error_cells": 0
+    },
+    "docx_files": {
+      "status": "PASS_SCOPED",
+      "files": {
+        "التقرير_الكامل_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 13809,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 252,
+            "text_runs": 252,
+            "bidi_true": 252,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 252,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
+        },
+        "Full_Report_EN.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 14273,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 250,
+            "text_runs": 250,
+            "bidi_true": 0,
+            "bidi_false": 250,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 250,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 32,
+          "unresolved_number_ids": []
+        },
+        "الملخص_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 9510,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 127,
+            "text_runs": 127,
+            "bidi_true": 127,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 127,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        },
+        "Summary_EN.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 9841,
+          "missing_evidence_literal_present": true,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 125,
+            "text_runs": 125,
+            "bidi_true": 0,
+            "bidi_false": 125,
+            "bidi_missing": 0,
+            "rtl_runs_true": 0,
+            "rtl_runs_false": 125,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        },
+        "دراسة_الجدوى_AR.docx": {
+          "status": "PASS_SCOPED",
+          "findings": [],
+          "text_characters": 6826,
+          "missing_evidence_literal_present": false,
+          "section_17_3_missing_items": [],
+          "directionality": {
+            "story_parts": [
+              "word/document.xml"
+            ],
+            "paragraphs": 147,
+            "text_runs": 147,
+            "bidi_true": 147,
+            "bidi_false": 0,
+            "bidi_missing": 0,
+            "rtl_runs_true": 147,
+            "rtl_runs_false": 0,
+            "rtl_runs_missing": 0
+          },
+          "number_id_occurrences": 16,
+          "unresolved_number_ids": []
+        }
+      },
+      "docx_files": 5,
+      "blocked_files": [],
+      "detail": "Per-file DOCX parse, T2, §17.3 substance, OOXML directionality and resolution of every explicit Number Registry ID; full numeric-token lineage remains a separate acceptance test."
+    },
+    "docx_number_registry_traceability": {
+      "status": "PASS_SCOPED",
+      "number_id_occurrences": 112,
+      "unresolved_number_ids": [],
+      "detail": "Every explicit NR-/D2D- identifier in DOCX resolves against the pinned Number Registry/extension; this does not claim every numeric token is registry-backed or execute Test 176."
+    },
+    "docx_rendering": {
+      "status": "PASS_SCOPED",
+      "page_counts": {
+        "d6_التقرير_الكامل_AR.docx": 4,
+        "d6_Full_Report_EN.docx": 3,
+        "d6_الملخص_AR.docx": 3,
+        "d6_Summary_EN.docx": 3,
+        "d6_دراسة_الجدوى_AR.docx": 3
+      },
+      "file_failures": {},
+      "timeout_seconds_per_file": 120,
+      "detail": "Each DOCX was rendered in a separate LibreOffice process with an isolated profile and 120-second timeout; both summaries must be 2–3 pages."
+    },
+    "docx_176": {
+      "status": "NOT_RUN",
+      "docx_files": 5,
+      "blocked_files": [],
+      "detail": "Test 176 requires complete numeric-token-to-Number-Registry lineage; scoped explicit-ID resolution and rendering do not execute that acceptance test."
+    },
+    "independent_post_write_audit": {
+      "status": "BLOCKED",
+      "error_type": "JSONDecodeError",
+      "error": "Extra data: line 72 column 2 (char 2860)",
+      "run_id": "42394060281",
+      "job_id": "128467560335",
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4"
+    }
+  },
+  "fixed_gate_states": {},
+  "missing_accounting_fields": [
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets"
+  ],
+  "limitations": [
+    "The independent audit did not complete successfully; exact exception is recorded and must not be treated as acceptance.",
+    "Completed partial findings are preserved; checks not reached remain absent or NOT_RUN.",
+    "No D5 historical Artifact or manifest was modified.",
+    "D6 does not imply P17 acceptance, FINAL_ACCEPTED, P18_RELEASED or CONVERGED."
+  ],
+  "d6_disposition": "BLOCKED",
+  "final_accepted": "NOT_DECLARED",
+  "p17_final_accepted": "NOT_DECLARED",
+  "p18_released": "NOT_DECLARED",
+  "converged": "NOT_DECLARED"
+}

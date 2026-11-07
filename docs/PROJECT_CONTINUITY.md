@@ -4019,3 +4019,17 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
 - Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
 - No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
+
+
+## D5 publication record correction — 2026-11-05 (append-only)
+
+- D5 Run 41928234377 tested source SHA: baf696af1e951cbf4a79e8a9e009c60c6b053b2d. The workflow committed publication evidence as 4c6a84b10ac78b6067175d0eafa149f3f12dbc2a; the earlier `publication_commit_sha` field and prose entry naming baf696... identify the triggering/tested SHA, not the documentation commit.
+- D5 matrix path is dated 2026-11-05, but its internal title says 2026-11-03; this is a stale title only and does not change package bytes or test results.
+- D5 exact-final-head Raw readback was performed at 4c6a84b10ac78b6067175d0eafa149f3f12dbc2a.
+
+## D6 independent post-write audit — 2026-11-05 (append-only)
+
+- Run 42394060281; tested source SHA 40933aeaac12cef94882529655aa7626811d4bc4; D5 Artifact 13582441423 from Run 42393413807.
+- Disposition BLOCKED; classification T2_INTERIM / NOT_FINAL_BLOCKED.
+- See docs/stage_d/D6_AUDIT_RUN_42394060281/FINAL_AUDIT.md and FINAL_AUDIT.json for check-level results and limitations.
+- D6 is not P17 acceptance, FINAL_ACCEPTED, CONVERGED or release authorization.
