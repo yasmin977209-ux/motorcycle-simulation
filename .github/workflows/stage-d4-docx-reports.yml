@@ -6,7 +6,6 @@ on:
       - docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json
       - scripts/audit_d4_numeric_occurrences.py
       - tests/test_d4_numeric_occurrences.py
-      - tests/test_176_numeric_token_lineage.py
   workflow_dispatch:
 permissions:
   contents: write
