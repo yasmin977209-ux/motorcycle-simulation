@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 import io, zipfile
 import pytest
 from scripts.audit_s6_deliverables_bundle import safe, zip_check, parse_sums, CONTRACTS, EXPECTED
