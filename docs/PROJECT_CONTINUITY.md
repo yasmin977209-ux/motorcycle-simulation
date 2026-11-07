@@ -3938,3 +3938,14 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Project Raw readback Run 42308670096 / Job 128204410265 succeeded; Artifact 13546977906, 2,686 bytes, digest sha256:4443b49e76041e87cd76a5dbc6519d8c573d53b384c122dfb2158e5afbb80e3e.
 - D1 artifact identity is taken from the D1 restore manifest and matched against all sidecars and the exact GitHub artifact digest. A redundant artifact-name heuristic is removed; the manifest ID and byte hashes are the controlling identity.
 - Main remains 01a6f79eedc522bb734ed9c5ea31beee581f2468. D3 phase and Global Preservation Gate remain BLOCKED pending actual provider byte verification and durable independent restore evidence.
+
+
+## D4 DOCX report build — 2026-11-05 (append-only)
+
+- Triggering tested SHA: 1fb4898480629c0a327dbff13792d455cd205a59; workflow Run: 42387025927.
+- D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+- Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+- Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+- Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+- Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+- D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.

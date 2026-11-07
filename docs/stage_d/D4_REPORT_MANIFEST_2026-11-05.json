@@ -1,5 +1,5 @@
 {
-  "build_date_utc": "2026-11-04",
+  "build_date_utc": "2026-11-07",
   "governing_reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
   "historical_execution_reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
   "no_trials_or_simulation": true,
@@ -9,6 +9,6 @@
   "registry_sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
   "schema_version": "d4-report-input-manifest-v1",
   "scope": "REFERENCE_COMPLIANT_BASELINE_ONLY",
-  "tested_sha": "c5327554d45dc836b7d7f265b4a024dd9049e1f5",
-  "workflow_run_id": "41916830283"
+  "tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+  "workflow_run_id": "42387025927"
 }

@@ -708,3 +708,14 @@ See [D0–D2 Live Evidence Reconciliation](stage_d/D0_D2_LIVE_RECONCILIATION_202
 - D0, D1 and D2 remain `PASS_SCOPED_WITH_LIMITATIONS`; no phase is promoted to `PASS_GAP_FREE`. D0's complete Parquet schema/null/partition audit, original all-48K historical ledgers, null aggregate `source_run_metadata.sha256`, and five missing historical accounting fields remain unresolved. D1 importer/full independent rebuild requirements are not proven. D2 registry does not replace all-48K original financial ledgers. C100 Golden remains NOT_RUN; fixed financial/statistical gates unchanged.
 - The old D2 JSON `NOT_VERIFIED_105_OF_105` field and older D1 audit snapshots are retained as historical records; this addendum is the later reconciliation. No code, business rule, reference, identity, threshold or historical artifact was changed; no Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/main write/merge/Release or D3/D4 progression occurred.
 - Reconciliation addendum commit: `4e5fab1990c6f4004062e53daa6910890fe3d717`. Further status/handoff writes are append-only and require their own exact-final-HEAD readback.
+
+
+## D4 DOCX report build — 2026-11-05 (append-only)
+
+- Triggering tested SHA: 1fb4898480629c0a327dbff13792d455cd205a59; workflow Run: 42387025927.
+- D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+- Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+- Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+- Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+- Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+- D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.

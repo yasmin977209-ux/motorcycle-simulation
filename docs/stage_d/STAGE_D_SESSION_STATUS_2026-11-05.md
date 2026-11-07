@@ -514,3 +514,14 @@ See [D0–D2 Live Evidence Reconciliation](stage_d/D0_D2_LIVE_RECONCILIATION_202
 ## Owner master authorization intake — 2026-11-06 (append-only)
 
 See [new session status snapshot](OWNER_AUTHORIZATION_SESSION_STATUS_2026-11-06.md) and [handoff](OWNER_AUTHORIZATION_HANDOFF_2026-11-06.md). Owner decision `OWNER-MASTER-BLOCKER-REMOVAL-2026-11-05` authorizes expanded historical evidence recovery and routine technical/audit remediation only within existing identities, rules and stage gates. Intake refs: branch `bc4a45585cd23b933e2d7428bd0adde18ec4f512`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468` read-only. Global Preservation BLOCKED; D0–D2 scoped only; D3 not closed; E2 original accounting BLOCKED; E3–E6 NOT_STARTED. No protected or long-running action was initiated.
+
+
+## D4 DOCX report build — 2026-11-05 (append-only)
+
+- Triggering tested SHA: 1fb4898480629c0a327dbff13792d455cd205a59; workflow Run: 42387025927.
+- D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+- Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+- Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+- Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+- Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+- D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.

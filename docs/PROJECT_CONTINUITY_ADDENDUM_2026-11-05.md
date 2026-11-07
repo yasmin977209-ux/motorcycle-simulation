@@ -30,3 +30,14 @@ Append-only session record for D3 owner acceptance and D4 rebuild.
 - Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
 - Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
 - No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
+
+
+## D4 DOCX report build — 2026-11-05 (append-only)
+
+- Triggering tested SHA: 1fb4898480629c0a327dbff13792d455cd205a59; workflow Run: 42387025927.
+- D3 was revalidated closed as PASS_SCOPED_WITH_LIMITATIONS before D4 began.
+- Five required DOCX reports generated from the pinned Number Registry and approved v2.4.0 reference only.
+- Arabic RTL and English LTR properties checked; both executive summaries rendered and page-count checked at two-to-three pages.
+- Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
+- Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
+- D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.

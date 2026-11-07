@@ -1,0 +1,2308 @@
+{
+  "schema": "d4-effective-closure-state-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+  "workflow_run_id": 42387025927,
+  "job_id": 128446462610,
+  "status": "PASS_GAP_FREE",
+  "test_176": {
+    "status": "PASS",
+    "execution": "EXECUTED_ON_EXACT_HEAD",
+    "pytest_nodeid": "tests/test_176_numeric_token_lineage.py::test_176_every_numeric_token_has_a_registry_or_explicit_classification",
+    "run_id": 42387025927,
+    "job_id": 128446462610,
+    "tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+    "total_occurrences": 241,
+    "resolved_occurrences": 64,
+    "explicitly_classified_occurrences": 177,
+    "unresolved_occurrences": 0,
+    "identity_equation": true
+  },
+  "documents": [
+    {
+      "file": "التقرير_الكامل_AR.docx",
+      "bytes": 42329,
+      "xml_parts_scanned": 8,
+      "total_occurrences": 68,
+      "resolved_occurrences": 16,
+      "explicitly_classified_occurrences": 52,
+      "unresolved_occurrences": 0,
+      "category_counts": {
+        "Date/Time": 5,
+        "Reference constant": 3,
+        "Financial": 18,
+        "Statistical": 3,
+        "Section/Item number": 6,
+        "Identifier": 33
+      },
+      "identity_equation": true,
+      "occurrences": [
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "42387025927",
+          "context": "Evidence seal | build commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 202",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "256",
+          "context": "uild commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "2026",
+          "context": "927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "11",
+          "context": " D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "07",
+          "context": " manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "4.0",
+          "context": "يبدأ النموذج من المرجع الحاكم المعتمد v2.4.0. تبقى هويتا S6 وC100 منفصلتين. C100 إعادة استخدام حتمية عابرة للأفواج ولا يُعامل كعينة عشوائية مستق",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "70",
+          "context": "C100 منفصلتين. C100 إعادة استخدام حتمية عابرة للأفواج ولا يُعامل كعينة عشوائية مستقلة. توزيع الحقوق 70/30 على صافي الحقوق الكلي؛ الشريك الأول موّل رأس المال الافتتاحي، بينما لم يساهم الشريك الثاني رأسما",
+          "category": "Financial",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "30",
+          "context": "0 منفصلتين. C100 إعادة استخدام حتمية عابرة للأفواج ولا يُعامل كعينة عشوائية مستقلة. توزيع الحقوق 70/30 على صافي الحقوق الكلي؛ الشريك الأول موّل رأس المال الافتتاحي، بينما لم يساهم الشريك الثاني رأسماليا",
+          "category": "Financial",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206113000",
+          "context": "| 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206142000",
+          "context": "| 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [NR-7187e61c0e96b9da20d76e6f] C085_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 41,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-0fe5e2402dda387f18941581] C085_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-0fe5e2402dda387f18941581",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206113000",
+          "context": "| 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e867842",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206142000",
+          "context": "ct_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e8678420ba9934a15358d97d] C085_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 49,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-ff559a56596ad7d63c49d760] C085_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-ff559a56596ad7d63c49d760",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205425500",
+          "context": "| 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205500500",
+          "context": "| 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [NR-7666a74d48709e0dfb370fcb] C070_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 61,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-2afbb5cf47485542a1362f55] C070_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-2afbb5cf47485542a1362f55",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205425500",
+          "context": "| 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205500500",
+          "context": "ct_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca3200e10f7229943eb] C070_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 69,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-9f5c718b47edb36404fc8d5a] C070_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-9f5c718b47edb36404fc8d5a",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 122,
+          "token": "4800",
+          "context": "• N=4800: NOT_EXECUTED.",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "17.1",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوص",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "17.2",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "1",
+          "context": ")، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "2",
+          "context": "تائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "3",
+          "context": "القيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتا",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "4",
+          "context": "لسوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين الس",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "5",
+          "context": " ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "0.5",
+          "context": "عكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية ا",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "6",
+          "context": "سيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي ر",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "21.4",
+          "context": "لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي رقم لسيناريو لم يُشغَّل.",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 139,
+          "token": "256",
+          "context": "source member SHA-256",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 145,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 145,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 152,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 152,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 159,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 159,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 166,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 166,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 173,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 173,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 180,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 180,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 187,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 187,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 194,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 194,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 201,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 201,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 208,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 208,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 215,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 215,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 222,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 222,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 229,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 229,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 236,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 236,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 243,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 243,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 250,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 250,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        }
+      ]
+    },
+    {
+      "file": "Full_Report_EN.docx",
+      "bytes": 41726,
+      "xml_parts_scanned": 8,
+      "total_occurrences": 64,
+      "resolved_occurrences": 16,
+      "explicitly_classified_occurrences": 48,
+      "unresolved_occurrences": 0,
+      "category_counts": {
+        "Date/Time": 5,
+        "Reference constant": 1,
+        "Financial": 18,
+        "Statistical": 1,
+        "Section/Item number": 6,
+        "Identifier": 33
+      },
+      "identity_equation": true,
+      "occurrences": [
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "42387025927",
+          "context": "Evidence seal | build commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 202",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "256",
+          "context": "uild commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "2026",
+          "context": "927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "11",
+          "context": " D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "07",
+          "context": " manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "4.0",
+          "context": "The model starts from the approved governing reference v2.4.0. S6 and C100 remain separate identities. C100 is deterministic cross-cohort reuse and is not treate",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "70",
+          "context": "tic cross-cohort reuse and is not treated as independent random sampling. The partner allocation is 70/30 on total net rights; the first partner funded the initial capital, while the second did not cont",
+          "category": "Financial",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 9,
+          "token": "30",
+          "context": " cross-cohort reuse and is not treated as independent random sampling. The partner allocation is 70/30 on total net rights; the first partner funded the initial capital, while the second did not contrib",
+          "category": "Financial",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206113000",
+          "context": "| 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "206142000",
+          "context": "| 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [NR-7187e61c0e96b9da20d76e6f] C085_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 41,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-0fe5e2402dda387f18941581] C085_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-0fe5e2402dda387f18941581",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206113000",
+          "context": "| 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e867842",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 48,
+          "token": "206142000",
+          "context": "ct_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e8678420ba9934a15358d97d] C085_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 49,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-ff559a56596ad7d63c49d760] C085_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-ff559a56596ad7d63c49d760",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205425500",
+          "context": "| 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 60,
+          "token": "205500500",
+          "context": "| 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [NR-7666a74d48709e0dfb370fcb] C070_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 61,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-2afbb5cf47485542a1362f55] C070_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-2afbb5cf47485542a1362f55",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205425500",
+          "context": "| 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "205500500",
+          "context": "ct_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca3200e10f7229943eb] C070_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 69,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-9f5c718b47edb36404fc8d5a] C070_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-9f5c718b47edb36404fc8d5a",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 122,
+          "token": "4800",
+          "context": "• N=4800: NOT_EXECUTED.",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "1",
+          "context": "nd feasibility study must state that results are **conditional on model limitations**, especially: (1) retained assets are valued at book value, not market value; (2) no repairs, fines, theft/accidents",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "2",
+          "context": "n model limitations**, especially: (1) retained assets are valued at book value, not market value; (2) no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "3",
+          "context": "alue, not market value; (2) no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; (4) the guarantee is a deterministic multiplier and does not represent vari",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "4",
+          "context": " no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; (4) the guarantee is a deterministic multiplier and does not represent variability in actual recovery ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "5",
+          "context": "ntee is a deterministic multiplier and does not represent variability in actual recovery capacity; (5) non-monotonic scenario results may occur for structural reasons and lower collection must not be r",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 130,
+          "token": "6",
+          "context": "easons and lower collection must not be read as better merely because net entitlements are higher; (6) zero accounting-loss probability is not a guarantee, but a result of model assumptions. No value m",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 137,
+          "token": "256",
+          "context": "source member SHA-256",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 143,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 143,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 150,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 150,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 157,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 157,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 164,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 164,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 171,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 171,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 178,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 178,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 185,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 185,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 192,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 192,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 199,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 199,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 206,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 206,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 213,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 213,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 220,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 220,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 227,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 227,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 234,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 234,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 241,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 241,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 248,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 248,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        }
+      ]
+    },
+    {
+      "file": "الملخص_AR.docx",
+      "bytes": 40517,
+      "xml_parts_scanned": 8,
+      "total_occurrences": 31,
+      "resolved_occurrences": 16,
+      "explicitly_classified_occurrences": 15,
+      "unresolved_occurrences": 0,
+      "category_counts": {
+        "Date/Time": 5,
+        "Financial": 16,
+        "Reference constant": 2,
+        "Section/Item number": 6,
+        "Statistical": 2
+      },
+      "identity_equation": true,
+      "occurrences": [
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "42387025927",
+          "context": "Evidence seal | build commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 202",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "256",
+          "context": "uild commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "2026",
+          "context": "927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "11",
+          "context": " D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "07",
+          "context": " manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206113000",
+          "context": "| 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206142000",
+          "context": "| 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [NR-7187e61c0e96b9da20d76e6f] C085_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 43,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-0fe5e2402dda387f18941581] C085_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-0fe5e2402dda387f18941581",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206113000",
+          "context": "| 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e867842",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206142000",
+          "context": "ct_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e8678420ba9934a15358d97d] C085_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 51,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-ff559a56596ad7d63c49d760] C085_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-ff559a56596ad7d63c49d760",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205425500",
+          "context": "| 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205500500",
+          "context": "| 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [NR-7666a74d48709e0dfb370fcb] C070_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 63,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-2afbb5cf47485542a1362f55] C070_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-2afbb5cf47485542a1362f55",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205425500",
+          "context": "| 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205500500",
+          "context": "ct_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca3200e10f7229943eb] C070_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 71,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-9f5c718b47edb36404fc8d5a] C070_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-9f5c718b47edb36404fc8d5a",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "17.1",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوص",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "17.2",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "1",
+          "context": ")، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "2",
+          "context": "تائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "3",
+          "context": "القيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتا",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "4",
+          "context": "لسوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين الس",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "5",
+          "context": " ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "0.5",
+          "context": "عكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية ا",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "6",
+          "context": "سيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي ر",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "21.4",
+          "context": "لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي رقم لسيناريو لم يُشغَّل.",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        }
+      ]
+    },
+    {
+      "file": "Summary_EN.docx",
+      "bytes": 40050,
+      "xml_parts_scanned": 8,
+      "total_occurrences": 27,
+      "resolved_occurrences": 16,
+      "explicitly_classified_occurrences": 11,
+      "unresolved_occurrences": 0,
+      "category_counts": {
+        "Date/Time": 5,
+        "Financial": 16,
+        "Section/Item number": 6
+      },
+      "identity_equation": true,
+      "occurrences": [
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "42387025927",
+          "context": "Evidence seal | build commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 202",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "256",
+          "context": "uild commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "2026",
+          "context": "927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "11",
+          "context": " D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 2,
+          "token": "07",
+          "context": " manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206113000",
+          "context": "| 206084000 [NR-c4b1fb966c3a993d8c50186d] C085_G100.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 42,
+          "token": "206142000",
+          "context": "| 206113000 [NR-1cbafa6eea008d7f62bbe2f8] C085_G100.N2400.indicator.P50_Cumulative_Project_Profit | 206142000 [NR-7187e61c0e96b9da20d76e6f] C085_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-c4b1fb966c3a993d8c50186d",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 43,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-0fe5e2402dda387f18941581] C085_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-0fe5e2402dda387f18941581",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206084000",
+          "context": "MISSING_EVIDENCE | 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206113000",
+          "context": "| 206084000 [NR-b1a9e33a316e422461ab3b27] C085_G070.N2400.indicator.P10_Cumulative_Project_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e867842",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 50,
+          "token": "206142000",
+          "context": "ct_Profit | 206113000 [NR-3e7d6fa090176f621fa6f2e5] C085_G070.N2400.P50_Cumulative_Project_Profit | 206142000 [NR-e8678420ba9934a15358d97d] C085_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-b1a9e33a316e422461ab3b27",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 51,
+          "token": "209842000",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209842000 [NR-ff559a56596ad7d63c49d760] C085_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-ff559a56596ad7d63c49d760",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205425500",
+          "context": "| 205328950 [NR-4941aa6d391358fa130951a4] C070_G100.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 62,
+          "token": "205500500",
+          "context": "| 205425500 [NR-04a2f4814c925732e0a76342] C070_G100.N2400.indicator.P50_Cumulative_Project_Profit | 205500500 [NR-7666a74d48709e0dfb370fcb] C070_G100.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-4941aa6d391358fa130951a4",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 63,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-2afbb5cf47485542a1362f55] C070_G100.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-2afbb5cf47485542a1362f55",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205328950",
+          "context": "MISSING_EVIDENCE | 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205425500",
+          "context": "| 205328950 [NR-5c4340eb49bf750db53248fa] C070_G070.N2400.indicator.P10_Cumulative_Project_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 70,
+          "token": "205500500",
+          "context": "ct_Profit | 205425500 [NR-32a0a773f9d59411417c71fe] C070_G070.N2400.P50_Cumulative_Project_Profit | 205500500 [NR-3d1e5ca3200e10f7229943eb] C070_G070.N2400.indicator.P90_Cumulative_Project_Profit",
+          "category": "Financial",
+          "number_id": "NR-5c4340eb49bf750db53248fa",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 71,
+          "token": "209200500",
+          "context": "MISSING_EVIDENCE | MISSING_EVIDENCE | MISSING_EVIDENCE | 209200500 [NR-9f5c718b47edb36404fc8d5a] C070_G070.N2400.indicator.P90_Final_Cash",
+          "category": "Financial",
+          "number_id": "NR-9f5c718b47edb36404fc8d5a",
+          "disposition": "RESOLVED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "1",
+          "context": "nd feasibility study must state that results are **conditional on model limitations**, especially: (1) retained assets are valued at book value, not market value; (2) no repairs, fines, theft/accidents",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "2",
+          "context": "n model limitations**, especially: (1) retained assets are valued at book value, not market value; (2) no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "3",
+          "context": "alue, not market value; (2) no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; (4) the guarantee is a deterministic multiplier and does not represent vari",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "4",
+          "context": " no repairs, fines, theft/accidents, administrative expenses, or taxes; (3) no external financing; (4) the guarantee is a deterministic multiplier and does not represent variability in actual recovery ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "5",
+          "context": "ntee is a deterministic multiplier and does not represent variability in actual recovery capacity; (5) non-monotonic scenario results may occur for structural reasons and lower collection must not be r",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 127,
+          "token": "6",
+          "context": "easons and lower collection must not be read as better merely because net entitlements are higher; (6) zero accounting-loss probability is not a guarantee, but a result of model assumptions. No value m",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        }
+      ]
+    },
+    {
+      "file": "دراسة_الجدوى_AR.docx",
+      "bytes": 40763,
+      "xml_parts_scanned": 8,
+      "total_occurrences": 51,
+      "resolved_occurrences": 0,
+      "explicitly_classified_occurrences": 51,
+      "unresolved_occurrences": 0,
+      "category_counts": {
+        "Date/Time": 5,
+        "Statistical": 4,
+        "Reference constant": 3,
+        "Section/Item number": 6,
+        "Identifier": 33
+      },
+      "identity_equation": true,
+      "occurrences": [
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 3,
+          "token": "42387025927",
+          "context": "Evidence seal | build commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 202",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 3,
+          "token": "256",
+          "context": "uild commit: 1fb4898480629c0a327dbff13792d455cd205a59 | workflow run: 42387025927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 3,
+          "token": "2026",
+          "context": "927 | D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 3,
+          "token": "11",
+          "context": " D4 manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 3,
+          "token": "07",
+          "context": " manifest SHA-256: 902b58ec5129d4d9c9375be3ab975d61b3fadd07013ef75361b3e51cef133928 | date: 2026-11-07",
+          "category": "Date/Time",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 10,
+          "token": "70",
+          "context": "راجات بعقود أساسية ومسارات فسخ وكفالة وتأجير ثانوي وتمليك عند اكتمال السداد. يوزع صافي الحقوق بنسبة 70/30؛ الشريك الأول موّل رأس المال كاملاً، والشريك الثاني لم يساهم رأسمالياً. رصيد إعادة الاستثمار يحد",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 10,
+          "token": "30",
+          "context": "ات بعقود أساسية ومسارات فسخ وكفالة وتأجير ثانوي وتمليك عند اكتمال السداد. يوزع صافي الحقوق بنسبة 70/30؛ الشريك الأول موّل رأس المال كاملاً، والشريك الثاني لم يساهم رأسمالياً. رصيد إعادة الاستثمار يحدد ت",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 23,
+          "token": "17.3",
+          "context": "الإفصاحات الإلزامية وفق §17.3",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "17.1",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوص",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "17.2",
+          "context": "لأن النموذج يستبعد بنوداً كثيرة (17.1–17.2)، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (",
+          "category": "Reference constant",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "1",
+          "context": ")، يجب أن يتضمن كل تقرير ودراسة جدوى فقرة صريحة تبيّن أن النتائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "2",
+          "context": "تائج **مشروطة بحدود النموذج**، خصوصاً: (1) الأصول المحتفظ بها تُقيَّم بالقيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "3",
+          "context": "القيمة الدفترية لا السوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتا",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "4",
+          "context": "لسوقية؛ (2) لا إصلاحات ولا مخالفات ولا سرقة/حوادث ولا مصاريف إدارية ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين الس",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "5",
+          "context": " ولا ضرائب؛ (3) لا تمويل خارجي؛ (4) الكفالة مضاعف حتمي لا يعكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أ",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "0.5",
+          "context": "عكس تذبذب القدرة الفعلية على الاسترداد؛ (5) قد تظهر نتائج غير رتيبة بين السيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية ا",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "6",
+          "context": "سيناريوهات لأسباب بنيوية (0.5)، فلا يُقرأ «التحصيل الأقل» على أنه «أفضل» لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي ر",
+          "category": "Section/Item number",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 25,
+          "token": "21.4",
+          "context": "لمجرد ارتفاع صافي الحقوق؛ (6) احتمال الخسارة المحاسبية الصفري ليس ضماناً بل نتيجة افتراضات النموذج (21.4). ولا يجوز استنتاج أي رقم لسيناريو لم يُشغَّل.",
+          "category": "Statistical",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 34,
+          "token": "256",
+          "context": "source member SHA-256",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 40,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 47,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 47,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 54,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 54,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 61,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 61,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 68,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 75,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 75,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 82,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 82,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 89,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 89,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 96,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 96,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 103,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 103,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 110,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 110,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 117,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 117,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 124,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 124,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 131,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 131,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 138,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 138,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 145,
+          "token": "12852969854",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        },
+        {
+          "part": "word/document.xml",
+          "paragraph_index": 145,
+          "token": "40773412377",
+          "context": "12852969854/40773412377",
+          "category": "Identifier",
+          "number_id": null,
+          "disposition": "EXPLICITLY_CLASSIFIED"
+        }
+      ]
+    }
+  ],
+  "required_outputs": [
+    "التقرير_الكامل_AR.docx",
+    "Full_Report_EN.docx",
+    "الملخص_AR.docx",
+    "Summary_EN.docx",
+    "دراسة_الجدوى_AR.docx"
+  ],
+  "preserved_project_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "upstream_gates": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED"
+  },
+  "limitations": [
+    "This D4 closure is limited to the normative D4 deliverables and occurrence-level lineage.",
+    "No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."
+  ]
+}
