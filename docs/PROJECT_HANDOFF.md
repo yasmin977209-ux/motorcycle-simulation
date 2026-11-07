@@ -778,3 +778,14 @@ See [D0–D2 Live Evidence Reconciliation](stage_d/D0_D2_LIVE_RECONCILIATION_202
 - `docs/CHATGPT_NEW_SESSION_PROMPT_2026-11-07_AR.md`
 
 الخطوة التالية الوحيدة: حل طريقة تشغيل D5 المسموح بها دون تعديل main، بموافقة المالك عند الحاجة. بعد D5 الناجح ينفذ D6 والاختبارات 175/176/179/180/181/182/183/186 على exact tested SHA، ثم final atomic continuity commit وفحوص Exact Final HEAD. لا Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill ولا تغيير هوية/seed/RNG أو ترقية أي Gate.
+
+
+## D5 package publication — 2026-11-05 (append-only)
+
+- Workflow Run 42393413807; tested source SHA c757126ac27e8f6606f38b14324119cc22604858; publication commit c757126ac27e8f6606f38b14324119cc22604858.
+- D5 package ZIP: 519104624 bytes; SHA-256 f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7; 8 members; reopened, exact inventory and CRC PASS.
+- manifest SHA-256 a291a886fc6973f1f747cc74c98b0b8a25b01a7f96e32048c4c345c1d19484eb; external SHA256SUMS SHA-256 7c76cef416a08b6864e2b1a1c2e4159023e72cb0326793887cceb143d4ce0421 (10 entries).
+- New GitHub Actions Artifact ID 13582441423; size 519117017; digest sha256:ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc; downloaded ZIP SHA-256 ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc; expires 2026-12-07T16:54:42Z; retention 30 days.
+- Independent download by exact Artifact ID matched metadata digest/size, exact outer inventory, CRC and every payload byte.
+- Classification remains T2_INTERIM / NOT_FINAL_BLOCKED; D5 scoped package integrity only. Full 177-unique-test acceptance suite NOT_RUN; final acceptance NOT_DECLARED.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release/D6.
