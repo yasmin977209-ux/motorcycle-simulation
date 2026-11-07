@@ -284,3 +284,79 @@ def test_summary_page_count_validation_normalizes_d6_temporary_prefixes():
     assert invalid["الملخص_AR.docx"]["error"] == "DOCX_SUMMARY_PAGE_COUNT_INVALID:4"
     assert "Summary_EN.docx" not in invalid
 
+
+
+def test_strict_json_loader_rejects_trailing_second_object_and_text_with_location(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import strict_json_load
+    for raw in (b'{}{}', b'{}tail'):
+        path=tmp_path/'extra.json'; path.write_bytes(raw)
+        with pytest.raises(ValueError, match=r'JSON_INVALID:.*extra\.json:line=1:column=3:pos=2'):
+            strict_json_load(path)
+
+
+@pytest.mark.parametrize("raw", [b"", b'{"x":', b'{broken}'])
+def test_strict_json_loader_rejects_empty_truncated_and_invalid_files(tmp_path, raw):
+    from scripts.audit_s6_deliverables_bundle import strict_json_load
+    path=tmp_path/'bad.json'; path.write_bytes(raw)
+    with pytest.raises(ValueError, match=r'JSON_INVALID:.*bad\.json:line='):
+        strict_json_load(path)
+
+
+def _execution_fixture(sha="a"*40, result="PASS", test_ids=("175","176","179","180","181","182","183","186")):
+    return {"run_id":10,"job_id":20,"tested_sha":sha,"d5_artifact_id":30,
+            "d5_artifact_sha256":"b"*64,
+            "tests":{tid:{"result":result,"run_id":10,"job_id":20,"tested_sha":sha} for tid in test_ids}}
+
+
+def test_acceptance_execution_rejects_blocked_and_fail_test_results(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import load_acceptance_execution
+    for status in ("BLOCKED","FAIL"):
+        payload=_execution_fixture(result=status); path=tmp_path/'execution.json'
+        path.write_text(json.dumps(payload),encoding="utf-8")
+        with pytest.raises(ValueError,match="D6_ACCEPTANCE_TEST_NOT_PASS_ON_EXACT_HEAD"):
+            load_acceptance_execution(path,set(payload["tests"]),10,20,"a"*40,30,"b"*64)
+
+
+def test_acceptance_execution_rejects_missing_required_test(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import load_acceptance_execution
+    payload=_execution_fixture(test_ids=("175","176","179","180","181","182","183"))
+    path=tmp_path/'execution.json'; path.write_text(json.dumps(payload),encoding="utf-8")
+    with pytest.raises(ValueError,match="D6_ACCEPTANCE_TEST_ID_SET_MISMATCH"):
+        load_acceptance_execution(path,{"175","176","179","180","181","182","183","186"},10,20,"a"*40,30,"b"*64)
+
+
+def test_acceptance_execution_rejects_test_report_from_different_sha(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import load_acceptance_execution
+    payload=_execution_fixture(); payload["tests"]["176"]["tested_sha"]="c"*40
+    path=tmp_path/'execution.json'; path.write_text(json.dumps(payload),encoding="utf-8")
+    with pytest.raises(ValueError,match="D6_ACCEPTANCE_TEST_NOT_PASS_ON_EXACT_HEAD:176"):
+        load_acceptance_execution(path,set(payload["tests"]),10,20,"a"*40,30,"b"*64)
+
+
+def test_acceptance_execution_rejects_artifact_identity_mismatch(tmp_path):
+    from scripts.audit_s6_deliverables_bundle import load_acceptance_execution
+    payload=_execution_fixture(); path=tmp_path/'execution.json'
+    path.write_text(json.dumps(payload),encoding="utf-8")
+    with pytest.raises(ValueError,match="D6_ACCEPTANCE_ARTIFACT_BINDING_MISMATCH"):
+        load_acceptance_execution(path,set(payload["tests"]),10,20,"a"*40,31,"b"*64)
+
+
+def test_test176_rejects_conflicting_lineage_and_report_disposition():
+    from scripts.audit_s6_deliverables_bundle import validate_docx_176_binding
+    execution={"tests":{"176":{"result":"PASS"}}}
+    lineage={"acceptance":"PASS","total_occurrences":241,"resolved_occurrences":64,
+             "explicitly_classified_occurrences":177,"unresolved_occurrences":0,"identity_equation":True}
+    with pytest.raises(ValueError,match="D6_TEST_176_REPORT_CONFLICT"):
+        validate_docx_176_binding(execution,lineage,"NOT_RUN")
+    bad=dict(lineage,total_occurrences=240)
+    with pytest.raises(ValueError,match="D6_TEST_176_LINEAGE_COUNTS_MISMATCH"):
+        validate_docx_176_binding(execution,bad,"EXECUTED_ON_EXACT_HEAD")
+
+
+def test_audit_disposition_gate_rejects_blocked_or_fail_and_never_promotes_acceptance():
+    from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
+    for status in ("BLOCKED","FAIL"):
+        with pytest.raises(ValueError,match="D6_AUDIT_NOT_CLOSABLE"):
+            validate_d6_audit_disposition({"status":status,"d6_disposition":status,"final_accepted":"NOT_DECLARED"})
+    with pytest.raises(ValueError,match="D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNDECLARED"):
+        validate_d6_audit_disposition({"status":"PASS_SCOPED_WITH_LIMITATIONS","d6_disposition":"PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"FINAL_ACCEPTED"})

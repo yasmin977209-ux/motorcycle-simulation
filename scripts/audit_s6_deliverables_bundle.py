@@ -24,6 +24,61 @@ CONTRACTS={
 "186":"Seven deliverables plus manifest in exactly eight-member ZIP; external SHA256SUMS and remote bytes"
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
+
+def strict_json_load(path):
+ path=Path(path)
+ try:
+  raw=path.read_bytes()
+  return json.loads(raw.decode("utf-8"))
+ except UnicodeDecodeError as exc:
+  raise ValueError(f"JSON_UTF8_INVALID:{path}:byte={exc.start}") from exc
+ except json.JSONDecodeError as exc:
+  raise ValueError(f"JSON_INVALID:{path}:line={exc.lineno}:column={exc.colno}:pos={exc.pos}:{exc.msg}") from exc
+
+
+def load_acceptance_execution(path, expected_test_ids, run_id, job_id, tested_sha,
+                              artifact_id, artifact_sha256):
+ execution=strict_json_load(path)
+ if not isinstance(execution,dict): raise ValueError("D6_ACCEPTANCE_REPORT_NOT_OBJECT")
+ tests=execution.get("tests")
+ if not isinstance(tests,dict) or set(tests)!=set(expected_test_ids):
+  raise ValueError("D6_ACCEPTANCE_TEST_ID_SET_MISMATCH")
+ if (str(execution.get("run_id"))!=str(run_id)
+     or str(execution.get("job_id"))!=str(job_id)
+     or execution.get("tested_sha")!=tested_sha):
+  raise ValueError("D6_ACCEPTANCE_REPORT_IDENTITY_MISMATCH")
+ if (str(execution.get("d5_artifact_id"))!=str(artifact_id)
+     or execution.get("d5_artifact_sha256")!=artifact_sha256):
+  raise ValueError("D6_ACCEPTANCE_ARTIFACT_BINDING_MISMATCH")
+ for tid,record in tests.items():
+  if (record.get("result")!="PASS" or record.get("tested_sha")!=tested_sha
+      or str(record.get("run_id"))!=str(run_id)
+      or str(record.get("job_id"))!=str(job_id)):
+   raise ValueError("D6_ACCEPTANCE_TEST_NOT_PASS_ON_EXACT_HEAD:"+tid)
+ return execution
+
+
+def validate_docx_176_binding(execution, lineage_report, docx_176_status):
+ if lineage_report.get("acceptance")!="PASS":
+  raise ValueError("D6_TEST_176_LINEAGE_NOT_ACCEPTED")
+ counts=(lineage_report.get("total_occurrences"),lineage_report.get("resolved_occurrences"),
+         lineage_report.get("explicitly_classified_occurrences"),lineage_report.get("unresolved_occurrences"))
+ if counts!=(241,64,177,0): raise ValueError("D6_TEST_176_LINEAGE_COUNTS_MISMATCH")
+ if counts[0]!=counts[1]+counts[2]+counts[3] or lineage_report.get("identity_equation") is not True:
+  raise ValueError("D6_TEST_176_LINEAGE_EQUATION_MISMATCH")
+ if execution.get("tests",{}).get("176",{}).get("result")!="PASS":
+  raise ValueError("D6_TEST_176_EXECUTION_NOT_PASS")
+ if docx_176_status!="EXECUTED_ON_EXACT_HEAD": raise ValueError("D6_TEST_176_REPORT_CONFLICT")
+ return True
+
+
+def validate_d6_audit_disposition(report):
+ status=report.get("status"); disposition=report.get("d6_disposition")
+ if status in ("BLOCKED","FAIL") or disposition in ("BLOCKED","FAIL"):
+  raise ValueError("D6_AUDIT_NOT_CLOSABLE:"+str(status)+":"+str(disposition))
+ if report.get("final_accepted")!="NOT_DECLARED":
+  raise ValueError("D6_FINAL_ACCEPTANCE_MUST_REMAIN_UNDECLARED")
+ return True
 def load_d5_pin(root):
  path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json"
  if not path.is_file(): path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json"
@@ -498,12 +553,9 @@ def audit(a):
  a.audit_checks=checks
  execution_path=Path(a.output_dir)/"ACCEPTANCE_TEST_EXECUTION.json"
  if not execution_path.is_file(): raise ValueError("D6_ACCEPTANCE_TEST_EXECUTION_MISSING")
- execution_results=json.loads(execution_path.read_text(encoding="utf-8"))
- expected_test_ids=set(CONTRACTS)
- if set(execution_results.get("tests",{}))!=expected_test_ids: raise ValueError("D6_ACCEPTANCE_TEST_ID_SET_MISMATCH")
- for tid,record in execution_results["tests"].items():
-  if record.get("result")!="PASS" or record.get("tested_sha")!=a.tested_sha or str(record.get("run_id"))!=str(a.run_id) or str(record.get("job_id"))!=str(a.job_id):
-   raise ValueError("D6_ACCEPTANCE_TEST_NOT_PASS_ON_EXACT_HEAD:"+tid)
+ execution_results=load_acceptance_execution(
+  execution_path, set(CONTRACTS), a.run_id, a.job_id, a.tested_sha,
+  pin["artifact_id"], pin["artifact_sha256"])
  checks["acceptance_test_execution"]={"status":"PASS","tested_sha":a.tested_sha,"run_id":a.run_id,"job_id":a.job_id,"tests":execution_results["tests"]}
  checks.update(acceptance_test_statuses(
   excel_sheets_verified=(len(prior_sheetnames or [])==185),
@@ -515,6 +567,8 @@ def audit(a):
   execution_results=execution_results))
  if execution_results["tests"]["176"]["result"]=="PASS":
   checks["docx_176"]={"status":"EXECUTED_ON_EXACT_HEAD","run_id":a.run_id,"job_id":a.job_id,"tested_sha":a.tested_sha,"pytest_nodeid":execution_results["tests"]["176"]["pytest_nodeid"]}
+ lineage_report=strict_json_load(root/"docs/stage_d/D4_NUMERIC_TOKEN_LINEAGE_2026-11-07.json")
+ validate_docx_176_binding(execution_results,lineage_report,checks["docx_176"]["status"])
  a.audit_checks=checks
  result={"schema_version":"d6-independent-post-write-audit-v2","status":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","classification":"T2_INTERIM / NOT_FINAL_BLOCKED","repository":"yasmin977209-ux/motorcycle-simulation","branch":a.branch,"tested_sha":a.tested_sha,"run_id":a.run_id,"source_d5_run_id":pin["artifact_run_id"],"source_d5_artifact_id":pin["artifact_id"],"checks":checks,"fixed_gate_states":gates,"missing_accounting_fields":MISSING,"limitations":["Full numeric-token-to-Number-Registry recomputation for every DOCX numeric token remains NOT_RUN; explicit identifier resolution is scoped only.","DOCX rendering and directionality are checked independently in this D6 job; rendering does not imply visual review of every page.","Historical acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 are individually NOT_RUN in this D6 job; auditor unit tests are not those acceptance tests.","Test 181 source partner daily balances are not recreated; missing historical 48K evidence remains missing.","No full 177-unique-test suite, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."],"d6_disposition":"BLOCKED" if (financial_mismatch_count or docx_blocked or render_blocked or docx_unknown_ids) else "PASS_SCOPED_WITH_LIMITATIONS","final_accepted":"NOT_DECLARED","p17_final_accepted":"NOT_DECLARED","p18_released":"NOT_DECLARED","converged":"NOT_DECLARED"}
  out=Path(a.output_dir); out.mkdir(parents=True,exist_ok=True)

@@ -104,9 +104,10 @@ jobs:
               raise SystemExit("D6_ACCEPTANCE_TEST_ID_SET_MISMATCH:"+repr(sorted(set(records)^expected)))
           failed=[k for k,v in records.items() if v["result"]!="PASS"]
           if failed: raise SystemExit("D6_ACCEPTANCE_TEST_FAILURES:"+repr(failed))
-          out={"schema_version":"d6-acceptance-test-execution-v1","run_id":int(os.environ["D6_RUN_ID"]),"job_id":int(os.environ["D6_JOB_ID"]),"tested_sha":os.environ["TESTED_SHA"],"tests":records}
+          pin=json.loads(pathlib.Path("docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json").read_text(encoding="utf-8"))
+          out={"schema_version":"d6-acceptance-test-execution-v1","run_id":int(os.environ["D6_RUN_ID"]),"job_id":int(os.environ["D6_JOB_ID"]),"tested_sha":os.environ["TESTED_SHA"],"d5_artifact_id":int(pin["artifact"]["id"]),"d5_artifact_sha256":pin["artifact"]["downloaded_zip_sha256"],"tests":records}
           path=pathlib.Path(os.environ["D6_OUT"])/"ACCEPTANCE_TEST_EXECUTION.json"
-          path.write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          path.write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
           print(json.dumps({"acceptance_tests":"PASS","test_ids":sorted(records),"run_id":out["run_id"],"job_id":out["job_id"],"tested_sha":out["tested_sha"]}))
           PY
       - name: Independent post-write audit
@@ -117,6 +118,17 @@ jobs:
           D6_JOB_ID: ${{ env.D6_JOB_ID }}
         run: |
           python scripts/audit_s6_deliverables_bundle.py --artifact /tmp/d5-artifact.zip --root . --run-id "$AUDIT_RUN_ID" --tested-sha "$TESTED_SHA" --branch "$BRANCH_NAME" --job-id "$D6_JOB_ID" --output-dir "docs/stage_d/D6_AUDIT_RUN_${AUDIT_RUN_ID}"
+      - name: Enforce fail-closed D6 audit disposition
+        env:
+          D6_OUT: docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import json,pathlib,os
+          from scripts.audit_s6_deliverables_bundle import validate_d6_audit_disposition
+          report=json.loads((pathlib.Path(os.environ["D6_OUT"])/"FINAL_AUDIT.json").read_text(encoding="utf-8"))
+          validate_d6_audit_disposition(report)
+          print("D6_AUDIT_DISPOSITION_GATE_PASS",report["status"],report["d6_disposition"])
+          PY
       - name: Append D6 session and continuity evidence
         env:
           AUDIT_RUN_ID: ${{ github.run_id }}
