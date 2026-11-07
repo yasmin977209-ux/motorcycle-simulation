@@ -6,6 +6,7 @@ import requests
 import duckdb
 
 PARQUET_REQUIRED={"trials_summary.parquet","daily_distribution.parquet","daily_snapshots.parquet"}
+REQUIRED_ACCOUNTING_FIELDS={"Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"}
 
 def sha_file(path):
     h=hashlib.sha256()
@@ -81,11 +82,21 @@ def metadata_hash_audit(root):
         matched.extend([a for a in actual if a["sha256"]==e])
     return {"status":"PASS" if matched else "FAIL","expected_sha256_values":sorted(set(expected)),"metadata_files":actual,"matching_files":matched}
 
+def missing_required_accounting_fields(columns):
+    present={str(column.get("name","")).casefold() for column in columns}
+    return sorted(field for field in REQUIRED_ACCOUNTING_FIELDS if field.casefold() not in present)
+
+def classify_audit(metadata_status, parquet_status, require_source_metadata):
+    metadata_ok=(metadata_status=="PASS") if require_source_metadata else metadata_status in ("PASS","MISSING_EVIDENCE")
+    parquet_ok=parquet_status in ("PASS_SCOPED","NOT_PRESENT")
+    return "PASS_SCOPED" if metadata_ok and parquet_ok else "BLOCKED"
+
 def parquet_audit(root, required):
     files=sorted(p for p in pathlib.Path(root).rglob("*.parquet") if p.is_file())
     basenames={p.name for p in files}
     missing=sorted(PARQUET_REQUIRED-basenames) if required else []
     reports=[]
+    missing_accounting_fields=[]
     con=duckdb.connect(database=":memory:")
     try:
         for p in files:
@@ -99,12 +110,15 @@ def parquet_audit(root, required):
                 q='"'+col["name"].replace('"','""')+'"'
                 nulls[col["name"]]=int(con.execute(f"SELECT COUNT(*) FILTER (WHERE {q} IS NULL) FROM {relation}").fetchone()[0])
             distinct=int(con.execute(f"SELECT COUNT(*) FROM (SELECT DISTINCT * FROM {relation})").fetchone()[0])
-            reports.append({"path":str(p.relative_to(root)),"bytes":p.stat().st_size,"schema":columns,"row_count":rows,"null_counts":nulls,"duplicate_row_count":rows-distinct,"partition_path_parts":list(p.relative_to(root).parts[:-1])})
+            missing_fields=missing_required_accounting_fields(columns) if p.name.lower()=="daily_snapshots.parquet" else []
+            if missing_fields: missing_accounting_fields.append({"path":str(p.relative_to(root)),"missing_fields":missing_fields})
+            reports.append({"path":str(p.relative_to(root)),"bytes":p.stat().st_size,"schema":columns,"row_count":rows,"null_counts":nulls,"duplicate_row_count":rows-distinct,"partition_path_parts":list(p.relative_to(root).parts[:-1]),"missing_required_accounting_fields":missing_fields})
     finally: con.close()
     if required and not files: status="MISSING_EVIDENCE"
     elif missing: status="MISSING_EVIDENCE"
+    elif missing_accounting_fields: status="MISSING_EVIDENCE"
     else: status="PASS_SCOPED"
-    return {"status":status,"parquet_file_count":len(files),"required_basenames":sorted(PARQUET_REQUIRED) if required else [],"missing_required_basenames":missing,"files":reports}
+    return {"status":status,"parquet_file_count":len(files),"required_basenames":sorted(PARQUET_REQUIRED) if required else [],"missing_required_basenames":missing,"missing_accounting_fields":missing_accounting_fields,"files":reports}
 
 def main():
     ap=argparse.ArgumentParser()
@@ -148,8 +162,8 @@ def main():
       "outer_zip":{"crc":"PASS","member_count":len(members),"restored_bytes":restored_bytes},
       "restore_test":{"status":"PASS","restored_member_count":len(members),"nested_archives":nested},
       "source_run_metadata_sha256":metadata,"parquet_audit":parquet,
-      "classification":"PASS_SCOPED" if metadata["status"] in ("PASS","MISSING_EVIDENCE") and parquet["status"] in ("PASS_SCOPED","NOT_PRESENT") else "BLOCKED",
-      "limitations":["GitHub source bytes are audited here; this runner cannot independently read back OneDrive or Dropbox object bytes. Provider metadata/size matches are separate evidence.","The historical original source_run_metadata.sha256 field may be null; MISSING_EVIDENCE is preserved as a gap and is not synthesized."]
+      "classification":classify_audit(metadata["status"],parquet["status"],a.require_source_metadata),
+      "limitations":["GitHub source bytes are audited here; this runner cannot independently read back OneDrive or Dropbox object bytes. Provider metadata/size matches are separate evidence.","When --require-source-metadata is set, absent/mismatched source metadata blocks this artifact audit; no hash is synthesized.","When Parquet is required, daily_snapshots.parquet must contain all five normative accounting fields; missing fields remain MISSING_EVIDENCE."]
     }
     out=pathlib.Path(a.output); out.mkdir(parents=True,exist_ok=True)
     dest=out/f"ARTIFACT_{a.artifact_id}_AUDIT.json"
