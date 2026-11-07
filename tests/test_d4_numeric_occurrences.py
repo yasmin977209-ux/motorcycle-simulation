@@ -44,3 +44,11 @@ def test_long_artifact_and_run_id_pair_is_classified_as_identifier():
     context = "12852969854/40773412377"
     assert classify("12852969854", context) == "Identifier"
     assert classify("40773412377", context) == "Identifier"
+
+def test_percentage_probability_precedes_financial_loss_context():
+    assert classify("5", "احتمال الخسارة 5٪") == "Statistical"
+    assert classify("5", "probability of loss is 5%") == "Statistical"
+
+
+def test_parenthetical_multiplier_is_formula_not_list_number():
+    assert classify("0.5", "معامل مضاعف (0.5) ضمن الصيغة") == "Formula constant"

@@ -12,7 +12,7 @@ DATE=re.compile(r"[0-9٠-٩۰-۹]{1,4}[-/][0-9٠-٩۰-۹]{1,2}[-/][0-9٠-٩۰-۹
 FINANCIAL=re.compile(r"(?i)(£|\$|€|ريال|جنيه|دولار|رأس المال|رأس مال|الإيراد|الإيرادات|الأصول|الالتزامات|الحقوق|الربح|الخسارة|equity|capital|revenue|asset|liabilit|profit|loss|cash|balance)")
 STATISTICAL=re.compile(r"(?i)(%|٪|نسبة|احتمال|متوسط|وسيط|انحراف|مئين|كمية|تجربة|تجارب|scenario|trial|mean|median|percent|probability|rate|sample|n\s*=|P10|P25|P50|P75|P90|quantile)")
 REFERENCE=re.compile(r"(?i)(§|المادة|الفقرة|البند|بنود|مرجع|reference|section|clause|v2\.)")
-FORMULA=re.compile(r"(?i)(formula|معادلة|equation|calculated|يحسب|ناتج المعادلة)")
+FORMULA=re.compile(r"(?i)(formula|معادلة|equation|calculated|يحسب|ناتج المعادلة|factor|multiplier|مضاعف|معامل|الصيغة)")
 QUANTITY=re.compile(r"(?i)(كمية|عدد|صفحة|صفحات|يوم|أيام|ساعة|ساعات|شهر|أشهر|سنة|سنوات|kg|km|days?|hours?|months?|years?|pages?|units?)")
 IDENTIFIER=re.compile(r"(?i)(id\b|identifier|معرّف|معرف|كود|code|run(?:\s*id)?|artifact(?:\s*id)?|job(?:\s*id)?|sha(?:-256)?|commit|version|scenario|trial|cohort|test\s*#?\s*\d+|T\d+_|D\d+|C\d{3}_G\d{3}|NR-)")
 PAGINATION=re.compile(r"(?i)(\bPAGE\b|\bNUMPAGES\b|page number|رقم الصفحة)")
@@ -20,11 +20,12 @@ PAGINATION=re.compile(r"(?i)(\bPAGE\b|\bNUMPAGES\b|page number|رقم الصفح
 def classify(token:str, context:str, field_context:str="")->str:
     if PAGINATION.search(field_context) or PAGINATION.search(context): return "Pagination"
     if re.search(r"(?<![0-9٠-٩۰-۹])[0-9٠-٩۰-۹]{8,}\s*/\s*[0-9٠-٩۰-۹]{8,}(?![0-9٠-٩۰-۹])",context): return "Identifier"
+    if token.isdigit() and re.search(r"[\(\[]\s*"+re.escape(token)+r"\s*[\)\]]",context): return "Section/Item number"
+    if re.match(r"^\s*"+re.escape(token)+r"(?:[.)،-])?\s+",context): return "Section/Item number"
+    if re.search(r"(?<![0-9٠-٩۰-۹])"+re.escape(token)+r"[.)،]\s+",context): return "Section/Item number"
     if REFERENCE.search(context): return "Reference constant"
     if DATE.search(context) or re.search(r"(?i)(تاريخ|date|time|وقت|اليوم)",context): return "Date/Time"
-    if re.search(r"[\(\[]\s*"+re.escape(token)+r"\s*[\)\]]",context): return "Section/Item number"
-    if re.search(r"(?<![0-9٠-٩۰-۹])"+re.escape(token)+r"[.)،]\s+",context): return "Section/Item number"
-    if re.match(r"^\s*"+re.escape(token)+r"(?:[.)،-])?\s+",context): return "Section/Item number"
+    if re.search(r"[%٪]|نسبة|احتمال|probability|percent(age)?",context,re.I): return "Statistical"
     if FINANCIAL.search(context): return "Financial"
     if STATISTICAL.search(context): return "Statistical"
     if FORMULA.search(context): return "Formula constant"
