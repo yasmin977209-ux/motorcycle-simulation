@@ -16,5 +16,10 @@
     "bytes": 8217,
     "sha256": "2bbd2edb3a948891c1da376079b93b6b3bbdb6d0a7149ec3859a62e81f2a20f1"
   },
-  "note": "Append-only pointer; historical root pointer unchanged."
+  "note": "Append-only pointer; historical root pointer unchanged.",
+  "current_branch_head_observed": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+  "current_head_d6_status": "NOT_RUN",
+  "current_run_remains_latest_d6": 42403657899,
+  "historical_json_error_file": "docs/stage_d/D6_AUDIT_RUN_42394060281/ACCEPTANCE_TEST_EXECUTION.json",
+  "root_cause_corrected_in_later_workflow": true
 }

@@ -90,5 +90,90 @@
   "main_modified": false,
   "merge": false,
   "release": false,
-  "new_trial_simulation_monte_carlo": false
+  "new_trial_simulation_monte_carlo": false,
+  "live_reconciliation": {
+    "observed_head": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+    "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "stages": {
+      "D0": {
+        "run_id": 42283741942,
+        "tested_sha": "afbc65bae45a53ccc14fd9098014494d09ec70e3",
+        "workflow_status": "success",
+        "artifact_count": 27,
+        "successful_jobs": 27,
+        "stage_disposition": "PASS_SCOPED_WITH_LIMITATIONS"
+      },
+      "D1_D2": {
+        "run_id": 42407443585,
+        "job_id": 128508085668,
+        "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+        "workflow_status": "success",
+        "tests_passed": 36,
+        "artifact_id": 13587689091,
+        "artifact_bytes": 10545,
+        "artifact_sha256": "174fc4e225186d9619db405cb7c952dfe659bb72aeb8b0b7fa3f9f8e168ea922",
+        "stage_disposition": "PASS_SCOPED_WITH_LIMITATIONS"
+      },
+      "D3": {
+        "run_id": 42407443559,
+        "job_id": 128508085687,
+        "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+        "workflow_status": "success",
+        "tests_passed": 38,
+        "files_read_back": 35,
+        "workbooks_rebuilt": false,
+        "stage_disposition": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE"
+      },
+      "D4": {
+        "run_id": 42407443567,
+        "job_id": 128508085683,
+        "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+        "workflow_status": "success",
+        "tests_passed": 5,
+        "artifact_id": 13587862179,
+        "artifact_bytes": 6325,
+        "artifact_sha256": "aa974d58122ac02e35f30c24cdbd738be65f63be8919d00e8153719ed30cad45",
+        "stage_disposition": "PASS_GAP_FREE"
+      },
+      "D5": {
+        "run_id": 42393413807,
+        "job_id": 128465567045,
+        "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+        "workflow_status": "success",
+        "artifact_id": 13582441423,
+        "artifact_bytes": 519117017,
+        "artifact_sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+        "stage_disposition": "PASS_GAP_FREE"
+      },
+      "D6": {
+        "run_id": 42403657899,
+        "job_id": 128498571102,
+        "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+        "workflow_status": "success",
+        "unit_tests_passed": 49,
+        "normative_tests_passed": 8,
+        "acceptance_seconds": 523.32,
+        "artifact_id": 13586354284,
+        "artifact_bytes": 8217,
+        "artifact_sha256": "2bbd2edb3a948891c1da376079b93b6b3bbdb6d0a7149ec3859a62e81f2a20f1",
+        "stage_disposition": "PASS_SCOPED_WITH_LIMITATIONS"
+      }
+    },
+    "raw_readback": {
+      "run_id": 42407443575,
+      "job_id": 128508085726,
+      "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+      "workflow_status": "success",
+      "files_compared": 39,
+      "audit_status": "BLOCKED_REPORT_JSON_INVALID",
+      "report_error": "literal backslash+n suffix",
+      "artifact_id": 13588455375,
+      "artifact_bytes": 4012,
+      "artifact_sha256": "5c19eb9fd5454d923260a2f9b8e94c8d932e7818fcfaee1fb9f9ea3f0de8497a"
+    },
+    "exact_final_head_across_d0_d6": "NOT_ESTABLISHED",
+    "global_preservation": "BLOCKED",
+    "final_acceptance": "NOT_ACCEPTED",
+    "project_status": "T2_INTERIM / NOT_FINAL_BLOCKED"
+  }
 }

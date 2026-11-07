@@ -55,5 +55,34 @@
     }
   },
   "correction": "D6_AUDIT_TEXT_RECONCILIATION_2026-11-07.md clarifies eight normative tests passed; full 177-unique-test suite remains NOT_RUN.",
-  "exact_final_head_validation": "NOT_ESTABLISHED"
+  "exact_final_head_validation": "NOT_ESTABLISHED",
+  "current_live_reconciliation": {
+    "observed_head": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+    "D5": {
+      "run_id": 42393413807,
+      "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+      "artifact_id": 13582441423,
+      "bytes": 519117017,
+      "sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+      "external_upload": "BLOCKED_FILE_UPLOAD_LIMIT_104857600"
+    },
+    "D6": {
+      "run_id": 42403657899,
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "unit_tests_passed": 49,
+      "normative_tests_passed": 8,
+      "stage_disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+      "current_head_status": "NOT_RUN_ON_FA55"
+    },
+    "root_cause": {
+      "run_id": 42394060281,
+      "job_id": 128467560335,
+      "tested_sha": "40933aeaac12cef94882529655aa7626811d4bc4",
+      "file": "docs/stage_d/D6_AUDIT_RUN_42394060281/ACCEPTANCE_TEST_EXECUTION.json",
+      "workflow_line": 109,
+      "defect": "literal backslash+n appended after JSON; 2862 bytes; JSONDecodeError Extra data line 72 column 2 char 2860",
+      "corrected_in_later_workflow": true,
+      "D5_preflight_at_40933": "2388 bytes; valid JSON"
+    }
+  }
 }

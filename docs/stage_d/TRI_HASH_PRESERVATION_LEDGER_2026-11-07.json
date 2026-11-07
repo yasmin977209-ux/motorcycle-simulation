@@ -49,7 +49,7 @@
       "github_artifact_id": 13382253631,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -68,7 +68,7 @@
       "github_artifact_id": 13364064483,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -87,7 +87,7 @@
       "github_artifact_id": 13288779998,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -106,7 +106,7 @@
       "github_artifact_id": 13371094066,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -125,7 +125,7 @@
       "github_artifact_id": 12998778418,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -144,7 +144,7 @@
       "github_artifact_id": 13373853115,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -163,7 +163,7 @@
       "github_artifact_id": 13369179742,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -182,7 +182,7 @@
       "github_artifact_id": 12852969854,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -201,7 +201,7 @@
       "github_artifact_id": 12630457193,
       "metadata_disposition": "MATCH",
       "live_inventory_rechecked": true,
-      "live_size_rechecked": true,
+      "live_size_rechecked": false,
       "live_hash_rechecked": false,
       "live_hash_recheck_status": "NOT_RETURNED_BY_CONNECTED_METADATA_ACTION",
       "raw_byte_sha256_readback": "NOT_RUN",
@@ -221,7 +221,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -239,7 +239,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -257,7 +257,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -275,7 +275,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -293,7 +293,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -311,7 +311,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -329,7 +329,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -347,7 +347,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -365,7 +365,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -383,7 +383,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -401,7 +401,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -419,7 +419,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -437,7 +437,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -455,7 +455,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -473,7 +473,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -491,7 +491,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -509,7 +509,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -527,7 +527,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -545,7 +545,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -563,7 +563,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -581,7 +581,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -599,7 +599,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -617,7 +617,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -635,7 +635,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -653,7 +653,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -671,7 +671,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -689,7 +689,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -707,7 +707,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -725,7 +725,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -743,7 +743,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -761,7 +761,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -779,7 +779,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -797,7 +797,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -815,7 +815,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -833,7 +833,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -851,7 +851,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -869,7 +869,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -887,7 +887,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -905,7 +905,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -923,7 +923,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -941,7 +941,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -959,7 +959,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -977,7 +977,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "MATCH",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -995,7 +995,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1013,7 +1013,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1031,7 +1031,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1049,7 +1049,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1067,7 +1067,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1085,7 +1085,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1103,7 +1103,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1121,7 +1121,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1139,7 +1139,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1157,7 +1157,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1175,7 +1175,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1193,7 +1193,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1211,7 +1211,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1229,7 +1229,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1247,7 +1247,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1265,7 +1265,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1283,7 +1283,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1301,7 +1301,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1319,7 +1319,7 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
     },
@@ -1337,9 +1337,100 @@
       "live_inventory_rechecked": true,
       "live_size_rechecked": true,
       "live_hash_rechecked": true,
-      "live_hash_recheck_status": "MATCH_RECORDED_METADATA",
+      "live_hash_recheck_status": "NOT_COMPARABLE_REFERENCE_HASH_MISSING",
       "raw_byte_sha256_readback": "NOT_RUN",
       "restore_test": "NOT_RUN"
+    }
+  ],
+  "live_reconciliation": {
+    "observed_at": "2026-11-07T23:15+03:00",
+    "observed_branch_head": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+    "observed_main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "inventory": {
+      "target": 72,
+      "onedrive": 63,
+      "dropbox": 9,
+      "onedrive_root_items": 73,
+      "d3s_folder_items": 23,
+      "multipart_folder_items": 21,
+      "dropbox_root_entries": 10,
+      "dropbox_secondary_mirror_files": 3
+    },
+    "counts": {
+      "recorded_match": 51,
+      "not_comparable": 21,
+      "mismatch": 0,
+      "missing": 0,
+      "live_onedrive_quickxor_matches": 42,
+      "live_onedrive_not_comparable": 21,
+      "dropbox_hash_live_recheck": "NOT_RETURNED",
+      "live_missing": 0,
+      "live_dropbox_items_relisted": 9
+    },
+    "raw_byte_sha256_readback": "NOT_RUN_FOR_ALL_72",
+    "restore": "NOT_RUN_FOR_ALL_72",
+    "failure_domain_independence": "NOT_PROVEN",
+    "e2_replay_20": "NOT_TRANSFERRED",
+    "global_preservation_gate": "BLOCKED",
+    "interpretation": "The 72/72 claim is unsupported. Detailed record remains 51 MATCH / 21 NOT_COMPARABLE / 0 MISMATCH. Of 51, 42 OneDrive QuickXorHash values rechecked live; 9 Dropbox hashes remain previously reported only."
+  },
+  "additional_artifact_copies": [
+    {
+      "run_id": 42407443575,
+      "artifact_id": 13588455375,
+      "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+      "bytes": 4012,
+      "sha256": "5c19eb9fd5454d923260a2f9b8e94c8d932e7818fcfaee1fb9f9ea3f0de8497a",
+      "onedrive_item_id": "893D06C344EA996B!sed35022491b34b18a8c13cfb67c50fb8",
+      "uploaded": true,
+      "raw_readback_downloaded": true,
+      "readback_sha256": "NOT_COMPUTED",
+      "restore": "NOT_RUN"
+    },
+    {
+      "run_id": 42407443567,
+      "artifact_id": 13587862179,
+      "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+      "bytes": 6325,
+      "sha256": "aa974d58122ac02e35f30c24cdbd738be65f63be8919d00e8153719ed30cad45",
+      "onedrive_item_id": "893D06C344EA996B!sff8b473e3e374dd79b4a613872e4fd88",
+      "uploaded": true,
+      "raw_readback_downloaded": true,
+      "readback_sha256": "NOT_COMPUTED",
+      "restore": "NOT_RUN"
+    },
+    {
+      "run_id": 42407443585,
+      "artifact_id": 13587689091,
+      "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+      "bytes": 10545,
+      "sha256": "174fc4e225186d9619db405cb7c952dfe659bb72aeb8b0b7fa3f9f8e168ea922",
+      "onedrive_item_id": "893D06C344EA996B!se3621bff3b9e4a54b2f810b2bedaf5db",
+      "uploaded": true,
+      "raw_readback_downloaded": true,
+      "readback_sha256": "NOT_COMPUTED",
+      "restore": "NOT_RUN"
+    },
+    {
+      "run_id": 42403657899,
+      "artifact_id": 13586354284,
+      "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "bytes": 8217,
+      "sha256": "2bbd2edb3a948891c1da376079b93b6b3bbdb6d0a7149ec3859a62e81f2a20f1",
+      "onedrive_item_id": "893D06C344EA996B!s76f9eaccaae1430f93e98c0b2f3992b7",
+      "present": true,
+      "raw_readback_downloaded": true,
+      "readback_sha256": "NOT_COMPUTED",
+      "restore": "NOT_RUN"
+    },
+    {
+      "run_id": 42393413807,
+      "artifact_id": 13582441423,
+      "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+      "bytes": 519117017,
+      "sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+      "downloaded_to_chat_file_store": true,
+      "onedrive_upload": "BLOCKED_FILE_UPLOAD_LIMIT_104857600"
     }
   ]
 }

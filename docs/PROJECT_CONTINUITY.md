@@ -4073,3 +4073,25 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Exact Final Head across D0-D6: NOT_ESTABLISHED. Overall `T2_INTERIM / NOT_FINAL_BLOCKED`.
 
 New records: REV7, D0-D2 effective closure, D5-D6 aggregate closure, D0-D6 master closure, 72-object metadata ledger, blocker register, D6 wording reconciliation and current pointer. Post-write raw readback is required before assigning SHA-256/commit triples.
+
+## Live execution update — 2026-11-07 (append-only)
+
+Observed work-branch HEAD before this documentation commit: fa55d396b3f0d5af78a9086e3b481e2f925c112d. Main read-only: 01a6f79eedc522bb734ed9c5ea31beee581f2468.
+
+### Live exact-SHA evidence
+- D0 Run 42283741942 tested afbc65bae45a53ccc14fd9098014494d09ec70e3; 27 Artifact-specific jobs and 27 Artifacts succeeded. D0 remains PASS_SCOPED_WITH_LIMITATIONS because full Parquet coverage and historical 48K accounting evidence remain incomplete.
+- D1-D2 Run 42407443585 / Job 128508085668 tested fa55d396b3f0d5af78a9086e3b481e2f925c112d; 36 passed, 0 failed. Artifact 13587689091: 10,545 bytes, SHA-256 174fc4e225186d9619db405cb7c952dfe659bb72aeb8b0b7fa3f9f8e168ea922. D1/D2 remain PASS_SCOPED_WITH_LIMITATIONS; Builder importer and C100 Golden revalidation remain NOT_RUN.
+- D3 Run 42407443559 / Job 128508085687 tested fa55d396b3f0d5af78a9086e3b481e2f925c112d; 38 passed and 35 committed files were read back. No workbook rebuild. D3 remains PASS_GAP_FREE_NORMATIVE_V240_SCOPE.
+- D4 Run 42407443567 / Job 128508085683 tested fa55d396b3f0d5af78a9086e3b481e2f925c112d; 5 passed. Artifact 13587862179: 6,325 bytes, SHA-256 aa974d58122ac02e35f30c24cdbd738be65f63be8919d00e8153719ed30cad45. D4 remains PASS_GAP_FREE.
+- D5 Run 42393413807 tested c757126ac27e8f6606f38b14324119cc22604858; Artifact 13582441423: 519,117,017 bytes, SHA-256 ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc. D6 downloaded and cryptographically checked it. D5 remains PASS_GAP_FREE on its Tested SHA, not current HEAD.
+- D6 Run 42403657899 / Job 128498571102 tested 42922d06637b7fad1d36c412e2253423f9367f34; 49 unit tests and eight normative tests passed in 523.32s. Test 176 = 241 = 64 + 177 + 0. Artifact 13586354284: 8,217 bytes, SHA-256 2bbd2edb3a948891c1da376079b93b6b3bbdb6d0a7149ec3859a62e81f2a20f1. D6 remains PASS_SCOPED_WITH_LIMITATIONS; no D6 run on fa55d396b3f0d5af78a9086e3b481e2f925c112d.
+
+### D6 root cause and correction
+Historical Run 42394060281 / Job 128467560335 failed because the old D6 workflow wrote a literal backslash+n suffix to ACCEPTANCE_TEST_EXECUTION.json (2,862 bytes), causing JSONDecodeError Extra data at line 72 column 2 char 2860. The later D6 workflow corrected the writer. D5_PACKAGE_PREFLIGHT at SHA 40933 is 2,388 bytes and valid JSON; it was not the failing file. Historical evidence is unchanged.
+
+### Preservation
+The 72-object ledger remains 51 MATCH / 21 NOT_COMPARABLE / 0 MISMATCH. 42 OneDrive QuickXorHash values were rechecked live; Dropbox content_hash was not returned, so nine Dropbox hash matches remain previously reported. Raw-byte SHA-256 and Restore for all 72 remain NOT_RUN; E2 Replay 20 NOT_TRANSFERRED; two independent failure domains NOT_PROVEN; Global Preservation BLOCKED.
+Three small current-head Artifacts (13588455375, 13587862179, 13587689091) were uploaded to the existing OneDrive rescue folder and downloaded again; sizes match but SHA-256 after readback and Restore were not computed. D6 Artifact 13586354284 is present in OneDrive. D5 full Artifact download succeeded, but OneDrive upload was blocked by the 104,857,600-byte file-source limit. No Dropbox write was performed.
+
+### Raw readback and exact head
+Raw Readback Run 42407443575 tested fa55d396b3f0d5af78a9086e3b481e2f925c112d, compared 39 files, and returned Workflow success, but its report JSON was invalid due a literal backslash+n suffix. The writer, expected-SHA enforcement, path deduplication, JSON parse check and eight negative tests are corrected in the next commit; the post-push run must be inspected. D0, D5 and D6 are not tested on fa55d396b3f0d5af78a9086e3b481e2f925c112d; Exact Final Head across D0-D6 remains NOT_ESTABLISHED. Project status remains T2_INTERIM / NOT_FINAL_BLOCKED. Main remains read-only; no Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, merge, Release or final acceptance occurred.

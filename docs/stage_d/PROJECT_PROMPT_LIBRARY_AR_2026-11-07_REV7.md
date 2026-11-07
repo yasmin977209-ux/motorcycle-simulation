@@ -1,3 +1,11 @@
+# مكتبة البرومبتات التشغيلية الشاملة — REV7 | Motorcycle Simulation | 2026-11-07
+
+**تصحيح الرأس:** كان رأس الملف الموروث يعرّف النص الأساسي بأنه REV6، رغم أن اسم الملف REV7 ووجود ملحق REV7 في نهايته. حُفظ نص REV6 كاملاً دون حذف، وأُضيف هذا الرأس وقسم REV7 التشغيلي الموحد. رأس REV7 والقسم الموحد أدناه هما النافذان؛ أما اللقطات السابقة فتبقى سجلاً تاريخياً.
+
+---
+
+# REV6 — النص التاريخي المحفوظ دون تعديل
+
 # مكتبة البرومبتات التشغيلية الشاملة — Motorcycle Simulation
 ## REV6 | إعادة تأسيس تشغيلية شاملة فوق REV1–REV5 | 2026-11-05
 
@@ -1079,3 +1087,71 @@ D6 tests 175/176/179/180/181/182/183/186 passed on the D6 tested SHA. Test 176 a
 Exact Final Head across D0-D6 is NOT_ESTABLISHED. Do not promote earlier tested SHAs to a newer HEAD. Preserve Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B N=2400 FAIL_SCOPED (10/10); Stability NOT_CONVERGED (0/60); N=4800 NOT_EXECUTED; five historical accounting fields MISSING_EVIDENCE. No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 
 Next: enable authorized Actions secrets `ONEDRIVE_GRAPH_ACCESS_TOKEN` and `DROPBOX_ACCESS_TOKEN` through GitHub Settings; reconcile D3S-010 and 20 multipart hashes; verify provider bytes, reassembly, CRC and restore; transfer separate E2 Replay 20; prove two independent durable failure domains; then run D0-D6 read-only validation on one exact final SHA before E3.
+
+
+
+## REV7 — Unified active operating contract (2026-11-07; authoritative)
+
+The section below is the single operative REV7 instruction set. The preceding REV6 body and earlier REV7 snapshot are retained as historical text. Where they conflict with this section or a later explicit owner decision, this section and the owner decision govern. No historical record is deleted.
+
+### 1. Source of truth and authority
+- GitHub live state on `tmp/d1-rebuild-20261101` is the operational source of truth; `main` is read-only.
+- Authority order: verified effective v2.4.0 reference bytes and owner decision; explicit owner decisions; normative contracts/tests; exact-SHA execution evidence; GitHub commits/workflows/jobs/artifacts; continuity records; interpretations.
+- Current governing reference: `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md`, SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, 401,397 bytes. Decision `D-2026-10-30-REFERENCE-V2.4.0` is `APPROVED_BY_OWNER`. The file heading `PROPOSED` does not override the owner decision. The decision's named Arabic filename differs from the deployed path, but the deployed bytes match the owner-approved SHA exactly.
+- Keep `current_governing_reference_sha256` separate from `historical_execution_reference_sha256`; v2.3 remains historical and v2.3.1 remains CLOSED_UNAPPROVED_CANDIDATE.
+
+### 2. Bootstrap and proof contract
+- At every session start, re-fetch branch HEAD and main HEAD; inspect commits, branches, PRs, releases, workflows, runs, jobs and Artifacts; read the live prompt library, governing reference, owner decision, continuity and handoff.
+- Never infer current state from a prior report. If HEAD moves unexpectedly, stop affected writes and reconcile intervening commits.
+- A GitHub file is VERIFIED_LIVE only with exact raw URL, SHA-256 calculated from Raw bytes, Git blob SHA-1, exact byte size and containing commit SHA.
+- An Artifact is verified only after actual download, exact size, SHA-256 from downloaded bytes, ZIP CRC/structure and identity linkage. Provider metadata is not a raw-byte SHA.
+- Distinguish Exact_Tested_SHA from Exact_Final_HEAD. Old run evidence never migrates to a newer SHA.
+
+### 3. Independent status dimensions and Fail-Closed
+Every Workflow, Audit, Stage and project report keeps these fields independent: Workflow_Status, Audit_Status, Stage_Disposition, Global_Preservation_Status and Final_Acceptance.
+- Workflow success does not imply audit success, stage closure, preservation or final acceptance.
+- A Stage-local audit may close independently of Global Preservation unless v2.4.0 makes preservation a Stage-local requirement.
+- PASS_SCOPED is limited evidence; PASS_GAP_FREE_NORMATIVE_V240_SCOPE requires a complete requirement-to-test-to-evidence matrix with exact SHA, outcome and limitations for every requirement.
+- Negative tests must reject invalid JSON, extra data, missing files/tests, SHA/Artifact mismatches, BLOCKED/FAIL-to-PASS promotion and Final Acceptance without independent owner approval.
+
+### 4. D0–D6 sequence and current observed dispositions
+The mandatory order is D0 → D1 → D2 → D3 → D4 → D5 → D6, then E0 → E1 → E2 → E3 → E4 → E5 → E6. Do not skip or promote a stage because another stage passed.
+- D0: PASS_SCOPED_WITH_LIMITATIONS; Run 42283741942 tested afbc65bae45a53ccc14fd9098014494d09ec70e3; 27 Artifact-specific jobs/Artifacts succeeded, but full Parquet coverage and 48K historical accounting remain missing.
+- D1: PASS_SCOPED_WITH_LIMITATIONS; Run 42407443585 tested `fa55d396b3f0d5af78a9086e3b481e2f925c112d`; 36 passed; 105 representative keys do not establish all 48K source records.
+- D2: PASS_SCOPED_WITH_LIMITATIONS; registry has 2,640 entries, 1,000 daily series, 2,086,550 points and SHA-256 `743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87`; C100 Golden revalidation NOT_RUN.
+- D3: PASS_GAP_FREE_NORMATIVE_V240_SCOPE; Run 42407443559 tested `fa55d396b3f0d5af78a9086e3b481e2f925c112d`; 38 passed and 35 committed outputs were read back without rebuilding workbooks. Keep D3-S transport evidence separate.
+- D4: PASS_GAP_FREE; Run 42407443567 tested `fa55d396b3f0d5af78a9086e3b481e2f925c112d`; 5 passed, DOCX reopen/pagination and provenance checks passed.
+- D5: PASS_GAP_FREE on tested SHA `c757126ac27e8f6606f38b14324119cc22604858`; Artifact 13582441423 has 8 package members, 519,117,017 outer bytes and SHA-256 `ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc`.
+- D6: PASS_SCOPED_WITH_LIMITATIONS on tested SHA `42922d06637b7fad1d36c412e2253423f9367f34`; tests 175/176/179/180/181/182/183/186 passed; Test 176 asserts 241 = 64 + 177 + 0. The separate full 177-unique-test suite remains NOT_RUN.
+- These are independent dispositions, not a single exact-head closure. D0, D5 and D6 have not run on observed HEAD `fa55d396...`; Exact Final Head across D0–D6 remains NOT_ESTABLISHED.
+
+### 5. D5, D3-S and D6 artifact identity
+- D5 package contract: eight members. Its Artifact, manifest and SHA256SUMS are checked as one exact package.
+- D3-S ten workbooks/equivalence evidence and their 23 OneDrive transport objects are a separate identity; never substitute them for D5's eight-member package.
+- D6 must consume the exact verified D5 Artifact; bind FINAL_AUDIT.json to ACCEPTANCE_TEST_EXECUTION.json and Test 176 from the same run and Tested SHA. A prior D4 Test 176 is not a D6 result.
+- Preserve the historical D6 failure: Run 42394060281 wrote literal backslash+n to ACCEPTANCE_TEST_EXECUTION.json, producing the 2,862-byte invalid JSON and Extra data at line 72 column 2. The later workflow corrected the writer; Run 42403657899 passed. Do not rewrite the historical report.
+
+### 6. Global Preservation and the 72-object ledger
+- Target inventory: 20 OneDrive S6 + 23 OneDrive D3-S + 20 OneDrive Multipart + 9 Dropbox = 72.
+- Detailed reconciliation: 51 MATCH / 21 NOT_COMPARABLE / 0 MISMATCH. The earlier 72/72 claim is unsupported and remains visibly conflicted.
+- Current recheck: 42 OneDrive QuickXorHash values match their recorded same-algorithm references; Dropbox content_hash was not returned, so 9 Dropbox matches remain previously reported only. D3S-010 and 20 multipart wrappers remain NOT_COMPARABLE.
+- Track PROVIDER_METADATA_MATCH, RAW_BYTE_HASH_MATCH, READBACK_VERIFIED, RESTORE_VERIFIED, MISSING, MISMATCH and NOT_TESTED independently. None implies another.
+- Git_Commit_SHA, Git_Blob_SHA1, SHA256 and Exact_Size_Bytes are four separate fields.
+- Raw-byte SHA-256 and Restore for all 72 remain NOT_RUN. E2 Replay 20 archives remain NOT_TRANSFERRED. Two durable failure domains remain NOT_PROVEN. Global Preservation Gate remains BLOCKED.
+- OneDrive and Dropbox are separate providers/accounts, but separate account names alone do not prove independent recovery/control domains.
+
+### 7. Immutable constants and owner-only decisions
+- Financial Gate A remains PASS_SCOPED. Production Gate A remains NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS.
+- Gate B at N=2400 remains FAIL_SCOPED (10/10); Stability remains NOT_CONVERGED (0/60); N=4800 remains NOT_EXECUTED.
+- These five fields remain MISSING_EVIDENCE and must never be guessed or zero-filled: Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets.
+- Never change SOURCE_SHA, cohort_id, MASTER_SEED, trial_id, scenario identity, RNG, business rules, financial calculations, thresholds or historical data.
+- Keep S6, C100 and Stage 12/13 identities, source lineages, cohorts and evidence strictly separate; never transfer a result or hash between them.
+- No Trial, Simulation, Monte Carlo, N expansion, N=4800, backfill, zero-fill, main write, merge, force-push, history deletion or Release.
+- Changing business rules, reference, thresholds, experiment identities, running new Trials/Monte Carlo, modifying main, releasing or declaring final acceptance requires a separate explicit owner decision.
+
+### 8. Preservation, reporting and handoff
+- Use existing approved OneDrive/Dropbox folders. Upload original bytes; download again and calculate SHA-256 from returned bytes, compare size/hash, test ZIP CRC and restore. If an action limit blocks transfer, record the exact limit and leave preservation BLOCKED.
+- Do not claim 72/72, raw-byte match, Restore, independent failure domains or Global Preservation PASS without per-object evidence.
+- Keep documentation append-only. Update continuity, handoff, session status, closure and blocker records with live HEAD and exact run/Artifact identities.
+- After any commit, verify branch HEAD, main HEAD, Raw bytes, SHA-256, Git blob SHA-1 and size. Run read-only validation on final commit; if a workflow auto-commits, re-fetch HEAD and repeat only affected checks.
+- D6 does not mean final acceptance. Project status remains T2_INTERIM / NOT_FINAL_BLOCKED until independent gates and approvals are complete.

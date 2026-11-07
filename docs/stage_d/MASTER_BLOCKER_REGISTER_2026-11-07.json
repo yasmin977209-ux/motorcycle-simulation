@@ -70,15 +70,50 @@
       "priority": "P2",
       "status": "STALE_POINTER",
       "detail": "Root D6 current pointer predates Run 42403657899."
+    },
+    {
+      "id": "RAW-001",
+      "priority": "P1",
+      "status": "NOT_RUN",
+      "detail": "Run 42407443575 compared 39 files on fa55 but wrote invalid JSON due literal backslash+n; corrected workflow and negative checks await post-push run."
+    },
+    {
+      "id": "PRES-005",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "detail": "D5 Artifact 13582441423 downloaded (519117017 bytes; SHA-256 checked by D6) but OneDrive upload rejects files above 104857600 bytes."
+    },
+    {
+      "id": "REV7-001",
+      "priority": "P1",
+      "status": "NOT_RUN",
+      "detail": "REV7 header and unified active section corrected append-only; post-commit Raw readback pending."
     }
   ],
   "owner_action_required": [
     "Configure ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN as GitHub Actions repository secrets; never send credentials in chat or commit them.",
-    "Confirm the approved second durable destination and retention arrangement."
+    "Confirm the approved second durable destination and retention arrangement.",
+    "Confirm exact Dropbox destination path and filename before a new Dropbox upload; the connected upload skill requires confirmation.",
+    "Provide an approved large-file transfer route for the 519,117,017-byte D5 Artifact; current OneDrive upload action rejects >104,857,600 bytes."
   ],
   "stop_conditions": [
     "No E3 until Global Preservation Gate passes.",
     "No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill or identity changes.",
     "No main write, merge, force-push, Release or final acceptance."
-  ]
+  ],
+  "live_observed_head": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+  "live_main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "live_reconciliation": {
+    "PRES_001": "BLOCKED — raw-byte SHA-256 and Restore remain NOT_RUN for all 72.",
+    "PRES_002": "BLOCKED — independent recovery/control domains are not proven.",
+    "PRES_003": "NOT_TRANSFERRED — E2 Replay 20 remains separate.",
+    "PRES_004": "NOT_COMPARABLE — D3S-010 plus 20 multipart wrappers lack comparable source hashes.",
+    "HEAD_001": "NOT_ESTABLISHED — D0/D5/D6 tested older SHAs; D1/D2/D3/D4 tested fa55; no single D0-D6 exact-head suite.",
+    "D3_001": "CONFLICTED — preserve historical 72/72 claim, but detailed ledger supports 51/72 MATCH and 21/72 NOT_COMPARABLE.",
+    "D6_001": "CORRECTED_APPEND_ONLY — exact old writer defect identified and fixed in later workflow.",
+    "D6_002": "STALE_POINTER — legacy root pointer is superseded by current pointer file; latest D6 still tested older SHA.",
+    "RAW_001": "NOT_RUN — prior raw-readback report JSON malformed; workflow correction awaits post-push run.",
+    "PRES_005": "BLOCKED — D5 artifact 519117017 bytes downloaded but OneDrive upload action has a 104857600-byte limit.",
+    "REV7_001": "NOT_RUN — header correction committed to Git object; post-commit raw readback pending."
+  }
 }

@@ -69,5 +69,31 @@
     "status": "NOT_ESTABLISHED",
     "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
     "current_head": "72c8f18f2e522b34e136c231bef52f1c3625c205"
+  },
+  "current_live_validation": {
+    "observed_head": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+    "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "D0": {
+      "run_id": 42283741942,
+      "tested_sha": "afbc65bae45a53ccc14fd9098014494d09ec70e3",
+      "workflow_status": "success",
+      "artifact_count": 27,
+      "successful_jobs": 27,
+      "stage_disposition": "PASS_SCOPED_WITH_LIMITATIONS"
+    },
+    "D1_D2": {
+      "run_id": 42407443585,
+      "job_id": 128508085668,
+      "tested_sha": "fa55d396b3f0d5af78a9086e3b481e2f925c112d",
+      "workflow_status": "success",
+      "tests_passed": 36,
+      "tests_failed": 0,
+      "artifact_id": 13587689091,
+      "artifact_bytes": 10545,
+      "artifact_sha256": "174fc4e225186d9619db405cb7c952dfe659bb72aeb8b0b7fa3f9f8e168ea922",
+      "d1_importer": "NOT_RUN",
+      "d2_c100_golden": "NOT_RUN"
+    },
+    "exact_final_head": "NOT_ESTABLISHED"
   }
 }

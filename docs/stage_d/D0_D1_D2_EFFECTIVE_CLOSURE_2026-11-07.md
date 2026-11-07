@@ -13,3 +13,6 @@
 Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`. Five accounting fields remain `MISSING_EVIDENCE`: `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
 
 Exact Final HEAD is `NOT_ESTABLISHED`: run 42403657890 tested 42922, not observed HEAD 72c8.
+
+## Current live source validation — 2026-11-07
+D1-D2 Run 42407443585 / Job 128508085668 tested exact HEAD fa55d396b3f0d5af78a9086e3b481e2f925c112d: 36 passed, 0 failed. Artifact 13587689091: 10,545 bytes; SHA-256 174fc4e225186d9619db405cb7c952dfe659bb72aeb8b0b7fa3f9f8e168ea922. D1 and D2 remain PASS_SCOPED_WITH_LIMITATIONS. D0 was not rerun on this SHA and remains supported by Run 42283741942 on afbc65. C100 Golden revalidation remains NOT_RUN; independent Builder importer and two clean rebuilds remain NOT_RUN.

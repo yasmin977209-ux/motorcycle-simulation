@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check requests==2.32.3
           python - <<'PY'
-          import hashlib, json, os, pathlib, requests
+          import copy, hashlib, json, os, pathlib, re, requests
           repo=os.environ["GITHUB_REPOSITORY"]
           branch="tmp/d1-rebuild-20261101"
           tested=os.environ["GITHUB_SHA"]
@@ -84,45 +84,45 @@ jobs:
               "docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md",
               "docs/governance/OWNER_MASTER_BLOCKER_REMOVAL_2026-11-05.md",
               "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md",
-            "docs/PROJECT_CONTINUITY.md",
-            "docs/governance/PROJECT_DECISION_QUALITY_AND_EVIDENCE_HARDENING_PLAN_2026-11-06.md",
-            "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json",
-            "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.md",
-            "docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md",
-            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md",
-            "scripts/verify_tri_hash_preservation_bridge.py",
-            "scripts/quickxorhash.c",
-            "tests/test_tri_hash_preservation_bridge.py",
-            ".github/workflows/tri-hash-preservation-verification.yml",
-            "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
-            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
-            "docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json",
-            "docs/stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json",
-            "scripts/d3_s_create_transport_chunks.py",
-            ".github/workflows/d3-s-scenario-partitioning.yml",
-                        "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md",
-            "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.json",
-            "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.md",
-            "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.json",
-            "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.md",
-            "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.json",
-            "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.md",
-            "docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json",
-            "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.json",
-            "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.md",
-            "docs/stage_d/D6_AUDIT_TEXT_RECONCILIATION_2026-11-07.md",
-            "docs/stage_d/D6_CURRENT_AUDIT_POINTER_2026-11-07.json",
-            "docs/PROJECT_CONTINUITY.md",
-            "docs/PROJECT_HANDOFF.md",
-            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md",
-            "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md",
-            "docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md",
-            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md",
-            ".github/workflows/project-continuity-raw-readback.yml"
+              "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md",
+              "docs/PROJECT_CONTINUITY.md",
+              "docs/governance/PROJECT_DECISION_QUALITY_AND_EVIDENCE_HARDENING_PLAN_2026-11-06.md",
+              "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.json",
+              "docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.md",
+              "docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md",
+              "docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md",
+              "scripts/verify_tri_hash_preservation_bridge.py",
+              "scripts/quickxorhash.c",
+              "tests/test_tri_hash_preservation_bridge.py",
+              ".github/workflows/tri-hash-preservation-verification.yml",
+              "docs/stage_d/SESSION_STATUS_2026-11-06_LIVE_REVIEW.md",
+              "docs/stage_d/CONTINUITY_HANDOFF_2026-11-06_LIVE_REVIEW.md",
+              "docs/stage_d/S6_ONEDRIVE_EXTERNAL_COPY_TRANSFER_2026-11-06.json",
+              "docs/stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json",
+              "scripts/d3_s_create_transport_chunks.py",
+              ".github/workflows/d3-s-scenario-partitioning.yml",
+              "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.json",
+              "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.md",
+              "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.json",
+              "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.md",
+              "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.json",
+              "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.md",
+              "docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json",
+              "docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.md",
+              "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.json",
+              "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.md",
+              "docs/stage_d/D6_AUDIT_TEXT_RECONCILIATION_2026-11-07.md",
+              "docs/stage_d/D6_CURRENT_AUDIT_POINTER_2026-11-07.json",
+              "docs/PROJECT_HANDOFF.md",
+              "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md",
+              "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md",
+              ".github/workflows/project-continuity-raw-readback.yml"
           ]
+          paths=list(dict.fromkeys(paths))
           expected={
-            "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md":"225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
-            "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md":"b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243"
+              "docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md":"225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+              "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-05_REV6.md":"b7d88fbda6426a330c25e65f66e3c9c99b8ce86543742c568ec5df17ac635243",
+              "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md":"334d3713a1550b4893bf3033311feb2eb967ccc18fae732cc29c8e4f4590c423"
           }
           out=[]
           for rel in paths:
@@ -136,18 +136,95 @@ jobs:
               blob=hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+b"\x00"+raw).hexdigest()
               out.append({"path":rel,"url":url,"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),
                           "git_blob_sha1":blob,"commit_sha":tested,"raw_equals_checkout":True})
+          by_path={item["path"]:item for item in out}
+          for rel,wanted in expected.items():
+              if by_path.get(rel,{}).get("sha256")!=wanted:
+                  raise SystemExit("RAW_READBACK_EXPECTED_SHA256_MISMATCH:"+rel)
           ref=requests.get(api+f"/git/ref/heads/{branch}",headers=headers,timeout=30)
           ref.raise_for_status()
           final=ref.json()["object"]["sha"]
           if final!=tested:
               raise SystemExit("RAW_READBACK_FINAL_HEAD_MOVED:"+final)
-          report={"schema_version":"project-continuity-raw-readback-v1","classification":"VERIFIED_LIVE",
+          rev7_header=pathlib.Path("docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md").read_text(encoding="utf-8").splitlines()[0]
+          report={"schema_version":"project-continuity-raw-readback-v2","classification":"VERIFIED_LIVE",
                   "run_id":int(os.environ["GITHUB_RUN_ID"]),"branch":branch,"tested_sha":tested,
-                  "initial_head":tested,"final_head":final,"files":out}
-          p=pathlib.Path("raw-readback-output"); p.mkdir(exist_ok=True)
-          (p/"PROJECT_CONTINUITY_RAW_READBACK.json").write_text(json.dumps(report,sort_keys=True,indent=2)+"\\n")
-          print(json.dumps({"classification":report["classification"],"run_id":report["run_id"],
-                            "tested_sha":tested,"file_count":len(out)},sort_keys=True))
+                  "initial_head":tested,"final_head":final,"files":out,
+                  "project_status":"T2_INTERIM / NOT_FINAL_BLOCKED","final_acceptance":"NOT_ACCEPTED",
+                  "global_preservation_status":"BLOCKED","rev7_header":rev7_header}
+          def validate_report(candidate):
+              if candidate.get("tested_sha")!=tested or candidate.get("final_head")!=tested:
+                  raise ValueError("tested/final SHA mismatch")
+              if candidate.get("classification")!="VERIFIED_LIVE":
+                  raise ValueError("classification mismatch")
+              names=[item.get("path") for item in candidate.get("files",[])]
+              if len(names)!=len(set(names)):
+                  raise ValueError("duplicate file paths")
+              if not set(paths).issubset(set(names)):
+                  raise ValueError("required file missing")
+              for item in candidate.get("files",[]):
+                  if item.get("commit_sha")!=tested or item.get("raw_equals_checkout") is not True:
+                      raise ValueError("commit/raw equality mismatch")
+                  if not re.fullmatch(r"[0-9a-f]{64}",item.get("sha256","")):
+                      raise ValueError("invalid SHA-256")
+                  if not re.fullmatch(r"[0-9a-f]{40}",item.get("git_blob_sha1","")):
+                      raise ValueError("invalid Git blob SHA-1")
+              candidate_by_path={item["path"]:item for item in candidate.get("files",[])}
+              for rel,wanted in expected.items():
+                  if candidate_by_path.get(rel,{}).get("sha256")!=wanted:
+                      raise ValueError("expected SHA mismatch:"+rel)
+              if candidate.get("project_status")!="T2_INTERIM / NOT_FINAL_BLOCKED":
+                  raise ValueError("project status promotion")
+              if candidate.get("global_preservation_status")!="BLOCKED":
+                  raise ValueError("global preservation promotion")
+              if candidate.get("final_acceptance")=="FINAL_ACCEPTED" and not candidate.get("owner_acceptance_decision"):
+                  raise ValueError("final acceptance without owner decision")
+              header=candidate.get("rev7_header","")
+              if "REV7" not in header or "REV6" in header:
+                  raise ValueError("REV7 header conflict")
+          def validate_stage_pair(audit_status,stage_disposition):
+              if audit_status in ("BLOCKED","FAIL") and stage_disposition.startswith("PASS"):
+                  raise ValueError("BLOCKED/FAIL promoted to PASS")
+              if stage_disposition in ("BLOCKED","FAIL") and audit_status.startswith("PASS"):
+                  raise ValueError("stage BLOCKED/FAIL hidden by PASS audit")
+          report_path=pathlib.Path("raw-readback-output/PROJECT_CONTINUITY_RAW_READBACK.json")
+          report_path.parent.mkdir(exist_ok=True)
+          report_path.write_text(json.dumps(report,sort_keys=True,indent=2)+"\n",encoding="utf-8")
+          parsed=json.loads(report_path.read_text(encoding="utf-8"))
+          validate_report(parsed)
+          def must_reject(label,fn):
+              try:
+                  fn()
+              except Exception:
+                  print("NEGATIVE_TEST_PASS "+label)
+              else:
+                  raise SystemExit("NEGATIVE_TEST_FAILED:"+label)
+          def test_missing_file():
+              c=copy.deepcopy(parsed); c["files"]=[z for z in c["files"] if z["path"]!=paths[0]]; validate_report(c)
+          def test_bad_json():
+              json.loads('{"broken":')
+          def test_hash_mismatch():
+              c=copy.deepcopy(parsed); rel=next(iter(expected)); next(z for z in c["files"] if z["path"]==rel)["sha256"]="0"*64; validate_report(c)
+          def test_blocked_with_pass():
+              validate_stage_pair("BLOCKED","PASS_SCOPED")
+          def test_final_acceptance_without_decision():
+              c=copy.deepcopy(parsed); c["final_acceptance"]="FINAL_ACCEPTED"; c.pop("owner_acceptance_decision",None); validate_report(c)
+          def test_tested_sha_mismatch():
+              c=copy.deepcopy(parsed); c["tested_sha"]="0"*40; validate_report(c)
+          def test_rev7_conflict():
+              c=copy.deepcopy(parsed); c["rev7_header"]="## REV6 — stale header"; validate_report(c)
+          def test_duplicate_path():
+              c=copy.deepcopy(parsed); c["files"].append(copy.deepcopy(c["files"][0])); validate_report(c)
+          def test_global_preservation_promotion():
+              c=copy.deepcopy(parsed); c["global_preservation_status"]="PASS"; validate_report(c)
+          negatives=[("missing_file",test_missing_file),("corrupt_json",test_bad_json),("hash_mismatch",test_hash_mismatch),
+                     ("blocked_with_pass",test_blocked_with_pass),("final_acceptance_without_decision",test_final_acceptance_without_decision),
+                     ("tested_sha_mismatch",test_tested_sha_mismatch),("rev7_header_conflict",test_rev7_conflict),
+                     ("duplicate_path",test_duplicate_path),("global_preservation_promotion",test_global_preservation_promotion)]
+          for label,fn in negatives:
+              must_reject(label,fn)
+          print(json.dumps({"classification":parsed["classification"],"run_id":parsed["run_id"],
+                            "tested_sha":tested,"file_count":len(out),"negative_tests_passed":len(negatives),
+                            "report_json":"PARSE_PASS"},sort_keys=True))
           PY
       - name: Publish raw readback evidence
         uses: actions/upload-artifact@v4

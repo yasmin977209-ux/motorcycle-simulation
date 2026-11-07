@@ -116,3 +116,7 @@ This handoff's earlier D3 BLOCKED / D4 NOT_STARTED statements are historical and
 - Exact Final Head across D0-D6: NOT_ESTABLISHED. Overall `T2_INTERIM / NOT_FINAL_BLOCKED`.
 
 New records: REV7, D0-D2 effective closure, D5-D6 aggregate closure, D0-D6 master closure, 72-object metadata ledger, blocker register, D6 wording reconciliation and current pointer. Post-write raw readback is required before assigning SHA-256/commit triples.
+
+## Resume point after live reconciliation — 2026-11-07
+
+Current branch before commit: fa55d396b3f0d5af78a9086e3b481e2f925c112d; main: 01a6f79eedc522bb734ed9c5ea31beee581f2468. After this documentation/workflow commit, inspect the new Raw Readback run on the new exact HEAD. D0, D5 and D6 remain on older Tested SHAs and must not be represented as tested on the new HEAD. The raw-readback workflow is corrected to write parseable JSON, enforce expected SHA-256 values, deduplicate paths and run eight negative checks. Next blockers: verify 72 raw-byte hashes and restore; transfer E2 Replay 20; resolve 21 NOT_COMPARABLE items; confirm independent failure domains; obtain a transfer route for the 519 MB D5 artifact; run missing stage validations only through authorized read-only workflows. Keep main read-only and project status T2_INTERIM / NOT_FINAL_BLOCKED.
