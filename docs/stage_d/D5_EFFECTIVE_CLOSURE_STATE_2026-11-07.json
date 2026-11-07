@@ -1,0 +1,123 @@
+{
+  "schema_version": "d5-effective-closure-state-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "gate_status": "PASS_GAP_FREE",
+  "scope": "D5 package construction, eight-member inventory, manifest and checksum verification, GitHub Actions Artifact publication, independent download/readback, and exact remote source-file readback.",
+  "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+  "workflow_run_id": 42393413807,
+  "job_id": 128465567045,
+  "run_url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42393413807",
+  "evidence_commit_sha": "85dfc8c385302923987f90d49a423cf79b028cd9",
+  "exact_final_head_readback": {
+    "status": "PASS",
+    "tested_sha": "85dfc8c385302923987f90d49a423cf79b028cd9"
+  },
+  "source_inputs": {
+    "governing_reference_v240_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b",
+    "d3_artifact": {
+      "id": 13288779998,
+      "bytes": 535567142,
+      "sha256": "e49b206d8d80034b1dc0cb284bfee76d81f9e9759e2459b1608fad2f5c933ffe"
+    },
+    "d4_tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+    "d4_status": "PASS_GAP_FREE"
+  },
+  "package": {
+    "path": "deliverables/Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05.zip",
+    "bytes": 519104624,
+    "sha256": "f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7",
+    "git_blob_sha1": "c1ece0d50fe992cc4ba176ecc385534f3bd4d6c7",
+    "member_count": 8,
+    "inventory": "seven deliverables plus manifest.json",
+    "crc": "PASS"
+  },
+  "manifest": {
+    "path": "deliverables/manifest.json",
+    "bytes": 11003,
+    "sha256": "a291a886fc6973f1f747cc74c98b0b8a25b01a7f96e32048c4c345c1d19484eb"
+  },
+  "sha256sums": {
+    "path": "deliverables/SHA256SUMS.txt",
+    "bytes": 938,
+    "sha256": "7c76cef416a08b6864e2b1a1c2e4159023e72cb0326793887cceb143d4ce0421",
+    "entries": 10
+  },
+  "artifact": {
+    "id": 13582441423,
+    "name": "Motorcycle_Simulation_D5_T2_INTERIM_2026-11-05",
+    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42393413807/artifacts/13582441423",
+    "bytes": 519117017,
+    "digest": "sha256:ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+    "downloaded_zip_sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+    "remote_readback": "PASS",
+    "expires_at": "2026-12-07T16:54:42Z",
+    "retention_days": 30
+  },
+  "tests": {
+    "command": "python -m pytest -q -rs tests/test_d5_package.py",
+    "result": "PASS",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "warning_count": 1,
+    "warning": "Python zipfile emitted a non-blocking duplicate-name warning while the negative duplicate-member test constructed its invalid fixture."
+  },
+  "workflow_steps": {
+    "preflight_build": "SUCCESS",
+    "package_safety_and_checksum_tests": "SUCCESS",
+    "artifact_publish": "SUCCESS",
+    "independent_artifact_download_and_readback": "SUCCESS",
+    "append_only_evidence_commit": "SUCCESS",
+    "exact_final_head_raw_readback": "SUCCESS"
+  },
+  "d4_docx_fingerprints_verified": [
+    {
+      "file": "التقرير_الكامل_AR.docx",
+      "bytes": 42329,
+      "sha256": "429f143bf84816c3f4ab7eb95dd9f34f758748035423be47ef79cb308c1aeec9"
+    },
+    {
+      "file": "Full_Report_EN.docx",
+      "bytes": 41726,
+      "sha256": "d4d0e49f4b97baa321b9092813ffa40f328a763e7c519ee7201080a3b3c44044"
+    },
+    {
+      "file": "الملخص_AR.docx",
+      "bytes": 40517,
+      "sha256": "17650a5c4c0a739eb87ba0b81b0a833aba6fcd844aea5230faea80f21840e2bd"
+    },
+    {
+      "file": "Summary_EN.docx",
+      "bytes": 40050,
+      "sha256": "e938822db4c4e5d941457a14ea0a6f0fd4cc8808c29ac9722abf1e6ea8bba795"
+    },
+    {
+      "file": "دراسة_الجدوى_AR.docx",
+      "bytes": 40763,
+      "sha256": "df8e5d5da036fd8526f0f33e618ec1b6a26da152caee27ce771cf39dee1cfe3f"
+    }
+  ],
+  "preserved_project_constraints": {
+    "classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED",
+    "gate_b_n2400": "FAIL_SCOPED (10 PASS / 10 FAIL)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "five_accounting_fields": "MISSING_EVIDENCE",
+    "full_177_unique_acceptance_suite": "NOT_RUN",
+    "d6": "NOT_RUN_AT_D5_CLOSURE",
+    "final_acceptance": "NOT_DECLARED",
+    "release_authorized": false
+  },
+  "main_modified": false,
+  "limitations": [
+    "D5 closes only the scoped package integrity and publication/readback gate.",
+    "The complete 177-unique-test acceptance suite was not run by D5.",
+    "Independent D6 post-write audit and its eight normative acceptance tests remain pending.",
+    "Global Preservation Gate, E2 replay archive migration, durable two-location raw-byte readback and restore drill remain open.",
+    "No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, source identity change, main write, merge or Release was performed."
+  ]
+}
