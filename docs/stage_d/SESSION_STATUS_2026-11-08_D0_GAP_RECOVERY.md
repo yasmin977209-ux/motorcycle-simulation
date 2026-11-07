@@ -19,3 +19,12 @@
 ## Resume condition
 
 Do not claim D0 `PASS_GAP_FREE` or proceed on the assumption D0 is closed. Resume only after the original S6 full daily accounting ledger and source metadata, bound to the original source identity, are available for byte-level and schema/row/lineage verification. Do not generate replacement Trials or infer missing accounting values.
+
+
+## 2026-11-08 — Expanded historical source search
+
+- Original S6 run `40731224990`: 20/20 scenario ZIP artifacts still listed on GitHub Actions; total 1,531,244,201 bytes. Matching OneDrive filenames and sizes: 20/20. Dropbox rescue: 0/20 originals.
+- Related aggregate `40773412377` found, but `source_run_metadata.sha256=null`; no full 48K daily ledger. E2 run `41958935113` is replay reconstruction and not historical original evidence. Full Logging `41098699740` remains 105 representative keys.
+- No original complete daily ledger, source metadata hash, or five missing balance fields found in accessible repository/Actions/OneDrive/Dropbox sources. D0 remains `BLOCKED / MISSING_EVIDENCE`.
+- No synthetic/backfill/zero-fill data created: it cannot establish historical D0 gap-free status and would require separate normative approval/identity.
+- Search report: [D0 Historical Source Search](D0_HISTORICAL_SOURCE_SEARCH_2026-11-08.md).

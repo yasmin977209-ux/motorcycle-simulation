@@ -4124,3 +4124,13 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - D0 remains `BLOCKED / MISSING_EVIDENCE`: original S6 daily ledgers for all 48K Trials, non-null verifiable `source_run_metadata.sha256`, and the five full-balance fields are not present in the authorized original source projection. The 105 representative keys, replay reconstruction, C100 and Stage 12/13 cannot substitute.
 - No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release occurred.
 - Details: [D0 recovery review](stage_d/D0_GAP_FREE_RECOVERY_2026-11-08.md), [machine record](stage_d/D0_GAP_FREE_RECOVERY_2026-11-08.json), [session status](stage_d/SESSION_STATUS_2026-11-08_D0_GAP_RECOVERY.md), [handoff](stage_d/CONTINUITY_HANDOFF_2026-11-08_D0_GAP_RECOVERY.md).
+
+
+## 2026-11-08 — Expanded original-source search
+
+- Searched the complete live repository tree (667 entries), GitHub code index, original S6 run `40731224990`, aggregate `40773412377`, independent artifact audit `40761382163`, golden accounting audit `40784902124`, daily equity audit `40787081064`, Full Logging `41098699740`, and E2 replay run `41958935113`.
+- Found 20 original S6 N=2400 scenario archives (1,531,244,201 bytes total) still available on GitHub Actions; all 20 matching filenames are present in OneDrive rescue with exact size matches. This is not raw-byte equality or restore verification. Dropbox rescue contains none of these 20 archives.
+- Found the S6 aggregate artifact `12852969854` in OneDrive; its manifest's `source_run_metadata.sha256` is null and it contains aggregate/statistical data, not the missing full 48K daily accounting ledger.
+- E2's 20 scenario archives are replay reconstructions, not original source evidence. Full Logging remains 105 representative keys.
+- The required original all-48K daily ledger, original source metadata hash, and five full-balance fields were not found in the accessible sources. D0 remains `BLOCKED / MISSING_EVIDENCE`; no synthetic/backfilled values were created and no identity/acceptance rule was changed.
+- Detailed source inventory: [D0 Historical Source Search](stage_d/D0_HISTORICAL_SOURCE_SEARCH_2026-11-08.md).

@@ -35,3 +35,10 @@ The 105 representative logging records and any replay reconstruction do not subs
 ## Stop conditions
 
 No Trials, Simulation, Monte Carlo, N expansion including N=4800, backfill, zero-fill, inferred accounting, SOURCE_SHA/cohort/MASTER_SEED/Trial identity changes, historical Artifact mutation, main write, merge, force-push, Release or final acceptance.
+
+
+## 2026-11-08 — Historical source search update
+
+The original 20 S6 N=2400 scenario archives remain available on GitHub Actions (1,531,244,201 bytes total) and matching OneDrive objects exist 20/20 by filename and size. Dropbox has none of the 20. The S6 aggregate exists but has `source_run_metadata.sha256=null`; it is not a complete daily ledger. E2 artifacts are replay reconstruction only; Full Logging is 105 representative keys. The full original 48K daily accounting ledgers, verifiable source metadata hash, and five full-balance fields were not found in accessible sources.
+
+Do not create or substitute synthetic/backfilled values to close historical D0. If a synthetic validation dataset is separately approved, assign it a distinct synthetic identity and keep it segregated; it cannot be represented as original S6 or yield `PASS_GAP_FREE` for this D0. Search detail: [D0 Historical Source Search](D0_HISTORICAL_SOURCE_SEARCH_2026-11-08.md).
