@@ -1,0 +1,84 @@
+{
+  "schema_version": "master-blocker-register-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "observed_head": "72c8f18f2e522b34e136c231bef52f1c3625c205",
+  "items": [
+    {
+      "id": "PRES-001",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "detail": "Provider raw-byte SHA-256 readback and restore NOT_RUN; 51/72 MATCH, 21/72 NOT_COMPARABLE."
+    },
+    {
+      "id": "PRES-002",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "detail": "Two independent durable failure domains not proven."
+    },
+    {
+      "id": "PRES-003",
+      "priority": "P0",
+      "status": "NOT_TRANSFERRED",
+      "detail": "Separate E2 Replay 20 archives not transferred."
+    },
+    {
+      "id": "PRES-004",
+      "priority": "P1",
+      "status": "NOT_COMPARABLE",
+      "detail": "D3S-010 and 20 multipart wrappers lack comparable source hashes."
+    },
+    {
+      "id": "HEAD-001",
+      "priority": "P1",
+      "status": "NOT_ESTABLISHED",
+      "detail": "D0-D6 exact-final-head suite not run on one SHA."
+    },
+    {
+      "id": "D0-001",
+      "priority": "P1",
+      "status": "MISSING_EVIDENCE",
+      "detail": "48K ledgers and five historical accounting fields missing."
+    },
+    {
+      "id": "D1-001",
+      "priority": "P2",
+      "status": "NOT_RUN",
+      "detail": "Independent Builder importer and two clean rebuilds."
+    },
+    {
+      "id": "D2-001",
+      "priority": "P2",
+      "status": "NOT_RUN",
+      "detail": "C100 Golden revalidation."
+    },
+    {
+      "id": "D3-001",
+      "priority": "P1",
+      "status": "CONFLICTED",
+      "detail": "72/72 summary conflicts with detailed 51/72 reconciliation."
+    },
+    {
+      "id": "D6-001",
+      "priority": "P1",
+      "status": "CORRECTED_APPEND_ONLY",
+      "detail": "D6 wording conflict corrected separately."
+    },
+    {
+      "id": "D6-002",
+      "priority": "P2",
+      "status": "STALE_POINTER",
+      "detail": "Root D6 current pointer predates Run 42403657899."
+    }
+  ],
+  "owner_action_required": [
+    "Configure ONEDRIVE_GRAPH_ACCESS_TOKEN and DROPBOX_ACCESS_TOKEN as GitHub Actions repository secrets; never send credentials in chat or commit them.",
+    "Confirm the approved second durable destination and retention arrangement."
+  ],
+  "stop_conditions": [
+    "No E3 until Global Preservation Gate passes.",
+    "No Trials, Simulation, Monte Carlo, N expansion, backfill, zero-fill or identity changes.",
+    "No main write, merge, force-push, Release or final acceptance."
+  ]
+}

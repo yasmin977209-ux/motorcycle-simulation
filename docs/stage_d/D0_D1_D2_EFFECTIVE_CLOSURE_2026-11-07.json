@@ -1,0 +1,73 @@
+{
+  "schema_version": "d0-d1-d2-effective-closure-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "branch_head_observed_before_commit": "72c8f18f2e522b34e136c231bef52f1c3625c205",
+  "main_head_read_only": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "latest_validation": {
+    "run_id": 42403657890,
+    "job_id": 128496620691,
+    "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+    "status": "success",
+    "tests_passed": 36,
+    "tests_failed": 0,
+    "artifact": {
+      "id": 13586712091,
+      "bytes": 10545,
+      "sha256": "a503f6646a5569143e0d5b1233b0534a69612f8e000aad54b3eeabc9f67be6dd"
+    }
+  },
+  "stages": {
+    "D0": {
+      "status": "PASS_SCOPED_WITH_LIMITATIONS",
+      "limits": [
+        "Full Parquet schema/row/null/duplicate/partition matrix not established.",
+        "Historical daily/accounting ledgers for 48,000 trials missing.",
+        "source_run_metadata.sha256 remains null.",
+        "Five historical accounting fields remain MISSING_EVIDENCE."
+      ]
+    },
+    "D1": {
+      "status": "PASS_SCOPED_WITH_LIMITATIONS",
+      "manifest": {
+        "path": "docs/stage_d/D1_105_MANIFEST_SIZE_EVIDENCE_2026-11-05.json",
+        "keys": 105,
+        "verified": 105
+      },
+      "limits": [
+        "105 representative keys only; not full 48K.",
+        "Independent Builder importer IMPORTER_NOT_RUN.",
+        "Two independent clean rebuilds not established."
+      ]
+    },
+    "D2": {
+      "status": "PASS_SCOPED_WITH_LIMITATIONS",
+      "registry": {
+        "path": "results/number_registry.json",
+        "entries": 2640,
+        "daily_series": 1000,
+        "daily_points": 2086550,
+        "sha256": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
+        "git_blob_sha1": "8cf17de488c623f96c1961ca91d682fbbc7733d6",
+        "bytes": 24137036
+      },
+      "c100_golden_revalidation": "NOT_RUN",
+      "limits": [
+        "Full 48K accounting lineage not present."
+      ]
+    }
+  },
+  "preserved_gates": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED"
+  },
+  "exact_final_head_validation": {
+    "status": "NOT_ESTABLISHED",
+    "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+    "current_head": "72c8f18f2e522b34e136c231bef52f1c3625c205"
+  }
+}

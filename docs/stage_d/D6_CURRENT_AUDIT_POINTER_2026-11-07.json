@@ -1,0 +1,20 @@
+{
+  "schema_version": "d6-current-audit-pointer-append-only-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "supersedes_for_current_run_only": "docs/stage_d/D6_CURRENT_AUDIT.json",
+  "current_run_id": 42403657899,
+  "current_job_id": 128498571102,
+  "tested_sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+  "disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+  "current_report_md": "docs/stage_d/D6_AUDIT_RUN_42403657899/FINAL_AUDIT.md",
+  "current_report_json": "docs/stage_d/D6_AUDIT_RUN_42403657899/FINAL_AUDIT.json",
+  "acceptance_execution": "docs/stage_d/D6_AUDIT_RUN_42403657899/ACCEPTANCE_TEST_EXECUTION.json",
+  "artifact": {
+    "id": 13586354284,
+    "bytes": 8217,
+    "sha256": "2bbd2edb3a948891c1da376079b93b6b3bbdb6d0a7149ec3859a62e81f2a20f1"
+  },
+  "note": "Append-only pointer; historical root pointer unchanged."
+}

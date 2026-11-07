@@ -1,0 +1,94 @@
+{
+  "schema_version": "d0-d6-master-closure-v1",
+  "recorded_at": "2026-11-07",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "branch_head_observed_before_commit": "72c8f18f2e522b34e136c231bef52f1c3625c205",
+  "main_head_read_only": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "branch_divergence": {
+    "ahead_by": 1149,
+    "behind_by": 2,
+    "merge_base": "c6e54349a5e94f65d5aa9f83141f225d777bb474"
+  },
+  "stages": {
+    "D0": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D1": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D2": "PASS_SCOPED_WITH_LIMITATIONS",
+    "D3": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE",
+    "D4": "PASS_GAP_FREE",
+    "D5": "PASS_GAP_FREE",
+    "D6": "PASS_SCOPED_WITH_LIMITATIONS"
+  },
+  "runs": {
+    "D1_D2": {
+      "id": 42403657890,
+      "job": 128496620691,
+      "sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "result": "36 passed"
+    },
+    "D3": {
+      "id": 42403657857,
+      "job": 128496620492,
+      "sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "result": "success"
+    },
+    "D4": {
+      "id": 42387025927,
+      "job": 128446462610,
+      "sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+      "result": "PASS_GAP_FREE"
+    },
+    "D5": {
+      "id": 42393413807,
+      "job": 128465567045,
+      "sha": "c757126ac27e8f6606f38b14324119cc22604858",
+      "result": "PASS_GAP_FREE"
+    },
+    "D6": {
+      "id": 42403657899,
+      "job": 128498571102,
+      "sha": "42922d06637b7fad1d36c412e2253423f9367f34",
+      "result": "PASS_SCOPED_WITH_LIMITATIONS"
+    }
+  },
+  "preservation": {
+    "objects": 72,
+    "metadata_match": 51,
+    "not_comparable": 21,
+    "mismatch": 0,
+    "provider_raw_byte_sha256": "NOT_RUN",
+    "restore": "NOT_RUN",
+    "e2_replay_20": "NOT_TRANSFERRED",
+    "two_independent_durable_failure_domains": "NOT_PROVEN",
+    "global_gate": "BLOCKED"
+  },
+  "conflicts": [
+    "D3 closure claims 72/72 metadata matches; later detailed reconciliation says 51/72.",
+    "D3-S transfer report has older D3 BLOCKED wording; later effective closure closes normative D3 separately.",
+    "D6 audit detail conflicts with execution JSON/log; see append-only correction."
+  ],
+  "exact_final_head": {
+    "status": "NOT_ESTABLISHED",
+    "current_head": "72c8f18f2e522b34e136c231bef52f1c3625c205",
+    "reason": "D1-D2/D3/D6 tested 42922; D4 tested 1fb489; D5 tested c757126."
+  },
+  "project_status": "T2_INTERIM / NOT_FINAL_BLOCKED",
+  "preserved_gates": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED",
+    "missing_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ]
+  },
+  "main_modified": false,
+  "merge": false,
+  "release": false,
+  "new_trial_simulation_monte_carlo": false
+}

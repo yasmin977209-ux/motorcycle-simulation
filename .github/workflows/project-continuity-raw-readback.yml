@@ -13,6 +13,23 @@ on:
       - docs/stage_d/D3_EFFECTIVE_CLOSURE_STATE_2026-11-06.md
       - docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md
       - docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md
+      - docs/PROJECT_HANDOFF.md
+      - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md
+      - docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md
+      - docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md
+      - docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.json
+      - docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.md
+      - docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.json
+      - docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.md
+      - docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.json
+      - docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.md
+      - docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json
+      - docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.json
+      - docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.md
+      - docs/stage_d/D6_AUDIT_TEXT_RECONCILIATION_2026-11-07.md
+      - docs/stage_d/D6_CURRENT_AUDIT_POINTER_2026-11-07.json
+      - docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md
+      - docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md
       - scripts/verify_tri_hash_preservation_bridge.py
       - scripts/quickxorhash.c
       - tests/test_tri_hash_preservation_bridge.py
@@ -83,6 +100,24 @@ jobs:
             "docs/stage_d/S6_ONEDRIVE_TRANSFER_CLASSIFICATION_CORRECTION_2026-11-06.json",
             "scripts/d3_s_create_transport_chunks.py",
             ".github/workflows/d3-s-scenario-partitioning.yml",
+                        "docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md",
+            "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.json",
+            "docs/stage_d/D0_D1_D2_EFFECTIVE_CLOSURE_2026-11-07.md",
+            "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.json",
+            "docs/stage_d/D5_D6_AGGREGATE_CLOSURE_2026-11-07.md",
+            "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.json",
+            "docs/stage_d/D0_D6_MASTER_CLOSURE_2026-11-07.md",
+            "docs/stage_d/TRI_HASH_PRESERVATION_LEDGER_2026-11-07.json",
+            "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.json",
+            "docs/stage_d/MASTER_BLOCKER_REGISTER_2026-11-07.md",
+            "docs/stage_d/D6_AUDIT_TEXT_RECONCILIATION_2026-11-07.md",
+            "docs/stage_d/D6_CURRENT_AUDIT_POINTER_2026-11-07.json",
+            "docs/PROJECT_CONTINUITY.md",
+            "docs/PROJECT_HANDOFF.md",
+            "docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-07.md",
+            "docs/stage_d/STAGE_D_CONTINUITY_HANDOFF_2026-11-07.md",
+            "docs/stage_d/SESSION_STATUS_2026-11-07_OWNER_DECISION_EXECUTION.md",
+            "docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_OWNER_DECISION_EXECUTION.md",
             ".github/workflows/project-continuity-raw-readback.yml"
           ]
           expected={
