@@ -12,6 +12,7 @@ C100={"SOURCE_SHA":"965281d52441cd0d4b744e211c9f68ee4cdc3753","cohort_id":"c100-
 MISSING=["Accounts_Receivable","Accumulated_Depreciation","Gross_Bike_Assets","Guarantee_Claim_Receivable","Total_Assets"]
 FILES=["Full_Results_EN.xlsx","النتائج_الكاملة_AR.xlsx","التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"]
 EXPECTED=set(FILES+["manifest.json"])
+REGISTRY_PATH="results/number_registry.json"
 CONTRACTS={
 "175":"185 sheets per workbook; identical sheet order; numeric parity; no Excel errors",
 "176":"Every report numeric value has Number Registry lineage; no manual unregistered number",
