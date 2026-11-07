@@ -173,7 +173,7 @@ jobs:
           session=pathlib.Path(os.environ["SESSION_PATH"])
           if not session.is_file(): raise SystemExit("D6_EXACT_SESSION_RECORD_MISSING:"+str(session))
           out=os.environ["D6_OUT"]
-          paths=[f"{out}/FINAL_AUDIT.md",f"{out}/FINAL_AUDIT.json",str(session),"docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"]
+          paths=[f"{out}/FINAL_AUDIT.md",f"{out}/FINAL_AUDIT.json",f"{out}/ACCEPTANCE_TEST_EXECUTION.json",str(session),"docs/PROJECT_CONTINUITY.md","docs/PROJECT_HANDOFF.md","docs/stage_d/STAGE_D_SESSION_STATUS_2026-11-05.md"]
           for path in paths:
             local=pathlib.Path(path).read_bytes()
             url=f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path,safe='/')}"
@@ -191,6 +191,7 @@ jobs:
           path: |
             docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/FINAL_AUDIT.md
             docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/FINAL_AUDIT.json
+            docs/stage_d/D6_AUDIT_RUN_${{ github.run_id }}/ACCEPTANCE_TEST_EXECUTION.json
             docs/stage_d/D6_SESSION_RECORD_2026-11-05_RUN_${{ github.run_id }}.md
           if-no-files-found: error
           retention-days: 30

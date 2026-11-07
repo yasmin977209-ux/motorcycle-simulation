@@ -24,7 +24,8 @@ CONTRACTS={
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def load_d5_pin(root):
- path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json"
+ path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-07.json"
+ if not path.is_file(): path=root/"docs/stage_d/D5_PACKAGE_PREFLIGHT_2026-11-05.json"
  if not path.is_file(): raise ValueError("D5_PREFLIGHT_MISSING")
  report=json.loads(path.read_text(encoding="utf-8"))
  if report.get("status")!="PUBLISHED_AND_REMOTE_READBACK_VERIFIED": raise ValueError("D5_NOT_PUBLISHED_OR_READBACK_VERIFIED")

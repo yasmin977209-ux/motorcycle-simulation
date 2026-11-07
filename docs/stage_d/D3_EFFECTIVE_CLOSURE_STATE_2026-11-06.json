@@ -811,10 +811,17 @@
       "previous_value": "D4 run 42331683955 failed; D6 historical contracts 176/179/180/181/183 were NOT_RUN",
       "classification": "NORMATIVE_TEST_EXECUTION_IMPLEMENTATION",
       "correction": "D4 occurrence-level audit now binds each displayed registry value, NR ID and metric label in one paragraph, classifies token-local context, and records unresolved samples. D6 workflow now executes pytest IDs 175,176,179,180,181,182,183,186 on exact HEAD, with tests 180/181 validating the existing 105 representative keys and 25 P50 cases only; no Trial/Simulation/Monte Carlo is run."
+    },
+    {
+      "date": "2026-11-07",
+      "field": "D6 exact D5 artifact pin and acceptance execution evidence",
+      "previous_value": "D6 auditor read the historical 2026-11-05 preflight pin while the current D6 trigger is the 2026-11-07 preflight; execution JSON was not included in raw readback/artifact",
+      "classification": "D6_WORKFLOW_LINEAGE_CORRECTION",
+      "correction": "Prefer the current 2026-11-07 D5 preflight pin (fall back to the 2026-11-05 pin only for historical compatibility), include ACCEPTANCE_TEST_EXECUTION.json in the D6 commit, raw readback and uploaded evidence artifact, and preserve the exact run/job/tested-SHA linkage."
     }
   ],
   "decision_execution_base_head": "71a0e354e9ecccd2b10ac9509af426be20fdcef0",
-  "updated_on_head": "aeaf17b793747913640b98e394d543188c541ed7",
+  "updated_on_head": "62bebaca859e1c7d62e2ca1c418a0d119f42f0da",
   "tri_hash_bridge_2026_11_07": {
     "stage_a": {
       "run_id": 42330906466,
