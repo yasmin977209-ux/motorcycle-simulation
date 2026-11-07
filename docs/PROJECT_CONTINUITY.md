@@ -4113,3 +4113,14 @@ Run 42416858162 tested `80c715d3ff489422ae2739627bb8819280ad48af`, not current b
 D0 Run 42283741942 tested `afbc65bae45a53ccc14fd9098014494d09ec70e3`; D4 Run 42387025927 tested `1fb4898480629c0a327dbff13792d455cd205a59`; D5 Run 42393413807 tested `c757126ac27e8f6606f38b14324119cc22604858`. These historical results do not migrate to `3217ab43f587e468753d13952fdd16cb947259f8`. Exact D0-D6 Final Head remains `NOT_ESTABLISHED` pending post-C2 final-head workflows.
 
 Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS`; Gate B N=2400 `FAIL_SCOPED (10/10)`; Stability `NOT_CONVERGED (0/60)`; N=4800 `NOT_EXECUTED`; Full Logging 105 representative keys only. Five accounting fields remain missing and must not be guessed or zero-filled. Project status `T2_INTERIM / NOT_FINAL_BLOCKED`.
+
+
+## 2026-11-08 — D0 Gap-Free Recovery (append-only)
+
+- Revalidated branch HEAD `beb1b83656bfdd15206427a7e4ce1575d654e588`; protected `main` remains `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D0 validator repair committed on the working branch: `03d0aa8c8b6c798b466f907d5f649e9307d61197`, then corrected in `beb1b83656bfdd15206427a7e4ce1575d654e588`. Six fail-closed unit tests passed.
+- D0 Run [42424755294](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42424755294) tested exact SHA `beb1b83656bfdd15206427a7e4ce1575d654e588`: 27/27 reports; 7 `PASS_SCOPED`, 20 `BLOCKED`, zero missing reports; aggregate job `128560779663` failed closed. This is not a gap-free pass.
+- D1-D2 Run [42424755307](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42424755307) and D3 Run [42424755281](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42424755281) succeeded on the same tested SHA. D6 Run [42424755247](https://github.com/yasmin977209-ux/motorcycle-simulation/actions/runs/42424755247) was pending at handoff.
+- D0 remains `BLOCKED / MISSING_EVIDENCE`: original S6 daily ledgers for all 48K Trials, non-null verifiable `source_run_metadata.sha256`, and the five full-balance fields are not present in the authorized original source projection. The 105 representative keys, replay reconstruction, C100 and Stage 12/13 cannot substitute.
+- No Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill/identity change/main write/merge/Release occurred.
+- Details: [D0 recovery review](stage_d/D0_GAP_FREE_RECOVERY_2026-11-08.md), [machine record](stage_d/D0_GAP_FREE_RECOVERY_2026-11-08.json), [session status](stage_d/SESSION_STATUS_2026-11-08_D0_GAP_RECOVERY.md), [handoff](stage_d/CONTINUITY_HANDOFF_2026-11-08_D0_GAP_RECOVERY.md).

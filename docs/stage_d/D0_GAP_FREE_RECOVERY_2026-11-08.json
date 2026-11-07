@@ -1,0 +1,84 @@
+{
+  "schema_version": "d0-gap-free-recovery-v1",
+  "recorded_at": "2026-11-08",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "tested_head": "beb1b83656bfdd15206427a7e4ce1575d654e588",
+  "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "stage_disposition": "BLOCKED",
+  "gap_free_verdict": "BLOCKED / MISSING_EVIDENCE",
+  "historical_disposition_preserved": "PASS_SCOPED_WITH_LIMITATIONS",
+  "repair_commits": [
+    "03d0aa8c8b6c798b466f907d5f649e9307d61197",
+    "beb1b83656bfdd15206427a7e4ce1575d654e588"
+  ],
+  "unit_tests": {
+    "run_id": 42424755294,
+    "job_id": 128560533348,
+    "passed": 6,
+    "failed": 0
+  },
+  "d0_audit": {
+    "run_id": 42424755294,
+    "tested_sha": "beb1b83656bfdd15206427a7e4ce1575d654e588",
+    "expected_reports": 27,
+    "reports_received": 27,
+    "pass_scoped": 7,
+    "blocked": 20,
+    "missing_reports": 0,
+    "aggregate_classification": "BLOCKED",
+    "aggregate_job_id": 128560779663,
+    "aggregate_artifact_id": 13595092311,
+    "aggregate_artifact_bytes": 2380,
+    "aggregate_artifact_api_digest": "sha256:34752606bf00e052b043cf085ab83966260d5c592800b30cfb9089179e27e9ef"
+  },
+  "source_identity": {
+    "run_id": 40731224990,
+    "execution_commit": "a23ba71f48487f3ebead99bc30039b14ef9b7609",
+    "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "cohort_id": "s6-v23-da1a9ea9",
+    "master_seed": 20270101,
+    "scenario_count": 20,
+    "trial_ids_per_scenario": "1..2400",
+    "total_trials": 48000
+  },
+  "missing_evidence": [
+    "source_run_metadata.sha256",
+    "original full daily accounting ledgers for all 48000 S6 Trials",
+    "Accounts_Receivable",
+    "Accumulated_Depreciation",
+    "Gross_Bike_Assets",
+    "Guarantee_Claim_Receivable",
+    "Total_Assets",
+    "complete full-cohort Parquet schema/row/null/duplicate/partition reconciliation",
+    "independent durable raw-byte readback and restore"
+  ],
+  "same_head_checks": {
+    "d1_d2_run_id": 42424755307,
+    "d1_d2_status": "success",
+    "d3_run_id": 42424755281,
+    "d3_status": "success",
+    "d6_run_id": 42424755247,
+    "d6_status": "pending"
+  },
+  "fixed_gates_unchanged": {
+    "financial_gate_a": "PASS_SCOPED",
+    "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+    "gate_b_n2400": "FAIL_SCOPED (10/10)",
+    "stability": "NOT_CONVERGED (0/60)",
+    "n4800": "NOT_EXECUTED"
+  },
+  "actions_not_taken": [
+    "new_trials",
+    "simulation",
+    "monte_carlo",
+    "n_expansion",
+    "backfill",
+    "zero_fill",
+    "identity_changes",
+    "main_write",
+    "merge",
+    "release",
+    "final_acceptance"
+  ]
+}
