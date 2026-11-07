@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: stage-d4-docx-${{ github.ref }}
   cancel-in-progress: false
@@ -19,6 +20,16 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+      - name: Resolve D4 GitHub Job ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" -o /tmp/d4-jobs.json
+          job_id="$(python -c 'import json; d=json.load(open("/tmp/d4-jobs.json")); print(next(x["id"] for x in d["jobs"] if x["name"]=="build"))')"
+          echo "D4_JOB_ID=${job_id}" >> "$GITHUB_ENV"
+          echo "D4_JOB_ID=${job_id}"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -80,8 +91,8 @@ jobs:
       - name: Run D4 document, provenance, disclosure, RTL and Test 176 tests
         run: |
           set -euo pipefail
-          python -m compileall -q scripts/s6_docx_reports.py scripts/audit_d4_numeric_occurrences.py tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py
-          python -m pytest -q -rs tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py
+          python -m compileall -q scripts/s6_docx_reports.py scripts/audit_d4_numeric_occurrences.py tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py tests/test_176_numeric_token_lineage.py
+          python -m pytest -q -rs tests/test_s6_docx_reports.py tests/test_d4_numeric_occurrences.py tests/test_176_numeric_token_lineage.py
       - name: Write D4 requirements matrix and scoped build report
         env:
           TESTED_SHA: ${{ github.sha }}
@@ -120,6 +131,7 @@ jobs:
         env:
           TESTED_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
+          D4_JOB_ID: ${{ env.D4_JOB_ID }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -128,7 +140,7 @@ jobs:
           r=json.loads(p.read_text(encoding="utf-8"))
           assert r["acceptance"]=="PASS" and r["unresolved_occurrences"]==0
           assert r["identity_equation"] and r["total_occurrences"]==r["resolved_occurrences"]+r["explicitly_classified_occurrences"]
-          state={"schema":"d4-effective-closure-state-v1","recorded_at":"2026-11-07","repository":"yasmin977209-ux/motorcycle-simulation","branch":"tmp/d1-rebuild-20261101","tested_sha":os.environ["TESTED_SHA"],"workflow_run_id":int(os.environ["RUN_ID"]),"status":"PASS_GAP_FREE","test_176":{"status":"PASS","total_occurrences":r["total_occurrences"],"resolved_occurrences":r["resolved_occurrences"],"explicitly_classified_occurrences":r["explicitly_classified_occurrences"],"unresolved_occurrences":0,"identity_equation":True},"documents":r["documents"],"required_outputs":["التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"],"preserved_project_status":"T2_INTERIM / NOT_FINAL_BLOCKED","upstream_gates":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED"},"limitations":["This D4 closure is limited to the normative D4 deliverables and occurrence-level lineage.","No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."]}
+          state={"schema":"d4-effective-closure-state-v1","recorded_at":"2026-11-07","repository":"yasmin977209-ux/motorcycle-simulation","branch":"tmp/d1-rebuild-20261101","tested_sha":os.environ["TESTED_SHA"],"workflow_run_id":int(os.environ["RUN_ID"]),"job_id":int(os.environ["D4_JOB_ID"]),"status":"PASS_GAP_FREE","test_176":{"status":"PASS","execution":"EXECUTED_ON_EXACT_HEAD","pytest_nodeid":"tests/test_176_numeric_token_lineage.py::test_176_every_numeric_token_has_a_registry_or_explicit_classification","run_id":int(os.environ["RUN_ID"]),"job_id":int(os.environ["D4_JOB_ID"]),"tested_sha":os.environ["TESTED_SHA"],"total_occurrences":r["total_occurrences"],"resolved_occurrences":r["resolved_occurrences"],"explicitly_classified_occurrences":r["explicitly_classified_occurrences"],"unresolved_occurrences":0,"identity_equation":True},"documents":r["documents"],"required_outputs":["التقرير_الكامل_AR.docx","Full_Report_EN.docx","الملخص_AR.docx","Summary_EN.docx","دراسة_الجدوى_AR.docx"],"preserved_project_status":"T2_INTERIM / NOT_FINAL_BLOCKED","upstream_gates":{"financial_gate_a":"PASS_SCOPED","production_gate_a":"NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS","gate_b_n2400":"FAIL_SCOPED (10/10)","stability":"NOT_CONVERGED (0/60)","n4800":"NOT_EXECUTED"},"limitations":["This D4 closure is limited to the normative D4 deliverables and occurrence-level lineage.","No Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance."]}
           pathlib.Path("docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json").write_text(json.dumps(state,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
           lines=["# D4 Effective Closure — 2026-11-07","","Status: PASS_GAP_FREE",f"- Tested SHA: {state['tested_sha']}",f"- Workflow Run: {state['workflow_run_id']}","- Test 176: PASS","",f"- Total occurrences: {r['total_occurrences']}",f"- Resolved: {r['resolved_occurrences']}",f"- Explicitly classified: {r['explicitly_classified_occurrences']}","- Unresolved: 0","- Identity equation: PASS","","## Five DOCX files",""]+[f"- {x['file']}: {x['total_occurrences']} occurrences; {x['xml_parts_scanned']} OOXML parts." for x in r["documents"]]+["","## Preserved gates",""]+[f"- {k}: {v}" for k,v in state["upstream_gates"].items()]+["","D4 closure does not change upstream project gates or final acceptance."]
           pathlib.Path("docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.md").write_text("\n".join(lines)+"\n",encoding="utf-8")

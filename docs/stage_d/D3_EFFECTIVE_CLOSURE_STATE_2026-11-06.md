@@ -88,3 +88,30 @@ QuickXorHash ليس بديلاً عن SHA-256. كما أن نسخ D1/D3/D5 ال�
 
 ## Append-only correction — Number Registry hash field
 The earlier draft JSON carried a literal SHA-256 for results/number_registry.json without a successful raw-byte readback in this session. That value is not evidence and must not be relied on. The effective JSON now records upstream_registry_sha256_status=NOT_VERIFIED_IN_THIS_SESSION and removes the unverified hash from each requirement chain. The registry remains part of UPSTREAM_COMPUTATIONAL_TRUTH; no substitute hash is inferred.
+
+
+## Owner Decision Execution — 2026-11-07 (append-only correction; supersedes prior D3/GPG coupling)
+
+**D3 normative closure: `PASS_GAP_FREE_NORMATIVE_V240_SCOPE`; `READY_FOR_D4 = true`.**
+
+- D3-01..D3-18: all existing requirement rows are PASS_SCOPED within the owner-approved v2.4.0 scope.
+- D3-S1 and D3-S2: PASS_SCOPED; 25/25 scenario coverage per language and 185/185 worksheet XML/relationship parts byte-exact after source-side reassembly.
+- D3-18: Run 42295053851 / Job 128158006147 / Artifact 13542125808; PASS_SCOPED.
+- Tri-hash Stage A: Run 42330906466 / Job 128276958747 / tested SHA `cef3572d3ce49545cc44739324929685208245a7`; Artifact 13557202516 (11,125 bytes; digest `sha256:a785c6bc51f9427c9e728a94797829eb4cf83ab33fc6509e1e49a6a1044d3b25`); 72 GitHub Artifact ZIPs raw-hashed, digest-checked and ZIP-CRC checked.
+- Tri-hash Stage A compatibility path: Run 42330906698 / Job 128276959441; SUCCESS without provider secrets.
+
+### Stage B live provider metadata reconciliation
+
+| Provider group | Count | Matching size + hash | Result |
+|---|---:|---:|---|
+| OneDrive S6 | 20 | 20/20 QuickXorHash | MATCH |
+| OneDrive D3-S | 23 | 23/23 QuickXorHash (including D3S-010) | MATCH |
+| OneDrive D1/D3/D5 multipart transport | 20 | 20/20 QuickXorHash | MATCH |
+| Dropbox rescue source | 9 | 9/9 content_hash | MATCH |
+| **Total** | **72** | **72/72** | **PASS** |
+
+The 72 live provider metadata values were compared against hashes calculated over the exact GitHub Actions Artifact ZIP bytes in Stage A. The connectors exposed live size/hash metadata; they did not download provider raw bytes. This is the specified two-stage split-responsibility method and is not described as provider raw-byte readback.
+
+### Gate separation under REV6 §§17.11 and 19
+
+Global Preservation Gate remains independently BLOCKED before E3 because E2 Replay's 20 archives and proof of two independent durable failure domains remain outstanding. That gate is not a D3 exit criterion and must not block D4, D5 or D6. The D3 normative gate is therefore closed and D4 is READY_FOR_D4. Preserve all upstream non-promotions and missing-evidence fields exactly as recorded above.

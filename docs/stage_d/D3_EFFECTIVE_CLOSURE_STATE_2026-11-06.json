@@ -1,6 +1,6 @@
 {
   "schema": "d3-effective-closure-state-v1",
-  "decision_id": "OWNER-DECISION-HARDENING-AND-D3-TO-D6-EXECUTION-2026-11-06",
+  "decision_id": "OWNER-FINALIZE-BRIDGE-72-AND-TRIGGER-D3-D4-D5-D6-2026-11-07",
   "recorded_at": "2026-11-07",
   "repository": "yasmin977209-ux/motorcycle-simulation",
   "branch": "tmp/d1-rebuild-20261101",
@@ -691,7 +691,7 @@
       "d3s_transport_objects": 23,
       "d3s_folder_id": "893D06C344EA996B!s0f3055f9ce89404c9ef34c7dd004f187",
       "d3s_folder_size": 1394763799,
-      "metadata_quickxorhash_readback": "PRESENT",
+      "metadata_quickxorhash_readback": "MATCHED_63_OF_63_VIA_CONNECTED_GRAPH_METADATA",
       "raw_sha256": "NOT_RUN",
       "remote_restore": "NOT_RUN"
     },
@@ -699,7 +699,7 @@
       "core_packages": 9,
       "root": "/Motorcycle-Simulation-Rescue-2026-11-05",
       "metadata_sizes_readback": "PRESENT",
-      "content_hash_readback": "NOT_EXPOSED_BY_CONNECTED_METADATA_ACTION",
+      "content_hash_readback": "MATCHED_9_OF_9_VIA_CONNECTED_DOWNLOAD_LINK_METADATA",
       "raw_sha256": "NOT_RUN",
       "restore": "NOT_RUN"
     },
@@ -708,20 +708,77 @@
       "status": "NOT_TRANSFERRED",
       "separate_from_s6": true
     },
-    "independent_failure_domains": "NOT_PROVEN_FOR_ALL_REQUIRED_ARTIFACTS"
+    "independent_failure_domains": "NOT_PROVEN_FOR_ALL_REQUIRED_ARTIFACTS",
+    "tri_hash_bridge_2026_11_07": {
+      "stage_a": {
+        "run_id": 42330906466,
+        "job_id": 128276958747,
+        "tested_sha": "cef3572d3ce49545cc44739324929685208245a7",
+        "artifact_id": 13557202516,
+        "artifact_name": "GITHUB-RAW-TRI-HASH-MANIFEST-42330906466",
+        "artifact_size_bytes": 11125,
+        "artifact_digest": "sha256:a785c6bc51f9427c9e728a94797829eb4cf83ab33fc6509e1e49a6a1044d3b25",
+        "unique_artifact_count": 72,
+        "expected_inventory": {
+          "s6": 20,
+          "d3s": 23,
+          "multipart_d1_d3_d5": 20,
+          "dropbox": 9
+        },
+        "result": "SUCCESS_PASS_GITHUB_RAW_HASHING_ONLY"
+      },
+      "stage_a_bridge_compatibility": {
+        "run_id": 42330906698,
+        "job_id": 128276959441,
+        "tested_sha": "cef3572d3ce49545cc44739324929685208245a7",
+        "result": "SUCCESS_GITHUB_RAW_MANIFEST_ONLY_NO_PROVIDER_SECRETS"
+      },
+      "stage_b_connector_metadata": {
+        "total": 72,
+        "match": 72,
+        "not_comparable": 0,
+        "mismatch": 0,
+        "groups": {
+          "onedrive_s6": {
+            "total": 20,
+            "match": 20,
+            "algorithm": "QuickXorHash + size"
+          },
+          "onedrive_d3s": {
+            "total": 23,
+            "match": 23,
+            "algorithm": "QuickXorHash + size"
+          },
+          "onedrive_multipart_d1_d3_d5": {
+            "total": 20,
+            "match": 20,
+            "algorithm": "QuickXorHash + size"
+          },
+          "dropbox": {
+            "total": 9,
+            "match": 9,
+            "algorithm": "Dropbox content_hash + size"
+          }
+        },
+        "result": "PASS_72_OF_72_METADATA_HASH_MATCH"
+      },
+      "limitation": "The GitHub raw Artifact ZIP bytes were downloaded and hashed in Stage A. Stage B compared live provider metadata to the computed hashes. Provider raw bytes were not separately downloaded by the ChatGPT connectors; this is the authorized split-responsibility design, not a provider raw-byte readback.",
+      "e2_replay": "20 archives remain separate and outside this 72-object scope."
+    }
   },
   "phase_disposition": {
-    "d3_requirements_scope": "PASS_SCOPED_OWNER_ALIGNED",
-    "d3_s1_s2": "PASS_SCOPED",
-    "d3_18": "PASS_SCOPED",
-    "d3_overall": "BLOCKED",
-    "d3_pass_gap_free": false,
-    "global_preservation_gate": "BLOCKED",
-    "d4": "NOT_STARTED",
+    "d3_requirements_scope": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE",
+    "d3_s1_s2": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE",
+    "d3_18": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE",
+    "d3_overall": "PASS_GAP_FREE_NORMATIVE_V240_SCOPE",
+    "d3_pass_gap_free": true,
+    "global_preservation_gate": "BLOCKED_INDEPENDENT_PRE_E3",
+    "d4": "READY_FOR_D4",
     "d5_new_exact_head_execution": "NOT_RUN",
     "d6_new_independent_audit": "NOT_RUN",
-    "reason": "REV6 preservation/readback/restore requirements remain incomplete. OneDrive raw-byte SHA-256 and restore are unverified; Dropbox content_hash and raw-byte restore are unverified; E2 Replay's 20 archives are not transferred; two independent durable failure domains are not proven.",
-    "next_allowed_action": "Run tri-hash preservation verification only after required GitHub Actions secrets are configured; reassess Global Preservation Gate from its ledger. Do not start D4 before D3 PASS_GAP_FREE and required preservation closure."
+    "reason": "D3-01..D3-18 and D3-S1/D3-S2 are PASS_SCOPED in the owner-approved v2.4.0 normative scope. The 72-object tri-hash bridge passed Stage A raw GitHub Artifact hashing and Stage B live provider metadata comparison (72/72). Under REV6 §§17.11 and 19, Global Preservation Gate is independent and occurs before E3; it is not a D3 exit criterion and does not block D4. E2 Replay and proof of two independent durable failure domains remain separate Global Preservation Gate work.",
+    "next_allowed_action": "Launch D4 immediately; then D5 after D4 PASS_GAP_FREE and D6 after D5 PASS_GAP_FREE. Continue E2/Global Preservation Gate in parallel before E3.",
+    "ready_for_d4": true
   },
   "no_new_trial_or_simulation": true,
   "final_head_validation": "PENDING_POST_COMMIT_RAW_READBACK",
@@ -732,6 +789,72 @@
       "previous_value": "743ffcced8de09a766870f201c352aabcf5789c43c84bfeae654a939700e4f87",
       "classification": "REPORTED_ONLY_UNVERIFIED",
       "correction": "Removed from verified claims; registry remains part of upstream computational truth, but its raw-byte SHA-256 was not established in this session."
+    },
+    {
+      "date": "2026-11-07",
+      "field": "phase_disposition.d3_overall / phase_disposition.global_preservation_gate / phase_disposition.next_allowed_action",
+      "previous_value": "D3 BLOCKED and D4 prohibited until global preservation closure",
+      "classification": "OWNER_DECISION_REV6_SCOPE_CORRECTION",
+      "correction": "D3 normative v2.4.0 scope is PASS_GAP_FREE_NORMATIVE_V240_SCOPE and READY_FOR_D4. Global Preservation Gate remains independently BLOCKED before E3; it does not gate D3/D4/D5/D6. 72/72 live provider metadata hashes and sizes match the 72 GitHub raw Artifact ZIP hash records.",
+      "evidence": "Stage A Run 42330906466 / Job 128276958747 / Artifact 13557202516; Stage A compatibility Run 42330906698 / Job 128276959441; Stage B connector metadata comparison 20+23+20+9=72 matches."
     }
-  ]
+  ],
+  "decision_execution_base_head": "71a0e354e9ecccd2b10ac9509af426be20fdcef0",
+  "updated_on_head": "cef3572d3ce49545cc44739324929685208245a7",
+  "tri_hash_bridge_2026_11_07": {
+    "stage_a": {
+      "run_id": 42330906466,
+      "job_id": 128276958747,
+      "tested_sha": "cef3572d3ce49545cc44739324929685208245a7",
+      "artifact_id": 13557202516,
+      "artifact_name": "GITHUB-RAW-TRI-HASH-MANIFEST-42330906466",
+      "artifact_size_bytes": 11125,
+      "artifact_digest": "sha256:a785c6bc51f9427c9e728a94797829eb4cf83ab33fc6509e1e49a6a1044d3b25",
+      "unique_artifact_count": 72,
+      "expected_inventory": {
+        "s6": 20,
+        "d3s": 23,
+        "multipart_d1_d3_d5": 20,
+        "dropbox": 9
+      },
+      "result": "SUCCESS_PASS_GITHUB_RAW_HASHING_ONLY"
+    },
+    "stage_a_bridge_compatibility": {
+      "run_id": 42330906698,
+      "job_id": 128276959441,
+      "tested_sha": "cef3572d3ce49545cc44739324929685208245a7",
+      "result": "SUCCESS_GITHUB_RAW_MANIFEST_ONLY_NO_PROVIDER_SECRETS"
+    },
+    "stage_b_connector_metadata": {
+      "total": 72,
+      "match": 72,
+      "not_comparable": 0,
+      "mismatch": 0,
+      "groups": {
+        "onedrive_s6": {
+          "total": 20,
+          "match": 20,
+          "algorithm": "QuickXorHash + size"
+        },
+        "onedrive_d3s": {
+          "total": 23,
+          "match": 23,
+          "algorithm": "QuickXorHash + size"
+        },
+        "onedrive_multipart_d1_d3_d5": {
+          "total": 20,
+          "match": 20,
+          "algorithm": "QuickXorHash + size"
+        },
+        "dropbox": {
+          "total": 9,
+          "match": 9,
+          "algorithm": "Dropbox content_hash + size"
+        }
+      },
+      "result": "PASS_72_OF_72_METADATA_HASH_MATCH"
+    },
+    "limitation": "The GitHub raw Artifact ZIP bytes were downloaded and hashed in Stage A. Stage B compared live provider metadata to the computed hashes. Provider raw bytes were not separately downloaded by the ChatGPT connectors; this is the authorized split-responsibility design, not a provider raw-byte readback.",
+    "e2_replay": "20 archives remain separate and outside this 72-object scope."
+  }
 }
