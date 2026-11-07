@@ -1432,5 +1432,329 @@
       "downloaded_to_chat_file_store": true,
       "onedrive_upload": "BLOCKED_FILE_UPLOAD_LIMIT_104857600"
     }
-  ]
+  ],
+  "live_reconciliation_2026_11_08": {
+    "observed_pre_c2_head": "3217ab43f587e468753d13952fdd16cb947259f8",
+    "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "D1_D2": {
+      "run_id": 42419105795,
+      "job_id": 128543480494,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "tests_passed": 37,
+      "artifact_id": 13593026097,
+      "artifact_bytes": 10545,
+      "artifact_sha256": "b335be1aab68a85b0b085b018dd55272d1c3c9d18809efd61acc47b7ce1d5162"
+    },
+    "D3": {
+      "run_id": 42419105827,
+      "job_id": 128543480974,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "tests_passed": 38,
+      "raw_readback_files": 35,
+      "exact_head_status": "PASS"
+    },
+    "D6": {
+      "run_id": 42419105855,
+      "job_id": 128543481098,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "unit_tests": "49 passed, 2 warnings",
+      "normative_tests": {
+        "ids": [
+          175,
+          176,
+          179,
+          180,
+          181,
+          182,
+          183,
+          186
+        ],
+        "passed": 8,
+        "duration_seconds": 473.04
+      },
+      "test_176_equation": "241 = 64 + 177 + 0",
+      "disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+      "artifact_id": 13592363586,
+      "artifact_bytes": 6929,
+      "artifact_sha256": "cb57bb2edb5ad7f474ac5c6ab9f38add3a960325717698efe481ce23b0c95b60",
+      "exact_head_check": "PASS",
+      "main_unchanged": "PASS",
+      "final_acceptance": "NOT_ACCEPTED",
+      "test_176_report_text_conflict": "generic detail says full historical contract not executed; test execution JSON, pytest log and test source show named test executed and passed"
+    },
+    "tri_hash": {
+      "run_id": 42416858162,
+      "tested_sha": "80c715d3ff489422ae2739627bb8819280ad48af",
+      "artifact_id": 13591479069,
+      "artifact_bytes": 20502,
+      "artifact_sha256": "54ca0d9961b29af9fbdca5a60e491bac335485db0f34aade0fc7424e2313ba69",
+      "counts": {
+        "total": 72,
+        "onedrive_provider_metadata_match": 63,
+        "dropbox_reported_only": 9,
+        "newly_compared_21": 21,
+        "mismatch": 0,
+        "not_comparable": 0
+      },
+      "raw_byte_hash_match": "NOT_RUN",
+      "restore_verified": "NOT_RUN",
+      "e2_replay_20": "NOT_TRANSFERRED",
+      "global_preservation_status": "BLOCKED",
+      "final_acceptance": "NOT_ACCEPTED"
+    },
+    "historical": {
+      "D0": {
+        "run_id": 42283741942,
+        "tested_sha": "afbc65bae45a53ccc14fd9098014494d09ec70e3",
+        "status": "PASS_SCOPED_WITH_LIMITATIONS"
+      },
+      "D4": {
+        "run_id": 42387025927,
+        "tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+        "status": "PASS_GAP_FREE"
+      },
+      "D5": {
+        "run_id": 42393413807,
+        "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+        "status": "PASS_GAP_FREE",
+        "artifact_id": 13582441423,
+        "outer_bytes": 519117017,
+        "outer_sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+        "inner_bytes": 519104624,
+        "inner_sha256": "f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7",
+        "members": 8
+      }
+    },
+    "exact_final_head": "NOT_ESTABLISHED",
+    "project_classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+    "fixed_gates": {
+      "financial_gate_a": "PASS_SCOPED",
+      "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+      "gate_b_n2400": "FAIL_SCOPED (10/10)",
+      "stability": "NOT_CONVERGED (0/60)",
+      "n4800": "NOT_EXECUTED",
+      "missing_accounting_fields": [
+        "Accounts_Receivable",
+        "Accumulated_Depreciation",
+        "Gross_Bike_Assets",
+        "Guarantee_Claim_Receivable",
+        "Total_Assets"
+      ]
+    },
+    "newly_compared_21_fingerprints": [
+      {
+        "name": "D3S-010.transport.zip",
+        "artifact_id": 13541174824,
+        "bytes": 68156823,
+        "sha256": "66f2a87e103fc561af36984bd290b6dae8824b2769c33215d8c353a783ff9b0a",
+        "quickxorhash": "zN3KmSLjCxkOm7anJwFpTjrdtq0=",
+        "onedrive_size": 68156823,
+        "onedrive_quickxorhash": "zN3KmSLjCxkOm7anJwFpTjrdtq0=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D1-000.transport.zip",
+        "artifact_id": 13531109443,
+        "bytes": 83889219,
+        "sha256": "6df7be596e0e78cfe499cd8e74ea3eed728c96496f2acb7740058c18f8c7c3b1",
+        "quickxorhash": "n/vjjY8/PAbxhX/eD1v0ewuWURc=",
+        "onedrive_size": 83889219,
+        "onedrive_quickxorhash": "n/vjjY8/PAbxhX/eD1v0ewuWURc=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D1-001.transport.zip",
+        "artifact_id": 13531139384,
+        "bytes": 83899694,
+        "sha256": "b107ff4859135d477be247d8c749ceb5325a0f5c617348bfeb27aa241aab6454",
+        "quickxorhash": "RHYRlSv3jD5PupIuNnEBvDA8RLk=",
+        "onedrive_size": 83899694,
+        "onedrive_quickxorhash": "RHYRlSv3jD5PupIuNnEBvDA8RLk=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D1-002.transport.zip",
+        "artifact_id": 13530959565,
+        "bytes": 83893599,
+        "sha256": "2ec85467f2422036175bf2b44e31c75ce866014ca1b54ce553496abb30e9c78b",
+        "quickxorhash": "6AtKazFHxqao1U1VpVMm29Iyj8s=",
+        "onedrive_size": 83893599,
+        "onedrive_quickxorhash": "6AtKazFHxqao1U1VpVMm29Iyj8s=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D1-003.transport.zip",
+        "artifact_id": 13530954627,
+        "bytes": 59016113,
+        "sha256": "24f899e8b4c763eb1667e54b303b2960f34e81e58c43a6d555efbbe706a61f64",
+        "quickxorhash": "KEJfjZTNVXye1nEmyVBEjaBxVRQ=",
+        "onedrive_size": 59016113,
+        "onedrive_quickxorhash": "KEJfjZTNVXye1nEmyVBEjaBxVRQ=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D1-RESTORE-MANIFEST.transport.zip",
+        "artifact_id": 13530829722,
+        "bytes": 705,
+        "sha256": "1fef298fdbaba29c8fafca2210579784f96055871d6265411c3d43335f15a854",
+        "quickxorhash": "pkflwUJmbxq2jLcOy++C0cUovWg=",
+        "onedrive_size": 705,
+        "onedrive_quickxorhash": "pkflwUJmbxq2jLcOy++C0cUovWg=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-000.transport.zip",
+        "artifact_id": 13530847772,
+        "bytes": 59235715,
+        "sha256": "1982d742b9807ffd8ff96655cf0a6ed51f81fafae21c418258c4851e7785ed7c",
+        "quickxorhash": "J2GEq3JH3BiC5KXCyTFIvA7wYtc=",
+        "onedrive_size": 59235715,
+        "onedrive_quickxorhash": "J2GEq3JH3BiC5KXCyTFIvA7wYtc=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-001.transport.zip",
+        "artifact_id": 13531347485,
+        "bytes": 67469671,
+        "sha256": "1705f3ff6a717bf07e6b0133fb0066f1c681a4eb89c83bf9a34356b30126a7b4",
+        "quickxorhash": "wyiwX4JWWqehe1sXLd3X453anIc=",
+        "onedrive_size": 67469671,
+        "onedrive_quickxorhash": "wyiwX4JWWqehe1sXLd3X453anIc=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-002.transport.zip",
+        "artifact_id": 13531037648,
+        "bytes": 76325778,
+        "sha256": "a148ab7bffcaa6a7d02882b137cc7177ca4d3ac48ce03910d6ab04035449f2af",
+        "quickxorhash": "m5jKzPEfz9ZoiwwPa2Vy+E0/6n4=",
+        "onedrive_size": 76325778,
+        "onedrive_quickxorhash": "m5jKzPEfz9ZoiwwPa2Vy+E0/6n4=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-003.transport.zip",
+        "artifact_id": 13531552090,
+        "bytes": 60008524,
+        "sha256": "0db1bf014502b810fa0baa8082cd60e7eaa7e207eb81999124ba81967ae4819a",
+        "quickxorhash": "ICUReZl27LFEjoKOzEJ7DxDrbFQ=",
+        "onedrive_size": 60008524,
+        "onedrive_quickxorhash": "ICUReZl27LFEjoKOzEJ7DxDrbFQ=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-004.transport.zip",
+        "artifact_id": 13531537218,
+        "bytes": 67638093,
+        "sha256": "1194194d5b5dd748e6f21649d1e99ee1438efbea0144020da19a227a832a7e3c",
+        "quickxorhash": "3mEZm9rSY9HDHe2rGF4WVD3XxV4=",
+        "onedrive_size": 67638093,
+        "onedrive_quickxorhash": "3mEZm9rSY9HDHe2rGF4WVD3XxV4=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-005.transport.zip",
+        "artifact_id": 13530997846,
+        "bytes": 75211928,
+        "sha256": "44d6b0655465408396feb43e8effdb366783e928cc55406dcc37acf79efc8791",
+        "quickxorhash": "p0Z7/QC70wckYaR04dmr+v5vuXc=",
+        "onedrive_size": 75211928,
+        "onedrive_quickxorhash": "p0Z7/QC70wckYaR04dmr+v5vuXc=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D3-006.transport.zip",
+        "artifact_id": 13531222587,
+        "bytes": 30050675,
+        "sha256": "c32f7f4d1a8f9f9b625ee41c313a8360f67ada4e948dd93dd08143ea72d32e39",
+        "quickxorhash": "P+1na9TURKP+mguWoxnabgFnPRs=",
+        "onedrive_size": 30050675,
+        "onedrive_quickxorhash": "P+1na9TURKP+mguWoxnabgFnPRs=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-000.transport.zip",
+        "artifact_id": 13531122727,
+        "bytes": 57391379,
+        "sha256": "7d5e7e18aea7d96c2a1eb4d04be090e7248e9cac39f0fbb54b3d85b74694b010",
+        "quickxorhash": "riekUtISBtzw42opeGBuNXdvJMc=",
+        "onedrive_size": 57391379,
+        "onedrive_quickxorhash": "riekUtISBtzw42opeGBuNXdvJMc=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-001.transport.zip",
+        "artifact_id": 13531212556,
+        "bytes": 67216975,
+        "sha256": "d2157888da70d1a82c665731597df9cceaef56ad2d2b234a2254da060e90e2ed",
+        "quickxorhash": "dVfivSmIeRiLB+JpELrNWNLkw/I=",
+        "onedrive_size": 67216975,
+        "onedrive_quickxorhash": "dVfivSmIeRiLB+JpELrNWNLkw/I=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-002.transport.zip",
+        "artifact_id": 13531262474,
+        "bytes": 78394029,
+        "sha256": "6bd9553462b5b049ff1624de772a77f80858796e2da7f4f09b6f8d43f55e12b4",
+        "quickxorhash": "ZmxvyMyapWudsRUb63fFIO2vckw=",
+        "onedrive_size": 78394029,
+        "onedrive_quickxorhash": "ZmxvyMyapWudsRUb63fFIO2vckw=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-003.transport.zip",
+        "artifact_id": 13531037720,
+        "bytes": 58152718,
+        "sha256": "ee6665ee68ad404357a45d5d6807fb6d07e6901439911ea3471b867b2dab09ec",
+        "quickxorhash": "0MaytP6YonIJWJsFrOvo6+ofiy8=",
+        "onedrive_size": 58152718,
+        "onedrive_quickxorhash": "0MaytP6YonIJWJsFrOvo6+ofiy8=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-004.transport.zip",
+        "artifact_id": 13531562213,
+        "bytes": 67218118,
+        "sha256": "d075247fad33421f0776820f47c081f53944a5d05796c6c2fb7454ca32dc4df8",
+        "quickxorhash": "3yRDId89JXz/0tes5b9PEKHpQ4U=",
+        "onedrive_size": 67218118,
+        "onedrive_quickxorhash": "3yRDId89JXz/0tes5b9PEKHpQ4U=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-005.transport.zip",
+        "artifact_id": 13531127658,
+        "bytes": 77566761,
+        "sha256": "9f1f531627d9b9c3e9dca9a9eb59dc7f4c63f2c8bf6f60fbdfefb0f547b55c5d",
+        "quickxorhash": "vnj+cS+7vjuXf+RMnW1U8h4z3L0=",
+        "onedrive_size": 77566761,
+        "onedrive_quickxorhash": "vnj+cS+7vjuXf+RMnW1U8h4z3L0=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "D5-006.transport.zip",
+        "artifact_id": 13531342529,
+        "bytes": 14619493,
+        "sha256": "6d960a466a6ba4b036023ee30d6a788bb741a0206f4dcec331e924e841c088f3",
+        "quickxorhash": "Dc9W+oDF7N4AbZiIqS/cmjLU+H0=",
+        "onedrive_size": 14619493,
+        "onedrive_quickxorhash": "Dc9W+oDF7N4AbZiIqS/cmjLU+H0=",
+        "disposition": "MATCH"
+      },
+      {
+        "name": "RESTORE-MANIFEST.transport.zip",
+        "artifact_id": 13530877847,
+        "bytes": 1250,
+        "sha256": "763c1fb416f3f04baa5ea2902556591c1b34464bfa79420dae3e5e13f2aa7909",
+        "quickxorhash": "509GNZH2MUS813DKZsBLXFE5+XE=",
+        "onedrive_size": 1250,
+        "onedrive_quickxorhash": "509GNZH2MUS813DKZsBLXFE5+XE=",
+        "disposition": "MATCH"
+      }
+    ]
+  }
 }

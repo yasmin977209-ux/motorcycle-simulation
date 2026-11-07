@@ -21,5 +21,21 @@
   "current_head_d6_status": "NOT_RUN",
   "current_run_remains_latest_d6": 42403657899,
   "historical_json_error_file": "docs/stage_d/D6_AUDIT_RUN_42394060281/ACCEPTANCE_TEST_EXECUTION.json",
-  "root_cause_corrected_in_later_workflow": true
+  "root_cause_corrected_in_later_workflow": true,
+  "live_reconciliation_2026_11_08": {
+    "current_run_id": 42419105855,
+    "current_job_id": 128543481098,
+    "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+    "disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+    "artifact": {
+      "id": 13592363586,
+      "bytes": 6929,
+      "sha256": "cb57bb2edb5ad7f474ac5c6ab9f38add3a960325717698efe481ce23b0c95b60",
+      "expires_at": "2026-12-07T22:16:56Z"
+    },
+    "current_branch_head_observed": "3217ab43f587e468753d13952fdd16cb947259f8",
+    "current_head_d6_status": "PASS_SCOPED_WITH_LIMITATIONS",
+    "final_acceptance": "NOT_ACCEPTED",
+    "historical_run_42403657899_preserved": true
+  }
 }

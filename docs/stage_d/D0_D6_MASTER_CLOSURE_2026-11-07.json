@@ -175,5 +175,117 @@
     "global_preservation": "BLOCKED",
     "final_acceptance": "NOT_ACCEPTED",
     "project_status": "T2_INTERIM / NOT_FINAL_BLOCKED"
+  },
+  "live_reconciliation_2026_11_08": {
+    "observed_pre_c2_head": "3217ab43f587e468753d13952fdd16cb947259f8",
+    "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+    "D1_D2": {
+      "run_id": 42419105795,
+      "job_id": 128543480494,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "tests_passed": 37,
+      "artifact_id": 13593026097,
+      "artifact_bytes": 10545,
+      "artifact_sha256": "b335be1aab68a85b0b085b018dd55272d1c3c9d18809efd61acc47b7ce1d5162"
+    },
+    "D3": {
+      "run_id": 42419105827,
+      "job_id": 128543480974,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "tests_passed": 38,
+      "raw_readback_files": 35,
+      "exact_head_status": "PASS"
+    },
+    "D6": {
+      "run_id": 42419105855,
+      "job_id": 128543481098,
+      "tested_sha": "3217ab43f587e468753d13952fdd16cb947259f8",
+      "workflow_status": "SUCCESS",
+      "unit_tests": "49 passed, 2 warnings",
+      "normative_tests": {
+        "ids": [
+          175,
+          176,
+          179,
+          180,
+          181,
+          182,
+          183,
+          186
+        ],
+        "passed": 8,
+        "duration_seconds": 473.04
+      },
+      "test_176_equation": "241 = 64 + 177 + 0",
+      "disposition": "PASS_SCOPED_WITH_LIMITATIONS",
+      "artifact_id": 13592363586,
+      "artifact_bytes": 6929,
+      "artifact_sha256": "cb57bb2edb5ad7f474ac5c6ab9f38add3a960325717698efe481ce23b0c95b60",
+      "exact_head_check": "PASS",
+      "main_unchanged": "PASS",
+      "final_acceptance": "NOT_ACCEPTED",
+      "test_176_report_text_conflict": "generic detail says full historical contract not executed; test execution JSON, pytest log and test source show named test executed and passed"
+    },
+    "tri_hash": {
+      "run_id": 42416858162,
+      "tested_sha": "80c715d3ff489422ae2739627bb8819280ad48af",
+      "artifact_id": 13591479069,
+      "artifact_bytes": 20502,
+      "artifact_sha256": "54ca0d9961b29af9fbdca5a60e491bac335485db0f34aade0fc7424e2313ba69",
+      "counts": {
+        "total": 72,
+        "onedrive_provider_metadata_match": 63,
+        "dropbox_reported_only": 9,
+        "newly_compared_21": 21,
+        "mismatch": 0,
+        "not_comparable": 0
+      },
+      "raw_byte_hash_match": "NOT_RUN",
+      "restore_verified": "NOT_RUN",
+      "e2_replay_20": "NOT_TRANSFERRED",
+      "global_preservation_status": "BLOCKED",
+      "final_acceptance": "NOT_ACCEPTED"
+    },
+    "historical": {
+      "D0": {
+        "run_id": 42283741942,
+        "tested_sha": "afbc65bae45a53ccc14fd9098014494d09ec70e3",
+        "status": "PASS_SCOPED_WITH_LIMITATIONS"
+      },
+      "D4": {
+        "run_id": 42387025927,
+        "tested_sha": "1fb4898480629c0a327dbff13792d455cd205a59",
+        "status": "PASS_GAP_FREE"
+      },
+      "D5": {
+        "run_id": 42393413807,
+        "tested_sha": "c757126ac27e8f6606f38b14324119cc22604858",
+        "status": "PASS_GAP_FREE",
+        "artifact_id": 13582441423,
+        "outer_bytes": 519117017,
+        "outer_sha256": "ae84c0e9c27d5a0be7c5c37ec1f923676745013b86e3fd528178d830df61d0cc",
+        "inner_bytes": 519104624,
+        "inner_sha256": "f7004da675f2af8d3201ed1b51d5106b890fe521ab66e198c635be414e5421c7",
+        "members": 8
+      }
+    },
+    "exact_final_head": "NOT_ESTABLISHED",
+    "project_classification": "T2_INTERIM / NOT_FINAL_BLOCKED",
+    "fixed_gates": {
+      "financial_gate_a": "PASS_SCOPED",
+      "production_gate_a": "NOT_DECLARED / MISSING_EVIDENCE_HISTORICAL_48K_BALANCE_FIELDS",
+      "gate_b_n2400": "FAIL_SCOPED (10/10)",
+      "stability": "NOT_CONVERGED (0/60)",
+      "n4800": "NOT_EXECUTED",
+      "missing_accounting_fields": [
+        "Accounts_Receivable",
+        "Accumulated_Depreciation",
+        "Gross_Bike_Assets",
+        "Guarantee_Claim_Receivable",
+        "Total_Assets"
+      ]
+    }
   }
 }
