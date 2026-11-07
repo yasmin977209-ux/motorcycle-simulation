@@ -3949,3 +3949,62 @@ At baseline HEAD 3862d153cebd8de9041c3608e2a4930fde713925, the D3-S workflow alr
 - Every displayed registry value carries number_id; missing metrics remain MISSING_EVIDENCE. The five historical accounting fields were not inferred or zero-filled.
 - Mandatory section 17.3 disclosures included; no market assumptions, Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, main write, merge, Release or final acceptance.
 - D4 disposition: PASS_SCOPED_WITH_LIMITATIONS, subject to final commit/readback evidence in D4 build report. D5 not started. FINAL_ACCEPTED remains NOT_DECLARED.
+
+
+## إعادة التحقق الحي والتصحيح اللاحق — 2026-11-07 (Append-only; أحدث من اللقطات السابقة)
+
+**وقت هذا السجل:** 2026-11-07.  
+**المستودع:** `yasmin977209-ux/motorcycle-simulation`  
+**فرع العمل:** `tmp/d1-rebuild-20261101`  
+**HEAD قبل تحديث هذا السجل:** `cd38117740c1577627fdebeb1ce9600019a5d338`  
+**main المقروء للقراءة فقط:** `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+
+### 1. تصحيح الحالة الحية
+هذا الإدخال اللاحق يتقدم زمنياً على أي مقطع أقدم داخل هذا الملف يقول إن D3 ما زال BLOCKED أو إن D4 لم يبدأ. تلك المقاطع تحفظ كسجل تاريخي ولا تُمحى.
+
+- المرجع الحاكم الفعلي في GitHub: `docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md`، 401,397 bytes، SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`.
+- قرار `D-2026-10-30-REFERENCE-V2.4.0`: `APPROVED_BY_OWNER`، نافذ 2026-10-30. المرجع التاريخي Stage 12/13 ذو SHA-256 `ee277aea4f68ffa2e801e100ebb8eee939c44b2c6150494aea0a6c4d1a6b7479` ليس المرجع الحاكم الحالي ولا مرجع S6.
+- D3 الفعّال: `PASS_GAP_FREE_NORMATIVE_V240_SCOPE`، `ready_for_d4=true`، ضمن D3-01..D3-18 وD3-S1/S2 فقط.
+- Global Preservation Gate: `BLOCKED_INDEPENDENT_PRE_E3`؛ لا يمنع D3/D4/D5/D6 وفق قرار المالك وREV6 §§17.11 و19. ما زال E2 Replay (20 أرشيفاً) وإثبات نطاقي فشل مستقلين دائمين مطلوبين قبل E3.
+- D4: Workflow Run `42387025927` / Job `128446462610`، tested SHA `1fb4898480629c0a327dbff13792d455cd205a59`، جميع الخطوات نجحت. Closure JSON `PASS_GAP_FREE` لنطاق D4؛ تقرير البناء `PASS_SCOPED_WITH_LIMITATIONS`.
+- D4 Artifact `13579374315`، `D4-DOCX-Report-Evidence`، 18,527 bytes، digest `sha256:0607b2974373739e51f0454f25e13138b4f50c54c02906cf57362cd37d46e4e2`، expiry `2026-12-07T15:35:23Z`.
+- D4 Test 176: PASS على exact tested SHA؛ 241 occurrence = 64 resolved + 177 explicitly classified + 0 unresolved. خمسة DOCX وُلدت وفُحصت، مع RTL/LTR وملخصات 2–3 صفحات وإفصاحات §17.3.
+- D4 workflow نفذ remote Raw readback وevidence triples وexact final HEAD بنجاح، وأنشأ commit `cd38117740c1577627fdebeb1ce9600019a5d338`. هذا لا يعني أن D1-D2 وD3 أُعيد تشغيلهما على `cd38117740c1577627fdebeb1ce9600019a5d338`: أحدث D1-D2 Run `42387026006` وD3 Run `42387025940` اختبرا SHA `1fb489...` لا `cd381...`.
+
+### 2. Tri-hash وحدود الحفظ
+- Stage A Run `42330906466` / Job `128276958747` / tested SHA `cef3572d3ce49545cc44739324929685208245a7` / Artifact `13557202516`، 11,125 bytes، digest `sha256:a785c6bc51f9427c9e728a94797829eb4cf83ab33fc6509e1e49a6a1044d3b25`.
+- Stage A: 72 GitHub Artifact ZIPs raw-hashed؛ المجموعات S6=20، D3-S=23، multipart=20، Dropbox=9؛ النتيجة `PASS_GITHUB_RAW_HASHING_ONLY`.
+- Stage B: 72/72 same-algorithm live provider metadata matches (OneDrive QuickXorHash + size، Dropbox content_hash + size). هذا **ليس** تنزيل بايتات OneDrive/Dropbox الخام وإعادة حساب SHA-256 منها، وليس restore test.
+- E2 Replay 20 archive ليست ضمن الـ72 ولا تُخلط مع S6 20. إثبات two independent durable failure domains ما زال مفتوحاً.
+
+### 3. D5/D6 — الحالة الحية والعائق التنفيذي
+- لم يظهر أي D5 أو D6 run جديد في أول 100 سجل Actions الأحدث؛ آخر runs الظاهرة تخص D1-D2/D3/D4.
+- `.github/workflows/stage-d5-delivery-package.yml` و`.github/workflows/stage-d6-independent-audit.yml` موجودان على فرع العمل، لكن GET لنسختيهما على `main` أعاد 404. لذلك لا نعتمد على `workflow_dispatch` من الفرع الحالي؛ يلزم وجود workflow على default branch لتفعيل هذا الحدث.
+- D5 workflow الحالي له push trigger على تغيير `docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json`. D4 workflow أنشأ commit عبر `github-actions[bot]`; أحداث push الناتجة عن GITHUB_TOKEN لا تشغّل workflows أخرى عادةً. لم يظهر D5 run تابع لذلك.
+- لا نعدّل D4 closure JSON اصطناعياً لمجرد إحداث trigger، ولا نكتب إلى main لتسهيل التشغيل. لا نعلن D5 أو D6 ناجحين.
+- D5/D6 التاريخيان (ومنها D5 Run `41928234377` / Artifact `13369179742`، وD6 Run `41929888796` / Artifact `13371094066`) دليل تاريخي منفصل لا يغني عن سلسلة جديدة على HEAD الحالي.
+
+### 4. حالات يجب أن تبقى كما هي
+- S6 التاريخي: 20 سيناريو × 2,400 = 48,000 trial.
+- Gate B عند N=2400: `FAIL_SCOPED` (10 PASS / 10 FAIL).
+- Stability: `NOT_CONVERGED` (0/60).
+- N=4800: `NOT_EXECUTED / BLOCKED`.
+- Financial Gate A: `PASS_SCOPED` للـfingerprints المالية فقط؛ Production Gate A: `NOT_DECLARED`.
+- الحقول الخمسة تبقى `MISSING_EVIDENCE`: Accounts_Receivable، Accumulated_Depreciation، Gross_Bike_Assets، Guarantee_Claim_Receivable، Total_Assets.
+- Full Logging 105 unique keys / 125 role assignments ضمن النطاق التمثيلي؛ ليس إثبات تسجيل كل 48,000 trial.
+- S6 وC100 منفصلان؛ لا Golden revalidation جديدة لـC100 ضمن T2_INTERIM.
+
+### 5. فحص ملفات المالك المرفقة
+- ZIP المرشح v2.4.0 سليم CRC؛ ملف المرجع داخله 401,397 bytes وبصمة SHA-256 تطابق `225de838...`.
+- `المرجع_النهائي_الموحد_المعتمد.md` المرفق بصمته `ee277aea...` وهو مرجع Stage 12/13 تاريخي، لا يستبدل v2.4.0.
+- نموذج الموافقة داخل حزمة المرشح يظهر `PENDING_OWNER_APPROVAL` لأنه نموذج intake؛ سجل GitHub الفعلي `docs/governance/D-2026-10-30-REFERENCE-V2.4.0.md` يثبت `APPROVED_BY_OWNER` ويحدد النطاق والتاريخ والبصمة. يعتمد سجل القرار الحي لا حالة النموذج القديم.
+- ZIP المصدر وZIP الأدلة D4 اجتازا فحص CRC. حزمة المصدر v2.3 تاريخية، وv2.3.1 مرشح غير معتمد/مؤرشف.
+
+### 6. نقطة الاستئناف
+راجع أحدث الملفات:
+- `docs/stage_d/SESSION_STATUS_2026-11-07_LIVE_REVALIDATION.md`
+- `docs/stage_d/CONTINUITY_HANDOFF_2026-11-07_LIVE_REVALIDATION.md`
+- `docs/stage_d/PRESERVATION_RECOVERY_STATUS_2026-11-07.md`
+- `docs/CHATGPT_NEW_SESSION_PROMPT_2026-11-07_AR.md`
+
+الخطوة التالية الوحيدة: حل طريقة تشغيل D5 المسموح بها دون تعديل main، بموافقة المالك عند الحاجة. بعد D5 الناجح ينفذ D6 والاختبارات 175/176/179/180/181/182/183/186 على exact tested SHA، ثم final atomic continuity commit وفحوص Exact Final HEAD. لا Trial/Simulation/Monte Carlo/N expansion/backfill/zero-fill ولا تغيير هوية/seed/RNG أو ترقية أي Gate.

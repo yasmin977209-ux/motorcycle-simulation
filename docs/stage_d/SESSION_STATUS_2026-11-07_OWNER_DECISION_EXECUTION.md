@@ -105,3 +105,16 @@ The final documentation commit SHA and post-commit Raw readback are to be record
 - D3 Run 42308670249 / Job 128204410893 PASS.
 - Raw readback Run 42308670096 / Job 128204410265 PASS; Artifact 13546977906 (2,686 bytes; sha256:4443b49e76041e87cd76a5dbc6519d8c573d53b384c122dfb2158e5afbb80e3e).
 - D1 source identity is manifest-driven; the next code revision removes a nonessential artifact-name heuristic. Provider bytes remain unread until the owner configures both Actions secrets.
+
+
+## تصحيح لاحق — إعادة التحقق الحي بعد D4 (2026-11-07؛ يتقدم على اللقطة أعلاه)
+اللقطة الأساسية في أعلى هذا الملف كُتبت قبل إغلاق D3 المعياري وD4؛ تبقى محفوظة تاريخياً ولا تمثل الحالة الحالية بعد التصحيح التالي.
+
+- D3 الحالي: `PASS_GAP_FREE_NORMATIVE_V240_SCOPE` ضمن D3-01..18 وD3-S1/S2؛ `READY_FOR_D4=true`. Global Preservation Gate منفصل وBLOCKED قبل E3، ولا يمنع D3/D4/D5/D6.
+- Stage A Run 42330906466 / Job 128276958747 / Artifact 13557202516؛ Stage B 72/72 metadata matches، وليس provider raw-byte readback.
+- D4 Run 42387025927 / Job 128446462610 / tested SHA `1fb4898480629c0a327dbff13792d455cd205a59`; D4 closure `PASS_GAP_FREE` في نطاق D4؛ build report `PASS_SCOPED_WITH_LIMITATIONS`; Test 176 = 241 (64 resolved + 177 classified + 0 unresolved).
+- D4 Artifact 13579374315، 18,527 bytes، digest `sha256:0607b2974373739e51f0454f25e13138b4f50c54c02906cf57362cd37d46e4e2`.
+- D4 commit/branch HEAD `cd38117740c1577627fdebeb1ce9600019a5d338`; main remains `01a6f79eedc522bb734ed9c5ea31beee581f2468`.
+- D1-D2 Run 42387026006 وD3 Run 42387025940 اختبرا `1fb489...` لا `cd381...`; لذلك الفحوص الشاملة على Exact Final HEAD لم تكتمل.
+- D5/D6 الجديدان NOT_RUN. Workflow files على الفرع فقط، 404 على main؛ لا workflow_dispatch موثوق حالياً. لا تعدّل main أو D4 closure JSON لإحداث trigger. اطلب قرار المالك إذا تعذر trigger آمن.
+- راجع `SESSION_STATUS_2026-11-07_LIVE_REVALIDATION.md` و`CONTINUITY_HANDOFF_2026-11-07_LIVE_REVALIDATION.md` و`PRESERVATION_RECOVERY_STATUS_2026-11-07.md` و`CHATGPT_NEW_SESSION_PROMPT_2026-11-07_AR.md`.

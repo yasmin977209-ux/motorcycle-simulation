@@ -93,3 +93,14 @@ On tested SHA c3d0f8819600c899eff9bf77c0428ddcf0b5bdc1:
 ## Latest exact-head results
 On SHA 292845e6442091bf90c941a7c6fe189d8b838822, D1-D2 Run 42308670105, D3 Run 42308670249 and Raw readback Run 42308670096 all succeeded. Tri-hash Run 42308670184 passed code compilation/tests but stopped at missing provider secrets and emitted blocked ledger Artifact 13547551455. No OneDrive/Dropbox bytes were downloaded.
 The D1 source artifact ID is read from its restore manifest; source bytes/hash are cross-checked against sidecars and the GitHub Artifact digest. The redundant name heuristic is being removed; it is not part of the evidence chain.
+
+
+## Live revalidation correction — 2026-11-07
+This handoff's earlier D3 BLOCKED / D4 NOT_STARTED statements are historical and superseded by the later live evidence:
+- D3 normative closure PASS_GAP_FREE_NORMATIVE_V240_SCOPE (D3-01..18 + D3-S1/S2); Global Preservation remains independently blocked before E3.
+- D4 Run 42387025927 / Job 128446462610 succeeded on tested SHA 1fb4898480629c0a327dbff13792d455cd205a59; D4 closure PASS_GAP_FREE within D4 scope; build report PASS_SCOPED_WITH_LIMITATIONS; Test 176 241=64+177+0.
+- D4 Artifact 13579374315, 18,527 bytes, digest sha256:0607b2974373739e51f0454f25e13138b4f50c54c02906cf57362cd37d46e4e2.
+- Branch HEAD after D4: cd38117740c1577627fdebeb1ce9600019a5d338; main unchanged at 01a6f79eedc522bb734ed9c5ea31beee581f2468.
+- D5/D6 new runs NOT_RUN. Their workflows exist on working branch but are absent from main; workflow_dispatch cannot be assumed. D4's GITHUB_TOKEN push did not yield a downstream D5 run. Do not change main or mutate the D4 closure just to trigger it.
+- The 72/72 tri-hash result is provider metadata matching, not provider raw-byte readback. Global Preservation remains blocked before E3 by E2 Replay 20 archives and two independent durable failure domains.
+- Read the new live revalidation status/handoff and the Arabic new-chat prompt linked from docs/PROJECT_CONTINUITY.md before resuming.
