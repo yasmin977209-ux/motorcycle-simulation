@@ -22,7 +22,7 @@ def classify(token:str, context:str, field_context:str="")->str:
     if re.search(r"(?<![0-9٠-٩۰-۹])[0-9٠-٩۰-۹]{8,}\s*/\s*[0-9٠-٩۰-۹]{8,}(?![0-9٠-٩۰-۹])",context): return "Identifier"
     if token.isdigit() and re.search(r"[\(\[]\s*"+re.escape(token)+r"\s*[\)\]]",context): return "Section/Item number"
     if re.match(r"^\s*"+re.escape(token)+r"(?:[.)،-])?\s+",context): return "Section/Item number"
-    if re.search(r"(?<![0-9٠-٩۰-۹])"+re.escape(token)+r"[.)،]\s+",context): return "Section/Item number"
+    if token.isdigit() and re.search(r"(?<![0-9٠-٩۰-۹])"+re.escape(token)+r"[.)،]\s+",context): return "Section/Item number"
     if REFERENCE.search(context): return "Reference constant"
     if DATE.search(context) or re.search(r"(?i)(تاريخ|date|time|وقت|اليوم)",context): return "Date/Time"
     if re.search(r"[%٪]|نسبة|احتمال|probability|percent(age)?",context,re.I): return "Statistical"
