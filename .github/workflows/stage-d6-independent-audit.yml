@@ -121,7 +121,7 @@ jobs:
           echo "D5_ARTIFACT_BYTES_DOWNLOADED artifact_id=${artifact_id}"
       - name: Execute normative acceptance tests 175, 176, 179, 180, 181, 182, 183 and 186 on exact HEAD
         env:
-          D5_ARTIFACT_ZIP: /tmp/d5-package.zip
+          D5_ARTIFACT_ZIP: /tmp/d5-artifact.zip
           D6_RUN_ID: ${{ github.run_id }}
           D6_JOB_ID: ${{ env.D6_JOB_ID }}
           TESTED_SHA: ${{ github.sha }}
