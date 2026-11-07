@@ -115,3 +115,14 @@ The 72 live provider metadata values were compared against hashes calculated ove
 ### Gate separation under REV6 §§17.11 and 19
 
 Global Preservation Gate remains independently BLOCKED before E3 because E2 Replay's 20 archives and proof of two independent durable failure domains remain outstanding. That gate is not a D3 exit criterion and must not block D4, D5 or D6. The D3 normative gate is therefore closed and D4 is READY_FOR_D4. Preserve all upstream non-promotions and missing-evidence fields exactly as recorded above.
+
+
+
+## Owner decision execution correction — 2026-11-07
+
+- D3 normative gate: `PASS_GAP_FREE_NORMATIVE_V240_SCOPE`; `READY_FOR_D4=true`.
+- This closure is limited to D3-01..D3-18 plus D3-S1/S2 in the owner-approved v2.4.0 scope. It does not assert full project acceptance.
+- Stage A: Run 42330906466 / Job 128276958747 / tested SHA `cef3572d3ce49545cc44739324929685208245a7`; Artifact 13557202516; 72 GitHub artifact ZIPs raw-hashed, GitHub digest checked and ZIP CRC passed.
+- Stage B recorded reconciliation: S6 20/20, D3-S 23/23, D1/D3/D5 multipart 20/20, Dropbox 9/9 = 72/72 same-algorithm provider metadata matches. This is metadata-hash comparison, not provider raw-byte download.
+- Global Preservation Gate remains independently blocked before E3; it does not block D3/D4/D5/D6 under REV6 §§17.11 and 19.
+- Preserved states: Financial Gate A PASS_SCOPED; Production Gate A NOT_DECLARED; Gate B FAIL_SCOPED 10/10; Stability NOT_CONVERGED 0/60; five historical fields remain MISSING_EVIDENCE.

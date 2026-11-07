@@ -30,3 +30,17 @@ def test_arabic_clause_ranges_are_classified_as_reference_constants():
 def test_artifact_run_numeric_pair_is_classified_as_identifier():
     from scripts.audit_d4_numeric_occurrences import classify
     assert classify("12852969854", "12852969854/40773412377") == "Identifier"
+
+def test_parenthetical_numbered_disclaimer_items_are_classified():
+    for token, context in [
+        ("3", "القيمة الدفترية؛ (2) لا إصلاحات؛ (3) لا تمويل خارجي؛ (4) الكفالة؛ (5) قد تظهر نتائج"),
+        ("4", "no repairs; (3) no external financing; (4) guarantee multiplier"),
+        ("5", "no external financing; (4) guarantee; (5) non-monotonic results"),
+    ]:
+        assert classify(token, context) == "Section/Item number"
+
+
+def test_long_artifact_and_run_id_pair_is_classified_as_identifier():
+    context = "12852969854/40773412377"
+    assert classify("12852969854", context) == "Identifier"
+    assert classify("40773412377", context) == "Identifier"
