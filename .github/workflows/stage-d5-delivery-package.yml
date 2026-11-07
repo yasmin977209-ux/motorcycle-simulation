@@ -7,6 +7,7 @@ on:
     paths:
       - docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json
       - .github/workflows/stage-d5-delivery-package.yml
+      - scripts/d5_package.py
 permissions:
   contents: write
   actions: read
