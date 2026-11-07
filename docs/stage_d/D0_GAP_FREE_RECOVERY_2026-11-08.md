@@ -2,7 +2,7 @@
 
 ## الحكم الحالي
 
-<badge>BLOCKED / MISSING_EVIDENCE</badge>
+**Status:** `BLOCKED / MISSING_EVIDENCE`
 
 **D0 is not PASS_GAP_FREE.** The historical disposition `PASS_SCOPED_WITH_LIMITATIONS` is retained; this review does not rewrite it. The new exact-SHA audit deliberately fails closed when required original evidence is absent.
 
