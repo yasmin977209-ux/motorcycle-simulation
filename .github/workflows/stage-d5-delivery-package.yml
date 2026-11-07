@@ -6,6 +6,7 @@ on:
       - tmp/d1-rebuild-20261101
     paths:
       - docs/stage_d/D4_EFFECTIVE_CLOSURE_STATE_2026-11-07.json
+      - .github/workflows/stage-d5-delivery-package.yml
 permissions:
   contents: write
   actions: read
