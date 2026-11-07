@@ -24,7 +24,7 @@ def classify(token:str, context:str, field_context:str="")->str:
     if DATE.search(context) or re.search(r"(?i)(تاريخ|date|time|وقت|اليوم)",context): return "Date/Time"
     if re.search(r"[\(\[]\s*"+re.escape(token)+r"\s*[\)\]]",context): return "Section/Item number"
     if re.search(r"(?<![0-9٠-٩۰-۹])"+re.escape(token)+r"[.)،]\s+",context): return "Section/Item number"
-    if re.match(r"^\\s*"+re.escape(token)+r"(?:[.)،-])?\\s+",context): return "Section/Item number"
+    if re.match(r"^\s*"+re.escape(token)+r"(?:[.)،-])?\s+",context): return "Section/Item number"
     if FINANCIAL.search(context): return "Financial"
     if STATISTICAL.search(context): return "Statistical"
     if FORMULA.search(context): return "Formula constant"
