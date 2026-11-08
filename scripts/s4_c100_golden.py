@@ -314,7 +314,7 @@ def main() -> int:
     if len(SOURCE_SHA) != 40 or any(ch not in "0123456789abcdef" for ch in SOURCE_SHA):
         raise RuntimeError("S4_SOURCE_SHA_INVALID")
     import re
-    is_new_c100_cohort = bool(re.fullmatch(r"c100-v23-rebuild-[0-9]{8}", COHORT_ID))
+    is_new_c100_cohort = COHORT_ID == "c100-v23-rebuild-20261105"
     is_pinned_historical_c100 = (
         SOURCE_SHA == "965281d52441cd0d4b744e211c9f68ee4cdc3753"
         and COHORT_ID == "c100-v23-s4-20261026-965281d5"
