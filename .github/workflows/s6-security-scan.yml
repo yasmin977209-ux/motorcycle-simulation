@@ -22,21 +22,21 @@ jobs:
       - name: Checkout full history without persisted credentials
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Scan repository history with Gitleaks
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
-          GITHUB_TOKEN: \${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           GITLEAKS_VERSION: "8.30.0"
           GITLEAKS_ENABLE_COMMENTS: "false"
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
           GITLEAKS_ENABLE_SUMMARY: "true"
 
       - name: Audit the exact runtime lock when present
-        if: \${{ hashFiles('requirements-lock-py311-hashed.txt') != '' }}
+        if: ${{ hashFiles('requirements-lock-py311-hashed.txt') != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -45,5 +45,5 @@ jobs:
           /tmp/pip-audit-env/bin/pip-audit --requirement requirements-lock-py311-hashed.txt --strict
 
       - name: Record lock-generation prerequisite if the hash lock is not yet committed
-        if: \${{ hashFiles('requirements-lock-py311-hashed.txt') == '' }}
+        if: ${{ hashFiles('requirements-lock-py311-hashed.txt') == '' }}
         run: echo "DEPENDENCY_AUDIT=BLOCKED_HASH_LOCK_NOT_YET_COMMITTED" >> "$GITHUB_STEP_SUMMARY"
