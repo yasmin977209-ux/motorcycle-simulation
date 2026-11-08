@@ -110,3 +110,25 @@ def test_new_c100_cohort_is_separate_from_s6_cohort_family():
             master_seed=SEED, scenario_id="C100_G100",
             expected_trial_ids=[1], expected_start_date=START.isoformat(),
         )
+
+
+def test_unapproved_cohort_date_variants_are_rejected():
+    source = "d" * 40
+    s6_cohort = "s6-v23-rebuild-20261106"
+    with pytest.raises(RuntimeError, match="S6_DAILY_PATH_SOURCE_COHORT_MISMATCH"):
+        build_daily_path_identity_evidence(
+            rows(source, s6_cohort), source_sha=source, cohort_id=s6_cohort,
+            master_seed=SEED, scenario_id=SC, expected_trial_ids=[1, 2],
+            expected_start_date=START.isoformat(),
+        )
+
+    c100_cohort = "c100-v23-rebuild-20261106"
+    sample = row(1, START, source, c100_cohort)
+    sample["scenario_id"] = "C100_G100"
+    sample["Final_Close_Date"] = START.isoformat()
+    with pytest.raises(RuntimeError, match="S6_DAILY_PATH_SOURCE_COHORT_MISMATCH"):
+        build_daily_path_identity_evidence(
+            [sample], source_sha=source, cohort_id=c100_cohort,
+            master_seed=SEED, scenario_id="C100_G100",
+            expected_trial_ids=[1], expected_start_date=START.isoformat(),
+        )
