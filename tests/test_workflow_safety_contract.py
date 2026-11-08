@@ -54,3 +54,17 @@ def test_safe_identity_workflow_actions_are_full_sha_pinned():
     source = Path(path).read_text(encoding="utf-8")
     refs = re.findall(r"uses:\s*[^@\s]+@([0-9a-f]{40})", source)
     assert len(refs) >= 3
+
+
+def test_runtime_dependency_lock_has_exact_versions_and_sha256_hashes():
+    source = Path("requirements-lock-py311-hashed.txt").read_text(encoding="utf-8")
+    entries = [line.strip() for line in source.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    assert len(entries) == 15
+    assert all(re.fullmatch(r"[a-z0-9][a-z0-9._-]*==[A-Za-z0-9.!+_-]+ --hash=sha256:[0-9a-f]{64}", line) for line in entries)
+    assert len({line.split("==", 1)[0] for line in entries}) == len(entries)
+
+
+def test_safe_test_workflow_installs_with_hash_verification():
+    source = Path(".github/workflows/s6-explicit-cohort-identity-contract.yml").read_text(encoding="utf-8")
+    assert "--require-hashes -r requirements-lock-py311-hashed.txt" in source
+    assert "diff -u requirements-lock-py311-hashed.txt" in source
