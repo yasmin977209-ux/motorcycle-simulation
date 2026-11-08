@@ -68,3 +68,12 @@ def test_safe_test_workflow_installs_with_hash_verification():
     source = Path(".github/workflows/s6-explicit-cohort-identity-contract.yml").read_text(encoding="utf-8")
     assert "--require-hashes -r requirements-lock-py311-hashed.txt" in source
     assert "diff -u requirements-lock-py311-hashed.txt" in source
+
+
+def test_execution_workflow_pins_model_source_separately_from_workflow_head():
+    source = Path(".github/workflows/s6-isolated-execution.yml").read_text(encoding="utf-8")
+    assert "e20f66e4a785c69247186b1773792f410f3d4c05" in source
+    assert "S6_EXECUTION_APPROVED_WORKFLOW_SHA" in source
+    assert "path: execution-source" in source
+    assert 'test "$GITHUB_SHA" = "$S6_SOURCE_SHA"' not in source
+    assert 'test "$GITHUB_SHA" = "$S4_SOURCE_SHA"' not in source
