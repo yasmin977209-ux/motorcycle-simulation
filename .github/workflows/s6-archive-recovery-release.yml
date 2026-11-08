@@ -83,7 +83,7 @@ jobs:
           import csv, hashlib, json, os
           rows=[]
           with open("recovery/validated.tsv", newline="") as f:
-              for artifact_id,name,size,expires_at,digest,path in csv.reader(f, delimiter="\\t"):
+              for artifact_id,name,size,expires_at,digest,path in csv.reader(f, delimiter="\t"):
                   h=hashlib.sha256()
                   with open(path,"rb") as z:
                       for chunk in iter(lambda:z.read(1024*1024), b""):
@@ -102,9 +102,9 @@ jobs:
                     "validation":"all 63 ZIP archives downloaded, size-checked, ZIP-tested and SHA-256 hashed",
                     "artifacts":rows}
           with open("recovery/MANIFEST.json","w") as f:
-              json.dump(manifest,f,indent=2); f.write("\\n")
+              json.dump(manifest,f,indent=2); f.write("\n")
           with open("recovery/SHA256SUMS","w") as f:
-              for x in rows: f.write(x["sha256"]+"  assets/"+x["asset"]+"\\n")
+              for x in rows: f.write(x["sha256"]+"  assets/"+x["asset"]+"\n")
           PY
           cat > recovery/RELEASE_NOTES.md <<'EOF'
           Archival preservation copy of the 63 original S6 GitHub Actions artifact ZIPs from runs:
