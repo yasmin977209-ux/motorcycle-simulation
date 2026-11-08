@@ -1,0 +1,56 @@
+name: S6 explicit cohort identity contract (safe tests)
+on:
+  push:
+    branches:
+      - "fix/explicit-cohort-identity-20261108"
+    paths:
+      - "scripts/s6_daily_path_identity.py"
+      - "scripts/s6_first_checkpoint.py"
+      - "scripts/s4_c100_golden.py"
+      - "scripts/s6_checkpoint_config.json"
+      - "tests/test_s6_daily_path_identity_contract.py"
+      - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
+  pull_request:
+    branches:
+      - "tmp/d1-rebuild-20261101"
+    paths:
+      - "scripts/s6_daily_path_identity.py"
+      - "scripts/s6_first_checkpoint.py"
+      - "scripts/s4_c100_golden.py"
+      - "scripts/s6_checkpoint_config.json"
+      - "tests/test_s6_daily_path_identity_contract.py"
+      - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
+permissions:
+  contents: read
+jobs:
+  explicit-identity-contract:
+    name: Explicit identity and schema tests only (no Trial)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: .
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile identity validators
+        run: python -m py_compile scripts/s6_daily_path_identity.py scripts/s6_first_checkpoint.py scripts/s4_c100_golden.py
+      - name: Run isolated identity contract tests
+        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py
+      - name: Assert workflow is non-executing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path(".github/workflows/s6-explicit-cohort-identity-contract.yml").read_text(encoding="utf-8")
+          forbidden = ("run_single_trial", "run_trials_parallel", "run_full_trials", "workflow_dispatch")
+          assert all(name not in text for name in forbidden)
+          print("SIMULATION_TRIALS=NOT_EXECUTED")
+          PY
