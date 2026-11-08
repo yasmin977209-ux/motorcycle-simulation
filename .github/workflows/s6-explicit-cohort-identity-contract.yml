@@ -9,6 +9,7 @@ on:
       - "scripts/s4_c100_golden.py"
       - "scripts/s6_checkpoint_config.json"
       - "tests/test_s6_daily_path_identity_contract.py"
+      - "tests/test_s6_daily_balance_snapshot_schema.py"
       - "requirements-lock-py311.txt"
       - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
       - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
@@ -25,6 +26,7 @@ on:
       - "scripts/s4_c100_golden.py"
       - "scripts/s6_checkpoint_config.json"
       - "tests/test_s6_daily_path_identity_contract.py"
+      - "tests/test_s6_daily_balance_snapshot_schema.py"
       - "requirements-lock-py311.txt"
       - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
       - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
@@ -59,7 +61,7 @@ jobs:
       - name: Compile identity validators
         run: python -m py_compile scripts/s6_daily_path_identity.py scripts/s6_first_checkpoint.py scripts/s4_c100_golden.py
       - name: Run isolated identity contract tests
-        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py
+        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py
       - name: Confirm this job has no simulation invocation
         run: |
           python - <<'PY'
@@ -67,6 +69,6 @@ jobs:
           workflow = Path(".github/workflows/s6-explicit-cohort-identity-contract.yml").read_text(encoding="utf-8")
           forbidden = ("run_" + "single_trial", "run_trials_" + "parallel", "run_full_" + "trials")
           assert all(name not in workflow for name in forbidden)
-          assert "pytest -q tests/test_s6_daily_path_identity_contract.py" in workflow
+          assert "pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py" in workflow
           print("SIMULATION_TRIALS=NOT_EXECUTED")
           PY
