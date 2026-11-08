@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Set up the lock-compatible Python runtime
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        with:
+          python-version: "3.11.18"
+
       - name: Scan repository history with Gitleaks
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
