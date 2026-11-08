@@ -158,19 +158,21 @@ def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
 
 
 def current_git_commit(source_sha: str | None = None) -> str | None:
-    """Return an actual checked-out commit SHA; never substitute SOURCE_SHA."""
-    commit = os.environ.get("GITHUB_SHA")
-    if commit:
-        require_source_sha(commit)
-        return commit
+    """Return the checked-out model-source commit, never the workflow/event HEAD."""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         )
     except (OSError, subprocess.CalledProcessError):
+        if source_sha:
+            require_source_sha(source_sha)
+            return source_sha
         return None
     commit = result.stdout.strip()
     if not commit:
+        if source_sha:
+            require_source_sha(source_sha)
+            return source_sha
         return None
     require_source_sha(commit)
     return commit
@@ -424,7 +426,8 @@ def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] |
     require_source_sha(expected_source_sha)
     workflow_head_sha = os.environ.get("GITHUB_SHA", "")
     require_source_sha(workflow_head_sha)
-    if expected_source_sha != workflow_head_sha or str(args.source_sha) != expected_source_sha:
+    checked_out_source_sha = current_git_commit()
+    if expected_source_sha != checked_out_source_sha or str(args.source_sha) != expected_source_sha:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_SOURCE_SHA_MISMATCH")
     if str(args.cohort_id) != str(config["cohort_id"]):
         raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_MISMATCH")
@@ -589,7 +592,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
         "n_unique_financial_outcomes":n_unique_financial_outcomes,
         "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
-        "git_commit":current_git_commit(args.source_sha),
+        "git_commit":current_git_commit(args.source_sha),"workflow_head_sha":os.environ.get("GITHUB_SHA"),
         "governing_decision_id":GOVERNING_DECISION_ID,
         "governing_reference_sha256":GOVERNING_REFERENCE_SHA256,
         "source_run_metadata_declared_sha256":source_metadata.get("sha256") if source_metadata_path else None,
@@ -1358,7 +1361,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         output_paths.append(out/"source_run_metadata.json")
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in output_paths}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
-        "git_commit":current_git_commit(args.source_sha),"cohort_id":args.cohort_id,
+        "git_commit":current_git_commit(args.source_sha),"workflow_head_sha":os.environ.get("GITHUB_SHA"),"cohort_id":args.cohort_id,
         "run_id":args.run_id,"run_attempt":args.run_attempt,
         "source_run_id":source_run_id,"source_run_attempt":source_run_attempt,
         "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),
