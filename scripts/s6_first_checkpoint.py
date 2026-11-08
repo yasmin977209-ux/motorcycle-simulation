@@ -420,7 +420,9 @@ def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] |
     args._s6_checkpoint_config = config
     expected_source_sha = os.environ.get("S6_SOURCE_SHA", "")
     require_source_sha(expected_source_sha)
-    if str(args.source_sha) != expected_source_sha:
+    workflow_head_sha = os.environ.get("GITHUB_SHA", "")
+    require_source_sha(workflow_head_sha)
+    if expected_source_sha != workflow_head_sha or str(args.source_sha) != expected_source_sha:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_SOURCE_SHA_MISMATCH")
     if str(args.cohort_id) != str(config["cohort_id"]):
         raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_MISMATCH")
