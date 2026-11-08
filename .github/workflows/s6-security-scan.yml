@@ -67,7 +67,7 @@ jobs:
                   "secret_value_emitted": False,
               }, sort_keys=True))
           with open(__import__("os").environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"finding_count={len(findings)}\\n")
+              output.write(f"finding_count={len(findings)}\n")
           print(f"GITLEAKS_FULL_HISTORY_FINDINGS={len(findings)}")
           PY
 
