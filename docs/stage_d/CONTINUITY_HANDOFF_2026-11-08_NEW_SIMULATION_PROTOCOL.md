@@ -55,3 +55,12 @@ Do not dispatch any Trial/Simulation/Monte Carlo before final owner confirmation
 - PR #83 remains Draft/open/unmerged; no independent reviews or comments. No Actions run for the protocol branch.
 - Resume: obtain owner decision on identity-contract route; then implement only approved code/config/workflow changes on a new isolated branch, lock runtime/dependencies, prove storage/security/fail-fast, run safe tests at exact pin, obtain independent review, then seek final owner execution confirmation.
 - Do not dispatch any Trial/Simulation/Monte Carlo or Golden revalidation. D0 historical remains BLOCKED. No main write, merge, Release, historical mutation or gate promotion.
+
+
+## End-of-session disposition — 2026-11-08
+- Read the full preflight report before continuing.
+- Overall status is `BLOCKED_BEFORE_EXECUTION`; no execution authorization exists.
+- First required action is an explicit owner decision resolving the mismatch between `s6-v23-rebuild-20261105` / `c100-v23-rebuild-20261105` and current code's enforced cohort rules. The existing S6 checkpoint config is still pinned to the historical source/cohort and cannot be reused for a clean new run.
+- Do not modify source/validators/config/workflows to bypass the mismatch. Any authorized change requires a new source pin and exact manifest.
+- Then complete dependency lock, dedicated least-privilege workflows, storage/restore, security scan, fail-fast/recovery, safe exact-pin tests and independent review; only after those should the owner be asked for final execution confirmation.
+- PR #83 remains Draft/open/unmerged. No Actions run was dispatched for this branch. No Trials/Simulation/Monte Carlo/Golden revalidation were run. Main and historical evidence remain untouched.
