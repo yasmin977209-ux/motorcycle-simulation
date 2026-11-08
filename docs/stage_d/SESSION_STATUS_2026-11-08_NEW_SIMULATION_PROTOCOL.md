@@ -41,3 +41,20 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' e
 - Re-read `main`: still `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`.
 - PR #82 remains open/draft/unmerged; not modified.
 - Execution remains `NOT_AUTHORIZED_FOR_EXECUTION`.
+
+
+## Full preflight review — 2026-11-08
+- Added `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md` and appended corrections to the protocol.
+- PF-01: Raw GitHub bytes of v2.4.0 now verified: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`, 401,397 bytes, Git blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`, containing commit `1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b`. The owner decision records this exact hash. Header still says `PROPOSED_FOR_OWNER_ADOPTION — NOT_EFFECTIVE_YET`; retain as stale-header governance note; do not edit reference bytes.
+- PF-02: E2 source pin `002b74893ca9dfea864e83fecc558f2388748ffe` is confirmed as a full source commit/tree, tree `9cfaa2a8a57cfaf62beeb4a4166c042553173159`; core model blob identities reviewed. Separate it from future Workflow HEAD.
+- PF-03 BLOCKED: E2-approved S6/C100 cohort IDs are rejected by current code. `s6_first_checkpoint.py` derives `s6-v23-{SOURCE_SHA[:8]}`; no `--cohort-id`. `s6_daily_path_identity.py` rejects proposed new C100 cohort. `s6_checkpoint_config.json` is pinned to old S6 source/cohort and old previous-run IDs; Actions execution rejects new source and is not clean-start.
+- PF-04 PASS_SCOPED: static code identity review only; not a full independent code review.
+- PF-05 BLOCKED: no exact dependency lock/runtime/container manifest; pyarrow and pyyaml unpinned in requirements.
+- PF-06 BLOCKED: no workflow implements new S6/C100 identity. Existing S6 N300, old-identity E2 replay, and historical C100 workflows are not reusable as-is.
+- PF-07 NOT_RUN: safe snapshot/path-contract test candidates identified; no exact-pin test run.
+- PF-08 BLOCKED: no verified two-failure-domain storage and restore plan for new lineage.
+- PF-09 NOT_RUN: no secret scan/redaction audit.
+- PF-10 BLOCKED: no new orchestrator with fail-fast child cancellation and safe resume; existing workflows have incompatible concurrency/fail-fast behavior.
+- PF-11 BLOCKED: PR #83 has no independent reviews; E2 still requires final owner confirmation.
+- Run `41958935113` is completed/successful old-identity Replay only; not a new-lineage execution.
+- Overall: `BLOCKED_BEFORE_EXECUTION`. No workflow dispatch, Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, identity mutation, historical data mutation, main write, merge or Release.
