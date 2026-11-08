@@ -354,3 +354,31 @@
 - PF-11 `BLOCKED` — لا independent reviewer ولا final owner confirmation.
 
 **الحكم المصحح:** `BLOCKED_BEFORE_EXECUTION`. لا Trial أو Simulation أو Monte Carlo أو Golden revalidation أو D0'–D6' قبل حسم قرار الهوية وإغلاق البوابات ثم تأكيد المالك النهائي.
+
+## 17. Owner decision and explicit identity-contract implementation — 2026-11-08
+
+At 2026-11-08T16:30:32Z, the owner explicitly approved Path B: update the identity contract to accept `cohort_id` explicitly, pin the resulting source, and review/approve its exact fingerprint before any Trial. This is an operational authorization for the narrow identity-contract change only; it is **not** authorization to execute the experiment, create a Golden, expand N, merge, or publish a Release.
+
+Approved new identities:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Implementation is isolated on branch `fix/explicit-cohort-identity-20261108`, Draft PR #84, based on PR #83's protocol branch:
+- S6 now requires explicit `--cohort-id`; no longer derives the cohort from SOURCE_SHA's first eight characters.
+- The daily-path validator accepts the explicit S6 and C100 rebuild families separately. The exact pinned historical C100 exception remains narrowly scoped.
+- The S6 checkpoint config is reset to a fresh N=300 / trial IDs 1..300 baseline and no longer contains historical run IDs or a source pin copied from the previous cohort.
+- Actions execution requires `S6_SOURCE_SHA` to equal both the CLI source SHA and exact `GITHUB_SHA`; the fresh checkpoint config rejects historical resume.
+- C100 validates its new cohort family separately and preserves only the exact historical source/cohort exception.
+- Safe identity tests and a read-only Actions workflow were added.
+
+Safe verification evidence:
+- Run `42500734407` passed the identity tests and non-execution guard before the dependency lock was added.
+- Run `42500791300` passed the same tests and guard using the exact Python 3.11 dependency-version lock.
+- The final candidate run after all append-only status updates must be checked before assigning the final code/Workflow HEAD as the reviewed pin.
+- These runs perform no Trials, Simulation, Monte Carlo, or Golden generation.
+
+Environment evidence currently scoped to the safe test workflow: Ubuntu 24.04, CPython 3.11.18, pip 26.2.2, and exact package versions in `requirements-lock-py311.txt`. This is a version lock, not a hash-locked wheel manifest or immutable runner image; the full simulation environment remains blocked until that stronger reproducibility requirement is closed.
+
+Remaining blockers: dedicated simulation Workflow with independent fail-fast/recovery; two durable failure-domain storage destinations and a successful restore/readback; security/secrets scan and redaction audit; exact final source fingerprint and independent review. The S6 aggregator still treats the old C100 evidence as read-only historical reuse; it is not evidence for the new C100 cohort.
+
+**Execution remains NOT AUTHORIZED.** No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' execution, historical evidence mutation, main write, merge, or Release occurred. Overall status remains `BLOCKED_BEFORE_EXECUTION`.
