@@ -67,3 +67,15 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' e
 - No workflow, static test run, Trial, Simulation, Monte Carlo, Golden revalidation or D0'–D6' build was dispatched in this session. The exact-pin safe tests remain `NOT_RUN`.
 - Owner decision required: resolve E2 cohort mismatch versus current enforced identity contract. Do not edit validators/config or alter source pin until this decision exists.
 - Main unchanged; D0 historical unchanged; no identities, thresholds, business logic, accounting, RNG, artifacts, manifests or Releases changed.
+
+## Addendum — owner-authorized identity contract change — 2026-11-08
+
+- Owner approved Path B at 2026-11-08T16:30:32Z. Scope: explicit S6/C100 `cohort_id` contract, fresh checkpoint config, and a new source pin for review. This is not execution authorization.
+- Implemented on `fix/explicit-cohort-identity-20261108`; Draft PR #84 targets the protocol branch from PR #83.
+- New identities: S6 `s6-v23-rebuild-20261105`; C100 `c100-v23-rebuild-20261105`.
+- S6 now requires `--cohort-id`, checkpoint config is fresh N=300 with no old run IDs, and Actions must bind `S6_SOURCE_SHA` to exact `GITHUB_SHA`. C100's new cohort is family-validated; the historical exception remains exact.
+- Safe tests: 11 passed in Run `42500791300`; compile and non-execution guard passed. Run used Ubuntu 24.04, CPython 3.11.18, pip 26.2.2 and `requirements-lock-py311.txt`.
+- The exact dependency versions are locked for the safe workflow, but wheel hashes and immutable runner image are not yet pinned. Do not treat this as a complete simulation environment lock.
+- Remaining: final HEAD/hash readback, independent review, dedicated simulation Workflow/fail-fast, two-failure-domain storage and restore, security scan/redaction audit, and separate final owner execution confirmation.
+- No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation.
+- Overall remains `BLOCKED_BEFORE_EXECUTION`; historical D0 and all project gates remain unchanged.
