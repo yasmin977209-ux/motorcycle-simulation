@@ -36,11 +36,49 @@ jobs:
           GITLEAKS_ENABLE_SUMMARY: "true"
 
       - name: Scan all reachable Git history with redacted output
+        id: full_history_scan
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
-          /tmp/gitleaks-8.30.0/gitleaks git . --redact --exit-code 2 --report-format sarif --report-path /tmp/gitleaks-full-history.sarif
+          /tmp/gitleaks-8.30.0/gitleaks git . --redact --exit-code 2 --report-format json --report-path /tmp/gitleaks-full-history.json
 
+      - name: Emit finding metadata only; never print secret material
+        id: finding_metadata
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = Path("/tmp/gitleaks-full-history.json")
+          if not report.is_file():
+              raise SystemExit("GITLEAKS_FULL_HISTORY_REPORT_MISSING")
+          findings = json.loads(report.read_text(encoding="utf-8"))
+          for item in findings:
+              print(json.dumps({
+                  "rule_id": item.get("RuleID"),
+                  "description": item.get("Description"),
+                  "file": item.get("File"),
+                  "commit": item.get("Commit"),
+                  "start_line": item.get("StartLine"),
+                  "end_line": item.get("EndLine"),
+                  "secret_value_emitted": False,
+              }, sort_keys=True))
+          with open(__import__("os").environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"finding_count={len(findings)}\\n")
+          print(f"GITLEAKS_FULL_HISTORY_FINDINGS={len(findings)}")
+          PY
+
+      - name: Fail closed when any historical finding remains
+        if: always()
+        shell: bash
+        env:
+          FINDING_COUNT: ${{ steps.finding_metadata.outputs.finding_count }}
+        run: |
+          set -euo pipefail
+          test "${FINDING_COUNT:-missing}" = "0"
       - name: Audit the exact runtime lock when present
         if: ${{ hashFiles('requirements-lock-py311-hashed.txt') != '' }}
         shell: bash
