@@ -3,8 +3,16 @@ name: S6 Original Actions Archive Recovery Release
 on:
   workflow_dispatch:
     inputs:
+      action:
+        description: "prepare preserves/resumes the draft; publish revalidates it and then publishes"
+        required: true
+        type: choice
+        options:
+          - prepare
+          - publish
+        default: prepare
       confirm:
-        description: 'Type PUBLISH_S6_ARCHIVE to create the archival release'
+        description: "Type PREPARE_S6_ARCHIVE or PUBLISH_S6_ARCHIVE to match the selected action"
         required: true
         type: string
 
@@ -18,45 +26,50 @@ concurrency:
 
 jobs:
   recover-and-publish:
-    if: github.ref == 'refs/heads/main' && inputs.confirm == 'PUBLISH_S6_ARCHIVE'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      ((inputs.action == 'prepare' && inputs.confirm == 'PREPARE_S6_ARCHIVE') ||
+       (inputs.action == 'publish' && inputs.confirm == 'PUBLISH_S6_ARCHIVE'))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      GH_TOKEN: ${{ github.token }}
-      REPO: ${{ github.repository }}
+      GH_TOKEN: \${{ github.token }}
+      REPO: \${{ github.repository }}
       TAG: s6-source-archive-recovery-2026-11-08
       ARCHIVE_SOURCE_SHA: f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866
+      ACTION_MODE: \${{ inputs.action }}
     steps:
-      - name: Validate release identity and enumerate original artifacts
+      - name: Validate release action and enumerate original artifacts
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-            echo "::error::Release/tag $TAG already exists; refusing to overwrite."
-            exit 1
-          fi
+          case "$ACTION_MODE" in
+            prepare|publish) ;;
+            *) echo "::error::Unsupported action mode."; exit 1 ;;
+          esac
           mkdir -p recovery/assets
           : > recovery/artifacts.tsv
+          : > recovery/validated.tsv
           for run_id in 40574326793 40596643263 40731224990 40773412377; do
             gh api "repos/$REPO/actions/runs/$run_id/artifacts?per_page=100" \
               --jq '.artifacts[] | [.id,.name,.size_in_bytes,.expired,.expires_at,(.digest // "")] | @tsv' \
               >> recovery/artifacts.tsv
           done
           count="$(wc -l < recovery/artifacts.tsv | tr -d ' ')"
-          test "$count" = "63" || { echo "::error::Expected 63 artifacts; found $count"; exit 1; }
+          test "$count" = "63" || { echo "::error::Expected 63 original artifacts; found $count."; exit 1; }
           if awk -F '\t' '$4 != "false" {bad=1} END {exit bad?0:1}' recovery/artifacts.tsv; then
-            echo "::error::At least one source artifact is expired."
+            echo "::error::At least one original artifact is expired."
             exit 1
           fi
           echo "Enumerated $count non-expired original artifacts."
 
-      - name: Download and validate exact artifact ZIP bytes
+      - name: Download and validate exact original artifact ZIP bytes
         shell: bash
         run: |
           set -euo pipefail
           while IFS=$'\t' read -r id name expected_size expired expires_at digest; do
             [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::Unsafe artifact name: $name"; exit 1; }
-            dest="recovery/assets/${name}.zip"
+            dest="recovery/assets/\${name}.zip"
             curl --fail --silent --show-error --location --retry 4 \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
@@ -75,7 +88,7 @@ jobs:
           done < recovery/artifacts.tsv
           test "$(wc -l < recovery/validated.tsv | tr -d ' ')" = "63"
 
-      - name: Build immutable inventory and checksum files
+      - name: Build manifest, checksums, and expected release asset inventory
         shell: bash
         run: |
           set -euo pipefail
@@ -94,7 +107,8 @@ jobs:
                   rows.append({"artifact_id":int(artifact_id),"artifact_name":name,
                                "size_bytes":int(size),"expires_at":expires_at,
                                "sha256":actual,"asset":os.path.basename(path)})
-          if len(rows)!=63: raise SystemExit("Inventory count mismatch")
+          if len(rows)!=63:
+              raise SystemExit("Inventory count mismatch")
           manifest={"purpose":"S6 original GitHub Actions artifact ZIP preservation",
                     "source_workflow_runs":[40574326793,40596643263,40731224990,40773412377],
                     "archive_source_branch_head":"f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866",
@@ -117,26 +131,152 @@ jobs:
 
           This is an archival transport release only. It does not change or upgrade any project gate, trial result, statistical disposition, D0/D1 status, or acceptance state. It does not repair missing historical accounting fields.
           EOF
-
-      - name: Create draft archival release
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh release create "$TAG" --repo "$REPO" --target "$ARCHIVE_SOURCE_SHA" \
-            --draft --title "S6 Original Source Archive Recovery (63 artifacts)" \
-            --notes-file recovery/RELEASE_NOTES.md
-
-      - name: Upload all 63 source archives and verification files
-        shell: bash
-        run: |
-          set -euo pipefail
+          : > recovery/expected_assets.tsv
           while IFS=$'\t' read -r id name size expires_at digest path; do
-            gh release upload "$TAG" "$path" --repo "$REPO"
+            printf '%s\t%s\t%s\n' "$(basename "$path")" "$size" "$digest" >> recovery/expected_assets.tsv
           done < recovery/validated.tsv
-          gh release upload "$TAG" recovery/MANIFEST.json recovery/SHA256SUMS --repo "$REPO"
-          release_id="$(gh api "repos/$REPO/releases/tags/$TAG" --jq '.id')"
-          asset_count="$(gh api "repos/$REPO/releases/$release_id/assets?per_page=100" --jq 'length')"
-          test "$asset_count" = "65" || { echo "::error::Expected 65 uploaded release assets; found $asset_count"; exit 1; }
-          gh api --method PATCH "repos/$REPO/releases/$release_id" -F draft=false >/dev/null
-          echo "Published release with $asset_count assets."
-          gh release view "$TAG" --repo "$REPO" --json url,isDraft,assets
+          for file in recovery/MANIFEST.json recovery/SHA256SUMS; do
+            printf '%s\t%s\tsha256:%s\n' "$(basename "$file")" "$(stat -c '%s' "$file")" "$(sha256sum "$file" | awk '{print $1}')" >> recovery/expected_assets.tsv
+          done
+          test "$(wc -l < recovery/expected_assets.tsv | tr -d ' ')" = "65"
+
+      - name: Ensure exact Git tag and locate or create the draft release by ID
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if tag_json="$(gh api "repos/$REPO/git/ref/tags/$TAG" 2>/dev/null)"; then
+            tag_type="$(jq -r '.object.type' <<< "$tag_json")"
+            tag_sha="$(jq -r '.object.sha' <<< "$tag_json")"
+            if [[ "$tag_type" != "commit" || "$tag_sha" != "$ARCHIVE_SOURCE_SHA" ]]; then
+              echo "::error::Existing tag does not point directly to the approved archive source commit."
+              exit 1
+            fi
+          else
+            gh api --method POST "repos/$REPO/git/refs" \
+              -f "ref=refs/tags/$TAG" \
+              -f "sha=$ARCHIVE_SOURCE_SHA" >/dev/null
+          fi
+
+          matches="$(gh api --paginate "repos/$REPO/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$TAG\") | [.id, (.draft|tostring), .target_commitish] | @tsv")"
+          match_count="$(printf '%s\n' "$matches" | awk 'NF {n++} END {print n+0}')"
+          if [[ "$match_count" -gt 1 ]]; then
+            echo "::error::More than one Release record uses the target tag."
+            exit 1
+          elif [[ "$match_count" -eq 1 ]]; then
+            IFS=$'\t' read -r release_id is_draft target_commit <<< "$matches"
+            if [[ "$target_commit" != "$ARCHIVE_SOURCE_SHA" ]]; then
+              echo "::error::Existing Release target does not match ARCHIVE_SOURCE_SHA."
+              exit 1
+            fi
+            if [[ "$is_draft" != "true" ]]; then
+              echo "::error::A published Release already exists; refusing to mutate it."
+              exit 1
+            fi
+          else
+            if [[ "$ACTION_MODE" == "publish" ]]; then
+              echo "::error::Publish mode requires an existing draft Release; run prepare first."
+              exit 1
+            fi
+            release_id="$(gh api --method POST "repos/$REPO/releases" \
+              -f "tag_name=$TAG" \
+              -f "target_commitish=$ARCHIVE_SOURCE_SHA" \
+              -F draft=true \
+              -f "name=S6 Original Source Archive Recovery (63 artifacts)" \
+              -f "body=$(cat recovery/RELEASE_NOTES.md)" \
+              --jq '.id')"
+          fi
+          test -n "$release_id"
+          printf 'release_id=%s\n' "$release_id" >> "$GITHUB_OUTPUT"
+          echo "Using Release ID $release_id; existing assets will be preserved."
+
+      - name: Resume uploads by Release ID without replacing existing assets
+        shell: bash
+        env:
+          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r asset expected_size expected_digest; do
+            path="recovery/assets/$asset"
+            [[ "$asset" == "MANIFEST.json" ]] && path="recovery/MANIFEST.json"
+            [[ "$asset" == "SHA256SUMS" ]] && path="recovery/SHA256SUMS"
+            existing="$(gh api "repos/$REPO/releases/$RELEASE_ID/assets?per_page=100" \
+              --jq ".[] | select(.name == \"$asset\") | [.size, (.digest // \"\")] | @tsv")"
+            existing_count="$(printf '%s\n' "$existing" | awk 'NF {n++} END {print n+0}')"
+            if [[ "$existing_count" -gt 1 ]]; then
+              echo "::error::Duplicate release assets named $asset."
+              exit 1
+            elif [[ "$existing_count" -eq 1 ]]; then
+              IFS=$'\t' read -r existing_size existing_digest <<< "$existing"
+              if [[ "$existing_size" != "$expected_size" || "$existing_digest" != "$expected_digest" ]]; then
+                echo "::error::Existing asset $asset differs from the freshly validated source; preserving it and stopping."
+                exit 1
+              fi
+              echo "Preserved and matched existing asset $asset."
+            else
+              gh api --method POST \
+                "https://uploads.github.com/repos/$REPO/releases/$RELEASE_ID/assets?name=$asset" \
+                -H "Content-Type: application/octet-stream" \
+                --input "$path" >/dev/null
+              echo "Uploaded missing asset $asset."
+            fi
+          done < recovery/expected_assets.tsv
+
+      - name: Reverify exact release asset set and tag before any publication
+        id: verify
+        shell: bash
+        env:
+          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPO/releases/$RELEASE_ID/assets?per_page=100" > recovery/release-assets.json
+          python3 - <<'PY'
+          import csv, json
+          expected={}
+          with open("recovery/expected_assets.tsv", newline="") as f:
+              for name,size,digest in csv.reader(f, delimiter="\t"):
+                  if name in expected:
+                      raise SystemExit("Duplicate expected asset: "+name)
+                  expected[name]=(int(size),digest)
+          with open("recovery/release-assets.json") as f:
+              actual=json.load(f)
+          if len(actual)!=65:
+              raise SystemExit(f"Expected exactly 65 release assets; found {len(actual)}")
+          seen={}
+          for item in actual:
+              name=item["name"]
+              if name in seen:
+                  raise SystemExit("Duplicate uploaded asset: "+name)
+              seen[name]=(int(item["size"]),item.get("digest"))
+          if set(seen)!=set(expected):
+              raise SystemExit("Release asset names do not exactly match the 65-item expected inventory")
+          for name,(size,digest) in expected.items():
+              actual_size,actual_digest=seen[name]
+              if actual_size!=size or actual_digest!=digest:
+                  raise SystemExit(f"Release asset verification failed: {name}")
+          print("Verified exactly 65 release assets by name, size, and SHA-256 digest.")
+          PY
+          tag_json="$(gh api "repos/$REPO/git/ref/tags/$TAG")"
+          test "$(jq -r '.object.type' <<< "$tag_json")" = "commit"
+          test "$(jq -r '.object.sha' <<< "$tag_json")" = "$ARCHIVE_SOURCE_SHA"
+          release_json="$(gh api "repos/$REPO/releases/$RELEASE_ID")"
+          test "$(jq -r '.tag_name' <<< "$release_json")" = "$TAG"
+          test "$(jq -r '.target_commitish' <<< "$release_json")" = "$ARCHIVE_SOURCE_SHA"
+          test "$(jq -r '.draft' <<< "$release_json")" = "true"
+          echo "Release ID $RELEASE_ID is a verified draft. No publication has occurred."
+
+      - name: Publish only when explicitly requested after verification
+        if: inputs.action == 'publish'
+        shell: bash
+        env:
+          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$REPO/releases/$RELEASE_ID" -F draft=false >/dev/null
+          final_json="$(gh api "repos/$REPO/releases/$RELEASE_ID")"
+          test "$(jq -r '.draft' <<< "$final_json")" = "false"
+          test "$(jq -r '.tag_name' <<< "$final_json")" = "$TAG"
+          test "$(jq -r '.target_commitish' <<< "$final_json")" = "$ARCHIVE_SOURCE_SHA"
+          echo "Published verified S6 archival Release ID $RELEASE_ID."
+          jq '{id,tag_name,target_commitish,draft,html_url,assets_count:(.assets|length)}' <<< "$final_json"
