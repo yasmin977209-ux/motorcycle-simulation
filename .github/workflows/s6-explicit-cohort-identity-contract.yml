@@ -19,7 +19,7 @@ on:
       - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
   pull_request:
     branches:
-      - "tmp/d1-rebuild-20261101"
+      - "docs/new-simulation-protocol-20261108"
     paths:
       - "scripts/s6_daily_path_identity.py"
       - "scripts/s6_first_checkpoint.py"
