@@ -104,7 +104,7 @@ jobs:
           with open("recovery/MANIFEST.json","w") as f:
               json.dump(manifest,f,indent=2); f.write("\n")
           with open("recovery/SHA256SUMS","w") as f:
-              for x in rows: f.write(x["sha256"]+"  assets/"+x["asset"]+"\n")
+              for x in rows: f.write(x["sha256"]+"  "+x["asset"]+"\n")
           PY
           cat > recovery/RELEASE_NOTES.md <<'EOF'
           Archival preservation copy of the 63 original S6 GitHub Actions artifact ZIPs from runs:
