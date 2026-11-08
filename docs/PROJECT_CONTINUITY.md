@@ -4188,3 +4188,17 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - PR #83 ما زال Draft/open/unmerged ولا توجد مراجعات مستقلة. لم يُشغّل Workflow أو Trial أو Simulation أو Monte Carlo أو Golden revalidation.
 - الحالة الكلية: `BLOCKED_BEFORE_EXECUTION`. يجب الحصول على قرار مالك يحسم تعارض الهوية قبل أي تعديل في الكود/الإعدادات، ثم استكمال البيئة والتخزين والأمن وWorkflow والمراجعة المستقلة، وأخيراً تأكيد المالك النهائي للتشغيل.
 - D0 التاريخية تبقى `BLOCKED / MISSING_EVIDENCE`. لم تتغير `main` أو الهوية أو القواعد أو العتبات أو الأدلة التاريخية أو Releases.
+
+
+---
+
+## 2026-11-08 — إغلاق جلسة مراجعة Preflight لتجربة المحاكاة الجديدة
+
+- التقرير التفصيلي: `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md`. تصحيحات البروتوكول في القسم 16 append-only.
+- تحقق المرجع v2.4.0 Raw bytes مطابق لبصمة قرار المالك `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`، 401,397 bytes، blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`. بقيت ملاحظة رأس الحالة القديمة واسم الملف/المسار موثقة دون تغيير المرجع.
+- تم تأكيد source pin `002b748...` كـModel source tree، لكن PF-03 BLOCKED لأن كود S6 يفرض cohort مشتقاً من SOURCE_SHA، C100 validator لا يقبل cohort الجديد، وcheckpoint config ما زال على الهوية التاريخية. لا تعديل أو تجاوز دون قرار مالك.
+- PF01/PF02/PF04 `PASS_SCOPED`; PF03/PF05/PF06/PF08/PF10/PF11 `BLOCKED`; PF07/PF09 `NOT_RUN`.
+- PR #83 Draft مفتوح وغير مدمج؛ تم تحديث وصفه بنتائج الفحص. لا مراجعة مستقلة حتى الإغلاق.
+- لم يتم dispatch لأي Workflow ولم تُشغّل اختبارات على exact pin أو Trials/Simulation/Monte Carlo/Golden revalidation. لا N expansion أو D0'–D6'.
+- الحالة النهائية: `BLOCKED_BEFORE_EXECUTION`. يلزم قرار مالك لحسم cohort/identity contract قبل أي تعديل كود أو إعدادات، ثم استكمال البيئة والـworkflow والتخزين والأمن والتوقف الآمن والمراجعة المستقلة، ثم تأكيد مالك نهائي منفصل للتشغيل.
+- `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4` دون تغيير. D0 التاريخية بقيت `BLOCKED / MISSING_EVIDENCE`. لا تعديل تاريخي أو merge أو Release.
