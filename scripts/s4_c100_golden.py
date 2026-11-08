@@ -311,6 +311,16 @@ def package_exists(name: str) -> bool:
 
 
 def main() -> int:
+    if len(SOURCE_SHA) != 40 or any(ch not in "0123456789abcdef" for ch in SOURCE_SHA):
+        raise RuntimeError("S4_SOURCE_SHA_INVALID")
+    import re
+    is_new_c100_cohort = bool(re.fullmatch(r"c100-v23-rebuild-[0-9]{8}", COHORT_ID))
+    is_pinned_historical_c100 = (
+        SOURCE_SHA == "965281d52441cd0d4b744e211c9f68ee4cdc3753"
+        and COHORT_ID == "c100-v23-s4-20261026-965281d5"
+    )
+    if not (is_new_c100_cohort or is_pinned_historical_c100):
+        raise RuntimeError("S4_C100_SOURCE_COHORT_IDENTITY_INVALID")
     started_at = now_utc()
     run_id = os.environ.get("GITHUB_RUN_ID", "LOCAL_NOT_GITHUB_ACTIONS")
     tested_sha = os.environ.get("GITHUB_SHA", "LOCAL_NOT_GITHUB_ACTIONS")
