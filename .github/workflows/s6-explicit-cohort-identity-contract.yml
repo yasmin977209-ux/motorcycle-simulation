@@ -20,6 +20,7 @@ on:
       - "scripts/s4_c100_golden.py"
       - "scripts/s6_checkpoint_config.json"
       - "tests/test_s6_daily_path_identity_contract.py"
+      - "requirements-lock-py311.txt"
       - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
 permissions:
   contents: read
