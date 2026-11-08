@@ -317,7 +317,6 @@ def _s6_action_checkpoint_config() -> dict[str, Any] | None:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_MISSING")
     config = json.loads(path.read_text(encoding="utf-8"))
     target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
-    validate_checkpoint_target_range(target, start, end)
     require_cohort_id(str(config.get("cohort_id", "")))
     if config.get("checkpoint_mode") != "FRESH" or (target, start, end) != (300, 1, 300):
         raise RuntimeError("S6_CHECKPOINT_CONFIG_NOT_FRESH_INITIAL_CHECKPOINT")
