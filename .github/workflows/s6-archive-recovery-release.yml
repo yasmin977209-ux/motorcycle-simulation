@@ -33,11 +33,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      GH_TOKEN: \${{ github.token }}
-      REPO: \${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
       TAG: s6-source-archive-recovery-2026-11-08
       ARCHIVE_SOURCE_SHA: f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866
-      ACTION_MODE: \${{ inputs.action }}
+      ACTION_MODE: ${{ inputs.action }}
     steps:
       - name: Validate release action and enumerate original artifacts
         shell: bash
@@ -69,7 +69,7 @@ jobs:
           set -euo pipefail
           while IFS=$'\t' read -r id name expected_size expired expires_at digest; do
             [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::Unsafe artifact name: $name"; exit 1; }
-            dest="recovery/assets/\${name}.zip"
+            dest="recovery/assets/${name}.zip"
             curl --fail --silent --show-error --location --retry 4 \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
@@ -194,7 +194,7 @@ jobs:
       - name: Resume uploads by Release ID without replacing existing assets
         shell: bash
         env:
-          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
         run: |
           set -euo pipefail
           while IFS=$'\t' read -r asset expected_size expected_digest; do
@@ -215,6 +215,10 @@ jobs:
               fi
               echo "Preserved and matched existing asset $asset."
             else
+              if [[ "$ACTION_MODE" == "publish" ]]; then
+                echo "::error::Publish mode requires a complete pre-existing draft; missing asset $asset."
+                exit 1
+              fi
               gh api --method POST \
                 "https://uploads.github.com/repos/$REPO/releases/$RELEASE_ID/assets?name=$asset" \
                 -H "Content-Type: application/octet-stream" \
@@ -227,7 +231,7 @@ jobs:
         id: verify
         shell: bash
         env:
-          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
         run: |
           set -euo pipefail
           gh api "repos/$REPO/releases/$RELEASE_ID/assets?per_page=100" > recovery/release-assets.json
@@ -270,7 +274,7 @@ jobs:
         if: inputs.action == 'publish'
         shell: bash
         env:
-          RELEASE_ID: \${{ steps.release.outputs.release_id }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
         run: |
           set -euo pipefail
           gh api --method PATCH "repos/$REPO/releases/$RELEASE_ID" -F draft=false >/dev/null
