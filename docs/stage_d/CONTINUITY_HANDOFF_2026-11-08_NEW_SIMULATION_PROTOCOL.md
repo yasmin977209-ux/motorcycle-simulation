@@ -33,3 +33,12 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, or D0'–D6
 
 ## Stop conditions
 Do not dispatch any Trial/Simulation/Monte Carlo before final owner confirmation. Do not modify main, merge PRs, publish Releases, change business rules/thresholds/identities, mutate historical artifacts/manifests, backfill or zero-fill missing historical accounting fields, or claim final acceptance.
+
+
+## Final remote readback correction — 2026-11-08
+- Final branch HEAD is `880c2f6f04967dc7b95f86f2ba7aaabe3af9c31b` (the protocol's original file-creation commit is `48f29a32183a0a5fe3e1496215f7a099f75ada22`).
+- Draft PR #83 is open and unmerged: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/83. Base remains the working branch, not `main`.
+- Diff is 4 files / 385 additions / 0 deletions. Main remains `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`.
+- No Actions run was associated with the final head; no workflow dispatch occurred.
+- Git blob SHA readback is recorded in the session status. Raw-byte SHA-256 was not calculated; do not claim `VERIFIED_LIVE`.
+- This is a documentation-only proposal. Do not dispatch execution without final owner confirmation after PF-01..PF-11.
