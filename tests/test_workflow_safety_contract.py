@@ -72,7 +72,7 @@ def test_safe_test_workflow_installs_with_hash_verification():
 
 def test_execution_workflow_pins_model_source_separately_from_workflow_head():
     source = Path(".github/workflows/s6-isolated-execution.yml").read_text(encoding="utf-8")
-    assert "e20f66e4a785c69247186b1773792f410f3d4c05" in source
+    assert "ac0d009aa004976009ed01e97f96d019945e9ad6" in source
     assert "S6_EXECUTION_APPROVED_WORKFLOW_SHA" in source
     assert "path: execution-source" in source
     assert 'test "$GITHUB_SHA" = "$S6_SOURCE_SHA"' not in source
