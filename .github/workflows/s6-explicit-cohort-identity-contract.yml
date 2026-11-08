@@ -15,10 +15,12 @@ on:
       - ".github/workflows/s6-isolated-execution.yml"
       - ".github/workflows/s6-security-scan.yml"
       - "tests/test_workflow_safety_contract.py"
+      - "tests/test_s6_source_pin_separation.py"
       - "requirements-lock-py311-hashed.txt"
       - ".github/workflows/s6-isolated-execution.yml"
       - ".github/workflows/s6-security-scan.yml"
       - "tests/test_workflow_safety_contract.py"
+      - "tests/test_s6_source_pin_separation.py"
       - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
       - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
       - "docs/stage_d/SESSION_STATUS_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
@@ -40,6 +42,7 @@ on:
       - ".github/workflows/s6-isolated-execution.yml"
       - ".github/workflows/s6-security-scan.yml"
       - "tests/test_workflow_safety_contract.py"
+      - "tests/test_s6_source_pin_separation.py"
       - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
       - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
       - "docs/stage_d/SESSION_STATUS_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
@@ -122,7 +125,7 @@ jobs:
       - name: Compile identity validators
         run: python -m py_compile scripts/s6_daily_path_identity.py scripts/s6_first_checkpoint.py scripts/s4_c100_golden.py
       - name: Run isolated identity contract tests
-        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py tests/test_workflow_safety_contract.py
+        run: python -m pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py tests/test_workflow_safety_contract.py tests/test_s6_source_pin_separation.py
       - name: Confirm this job has no simulation invocation
         run: |
           python - <<'PY'
