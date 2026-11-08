@@ -4162,3 +4162,15 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - Run `41958935113` هو Replay للهوية S6 القديمة وليس تشغيل السلالة الجديدة. D0 التاريخية تبقى `BLOCKED / MISSING_EVIDENCE`.
 - لم يُشغّل Workflow أو Trial أو Simulation أو Monte Carlo أو Golden revalidation. لم تتغير أي هوية أو قاعدة أو عتبة أو Artifact تاريخي أو Manifest. لم يُعدّل `main` أو PR #82 أو أي Release.
 - الحالة: `PREPARATION_ONLY — NOT_AUTHORIZED_FOR_EXECUTION`. الخطوة التالية المسموحة هي مراجعة البروتوكول واستكمال PF-01..PF-11 ثم أخذ تأكيد المالك النهائي المنصوص عليه في القسم 14 قبل أي تشغيل.
+
+
+---
+
+## 2026-11-08 — تصحيح قراءة راجعة نهائية لبروتوكول المحاكاة الجديدة
+
+- Final documentation branch HEAD: `880c2f6f04967dc7b95f86f2ba7aaabe3af9c31b`.
+- Draft PR #83: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/83؛ open/draft/merged=false؛ base `tmp/d1-rebuild-20261101` وليس `main`.
+- فرق PR: أربعة ملفات، 385 إضافة، صفر حذف. GitHub Actions query للرأس النهائي أعاد صفر Runs؛ لم يتم dispatch لأي Workflow.
+- `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`. PR #82 بقي مفتوحاً Draft وغير مدمج ولم يتغير.
+- تم التحقق من وجود الملفات عبر GitHub readback وتسجيل Git blob SHAs في Session Status. لم تُحسب Raw-byte SHA-256 في هذه الجلسة؛ لا تصنف الملفات `VERIFIED_LIVE`.
+- حالة البروتوكول: `PREPARATION_ONLY — NOT_AUTHORIZED_FOR_EXECUTION`. لا Trial/Simulation/Monte Carlo أو Golden revalidation قبل استكمال preflight وتأكيد المالك النهائي.
