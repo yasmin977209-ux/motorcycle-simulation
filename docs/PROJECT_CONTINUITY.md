@@ -4213,3 +4213,11 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - PF-03: `PASS_SCOPED_CODE_CONTRACT`; PF-07: `PASS_SCOPED` for the safe identity suite. PF-05 is scoped only to the safe workflow; full simulation environment remains blocked. PF-06/PF-08/PF-10/PF-11 remain blocked; PF-09 remains not run.
 - Still required: final source HEAD and Raw SHA-256/Git blob SHA-1 readback, independent review, dedicated least-privilege simulation workflow with fail-fast/recovery, two-failure-domain durable storage and restore test, security/secrets/redaction scan, then separate final owner execution confirmation.
 - Historical C100 reuse remains read-only and is not the new C100 cohort. No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, historical evidence mutation, main write, merge, Release, or gate promotion occurred. Overall `BLOCKED_BEFORE_EXECUTION`; historical D0 and project gates unchanged.
+
+## Identity-scope clarification — exact owner-approved values only — 2026-11-08
+
+This addendum narrows any earlier wording that referred to a cohort “family” or pattern. The implementation accepts only the exact E2-approved values:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
