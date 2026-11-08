@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_sha:
-        description: Exact 40-character SHA of the selected branch HEAD; must equal GITHUB_SHA
+        description: Exact model-source commit SHA, separate from the workflow/event HEAD
         required: true
         type: string
       s6_cohort_id:
@@ -45,10 +45,17 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout exact selected source
+      - name: Checkout exact workflow branch HEAD
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout the separately pinned model source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.source_sha }}
+          path: execution-source
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
@@ -64,15 +71,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/fix/explicit-cohort-identity-20261108"
-          test "$REQUESTED_SOURCE_SHA" = "$GITHUB_SHA"
-          test "$(git rev-parse HEAD)" = "$REQUESTED_SOURCE_SHA"
+          test "$REQUESTED_SOURCE_SHA" = "e20f66e4a785c69247186b1773792f410f3d4c05"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C execution-source rev-parse HEAD)" = "$REQUESTED_SOURCE_SHA"
           test "$REQUESTED_S6_COHORT" = "s6-v23-rebuild-20261105"
           test "$REQUESTED_C100_COHORT" = "c100-v23-rebuild-20261105"
           test "$REQUESTED_N" = "300"
           python - <<'PY'
           import json
           from pathlib import Path
-          cfg = json.loads(Path("scripts/s6_checkpoint_config.json").read_text(encoding="utf-8"))
+          cfg = json.loads(Path("execution-source/scripts/s6_checkpoint_config.json").read_text(encoding="utf-8"))
           assert cfg == {
               "checkpoint_mode": "FRESH",
               "active_target_trials": 300,
@@ -106,13 +114,21 @@ jobs:
       OWNER_EXECUTION_DECISION_ID: ${{ secrets.S6_OWNER_EXECUTION_DECISION_ID }}
       S6_EXECUTION_ENVIRONMENT_LOCKED: ${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
       S6_EXECUTION_APPROVED_SOURCE_SHA: ${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
+      S6_EXECUTION_APPROVED_WORKFLOW_SHA: ${{ vars.S6_EXECUTION_APPROVED_WORKFLOW_SHA }}
       S6_EXECUTION_APPROVED_COHORT_ID: ${{ vars.S6_EXECUTION_APPROVED_COHORT_ID }}
       S6_EXECUTION_APPROVED_N: ${{ vars.S6_EXECUTION_APPROVED_N }}
     steps:
-      - name: Checkout exact approved source
+      - name: Checkout exact workflow branch HEAD
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout exact model source into isolated directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.source_sha }}
+          path: execution-source
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
@@ -126,8 +142,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$GITHUB_SHA" = "$S6_SOURCE_SHA"
-          test "$(git rev-parse HEAD)" = "$S6_SOURCE_SHA"
+          test "$GITHUB_SHA" = "$S6_EXECUTION_APPROVED_WORKFLOW_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C execution-source rev-parse HEAD)" = "$S6_SOURCE_SHA"
           test "$S6_EXECUTION_ENVIRONMENT_LOCKED" = "true"
           test "$S6_EXECUTION_APPROVED_SOURCE_SHA" = "$S6_SOURCE_SHA"
           test "$S6_EXECUTION_APPROVED_COHORT_ID" = "$S6_COHORT_ID"
@@ -139,6 +156,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          cd execution-source
           test ! -e results_stage7_s6
           mkdir -p results_stage7_s6
           active_scenario="PRE_START"
@@ -184,7 +202,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: s6-initial-n300-${{ github.run_id }}-${{ github.run_attempt }}
-          path: results_stage7_s6/
+          path: execution-source/results_stage7_s6/
           if-no-files-found: warn
           retention-days: 90
 
@@ -210,6 +228,7 @@ jobs:
       S6_EXECUTION_ENVIRONMENT_LOCKED: ${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
       S6_EXECUTION_APPROVED_SOURCE_SHA: ${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
       C100_EXECUTION_APPROVED_COHORT_ID: ${{ vars.C100_EXECUTION_APPROVED_COHORT_ID }}
+      S6_EXECUTION_APPROVED_WORKFLOW_SHA: ${{ vars.S6_EXECUTION_APPROVED_WORKFLOW_SHA }}
     steps:
       - name: Checkout exact approved source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -228,8 +247,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$GITHUB_SHA" = "$S4_SOURCE_SHA"
-          test "$(git rev-parse HEAD)" = "$S4_SOURCE_SHA"
+          test "$GITHUB_SHA" = "$S6_EXECUTION_APPROVED_WORKFLOW_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C execution-source rev-parse HEAD)" = "$S4_SOURCE_SHA"
           test "$S6_EXECUTION_ENVIRONMENT_LOCKED" = "true"
           test "$S6_EXECUTION_APPROVED_SOURCE_SHA" = "$S4_SOURCE_SHA"
           test "$C100_EXECUTION_APPROVED_COHORT_ID" = "$S4_COHORT_ID"
@@ -237,18 +257,18 @@ jobs:
           test "$OWNER_EXECUTION_DECISION_ID" = "$OWNER_DECISION_ID_INPUT"
           echo "OWNER_APPROVAL_AND_ENVIRONMENT_PIN=PASS"
       - name: Run exact C100 initial Golden
-        run: python scripts/s4_c100_golden.py
+        run: cd execution-source && python scripts/s4_c100_golden.py
       - name: Upload only new C100 outputs; exclude historical R4 report
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: c100-initial-n300-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            docs/golden/v2.3/C100_GOLDEN_${{ inputs.source_sha }}.json
-            docs/audits/S4_C100_GOLDEN_MANIFEST_${{ inputs.source_sha }}.json
-            docs/audits/S4_C100_GOLDEN_REPORT_${{ inputs.source_sha }}.md
-            docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ inputs.source_sha }}.json
-            docs/audits/S4_EXECUTION_FAILURE_C100_${{ inputs.source_sha }}.json
-            s4_evidence/
+            execution-source/docs/golden/v2.3/C100_GOLDEN_${{ inputs.source_sha }}.json
+            execution-source/docs/audits/S4_C100_GOLDEN_MANIFEST_${{ inputs.source_sha }}.json
+            execution-source/docs/audits/S4_C100_GOLDEN_REPORT_${{ inputs.source_sha }}.md
+            execution-source/docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ inputs.source_sha }}.json
+            execution-source/docs/audits/S4_EXECUTION_FAILURE_C100_${{ inputs.source_sha }}.json
+            execution-source/s4_evidence/
           if-no-files-found: warn
           retention-days: 90
