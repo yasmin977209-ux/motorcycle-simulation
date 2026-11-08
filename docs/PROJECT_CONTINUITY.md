@@ -4148,3 +4148,57 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - Verified related N300 metadata file: SHA-256 `a52657b0b5ffe281500a1c028f5396b9c91e3932267816d0e5c0069927c420a4`, blob `a93b5c7d4337d5297dad61793bb862cb5fa4a8a3`, 33,467 bytes, commit a23ba71. It is N300-scoped only; N2400 aggregate still has `source_run_metadata.sha256=null`.
 - D0 remains `BLOCKED / MISSING_EVIDENCE`; no synthetic data, accounting inference, Trial/Simulation/Monte Carlo, N expansion, identity change, main write, merge or Release.
 - New report: [S6 Archive Recovery Report](stage_d/S6_ARCHIVE_RECOVERY_REPORT_2026-11-08.md). New artifact inventory: [S6 Archive Recovery Manifest](stage_d/S6_ARCHIVE_RECOVERY_MANIFEST_2026-11-08.json). New session handoff: [S6 Archive Recovery Handoff](stage_d/CONTINUITY_HANDOFF_2026-11-08_S6_ARCHIVE_RECOVERY.md).
+
+
+---
+
+## 2026-11-08 — إعداد بروتوكول تجربة محاكاة جديدة مستقلة (توثيق فقط)
+
+- أُنشئ الفرع التوثيقي `docs/new-simulation-protocol-20261108` من `tmp/d1-rebuild-20261101` عند `f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866`. بقي `main` عند baseline `1d67cd56d326a9c42f7ecf324fa284dcc129acd4` دون أي كتابة.
+- أُعد البروتوكول `docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md`، مع سجل الجلسة `docs/stage_d/SESSION_STATUS_2026-11-08_NEW_SIMULATION_PROTOCOL.md` والتسليم `docs/stage_d/CONTINUITY_HANDOFF_2026-11-08_NEW_SIMULATION_PROTOCOL.md`.
+- النطاق التحضيري مستند إلى `docs/post_d/E2_OWNER_DECISION_APPROVED_A_2026-11-05.md`: S6 المقترح 20×2400 = 48,000، cohort جديد `s6-v23-rebuild-20261105`، وC100 منفصل بخمسة مسارات ×300 وتحت cohort `c100-v23-rebuild-20261105`.
+- قرار E2 لا يزال `WAIT_FINAL_OWNER_CONFIRMATION`; لم يُفسر طلب إعداد البروتوكول على أنه إذن بتشغيل Trials/Simulation/Monte Carlo.
+- مانعان سابقان للتشغيل سجلا في البروتوكول: التحقق من بايتات المرجع v2.4.0 بسبب تعارض رأس النسخة المقروءة مع قرار المالك، والتحقق من Model SOURCE_SHA الفعلي وتمييزه عن Workflow HEAD. عقد مقارنة C100 يحتاج تأكيداً صريحاً.
+- Run `41958935113` هو Replay للهوية S6 القديمة وليس تشغيل السلالة الجديدة. D0 التاريخية تبقى `BLOCKED / MISSING_EVIDENCE`.
+- لم يُشغّل Workflow أو Trial أو Simulation أو Monte Carlo أو Golden revalidation. لم تتغير أي هوية أو قاعدة أو عتبة أو Artifact تاريخي أو Manifest. لم يُعدّل `main` أو PR #82 أو أي Release.
+- الحالة: `PREPARATION_ONLY — NOT_AUTHORIZED_FOR_EXECUTION`. الخطوة التالية المسموحة هي مراجعة البروتوكول واستكمال PF-01..PF-11 ثم أخذ تأكيد المالك النهائي المنصوص عليه في القسم 14 قبل أي تشغيل.
+
+
+---
+
+## 2026-11-08 — تصحيح قراءة راجعة نهائية لبروتوكول المحاكاة الجديدة
+
+- Final documentation branch HEAD: `880c2f6f04967dc7b95f86f2ba7aaabe3af9c31b`.
+- Draft PR #83: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/83؛ open/draft/merged=false؛ base `tmp/d1-rebuild-20261101` وليس `main`.
+- فرق PR: أربعة ملفات، 385 إضافة، صفر حذف. GitHub Actions query للرأس النهائي أعاد صفر Runs؛ لم يتم dispatch لأي Workflow.
+- `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`. PR #82 بقي مفتوحاً Draft وغير مدمج ولم يتغير.
+- تم التحقق من وجود الملفات عبر GitHub readback وتسجيل Git blob SHAs في Session Status. لم تُحسب Raw-byte SHA-256 في هذه الجلسة؛ لا تصنف الملفات `VERIFIED_LIVE`.
+- حالة البروتوكول: `PREPARATION_ONLY — NOT_AUTHORIZED_FOR_EXECUTION`. لا Trial/Simulation/Monte Carlo أو Golden revalidation قبل استكمال preflight وتأكيد المالك النهائي.
+
+
+---
+
+## 2026-11-08 — تقرير Preflight كامل لتجربة المحاكاة الجديدة
+
+- أضيف التقرير `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md` وأُلحقت تصحيحات تحقق بالبروتوكول في قسمه 16.
+- تحقق Raw GitHub من المرجع v2.4.0: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`، الحجم 401,397، Git blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`، commit الحاوي `1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b`. قرار المالك يسجل البصمة نفسها. رأس الملف لا يزال يحمل حالة مرشح الاعتماد؛ حُفظت كملاحظة حوكمة ولم تتغير بايتات المرجع.
+- تم تأكيد `002b748...` كـModel source commit/tree مرشح كامل؛ تصحيح الملاحظة السابقة التي اختزلت direct diff إلى تغيير Workflow فقط. يجب فصل Model SOURCE_SHA عن Workflow HEAD.
+- المانع الحاسم: cohort IDs التي وافق عليها E2 لا تقبلها validators الحالية؛ S6 يشتق cohort من SOURCE_SHA ولا يوفر `--cohort-id`، وC100 validator لا يقبل cohort الجديد، و`s6_checkpoint_config.json` مثبت على الهوية التاريخية. كما أن Workflows الموجودة لا تنفذ السلالة الجديدة.
+- PF01/PF02/PF04: `PASS_SCOPED`. PF03/PF05/PF06/PF08/PF10/PF11: `BLOCKED`. PF07/PF09: `NOT_RUN`.
+- PR #83 ما زال Draft/open/unmerged ولا توجد مراجعات مستقلة. لم يُشغّل Workflow أو Trial أو Simulation أو Monte Carlo أو Golden revalidation.
+- الحالة الكلية: `BLOCKED_BEFORE_EXECUTION`. يجب الحصول على قرار مالك يحسم تعارض الهوية قبل أي تعديل في الكود/الإعدادات، ثم استكمال البيئة والتخزين والأمن وWorkflow والمراجعة المستقلة، وأخيراً تأكيد المالك النهائي للتشغيل.
+- D0 التاريخية تبقى `BLOCKED / MISSING_EVIDENCE`. لم تتغير `main` أو الهوية أو القواعد أو العتبات أو الأدلة التاريخية أو Releases.
+
+
+---
+
+## 2026-11-08 — إغلاق جلسة مراجعة Preflight لتجربة المحاكاة الجديدة
+
+- التقرير التفصيلي: `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md`. تصحيحات البروتوكول في القسم 16 append-only.
+- تحقق المرجع v2.4.0 Raw bytes مطابق لبصمة قرار المالك `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`، 401,397 bytes، blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`. بقيت ملاحظة رأس الحالة القديمة واسم الملف/المسار موثقة دون تغيير المرجع.
+- تم تأكيد source pin `002b748...` كـModel source tree، لكن PF-03 BLOCKED لأن كود S6 يفرض cohort مشتقاً من SOURCE_SHA، C100 validator لا يقبل cohort الجديد، وcheckpoint config ما زال على الهوية التاريخية. لا تعديل أو تجاوز دون قرار مالك.
+- PF01/PF02/PF04 `PASS_SCOPED`; PF03/PF05/PF06/PF08/PF10/PF11 `BLOCKED`; PF07/PF09 `NOT_RUN`.
+- PR #83 Draft مفتوح وغير مدمج؛ تم تحديث وصفه بنتائج الفحص. لا مراجعة مستقلة حتى الإغلاق.
+- لم يتم dispatch لأي Workflow ولم تُشغّل اختبارات على exact pin أو Trials/Simulation/Monte Carlo/Golden revalidation. لا N expansion أو D0'–D6'.
+- الحالة النهائية: `BLOCKED_BEFORE_EXECUTION`. يلزم قرار مالك لحسم cohort/identity contract قبل أي تعديل كود أو إعدادات، ثم استكمال البيئة والـworkflow والتخزين والأمن والتوقف الآمن والمراجعة المستقلة، ثم تأكيد مالك نهائي منفصل للتشغيل.
+- `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4` دون تغيير. D0 التاريخية بقيت `BLOCKED / MISSING_EVIDENCE`. لا تعديل تاريخي أو merge أو Release.
