@@ -77,3 +77,10 @@ def test_execution_workflow_pins_model_source_separately_from_workflow_head():
     assert "path: execution-source" in source
     assert 'test "$GITHUB_SHA" = "$S6_SOURCE_SHA"' not in source
     assert 'test "$GITHUB_SHA" = "$S4_SOURCE_SHA"' not in source
+
+
+def test_security_audit_uses_same_python_patch_as_hash_lock():
+    source = Path(".github/workflows/s6-security-scan.yml").read_text(encoding="utf-8")
+    assert 'python-version: "3.11.18"' in source
+    assert "pip-audit==2.10.1" in source
+    assert "--requirement requirements-lock-py311-hashed.txt" in source
