@@ -164,15 +164,9 @@ def current_git_commit(source_sha: str | None = None) -> str | None:
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         )
     except (OSError, subprocess.CalledProcessError):
-        if source_sha:
-            require_source_sha(source_sha)
-            return source_sha
         return None
     commit = result.stdout.strip()
     if not commit:
-        if source_sha:
-            require_source_sha(source_sha)
-            return source_sha
         return None
     require_source_sha(commit)
     return commit
