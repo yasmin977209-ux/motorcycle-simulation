@@ -1,7 +1,6 @@
 import argparse
 import subprocess
 
-from scripts import s4_c100_golden as c100
 from scripts import s6_first_checkpoint as s6
 
 
@@ -48,6 +47,10 @@ def test_s6_action_config_separates_model_source_sha_from_workflow_head(monkeypa
 
 def test_c100_checked_out_source_sha_is_not_workflow_event_sha(monkeypatch):
     monkeypatch.setenv("GITHUB_SHA", WORKFLOW_HEAD_SHA)
+    monkeypatch.setenv("S4_SOURCE_SHA", MODEL_SOURCE_SHA)
+    monkeypatch.setenv("S4_COHORT_ID", "c100-v23-rebuild-20261105")
+    monkeypatch.setenv("S4_C100_TRIAL_COUNT", "300")
+    from scripts import s4_c100_golden as c100
     monkeypatch.setattr(
         c100.subprocess,
         "run",
