@@ -279,3 +279,14 @@ Other date variants or cohort IDs matching the same textual pattern are rejected
 - Conditional owner request is `docs/experiments/OWNER_FINAL_EXECUTION_APPROVAL_REQUEST_2026-11-08.md`. It asks for one initial checkpoint only: 20 S6 scenarios × 300 = 6,000 stochastic Trials and 5 C100 scenarios × 300 = 1,500 deterministic Trials, MASTER_SEED 20270101. No N expansion or final acceptance is authorized.
 - The S6 aggregate still uses historical C100 reuse evidence; the new C100 Golden remains a separate evidence artifact and is not yet consumed by the S6 aggregate.
 - No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation occurred. PR #84 remains unmerged. Execution remains blocked.
+
+## Final 2026-11-08 security and validation update
+
+- Safe contract CI Run `42506231384` on workflow branch commit `d22257b46af426c6796d7e7d51a450b2ba708e55`: `success`; 23 tests passed in 1.26 seconds; 15 wheel hashes regenerated and matched; Python compilation passed; `SIMULATION_TRIALS=NOT_EXECUTED`. The later branch commits after this run are documentation-only.
+- Security CI Run `42506266426` on workflow branch commit `e5d6a61e22c0cee0ef181735b01abea756b564ff`: PR-diff Gitleaks scan found no leaks; full reachable-history scan found 9 unclassified `generic-api-key` matches across 3,534 commits; no secret values were emitted. Security workflow remains failed/blocked on these findings.
+- In the same security run, `pip-audit==2.10.1` on CPython 3.11.18 audited the exact 15-package hash lock and reported `No known vulnerabilities found`. The previous CPython 3.12/hash mismatch was corrected by explicitly setting up Python 3.11.18 in the security workflow.
+- Storage remains `PASS_SCOPED` only for one OneDrive-restored C100 archive whose bytes matched Dropbox's server-side content hash. Dropbox raw download and full-folder restore are still outstanding.
+- Operations guide: `docs/experiments/S6_EXECUTION_WORKFLOW_OPERATIONS_2026-11-08.md`.
+- Independent review is still not performed by a different reviewer. The review packet remains a self-review/checklist, not independent approval.
+- Owner approval request updated with the passing dependency audit; Gitleaks findings, independent review, protected environment setup, and full storage restore remain preconditions.
+- No simulation workflow dispatch, Trial, Monte Carlo, Golden generation/revalidation, N expansion, merge, main write, Release, or final acceptance occurred.
