@@ -320,7 +320,9 @@ def _s6_action_checkpoint_config() -> dict[str, Any] | None:
     require_cohort_id(str(config.get("cohort_id", "")))
     if config.get("checkpoint_mode") != "FRESH" or (target, start, end) != (300, 1, 300):
         raise RuntimeError("S6_CHECKPOINT_CONFIG_NOT_FRESH_INITIAL_CHECKPOINT")
-    if config.get("governing_decision_id") != "D-2026-10-30-REFERENCE-V2.4.0" or config.get("reference_sha256") != "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b":\n        raise RuntimeError("S6_CHECKPOINT_CONFIG_GOVERNING_REFERENCE_MISMATCH")\n    if any(key in config for key in ("source_sha", "previous_run_id", "n300_aggregate_run_id", "n600_aggregate_run_id", "n1200_aggregate_run_id")):
+    if config.get("governing_decision_id") != "D-2026-10-30-REFERENCE-V2.4.0" or config.get("reference_sha256") != "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b":
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_GOVERNING_REFERENCE_MISMATCH")
+    if any(key in config for key in ("source_sha", "previous_run_id", "n300_aggregate_run_id", "n600_aggregate_run_id", "n1200_aggregate_run_id")):
         raise RuntimeError("S6_CHECKPOINT_CONFIG_MUST_NOT_REFERENCE_HISTORICAL_RUNS")
     return config
 
