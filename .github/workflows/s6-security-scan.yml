@@ -80,7 +80,7 @@ jobs:
           set -euo pipefail
           test "${FINDING_COUNT:-missing}" = "0"
       - name: Audit the exact runtime lock when present
-        if: ${{ hashFiles('requirements-lock-py311-hashed.txt') != '' }}
+        if: ${{ always() && hashFiles('requirements-lock-py311-hashed.txt') != '' }}
         shell: bash
         run: |
           set -euo pipefail
