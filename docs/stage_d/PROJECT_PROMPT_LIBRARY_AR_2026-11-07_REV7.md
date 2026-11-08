@@ -1155,3 +1155,287 @@ The mandatory order is D0 → D1 → D2 → D3 → D4 → D5 → D6, then E0 →
 - Keep documentation append-only. Update continuity, handoff, session status, closure and blocker records with live HEAD and exact run/Artifact identities.
 - After any commit, verify branch HEAD, main HEAD, Raw bytes, SHA-256, Git blob SHA-1 and size. Run read-only validation on final commit; if a workflow auto-commits, re-fetch HEAD and repeat only affected checks.
 - D6 does not mean final acceptance. Project status remains T2_INTERIM / NOT_FINAL_BLOCKED until independent gates and approvals are complete.
+
+
+---
+
+# REV7 — Additive Operational Hardening: Evidence Recovery, Legitimate Reconstruction and Continuous Progress
+**تاريخ الإضافة:** 2026-11-08  
+**النطاق:** تحسين تشغيلي داخل REV7 نفسها. هذه الإضافة ليست REV8، ولا تنشئ إصداراً جديداً، ولا تغير المرجع v2.4.0 أو قواعد الأعمال أو عتبات القبول أو هويات التجارب.  
+**حفظ التاريخ:** كل ما سبق في هذا الملف محفوظ كما هو بوصفه تاريخاً وسجلاً. هذه الإضافة Append-only، وهي جزء من العقد التشغيلي النافذ في REV7. عند تعارض صياغة تشغيلية سابقة مع هذه الإضافة، يُعمل بهذه الإضافة في تفسير البحث والاستعادة والإنشاء ومواصلة العمل، مع بقاء المرجع وقرارات المالك والقيود المحمية أعلى منها.
+
+## 9. المبدأ المعدّل: لا توقف العمل بسبب فجوة دليل؛ أوقف ادعاء الإغلاق فقط
+
+غياب الدليل لا يساوي فشل المشروع كله، ولا يساوي ثبوت أن الدليل لم يوجد، ولا يمنح إذناً باختلاقه. لذلك يجب على الوكيل الفصل بين:
+
+1. **بوابة القبول:** تظل BLOCKED ما دام متطلب إلزامي غير مثبت. لا انتقال مرحلي ولا PASS_GAP_FREE ولا إعلان قبول.
+2. **مسار استعادة الدليل:** يستمر البحث والفحص والاستعادة حتى استنفاد المصادر المعقولة المتاحة وتوثيق حدود البحث.
+3. **مسار إنشاء بديل مشروع:** ينفذ ما تسمح به المدخلات والهوية والصلاحيات، مع تسمية الناتج بدقة وعدم تقديمه كدليل تاريخي أصلي.
+4. **العمل المستقل:** يستمر بالتوازي كل عمل لا يعتمد على المتطلب المفقود ولا يغير هويته ولا يتجاوز بوابة سابقة.
+5. **قرار المالك:** يطلب فقط عندما يكون الفعل أو تغيير معيار القبول محمياً. لا يُستخدم انتظار القرار ذريعة لإيقاف أعمال البحث أو التحليل أو الإصلاح غير المحمية.
+
+عبارة «أوقف» في أي Prompt سابق تعني: أوقف الفعل المحمي أو ادعاء إغلاق المرحلة أو العمل التابع الذي يعتمد مباشرة على الدليل المفقود. ولا تعني إيقاف المشروع أو كل الأعمال المستقلة. لا تبدأ المرحلة التالية بوصفها مرحلة مقبولة، ولا تنفذ أعمالها التي تعتمد على مخرجات المرحلة السابقة، لكن يجوز تنفيذ تحضير مستقل ومحدود وموسوم PREPARATORY_ONLY دون احتساب ذلك انتقالاً أو إغلاقاً.
+
+## 10. تصنيف الفجوة قبل الحكم عليها
+
+يجب ألا يكتب الوكيل «الدليل غير موجود» قبل تحديد أي حالة من الحالات التالية:
+
+| التصنيف التشخيصي | المعنى | ما يجوز استنتاجه |
+|---|---|---|
+| NOT_YET_SEARCHED | لم يكتمل البحث المحدد | لا استنتاج عن الوجود أو الغياب |
+| ACCESS_BLOCKED | المصدر معروف أو محتمل لكن الوصول إليه فشل/ممنوع | لا يساوي الغياب |
+| NOT_FOUND_IN_SEARCHED_SCOPE | لم يظهر الدليل في المصادر المحددة التي فُحصت | لا يثبت أنه لم يوجد في أي مكان |
+| SOURCE_EXPIRED_OR_DELETED | المصدر كان موجوداً وفق سجل، لكنه منتهي/محذوف حالياً | ابحث عن نسخ/نسخ احتياطية/تنزيلات/مرآة |
+| PRODUCED_BUT_NOT_PRESERVED | توجد أدلة إنتاج/إنشاء، ولا توجد نسخة قابلة للاستعادة في النطاق المفحوص | ابحث في سجلات التشغيل والتخزين والنقل |
+| NEVER_PRODUCED_PROVEN | ثبت من مسار المنتج الفعلي وسجلات التنفيذ أن المخرج لم يُنتج أو لم يُسلسل أصلاً | لا تدّع استعادة الأصل؛ انتقل لتقييم إعادة البناء/الإنشاء المشروع |
+| RECONSTRUCTION_POSSIBLE | توجد مدخلات أصلية كافية لإعادة اشتقاق مخرج، وفق قواعد محددة | الناتج مشتق/معاد البناء حتى يثبت خلاف ذلك |
+| RECONSTRUCTION_NOT_POSSIBLE_FROM_AVAILABLE_INPUTS | لا تكفي المدخلات المحفوظة لإعادة اشتقاق الناتج | يلزم مصدر آخر أو قرار مالك أو إبقاء الفجوة |
+| OWNER_DECISION_REQUIRED | الخطوة التالية تتطلب سلطة المالك | يحدد القرار بدقة؛ لا تُنفذ قبل صدوره |
+
+هذه تسميات تشخيص/سير عمل، وليست بدائل عن حالات الأدلة أو أحكام المراحل المعتمدة. يجب أن يبقى Evidence_Status من التصنيفات المعتمدة في §4.3، وأن يبقى Stage_Disposition منفصلاً.
+
+**قاعدة لغوية ملزمة:** لا تستخدم NEVER_PRODUCED_PROVEN لمجرد أن بحث GitHub أو مجلد واحد لم يعثر على الملف. ولا تستخدم MISSING_EVIDENCE كمرادف لـ«لم يُنتج قط». ولا تستخدم NOT_FOUND_IN_SEARCHED_SCOPE كدليل على الاستحالة.
+
+## 11. بروتوكول البحث الموسع الإلزامي عن كل دليل مفقود
+
+قبل تقرير أن الدليل غير قابل للاستعادة، أنشئ سجل بحث مستقل لكل Requirement/Artifact مفقود. يجب أن يتضمن على الأقل:
+
+- requirement_id واسم الدليل وشكله المتوقع ومحتواه/حقوله المطلوبة.
+- الهوية الدقيقة: SOURCE_SHA وcohort_id وMASTER_SEED وtrial_id وscenario_id وتاريخ/فترة البيانات وschema/version وRun/Job/Artifact IDs ذات الصلة.
+- المنتج المتوقع: الملف/الدالة/الـworkflow/الـjob/الـserializer الذي كان يفترض أن ينتج الدليل.
+- مسارات البحث ومصادرها ووقت الفحص ونتيجة كل محاولة وطريقة الوصول وحدود الصلاحية.
+- مصطلحات البحث وأسماء الملفات والـIDs والـhashes والـprefixes والـcommit refs المستخدمة.
+- روابط المصدر الدقيق والـcommit والـblob والـsize والـhash متى توفرت.
+- ما تم تنزيله فعلياً، وما تمت قراءة بايتاته، وما فُحصت بنيته، وما بقي metadata فقط.
+- سبب استبعاد أي مرشح: اختلاف الهوية، اختلاف الحجم/البصمة، scope غير مطابق، ملف مشتق، ملف محظور، أو تعذر قراءة البايتات.
+
+### 11.1 مصادر البحث الدنيا
+
+افحص، بالقدر المتاح والمصرح به، كل ما ينطبق من الآتي؛ لا تكتفِ بمسار واحد:
+
+1. GitHub branch الحالي وmain للقراءة المقارنة والفروع ذات الصلة وtags وcommits وGit trees وblobs والـhistory ذات الصلة.
+2. جميع Actions workflow runs ذات الصلة بالـsource SHA والـcohort والـworkflow والـscenario؛ jobs وlogs وsummaries وuploaded artifacts وArtifact IDs وdigests وsizes وexpiry وحالة الحذف/الانتهاء.
+3. Releases وdraft releases وrelease assets وmanifests وchecksum files وملفات التصدير.
+4. OneDrive وDropbox والوجهات المعتمدة الأخرى: metadata ثم تنزيل bytes فعلياً ثم SHA-256 وsize وCRC/structure وrestore؛ metadata أو QuickXorHash أو اسم الملف لا يثبت raw-byte identity.
+5. ملفات الإنقاذ/الأرشفة المحلية المتاحة في بيئة العمل والملفات المرفوعة فعلياً في المحادثة، دون طلب إعادة رفع ملف متاح بالفعل.
+6. سجلات النقل والنسخ الاحتياطي وملفات multipart/chunk manifests وسجلات إعادة التجميع.
+7. المصدر المنتج عند exact execution commit: producer function وcallback وserializer وschema projection وworkflow inputs/outputs وlogs وموضع فقد الحقول إن وجد.
+8. أي مصدر أولي بديل يثبته lineage والهوية، لا مجرد تشابه الاسم أو القيم.
+
+لا تقرأ الملفات المحظورة في تعليمات المشروع، ولا الملفات السابقة للتاريخ المحظور. لا تتجاوز صلاحيات التخزين أو الحسابات، ولا تعتبر فشل API/403/404 دليلاً على عدم وجود المحتوى. عند تعذر الوصول، صنف ACCESS_BLOCKED وحدد محاولة بديلة مشروعة.
+
+### 11.2 شروط استنفاد البحث
+
+لا يجوز وصف البحث بأنه «موسع/مستنفد» إلا بعد:
+- فحص كل مصدر ذي صلة متاح ومصرح به، أو تسجيل سبب عدم إمكان فحصه.
+- تنفيذ بحث بالهوية الدقيقة وبأسماء/أنماط الملفات، لا بالاسم العام فقط.
+- فحص artifacts المصدرية والـaggregate والـlogs والـmanifests والـstorage mirrors كلٌّ على حدة.
+- التحقق من عدم الخلط بين S6 وC100 وStage 12/13 أو بين N=300 وN=1200 وN=2400.
+- وجود مراجع ونتائج قابلة لإعادة الفحص لكل محاولة.
+
+إذا بقي مصدر غير متاح، فالنتيجة SEARCH_INCOMPLETE_ACCESS_BLOCKED لا «لم يوجد». وإذا استُنفدت المصادر المتاحة، فالنتيجة NOT_FOUND_IN_SEARCHED_SCOPE مع بيان نطاق البحث، لا ادعاء عدم وجود عالمي مطلق.
+
+## 12. إثبات أن الدليل لم يُنتج أصلاً
+
+يمكن استخدام NEVER_PRODUCED_PROVEN فقط عند اجتماع الأدلة التالية:
+
+1. تحديد exact source execution commit والـworkflow/Run/Job/inputs والهوية.
+2. قراءة producer code الفعلي عند ذلك commit، لا نسخة أحدث أو branch مختلف.
+3. تتبع البيانات من الحساب/المصدر إلى callback ثم serializer ثم الملف النهائي.
+4. إثبات أن الحقل/الصف/الملف المطلوب لم يدخل مسار serialization أو لم يُكتب في أي output ذي صلة.
+5. فحص جميع المخرجات البديلة المحتملة وسجلات التشغيل والـlogs والـmanifests التي قد تحتويه.
+6. مراجعة مستقلة تؤكد الاستنتاج ولا تعتمد على تقرير المنفذ وحده.
+
+إذا أثبت producer code أن الحقل حُسب في الذاكرة ثم أسقطه serializer، فهذا يثبت غيابه عن ذلك المخرج المحفوظ، لكنه لا يثبت وحده عدم إمكان إعادة اشتقاقه من مدخلات أصلية أو replay مصرح به. يجب تقييم هذه الإمكانية على حدة.
+
+## 13. إنشاء واستعادة الأدلة: سلم القرار الإلزامي
+
+بعد البحث، لا يتوقف الوكيل عند كلمة «مفقود». ينفذ تقييم إنشاء/استعادة بالترتيب التالي:
+
+### المستوى A — استعادة الأصل كما هو
+- استرجع bytes الأصلية من Artifact/backup/provider/branch/commit مطابق الهوية.
+- تحقق من raw SHA-256 والحجم وGit blob عند انطباقه، ZIP CRC/structure، schema، row counts، partitions، nulls، duplicates، lineage، وrestore.
+- لا تعِد حفظ الملف ثم تسميه الأصل نفسه إذا تغيرت bytes؛ احتفظ بالأصل وأصدر مشتقاً منفصلاً عند الحاجة.
+- عند نجاح الثلاثية والبنية والهوية، صنف الدليل وفق سياسة الإثبات. الاستعادة الناجحة لا تعني تلقائياً إغلاق المرحلة؛ يجب إكمال بقية المتطلبات.
+
+### المستوى B — إعادة اشتقاق حتمية من مدخلات أصلية محفوظة
+- يجوز إعادة توليد مشتق/manifest/report/index/registry/workbook/document إذا كانت كل المدخلات الأصلية اللازمة متاحة ومثبتة، وكان التحويل محدداً وقابلاً لإعادة الإنتاج ولا يغير قواعد الأعمال أو الهوية.
+- احتفظ بالمدخلات الأصلية دون تعديل، وسجل كود التحويل وإصداره واعتمادياته وأوامره وبيئة التنفيذ والـinput/output hashes.
+- سمِّ الناتج DERIVED_RECONSTRUCTION أو ما يطابق حقيقته. لا تصفه بأنه original historical artifact.
+- لا يقبل هذا الناتج لإغلاق متطلب يطلب صراحةً الأصل التاريخي إلا إذا كان المرجع الحاكم يسمح به أو صدر قرار مالك بتغيير معيار القبول.
+
+### المستوى C — Replay لإعادة بناء دليل تاريخي محدود
+- Replay هو تنفيذ جديد لإعادة بناء/التحقق، وليس استعادة لبايتات لم تُحفظ.
+- يجب استخدام الهوية والـsource SHA والـcohort والـseed والـTrial IDs والكود/الـcommit والنطاق المعتمد بدقة، مع مقارنة كل الحقول/التواريخ/الصفوف المتداخلة، وتغطية كاملة، وفشل مغلق عند أي mismatch.
+- وسم إلزامي للناتج: REPLAY_RECONSTRUCTED_NOT_ORIGINAL_PRESERVED.
+- لا تستبدل الأصل أو manifest التاريخي، ولا تنقل نتائج Replay إلى السجل التاريخي على أنها أصلية.
+- لا يشغل Replay إلا ضمن قرار مالك صريح يغطي نطاقه. قرار S6 Option A المؤرخ 2026-11-05 في docs/post_d/E2_OWNER_DECISION_REQUIRED.md يغطي فقط 20 سيناريو × 2,400 Trial، وSOURCE_SHA/cohort/seed/Trial IDs والـexecution revision المحددة فيه، وبشروط المقارنة والوسم والحفظ الواردة في القرار. يجب إعادة قراءة القرار الحي والتحقق من عدم وجود قرار لاحق يلغيه قبل التنفيذ. لا يجيز هذا القرار N=4800 أو cohort جديداً أو قواعد/هوية جديدة أو Production Gate A أو E3 أو قبولاً نهائياً.
+- حتى عند نجاح Replay بالكامل، يبقى الدليل Replay لا Original. لا يرقى متطلب «original historical evidence» إلا وفق معيار مرجعي/قرار مالك صالح يسمح صراحةً ببديل، مع بيان أن هذا تغيير لمعيار القبول لا استعادة للتاريخ.
+
+### المستوى D — إنشاء بيانات جديدة بهوية جديدة
+- عند تعذر استعادة/اشتقاق التاريخ، يمكن اقتراح أو إنشاء dataset جديد فقط بعد قرار مالك يحدد الهوية الجديدة والنطاق والـseed والـTrial IDs والعتبات والتكلفة والغرض ومعيار القبول.
+- لا تخلط الناتج مع S6 أو C100 أو Stage 12/13، ولا تستخدمه لملء تاريخ قديم أو إعادة كتابة manifests تاريخية.
+- البيانات الجديدة تثبت ما حدث في تنفيذها الجديد فقط؛ لا تثبت ما حدث في التجربة التاريخية السابقة.
+
+### المستوى E — Synthetic fixtures للاختبار
+- يجوز إنشاء fixtures اصطناعية لاختبار الكود والـschemas والـnegative cases إذا كانت مصنفة بوضوح SYNTHETIC_TEST_ONLY.
+- لا تدخل fixtures في دفاتر الإنتاج أو Gate A أو النتائج المالية/الإحصائية أو تقارير القبول التاريخي.
+- يجب أن تضمن الاختبارات أن البيانات الاصطناعية لا يمكن ترقيتها أو دمجها بصمت في evidence production.
+
+### المستوى F — تعذر الإنشاء
+إذا لم توجد مدخلات أصلية كافية، أو كان الإنشاء يتطلب تغيير قاعدة أو هوية أو تشغيل محمي غير مصرح به:
+- لا تخترع القيم ولا تصفرها ولا تستنتجها من مؤشرات proxy.
+- جهّز خيارات قرار مالك محددة مع أثر كل خيار.
+- استمر في الأعمال المستقلة غير المعتمدة على هذا الدليل.
+- اترك المتطلب والبوابة في حالتهما الصادقة؛ لا تدّع الإغلاق.
+
+## 14. تطبيق خاص على فجوة S6 التاريخية والحقول الخمسة
+
+عند التعامل مع:
+Accounts_Receivable, Accumulated_Depreciation, Gross_Bike_Assets, Guarantee_Claim_Receivable, Total_Assets:
+
+1. ابدأ ببحث واسع عن أي ledger أو event journal أو database snapshot أو serialized in-memory snapshot أو job log أو checkpoint أو backup يطابق S6 exact identity، لا عن Parquet الحالي فقط.
+2. افحص المصدر عند execution commit a23ba71f48487f3ebead99bc30039b14ef9b7609 ومسار _daily_snapshot، وتحقق من كل producer/serializer بديل قبل الجزم بأن القيمة لم تحفظ في أي مكان.
+3. لا تعتبر N=300 metadata بديلاً عن N=2400، ولا C100 أو Stage 12/13 مصدراً بديلاً.
+4. إذا ثبت أن projection الأصلي أسقط الحقول، قيّم إعادة اشتقاقها من المدخلات الأصلية أو replay المصرح به. سجّل الناتج Replay/Derived بوضوح.
+5. موافقة Option A السابقة تسمح فقط بالـdeterministic replay المحدد فيها؛ لا توسعها ولا تغير أي هوية أو منطق محاكاة.
+6. قارن 48,000 Trial fingerprints وجميع الحقول/التواريخ المتداخلة مع الأرشيف الأصلي، واثبت تغطية Trial/day كاملة وAssets == Equity لكل صف معاد بناؤه. أي اختلاف أو نقص يمنع قبول Replay.
+7. لا تجعل نجاح Replay يغير Production Gate A = NOT_DECLARED أو يحول الحقول الخمسة إلى Original Historical Evidence. أي معيار بديل لقبول الحسابات يتطلب قراراً مستقلاً.
+8. إذا لم توجد مدخلات أصلية تكفي لإعادة الاشتقاق، جهّز قرار مالك بشأن إبقاء الفجوة أو اعتماد dataset جديد بهوية جديدة. لا تكتب «توقف المشروع»؛ اكتب أن D0/Production Gate A لا يمكن إغلاقهما وفق المعيار الحالي، مع استمرار الأعمال غير التابعة.
+
+## 15. استمرار الأعمال تحت BLOCKED — إدارة التبعيات
+
+لكل فجوة أنشئ Dependency/Workstream Matrix بهذه الحقول:
+blocker_id, blocked_requirement_ids, blocking_stage, root_cause, recovery_workstream, independent_workstreams, owner_decision, entry_dependencies, exit_criteria, status, evidence_links.
+
+قسّم العمل إلى:
+
+- **Critical-path work:** يتطلب الدليل المفقود؛ لا يصدر حكم قبول حتى يكتمل.
+- **Independent remediation:** إصلاحات تقنية/توثيقية/اختبارية لا تعتمد على الدليل ولا تغير الهوية؛ تستمر.
+- **Preparatory-only downstream work:** تحليل متطلبات أو إعداد أدوات/fixtures أو تدقيق كود لمرحلة لاحقة دون استهلاك مخرجات غير مثبتة أو تنفيذ acceptance؛ يجوز بشرط وسمه PREPARATORY_ONLY.
+- **Protected work:** Trial/Simulation/Monte Carlo/N expansion/backfill/identity/reference/rule changes/merge/release؛ لا ينفذ إلا بتفويض صريح محدد.
+
+لا يجوز أن تؤدي فجوة واحدة إلى إيقاف كل أعمال المستودع. ولا يجوز أن تؤدي الأعمال المستقلة إلى تجاوز بوابة المرحلة أو ترقية حكمها. يجب أن يبين التقرير ما استمر، وما تعذر، ولماذا، وما الذي ينتظر الدليل أو قرار المالك.
+
+## 16. مصفوفة معالجة الفجوات حسب المراحل D0–D6 وE0–E6
+
+| المرحلة | البحث والاستعادة أولاً | ما يمكن إنشاؤه/إصلاحه بصورة مشروعة | ما لا يجوز اعتباره بديلاً |
+|---|---|---|---|
+| D0 | المصدر الأصلي، run/job/artifacts، metadata، Parquet/SQLite/CSV، partitions، logs، backups، identity | استعادة bytes؛ إعادة اشتقاق من مدخلات أصلية؛ Replay مصرح وموسوم | عينة ممثلة، Replay بوصفه Original، N مختلف، C100، Stage 12/13، قيم مستنتجة |
+| D1 | reference bytes/decision، builder/importer source، dependencies، manifests، expected sizes ومصدرها | إعادة بناء builder من source ثابت؛ إصلاح importer؛ إعادة توليد manifest من inputs مثبتة | حجم متوقع مخمّن، reference SHA مصرح به دون hashing للبايتات، 105 keys بوصفها 48K |
+| D2 | registry source/commit، جميع daily points، IDs، dates، scenario/cohort lineage | إعادة توليد Registry/resolver من المصدر الكامل المثبت واختبار كل نقطة | عينة، أرقام قديمة غير متحققة، ملء missing keys بقيم افتراضية |
+| D3 وD3-S | workbook originals/versions/hidden sheets/metadata/Artifacts/backup | إعادة بناء مشتقات من المصنف الأصلي الموثق، manifests، partition/round-trip واختبارات التكافؤ | مصنف جديد مشابه، mapping مفترض، حذف أوراق غير مصنفة |
+| D4 | DOCX originals، source templates، Registry links، rendered pages | إعادة توليد الوثائق من outputs معتمدة وإعادة كل QA/lineage | أرقام منسوخة بلا مصدر أو ادعاء مراجعة بصرية غير منفذة |
+| D5 | package source members، manifests، SHA256SUMS، exact Artifact IDs | إعادة بناء package من الأعضاء المعتمدين وإعادة readback/restore | package مبني من outputs غير مثبتة أو Artifact metadata وحدها |
+| D6 | exact D5 Artifact، test catalog، independent audit source | إعادة إجراء كل الاختبارات المطلوبة وتدقيق مستقل | تقرير Builder/Publisher نفسه أو focused tests بوصفها full suite |
+| E0 | كل clauses والـoutputs والـtests والـcode والـartifacts والـhistory المسموح | إعادة توليد traceability/gap inventory من مصادر مثبتة وإضافة unknowns | اعتبار الجرد إغلاقاً للفجوات |
+| E1 | قرارات المالك، conflict sources، authority order، superseding decisions | إعداد decision memos وخيارات وآثارها وسجل تصحيح | تفسير الصمت أو تعميم موافقة محدودة أو تعديل المرجع ضمنياً |
+| E2 | original ledgers، producer path، transaction/event sources، serialization، identity | تدقيق/اشتقاق/Replay وفق التفويض وبوسم صريح | proxy، zero-fill، inferred accounting، Replay كأصل تاريخي |
+| E3 | acceptance clauses، fixtures، test inputs، expected outputs، source identities | إنشاء fixtures اختبارية معلّمة، إصلاح الاختبارات، negative coverage | synthetic fixture كدليل إنتاج أو acceptance |
+| E4 | raw result DB، جميع Trial/scenario outcomes، statistical inputs and logs | إعادة حساب النتائج من بيانات مكتملة موجودة؛ اختبارات مستقلة | استقراء، scaling، N expansion دون قرار، إخفاء FAIL/NOT_CONVERGED |
+| E5 | كامل evidence package ومراجعة مستقلة | إعادة تدقيق متطلبات القبول وتوثيق استقلال المراجع | self-review أو نقل PASS من مرحلة سابقة |
+| E6 | release manifest، durable copies، restore، approvals، residual risks | إعداد decision package وتوصية release | نشر/دمج/FINAL_ACCEPTED دون قرار مالك |
+
+هذه المصفوفة لا توسع المتطلبات المعيارية ولا تمنح صلاحيات جديدة؛ إنها تحدد طريقة البحث والمعالجة داخل النطاق المصرح.
+
+## 17. شروط التقدم والبوابات بعد التحسين
+
+- لا تنتقل المرحلة التالية إلى التنفيذ المعتمد/الإغلاق إلا بعد PASS_GAP_FREE للمرحلة السابقة وفق عقدها ومتطلبات المرجع.
+- لا يُطلب أن يكون كل مشروع البحث والإصلاح متوقفاً حتى ذلك الوقت: يسمح بمسارات مستقلة وPREPARATORY_ONLY وفق §15.
+- لا تؤجل فجوات مرحلة إلى مرحلة نهائية لتسويتها جماعياً. عالج كل فجوة عند المرحلة المالكة لها، وسجل أثرها على المراحل التابعة.
+- لا يشترط أن يحمل كل نشاط تشغيلي عابر اسم مرحلة جديدة؛ أنشطة البحث والاستعادة والاحتفاظ أنشطة مساندة لا تستبدل D/E ولا تتجاوزها.
+- PASS_GAP_FREE حكم على كل المتطلبات الإلزامية المحددة في نطاق المرحلة، وليس ادعاءً فلسفياً بانعدام كل مجهول. يجب توثيق completeness discovery وحدود البحث والـunknowns.
+- PASS_GAP_FREE_NORMATIVE_V240_SCOPE لا يعني إغلاق متطلبات النقل أو الاحتفاظ أو الإنتاج خارج ذلك النطاق. لا تختصره إلى PASS_GAP_FREE دون إثبات جميع النطاقات الإلزامية.
+- لا تعتبر requirement غير منطبق إلا مع سبب ودليل يثبت عدم الانطباق، وموافقة المعيار/المرجع على ذلك.
+- أي اكتشاف لاحق يثبت خطأ حكم سابق يفتح correction/reassessment append-only للمرحلة المتأثرة؛ لا يُخفى خلف إغلاق لاحق.
+
+## 18. حواجز آلية ضد النجاح غير المسند
+
+يجب أن تتضمن validators وnegative tests، حيثما ينطبق، اختبارات رفض الحالات التالية:
+
+1. PASS_GAP_FREE مع requirement إلزامي بلا evidence pointer أو بلا exact identity.
+2. PASS عند وجود MISSING_EVIDENCE أو NOT_RUN أو CONFLICTED أو BLOCKED أو REPORTED_ONLY أو ACCESS_BLOCKED لمتطلب إلزامي.
+3. تحويل NOT_FOUND_IN_SEARCHED_SCOPE إلى NEVER_PRODUCED_PROVEN دون producer-path proof.
+4. تحويل Replay/Derived/New/Synthetic إلى Original Historical Evidence.
+5. استخدام Artifact metadata أو provider metadata بديلاً عن download/raw-byte hashing/readback/restore المطلوب.
+6. نقل نجاح Run إلى SHA مختلف أو إعلان Exact Final Head قبل فحص HEAD بعد آخر commit.
+7. إغلاق مرحلة مع اختبار إلزامي لم يُستدعَ فعلياً، أو اعتبار عدد اختبارات focused هو full suite.
+8. إغلاق requirement بنطاق عينة أو ممثل مع أن المطلوب full population.
+9. خلط S6/C100/Stage 12/13 أو خلط N=300/N=1200/N=2400 أو cohorts/seeds.
+10. تغيير حالة Financial Gate A أو Production Gate A أو Gate B أو Stability أو N=4800 دون دليل وقرار صالح.
+11. اعتبار نجاح D4/D5 أو Global Preservation دليلاً على D0 أو العكس؛ تبقى بوابات المرحلة والاحتفاظ مستقلة إلا حيث ينص المرجع على الارتباط.
+12. إعلان E3/E4/E5/E6 أو final acceptance قبل شروط الدخول والموافقات المحددة.
+
+إذا لم يستطع validator التحقق من حقل أو دليل، يجب أن يفشل مغلقاً ويصدر سبباً محدداً، لا أن يستخدم default أو empty value أو implicit pass.
+
+## 19. سجل القرار والتنفيذ عند وجود بدائل
+
+لكل فجوة لا يمكن حسمها تقنياً، جهّز مذكرة قرار مالك تشمل:
+- الوصف الدقيق للفجوة وسببها الجذري.
+- ما تم البحث عنه والنتائج والحدود.
+- هل ثبت عدم الإنتاج أم تعذر الوصول أم فشل الحفظ أم نقص المدخلات.
+- الخيارات الممكنة: استعادة أصل، اشتقاق، Replay ضمن تفويض قائم، dataset جديد بهوية جديدة، أو الإبقاء على الفجوة.
+- أثر كل خيار على التاريخ والهوية والمرجع والبوابات والقبول النهائي.
+- التكاليف والمخاطر والمدة والموارد.
+- ما الذي سيتغير وما الذي لن يتغير.
+- القرار المطلوب بنص صريح، وحدود التفويض.
+- ما يبقى ممنوعاً حتى بعد القرار.
+
+لا تطلب قراراً عاماً من نوع «هل نكمل؟». اطلب القرار المحدد فقط. لا تنفذ خياراً محمياً قبل تسجيل الموافقة، لكن استمر في كل عمل غير محمي لا يعتمد عليه.
+
+## 20. قالب تقرير الفجوة والاستعادة
+
+يضاف لكل متطلب مفقود سجل بالحقول التالية، ولا يُغلق حتى تُملأ أو يثبت عدم انطباقها:
+
+requirement_id:
+stage:
+normative_clause:
+expected_evidence:
+expected_identity:
+producer_path_and_exact_commit:
+search_scope:
+sources_checked:
+sources_not_accessible:
+search_terms_and_ids:
+candidate_objects:
+bytes_downloaded:
+raw_sha256:
+exact_size_bytes:
+git_blob_sha1:
+containing_commit:
+schema_and_coverage_result:
+producer_path_result:
+diagnosis:
+recovery_attempts:
+reconstruction_feasibility:
+authorized_owner_decision:
+created_or_recovered_output:
+output_identity_and_label:
+independent_verification:
+remaining_gap:
+evidence_status:
+stage_disposition:
+next_action:
+
+## 21. قواعد كتابة النتائج بعد هذه الإضافة
+
+- قل «لم نعثر عليه في المصادر التالية» مع تعداد المصادر، ولا تقل «غير موجود» إلا ببرهان إنتاج/حفظ كافٍ.
+- قل «تعذر الوصول» إذا منع API أو صلاحية أو انتهاء Artifact الفحص.
+- قل «أُعيد بناؤه» إذا أنشئ من inputs أو Replay، ولا تقل «استُعيد الأصل».
+- قل «تم إنشاء مخرج جديد» مع identity جديدة إذا كان ذلك هو الواقع.
+- اذكر ما تم إنجازه وما بقي مفتوحاً، ولا تختزل التقدم إلى PASS/FAIL واحد.
+- لا تُسقط الفجوة من التقرير عند بدء مسار بديل؛ اربط الأصل والمشتق والجديد معاً في lineage واضح.
+- لا تصف العمل بأنه «توقف» إذا استمرت مسارات مستقلة؛ حدد فقط البوابة أو النشاط المحمي المتوقف.
+- لا تعلن نجاحاً لا تسنده الأدلة، حتى إذا اكتملت كل أعمال المعالجة المتاحة.
+
+## 22. سجل هذه الإضافة وحدودها
+
+- هذه إضافة Append-only داخل الملف نفسه PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md؛ لم يُنشأ ملف REV8.
+- لم يتغير المرجع v2.4.0 أو قرار اعتماده أو قواعد الأعمال أو العتبات أو source/cohort/seed/Trial identities.
+- لم تُغيّر أي Artifact أو manifest تاريخي، ولم تُنشأ بيانات تاريخية اصطناعية.
+- لم تُنفذ Trial أو Simulation أو Monte Carlo أو N expansion أو backfill أو zero-fill.
+- لم يُعدّل main ولم يحدث merge أو Release أو إعلان قبول نهائي.
+- تظل كل أحكام المراحل السابقة كما هي إلى أن تُنتج أدلة جديدة وتُراجع على exact SHA.
+- الغرض من هذه الإضافة هو جعل البحث والاستعادة والإنشاء المشروع مساراً إلزامياً مستمراً، مع بقاء القبول fail-closed.
+
+**نهاية إضافة التحسين التشغيلي REV7 — 2026-11-08.**
