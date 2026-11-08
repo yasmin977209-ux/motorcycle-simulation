@@ -7,7 +7,7 @@ import pyarrow.parquet as pq
 import pytest
 from scripts.s6_daily_path_identity import DAILY_BALANCE_INTEGER_FIELDS,DAILY_BALANCE_SCHEMA_VERSION,DAILY_PATH_IDENTITY_SCHEMA_VERSION,MODEL_SCHEMA_VERSION,SCENARIO_MANIFEST_SCHEMA_VERSION,build_daily_path_identity_evidence,require_daily_path_manifest_contract
 from scripts.audit_s6_daily_balance_artifact import audit_scenario_artifacts
-SRC="a"*40;COHORT=f"s6-v23-{SRC[:8]}";SC="C085_G100";SEED=20270101;START=date(2027,1,1)
+SRC="a"*40;COHORT="s6-v23-rebuild-20261105";SC="C085_G100";SEED=20270101;START=date(2027,1,1)
 def row(tid,day,src=SRC,cohort=COHORT):
     return {"date":day.isoformat(),"trial_id":tid,"daily_balance_schema_version":DAILY_BALANCE_SCHEMA_VERSION,"Cash":100,"Capital":100,"Retained_Earnings":0,"Net_Equity":100,"Accounts_Receivable":0,"Guarantee_Claim_Receivable":0,"Gross_Bike_Assets":0,"Accumulated_Depreciation":0,"Net_Bike_Assets":0,"Total_Assets":100,"Total_Equity":100,"Liabilities":0,"Balance_Difference":0,"Partner1_Reinvestment_Balance":0,"Partner2_Reinvestment_Balance":0,"Active_Bikes":0,"Owned_Transferred_Bikes":0,"Pending_Claims":0,"Final_Close_Date":(START+timedelta(days=1)).isoformat() if day==START+timedelta(days=1) else None,"scenario_id":SC,"source_sha":src,"cohort_id":cohort,"schema_version":MODEL_SCHEMA_VERSION}
 def rows(src=SRC,cohort=COHORT):return [row(t,d,src,cohort) for t in (1,2) for d in (START,START+timedelta(days=1))]
@@ -16,7 +16,7 @@ def test_content_and_identity_bound_hashes_are_separate():
     x=ev(rows());s=x["summary"];assert s["contract_schema_version"]==DAILY_PATH_IDENTITY_SCHEMA_VERSION and s["balance_mismatch_count"]==0 and s["row_count"]==s["balance_rows_checked"]==4 and s["unique_daily_path_count"]==1
     assert x["path_content_fingerprint_by_trial"][1]==x["path_content_fingerprint_by_trial"][2] and x["identity_bound_fingerprint_by_trial"][1]!=x["identity_bound_fingerprint_by_trial"][2]
 def test_identity_hash_binds_source_and_cohort():
-    a=ev(rows());src="b"*40;co=f"s6-v23-{src[:8]}";b=ev(rows(src,co),src,co)
+    a=ev(rows());src="b"*40;co=COHORT;b=ev(rows(src,co),src,co)
     assert a["summary"]["daily_path_content_map_sha256"]==b["summary"]["daily_path_content_map_sha256"] and a["summary"]["identity_bound_daily_path_map_sha256"]!=b["summary"]["identity_bound_daily_path_map_sha256"]
 def test_foreign_source_fails_closed():
     rs=rows();rs[-1]["source_sha"]="b"*40
@@ -69,4 +69,44 @@ def test_pinned_historical_c100_cohort_identity_is_scoped_and_allowed():
             source_sha=source, cohort_id="c100-v23-unapproved", master_seed=SEED,
             scenario_id="C100_G100", expected_trial_ids=[1],
             expected_start_date=START.isoformat(),
+        )
+
+
+def test_new_s6_cohort_is_explicit_and_independent_of_source_prefix():
+    source = "b" * 40
+    cohort = "s6-v23-rebuild-20261105"
+    evidence = build_daily_path_identity_evidence(
+        rows(source, cohort), source_sha=source, cohort_id=cohort,
+        master_seed=SEED, scenario_id=SC, expected_trial_ids=[1, 2],
+        expected_start_date=START.isoformat(),
+    )
+    assert evidence["summary"]["source_sha"] == source
+    assert evidence["summary"]["cohort_id"] == cohort
+    with pytest.raises(RuntimeError, match="S6_DAILY_PATH_SOURCE_COHORT_MISMATCH"):
+        build_daily_path_identity_evidence(
+            rows(source, "s6-v23-" + source[:8]), source_sha=source,
+            cohort_id="s6-v23-" + source[:8], master_seed=SEED,
+            scenario_id=SC, expected_trial_ids=[1, 2],
+            expected_start_date=START.isoformat(),
+        )
+
+
+def test_new_c100_cohort_is_separate_from_s6_cohort_family():
+    source = "c" * 40
+    cohort = "c100-v23-rebuild-20261105"
+    sample = row(1, START, source, cohort)
+    sample["scenario_id"] = "C100_G100"
+    sample["Final_Close_Date"] = START.isoformat()
+    evidence = build_daily_path_identity_evidence(
+        [sample], source_sha=source, cohort_id=cohort, master_seed=SEED,
+        scenario_id="C100_G100", expected_trial_ids=[1],
+        expected_start_date=START.isoformat(),
+    )
+    assert evidence["summary"]["cohort_id"] == cohort
+    with pytest.raises(RuntimeError, match="S6_DAILY_PATH_SOURCE_COHORT_MISMATCH"):
+        build_daily_path_identity_evidence(
+            [dict(sample, cohort_id="s6-v23-rebuild-20261105")],
+            source_sha=source, cohort_id="s6-v23-rebuild-20261105",
+            master_seed=SEED, scenario_id="C100_G100",
+            expected_trial_ids=[1], expected_start_date=START.isoformat(),
         )
