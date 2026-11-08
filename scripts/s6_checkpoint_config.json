@@ -1,12 +1,9 @@
 {
-  "active_target_trials": 2400,
-  "trial_start": 1201,
-  "trial_end": 2400,
-  "previous_run_id": 40596643263,
-  "n300_aggregate_run_id": 40588234012,
-  "n600_aggregate_run_id": 40582501871,
-  "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
-  "cohort_id": "s6-v23-da1a9ea9",
-  "reference_sha256": "e5efaf0874384e8248c339ca10e248ea9e17e9f0882153b4ef88bc955b91d53f",
-  "n1200_aggregate_run_id": 40596643263
+  "checkpoint_mode": "FRESH",
+  "active_target_trials": 300,
+  "trial_start": 1,
+  "trial_end": 300,
+  "cohort_id": "s6-v23-rebuild-20261105",
+  "governing_decision_id": "D-2026-10-30-REFERENCE-V2.4.0",
+  "reference_sha256": "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b"
 }
