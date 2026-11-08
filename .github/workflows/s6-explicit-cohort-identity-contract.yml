@@ -133,6 +133,6 @@ jobs:
           workflow = Path(".github/workflows/s6-explicit-cohort-identity-contract.yml").read_text(encoding="utf-8")
           forbidden = ("run_" + "single_trial", "run_trials_" + "parallel", "run_full_" + "trials")
           assert all(name not in workflow for name in forbidden)
-          assert "pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py tests/test_workflow_safety_contract.py" in workflow
+          assert "pytest -q tests/test_s6_daily_path_identity_contract.py tests/test_s6_daily_balance_snapshot_schema.py tests/test_workflow_safety_contract.py tests/test_s6_source_pin_separation.py" in workflow
           print("SIMULATION_TRIALS=NOT_EXECUTED")
           PY
