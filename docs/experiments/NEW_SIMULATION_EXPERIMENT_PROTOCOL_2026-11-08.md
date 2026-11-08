@@ -382,3 +382,11 @@ Environment evidence currently scoped to the safe test workflow: Ubuntu 24.04, C
 Remaining blockers: dedicated simulation Workflow with independent fail-fast/recovery; two durable failure-domain storage destinations and a successful restore/readback; security/secrets scan and redaction audit; exact final source fingerprint and independent review. The S6 aggregator still treats the old C100 evidence as read-only historical reuse; it is not evidence for the new C100 cohort.
 
 **Execution remains NOT AUTHORIZED.** No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' execution, historical evidence mutation, main write, merge, or Release occurred. Overall status remains `BLOCKED_BEFORE_EXECUTION`.
+
+## Identity-scope clarification — exact owner-approved values only — 2026-11-08
+
+This addendum narrows any earlier wording that referred to a cohort “family” or pattern. The implementation accepts only the exact E2-approved values:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
