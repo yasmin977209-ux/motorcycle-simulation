@@ -80,3 +80,11 @@ The earlier handoff instruction to obtain an owner identity decision is supersed
 - Complete a dedicated least-privilege simulation Workflow with fail-fast/recovery, two independent durable storage destinations plus restore test, secrets/redaction scan, and independent review.
 - Only after those blockers are closed, request a separate final owner confirmation before any Trial or Monte Carlo dispatch.
 - No simulation execution, N expansion, historical artifact mutation, main write, merge, Release, or final acceptance occurred. Overall status remains `BLOCKED_BEFORE_EXECUTION`.
+
+## Identity-scope clarification — exact owner-approved values only — 2026-11-08
+
+This addendum narrows any earlier wording that referred to a cohort “family” or pattern. The implementation accepts only the exact E2-approved values:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
