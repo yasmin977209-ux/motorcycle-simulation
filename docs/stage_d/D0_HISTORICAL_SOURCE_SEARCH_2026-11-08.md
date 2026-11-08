@@ -100,3 +100,12 @@ Under REV7 and the owner-approved v2.4.0 rules, backfill/inference and any subst
 ## Actions not taken
 
 No new Trial, Simulation, Monte Carlo, N expansion, N=4800, backfill, zero-fill, inferred accounting, SOURCE_SHA/cohort/MASTER_SEED/Trial identity change, historical Artifact mutation, main write, merge, force-push, Release or final-acceptance declaration was performed.
+
+
+## 2026-11-08 — Archive recovery addendum (correction and deeper verification)
+
+The earlier search correctly distinguished the N300 metadata file from the N2400 metadata requirement, but the original 60 scenario archives and upstream lineage have now been downloaded and independently checked. All 60 scenario ZIPs and three related aggregate ZIPs (63 total) match GitHub Actions API SHA-256 digests, pass ZIP CRC/member reads, and pass extracted-bundle restore/re-hash. The N300 metadata file is verified at [exact GitHub commit](https://github.com/yasmin977209-ux/motorcycle-simulation/blob/a23ba71f48487f3ebead99bc30039b14ef9b7609/docs/evidence/s6_n300_source_run_metadata.json): SHA-256 `a52657b0b5ffe281500a1c028f5396b9c91e3932267816d0e5c0069927c420a4`, Git blob `a93b5c7d4337d5297dad61793bb862cb5fa4a8a3`, size 33,467 bytes. It remains N300-scoped and does not replace the N2400 metadata object, whose related aggregate manifest still records `source_run_metadata.sha256=null`.
+
+Parquet footer inspection across all 20 scenario archives at each of N300, N1200 and N2400 confirms that `daily_snapshots.parquet` is extensive (12,291,768 / 49,162,656 / 98,323,918 rows respectively) but the stored projection excludes all five required balance fields. The exact N2400 execution writer `monte_carlo.py::_daily_snapshot` (a23ba71, lines 78–112) corroborates the omission. Thus the original archives are recoverable, but the complete historical accounting ledger is not present in these archives. D0 remains `BLOCKED / MISSING_EVIDENCE`.
+
+Recovery report: [S6 Archive Recovery Report](S6_ARCHIVE_RECOVERY_REPORT_2026-11-08.md). Detailed 63-artifact inventory: [S6 Archive Recovery Manifest](S6_ARCHIVE_RECOVERY_MANIFEST_2026-11-08.json). Durable remote upload is still pending exact Dropbox destination/filename confirmation; no claim of permanent retention is made.

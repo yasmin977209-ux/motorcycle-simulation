@@ -4134,3 +4134,17 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - E2's 20 scenario archives are replay reconstructions, not original source evidence. Full Logging remains 105 representative keys.
 - The required original all-48K daily ledger, original source metadata hash, and five full-balance fields were not found in the accessible sources. D0 remains `BLOCKED / MISSING_EVIDENCE`; no synthetic/backfilled values were created and no identity/acceptance rule was changed.
 - Detailed source inventory: [D0 Historical Source Search](stage_d/D0_HISTORICAL_SOURCE_SEARCH_2026-11-08.md).
+
+
+---
+
+## 2026-11-08 — S6 original archive recovery and schema audit
+
+- Live baseline before this documentation commit: working branch `343c1fd537a113f00b8af2f4541c10c896102792`; main `01a6f79eedc522bb734ed9c5ea31beee581f2468` (read-only).
+- S6 lineage recovered from GitHub Actions: N300 Run 40574326793 / commit `da1a9ea9b5cd789c944de3f07b08395bb67c49e7`; N1200 Run 40596643263 / commit `2f77566e6c999a3af87d8aed49649dfd6ebb68ca`; N2400 Run 40731224990 / commit `a23ba71f48487f3ebead99bc30039b14ef9b7609`; related N2400 aggregate Run 40773412377 / Artifact 12852969854.
+- Recovered 60 scenario archives plus 3 aggregates. Downloaded ZIP SHA-256 matched GitHub artifact digest 63/63; ZIP CRC 63/63; scenario identity/internal file hashes 60/60; aggregate manifest files 3/3; extracted bundle restore and rehash 63/63.
+- Local bundle `S6_SOURCE_ARCHIVE_RECOVERY_2026-11-08.tar`: 2,532,321,280 bytes; SHA-256 `b09d2e5e152fe3df66672d2099107bbbf807cf02c4bff7030b1e232ccf22f64d`. Local-only until uploaded/read back from approved durable storage.
+- Daily snapshots contain 12,291,768 rows (N300), 49,162,656 (N1200), and 98,323,918 (N2400), but all checkpoint schemas omit the five required balance fields. The exact source writer is `monte_carlo.py::_daily_snapshot` at a23ba71 lines 78–112.
+- Verified related N300 metadata file: SHA-256 `a52657b0b5ffe281500a1c028f5396b9c91e3932267816d0e5c0069927c420a4`, blob `a93b5c7d4337d5297dad61793bb862cb5fa4a8a3`, 33,467 bytes, commit a23ba71. It is N300-scoped only; N2400 aggregate still has `source_run_metadata.sha256=null`.
+- D0 remains `BLOCKED / MISSING_EVIDENCE`; no synthetic data, accounting inference, Trial/Simulation/Monte Carlo, N expansion, identity change, main write, merge or Release.
+- New report: [S6 Archive Recovery Report](stage_d/S6_ARCHIVE_RECOVERY_REPORT_2026-11-08.md). New artifact inventory: [S6 Archive Recovery Manifest](stage_d/S6_ARCHIVE_RECOVERY_MANIFEST_2026-11-08.json). New session handoff: [S6 Archive Recovery Handoff](stage_d/CONTINUITY_HANDOFF_2026-11-08_S6_ARCHIVE_RECOVERY.md).

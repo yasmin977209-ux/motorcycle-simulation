@@ -1,0 +1,815 @@
+{
+  "schema_version": "s6-original-archive-recovery-manifest-v1",
+  "recorded_at": "2026-11-08",
+  "repository": "yasmin977209-ux/motorcycle-simulation",
+  "branch": "tmp/d1-rebuild-20261101",
+  "branch_head_before_record": "343c1fd537a113f00b8af2f4541c10c896102792",
+  "main_head": "01a6f79eedc522bb734ed9c5ea31beee581f2468",
+  "identity": {
+    "source_sha": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+    "cohort_id": "s6-v23-da1a9ea9",
+    "master_seed": 20270101
+  },
+  "checkpoints": [
+    {
+      "checkpoint_n": 300,
+      "run_id": 40574326793,
+      "execution_commit": "da1a9ea9b5cd789c944de3f07b08395bb67c49e7",
+      "artifacts": [
+        {
+          "artifact_id": 12769640307,
+          "name": "s6-n300-C050_G050-40574326793",
+          "size_bytes": 12739428,
+          "github_digest": "sha256:aaa1a3b12391df703304b37eaa6ab0273bef2170a7cf19943ab2be68439be080",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:34:36Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12769640307"
+        },
+        {
+          "artifact_id": 12768991038,
+          "name": "s6-n300-C050_G070-40574326793",
+          "size_bytes": 12852560,
+          "github_digest": "sha256:b279a46f57ebedce62efe4bd7e5f22e239f08e6d7b37dd77c0d23d1dec842595",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:31:51Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768991038"
+        },
+        {
+          "artifact_id": 12768845334,
+          "name": "s6-n300-C070_G050-40574326793",
+          "size_bytes": 11029654,
+          "github_digest": "sha256:40cc3f7f3fa5f17e9a78e7ffadefaa7626b14814898c2cba77d18478cd876b40",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:48Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768845334"
+        },
+        {
+          "artifact_id": 12768635815,
+          "name": "s6-n300-C030_G070-40574326793",
+          "size_bytes": 7516784,
+          "github_digest": "sha256:a2caf64b98fb9f0b6229cd0028becb386749767119c50157a4b253bd90637c90",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:25:57Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768635815"
+        },
+        {
+          "artifact_id": 12768510651,
+          "name": "s6-n300-C070_G030-40574326793",
+          "size_bytes": 11029653,
+          "github_digest": "sha256:431dd46ecede9c7e9448808b8a4a0cbb6cfd64f09fed07e244b8981c21958ed7",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:31Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768510651"
+        },
+        {
+          "artifact_id": 12768417954,
+          "name": "s6-n300-C050_G030-40574326793",
+          "size_bytes": 12857729,
+          "github_digest": "sha256:6042e9404b9685b24c0ec46c3591545043ae1a008e0a2d2b00bdabcc5cedfb92",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:33:33Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768417954"
+        },
+        {
+          "artifact_id": 12768321687,
+          "name": "s6-n300-C030_G030-40574326793",
+          "size_bytes": 7164157,
+          "github_digest": "sha256:5d1363e7c165693ea9942d3b411eb3ab5144cfe444714eb9892982c95a96b61b",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:26:47Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768321687"
+        },
+        {
+          "artifact_id": 12768243122,
+          "name": "s6-n300-C050_G000-40574326793",
+          "size_bytes": 12496296,
+          "github_digest": "sha256:be2c3de67d0eacb4aa12a97aa74173b610a8c3f0d3899937569441b0f2abbbe1",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:33:56Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768243122"
+        },
+        {
+          "artifact_id": 12768111910,
+          "name": "s6-n300-C085_G000-40574326793",
+          "size_bytes": 10056248,
+          "github_digest": "sha256:6e165ebe5a1c42599ba62a8878fecaeac38688a6cce2e68d1b725bd182822b38",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:41Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12768111910"
+        },
+        {
+          "artifact_id": 12767798033,
+          "name": "s6-n300-C085_G070-40574326793",
+          "size_bytes": 10056491,
+          "github_digest": "sha256:24c8694526c2be99c47350158e8b6afda3573a2042ca99660b0c06f64817401d",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:42Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767798033"
+        },
+        {
+          "artifact_id": 12767752340,
+          "name": "s6-n300-C070-G100-40574326793",
+          "size_bytes": 11017459,
+          "github_digest": "sha256:eea972a529cad905af8e35081532e73ec6bd5d9e9ef94c98ac428f7f1f4ae4c8",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:18:14Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767752340"
+        },
+        {
+          "artifact_id": 12767728040,
+          "name": "s6-n300-C085-G100-40574326793",
+          "size_bytes": 10044760,
+          "github_digest": "sha256:d193b48aa580591bf2f9dfb13c691f6fbde527cadcda908bcd1ab0de4d8669eb",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:00Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767728040"
+        },
+        {
+          "artifact_id": 12767718321,
+          "name": "s6-n300-C070_G070-40574326793",
+          "size_bytes": 11029654,
+          "github_digest": "sha256:9b6b8d72e1d3bbfe94d8322d338ac17edb37f92a81a5a0b7578ca2a59c87550a",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:46Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767718321"
+        },
+        {
+          "artifact_id": 12767593753,
+          "name": "s6-n300-C030_G050-40574326793",
+          "size_bytes": 7330672,
+          "github_digest": "sha256:fcc2ecfe9902dafe30d964c083b30458c3e608f7dc1284e833163e9695c0f7c1",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:25:20Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767593753"
+        },
+        {
+          "artifact_id": 12767573463,
+          "name": "s6-n300-C050-G100-40574326793",
+          "size_bytes": 12548321,
+          "github_digest": "sha256:512ade250620b22316903b0958b59d804b9cd055073099e261d3892a3442112f",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:22:11Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12767573463"
+        },
+        {
+          "artifact_id": 12766989385,
+          "name": "s6-n300-C030-G100-40574326793",
+          "size_bytes": 7700446,
+          "github_digest": "sha256:46113e6b0216a442e5835f15ef36807d54f37a84529889a5499b2c1b5fd45905",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:15:53Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12766989385"
+        },
+        {
+          "artifact_id": 12766969392,
+          "name": "s6-n300-C030_G000-40574326793",
+          "size_bytes": 6711291,
+          "github_digest": "sha256:b5724255dfba341218e5d7a3a1c9c4e2e92260e116e603cef064ea976b09236b",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:25:27Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12766969392"
+        },
+        {
+          "artifact_id": 12766789080,
+          "name": "s6-n300-C070_G000-40574326793",
+          "size_bytes": 11029573,
+          "github_digest": "sha256:62bec63aea1a708de5f6b217d79dc7ad23b3eb9864098e9ca161011ed99f1ddd",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:42Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12766789080"
+        },
+        {
+          "artifact_id": 12766594357,
+          "name": "s6-n300-C085_G030-40574326793",
+          "size_bytes": 10056041,
+          "github_digest": "sha256:a62bf557111b51788a935c685480a4c828ab4651bce0b39f5186d5d8d2d6e0e4",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:35Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12766594357"
+        },
+        {
+          "artifact_id": 12765974975,
+          "name": "s6-n300-C085_G050-40574326793",
+          "size_bytes": 10056286,
+          "github_digest": "sha256:a8abd9b7cafa5a65653caec2631f225bab3ec0067b8d3886bfc13926fabefd23",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-10T20:23:41Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12765974975"
+        }
+      ],
+      "aggregate": [
+        {
+          "artifact_id": 12769096239,
+          "name": "s6-n300-aggregate-40574326793",
+          "size_bytes": 5315786,
+          "github_digest": "sha256:4bf12b17243db39fe2842e00060a010cfe2360722be8f8e10a3ffc91ae448e82",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T20:35:05Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12769096239"
+        }
+      ]
+    },
+    {
+      "checkpoint_n": 1200,
+      "run_id": 40596643263,
+      "execution_commit": "2f77566e6c999a3af87d8aed49649dfd6ebb68ca",
+      "artifacts": [
+        {
+          "artifact_id": 12780385355,
+          "name": "s6-n1200-C050_G050-40596643263",
+          "size_bytes": 48786847,
+          "github_digest": "sha256:90771155f52c99f755945b85cd79c5d1803c0a014708086bef13c6f560ac2195",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:38:27Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12780385355"
+        },
+        {
+          "artifact_id": 12779762216,
+          "name": "s6-n1200-C050_G030-40596643263",
+          "size_bytes": 49267290,
+          "github_digest": "sha256:68f38e67328fcf7f37e4eeddda7480b1a3a87c306376cb75dd3515692f01f806",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:46:18Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12779762216"
+        },
+        {
+          "artifact_id": 12779561617,
+          "name": "s6-n1200-C050_G000-40596643263",
+          "size_bytes": 47826699,
+          "github_digest": "sha256:958e8ca3d6da40f1ab194cc4bcdaf964d4771a7abfbdcf8986a0f8c0fc6b111a",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:38:14Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12779561617"
+        },
+        {
+          "artifact_id": 12779330252,
+          "name": "s6-n1200-C070_G050-40596643263",
+          "size_bytes": 41927874,
+          "github_digest": "sha256:7f48fcdaf93464f7ca2ce0ac79c0be4b349240f3baaada9f017f5db0caafe635",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:44Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12779330252"
+        },
+        {
+          "artifact_id": 12779291324,
+          "name": "s6-n1200-C030_G030-40596643263",
+          "size_bytes": 26063754,
+          "github_digest": "sha256:51eb812e8e0dd105061780854cb628af22532218be2d4b64f3b00f6aef2941c1",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:21:31Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12779291324"
+        },
+        {
+          "artifact_id": 12779033620,
+          "name": "s6-n1200-C050_G070-40596643263",
+          "size_bytes": 49194434,
+          "github_digest": "sha256:682de8605b708ccf1ab30bc30080a6976288b37a39a611f230d2dfbc56a533bb",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:33:58Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12779033620"
+        },
+        {
+          "artifact_id": 12778971338,
+          "name": "s6-n1200-C085_G030-40596643263",
+          "size_bytes": 37810412,
+          "github_digest": "sha256:8b38bef1aeda56f7d0ab3a729c62ddd9233d3217fa4acb1652173b4fff83ceab",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:42Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778971338"
+        },
+        {
+          "artifact_id": 12778930428,
+          "name": "s6-n1200-C070-G100-40596643263",
+          "size_bytes": 41880467,
+          "github_digest": "sha256:ea57a74db5a5c0370447641f8d23c14498f09294dd6c2bacee69fa82fe2f3863",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:08:29Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778930428"
+        },
+        {
+          "artifact_id": 12778846747,
+          "name": "s6-n1200-C085_G050-40596643263",
+          "size_bytes": 37810752,
+          "github_digest": "sha256:046f85dab4cc2110e02b10155d1d8b363b69bd98076599c85a930a5a6682a147",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:24Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778846747"
+        },
+        {
+          "artifact_id": 12778796960,
+          "name": "s6-n1200-C070_G000-40596643263",
+          "size_bytes": 41926937,
+          "github_digest": "sha256:290523a889c3dd6ac609c796a088648bca16c109bd1b4a13b10cd2f2114e7004",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:40Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778796960"
+        },
+        {
+          "artifact_id": 12778736916,
+          "name": "s6-n1200-C070_G030-40596643263",
+          "size_bytes": 41927444,
+          "github_digest": "sha256:bb95c289d842c55a0bc4812b6c70c5e4cd20e496aa04584fc728c00b182b2506",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:44Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778736916"
+        },
+        {
+          "artifact_id": 12778302046,
+          "name": "s6-n1200-C085_G000-40596643263",
+          "size_bytes": 37810672,
+          "github_digest": "sha256:23094cfc7e796a4abd061dc975e4a9d1072d4336cdb1c7a519868d1502908772",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:28Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778302046"
+        },
+        {
+          "artifact_id": 12778238329,
+          "name": "s6-n1200-C030_G050-40596643263",
+          "size_bytes": 26632593,
+          "github_digest": "sha256:3a5dc72869ff760be7ce109e318edec8073e398753e11b6ea45b6fd3da6a0f3a",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:23:36Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778238329"
+        },
+        {
+          "artifact_id": 12778002216,
+          "name": "s6-n1200-C070_G070-40596643263",
+          "size_bytes": 41927407,
+          "github_digest": "sha256:0d9249ad7ea978151909c493c8d20a44082118e3ff29f421d1151d762920d81f",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:49Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12778002216"
+        },
+        {
+          "artifact_id": 12777962297,
+          "name": "s6-n1200-C085_G070-40596643263",
+          "size_bytes": 37810920,
+          "github_digest": "sha256:9cca0940e4b15d8a6ada616dce7c11f9a1beb6cb5761b942a02c4a90e5384b58",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:16:03Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12777962297"
+        },
+        {
+          "artifact_id": 12777829274,
+          "name": "s6-n1200-C030_G070-40596643263",
+          "size_bytes": 27366513,
+          "github_digest": "sha256:f4556eef768ec1985d2998dc11c8ea72ed6d75dda60d21f65a9fd77ad187826a",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:21:48Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12777829274"
+        },
+        {
+          "artifact_id": 12777684308,
+          "name": "s6-n1200-C030_G000-40596643263",
+          "size_bytes": 24462503,
+          "github_digest": "sha256:4017cc27402e214f82210a74e3dc725e87c974d3681768da2a2e99c1c5be079d",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:19:02Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12777684308"
+        },
+        {
+          "artifact_id": 12777614001,
+          "name": "s6-n1200-C050-G100-40596643263",
+          "size_bytes": 48092220,
+          "github_digest": "sha256:f57f4622a9bf5790c75c16da4eba69c13b4636c53b6463face15903c4387bc65",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:14:53Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12777614001"
+        },
+        {
+          "artifact_id": 12777589879,
+          "name": "s6-n1200-C085-G100-40596643263",
+          "size_bytes": 37766905,
+          "github_digest": "sha256:7b102df7e1e423562c96f3ca7ed8571eddceeb15149425062372ec8060c8df09",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:08:58Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12777589879"
+        },
+        {
+          "artifact_id": 12776023642,
+          "name": "s6-n1200-C030-G100-40596643263",
+          "size_bytes": 27785265,
+          "github_digest": "sha256:f4fe403a64c7f5f9f754b5b5107ddfc2871f2bdcfbf16dda00e019ba4c5df120",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T22:50:36Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12776023642"
+        }
+      ],
+      "aggregate": [
+        {
+          "artifact_id": 12780247706,
+          "name": "s6-n1200-aggregate-40596643263",
+          "size_bytes": 6904475,
+          "github_digest": "sha256:c311b55f745c05ad857fc59e8c26c65c7bb7c47d2f396c026cb0e17107754017",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-26T23:52:22Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12780247706"
+        }
+      ]
+    },
+    {
+      "checkpoint_n": 2400,
+      "run_id": 40731224990,
+      "execution_commit": "a23ba71f48487f3ebead99bc30039b14ef9b7609",
+      "artifacts": [
+        {
+          "artifact_id": 12842976168,
+          "name": "s6-n2400-C050_G070-40731224990",
+          "size_bytes": 97639363,
+          "github_digest": "sha256:915eaa21f7f95f90802d371916d5e7b8a7604bcdd1b88341b40859dd9481a3ce",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:45:32Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12842976168"
+        },
+        {
+          "artifact_id": 12842638708,
+          "name": "s6-n2400-C050_G000-40731224990",
+          "size_bytes": 94849558,
+          "github_digest": "sha256:fb02fb4e36bb0cf113125f3595a45a5ddae43a35e4b27291ca38154810fa8767",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:57:55Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12842638708"
+        },
+        {
+          "artifact_id": 12842495430,
+          "name": "s6-n2400-C050_G030-40731224990",
+          "size_bytes": 97589544,
+          "github_digest": "sha256:77f15ce173dc41141c26fa66100a7c382ce0f5d5f1fabd12a8cd6343720ec9b6",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:34:04Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12842495430"
+        },
+        {
+          "artifact_id": 12842099758,
+          "name": "s6-n2400-C050_G050-40731224990",
+          "size_bytes": 96741246,
+          "github_digest": "sha256:fa0082a22853dd2ea23856e8cbf4a9698f12807f4831f25a8839947be375c993",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:49:46Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12842099758"
+        },
+        {
+          "artifact_id": 12840482357,
+          "name": "s6-n2400-C030_G070-40731224990",
+          "size_bytes": 54426987,
+          "github_digest": "sha256:a8335cb1e01c1dc0d164e0d6c7c42fd5ceab32ec06b91c31db75e3f4af470a2a",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:18:04Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12840482357"
+        },
+        {
+          "artifact_id": 12840360793,
+          "name": "s6-n2400-C030_G050-40731224990",
+          "size_bytes": 52997909,
+          "github_digest": "sha256:47245a1c5467f683d5dec720a6a11e60661d82f673d1915637ed223bcfaab76c",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:06:26Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12840360793"
+        },
+        {
+          "artifact_id": 12840210926,
+          "name": "s6-n2400-C030_G030-40731224990",
+          "size_bytes": 51887261,
+          "github_digest": "sha256:b70ec893c3c57b98355738f5a9add9cbb5bad70f9a217fc51640c659f8645488",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:05:11Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12840210926"
+        },
+        {
+          "artifact_id": 12839945046,
+          "name": "s6-n2400-C070-G100-40731224990",
+          "size_bytes": 82683835,
+          "github_digest": "sha256:5a4c30d6c2c8c31b1ab9f8b72f22f6e624e8a5b85df496bc4dbc58501a7dcc51",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:56:11Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839945046"
+        },
+        {
+          "artifact_id": 12839875625,
+          "name": "s6-n2400-C085_G000-40731224990",
+          "size_bytes": 74384364,
+          "github_digest": "sha256:1aa1f47e8fc8aab7244ba2bf9320434b48c27d7ffae367465092e01209b6df7c",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:00:20Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839875625"
+        },
+        {
+          "artifact_id": 12839361726,
+          "name": "s6-n2400-C070_G070-40731224990",
+          "size_bytes": 82776281,
+          "github_digest": "sha256:ce5b38e0af6d41b5ce7415d41dba139b2390019760b236cb24679aea69cd109d",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:59:47Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839361726"
+        },
+        {
+          "artifact_id": 12839102296,
+          "name": "s6-n2400-C085_G050-40731224990",
+          "size_bytes": 74384698,
+          "github_digest": "sha256:14c87c9f97461f8f372c41d9b64954a94321642c9ae72a6b0e4e76347b7b7e93",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:00:06Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839102296"
+        },
+        {
+          "artifact_id": 12839062393,
+          "name": "s6-n2400-C070_G000-40731224990",
+          "size_bytes": 82775948,
+          "github_digest": "sha256:c1e7bae523dc1b30fe2d21c344a01449ef4867e76bfe63292d5b3621b7694c9c",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:00:11Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839062393"
+        },
+        {
+          "artifact_id": 12839053751,
+          "name": "s6-n2400-C030_G000-40731224990",
+          "size_bytes": 48678427,
+          "github_digest": "sha256:683133a5619981e6daf76d54dc41b4fedf8082fe9e856a24e512fab3aba85f52",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:03:45Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12839053751"
+        },
+        {
+          "artifact_id": 12838992458,
+          "name": "s6-n2400-C085-G100-40731224990",
+          "size_bytes": 74297741,
+          "github_digest": "sha256:f6a82fcf0ed75111d492f740a3b6dfa5bc1c9d1fd5dec1dd9950c0e3281665ed",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:56:24Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838992458"
+        },
+        {
+          "artifact_id": 12838987686,
+          "name": "s6-n2400-C070_G050-40731224990",
+          "size_bytes": 82776739,
+          "github_digest": "sha256:5f28aa1f273c9bd013bfcd120bc919bce80eb3b58da78b4ce4db0c720e55b60c",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:58:40Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838987686"
+        },
+        {
+          "artifact_id": 12838354545,
+          "name": "s6-n2400-C085_G070-40731224990",
+          "size_bytes": 74384935,
+          "github_digest": "sha256:76bd639a360dfc5ef90cdb83aa9d25c64de619295a576ef8695e11bd5ee76137",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:59:59Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838354545"
+        },
+        {
+          "artifact_id": 12838339633,
+          "name": "s6-n2400-C085_G030-40731224990",
+          "size_bytes": 74384375,
+          "github_digest": "sha256:bb687a075e229d04388b516f931de967d7bc14b71da7db38e42b3e847ee32293",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:01:05Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838339633"
+        },
+        {
+          "artifact_id": 12838242824,
+          "name": "s6-n2400-C050-G100-40731224990",
+          "size_bytes": 95527693,
+          "github_digest": "sha256:7bbf4d50df56d184f175155660add5ba7684d07c955285294261163ee1857f17",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:48:45Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838242824"
+        },
+        {
+          "artifact_id": 12838164871,
+          "name": "s6-n2400-C070_G030-40731224990",
+          "size_bytes": 82776343,
+          "github_digest": "sha256:6fa0a6e21e2757ca1b668262285e0bf55f036d3942cb1d1964529787542ec08b",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T18:00:04Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12838164871"
+        },
+        {
+          "artifact_id": 12836747552,
+          "name": "s6-n2400-C030-G100-40731224990",
+          "size_bytes": 55280954,
+          "github_digest": "sha256:77724045a5ffa52e1845bfed4334e7e82ea90a33f1bce3255ec4327caf294052",
+          "sha256_match_verified": true,
+          "zip_crc": "PASS",
+          "restore_rehash": "PASS",
+          "expires_at": "2026-11-27T17:23:02Z",
+          "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12836747552"
+        }
+      ]
+    }
+  ],
+  "related_n2400_aggregate": {
+    "run_id": 40773412377,
+    "execution_commit": "4f2f2cc16d0cb5125262088704febccbae6f50ed",
+    "artifacts": [
+      {
+        "artifact_id": 12852969854,
+        "name": "s6-n2400-status-reconciled-aggregate-40773412377",
+        "size_bytes": 9357996,
+        "github_digest": "sha256:ec05a69ae8968585decf83cf0716d56c264f47f86187cfd3cf53b11f52ca2e54",
+        "sha256_match_verified": true,
+        "zip_crc": "PASS",
+        "restore_rehash": "PASS",
+        "expires_at": "2026-11-27T21:46:36Z",
+        "artifact_url": "https://api.github.com/repos/yasmin977209-ux/motorcycle-simulation/actions/artifacts/12852969854"
+      }
+    ]
+  },
+  "verification": {
+    "scenario_archive_count": 60,
+    "aggregate_archive_count": 3,
+    "total_artifacts": 63,
+    "downloaded_zip_sha256_vs_github_api_digest": "63/63 MATCH",
+    "zip_crc_and_member_read": "63/63 PASS",
+    "scenario_manifest_identity_and_declared_member_hashes": "60/60 PASS",
+    "aggregate_manifest_declared_member_hashes": "3/3 PASS",
+    "extracted_bundle_restore_and_rehash": "63/63 PASS"
+  },
+  "parquet_daily_snapshots": {
+    "schema_fields": [
+      "date",
+      "trial_id",
+      "Cash",
+      "Partner1_Reinvestment_Balance",
+      "Partner2_Reinvestment_Balance",
+      "Capital",
+      "Retained_Earnings",
+      "Net_Equity",
+      "Active_Bikes",
+      "Owned_Transferred_Bikes",
+      "Pending_Claims",
+      "Final_Close_Date",
+      "scenario_id",
+      "source_sha",
+      "cohort_id",
+      "schema_version"
+    ],
+    "total_rows_by_checkpoint": {
+      "N300": 12291768,
+      "N1200": 49162656,
+      "N2400": 98323918
+    },
+    "required_missing_fields": [
+      "Accounts_Receivable",
+      "Accumulated_Depreciation",
+      "Gross_Bike_Assets",
+      "Guarantee_Claim_Receivable",
+      "Total_Assets"
+    ],
+    "code_path": {
+      "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/a23ba71f48487f3ebead99bc30039b14ef9b7609/monte_carlo.py#L78-L112",
+      "description": "_daily_snapshot emits only the listed projection fields; the five required balance fields are not written to daily_snapshots.parquet"
+    }
+  },
+  "source_metadata": {
+    "file": "docs/evidence/s6_n300_source_run_metadata.json",
+    "url": "https://github.com/yasmin977209-ux/motorcycle-simulation/blob/a23ba71f48487f3ebead99bc30039b14ef9b7609/docs/evidence/s6_n300_source_run_metadata.json",
+    "commit": "a23ba71f48487f3ebead99bc30039b14ef9b7609",
+    "git_blob_sha1": "a93b5c7d4337d5297dad61793bb862cb5fa4a8a3",
+    "raw_utf8_sha256": "a52657b0b5ffe281500a1c028f5396b9c91e3932267816d0e5c0069927c420a4",
+    "size_bytes": 33467,
+    "scope": "N300 source run 40574326793 only; not a replacement for N2400 source_run_metadata"
+  },
+  "n2400_aggregate_source_metadata": {
+    "run_id": 40773412377,
+    "artifact_id": 12852969854,
+    "source_run_id": 40731224990,
+    "source_run_metadata_sha256": null
+  },
+  "local_bundle": {
+    "filename": "S6_SOURCE_ARCHIVE_RECOVERY_2026-11-08.tar",
+    "size_bytes": 2532321280,
+    "sha256": "b09d2e5e152fe3df66672d2099107bbbf807cf02c4bff7030b1e232ccf22f64d",
+    "classification": "VERIFIED_LOCAL",
+    "durable_external_upload": "PENDING_EXPLICIT_DESTINATION_FILENAME_CONFIRMATION"
+  },
+  "external_storage": {
+    "dropbox_approved_path": "/Motorcycle-Simulation-Rescue-2026-11-05",
+    "proposed_filename": "S6_SOURCE_ARCHIVE_RECOVERY_2026-11-08.tar",
+    "upload_status": "NOT_UPLOADED_PENDING_USER_CONFIRMATION",
+    "onedrive_existing_name_conflict": "409 nameAlreadyExists",
+    "onedrive_raw_readback": "403 Database Is Read Only"
+  },
+  "decision": "D0 remains BLOCKED / MISSING_EVIDENCE; no synthetic values, backfill, zero-fill, identity changes, or new Trials/Simulation/Monte Carlo were performed."
+}

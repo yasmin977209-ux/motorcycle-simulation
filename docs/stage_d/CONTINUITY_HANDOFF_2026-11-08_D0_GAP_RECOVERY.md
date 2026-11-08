@@ -42,3 +42,24 @@ No Trials, Simulation, Monte Carlo, N expansion including N=4800, backfill, zero
 The original 20 S6 N=2400 scenario archives remain available on GitHub Actions (1,531,244,201 bytes total) and matching OneDrive objects exist 20/20 by filename and size. Dropbox has none of the 20. The S6 aggregate exists but has `source_run_metadata.sha256=null`; it is not a complete daily ledger. E2 artifacts are replay reconstruction only; Full Logging is 105 representative keys. The full original 48K daily accounting ledgers, verifiable source metadata hash, and five full-balance fields were not found in accessible sources.
 
 Do not create or substitute synthetic/backfilled values to close historical D0. If a synthetic validation dataset is separately approved, assign it a distinct synthetic identity and keep it segregated; it cannot be represented as original S6 or yield `PASS_GAP_FREE` for this D0. Search detail: [D0 Historical Source Search](D0_HISTORICAL_SOURCE_SEARCH_2026-11-08.md).
+
+
+## 2026-11-08 — S6 original archive recovery handoff
+
+### Verified locally
+- 63 original GitHub Actions ZIP artifacts recovered: N300 Run 40574326793 (20 scenarios + aggregate), N1200 Run 40596643263 (20 scenarios + aggregate), N2400 Run 40731224990 (20 scenarios), plus N2400 related aggregate Artifact 12852969854 from Run 40773412377.
+- GitHub artifact digest vs downloaded SHA-256: 63/63. ZIP CRC/read: 63/63. Scenario identity and internal file hashes: 60/60. Aggregate manifest file hashes: 3/3. Extracted bundle restore and rehash: 63/63.
+- Local TAR bundle size 2,532,321,280 bytes; SHA-256 `b09d2e5e152fe3df66672d2099107bbbf807cf02c4bff7030b1e232ccf22f64d`.
+
+### Still blocking D0
+- All three generations' `daily_snapshots.parquet` omit `Accounts_Receivable`, `Accumulated_Depreciation`, `Gross_Bike_Assets`, `Guarantee_Claim_Receivable`, `Total_Assets`.
+- N2400 aggregate Run 40773412377 / Artifact 12852969854 records `source_run_metadata.sha256=null`.
+- The found `s6_n300_source_run_metadata.json` is specific to N300 Run 40574326793 and does not replace N2400 metadata.
+- D0 remains `BLOCKED / MISSING_EVIDENCE`; do not infer balances or claim `PASS_GAP_FREE`.
+
+### Next permitted steps
+1. Ask/receive explicit confirmation to upload `S6_SOURCE_ARCHIVE_RECOVERY_2026-11-08.tar` to Dropbox path `/Motorcycle-Simulation-Rescue-2026-11-05` under the exact proposed filename. After upload, raw-byte download/readback, SHA-256 comparison and restore test are mandatory.
+2. Prove a second independent durable failure domain with byte-level readback and restore; Dropbox secondary mirror is not independent, and OneDrive raw readback was 403.
+3. Search only for original S6 accounting records and N2400 source metadata tied to the exact source identity. If absent, stop with D0 blocked.
+
+No new Trial, Simulation, Monte Carlo, N expansion, backfill, zero-fill, identity change, historical Artifact replacement, main write, merge or Release was performed.
