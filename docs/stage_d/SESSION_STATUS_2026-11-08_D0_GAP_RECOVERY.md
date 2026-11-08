@@ -40,3 +40,16 @@ Do not claim D0 `PASS_GAP_FREE` or proceed on the assumption D0 is closed. Resum
 - Dropbox approved folder exists; upload not performed pending confirmation of `/Motorcycle-Simulation-Rescue-2026-11-05/S6_SOURCE_ARCHIVE_RECOVERY_2026-11-08.tar`. OneDrive prior attempt returned name conflict; raw readback was 403.
 - D0 remains `BLOCKED / MISSING_EVIDENCE`. No Trial/Simulation/Monte Carlo, backfill, zero-fill, identity change, main write or historical artifact modification.
 - Detailed report: [S6 Original Archive Recovery](S6_ARCHIVE_RECOVERY_REPORT_2026-11-08.md). Inventory: [S6 Archive Recovery Manifest](S6_ARCHIVE_RECOVERY_MANIFEST_2026-11-08.json).
+
+
+## 2026-11-08 — Full-session live reconciliation addendum
+
+- Live working branch HEAD before this addendum: `f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866`.
+- Live main HEAD: `1d67cd56d326a9c42f7ecf324fa284dcc129acd4` (PR #80 merge).
+- D0 remains `BLOCKED / MISSING_EVIDENCE`; 63 original ZIPs were recovered/checked according to the existing recovery record, but the five required balance fields are absent from the source projection and the N2400 source metadata hash is null.
+- The active library is REV7 at `docs/stage_d/PROJECT_PROMPT_LIBRARY_AR_2026-11-07_REV7.md`; its unified REV7 contract supersedes older library snapshots. This session fetched it and the owner decision, but did not independently compute the raw-byte SHA-256 for either file.
+- PR #81–#84 are open candidates per live PR search. #83 is `BLOCKED_BEFORE_EXECUTION`; #84's owner decision covers identity-contract changes only and safe tests, not execution. No Trials or simulation ran.
+- Release ID `437946401` current state was not directly fetched during this session; retain `REPORTED_ONLY` until live Release and asset inventory readback.
+- Project status remains `T2_INTERIM / NOT_FINAL_BLOCKED`. Exact Final Head across D0–D6 and Global Preservation Gate remain unestablished/blocked.
+- No workflow dispatch, Release publication, merge, main write, Trial, Simulation, Monte Carlo, N expansion, backfill or zero-fill occurred in this session.
+- Detailed new handoff: [CONTINUITY_HANDOFF_2026-11-08_SESSION_CLOSE.md](CONTINUITY_HANDOFF_2026-11-08_SESSION_CLOSE.md).
