@@ -79,3 +79,11 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' e
 - Remaining: final HEAD/hash readback, independent review, dedicated simulation Workflow/fail-fast, two-failure-domain storage and restore, security scan/redaction audit, and separate final owner execution confirmation.
 - No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation.
 - Overall remains `BLOCKED_BEFORE_EXECUTION`; historical D0 and all project gates remain unchanged.
+
+## Identity-scope clarification — exact owner-approved values only — 2026-11-08
+
+This addendum narrows any earlier wording that referred to a cohort “family” or pattern. The implementation accepts only the exact E2-approved values:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
