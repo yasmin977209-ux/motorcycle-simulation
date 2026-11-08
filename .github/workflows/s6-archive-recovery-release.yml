@@ -1,0 +1,142 @@
+name: S6 Original Actions Archive Recovery Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PUBLISH_S6_ARCHIVE to create the archival release'
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: s6-archive-recovery-release
+  cancel-in-progress: false
+
+jobs:
+  recover-and-publish:
+    if: github.ref == 'refs/heads/main' && inputs.confirm == 'PUBLISH_S6_ARCHIVE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: s6-source-archive-recovery-2026-11-08
+      ARCHIVE_SOURCE_SHA: f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866
+    steps:
+      - name: Validate release identity and enumerate original artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            echo "::error::Release/tag $TAG already exists; refusing to overwrite."
+            exit 1
+          fi
+          mkdir -p recovery/assets
+          : > recovery/artifacts.tsv
+          for run_id in 40574326793 40596643263 40731224990 40773412377; do
+            gh api "repos/$REPO/actions/runs/$run_id/artifacts?per_page=100" \
+              --jq '.artifacts[] | [.id,.name,.size_in_bytes,.expired,.expires_at,(.digest // "")] | @tsv' \
+              >> recovery/artifacts.tsv
+          done
+          count="$(wc -l < recovery/artifacts.tsv | tr -d ' ')"
+          test "$count" = "63" || { echo "::error::Expected 63 artifacts; found $count"; exit 1; }
+          if awk -F '\t' '$4 != "false" {bad=1} END {exit bad?0:1}' recovery/artifacts.tsv; then
+            echo "::error::At least one source artifact is expired."
+            exit 1
+          fi
+          echo "Enumerated $count non-expired original artifacts."
+
+      - name: Download and validate exact artifact ZIP bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r id name expected_size expired expires_at digest; do
+            [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::Unsafe artifact name: $name"; exit 1; }
+            dest="recovery/assets/${name}.zip"
+            curl --fail --silent --show-error --location --retry 4 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/actions/artifacts/$id/zip" \
+              --output "$dest"
+            actual_size="$(stat -c '%s' "$dest")"
+            test "$actual_size" = "$expected_size" || { echo "::error::Size mismatch for $name"; exit 1; }
+            unzip -tqq "$dest" || { echo "::error::ZIP integrity failure for $name"; exit 1; }
+            actual_sha="sha256:$(sha256sum "$dest" | awk '{print $1}')"
+            if [[ -n "$digest" && "$digest" != "$actual_sha" ]]; then
+              echo "::error::GitHub artifact digest mismatch for $name"
+              exit 1
+            fi
+            printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$name" "$actual_size" "$expires_at" "$actual_sha" "$dest" >> recovery/validated.tsv
+            echo "Validated $name ($actual_size bytes)"
+          done < recovery/artifacts.tsv
+          test "$(wc -l < recovery/validated.tsv | tr -d ' ')" = "63"
+
+      - name: Build immutable inventory and checksum files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, hashlib, json, os
+          rows=[]
+          with open("recovery/validated.tsv", newline="") as f:
+              for artifact_id,name,size,expires_at,digest,path in csv.reader(f, delimiter="\\t"):
+                  h=hashlib.sha256()
+                  with open(path,"rb") as z:
+                      for chunk in iter(lambda:z.read(1024*1024), b""):
+                          h.update(chunk)
+                  actual=h.hexdigest()
+                  if digest != "sha256:"+actual:
+                      raise SystemExit("SHA-256 changed after ZIP validation: "+name)
+                  rows.append({"artifact_id":int(artifact_id),"artifact_name":name,
+                               "size_bytes":int(size),"expires_at":expires_at,
+                               "sha256":actual,"asset":os.path.basename(path)})
+          if len(rows)!=63: raise SystemExit("Inventory count mismatch")
+          manifest={"purpose":"S6 original GitHub Actions artifact ZIP preservation",
+                    "source_workflow_runs":[40574326793,40596643263,40731224990,40773412377],
+                    "archive_source_branch_head":"f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866",
+                    "count":len(rows),"total_bytes":sum(x["size_bytes"] for x in rows),
+                    "validation":"all 63 ZIP archives downloaded, size-checked, ZIP-tested and SHA-256 hashed",
+                    "artifacts":rows}
+          with open("recovery/MANIFEST.json","w") as f:
+              json.dump(manifest,f,indent=2); f.write("\\n")
+          with open("recovery/SHA256SUMS","w") as f:
+              for x in rows: f.write(x["sha256"]+"  assets/"+x["asset"]+"\\n")
+          PY
+          cat > recovery/RELEASE_NOTES.md <<'EOF'
+          Archival preservation copy of the 63 original S6 GitHub Actions artifact ZIPs from runs:
+          - 40574326793 (N=300)
+          - 40596643263 (N=1200)
+          - 40731224990 (N=2400)
+          - 40773412377 (reconciled aggregate)
+
+          Every ZIP is downloaded from its exact GitHub Actions artifact ID, checked against its API-reported size, tested with unzip, and SHA-256 hashed. MANIFEST.json records IDs, names, sizes, expiry metadata and hashes; SHA256SUMS supports independent verification.
+
+          This is an archival transport release only. It does not change or upgrade any project gate, trial result, statistical disposition, D0/D1 status, or acceptance state. It does not repair missing historical accounting fields.
+          EOF
+
+      - name: Create draft archival release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" --repo "$REPO" --target "$ARCHIVE_SOURCE_SHA" \
+            --draft --title "S6 Original Source Archive Recovery (63 artifacts)" \
+            --notes-file recovery/RELEASE_NOTES.md
+
+      - name: Upload all 63 source archives and verification files
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r id name size expires_at digest path; do
+            gh release upload "$TAG" "$path" --repo "$REPO"
+          done < recovery/validated.tsv
+          gh release upload "$TAG" recovery/MANIFEST.json recovery/SHA256SUMS --repo "$REPO"
+          release_id="$(gh api "repos/$REPO/releases/tags/$TAG" --jq '.id')"
+          asset_count="$(gh api "repos/$REPO/releases/$release_id/assets?per_page=100" --jq 'length')"
+          test "$asset_count" = "65" || { echo "::error::Expected 65 uploaded release assets; found $asset_count"; exit 1; }
+          gh api --method PATCH "repos/$REPO/releases/$release_id" -F draft=false >/dev/null
+          echo "Published release with $asset_count assets."
+          gh release view "$TAG" --repo "$REPO" --json url,isDraft,assets
