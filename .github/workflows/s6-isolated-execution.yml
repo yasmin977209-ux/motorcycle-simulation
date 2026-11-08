@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: s6-isolated-initial-\${{ inputs.source_sha }}
+  group: s6-isolated-initial-${{ inputs.source_sha }}
   cancel-in-progress: false
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
       - name: Checkout exact selected source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: \${{ inputs.source_sha }}
+          ref: ${{ inputs.source_sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
@@ -57,10 +57,10 @@ jobs:
           python-version: "3.11.18"
       - name: Verify dispatch context and exact identities
         env:
-          REQUESTED_SOURCE_SHA: \${{ inputs.source_sha }}
-          REQUESTED_S6_COHORT: \${{ inputs.s6_cohort_id }}
-          REQUESTED_C100_COHORT: \${{ inputs.c100_cohort_id }}
-          REQUESTED_N: \${{ inputs.trial_count }}
+          REQUESTED_SOURCE_SHA: ${{ inputs.source_sha }}
+          REQUESTED_S6_COHORT: ${{ inputs.s6_cohort_id }}
+          REQUESTED_C100_COHORT: ${{ inputs.c100_cohort_id }}
+          REQUESTED_N: ${{ inputs.trial_count }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/fix/explicit-cohort-identity-20261108"
@@ -89,7 +89,7 @@ jobs:
   s6-initial-checkpoint:
     name: S6 N=300 — 20 scenarios, sequential fail-fast
     needs: preflight
-    if: \${{ needs.preflight.result == 'success' }}
+    if: ${{ needs.preflight.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     environment:
@@ -99,20 +99,20 @@ jobs:
     env:
       PYTHONPATH: .
       PYTHONDONTWRITEBYTECODE: "1"
-      S6_SOURCE_SHA: \${{ inputs.source_sha }}
-      S6_COHORT_ID: \${{ inputs.s6_cohort_id }}
-      S6_TRIAL_COUNT: \${{ inputs.trial_count }}
-      OWNER_DECISION_ID_INPUT: \${{ inputs.owner_decision_id }}
-      OWNER_EXECUTION_DECISION_ID: \${{ secrets.S6_OWNER_EXECUTION_DECISION_ID }}
-      S6_EXECUTION_ENVIRONMENT_LOCKED: \${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
-      S6_EXECUTION_APPROVED_SOURCE_SHA: \${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
-      S6_EXECUTION_APPROVED_COHORT_ID: \${{ vars.S6_EXECUTION_APPROVED_COHORT_ID }}
-      S6_EXECUTION_APPROVED_N: \${{ vars.S6_EXECUTION_APPROVED_N }}
+      S6_SOURCE_SHA: ${{ inputs.source_sha }}
+      S6_COHORT_ID: ${{ inputs.s6_cohort_id }}
+      S6_TRIAL_COUNT: ${{ inputs.trial_count }}
+      OWNER_DECISION_ID_INPUT: ${{ inputs.owner_decision_id }}
+      OWNER_EXECUTION_DECISION_ID: ${{ secrets.S6_OWNER_EXECUTION_DECISION_ID }}
+      S6_EXECUTION_ENVIRONMENT_LOCKED: ${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
+      S6_EXECUTION_APPROVED_SOURCE_SHA: ${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
+      S6_EXECUTION_APPROVED_COHORT_ID: ${{ vars.S6_EXECUTION_APPROVED_COHORT_ID }}
+      S6_EXECUTION_APPROVED_N: ${{ vars.S6_EXECUTION_APPROVED_N }}
     steps:
       - name: Checkout exact approved source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: \${{ inputs.source_sha }}
+          ref: ${{ inputs.source_sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
@@ -144,7 +144,7 @@ jobs:
           trap 'rc=$?; trap - ERR INT TERM; printf "{\"status\":\"FAILED_OR_CANCELLED_DIAGNOSTIC_ONLY\",\"run_id\":\"%s\",\"run_attempt\":\"%s\",\"source_sha\":\"%s\",\"cohort_id\":\"%s\",\"scenario\":\"%s\",\"exit_code\":%s,\"recorded_at_utc\":\"%s\"}\n" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$S6_SOURCE_SHA" "$S6_COHORT_ID" "$active_scenario" "$rc" "$(date -u +%FT%TZ)" > results_stage7_s6/EXECUTION_FAILURE.json; exit "$rc"' ERR INT TERM
           for collection in 085 070 050 030; do
             for recovery in 100 070 050 030 000; do
-              active_scenario="C\${collection}_G\${recovery}"
+              active_scenario="C${collection}_G${recovery}"
               args=(
                 --mode scenario
                 --scenario "$active_scenario"
@@ -159,10 +159,10 @@ jobs:
                 --output-dir "results_stage7_s6/$active_scenario"
               )
               if [[ "$recovery" != "100" && ( "$collection" == "085" || "$collection" == "070" ) ]]; then
-                args+=(--base-dir "results_stage7_s6/C\${collection}_G100")
+                args+=(--base-dir "results_stage7_s6/C${collection}_G100")
               fi
               echo "S6_SCENARIO_START=$active_scenario"
-              python scripts/s6_first_checkpoint.py "\${args[@]}"
+              python scripts/s6_first_checkpoint.py "${args[@]}"
               echo "S6_SCENARIO_COMPLETE=$active_scenario"
             done
           done
@@ -180,9 +180,9 @@ jobs:
           echo "S6_AGGREGATE_C100_EVIDENCE=HISTORICAL_READ_ONLY_REUSE_ONLY"
       - name: Upload all completed and partial S6 evidence as immutable diagnostics
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: s6-initial-n300-\${{ github.run_id }}-\${{ github.run_attempt }}
+          name: s6-initial-n300-${{ github.run_id }}-${{ github.run_attempt }}
           path: results_stage7_s6/
           if-no-files-found: warn
           retention-days: 90
@@ -190,7 +190,7 @@ jobs:
   c100-initial-golden:
     name: C100 initial deterministic Golden — 5 scenarios × 300
     needs: s6-initial-checkpoint
-    if: \${{ needs.s6-initial-checkpoint.result == 'success' }}
+    if: ${{ needs.s6-initial-checkpoint.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     environment:
@@ -200,20 +200,20 @@ jobs:
     env:
       PYTHONPATH: .
       PYTHONDONTWRITEBYTECODE: "1"
-      S4_SOURCE_SHA: \${{ inputs.source_sha }}
-      S4_COHORT_ID: \${{ inputs.c100_cohort_id }}
+      S4_SOURCE_SHA: ${{ inputs.source_sha }}
+      S4_COHORT_ID: ${{ inputs.c100_cohort_id }}
       S4_C100_TRIAL_COUNT: "300"
-      S4_RUN_URL: https://github.com/\${{ github.repository }}/actions/runs/\${{ github.run_id }}
-      OWNER_DECISION_ID_INPUT: \${{ inputs.owner_decision_id }}
-      OWNER_EXECUTION_DECISION_ID: \${{ secrets.S6_OWNER_EXECUTION_DECISION_ID }}
-      S6_EXECUTION_ENVIRONMENT_LOCKED: \${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
-      S6_EXECUTION_APPROVED_SOURCE_SHA: \${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
-      C100_EXECUTION_APPROVED_COHORT_ID: \${{ vars.C100_EXECUTION_APPROVED_COHORT_ID }}
+      S4_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      OWNER_DECISION_ID_INPUT: ${{ inputs.owner_decision_id }}
+      OWNER_EXECUTION_DECISION_ID: ${{ secrets.S6_OWNER_EXECUTION_DECISION_ID }}
+      S6_EXECUTION_ENVIRONMENT_LOCKED: ${{ vars.S6_EXECUTION_ENVIRONMENT_LOCKED }}
+      S6_EXECUTION_APPROVED_SOURCE_SHA: ${{ vars.S6_EXECUTION_APPROVED_SOURCE_SHA }}
+      C100_EXECUTION_APPROVED_COHORT_ID: ${{ vars.C100_EXECUTION_APPROVED_COHORT_ID }}
     steps:
       - name: Checkout exact approved source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: \${{ inputs.source_sha }}
+          ref: ${{ inputs.source_sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
@@ -238,15 +238,15 @@ jobs:
         run: python scripts/s4_c100_golden.py
       - name: Upload only new C100 outputs; exclude historical R4 report
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: c100-initial-n300-\${{ github.run_id }}-\${{ github.run_attempt }}
+          name: c100-initial-n300-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            docs/golden/v2.3/C100_GOLDEN_\${{ inputs.source_sha }}.json
-            docs/audits/S4_C100_GOLDEN_MANIFEST_\${{ inputs.source_sha }}.json
-            docs/audits/S4_C100_GOLDEN_REPORT_\${{ inputs.source_sha }}.md
-            docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_\${{ inputs.source_sha }}.json
-            docs/audits/S4_EXECUTION_FAILURE_C100_\${{ inputs.source_sha }}.json
+            docs/golden/v2.3/C100_GOLDEN_${{ inputs.source_sha }}.json
+            docs/audits/S4_C100_GOLDEN_MANIFEST_${{ inputs.source_sha }}.json
+            docs/audits/S4_C100_GOLDEN_REPORT_${{ inputs.source_sha }}.md
+            docs/audits/UNDEFINED_BUSINESS_RULE_S4_C100_${{ inputs.source_sha }}.json
+            docs/audits/S4_EXECUTION_FAILURE_C100_${{ inputs.source_sha }}.json
             s4_evidence/
           if-no-files-found: warn
           retention-days: 90
