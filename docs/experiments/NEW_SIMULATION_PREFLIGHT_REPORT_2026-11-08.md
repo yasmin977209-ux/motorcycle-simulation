@@ -257,3 +257,12 @@ This addendum narrows any earlier wording that referred to a cohort “family”
 - C100: `c100-v23-rebuild-20261105`
 
 Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
+
+## Final verification and guard-scope correction — 2026-11-08
+
+- The approved cohort contract is exact, not pattern-based: S6 `s6-v23-rebuild-20261105`; C100 `c100-v23-rebuild-20261105`. All other date variants are rejected. Historical C100 remains an exact source/cohort exception only.
+- Final safe test run before the PR-trigger-only workflow correction: Run `42501711253`, candidate HEAD `1293d883071355200e90948fcce801f45aac7b7c`, `success`. It ran both approved safe suites: 13 passed in 0.95s; py_compile passed; non-execution guard passed; `SIMULATION_TRIALS=NOT_EXECUTED`.
+- The safe workflow's pull-request base filter was corrected to `docs/new-simulation-protocol-20261108`, matching PR #84's actual base. The new branch HEAD must be re-read and the safe workflow run on that exact final HEAD before source-pin acceptance.
+- Storage inspection: Dropbox rescue folder ~2.74 GB and OneDrive rescue folder ~4.11 GB / 85 children exist. Dropbox's `secondary_verified_mirror` is still the same Dropbox provider, not a second failure domain. OneDrive raw readback returned HTTP 403 `Database Is Read Only`; no byte-for-byte verification or restore test is complete. PF-08 remains `BLOCKED`.
+- PR #84 remains Draft/open/unmerged with zero independent reviews/comments. PF-11 remains `BLOCKED`; dedicated simulation workflow, fail-fast/recovery, security scan/redaction, and separate final owner execution confirmation remain outstanding.
+- No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation occurred. Overall `BLOCKED_BEFORE_EXECUTION`.
