@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import subprocess
 import sys
 import time
 from typing import Any
@@ -35,6 +36,19 @@ class ReferenceMismatch(RuntimeError):
     def __init__(self, payload: dict[str, Any]):
         self.payload = payload
         super().__init__("UNDEFINED_BUSINESS_RULE §21.8: " + str(payload.get("date")) + " " + str(payload.get("field")))
+
+
+def checked_out_source_sha() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("S4_CHECKED_OUT_SOURCE_SHA_UNAVAILABLE") from exc
+    value = result.stdout.strip()
+    if len(value) != 40 or any(ch not in "0123456789abcdef" for ch in value):
+        raise RuntimeError("S4_CHECKED_OUT_SOURCE_SHA_INVALID")
+    return value
 
 
 def now_utc() -> str:
@@ -311,6 +325,18 @@ def package_exists(name: str) -> bool:
 
 
 def main() -> int:
+    if len(SOURCE_SHA) != 40 or any(ch not in "0123456789abcdef" for ch in SOURCE_SHA):
+        raise RuntimeError("S4_SOURCE_SHA_INVALID")
+    if checked_out_source_sha() != SOURCE_SHA:
+        raise RuntimeError("S4_CHECKED_OUT_SOURCE_SHA_MISMATCH")
+    import re
+    is_new_c100_cohort = COHORT_ID == "c100-v23-rebuild-20261105"
+    is_pinned_historical_c100 = (
+        SOURCE_SHA == "965281d52441cd0d4b744e211c9f68ee4cdc3753"
+        and COHORT_ID == "c100-v23-s4-20261026-965281d5"
+    )
+    if not (is_new_c100_cohort or is_pinned_historical_c100):
+        raise RuntimeError("S4_C100_SOURCE_COHORT_IDENTITY_INVALID")
     started_at = now_utc()
     run_id = os.environ.get("GITHUB_RUN_ID", "LOCAL_NOT_GITHUB_ACTIONS")
     tested_sha = os.environ.get("GITHUB_SHA", "LOCAL_NOT_GITHUB_ACTIONS")

@@ -129,6 +129,12 @@ def require_source_sha(value: str) -> None:
         raise ValueError("S6_SOURCE_SHA_INVALID")
 
 
+def require_cohort_id(value: str) -> None:
+    import re
+    if value != "s6-v23-rebuild-20261105":
+        raise ValueError("S6_COHORT_ID_INVALID")
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -152,11 +158,7 @@ def reported_unique_path_evidence(manifest: dict[str, Any], computed_count: int,
 
 
 def current_git_commit(source_sha: str | None = None) -> str | None:
-    """Return an actual checked-out commit SHA; never substitute SOURCE_SHA."""
-    commit = os.environ.get("GITHUB_SHA")
-    if commit:
-        require_source_sha(commit)
-        return commit
+    """Return the checked-out model-source commit, never the workflow/event HEAD."""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
@@ -303,7 +305,7 @@ def validate_checkpoint_target_range(target: int, trial_start: int, trial_end: i
 
 
 def _s6_action_checkpoint_config() -> dict[str, Any] | None:
-    """Load owner-pinned resume config only on Actions, never under pytest."""
+    """Load a fresh-lineage config only on Actions; never auto-resume historical runs."""
     if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or "PYTEST_CURRENT_TEST" in os.environ:
         return None
     path = Path("scripts/s6_checkpoint_config.json")
@@ -311,10 +313,13 @@ def _s6_action_checkpoint_config() -> dict[str, Any] | None:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_MISSING")
     config = json.loads(path.read_text(encoding="utf-8"))
     target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
-    validate_checkpoint_target_range(target, start, end)
-    require_source_sha(str(config["source_sha"]))
-    if config.get("cohort_id") != f"s6-v23-{config['source_sha'][:8]}":
-        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_INVALID")
+    require_cohort_id(str(config.get("cohort_id", "")))
+    if config.get("checkpoint_mode") != "FRESH" or (target, start, end) != (300, 1, 300):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_NOT_FRESH_INITIAL_CHECKPOINT")
+    if config.get("governing_decision_id") != "D-2026-10-30-REFERENCE-V2.4.0" or config.get("reference_sha256") != "225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b":
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_GOVERNING_REFERENCE_MISMATCH")
+    if any(key in config for key in ("source_sha", "previous_run_id", "n300_aggregate_run_id", "n600_aggregate_run_id", "n1200_aggregate_run_id")):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_MUST_NOT_REFERENCE_HISTORICAL_RUNS")
     return config
 
 
@@ -406,66 +411,26 @@ def require_latest_branch_commit() -> None:
 
 
 def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
-    """Apply active checkpoint config only to scenario runs; aggregate uses manifest evidence."""
+    """Require an externally pinned new source and explicit cohort; never resume historical data."""
     config = _s6_action_checkpoint_config()
     if config is None:
         return None
     args._s6_checkpoint_config = config
-    if str(args.source_sha) != str(config["source_sha"]):
+    expected_source_sha = os.environ.get("S6_SOURCE_SHA", "")
+    require_source_sha(expected_source_sha)
+    workflow_head_sha = os.environ.get("GITHUB_SHA", "")
+    require_source_sha(workflow_head_sha)
+    checked_out_source_sha = current_git_commit()
+    if expected_source_sha != checked_out_source_sha or str(args.source_sha) != expected_source_sha:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_SOURCE_SHA_MISMATCH")
-    if args.mode != "scenario":
-        return config
-
-    target = int(config["active_target_trials"])
-    args.trials = target
+    if str(args.cohort_id) != str(config["cohort_id"]):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_MISMATCH")
+    if args.trials != int(config["active_target_trials"]):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_TRIAL_TARGET_MISMATCH")
+    if args.mode == "scenario" and args.previous_dir:
+        raise RuntimeError("S6_FRESH_LINEAGE_MUST_NOT_RESUME_PREVIOUS_ARTIFACT")
     args.trial_start = int(config["trial_start"])
     args.trial_end = int(config["trial_end"])
-    scenario = str(args.scenario)
-    prior_run_id = int(config["previous_run_id"])
-    candidates: list[Path] = []
-    if args.previous_dir:
-        supplied = Path(args.previous_dir)
-        if (supplied / "scenario_manifest.json").is_file():
-            candidates.append(supplied)
-        elif supplied.is_dir():
-            manifests = list(supplied.rglob("scenario_manifest.json"))
-            if len(manifests) == 1:
-                candidates.append(manifests[0].parent)
-    cache_dir = Path("/tmp/s6_prev_n600") / scenario
-    if cache_dir.is_dir() and (cache_dir / "scenario_manifest.json").is_file():
-        candidates.append(cache_dir)
-
-    previous_dir: Path | None = None
-    for candidate in candidates:
-        manifest = json.loads((candidate / "scenario_manifest.json").read_text(encoding="utf-8"))
-        if (
-            manifest.get("scenario_id") != scenario
-            or manifest.get("source_sha") != config["source_sha"]
-            or manifest.get("cohort_id") != config["cohort_id"]
-            or int(manifest.get("trial_count", -1)) != target // 2
-            or str(manifest.get("run_id")) != str(prior_run_id)
-            or int(manifest.get("run_attempt", -1)) != 1
-            or manifest.get("trial_id_start") != 1
-            or manifest.get("trial_id_end") != target // 2
-        ):
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
-        previous_dir = candidate
-        break
-    if previous_dir is None:
-        previous_dir = download_previous_scenario_artifact(prior_run_id, scenario, cache_dir)
-        manifest = json.loads((previous_dir / "scenario_manifest.json").read_text(encoding="utf-8"))
-        if (
-            manifest.get("scenario_id") != scenario
-            or manifest.get("source_sha") != config["source_sha"]
-            or manifest.get("cohort_id") != config["cohort_id"]
-            or int(manifest.get("trial_count", -1)) != target // 2
-            or str(manifest.get("run_id")) != str(prior_run_id)
-            or int(manifest.get("run_attempt", -1)) != 1
-            or manifest.get("trial_id_start") != 1
-            or manifest.get("trial_id_end") != target // 2
-        ):
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
-    args.previous_dir = str(previous_dir)
     return config
 
 
@@ -509,6 +474,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
     require_source_sha(args.source_sha)
+    require_cohort_id(args.cohort_id)
     previous_n = previous_checkpoint_n(args.trials)
     if args.workers<1: raise ValueError("S6_WORKERS_MUST_BE_POSITIVE")
     if previous_n and not args.previous_dir:
@@ -528,7 +494,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     collection_pct = int(collection_part[1:])
     recovery_pct = int(recovery_part[1:])
     if collection_pct not in COLLECTION_LEVELS or recovery_pct not in RECOVERY_LEVELS: raise ValueError("S6_SCENARIO_OUTSIDE_FIRST_STOCHASTIC_FAMILY")
-    cohort_id=f"s6-v23-{args.source_sha[:8]}"
+    cohort_id=args.cohort_id
     trial_ids=list(range(1,args.trials+1))
     new_trial_ids=list(range(trial_start,trial_end+1))
     out_dir=Path(args.output_dir)
@@ -620,7 +586,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
         "unique_terminal_fingerprints":n_unique_financial_outcomes,
         "n_unique_financial_outcomes":n_unique_financial_outcomes,
         "n_unique_daily_paths_diagnostic":n_unique_daily_paths,
-        "git_commit":current_git_commit(args.source_sha),
+        "git_commit":current_git_commit(args.source_sha),"workflow_head_sha":os.environ.get("GITHUB_SHA"),
         "governing_decision_id":GOVERNING_DECISION_ID,
         "governing_reference_sha256":GOVERNING_REFERENCE_SHA256,
         "source_run_metadata_declared_sha256":source_metadata.get("sha256") if source_metadata_path else None,
@@ -1155,7 +1121,7 @@ def evaluate_s6_aggregate_statistics(
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
-    require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
+    require_source_sha(args.source_sha); require_cohort_id(args.cohort_id); c100_reuse=verify_c100_reuse()
     source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
     source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
     requested_n = args.trials
@@ -1180,7 +1146,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
         if str(m.get("run_id"))!=source_run_id or int(m.get("run_attempt",-1))!=source_run_attempt:
             raise RuntimeError(f"S6_RUN_IDENTITY_MISMATCH:{scenario}")
-        if m.get("cohort_id")!=f"s6-v23-{args.source_sha[:8]}":
+        if m.get("cohort_id")!=args.cohort_id:
             raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
         if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
@@ -1226,7 +1192,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if required_distribution_fields.issubset(set(distribution_table.schema.names)):
             stats_integrity.validate_daily_distribution_rows(
                 daily, scenario_id=scenario, source_sha=args.source_sha,
-                cohort_id=f"s6-v23-{args.source_sha[:8]}",
+                cohort_id=args.cohort_id,
                 expected_dates=sorted({str(row["date"]) for row in snapshots}),
                 expected_trial_count=checkpoint_n,
             )
@@ -1234,19 +1200,19 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         else:
             daily_distribution_status="MISSING_EVIDENCE_DAILY_DISTRIBUTION_SCHEMA"
         if all_have_path_contract:
-            require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
-            path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=f"s6-v23-{args.source_sha[:8]}",master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+            require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=args.cohort_id,expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
+            path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=args.cohort_id,master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
             if path_evidence["summary"]!=m.get("daily_path_identity_contract"): raise RuntimeError(f"S6_DAILY_PATH_IDENTITY_MANIFEST_MISMATCH:{scenario}")
             path_fingerprints=path_evidence["path_content_fingerprint_by_trial"];n_unique_daily_paths=int(path_evidence["summary"]["unique_daily_path_count"])
             daily_balance_schema_status="PASS_SCOPED_POST_WRITE_BALANCE_CHECK";daily_path_identity_status="PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT"
             n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
-            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,args.cohort_id)
         else:
             path_fingerprints=daily_path_fingerprints(snapshots)
             if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
             n_unique_daily_paths=len(set(path_fingerprints.values()))
             n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
-            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,args.cohort_id)
             daily_balance_schema_status="MISSING_EVIDENCE";daily_path_identity_status="MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP"
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         rng_audit_records_verified=validate_cumulative_rng_audit(rows,args.source_sha)
@@ -1352,7 +1318,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         getattr(args, "golden_manifest", None),
         getattr(args, "golden_approval", None),
         expected_source_sha=args.source_sha,
-        expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",
+        expected_cohort_id=args.cohort_id,
     )
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
     gate_a_evidence_output_paths: list[Path] = []
@@ -1367,7 +1333,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             gate_a_evidence_output_paths.append(target_path)
     statistical_evaluation, stability_history, number_registry = evaluate_s6_aggregate_statistics(
         scenario_rows_by_id, source_sha=args.source_sha,
-        cohort_id=f"s6-v23-{args.source_sha[:8]}", run_id=args.run_id,
+        cohort_id=args.cohort_id, run_id=args.run_id,
         golden_evidence=golden_evidence,
     )
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
@@ -1389,7 +1355,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         output_paths.append(out/"source_run_metadata.json")
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in output_paths}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
-        "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
+        "git_commit":current_git_commit(args.source_sha),"workflow_head_sha":os.environ.get("GITHUB_SHA"),"cohort_id":args.cohort_id,
         "run_id":args.run_id,"run_attempt":args.run_attempt,
         "source_run_id":source_run_id,"source_run_attempt":source_run_attempt,
         "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),
@@ -1452,6 +1418,7 @@ def main() -> int:
     p.add_argument("--mode",choices=("scenario","aggregate"),required=True)
     p.add_argument("--scenario")
     p.add_argument("--source-sha",required=True)
+    p.add_argument("--cohort-id",required=True,help="Explicit owner-approved isolated S6 cohort ID")
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
     p.add_argument("--source-run-id")

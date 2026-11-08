@@ -64,3 +64,60 @@ Do not dispatch any Trial/Simulation/Monte Carlo before final owner confirmation
 - Do not modify source/validators/config/workflows to bypass the mismatch. Any authorized change requires a new source pin and exact manifest.
 - Then complete dependency lock, dedicated least-privilege workflows, storage/restore, security scan, fail-fast/recovery, safe exact-pin tests and independent review; only after those should the owner be asked for final execution confirmation.
 - PR #83 remains Draft/open/unmerged. No Actions run was dispatched for this branch. No Trials/Simulation/Monte Carlo/Golden revalidation were run. Main and historical evidence remain untouched.
+
+## Handoff addendum — Path B approved and implemented — 2026-11-08
+
+The earlier handoff instruction to obtain an owner identity decision is superseded by the owner's explicit Path B approval at 2026-11-08T16:30:32Z. The approval covers only identity-contract code/config changes and creation of a new source pin for review; it does not authorize any Trial.
+
+- Working branch: `fix/explicit-cohort-identity-20261108`
+- Draft PR: #84, based on PR #83 protocol branch.
+- Explicit S6 cohort: `s6-v23-rebuild-20261105`
+- Explicit C100 cohort: `c100-v23-rebuild-20261105`
+- Safe test Run `42500791300`: success; 11 identity tests passed, validators compiled, non-execution guard passed.
+- Safe workflow environment: Ubuntu 24.04 / CPython 3.11.18 / pip 26.2.2 / exact package versions in `requirements-lock-py311.txt`. This is not yet a hash-locked wheel set or immutable runner image.
+- Do not use historical run IDs/checkpoints; fresh S6 baseline is N=300. The old C100 evidence remains read-only historical reuse and is not the new C100 cohort.
+- Verify final branch HEAD and all Raw SHA-256 / Git blob SHA-1 values before calling the source pin `VERIFIED_LIVE`.
+- Complete a dedicated least-privilege simulation Workflow with fail-fast/recovery, two independent durable storage destinations plus restore test, secrets/redaction scan, and independent review.
+- Only after those blockers are closed, request a separate final owner confirmation before any Trial or Monte Carlo dispatch.
+- No simulation execution, N expansion, historical artifact mutation, main write, merge, Release, or final acceptance occurred. Overall status remains `BLOCKED_BEFORE_EXECUTION`.
+
+## Identity-scope clarification — exact owner-approved values only — 2026-11-08
+
+This addendum narrows any earlier wording that referred to a cohort “family” or pattern. The implementation accepts only the exact E2-approved values:
+- S6: `s6-v23-rebuild-20261105`
+- C100: `c100-v23-rebuild-20261105`
+
+Other date variants or cohort IDs matching the same textual pattern are rejected. The exact historical C100 source/cohort exception remains unchanged and narrowly pinned. This is a fail-closed clarification; it does not authorize any additional cohort, Trial, or N expansion.
+
+## Final verification and guard-scope correction — 2026-11-08
+
+- The approved cohort contract is exact, not pattern-based: S6 `s6-v23-rebuild-20261105`; C100 `c100-v23-rebuild-20261105`. All other date variants are rejected. Historical C100 remains an exact source/cohort exception only.
+- Final safe test run before the PR-trigger-only workflow correction: Run `42501711253`, candidate HEAD `1293d883071355200e90948fcce801f45aac7b7c`, `success`. It ran both approved safe suites: 13 passed in 0.95s; py_compile passed; non-execution guard passed; `SIMULATION_TRIALS=NOT_EXECUTED`.
+- The safe workflow's pull-request base filter was corrected to `docs/new-simulation-protocol-20261108`, matching PR #84's actual base. The new branch HEAD must be re-read and the safe workflow run on that exact final HEAD before source-pin acceptance.
+- Storage inspection: Dropbox rescue folder ~2.74 GB and OneDrive rescue folder ~4.11 GB / 85 children exist. Dropbox's `secondary_verified_mirror` is still the same Dropbox provider, not a second failure domain. OneDrive raw readback returned HTTP 403 `Database Is Read Only`; no byte-for-byte verification or restore test is complete. PF-08 remains `BLOCKED`.
+- PR #84 remains Draft/open/unmerged with zero independent reviews/comments. PF-11 remains `BLOCKED`; dedicated simulation workflow, fail-fast/recovery, security scan/redaction, and separate final owner execution confirmation remain outstanding.
+- No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation occurred. Overall `BLOCKED_BEFORE_EXECUTION`.
+
+## 2026-11-08 — Security, storage, environment, and owner-approval follow-up
+
+- Model-source identity is now separate from the workflow/event HEAD. The exact candidate model-source commit is `ac0d009aa004976009ed01e97f96d019945e9ad6`; the workflow branch HEAD is separately pinned through protected environment variable `S6_EXECUTION_APPROVED_WORKFLOW_SHA`. S6 manifests record model `git_commit` and `workflow_head_sha` separately. C100 validates its checked-out model source.
+- The manual execution workflow is owner-gated, uses a separate `execution-source` checkout, least-privilege read permissions, N=300 only, sequential fail-fast scenario execution, diagnostic-only partial artifacts, and no repository writes. It is not dispatchable until the workflow is present on the default branch and the protected environment is configured. It has not been dispatched.
+- Runtime lock now contains 15 exact Linux x86_64 / CPython 3.11.18 wheel SHA-256 hashes. Hash-lock SHA-256: `074944b6a48090723f51a1f25e0d9dcf5e29f3a5df025b064bef485c2daa6fbf`. Safe CI regenerated all 15 hashes and matched the committed lock.
+- Safe CI at branch HEAD `059ca9b6202b7cf02140a73f9d1bca9819e86856`: Run `42505862577`, success; 22 tests passed in 1.17s; compile checks passed; `SIMULATION_TRIALS=NOT_EXECUTED`.
+- Gitleaks PR-diff scan found no leaks. Full reachable-history scan found nine unclassified `generic-api-key` findings. No secret values were emitted. Security remains blocked pending human classification and rotation of any confirmed live credentials. See `docs/experiments/SECURITY_STORAGE_ENVIRONMENT_REVIEW_2026-11-08.md`.
+- One C100 reuse archive was fetched raw from OneDrive, restored, and ZIP-validated; its bytes matched Dropbox's provider content hash. This is scoped evidence only: Dropbox raw download and full-folder restore remain incomplete; storage is not PASS.
+- Independent review remains pending. The review packet is `docs/experiments/INDEPENDENT_REVIEW_PACKET_2026-11-08.md`; it is explicitly not represented as an independent review.
+- Conditional owner request is `docs/experiments/OWNER_FINAL_EXECUTION_APPROVAL_REQUEST_2026-11-08.md`. It asks for one initial checkpoint only: 20 S6 scenarios × 300 = 6,000 stochastic Trials and 5 C100 scenarios × 300 = 1,500 deterministic Trials, MASTER_SEED 20270101. No N expansion or final acceptance is authorized.
+- The S6 aggregate still uses historical C100 reuse evidence; the new C100 Golden remains a separate evidence artifact and is not yet consumed by the S6 aggregate.
+- No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, main write, merge, Release, or historical evidence mutation occurred. PR #84 remains unmerged. Execution remains blocked.
+
+## Final 2026-11-08 security and validation update
+
+- Safe contract CI Run `42506231384` on workflow branch commit `d22257b46af426c6796d7e7d51a450b2ba708e55`: `success`; 23 tests passed in 1.26 seconds; 15 wheel hashes regenerated and matched; Python compilation passed; `SIMULATION_TRIALS=NOT_EXECUTED`. The later branch commits after this run are documentation-only.
+- Security CI Run `42506266426` on workflow branch commit `e5d6a61e22c0cee0ef181735b01abea756b564ff`: PR-diff Gitleaks scan found no leaks; full reachable-history scan found 9 unclassified `generic-api-key` matches across 3,534 commits; no secret values were emitted. Security workflow remains failed/blocked on these findings.
+- In the same security run, `pip-audit==2.10.1` on CPython 3.11.18 audited the exact 15-package hash lock and reported `No known vulnerabilities found`. The previous CPython 3.12/hash mismatch was corrected by explicitly setting up Python 3.11.18 in the security workflow.
+- Storage remains `PASS_SCOPED` only for one OneDrive-restored C100 archive whose bytes matched Dropbox's server-side content hash. Dropbox raw download and full-folder restore are still outstanding.
+- Operations guide: `docs/experiments/S6_EXECUTION_WORKFLOW_OPERATIONS_2026-11-08.md`.
+- Independent review is still not performed by a different reviewer. The review packet remains a self-review/checklist, not independent approval.
+- Owner approval request updated with the passing dependency audit; Gitleaks findings, independent review, protected environment setup, and full storage restore remain preconditions.
+- No simulation workflow dispatch, Trial, Monte Carlo, Golden generation/revalidation, N expansion, merge, main write, Release, or final acceptance occurred.
