@@ -25,10 +25,10 @@ def _identity(*,source_sha:str,cohort_id:str,master_seed:int,scenario_id:str,mod
         and cohort_id == "c100-v23-s4-20261026-965281d5"
     )
     if is_c100_scenario:
-        valid_new_cohort = bool(re.fullmatch(r"c100-v23-rebuild-[0-9]{8}", str(cohort_id)))
+        valid_new_cohort = cohort_id == "c100-v23-rebuild-20261105"
         if not (valid_new_cohort or is_pinned_historical_c100):
             raise RuntimeError("S6_DAILY_PATH_SOURCE_COHORT_MISMATCH")
-    elif not re.fullmatch(r"s6-v23-rebuild-[0-9]{8}", str(cohort_id)):
+    elif cohort_id != "s6-v23-rebuild-20261105":
         raise RuntimeError("S6_DAILY_PATH_SOURCE_COHORT_MISMATCH")
     if type(master_seed)is not int:raise RuntimeError("S6_DAILY_PATH_MASTER_SEED_INVALID")
     if model_schema_version!=MODEL_SCHEMA_VERSION:raise RuntimeError("S6_DAILY_PATH_MODEL_SCHEMA_MISMATCH")
