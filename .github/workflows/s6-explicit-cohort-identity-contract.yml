@@ -10,6 +10,11 @@ on:
       - "scripts/s6_checkpoint_config.json"
       - "tests/test_s6_daily_path_identity_contract.py"
       - "requirements-lock-py311.txt"
+      - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
+      - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
+      - "docs/stage_d/SESSION_STATUS_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
+      - "docs/stage_d/CONTINUITY_HANDOFF_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
+      - "docs/PROJECT_CONTINUITY.md"
       - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
   pull_request:
     branches:
@@ -21,6 +26,11 @@ on:
       - "scripts/s6_checkpoint_config.json"
       - "tests/test_s6_daily_path_identity_contract.py"
       - "requirements-lock-py311.txt"
+      - "docs/experiments/NEW_SIMULATION_EXPERIMENT_PROTOCOL_2026-11-08.md"
+      - "docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md"
+      - "docs/stage_d/SESSION_STATUS_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
+      - "docs/stage_d/CONTINUITY_HANDOFF_2026-11-08_NEW_SIMULATION_PROTOCOL.md"
+      - "docs/PROJECT_CONTINUITY.md"
       - ".github/workflows/s6-explicit-cohort-identity-contract.yml"
 permissions:
   contents: read
