@@ -61,7 +61,8 @@ These are unclassified scanner findings, not confirmed credentials. Do not silen
 - Hash-lock SHA-256: `074944b6a48090723f51a1f25e0d9dcf5e29f3a5df025b064bef485c2daa6fbf`.
 - Wheel hashes are for the CPython 3.11.18 / ubuntu-24.04 x86_64 environment only.
 - Safe workflow regenerated the 15 hashes and diff-checked them against the committed lock successfully.
-- `pip-audit` result: pending latest security workflow run.
+- `pip-audit`: `PASS_SCOPED`, Run `42506266426`, CPython 3.11.18; `No known vulnerabilities found` across the 15-package runtime lock.
+- Security workflow overall: `FAIL_SCOPED` only because the full-history Gitleaks scan found nine unclassified historical matches. The dependency audit itself passed.
 
 The lock pins package artifacts; it does not pin the hosted runner image or the dependency-audit tool's own transitive dependencies.
 
