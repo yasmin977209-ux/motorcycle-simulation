@@ -129,6 +129,12 @@ def require_source_sha(value: str) -> None:
         raise ValueError("S6_SOURCE_SHA_INVALID")
 
 
+def require_cohort_id(value: str) -> None:
+    import re
+    if not isinstance(value, str) or not re.fullmatch(r"s6-v23-rebuild-[0-9]{8}", value):
+        raise ValueError("S6_COHORT_ID_INVALID")
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -303,7 +309,7 @@ def validate_checkpoint_target_range(target: int, trial_start: int, trial_end: i
 
 
 def _s6_action_checkpoint_config() -> dict[str, Any] | None:
-    """Load owner-pinned resume config only on Actions, never under pytest."""
+    """Load a fresh-lineage config only on Actions; never auto-resume historical runs."""
     if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or "PYTEST_CURRENT_TEST" in os.environ:
         return None
     path = Path("scripts/s6_checkpoint_config.json")
@@ -312,9 +318,11 @@ def _s6_action_checkpoint_config() -> dict[str, Any] | None:
     config = json.loads(path.read_text(encoding="utf-8"))
     target, start, end = int(config["active_target_trials"]), int(config["trial_start"]), int(config["trial_end"])
     validate_checkpoint_target_range(target, start, end)
-    require_source_sha(str(config["source_sha"]))
-    if config.get("cohort_id") != f"s6-v23-{config['source_sha'][:8]}":
-        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_INVALID")
+    require_cohort_id(str(config.get("cohort_id", "")))
+    if config.get("checkpoint_mode") != "FRESH" or (target, start, end) != (300, 1, 300):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_NOT_FRESH_INITIAL_CHECKPOINT")
+    if any(key in config for key in ("source_sha", "previous_run_id", "n300_aggregate_run_id", "n600_aggregate_run_id", "n1200_aggregate_run_id")):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_MUST_NOT_REFERENCE_HISTORICAL_RUNS")
     return config
 
 
@@ -406,66 +414,23 @@ def require_latest_branch_commit() -> None:
 
 
 def apply_action_checkpoint_config(args: argparse.Namespace) -> dict[str, Any] | None:
-    """Apply active checkpoint config only to scenario runs; aggregate uses manifest evidence."""
+    """Require an externally pinned new source and explicit cohort; never resume historical data."""
     config = _s6_action_checkpoint_config()
     if config is None:
         return None
     args._s6_checkpoint_config = config
-    if str(args.source_sha) != str(config["source_sha"]):
+    expected_source_sha = os.environ.get("S6_SOURCE_SHA", "")
+    require_source_sha(expected_source_sha)
+    if str(args.source_sha) != expected_source_sha:
         raise RuntimeError("S6_CHECKPOINT_CONFIG_SOURCE_SHA_MISMATCH")
-    if args.mode != "scenario":
-        return config
-
-    target = int(config["active_target_trials"])
-    args.trials = target
+    if str(args.cohort_id) != str(config["cohort_id"]):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_COHORT_MISMATCH")
+    if args.trials != int(config["active_target_trials"]):
+        raise RuntimeError("S6_CHECKPOINT_CONFIG_TRIAL_TARGET_MISMATCH")
+    if args.mode == "scenario" and args.previous_dir:
+        raise RuntimeError("S6_FRESH_LINEAGE_MUST_NOT_RESUME_PREVIOUS_ARTIFACT")
     args.trial_start = int(config["trial_start"])
     args.trial_end = int(config["trial_end"])
-    scenario = str(args.scenario)
-    prior_run_id = int(config["previous_run_id"])
-    candidates: list[Path] = []
-    if args.previous_dir:
-        supplied = Path(args.previous_dir)
-        if (supplied / "scenario_manifest.json").is_file():
-            candidates.append(supplied)
-        elif supplied.is_dir():
-            manifests = list(supplied.rglob("scenario_manifest.json"))
-            if len(manifests) == 1:
-                candidates.append(manifests[0].parent)
-    cache_dir = Path("/tmp/s6_prev_n600") / scenario
-    if cache_dir.is_dir() and (cache_dir / "scenario_manifest.json").is_file():
-        candidates.append(cache_dir)
-
-    previous_dir: Path | None = None
-    for candidate in candidates:
-        manifest = json.loads((candidate / "scenario_manifest.json").read_text(encoding="utf-8"))
-        if (
-            manifest.get("scenario_id") != scenario
-            or manifest.get("source_sha") != config["source_sha"]
-            or manifest.get("cohort_id") != config["cohort_id"]
-            or int(manifest.get("trial_count", -1)) != target // 2
-            or str(manifest.get("run_id")) != str(prior_run_id)
-            or int(manifest.get("run_attempt", -1)) != 1
-            or manifest.get("trial_id_start") != 1
-            or manifest.get("trial_id_end") != target // 2
-        ):
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
-        previous_dir = candidate
-        break
-    if previous_dir is None:
-        previous_dir = download_previous_scenario_artifact(prior_run_id, scenario, cache_dir)
-        manifest = json.loads((previous_dir / "scenario_manifest.json").read_text(encoding="utf-8"))
-        if (
-            manifest.get("scenario_id") != scenario
-            or manifest.get("source_sha") != config["source_sha"]
-            or manifest.get("cohort_id") != config["cohort_id"]
-            or int(manifest.get("trial_count", -1)) != target // 2
-            or str(manifest.get("run_id")) != str(prior_run_id)
-            or int(manifest.get("run_attempt", -1)) != 1
-            or manifest.get("trial_id_start") != 1
-            or manifest.get("trial_id_end") != target // 2
-        ):
-            raise RuntimeError(f"S6_PREVIOUS_CHECKPOINT_SOURCE_COHORT_RUN_OR_RANGE_MISMATCH:{scenario}")
-    args.previous_dir = str(previous_dir)
     return config
 
 
@@ -509,6 +474,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
     require_source_sha(args.source_sha)
+    require_cohort_id(args.cohort_id)
     previous_n = previous_checkpoint_n(args.trials)
     if args.workers<1: raise ValueError("S6_WORKERS_MUST_BE_POSITIVE")
     if previous_n and not args.previous_dir:
@@ -528,7 +494,7 @@ def run_scenario(args: argparse.Namespace) -> dict[str, Any]:
     collection_pct = int(collection_part[1:])
     recovery_pct = int(recovery_part[1:])
     if collection_pct not in COLLECTION_LEVELS or recovery_pct not in RECOVERY_LEVELS: raise ValueError("S6_SCENARIO_OUTSIDE_FIRST_STOCHASTIC_FAMILY")
-    cohort_id=f"s6-v23-{args.source_sha[:8]}"
+    cohort_id=args.cohort_id
     trial_ids=list(range(1,args.trials+1))
     new_trial_ids=list(range(trial_start,trial_end+1))
     out_dir=Path(args.output_dir)
@@ -1155,7 +1121,7 @@ def evaluate_s6_aggregate_statistics(
 def aggregate(args: argparse.Namespace) -> dict[str, Any]:
     started_at_utc = utc_now()
     started = time.monotonic()
-    require_source_sha(args.source_sha); c100_reuse=verify_c100_reuse()
+    require_source_sha(args.source_sha); require_cohort_id(args.cohort_id); c100_reuse=verify_c100_reuse()
     source_run_id = str(getattr(args,"source_run_id",None) or args.run_id)
     source_run_attempt = int(getattr(args,"source_run_attempt",None) or args.run_attempt)
     requested_n = args.trials
@@ -1180,7 +1146,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if m.get("source_sha")!=args.source_sha: raise RuntimeError(f"S6_SOURCE_SHA_MISMATCH:{scenario}")
         if str(m.get("run_id"))!=source_run_id or int(m.get("run_attempt",-1))!=source_run_attempt:
             raise RuntimeError(f"S6_RUN_IDENTITY_MISMATCH:{scenario}")
-        if m.get("cohort_id")!=f"s6-v23-{args.source_sha[:8]}":
+        if m.get("cohort_id")!=args.cohort_id:
             raise RuntimeError(f"S6_COHORT_ID_MISMATCH:{scenario}")
         if m.get("trial_count")!=checkpoint_n or m.get("trial_id_start")!=1 or m.get("trial_id_end")!=checkpoint_n: raise RuntimeError(f"S6_TRIAL_COUNT_MISMATCH:{scenario}")
         base=mp.parent
@@ -1452,6 +1418,7 @@ def main() -> int:
     p.add_argument("--mode",choices=("scenario","aggregate"),required=True)
     p.add_argument("--scenario")
     p.add_argument("--source-sha",required=True)
+    p.add_argument("--cohort-id",required=True,help="Explicit owner-approved isolated S6 cohort ID")
     p.add_argument("--run-id",required=True)
     p.add_argument("--run-attempt",type=int,required=True)
     p.add_argument("--source-run-id")
