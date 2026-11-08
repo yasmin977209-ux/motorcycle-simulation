@@ -1192,7 +1192,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         if required_distribution_fields.issubset(set(distribution_table.schema.names)):
             stats_integrity.validate_daily_distribution_rows(
                 daily, scenario_id=scenario, source_sha=args.source_sha,
-                cohort_id=f"s6-v23-{args.source_sha[:8]}",
+                cohort_id=args.cohort_id,
                 expected_dates=sorted({str(row["date"]) for row in snapshots}),
                 expected_trial_count=checkpoint_n,
             )
@@ -1200,19 +1200,19 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         else:
             daily_distribution_status="MISSING_EVIDENCE_DAILY_DISTRIBUTION_SCHEMA"
         if all_have_path_contract:
-            require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
-            path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=f"s6-v23-{args.source_sha[:8]}",master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
+            require_daily_path_manifest_contract(m,expected_source_sha=args.source_sha,expected_cohort_id=args.cohort_id,expected_scenario_id=scenario,expected_master_seed=constants.MASTER_SEED,expected_trial_count=checkpoint_n,model_schema_version=SCHEMA_VERSION)
+            path_evidence=build_daily_path_identity_evidence(snapshots,source_sha=args.source_sha,cohort_id=args.cohort_id,master_seed=constants.MASTER_SEED,scenario_id=scenario,expected_trial_ids=range(1,checkpoint_n+1),expected_start_date=constants.PROJECT_START_DATE.isoformat(),model_schema_version=SCHEMA_VERSION)
             if path_evidence["summary"]!=m.get("daily_path_identity_contract"): raise RuntimeError(f"S6_DAILY_PATH_IDENTITY_MANIFEST_MISMATCH:{scenario}")
             path_fingerprints=path_evidence["path_content_fingerprint_by_trial"];n_unique_daily_paths=int(path_evidence["summary"]["unique_daily_path_count"])
             daily_balance_schema_status="PASS_SCOPED_POST_WRITE_BALANCE_CHECK";daily_path_identity_status="PASS_SCOPED_DAILY_BALANCE_PATH_CONTRACT"
             n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
-            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,args.cohort_id)
         else:
             path_fingerprints=daily_path_fingerprints(snapshots)
             if set(path_fingerprints)!=set(range(1,checkpoint_n+1)):raise RuntimeError(f"S6_DAILY_PATH_TRIAL_COVERAGE_MISMATCH:{scenario}")
             n_unique_daily_paths=len(set(path_fingerprints.values()))
             n_unique_paths=resolve_n_unique_paths(scenario,[int(row.get("rng_draw_count",0)) for row in rows],n_unique_daily_paths)
-            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,f"s6-v23-{args.source_sha[:8]}")
+            reported_n_unique_paths,reported_n_unique_paths_status=reported_unique_path_evidence(m,n_unique_paths,n_unique_daily_paths,args.source_sha,args.cohort_id)
             daily_balance_schema_status="MISSING_EVIDENCE";daily_path_identity_status="MISSING_EVIDENCE_IDENTITY_BOUND_PATH_MAP"
         n_unique_financial_outcomes=len({str(row["trial_fingerprint"]) for row in rows})
         rng_audit_records_verified=validate_cumulative_rng_audit(rows,args.source_sha)
@@ -1318,7 +1318,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         getattr(args, "golden_manifest", None),
         getattr(args, "golden_approval", None),
         expected_source_sha=args.source_sha,
-        expected_cohort_id=f"s6-v23-{args.source_sha[:8]}",
+        expected_cohort_id=args.cohort_id,
     )
     out=Path(args.output_dir); out.mkdir(parents=True,exist_ok=True)
     gate_a_evidence_output_paths: list[Path] = []
@@ -1333,7 +1333,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
             gate_a_evidence_output_paths.append(target_path)
     statistical_evaluation, stability_history, number_registry = evaluate_s6_aggregate_statistics(
         scenario_rows_by_id, source_sha=args.source_sha,
-        cohort_id=f"s6-v23-{args.source_sha[:8]}", run_id=args.run_id,
+        cohort_id=args.cohort_id, run_id=args.run_id,
         golden_evidence=golden_evidence,
     )
     for name,rows in (("trials_summary.parquet",all_trials),("daily_distribution.parquet",all_daily)):
@@ -1355,7 +1355,7 @@ def aggregate(args: argparse.Namespace) -> dict[str, Any]:
         output_paths.append(out/"source_run_metadata.json")
     files={p.name:{"sha256":sha256_file(p),"size_bytes":p.stat().st_size} for p in output_paths}
     manifest={"schema_version":"s6-cumulative-aggregate-v2","status":"EXECUTED","source_sha":args.source_sha,
-        "git_commit":current_git_commit(args.source_sha),"cohort_id":f"s6-v23-{args.source_sha[:8]}",
+        "git_commit":current_git_commit(args.source_sha),"cohort_id":args.cohort_id,
         "run_id":args.run_id,"run_attempt":args.run_attempt,
         "source_run_id":source_run_id,"source_run_attempt":source_run_attempt,
         "started_at_utc":started_at_utc,"finished_at_utc":utc_now(),
