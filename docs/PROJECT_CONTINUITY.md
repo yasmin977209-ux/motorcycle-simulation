@@ -4174,3 +4174,17 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`. PR #82 بقي مفتوحاً Draft وغير مدمج ولم يتغير.
 - تم التحقق من وجود الملفات عبر GitHub readback وتسجيل Git blob SHAs في Session Status. لم تُحسب Raw-byte SHA-256 في هذه الجلسة؛ لا تصنف الملفات `VERIFIED_LIVE`.
 - حالة البروتوكول: `PREPARATION_ONLY — NOT_AUTHORIZED_FOR_EXECUTION`. لا Trial/Simulation/Monte Carlo أو Golden revalidation قبل استكمال preflight وتأكيد المالك النهائي.
+
+
+---
+
+## 2026-11-08 — تقرير Preflight كامل لتجربة المحاكاة الجديدة
+
+- أضيف التقرير `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md` وأُلحقت تصحيحات تحقق بالبروتوكول في قسمه 16.
+- تحقق Raw GitHub من المرجع v2.4.0: SHA-256 `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`، الحجم 401,397، Git blob `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`، commit الحاوي `1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b`. قرار المالك يسجل البصمة نفسها. رأس الملف لا يزال يحمل حالة مرشح الاعتماد؛ حُفظت كملاحظة حوكمة ولم تتغير بايتات المرجع.
+- تم تأكيد `002b748...` كـModel source commit/tree مرشح كامل؛ تصحيح الملاحظة السابقة التي اختزلت direct diff إلى تغيير Workflow فقط. يجب فصل Model SOURCE_SHA عن Workflow HEAD.
+- المانع الحاسم: cohort IDs التي وافق عليها E2 لا تقبلها validators الحالية؛ S6 يشتق cohort من SOURCE_SHA ولا يوفر `--cohort-id`، وC100 validator لا يقبل cohort الجديد، و`s6_checkpoint_config.json` مثبت على الهوية التاريخية. كما أن Workflows الموجودة لا تنفذ السلالة الجديدة.
+- PF01/PF02/PF04: `PASS_SCOPED`. PF03/PF05/PF06/PF08/PF10/PF11: `BLOCKED`. PF07/PF09: `NOT_RUN`.
+- PR #83 ما زال Draft/open/unmerged ولا توجد مراجعات مستقلة. لم يُشغّل Workflow أو Trial أو Simulation أو Monte Carlo أو Golden revalidation.
+- الحالة الكلية: `BLOCKED_BEFORE_EXECUTION`. يجب الحصول على قرار مالك يحسم تعارض الهوية قبل أي تعديل في الكود/الإعدادات، ثم استكمال البيئة والتخزين والأمن وWorkflow والمراجعة المستقلة، وأخيراً تأكيد المالك النهائي للتشغيل.
+- D0 التاريخية تبقى `BLOCKED / MISSING_EVIDENCE`. لم تتغير `main` أو الهوية أو القواعد أو العتبات أو الأدلة التاريخية أو Releases.
