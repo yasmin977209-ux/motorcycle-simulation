@@ -4202,3 +4202,14 @@ Financial Gate A `PASS_SCOPED`; Production Gate A `NOT_DECLARED / MISSING_EVIDEN
 - لم يتم dispatch لأي Workflow ولم تُشغّل اختبارات على exact pin أو Trials/Simulation/Monte Carlo/Golden revalidation. لا N expansion أو D0'–D6'.
 - الحالة النهائية: `BLOCKED_BEFORE_EXECUTION`. يلزم قرار مالك لحسم cohort/identity contract قبل أي تعديل كود أو إعدادات، ثم استكمال البيئة والـworkflow والتخزين والأمن والتوقف الآمن والمراجعة المستقلة، ثم تأكيد مالك نهائي منفصل للتشغيل.
 - `main` بقي `1d67cd56d326a9c42f7ecf324fa284dcc129acd4` دون تغيير. D0 التاريخية بقيت `BLOCKED / MISSING_EVIDENCE`. لا تعديل تاريخي أو merge أو Release.
+
+
+## 2026-11-08 — owner-approved explicit S6/C100 identity-contract correction
+- Owner explicitly approved Path B at 2026-11-08T16:30:32Z: explicit `cohort_id` support and a new source pin for review. This is not permission to execute Trials or Monte Carlo.
+- Implemented on branch `fix/explicit-cohort-identity-20261108`, Draft PR #84 (stacked on PR #83 protocol branch).
+- S6 identity is `s6-v23-rebuild-20261105`; C100 identity is `c100-v23-rebuild-20261105`. S6 requires explicit `--cohort-id`; identity validation keeps S6/C100 cohort families distinct and preserves only the exact historical C100 exception.
+- S6 checkpoint config now describes a fresh N=300 / trial IDs 1..300 baseline and contains no historical run IDs. Actions must bind `S6_SOURCE_SHA` to the CLI source SHA and exact `GITHUB_SHA`.
+- Safe identity contract suite: 11 tests passed; Python compilation and non-execution guard passed in Run `42500791300`. Safe environment: Ubuntu 24.04, CPython 3.11.18, pip 26.2.2, exact package versions in `requirements-lock-py311.txt`. The lock is version-exact but not wheel-hash-locked; immutable runner image is not established.
+- PF-03: `PASS_SCOPED_CODE_CONTRACT`; PF-07: `PASS_SCOPED` for the safe identity suite. PF-05 is scoped only to the safe workflow; full simulation environment remains blocked. PF-06/PF-08/PF-10/PF-11 remain blocked; PF-09 remains not run.
+- Still required: final source HEAD and Raw SHA-256/Git blob SHA-1 readback, independent review, dedicated least-privilege simulation workflow with fail-fast/recovery, two-failure-domain durable storage and restore test, security/secrets/redaction scan, then separate final owner execution confirmation.
+- Historical C100 reuse remains read-only and is not the new C100 cohort. No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, historical evidence mutation, main write, merge, Release, or gate promotion occurred. Overall `BLOCKED_BEFORE_EXECUTION`; historical D0 and project gates unchanged.
