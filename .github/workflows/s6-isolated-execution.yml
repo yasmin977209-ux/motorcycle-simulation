@@ -230,10 +230,17 @@ jobs:
       C100_EXECUTION_APPROVED_COHORT_ID: ${{ vars.C100_EXECUTION_APPROVED_COHORT_ID }}
       S6_EXECUTION_APPROVED_WORKFLOW_SHA: ${{ vars.S6_EXECUTION_APPROVED_WORKFLOW_SHA }}
     steps:
-      - name: Checkout exact approved source
+      - name: Checkout exact workflow branch HEAD
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout exact model source into isolated directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.source_sha }}
+          path: execution-source
           fetch-depth: 0
           persist-credentials: false
       - name: Set up exact Python patch version
