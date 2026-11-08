@@ -35,6 +35,12 @@ jobs:
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
           GITLEAKS_ENABLE_SUMMARY: "true"
 
+      - name: Scan all reachable Git history with redacted output
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/gitleaks-8.30.0/gitleaks git . --redact --exit-code 2 --report-format sarif --report-path /tmp/gitleaks-full-history.sarif
+
       - name: Audit the exact runtime lock when present
         if: ${{ hashFiles('requirements-lock-py311-hashed.txt') != '' }}
         shell: bash
