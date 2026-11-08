@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/fix/explicit-cohort-identity-20261108"
-          test "$REQUESTED_SOURCE_SHA" = "e20f66e4a785c69247186b1773792f410f3d4c05"
+          test "$REQUESTED_SOURCE_SHA" = "ac0d009aa004976009ed01e97f96d019945e9ad6"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(git -C execution-source rev-parse HEAD)" = "$REQUESTED_SOURCE_SHA"
           test "$REQUESTED_S6_COHORT" = "s6-v23-rebuild-20261105"
