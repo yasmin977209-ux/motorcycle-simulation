@@ -58,3 +58,12 @@ No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' e
 - PF-11 BLOCKED: PR #83 has no independent reviews; E2 still requires final owner confirmation.
 - Run `41958935113` is completed/successful old-identity Replay only; not a new-lineage execution.
 - Overall: `BLOCKED_BEFORE_EXECUTION`. No workflow dispatch, Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, identity mutation, historical data mutation, main write, merge or Release.
+
+
+## End-of-session disposition — 2026-11-08
+- Full preflight report is committed on this isolated documentation branch; PR #83 body now includes all PF outcomes and the identity-contract blocker.
+- PR #83 remains Draft/open/unmerged and targets `tmp/d1-rebuild-20261101`, not `main`. No independent review has been received.
+- Overall experiment readiness: `BLOCKED_BEFORE_EXECUTION`.
+- No workflow, static test run, Trial, Simulation, Monte Carlo, Golden revalidation or D0'–D6' build was dispatched in this session. The exact-pin safe tests remain `NOT_RUN`.
+- Owner decision required: resolve E2 cohort mismatch versus current enforced identity contract. Do not edit validators/config or alter source pin until this decision exists.
+- Main unchanged; D0 historical unchanged; no identities, thresholds, business logic, accounting, RNG, artifacts, manifests or Releases changed.
