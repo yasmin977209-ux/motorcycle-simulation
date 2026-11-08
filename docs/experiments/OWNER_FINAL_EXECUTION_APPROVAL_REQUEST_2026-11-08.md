@@ -49,7 +49,8 @@ Any later checkpoint or retry requires a separate owner decision.
 
 - [ ] Independent reviewer signs off on the exact model-source SHA and workflow HEAD.
 - [ ] Nine Gitleaks findings are classified; any confirmed credentials are rotated.
-- [ ] `pip-audit` completes without unresolved vulnerabilities, or the owner explicitly accepts documented exceptions.
+- [x] `pip-audit` completed on CPython 3.11.18 (Run `42506266426`): no known vulnerabilities in the 15-package runtime lock.
+- [ ] The nine unclassified Gitleaks findings are reviewed and any confirmed credentials are rotated.
 - [ ] Protected environment `s6-simulation-execution` is configured with required reviewers and exact variables/secrets.
 - [ ] Storage restore evidence is completed or the owner explicitly accepts the scoped limitation.
 - [ ] PR #84 has completed review; merge approval is separately recorded. No merge is implied by this request.
