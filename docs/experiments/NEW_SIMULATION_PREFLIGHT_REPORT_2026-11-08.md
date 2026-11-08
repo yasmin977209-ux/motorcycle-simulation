@@ -226,3 +226,26 @@ The owner must also confirm C100's 300-repeat-to-one-Golden comparison contract,
 **Historical D0:** `BLOCKED / MISSING_EVIDENCE` — unchanged  
 **Project gates:** unchanged  
 **Approval to execute:** `NOT_GRANTED`
+
+## 19. Owner Path B decision and post-change safe verification — 2026-11-08
+
+The owner approved Path B at 2026-11-08T16:30:32Z. This authorizes only explicit S6/C100 identity-contract support and creation of a new source pin for review; it does not authorize any Trial or simulation execution.
+
+Implementation: Draft PR #84, branch `fix/explicit-cohort-identity-20261108`. The S6 cohort is now a required CLI argument; the validator distinguishes the explicit S6 and C100 rebuild cohort families; historical C100 remains allowed only under its exact prior source/cohort pair. The checkpoint configuration is fresh N=300 with no historical run IDs, and Actions requires the source pin to match exact workflow HEAD. C100 validates the new cohort family separately.
+
+Post-change gate disposition (scoped to this candidate):
+- PF-01: `PASS_SCOPED` — previously verified governing-reference bytes and owner decision unchanged.
+- PF-02: `PASS_SCOPED` — original E2 model source tree remains separately identified; the new identity-contract source pin must be recorded from final reviewed HEAD.
+- PF-03: `PASS_SCOPED_CODE_CONTRACT` — explicit identity families and fresh checkpoint rules implemented; no Trial has validated a produced artifact.
+- PF-04: `PASS_SCOPED` — code changes limited to identity metadata/validation/config; independent review remains pending.
+- PF-05: `PASS_SCOPED_SAFE_TEST_ENVIRONMENT / BLOCKED_SIMULATION_ENVIRONMENT` — safe workflow uses Ubuntu 24.04, CPython 3.11.18, pip 26.2.2 and exact package versions in `requirements-lock-py311.txt`; no wheel hashes or immutable runner image yet.
+- PF-06: `BLOCKED` — safe test Workflow exists; dedicated simulation orchestration Workflow with fail-fast and recovery is not yet approved/ready.
+- PF-07: `PASS_SCOPED` — safe identity test suite passed (11 tests) and the non-execution guard passed in Run `42500791300`; final candidate commit still requires final readback/test confirmation.
+- PF-08: `BLOCKED` — no verified two-failure-domain durable storage or restore test.
+- PF-09: `NOT_RUN` — no secrets scan/redaction audit.
+- PF-10: `BLOCKED` — no complete fail-fast/recovery orchestrator.
+- PF-11: `BLOCKED` — PR #84 has no independent review; final owner execution confirmation remains separate and absent.
+
+No Trial, Simulation, Monte Carlo, Golden generation/revalidation, N expansion, historical artifact mutation, main write, merge, Release, or gate promotion was performed.
+
+**Overall:** `BLOCKED_BEFORE_EXECUTION`; execution authorization remains `NOT_GRANTED`.
