@@ -302,3 +302,55 @@
 **الحكم الحالي:** `PREPARATION_ONLY — BLOCKED_BEFORE_EXECUTION`  
 **الخطوة التالية المسموحة:** مراجعة البروتوكول، ثم استكمال PF-01..PF-11 وإعداد تقرير preflight منفصل.  
 **الخطوة غير المسموحة حالياً:** أي Trial أو Simulation أو Monte Carlo أو Golden revalidation أو D0'–D6' execution قبل تأكيد المالك النهائي.
+
+
+---
+
+## 16. تصحيح نتائج التحقق الأولي — 2026-11-08 (Append-only)
+
+هذا القسم يصحح/يستكمل الملاحظات الأولية في الأقسام السابقة دون حذفها:
+
+### 16.1 المرجع v2.4.0 — تحقق بايتات مكتمل
+
+تم جلب Raw bytes من GitHub عند commit `1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b` للمسار:
+
+`docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md`
+
+- Raw URL: `https://raw.githubusercontent.com/yasmin977209-ux/motorcycle-simulation/1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b/docs/governance/MOTORCYCLE_SIMULATION_GOVERNING_REFERENCE_V2.4.0.md`
+- Raw-byte SHA-256: `225de838d35d6ed383886bf8d0dbe104a6f3d7c72baa6eac5d15e352f4652c0b`
+- Size: `401397 bytes`
+- Git blob SHA-1: `9fe43bfbb2cbfd2bb7f7010866e7469506d22c33`
+- Containing commit: `1491aefa84d061ef2b08cd3ea1e290a0bf3fb58b`
+
+البصمة تطابق تماماً قيمة قرار المالك `D-2026-10-30-REFERENCE-V2.4.0` وحجم عضو المرجع داخل الأرشيف المرفق. إذن تحقق هوية البايتات `VERIFIED_LIVE`. يظل رأس الوثيقة يعرض `PROPOSED_FOR_OWNER_ADOPTION — NOT_EFFECTIVE_YET`، بينما قرار المالك يسجل `APPROVED_BY_OWNER` وتاريخ السريان 2026-10-30؛ كما أن اسم الملف في القرار يختلف عن مسار Git الحالي. يجب حفظ هذه الملاحظة في تصحيح حوكمي append-only، ولا تُعدّل بايتات المرجع المعتمد.
+
+### 16.2 تصحيح ملاحظة SOURCE_SHA المرشح
+
+الملاحظة السابقة بأن commit `002b748...` لا يثبت وجود Model Source لمجرد أن direct commit diff يغير Workflow فقط كانت استنتاجاً غير مكتمل. قرار E2 يحدد `002b74893ca9dfea864e83fecc558f2388748ffe` صراحةً كمصدر مرشح، وشجرة commit الكاملة `9cfaa2a8a57cfaf62beeb4a4166c042553173159` تحتوي كود المحرك المُصلح. لذلك يُقبل كـModel SOURCE_SHA مرشح ضمن PF-02، مع وجوب فصل Model SOURCE_SHA عن Workflow HEAD في Manifest التنفيذ.
+
+### 16.3 مانع هوية جديد ومثبت
+
+فحص المصدر عند `002b748...` أثبت أن قرار E2 الحالي لا يطابق عقود الهوية في الكود:
+- `scripts/s6_first_checkpoint.py` يشتق cohort حصراً بصيغة `s6-v23-{SOURCE_SHA[:8]}` ولا يوفر `--cohort-id`. مع SOURCE_SHA الحالي تكون القيمة `s6-v23-002b7489`، لا `s6-v23-rebuild-20261105`.
+- `scripts/s6_daily_path_identity.py` لا يقبل C100 cohort الجديد؛ الاستثناء الوحيد هو C100 التاريخي المثبت بمصدره وفوجه القديمين.
+- `scripts/s6_checkpoint_config.json` ما زال مثبتاً على المصدر والفوج التاريخيين `da1a9ea9...` و`s6-v23-da1a9ea9`، وActions code يحمل هذا الإعداد تلقائياً ويرفض SOURCE_SHA الجديد، كما أن إعداد الاستئناف يشير إلى Run تاريخي بدلاً من clean start.
+- لا توجد في CLI الحالية وسيلة لتعيين cohort جديد صراحةً، ولا Workflow مستقل يطلق السلالة الجديدة بهويتها المعتمدة.
+
+هذا مانع `BLOCKED` لا يجوز تجاوزه بتغيير أسماء الـcohort أو patch مؤقت أو إعادة استخدام artifacts التاريخية. يلزم قرار مالك يختار إما تعديل هوية E2 لتتوافق مع الكود، أو السماح بتعديل محدود لعقد الهوية/الإعدادات وتثبيت SOURCE_SHA جديد. لا يغير هذا التصحيح أي هوية أو كود.
+
+### 16.4 وضع بوابات Preflight بعد المراجعة الحية
+
+التقرير التفصيلي في `docs/experiments/NEW_SIMULATION_PREFLIGHT_REPORT_2026-11-08.md` هو المرجع لسجل الفحوص. الملخص:
+- PF-01 `PASS_SCOPED` — بايتات المرجع `VERIFIED_LIVE`، مع ملاحظة رأس الحالة/اسم المسار.
+- PF-02 `PASS_SCOPED` — Model SOURCE_SHA وشجرة المصدر محددان.
+- PF-03 `BLOCKED` — cohort/config mismatch.
+- PF-04 `PASS_SCOPED` — مراجعة static محدودة لهوية ملفات المحرك؛ المراجعة المستقلة الكاملة لم تتم.
+- PF-05 `BLOCKED` — لا dependency lock/runtime manifest دقيق.
+- PF-06 `BLOCKED` — لا Workflow جاهز للسلالة الجديدة؛ Workflows الحالية مثبتة على نطاقات وهويات مختلفة.
+- PF-07 `NOT_RUN` — لم تُشغل الاختبارات الآمنة على exact pin.
+- PF-08 `BLOCKED` — لا نسختان دائمتان مستقلتان واختبار restore للسلالة الجديدة.
+- PF-09 `NOT_RUN` — لم ينفذ secret scan/redaction audit.
+- PF-10 `BLOCKED` — لا orchestrator جديد يطبق fail-fast والتعافي الآمن.
+- PF-11 `BLOCKED` — لا independent reviewer ولا final owner confirmation.
+
+**الحكم المصحح:** `BLOCKED_BEFORE_EXECUTION`. لا Trial أو Simulation أو Monte Carlo أو Golden revalidation أو D0'–D6' قبل حسم قرار الهوية وإغلاق البوابات ثم تأكيد المالك النهائي.
