@@ -64,3 +64,19 @@ Do not dispatch any Trial/Simulation/Monte Carlo before final owner confirmation
 - Do not modify source/validators/config/workflows to bypass the mismatch. Any authorized change requires a new source pin and exact manifest.
 - Then complete dependency lock, dedicated least-privilege workflows, storage/restore, security scan, fail-fast/recovery, safe exact-pin tests and independent review; only after those should the owner be asked for final execution confirmation.
 - PR #83 remains Draft/open/unmerged. No Actions run was dispatched for this branch. No Trials/Simulation/Monte Carlo/Golden revalidation were run. Main and historical evidence remain untouched.
+
+## Handoff addendum — Path B approved and implemented — 2026-11-08
+
+The earlier handoff instruction to obtain an owner identity decision is superseded by the owner's explicit Path B approval at 2026-11-08T16:30:32Z. The approval covers only identity-contract code/config changes and creation of a new source pin for review; it does not authorize any Trial.
+
+- Working branch: `fix/explicit-cohort-identity-20261108`
+- Draft PR: #84, based on PR #83 protocol branch.
+- Explicit S6 cohort: `s6-v23-rebuild-20261105`
+- Explicit C100 cohort: `c100-v23-rebuild-20261105`
+- Safe test Run `42500791300`: success; 11 identity tests passed, validators compiled, non-execution guard passed.
+- Safe workflow environment: Ubuntu 24.04 / CPython 3.11.18 / pip 26.2.2 / exact package versions in `requirements-lock-py311.txt`. This is not yet a hash-locked wheel set or immutable runner image.
+- Do not use historical run IDs/checkpoints; fresh S6 baseline is N=300. The old C100 evidence remains read-only historical reuse and is not the new C100 cohort.
+- Verify final branch HEAD and all Raw SHA-256 / Git blob SHA-1 values before calling the source pin `VERIFIED_LIVE`.
+- Complete a dedicated least-privilege simulation Workflow with fail-fast/recovery, two independent durable storage destinations plus restore test, secrets/redaction scan, and independent review.
+- Only after those blockers are closed, request a separate final owner confirmation before any Trial or Monte Carlo dispatch.
+- No simulation execution, N expansion, historical artifact mutation, main write, merge, Release, or final acceptance occurred. Overall status remains `BLOCKED_BEFORE_EXECUTION`.
