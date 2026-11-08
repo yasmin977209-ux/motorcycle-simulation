@@ -30,3 +30,14 @@
 
 ## Prohibited until final confirmation
 No Trial, Simulation, Monte Carlo, Golden revalidation, N expansion, D0'–D6' execution, historical backfill/zero-fill, identity mutation, main write, merge, Release publication, or final acceptance declaration.
+
+
+## Final remote readback — 2026-11-08
+- Final branch HEAD: `880c2f6f04967dc7b95f86f2ba7aaabe3af9c31b`.
+- Draft PR #83: https://github.com/yasmin977209-ux/motorcycle-simulation/pull/83; open, draft, unmerged; base `tmp/d1-rebuild-20261101` at `f2ffb9743c8b9aff9fd9d4cadcdb5484e6069866`.
+- PR diff: 4 files, 385 additions, 0 deletions.
+- Raw GitHub readback confirmed the protocol and handoff files exist at the branch; Git blob SHAs: protocol `75075d23d2bcc382f58ceede447ee0d9129edb1a`, session status `f88d88bb82325212c8084e9a43d1e23ffbac39af`, handoff `dcf0e5f41b8985496ff5218f46ef78515d18922b`, continuity `9fa43d7559000b52ea04fd06bd05a04bc6970467`. Raw-byte SHA-256 was not calculated in this session; do not classify these files `VERIFIED_LIVE` under the strict evidence rule.
+- GitHub Actions query for the final head returned zero runs. No workflow was dispatched.
+- Re-read `main`: still `1d67cd56d326a9c42f7ecf324fa284dcc129acd4`.
+- PR #82 remains open/draft/unmerged; not modified.
+- Execution remains `NOT_AUTHORIZED_FOR_EXECUTION`.
